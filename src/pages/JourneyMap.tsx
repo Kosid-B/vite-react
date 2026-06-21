@@ -138,7 +138,7 @@ export default function JourneyMap({ data, activeStage, onStageChange, onUpdate 
         </div>
       </div>
 
-      {/* 2×2 quadrant grid */}
+      {/* 2x2 quadrant grid */}
       <div className="journey-grid">
         {SECTIONS.map(sec => (
           <div key={sec.key} className="jq">
