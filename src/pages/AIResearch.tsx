@@ -83,29 +83,11 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
         body: JSON.stringify({
           model: 'claude-sonnet-4-5',
           max_tokens: 2000,
-          system: `คุณเป็น Customer Journey Research Analyst ที่เชี่ยวชาญตลาด B2B Consulting ในประเทศไทย
-โดยเฉพาะกลุ่ม SME (ทีม 10-100 คน) ที่หา Strategy Consultant ผ่าน Inbound channels
-
-สรุปสิ่งที่พบก่อน แล้วตามด้วย JSON block นี้เสมอ:
-
-\`\`\`json
-{
-  "touchpoints": ["touchpoint 1", "touchpoint 2", "touchpoint 3"],
-  "pain_points": ["pain 1", "pain 2", "pain 3"],
-  "opportunities": ["opportunity 1", "opportunity 2", "opportunity 3"],
-  "behaviors": ["behavior 1", "behavior 2", "behavior 3"],
-  "sources": ["แหล่งข้อมูล 1", "แหล่งข้อมูล 2"]
-}
-\`\`\``,
+          system: `คุณเป็น Customer Journey Research Analyst ที่เชี่ยวชาญตลาด B2B Consulting ในประเทศไทย\nโดยเฉพาะกลุ่ม SME (ทีม 10-100 คน) ที่หา Strategy Consultant ผ่าน Inbound channels\n\nสรุปสิ่งที่พบก่อน แล้วตามด้วย JSON block นี้เสมอ:\n\n\`\`\`json\n{\n  "touchpoints": ["touchpoint 1", "touchpoint 2", "touchpoint 3"],\n  "pain_points": ["pain 1", "pain 2", "pain 3"],\n  "opportunities": ["opportunity 1", "opportunity 2", "opportunity 3"],\n  "behaviors": ["behavior 1", "behavior 2", "behavior 3"],\n  "sources": ["แหล่งข้อมูล 1", "แหล่งข้อมูล 2"]\n}\n\`\`\``,
           tools: [{ type: 'web_search_20250305', name: 'web_search' }],
           messages: [{
             role: 'user',
-            content: `ค้นหาข้อมูลจริงเกี่ยวกับ: "${t}"
-
-ค้นหาจาก: Google Thailand, Reddit, Pantip, LinkedIn Thailand, Facebook Business Groups
-เน้น: ประสบการณ์จริงของ SME ไทย, ความคิดเห็น, pain point, พฤติกรรมการค้นหาและตัดสินใจ
-
-สรุปสิ่งที่พบก่อน แล้วตามด้วย JSON ตามรูปแบบที่กำหนด`,
+            content: `ค้นหาข้อมูลจริงเกี่ยวกับ: "${t}"\n\nค้นหาจาก: Google Thailand, Reddit, Pantip, LinkedIn Thailand, Facebook Business Groups\nเน้น: ประสบการณ์จริงของ SME ไทย, ความคิดเห็น, pain point, พฤติกรรมการค้นหาและตัดสินใจ\n\nสรุปสิ่งที่พบก่อน แล้วตามด้วย JSON ตามรูปแบบที่กำหนด`,
           }],
         }),
       });
@@ -138,7 +120,7 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
 
       setAnswer(displayText);
       setInsights(parsedInsights);
-      setSources(parsedInsights?.sources ?? searched.map(q => `"${q}"`));
+      setSources(parsedInsights?.sources ?? searched.map(q => `"${q}"`)  );
       setSearchLabel(searched.length ? `ค้นหา: "${t}"` : '');
     } catch (err) {
       clearInterval(ltInterval);
