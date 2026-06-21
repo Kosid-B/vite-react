@@ -87,7 +87,7 @@ export default function PriorityActions({ data, onUpdate }: Props) {
               />
               <div className="a-tags">
                 {a.tags.map((t, ti) => (
-                  <span key={ti} className={`tag ${t.c}`}>{t.l}</span>
+                  <span key={ti} className={`tag ${t.className}`}>{t.label}</span>
                 ))}
               </div>
             </div>

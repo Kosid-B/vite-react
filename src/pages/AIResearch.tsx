@@ -27,10 +27,10 @@ const QUICK_PROMPTS = [
 ];
 
 const INSIGHT_CATS = [
-  { key: 'touchpoints' as const, label: 'Touchpoints ที่พบ',     color: '#1a4f8a', jkey: 'touch'  },
-  { key: 'pain_points'  as const, label: 'Pain Points จริงๆ',    color: '#c44b2b', jkey: 'pain'   },
-  { key: 'opportunities'as const, label: 'โอกาส (Opportunities)', color: '#2d6a4f', jkey: 'opp'    },
-  { key: 'behaviors'    as const, label: 'พฤติกรรมลูกค้า',       color: '#1c1814', jkey: 'action' },
+  { key: 'touchpoints'   as const, label: 'Touchpoints ที่พบ',      color: '#1a4f8a', jkey: 'touch'  },
+  { key: 'pain_points'   as const, label: 'Pain Points จริงๆ',      color: '#c44b2b', jkey: 'pain'   },
+  { key: 'opportunities' as const, label: 'โอกาส (Opportunities)',   color: '#2d6a4f', jkey: 'opp'    },
+  { key: 'behaviors'     as const, label: 'พฤติกรรมลูกค้า',         color: '#1c1814', jkey: 'action' },
 ] as const;
 
 type JKey = 'touch' | 'pain' | 'opp' | 'action';
@@ -49,7 +49,6 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
   const [answer, setAnswer] = useState('');
   const [insights, setInsights] = useState<Insights | null>(null);
   const [sources, setSources] = useState<string[]>([]);
-  const [searchLabel, setSearchLabel] = useState('');
   const [error, setError] = useState('');
   const [added, setAdded] = useState<Record<string, boolean>>({});
   const topicRef = useRef<HTMLInputElement>(null);
@@ -63,7 +62,6 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
     setInsights(null);
     setSources([]);
     setError('');
-    setSearchLabel('');
 
     let ltIdx = 0;
     const ltInterval = setInterval(() => {
@@ -105,9 +103,7 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
       const searched: string[] = [];
       for (const block of responseData.content ?? []) {
         if (block.type === 'text' && block.text) fullText += block.text;
-        if (block.type === 'tool_use' && block.name === 'web_search' && block.input?.query) {
-          searched.push(block.input.query);
-        }
+        if (block.type === 'tool_use' && block.name === 'web_search' && block.input?.query) searched.push(block.input.query);
       }
 
       let parsedInsights: Insights | null = null;
@@ -116,12 +112,9 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
         try { parsedInsights = JSON.parse(jsonMatch[1]) as Insights; } catch {}
       }
 
-      const displayText = fullText.replace(/```json[\s\S]*?```/g, '').trim();
-
-      setAnswer(displayText);
+      setAnswer(fullText.replace(/```json[\s\S]*?```/g, '').trim());
       setInsights(parsedInsights);
-      setSources(parsedInsights?.sources ?? searched.map(q => `"${q}"`)  );
-      setSearchLabel(searched.length ? `ค้นหา: "${t}"` : '');
+      setSources(parsedInsights?.sources ?? searched.map(q => `"${q}"`));
     } catch (err) {
       clearInterval(ltInterval);
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด');
@@ -131,20 +124,14 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
   }
 
   function addOne(jkey: JKey, item: string, key: string) {
-    const stages = data.stages.map((s, i) => {
-      if (i !== activeStage) return s;
-      return { ...s, [jkey]: [...s[jkey], item] };
-    });
+    const stages = data.stages.map((s, i) => i !== activeStage ? s : { ...s, [jkey]: [...s[jkey], item] });
     onAddToJourney({ ...data, stages });
     setAdded(prev => ({ ...prev, [key]: true }));
     setTimeout(() => setAdded(prev => ({ ...prev, [key]: false })), 1500);
   }
 
   function addAll(jkey: JKey, items: string[]) {
-    const stages = data.stages.map((s, i) => {
-      if (i !== activeStage) return s;
-      return { ...s, [jkey]: [...s[jkey], ...items] };
-    });
+    const stages = data.stages.map((s, i) => i !== activeStage ? s : { ...s, [jkey]: [...s[jkey], ...items] });
     onAddToJourney({ ...data, stages });
   }
 
@@ -156,133 +143,97 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
         <div className="page-title">AI Research</div>
         <div className="page-meta">
           <span className="meta-chip">ค้นหาข้อมูลจริงจาก Google &amp; Social</span>
-          <span className="meta-chip" style={{ background: '#fdf3f0', borderColor: '#f5c6bb', color: '#c44b2b' }}>
-            ✦ Powered by Claude + Web Search
-          </span>
+          <span className="meta-chip ai-powered-chip">✦ Powered by Claude + Web Search</span>
         </div>
       </div>
 
-      {/* Search bar */}
-      <div style={{ background: 'var(--white)', border: '1.5px solid var(--sand)', borderRadius: 'var(--r-lg)', padding: '20px 24px', marginBottom: 20, boxShadow: 'var(--shadow)' }}>
-        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 12 }}>
-          ค้นหาข้อมูลเชิงลึก
-        </div>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+      <div className="ai-search-box">
+        <div className="ai-search-label">ค้นหาข้อมูลเชิงลึก</div>
+        <div className="ai-search-row">
           <input
             ref={topicRef}
             value={topic}
             onChange={e => setTopic(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') runSearch(); }}
             placeholder="เช่น: SME ไทยเลือกที่ปรึกษาอย่างไร, pain point การจ้าง consultant"
-            style={{ flex: 1, padding: '11px 14px', border: '1px solid var(--sand)', borderRadius: 'var(--r)', fontSize: 13.5, fontFamily: 'inherit', color: 'var(--ink)', background: 'var(--cream)', outline: 'none', minHeight: 44 }}
+            className="ai-search-inp"
           />
-          <button
-            onClick={() => runSearch()}
-            disabled={loading}
-            style={{ padding: '11px 22px', background: loading ? 'var(--ink3)' : 'var(--ink)', color: '#fff', border: 'none', borderRadius: 'var(--r)', fontSize: 13, fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', minHeight: 44, minWidth: 100, whiteSpace: 'nowrap' }}
-          >
+          <button onClick={() => runSearch()} disabled={loading} className={`ai-search-btn${loading ? ' loading' : ''}`}>
             {loading ? 'กำลังค้นหา…' : 'ค้นหา ✦'}
           </button>
         </div>
-
-        <div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 8 }}>หัวข้อแนะนำ:</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <div className="ai-ql-label">หัวข้อแนะนำ:</div>
+        <div className="ai-ql-row">
           {QUICK_PROMPTS.map(p => (
-            <button
-              key={p}
-              onClick={() => { setTopic(p); runSearch(p); }}
-              style={{ padding: '5px 12px', border: '1px solid var(--sand)', background: 'var(--cream)', borderRadius: 14, fontSize: 12, cursor: 'pointer', color: 'var(--ink2)', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
-            >
-              {p}
-            </button>
+            <button key={p} onClick={() => { setTopic(p); runSearch(p); }} className="ai-qp-btn">{p}</button>
           ))}
         </div>
       </div>
 
-      {/* Loading */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-          <div style={{ width: 36, height: 36, border: '3px solid var(--cream2)', borderTopColor: 'var(--rust)', borderRadius: '50%', animation: 'spin .8s linear infinite', margin: '0 auto 16px' }} />
-          <div style={{ fontSize: 13.5, color: 'var(--ink2)' }}>{loadingText}</div>
-          <div style={{ fontSize: 12, color: 'var(--ink4)', marginTop: 6 }}>Claude กำลังวิเคราะห์ข้อมูลจริงเพื่อ Journey ของคุณ</div>
+        <div className="ai-loading">
+          <div className="ai-spinner" />
+          <div className="ai-loading-text">{loadingText}</div>
+          <div className="ai-loading-sub">Claude กำลังวิเคราะห์ข้อมูลจริงเพื่อ Journey ของคุณ</div>
         </div>
       )}
 
-      {/* Error */}
       {!loading && error && (
-        <div style={{ textAlign: 'center', padding: '48px 20px', background: 'var(--white)', border: '1px dashed var(--sand)', borderRadius: 'var(--r-lg)' }}>
-          <div style={{ fontSize: 28, marginBottom: 12 }}>⚠️</div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginBottom: 8 }}>เกิดข้อผิดพลาด</div>
-          <div style={{ fontSize: 12.5, color: 'var(--ink3)', lineHeight: 1.7 }}>{error}</div>
+        <div className="ai-state">
+          <div className="ai-state-icon">⚠️</div>
+          <div className="ai-state-title">เกิดข้อผิดพลาด</div>
+          <div className="ai-state-text">{error}</div>
         </div>
       )}
 
-      {/* Empty state */}
       {!loading && !hasResults && (
-        <div style={{ textAlign: 'center', padding: '48px 20px', background: 'var(--white)', border: '1px dashed var(--sand)', borderRadius: 'var(--r-lg)' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 6 }}>ค้นหาข้อมูล Insight จริง</div>
-          <div style={{ fontSize: 13, color: 'var(--ink3)', lineHeight: 1.7 }}>
+        <div className="ai-state">
+          <div className="ai-state-icon">🔍</div>
+          <div className="ai-state-title ai-state-title-lg">ค้นหาข้อมูล Insight จริง</div>
+          <div className="ai-state-text">
             AI จะค้นหาจาก Google, Reddit, LinkedIn, Pantip และ Social Media<br />
             แล้วดึง insight มาเติมใน Journey Map ของคุณโดยตรง
           </div>
         </div>
       )}
 
-      {/* Results */}
       {!loading && answer && (
         <div>
-          {/* Sources */}
           {sources.length > 0 && (
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-              {sources.slice(0, 5).map((s, i) => (
-                <span key={i} style={{ padding: '3px 10px', background: 'var(--blue-bg)', color: 'var(--blue)', borderRadius: 12, fontSize: 11, fontWeight: 500 }}>{s}</span>
-              ))}
+            <div className="ai-sources">
+              {sources.slice(0, 5).map((s, i) => <span key={i} className="ai-source-chip">{s}</span>)}
             </div>
           )}
 
-          {/* Answer */}
-          <div style={{ background: 'var(--white)', border: '1px solid var(--sand)', borderRadius: 'var(--r-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)', marginBottom: 16 }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--cream2)', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>สิ่งที่ AI พบ</span>
-              {searchLabel && <span style={{ fontSize: 11, color: 'var(--ink4)' }}>{searchLabel}</span>}
-            </div>
-            <div style={{ padding: '18px 20px', fontSize: 13.5, color: 'var(--ink2)', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{answer}</div>
+          <div className="ai-answer-card">
+            <div className="ai-answer-hd">สิ่งที่ AI พบ</div>
+            <div className="ai-answer-body">{answer}</div>
           </div>
 
-          {/* Insight cards */}
           {insights && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' as const, color: 'var(--ink3)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="ai-insights-hd">
                 Insights ที่ดึงมาได้ — เลือกเพิ่มใน Journey Map
-                <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ink4)' }}>คลิก ＋ เพื่อเพิ่มทันที</span>
+                <span className="ai-insights-hint">คลิก ＋ เพื่อเพิ่มทันที</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div className="ai-insights-grid">
                 {INSIGHT_CATS.map(cat => {
                   const items = insights[cat.key] ?? [];
                   return (
-                    <div key={cat.key} style={{ background: 'var(--white)', border: '1px solid var(--sand)', borderRadius: 'var(--r-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-                      <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--cream2)', fontSize: 11, fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase' as const, color: cat.color }}>
-                        {cat.label}
-                      </div>
-                      <div style={{ padding: 8 }}>
+                    <div key={cat.key} className="ai-insight-card">
+                      <div className="ai-insight-card-hd" style={{ color: cat.color }}>{cat.label}</div>
+                      <div className="ai-insight-card-body">
                         {items.map((item, idx) => {
                           const key = `${cat.key}-${idx}`;
                           const isAdded = added[key];
                           return (
-                            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '6px 8px', borderRadius: 6 }}>
-                              <span style={{ color: 'var(--ink4)', fontSize: 12, flexShrink: 0, marginTop: 2 }}>›</span>
-                              <span style={{ flex: 1, fontSize: 12.5, color: 'var(--ink2)', lineHeight: 1.5 }}>{item}</span>
+                            <div key={idx} className="ai-item">
+                              <span className="ai-item-bullet">›</span>
+                              <span className="ai-item-text">{item}</span>
                               <button
                                 onClick={() => addOne(cat.jkey as JKey, item, key)}
-                                style={{
-                                  width: 24, height: 24, borderRadius: '50%',
-                                  border: `1.5px solid ${isAdded ? '#2d6a4f' : cat.color}`,
-                                  background: isAdded ? '#2d6a4f' : 'none',
-                                  color: isAdded ? '#fff' : cat.color,
-                                  cursor: 'pointer', fontSize: 14, padding: 0, flexShrink: 0,
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                }}
+                                className={`ai-add-btn${isAdded ? ' added' : ''}`}
+                                style={{ borderColor: isAdded ? undefined : cat.color, color: isAdded ? undefined : cat.color }}
                                 title="เพิ่มใน Journey Map stage ปัจจุบัน"
                               >
                                 {isAdded ? '✓' : '＋'}
@@ -291,11 +242,8 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
                           );
                         })}
                       </div>
-                      <div style={{ padding: '8px 14px 10px', borderTop: '1px solid var(--cream2)' }}>
-                        <button
-                          onClick={() => addAll(cat.jkey as JKey, items)}
-                          style={{ width: '100%', padding: 7, background: 'var(--cream)', border: '1px solid var(--sand)', borderRadius: 'var(--r)', fontSize: 11.5, color: 'var(--ink2)', cursor: 'pointer', fontFamily: 'inherit' }}
-                        >
+                      <div className="ai-card-foot">
+                        <button onClick={() => addAll(cat.jkey as JKey, items)} className="ai-add-all-btn">
                           เพิ่มทั้งหมดใน Stage ปัจจุบัน →
                         </button>
                       </div>

@@ -1,4 +1,5 @@
 import type { AppData, Persona } from '../types';
+import EditableList from '../components/EditableList';
 
 interface Props {
   data: AppData;
@@ -88,26 +89,17 @@ export default function Personas({ data, onUpdate }: Props) {
             {P_SECTIONS.map(sec => (
               <div key={sec.key} className="p-section">
                 <div className="p-sec-hd" style={{ color: sec.color }}>{sec.hd}</div>
-                {p[sec.key].map((item, idx) => (
-                  <div key={idx} className="p-item">
-                    <span className="p-item-bullet">›</span>
-                    <input
-                      className="p-item-inp"
-                      defaultValue={item}
-                      key={`${sec.key}-${pi}-${idx}`}
-                      onBlur={e => saveItem(pi, sec.key, idx, e.target.value)}
-                      spellCheck={false}
-                    />
-                    <button className="p-item-del" onClick={() => delItem(pi, sec.key, idx)}>×</button>
-                  </div>
-                ))}
-                <button
-                  className="add-row"
-                  style={{ fontSize: 11, padding: '3px 4px', marginTop: 2 }}
-                  onClick={() => addItem(pi, sec.key)}
-                >
-                  ＋ เพิ่ม
-                </button>
+                <EditableList
+                  items={p[sec.key]}
+                  itemKey={`${sec.key}-${pi}`}
+                  onSave={(idx, val) => saveItem(pi, sec.key, idx, val)}
+                  onAdd={() => addItem(pi, sec.key)}
+                  onDelete={idx => delItem(pi, sec.key, idx)}
+                  multiline={false}
+                  bordered
+                  addLabel="＋ เพิ่ม"
+                  addStyle={{ fontSize: 11, padding: '3px 4px', marginTop: 2 }}
+                />
               </div>
             ))}
           </div>

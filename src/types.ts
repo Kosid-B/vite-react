@@ -35,8 +35,8 @@ export interface ContentMonth {
 }
 
 export interface ActionTag {
-  l: string;
-  c: string;
+  label: string;
+  className: string;
 }
 
 export interface Action {

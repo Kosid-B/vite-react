@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { AppData } from '../types';
 import { autoH } from '../utils';
+import EditableList from '../components/EditableList';
 
 interface Props {
   data: AppData;
@@ -146,23 +147,13 @@ export default function JourneyMap({ data, activeStage, onStageChange, onUpdate 
               <span className="jq-title" style={{ color: sec.color }}>{sec.title}</span>
             </div>
             <div className="jq-body">
-              {stage[sec.key].map((item, idx) => (
-                <div key={idx} className="ji">
-                  <span className="ji-bullet">›</span>
-                  <textarea
-                    className="ji-text"
-                    rows={1}
-                    defaultValue={item}
-                    key={`${sec.key}-${activeStage}-${idx}`}
-                    onBlur={e => saveItem(sec.key, idx, e.target.value)}
-                    onChange={e => autoH(e.target)}
-                    ref={el => { if (el) autoH(el); }}
-                    spellCheck={false}
-                  />
-                  <button className="ji-del" onClick={() => delItem(sec.key, idx)}>×</button>
-                </div>
-              ))}
-              <button className="add-row" onClick={() => addItem(sec.key)}>＋ เพิ่มรายการ</button>
+              <EditableList
+                items={stage[sec.key]}
+                itemKey={`${sec.key}-${activeStage}`}
+                onSave={(idx, val) => saveItem(sec.key, idx, val)}
+                onAdd={() => addItem(sec.key)}
+                onDelete={idx => delItem(sec.key, idx)}
+              />
             </div>
           </div>
         ))}

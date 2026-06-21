@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
 import type { AppData } from '../types';
-import { autoH } from '../utils';
+import EditableList from '../components/EditableList';
 
 interface Props {
   data: AppData;
@@ -11,10 +10,6 @@ interface Props {
 
 export default function ContentPlan({ data, activeMonth, onMonthChange, onUpdate }: Props) {
   const month = data.contentPlan[activeMonth];
-
-  useEffect(() => {
-    document.querySelectorAll<HTMLTextAreaElement>('.cp-item-text').forEach(autoH);
-  }, [activeMonth]);
 
   function saveGoal(value: string) {
     const contentPlan = data.contentPlan.map((m, i) => i === activeMonth ? { ...m, goal: value } : m);
@@ -105,29 +100,15 @@ export default function ContentPlan({ data, activeMonth, onMonthChange, onUpdate
               />
             </div>
             <div className="cp-body">
-              {col.items.map((item, idx) => (
-                <div key={idx} className="cp-item">
-                  <span className="cp-item-bullet">›</span>
-                  <textarea
-                    className="cp-item-text"
-                    rows={2}
-                    defaultValue={item}
-                    key={`item-${activeMonth}-${ci}-${idx}`}
-                    onBlur={e => saveItem(ci, idx, e.target.value)}
-                    onChange={e => autoH(e.target)}
-                    ref={el => { if (el) autoH(el); }}
-                    spellCheck={false}
-                  />
-                  <button className="cp-item-del" onClick={() => delItem(ci, idx)}>×</button>
-                </div>
-              ))}
-              <button
-                className="add-row"
-                style={{ fontSize: 11, padding: '3px 6px', marginTop: 2 }}
-                onClick={() => addItem(ci)}
-              >
-                ＋ เพิ่ม
-              </button>
+              <EditableList
+                items={col.items}
+                itemKey={`item-${activeMonth}-${ci}`}
+                onSave={(idx, val) => saveItem(ci, idx, val)}
+                onAdd={() => addItem(ci)}
+                onDelete={idx => delItem(ci, idx)}
+                addLabel="＋ เพิ่ม"
+                addStyle={{ fontSize: 11, padding: '3px 6px', marginTop: 2 }}
+              />
             </div>
           </div>
         ))}
