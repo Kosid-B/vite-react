@@ -13,15 +13,12 @@ export default function PriorityActions({ data, onUpdate }: Props) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const allDone = done === total;
 
-  useEffect(() => {
-    document.querySelectorAll<HTMLTextAreaElement>('.a-desc').forEach(autoH);
-  });
+  useEffect(() => { document.querySelectorAll<HTMLTextAreaElement>('.a-desc').forEach(autoH); });
 
   function toggle(ai: number) {
     const actions = data.actions.map((a, i) => i === ai ? { ...a, done: !a.done } : a);
     onUpdate({ ...data, actions });
   }
-
   function saveField(ai: number, field: 'title' | 'desc', value: string) {
     const actions = data.actions.map((a, i) => i === ai ? { ...a, [field]: value } : a);
     onUpdate({ ...data, actions });
@@ -39,57 +36,26 @@ export default function PriorityActions({ data, onUpdate }: Props) {
           <span className="law-badge" data-tip={"Fitts's Law: checkbox 32px\nคลิกได้ง่าย ไม่พลาด"}>Fitts's Law</span>
         </div>
       </div>
-
       <div className="progress-header">
         <div className="progress-text"><b>{done}</b> / {total} เสร็จแล้ว</div>
-        <div className="progress-track">
-          <div className="progress-fill" style={{ width: `${pct}%` }} />
-        </div>
+        <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
       </div>
-
       <div className={`celebration ${allDone ? 'show' : ''}`}>
         <div className="celebration-emoji">🎉</div>
         <div className="celebration-title">ทำครบทุก Action แล้ว!</div>
-        <div className="celebration-sub">
-          ทีมของคุณพร้อมแล้วสำหรับขั้นตอนถัดไป<br />
-          ลองเพิ่ม action ใหม่หรือ reset เพื่อเริ่มรอบถัดไป
-        </div>
+        <div className="celebration-sub">ทีมของคุณพร้อมแล้วสำหรับขั้นตอนถัดไป<br />ลองเพิ่ม action ใหม่หรือ reset เพื่อเริ่มรอบถัดไป</div>
       </div>
-
       <div className="action-list">
         {data.actions.map((a, ai) => (
           <div key={ai} className={`a-item priority-${a.priority} ${a.done ? 'done' : ''}`}>
-            <div className={`a-check ${a.done ? 'checked' : ''}`} onClick={() => toggle(ai)} title="ติ๊กเมื่อทำเสร็จ">
-              {a.done && (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
+            <div className={`a-check ${a.done ? 'checked' : ''}`} onClick={() => toggle(ai)}>
+              {a.done && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
             </div>
             <div className="a-num" style={{ background: a.nb, color: a.nt }}>{ai + 1}</div>
             <div className="a-body">
-              <input
-                className="a-title"
-                defaultValue={a.title}
-                key={`title-${ai}`}
-                onBlur={e => saveField(ai, 'title', e.target.value)}
-                spellCheck={false}
-              />
-              <textarea
-                className="a-desc"
-                rows={2}
-                defaultValue={a.desc}
-                key={`desc-${ai}`}
-                onBlur={e => saveField(ai, 'desc', e.target.value)}
-                onChange={e => autoH(e.target)}
-                ref={el => { if (el) autoH(el); }}
-                spellCheck={false}
-              />
-              <div className="a-tags">
-                {a.tags.map((t, ti) => (
-                  <span key={ti} className={`tag ${t.c}`}>{t.l}</span>
-                ))}
-              </div>
+              <input className="a-title" defaultValue={a.title} key={`title-${ai}`} onBlur={e => saveField(ai, 'title', e.target.value)} spellCheck={false} />
+              <textarea className="a-desc" rows={2} defaultValue={a.desc} key={`desc-${ai}`} onBlur={e => saveField(ai, 'desc', e.target.value)} onChange={e => autoH(e.target)} ref={el => { if (el) autoH(el); }} spellCheck={false} />
+              <div className="a-tags">{a.tags.map((t, ti) => <span key={ti} className={`tag ${t.c}`}>{t.l}</span>)}</div>
             </div>
           </div>
         ))}
