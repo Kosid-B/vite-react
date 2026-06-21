@@ -55,12 +55,25 @@ export interface FunnelStage {
   note: string;
 }
 
+export interface ROIStageCost {
+  stageId: string;
+  hours: number;
+}
+
+export interface ROIInput {
+  avgDealValue: number;
+  teamHourlyRate: number;
+  monthlyRevenueTarget: number;
+  stageCosts: ROIStageCost[];
+}
+
 export interface AppData {
   stages: Stage[];
   personas: Persona[];
   contentPlan: ContentMonth[];
   actions: Action[];
   funnel: FunnelStage[];
+  roi: ROIInput;
 }
 
-export type PageId = 'journey' | 'personas' | 'content' | 'actions' | 'aisearch' | 'funnel';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch';

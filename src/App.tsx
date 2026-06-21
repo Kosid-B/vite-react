@@ -2,12 +2,14 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { AppData, PageId } from './types';
 import { DEFAULT_DATA } from './data';
 import Sidebar from './components/Sidebar';
+import Dashboard from './pages/Dashboard';
 import JourneyMap from './pages/JourneyMap';
 import Personas from './pages/Personas';
 import ContentPlan from './pages/ContentPlan';
 import PriorityActions from './pages/PriorityActions';
 import AIResearch from './pages/AIResearch';
 import ConversionFunnel from './pages/ConversionFunnel';
+import ROICalculator from './pages/ROICalculator';
 
 const STORAGE_KEY = 'cjux2';
 
@@ -17,6 +19,7 @@ function loadData(): AppData {
     if (s) {
       const parsed = JSON.parse(s) as AppData;
       if (!parsed.funnel) parsed.funnel = DEFAULT_DATA.funnel;
+      if (!parsed.roi) parsed.roi = DEFAULT_DATA.roi;
       return parsed;
     }
   } catch {}
@@ -25,7 +28,7 @@ function loadData(): AppData {
 
 export default function App() {
   const [data, setData] = useState<AppData>(loadData);
-  const [activePage, setActivePage] = useState<PageId>('journey');
+  const [activePage, setActivePage] = useState<PageId>('dashboard');
   const [activeStage, setActiveStage] = useState(0);
   const [activeMonth, setActiveMonth] = useState(0);
   const [toastVisible, setToastVisible] = useState(false);
@@ -57,6 +60,9 @@ export default function App() {
       />
 
       <main className="main">
+        {activePage === 'dashboard' && (
+          <Dashboard data={data} onNavigate={setActivePage} />
+        )}
         {activePage === 'journey' && (
           <JourneyMap
             data={data}
@@ -88,6 +94,9 @@ export default function App() {
         )}
         {activePage === 'funnel' && (
           <ConversionFunnel data={data} onUpdate={updateData} />
+        )}
+        {activePage === 'roi' && (
+          <ROICalculator data={data} onUpdate={updateData} />
         )}
       </main>
 

@@ -18,6 +18,18 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
       </div>
 
       <div className="nav-section">
+        <div className="nav-label">ภาพรวม</div>
+
+        <button className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`} onClick={() => onNavigate('dashboard')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          Dashboard
+          <span className="nav-dot" />
+        </button>
+      </div>
+
+      <div className="nav-section">
         <div className="nav-label">เครื่องมือ</div>
 
         <button className={`nav-item ${activePage === 'journey' ? 'active' : ''}`} onClick={() => onNavigate('journey')}>
@@ -33,6 +45,14 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
             <path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
           </svg>
           Conversion Funnel
+          <span className="nav-dot" />
+        </button>
+
+        <button className={`nav-item ${activePage === 'roi' ? 'active' : ''}`} onClick={() => onNavigate('roi')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+          ROI Calculator
           <span className="nav-dot" />
         </button>
 
