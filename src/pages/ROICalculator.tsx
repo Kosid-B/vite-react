@@ -14,7 +14,6 @@ const INPUT_FIELDS: { label: string; field: keyof Pick<ROIInput, 'avgDealValue' 
 export default function ROICalculator({ data, onUpdate }: Props) {
   const { funnel, stages, roi } = data;
 
-  const firstLeads = funnel[0]?.leads ?? 1;
   const lastLeads = funnel[funnel.length - 1]?.leads ?? 0;
 
   function save(next: ROIInput) { onUpdate({ ...data, roi: next }); }
