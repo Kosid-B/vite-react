@@ -38,10 +38,8 @@ body {
   display: block;
 }
 
-/* LAYOUT */
 .app { display: flex; min-height: 100vh; }
 
-/* SIDEBAR */
 .sidebar {
   width: 230px;
   background: var(--ink);
@@ -164,7 +162,6 @@ body {
 .btn-export:hover { background: #ad3e22; }
 .btn-export:active { transform: scale(.98); }
 
-/* UX LAW BADGE */
 .law-badge {
   display: inline-flex;
   align-items: center;
@@ -204,14 +201,12 @@ body {
 }
 .law-badge:hover::after { opacity: 1; }
 
-/* MAIN */
 .main {
   margin-left: 230px;
   flex: 1;
   padding: 36px 40px;
 }
 
-/* PAGE HEADER */
 .page-header { margin-bottom: 28px; }
 .page-title {
   font-family: 'DM Serif Display', serif;
@@ -238,7 +233,6 @@ body {
   color: var(--ink2);
 }
 
-/* JOURNEY MAP */
 .stage-strip {
   display: flex;
   gap: 6px;
@@ -392,7 +386,6 @@ body {
 }
 .add-row:hover { background: var(--cream2); color: var(--ink2); }
 
-/* PERSONAS */
 .persona-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
 .p-card {
   background: var(--white);
@@ -472,7 +465,6 @@ body {
 .p-item:hover .p-item-del { opacity: 1; }
 .p-item-del:hover { color: var(--rust); }
 
-/* CONTENT PLAN */
 .cp-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
 .cp-tab-btn {
   flex: 1;
@@ -547,7 +539,6 @@ body {
 .cp-item:hover .cp-item-del { opacity: 1; }
 .cp-item-del:hover { color: var(--rust); }
 
-/* PRIORITY ACTIONS */
 .progress-header {
   display: flex;
   align-items: center;
@@ -659,7 +650,6 @@ body {
 }
 .celebration-sub { font-size: 13px; color: var(--ink3); }
 
-/* LAWS LEGEND */
 .laws-legend {
   background: var(--white);
   border: 1px solid var(--sand);
@@ -705,14 +695,12 @@ body {
 }
 .law-pill:hover::after { opacity: 1; }
 
-/* FOCUS */
 input:focus, textarea:focus {
   outline: 2px solid rgba(196,75,43,.3);
   outline-offset: 1px;
   border-radius: 3px;
 }
 
-/* TOAST */
 .toast {
   position: fixed;
   bottom: 24px;
@@ -733,14 +721,12 @@ input:focus, textarea:focus {
 }
 .toast.show { opacity: 1; transform: translateY(0); }
 
-/* ANIMATIONS */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* PRINT */
 @media print {
   .sidebar, .add-row, .ji-del, .p-item-del, .cp-item-del, .toast, .laws-legend { display: none !important; }
   .main { margin-left: 0; padding: 20px; }
