@@ -68,7 +68,7 @@ export const DEFAULT_DATA: AppData = {
         'อ่าน testimonial และ review อย่างละเอียด',
         'ถามเพื่อนที่เคยจ้าง consultant',
         'Shortlist เหลือ 2–3 เจ้า',
-        'หารือหับส่วนหรือ CFO ก่อนติดต่อ',
+        'หารือกับหุ้นส่วนหรือ CFO ก่อนติดต่อ',
       ],
       pain: [
         'ไม่มีราคาบนเว็บ ต้องติดต่อก่อนถึงจะรู้',
@@ -509,5 +509,15 @@ export const DEFAULT_DATA: AppData = {
         { l: 'รักษา', c: 't-stage' },
       ],
     },
+  ],
+  funnel: [
+    { stageId: 's1', leads: 10000, note: 'ผู้เข้าชมเนื้อหา / Google Organic' },
+    { stageId: 's2', leads: 2500,  note: 'คลิกเข้าเว็บ / อ่านบทความ' },
+    { stageId: 's3', leads: 750,   note: 'อ่าน Services / ดู Case Study' },
+    { stageId: 's4', leads: 225,   note: 'กรอก Contact Form / ส่ง DM' },
+    { stageId: 's5', leads: 135,   note: 'นัด Discovery Call สำเร็จ' },
+    { stageId: 's6', leads: 81,    note: 'ได้รับ Proposal / อยู่ระหว่างพิจารณา' },
+    { stageId: 's7', leads: 57,    note: 'เซ็นสัญญา เริ่มโปรเจกต์' },
+    { stageId: 's8', leads: 40,    note: 'ต่อสัญญา / ลูกค้าประจำ' },
   ],
 };

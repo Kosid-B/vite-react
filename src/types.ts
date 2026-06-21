@@ -49,11 +49,18 @@ export interface Action {
   tags: ActionTag[];
 }
 
+export interface FunnelStage {
+  stageId: string;
+  leads: number;
+  note: string;
+}
+
 export interface AppData {
   stages: Stage[];
   personas: Persona[];
   contentPlan: ContentMonth[];
   actions: Action[];
+  funnel: FunnelStage[];
 }
 
-export type PageId = 'journey' | 'personas' | 'content' | 'actions' | 'aisearch';
+export type PageId = 'journey' | 'personas' | 'content' | 'actions' | 'aisearch' | 'funnel';

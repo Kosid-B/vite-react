@@ -7,13 +7,18 @@ import Personas from './pages/Personas';
 import ContentPlan from './pages/ContentPlan';
 import PriorityActions from './pages/PriorityActions';
 import AIResearch from './pages/AIResearch';
+import ConversionFunnel from './pages/ConversionFunnel';
 
 const STORAGE_KEY = 'cjux2';
 
 function loadData(): AppData {
   try {
     const s = localStorage.getItem(STORAGE_KEY);
-    if (s) return JSON.parse(s) as AppData;
+    if (s) {
+      const parsed = JSON.parse(s) as AppData;
+      if (!parsed.funnel) parsed.funnel = DEFAULT_DATA.funnel;
+      return parsed;
+    }
   } catch {}
   return JSON.parse(JSON.stringify(DEFAULT_DATA)) as AppData;
 }
@@ -80,6 +85,9 @@ export default function App() {
             activeStage={activeStage}
             onAddToJourney={updateData}
           />
+        )}
+        {activePage === 'funnel' && (
+          <ConversionFunnel data={data} onUpdate={updateData} />
         )}
       </main>
 
