@@ -361,4 +361,61 @@ export const DEFAULT_DATA: AppData = {
       { stageId: 's8', hours: 8 },
     ],
   },
+  businessModel: {
+    bmc: {
+      partners: [
+        'Digital Marketing Agency',
+        'Platform: LinkedIn, Google Ads',
+        'ผู้เชี่ยวชาญเฉพาะทาง (Finance, IT, Legal)',
+      ],
+      activities: [
+        'Strategy Consulting & Workshop',
+        'Inbound Content Marketing',
+        'Discovery & Proposal Process',
+        'Client Success & Quarterly Review',
+      ],
+      value: [
+        'แก้ปัญหา SME ไทยเฉพาะกลุ่ม',
+        'ผลลัพธ์วัดได้ภายใน 90 วัน',
+        'ที่ปรึกษาที่ลงมือได้จริง ไม่แค่แผน',
+        'เข้าใจ context ธุรกิจไทยในเชิงลึก',
+      ],
+      relationships: [
+        'Discovery Call ส่วนตัว 1:1',
+        'Monthly Check-in & Progress Report',
+        'Quarterly Business Review (QBR)',
+        'Insight Email รายเดือน',
+      ],
+      segments: [
+        'MD / เจ้าของ SME ทีม 10–100 คน',
+        'CFO / Finance Director',
+        'Operations Manager',
+      ],
+      resources: [
+        'ทีมที่ปรึกษาประสบการณ์ 10+ ปี',
+        'Methodology & Framework IP',
+        'Case Study Library (30+ ราย)',
+        'MD Network & Referral Base',
+      ],
+      channels: [
+        'Google Organic / SEO Blog',
+        'LinkedIn Company Page & Posts',
+        'Lead Magnet / E-book ฟรี',
+        'Referral จากลูกค้าเก่า',
+      ],
+      costs: [
+        'ค่าแรงทีม Consultant',
+        'Digital Marketing & Content Production',
+        'Software & Cloud Tools',
+        'Travel, Venue & Events',
+      ],
+      revenue: [
+        'Project-based Consulting Fee',
+        'Monthly Retainer',
+        'Workshop & Training Fee',
+        'Online Course / Digital Product',
+      ],
+    },
+    de24: Array.from({ length: 24 }, () => ({ done: false, notes: '' })),
+  },
 };

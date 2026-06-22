@@ -67,6 +67,23 @@ export interface ROIInput {
   stageCosts: ROIStageCost[];
 }
 
+export interface BMCData {
+  partners: string[];
+  activities: string[];
+  value: string[];
+  relationships: string[];
+  segments: string[];
+  resources: string[];
+  channels: string[];
+  costs: string[];
+  revenue: string[];
+}
+
+export interface BusinessModelData {
+  bmc: BMCData;
+  de24: Array<{ done: boolean; notes: string }>;
+}
+
 export interface AppData {
   stages: Stage[];
   personas: Persona[];
@@ -74,6 +91,7 @@ export interface AppData {
   actions: Action[];
   funnel: FunnelStage[];
   roi: ROIInput;
+  businessModel: BusinessModelData;
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc';

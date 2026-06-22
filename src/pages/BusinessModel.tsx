@@ -1,0 +1,215 @@
+import { useState } from 'react';
+import type { AppData, BMCData } from '../types';
+import EditableList from '../components/EditableList';
+
+interface Props {
+  data: AppData;
+  onUpdate: (data: AppData) => void;
+}
+
+type BMCKey = keyof BMCData;
+
+const BMC_CONFIG: Array<{ key: BMCKey; title: string; sub: string; color: string; area: string }> = [
+  { key: 'partners',      title: 'Key Partners',          sub: 'พันธมิตรหลัก',         color: '#1a4f8a', area: 'kp' },
+  { key: 'activities',   title: 'Key Activities',         sub: 'กิจกรรมหลัก',          color: '#2d6a4f', area: 'ka' },
+  { key: 'value',        title: 'Value Propositions',     sub: 'คุณค่าที่นำเสนอ',      color: '#c44b2b', area: 'vp' },
+  { key: 'relationships',title: 'Customer Relationships', sub: 'ความสัมพันธ์ลูกค้า',   color: '#a05c1a', area: 'cr' },
+  { key: 'segments',     title: 'Customer Segments',      sub: 'กลุ่มลูกค้าเป้าหมาย',  color: '#1a4f8a', area: 'cs' },
+  { key: 'resources',    title: 'Key Resources',          sub: 'ทรัพยากรหลัก',         color: '#2d6a4f', area: 'kr' },
+  { key: 'channels',     title: 'Channels',               sub: 'ช่องทางเข้าถึงลูกค้า', color: '#a05c1a', area: 'ch' },
+  { key: 'costs',        title: 'Cost Structure',         sub: 'โครงสร้างต้นทุน',      color: '#1c1814', area: 'co' },
+  { key: 'revenue',      title: 'Revenue Streams',        sub: 'กระแสรายได้',           color: '#2d6a4f', area: 're' },
+];
+
+const DE24: Array<{ name: string; phase: number }> = [
+  { name: 'Market Segmentation',                           phase: 0 },
+  { name: 'Select Beachhead Market',                       phase: 0 },
+  { name: 'Build End User Profile',                        phase: 0 },
+  { name: 'Calculate Total Addressable Market (TAM)',       phase: 0 },
+  { name: 'Profile the Persona',                           phase: 0 },
+  { name: 'Full Life Cycle Use Case',                      phase: 0 },
+  { name: 'High-Level Product Specification',              phase: 1 },
+  { name: 'Quantify the Value Proposition',                phase: 1 },
+  { name: 'Identify Your Next 10 Customers',               phase: 1 },
+  { name: 'Define Your Core',                              phase: 1 },
+  { name: 'Chart Your Competitive Position',               phase: 1 },
+  { name: "Determine Customer's DMU",                      phase: 2 },
+  { name: 'Map Process to Acquire a Paying Customer',      phase: 2 },
+  { name: 'Calculate TAM for Beachhead Market',            phase: 2 },
+  { name: 'Design a Business Model',                       phase: 2 },
+  { name: 'Set Your Pricing Framework',                    phase: 2 },
+  { name: 'Calculate Lifetime Value (LTV)',                phase: 2 },
+  { name: 'Map the Sales Process',                         phase: 2 },
+  { name: 'Calculate Cost of Acquisition (COCA)',          phase: 2 },
+  { name: 'Identify Key Assumptions',                      phase: 3 },
+  { name: 'Test Key Assumptions',                          phase: 3 },
+  { name: 'Define Minimum Viable Business Product (MVBP)', phase: 3 },
+  { name: 'Show That "Dogs Eat the Dog Food"',             phase: 3 },
+  { name: 'Develop a Product Plan',                        phase: 3 },
+];
+
+const PHASES = [
+  { label: 'ลูกค้าของคุณคือใคร',      color: '#1a4f8a' },
+  { label: 'คุณค่าที่นำเสนอคืออะไร',  color: '#c44b2b' },
+  { label: 'กระบวนการขายและรายได้',   color: '#a05c1a' },
+  { label: 'ทดสอบและขยายธุรกิจ',      color: '#2d6a4f' },
+];
+
+export default function BusinessModel({ data, onUpdate }: Props) {
+  const [expandedStep, setExpandedStep] = useState<number | null>(null);
+  const bm = data.businessModel;
+
+  function updateBMC(key: BMCKey, items: string[]) {
+    onUpdate({ ...data, businessModel: { ...bm, bmc: { ...bm.bmc, [key]: items } } });
+  }
+
+  function toggleStep(idx: number) {
+    const de24 = bm.de24.map((s, i) => i === idx ? { ...s, done: !s.done } : s);
+    onUpdate({ ...data, businessModel: { ...bm, de24 } });
+  }
+
+  function saveStepNote(idx: number, notes: string) {
+    const de24 = bm.de24.map((s, i) => i === idx ? { ...s, notes } : s);
+    onUpdate({ ...data, businessModel: { ...bm, de24 } });
+  }
+
+  function autoPopulate() {
+    const segments = data.personas.map(p => `${p.name} — ${p.role}`);
+    const value = [...new Set(data.stages.flatMap(s => s.opp))].slice(0, 5);
+    const channels = [...new Set(data.stages.flatMap(s => s.touch))].slice(0, 4);
+    const activities = data.actions.slice(0, 4).map(a => a.title);
+    const stageCostTotal = data.roi.stageCosts.reduce((sum, sc) => sum + sc.hours * data.roi.teamHourlyRate, 0);
+    const costs = [
+      `ต้นทุนทีม Consultant ฿${stageCostTotal.toLocaleString()} / รอบ`,
+      ...bm.bmc.costs.slice(1),
+    ];
+    const revenue = [
+      `Project Fee เฉลี่ย ฿${data.roi.avgDealValue.toLocaleString()} / โปรเจกต์`,
+      `เป้าหมาย ฿${data.roi.monthlyRevenueTarget.toLocaleString()} / เดือน`,
+      'Monthly Retainer',
+      'Workshop & Training',
+    ];
+    onUpdate({
+      ...data,
+      businessModel: {
+        ...bm,
+        bmc: {
+          ...bm.bmc,
+          segments,
+          value: value.length ? value : bm.bmc.value,
+          channels: channels.length ? channels : bm.bmc.channels,
+          activities: activities.length ? activities : bm.bmc.activities,
+          costs,
+          revenue,
+        },
+      },
+    });
+  }
+
+  const doneCount = bm.de24.filter(s => s.done).length;
+  const pct = Math.round((doneCount / 24) * 100);
+
+  return (
+    <div>
+      <div className="page-header">
+        <div className="page-title">Business Model</div>
+        <div className="page-meta">
+          <span className="meta-chip">Business Model Canvas</span>
+          <span className="meta-chip">Disciplined Entrepreneurship · 24 Steps</span>
+          <button className="bmc-auto-btn" onClick={autoPopulate}>
+            ↻ Auto-populate จากข้อมูล
+          </button>
+        </div>
+      </div>
+
+      <div className="bmc-section-label">Business Model Canvas (Osterwalder)</div>
+      <div className="bmc-canvas">
+        {BMC_CONFIG.map(b => (
+          <div key={b.key} className={`bmc-block bmc-block-${b.area}`}>
+            <div className="bmc-block-hd">
+              <span className="bmc-block-title" style={{ color: b.color }}>{b.title}</span>
+              <span className="bmc-block-sub">{b.sub}</span>
+            </div>
+            <EditableList
+              items={bm.bmc[b.key]}
+              itemKey={`bmc-${b.key}`}
+              onSave={(idx, val) => {
+                const arr = [...bm.bmc[b.key]];
+                arr[idx] = val;
+                updateBMC(b.key, arr);
+              }}
+              onAdd={() => updateBMC(b.key, [...bm.bmc[b.key], 'รายการใหม่'])}
+              onDelete={idx => updateBMC(b.key, bm.bmc[b.key].filter((_, i) => i !== idx))}
+              multiline={false}
+              addLabel="＋"
+              addStyle={{ fontSize: 10, padding: '2px 4px', marginTop: 2 }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="bmc-de24-header">
+        <div>
+          <div className="bmc-de24-title">Disciplined Entrepreneurship — 24 Steps</div>
+          <div className="bmc-de24-author">Bill Aulet, MIT</div>
+        </div>
+        <div className="bmc-de24-progress">
+          <div className="bmc-de24-bar">
+            <div className="bmc-de24-bar-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <span className="bmc-de24-count"><b>{doneCount}</b> / 24 เสร็จแล้ว ({pct}%)</span>
+        </div>
+      </div>
+
+      <div className="bmc-de24-grid">
+        {PHASES.map((phase, pi) => (
+          <div key={pi} className="bmc-phase-card" style={{ borderTopColor: phase.color }}>
+            <div className="bmc-phase-hd">
+              <span className="bmc-phase-num" style={{ color: phase.color }}>Phase {pi + 1}</span>
+              <span className="bmc-phase-label" style={{ color: phase.color }}>{phase.label}</span>
+            </div>
+            {DE24.map((step, si) => {
+              if (step.phase !== pi) return null;
+              const state = bm.de24[si];
+              const isExp = expandedStep === si;
+              return (
+                <div key={si} className={`bmc-step${state.done ? ' bmc-step-done' : ''}`}>
+                  <div className="bmc-step-row" onClick={() => setExpandedStep(isExp ? null : si)}>
+                    <button
+                      className={`bmc-step-chk${state.done ? ' done' : ''}`}
+                      onClick={e => { e.stopPropagation(); toggleStep(si); }}
+                      title={state.done ? 'ยกเลิก' : 'ทำเครื่องหมายเสร็จแล้ว'}
+                    >
+                      {state.done && (
+                        <svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3.5">
+                          <path d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                    <span className="bmc-step-n">{si + 1}</span>
+                    <span className="bmc-step-name">{step.name}</span>
+                    {state.notes && !isExp && <span className="bmc-step-note-dot" title="มีหมายเหตุ" />}
+                    <span className="bmc-step-tog">{isExp ? '▲' : '▽'}</span>
+                  </div>
+                  {isExp && (
+                    <div className="bmc-step-note-wrap">
+                      <textarea
+                        className="bmc-step-note"
+                        placeholder="หมายเหตุ / สิ่งที่ค้นพบ / action items..."
+                        defaultValue={state.notes}
+                        key={`note-${si}`}
+                        onBlur={e => saveStepNote(si, e.target.value)}
+                        rows={2}
+                        spellCheck={false}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -10,6 +10,7 @@ import PriorityActions from './pages/PriorityActions';
 import AIResearch from './pages/AIResearch';
 import ConversionFunnel from './pages/ConversionFunnel';
 import ROICalculator from './pages/ROICalculator';
+import BusinessModel from './pages/BusinessModel';
 
 const STORAGE_KEY = 'cjux2';
 
@@ -20,6 +21,7 @@ function loadData(): AppData {
       const parsed = JSON.parse(s) as AppData;
       if (!parsed.funnel) parsed.funnel = DEFAULT_DATA.funnel;
       if (!parsed.roi) parsed.roi = DEFAULT_DATA.roi;
+      if (!parsed.businessModel) parsed.businessModel = DEFAULT_DATA.businessModel;
       return parsed;
     }
   } catch {}
@@ -67,6 +69,7 @@ export default function App() {
         if (!parsed.stages || !parsed.personas) throw new Error('invalid');
         if (!parsed.funnel) parsed.funnel = DEFAULT_DATA.funnel;
         if (!parsed.roi) parsed.roi = DEFAULT_DATA.roi;
+        if (!parsed.businessModel) parsed.businessModel = DEFAULT_DATA.businessModel;
         updateData(parsed);
       } catch {
         alert('ไฟล์ไม่ถูกต้อง — กรุณาเลือกไฟล์ .json ที่ export จาก CJ Planner');
@@ -113,6 +116,7 @@ export default function App() {
         )}
         {activePage === 'funnel' && <ConversionFunnel data={data} onUpdate={updateData} />}
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
+        {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
       </main>
 
       <div className={`toast ${toastVisible ? 'show' : ''}`}>
