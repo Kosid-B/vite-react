@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { PageId } from '../types';
 
 interface Props {
@@ -5,21 +6,26 @@ interface Props {
   onNavigate: (page: PageId) => void;
   doneCount: number;
   totalActions: number;
+  isOpen: boolean;
+  onClose: () => void;
+  onExport: () => void;
+  onImportFile: (file: File) => void;
 }
 
-export default function Sidebar({ activePage, onNavigate, doneCount, totalActions }: Props) {
+export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile }: Props) {
   const pct = totalActions > 0 ? Math.round((doneCount / totalActions) * 100) : 0;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <nav className="sidebar">
+    <nav className={`sidebar${isOpen ? ' open' : ''}`}>
       <div className="sidebar-brand">
         <div className="brand-serif">CJ Planner</div>
         <div className="brand-sub">Strategy Consulting · SME · Inbound</div>
+        <button className="sidebar-close" onClick={onClose} aria-label="ปิดเมนู">×</button>
       </div>
 
       <div className="nav-section">
         <div className="nav-label">ภาพรวม</div>
-
         <button className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`} onClick={() => onNavigate('dashboard')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -109,11 +115,30 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
 
       <div className="sidebar-footer">
         <button className="btn-export" onClick={() => window.print()}>
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
             <path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
           </svg>
-          Export / Print PDF
+          Print PDF
         </button>
+        <button className="btn-export" onClick={onExport}>
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export JSON
+        </button>
+        <button className="btn-export" onClick={() => fileInputRef.current?.click()}>
+          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          Import JSON
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={e => { const f = e.target.files?.[0]; if (f) { onImportFile(f); e.target.value = ''; } }}
+        />
       </div>
     </nav>
   );

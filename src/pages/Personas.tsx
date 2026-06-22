@@ -14,6 +14,25 @@ const P_SECTIONS: { key: keyof Pick<Persona, 'goal' | 'fear' | 'search' | 'actio
 ];
 
 export default function Personas({ data, onUpdate }: Props) {
+  function addPersona() {
+    const palettes = [
+      { bg: '#eff4fb', tc: '#1a4f8a' }, { bg: '#fdf3f0', tc: '#c44b2b' },
+      { bg: '#edf7f2', tc: '#2d6a4f' }, { bg: '#fdf6ec', tc: '#a05c1a' },
+    ];
+    const pal = palettes[data.personas.length % palettes.length];
+    const newP: Persona = {
+      name: 'Persona ใหม่', role: 'ตำแหน่ง / บทบาท', initials: 'NW',
+      bg: pal.bg, tc: pal.tc, quote: 'เพิ่ม quote ของ persona นี้',
+      goal: ['เป้าหมาย'], fear: ['ความกังวล'], search: ['ช่องทาง'], action: ['พฤติกรรม'],
+    };
+    onUpdate({ ...data, personas: [...data.personas, newP] });
+  }
+
+  function delPersona(pi: number) {
+    if (data.personas.length <= 1) return;
+    onUpdate({ ...data, personas: data.personas.filter((_, i) => i !== pi) });
+  }
+
   function saveField(pi: number, field: keyof Persona, value: string) {
     const personas = data.personas.map((p, i) => i === pi ? { ...p, [field]: value } : p);
     onUpdate({ ...data, personas });
@@ -56,6 +75,9 @@ export default function Personas({ data, onUpdate }: Props) {
       <div className="persona-grid">
         {data.personas.map((p, pi) => (
           <div key={pi} className="p-card">
+            {data.personas.length > 1 && (
+              <button className="p-card-del" onClick={() => delPersona(pi)} title="ลบ Persona">×</button>
+            )}
             <div className="p-card-top">
               <div className="p-av" style={{ background: p.bg, color: p.tc }}>{p.initials}</div>
               <input
@@ -104,6 +126,10 @@ export default function Personas({ data, onUpdate }: Props) {
             ))}
           </div>
         ))}
+        <button className="p-add-card" onClick={addPersona}>
+          <div className="p-add-icon">＋</div>
+          <div className="p-add-label">เพิ่ม Persona</div>
+        </button>
       </div>
     </div>
   );

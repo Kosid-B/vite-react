@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { AppData } from '../types';
+import type { AppData, Stage, FunnelStage, ROIStageCost } from '../types';
 import { autoH } from '../utils';
 import EditableList from '../components/EditableList';
 
@@ -66,6 +66,34 @@ export default function JourneyMap({ data, activeStage, onStageChange, onUpdate 
     onUpdate(next);
   }
 
+  function addStage() {
+    const id = `s${Date.now()}`;
+    const newStage: Stage = {
+      id, label: `Stage ${data.stages.length + 1}`,
+      title: `ขั้นตอนที่ ${data.stages.length + 1}`,
+      emotion: '', touch: [], action: [], pain: [], opp: [],
+    };
+    onUpdate({
+      ...data,
+      stages: [...data.stages, newStage],
+      funnel: [...data.funnel, { stageId: id, leads: 0, note: '' } as FunnelStage],
+      roi: { ...data.roi, stageCosts: [...data.roi.stageCosts, { stageId: id, hours: 0 } as ROIStageCost] },
+    });
+    onStageChange(data.stages.length);
+  }
+
+  function delActiveStage() {
+    if (data.stages.length <= 1) return;
+    const stageId = stage.id;
+    onUpdate({
+      ...data,
+      stages: data.stages.filter((_, i) => i !== activeStage),
+      funnel: data.funnel.filter(f => f.stageId !== stageId),
+      roi: { ...data.roi, stageCosts: data.roi.stageCosts.filter(sc => sc.stageId !== stageId) },
+    });
+    onStageChange(Math.max(0, activeStage - 1));
+  }
+
   function delItem(key: typeof SECTIONS[number]['key'], idx: number) {
     const next = {
       ...data,
@@ -118,11 +146,17 @@ export default function JourneyMap({ data, activeStage, onStageChange, onUpdate 
             {s.label}
           </button>
         ))}
+        <button className="stage-add" onClick={addStage} title="เพิ่ม Stage">＋</button>
       </div>
 
       {/* Emotion row */}
       <div className="emotion-row">
-        <div className="emotion-stage-title">{stage.title}</div>
+        <div className="emotion-stage-hd">
+          <div className="emotion-stage-title">{stage.title}</div>
+          {data.stages.length > 1 && (
+            <button className="stage-del-btn" onClick={delActiveStage} title="ลบ Stage นี้">×</button>
+          )}
+        </div>
         <div className="emotion-divider" />
         <div className="emotion-content">
           <div className="emotion-lbl">ความรู้สึกลูกค้า</div>
