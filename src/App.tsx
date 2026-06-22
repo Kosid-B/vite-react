@@ -52,7 +52,12 @@ export default function App() {
 
   const updateData = useCallback((next: AppData) => {
     setData(next);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+    try {
+      const serial = JSON.stringify(next);
+      requestAnimationFrame(() => {
+        try { localStorage.setItem(STORAGE_KEY, serial); } catch {}
+      });
+    } catch {}
     showToast();
   }, [showToast]);
 

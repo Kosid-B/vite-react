@@ -15,7 +15,7 @@ export default function PriorityActions({ data, onUpdate }: Props) {
 
   useEffect(() => {
     document.querySelectorAll<HTMLTextAreaElement>('.a-desc').forEach(autoH);
-  });
+  }, [data.actions]);
 
   function toggle(ai: number) {
     const actions = data.actions.map((a, i) => i === ai ? { ...a, done: !a.done } : a);
