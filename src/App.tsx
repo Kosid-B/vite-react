@@ -21,7 +21,14 @@ function loadData(): AppData {
       const parsed = JSON.parse(s) as AppData;
       if (!parsed.funnel) parsed.funnel = DEFAULT_DATA.funnel;
       if (!parsed.roi) parsed.roi = DEFAULT_DATA.roi;
-      if (!parsed.businessModel) parsed.businessModel = DEFAULT_DATA.businessModel;
+      if (!parsed.businessModel) {
+        parsed.businessModel = DEFAULT_DATA.businessModel;
+      } else {
+        if (!parsed.businessModel.bmc) parsed.businessModel.bmc = DEFAULT_DATA.businessModel.bmc;
+        if (!parsed.businessModel.de24 || parsed.businessModel.de24.length < 24) {
+          parsed.businessModel.de24 = DEFAULT_DATA.businessModel.de24;
+        }
+      }
       return parsed;
     }
   } catch {}
@@ -69,7 +76,14 @@ export default function App() {
         if (!parsed.stages || !parsed.personas) throw new Error('invalid');
         if (!parsed.funnel) parsed.funnel = DEFAULT_DATA.funnel;
         if (!parsed.roi) parsed.roi = DEFAULT_DATA.roi;
-        if (!parsed.businessModel) parsed.businessModel = DEFAULT_DATA.businessModel;
+        if (!parsed.businessModel) {
+          parsed.businessModel = DEFAULT_DATA.businessModel;
+        } else {
+          if (!parsed.businessModel.bmc) parsed.businessModel.bmc = DEFAULT_DATA.businessModel.bmc;
+          if (!parsed.businessModel.de24 || parsed.businessModel.de24.length < 24) {
+            parsed.businessModel.de24 = DEFAULT_DATA.businessModel.de24;
+          }
+        }
         updateData(parsed);
       } catch {
         alert('ไฟล์ไม่ถูกต้อง — กรุณาเลือกไฟล์ .json ที่ export จาก CJ Planner');

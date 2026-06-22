@@ -16,14 +16,13 @@ export default function EditableList({ items, itemKey, onSave, onAdd, onDelete, 
   return (
     <>
       {items.map((item, idx) => (
-        <div key={idx} className={`elist-row${bordered ? ' elist-bordered' : ''}`}>
+        <div key={`${itemKey}-${idx}-${item.substring(0, 20)}`} className={`elist-row${bordered ? ' elist-bordered' : ''}`}>
           <span className="elist-bullet">›</span>
           {multiline ? (
             <textarea
               className="elist-inp"
               rows={1}
               defaultValue={item}
-              key={`${itemKey}-${idx}`}
               onBlur={e => onSave(idx, e.target.value)}
               onChange={e => autoH(e.target)}
               ref={el => { if (el) autoH(el); }}
@@ -33,7 +32,6 @@ export default function EditableList({ items, itemKey, onSave, onAdd, onDelete, 
             <input
               className="elist-inp"
               defaultValue={item}
-              key={`${itemKey}-${idx}`}
               onBlur={e => onSave(idx, e.target.value)}
               spellCheck={false}
             />

@@ -70,7 +70,7 @@ export default function ConversionFunnel({ data, onUpdate }: Props) {
       <div className="page-header">
         <div className="page-title">Conversion Funnel</div>
         <div className="page-meta">
-          <span className="meta-chip">8 Stages · Inbound B2B</span>
+          <span className="meta-chip">{stages.length} Stages · Inbound B2B</span>
           <span className="law-badge" data-tip={"Goal-Gradient: เห็น funnel ทั้งหมด\nทำให้รู้ว่าต้องปรับ stage ไหน\nเพื่อถึงเป้าได้เร็วขึ้น"}>Goal-Gradient</span>
           <span className="law-badge" data-tip={"Von Restorff: stage ที่ conversion\nต่ำที่สุดจะถูก highlight โดดเด่น\nเพื่อดึงความสนใจให้แก้ก่อน"}>Von Restorff</span>
         </div>
