@@ -210,4 +210,4 @@ export interface AppData {
   marketplace: Marketplace;
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team';

@@ -7,6 +7,13 @@ export interface Workspace {
   owner_id: string;
 }
 
+export interface Member {
+  user_id: string;
+  email: string;
+  role: string;
+  created_at: string;
+}
+
 /** คืนเวิร์กสเปซเริ่มต้นของผู้ใช้ (สร้าง "ส่วนตัว" ให้ถ้ายังไม่มี) */
 export async function ensureDefaultWorkspace(): Promise<string | null> {
   if (!supabase) return null;
@@ -33,6 +40,25 @@ export async function createWorkspace(name: string): Promise<string | null> {
 export async function inviteMember(workspaceId: string, email: string): Promise<string> {
   if (!supabase) return 'no_supabase';
   const { data, error } = await supabase.rpc('invite_member', { p_workspace: workspaceId, p_email: email.trim() });
+  return error ? error.message : (data as string);
+}
+
+export async function listMembers(workspaceId: string): Promise<Member[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc('list_members', { p_workspace: workspaceId });
+  if (error) { console.warn('[ws] members:', error.message); return []; }
+  return (data ?? []) as Member[];
+}
+
+export async function setMemberRole(workspaceId: string, userId: string, role: 'admin' | 'member'): Promise<string> {
+  if (!supabase) return 'no_supabase';
+  const { data, error } = await supabase.rpc('set_member_role', { p_workspace: workspaceId, p_user: userId, p_role: role });
+  return error ? error.message : (data as string);
+}
+
+export async function removeMember(workspaceId: string, userId: string): Promise<string> {
+  if (!supabase) return 'no_supabase';
+  const { data, error } = await supabase.rpc('remove_member', { p_workspace: workspaceId, p_user: userId });
   return error ? error.message : (data as string);
 }
 

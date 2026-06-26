@@ -19,6 +19,7 @@ import AICompany from './pages/AICompany';
 import Billing from './pages/Billing';
 import VRIO from './pages/VRIO';
 import Marketplace from './pages/Marketplace';
+import Team from './pages/Team';
 
 const STORAGE_KEY = 'cjux2';
 
@@ -219,6 +220,7 @@ export default function App() {
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
         {activePage === 'market' && <Marketplace data={data} onUpdate={updateData} />}
+        {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} />}
       </main>
 
       <div className={`toast ${toastVisible ? 'show' : ''}`}>
