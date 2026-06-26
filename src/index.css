@@ -866,3 +866,58 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
   .bill-pay { grid-template-columns: 1fr; }
   .bill-pay-qr { order: -1; }
 }
+
+/* =====================================================
+   VRIO ANALYSIS
+===================================================== */
+.vrio-legend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.vrio-leg { display: flex; gap: 10px; align-items: flex-start; background: var(--white); border: 1px solid var(--sand); border-radius: var(--r); padding: 12px 14px; box-shadow: var(--shadow-sm); }
+.vrio-leg-letter { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--rust); line-height: 1; flex-shrink: 0; }
+.vrio-leg b { font-size: 13px; color: var(--ink); }
+.vrio-leg-tip { font-size: 11px; color: var(--ink3); line-height: 1.45; margin-top: 2px; }
+
+.vrio-summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.vrio-sum-item { font-size: 12px; color: var(--ink2); background: var(--white); border: 1px solid var(--sand); border-radius: 20px; padding: 5px 14px; }
+.vrio-sum-item b { font-family: 'DM Serif Display', serif; font-size: 15px; margin-right: 4px; }
+.vrio-sum-item.vd-sus { border-color: #cfe8db; background: var(--green-bg); } .vrio-sum-item.vd-sus b { color: var(--green); }
+.vrio-sum-item.vd-unused { border-color: #d9cdef; background: #f4f0fb; } .vrio-sum-item.vd-unused b { color: #6b3fa0; }
+.vrio-sum-item.vd-tmp { border-color: #f0dcc0; background: var(--amber-bg); } .vrio-sum-item.vd-tmp b { color: var(--amber); }
+.vrio-sum-item.vd-par { border-color: var(--sand); } .vrio-sum-item.vd-par b { color: var(--ink3); }
+.vrio-sum-item.vd-dis { border-color: #f1cabf; background: var(--rust-bg); } .vrio-sum-item.vd-dis b { color: var(--rust); }
+
+.vrio-table { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+.vrio-row { display: grid; grid-template-columns: 1fr 46px 46px 46px 46px 150px 34px; align-items: center; border-bottom: 1px solid var(--cream2); }
+.vrio-row:last-child { border-bottom: none; }
+.vrio-head { background: var(--cream); font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--ink3); text-transform: uppercase; }
+.vrio-head .vrio-c-flag { color: var(--rust); font-family: 'DM Serif Display', serif; font-size: 15px; }
+.vrio-c-res { padding: 12px 16px; min-width: 0; }
+.vrio-c-flag { display: flex; align-items: center; justify-content: center; padding: 10px 0; }
+.vrio-c-verdict { padding: 10px 12px; }
+.vrio-c-del { display: flex; align-items: center; justify-content: center; }
+.vrio-res-inp { width: 100%; border: none; background: none; outline: none; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--ink); cursor: text; }
+.vrio-note-inp { width: 100%; border: none; background: none; outline: none; resize: none; font-family: inherit; font-size: 11.5px; color: var(--ink3); line-height: 1.5; cursor: text; margin-top: 3px; }
+.vrio-flag { width: 28px; height: 28px; border-radius: 7px; border: 1.5px solid var(--sand); background: var(--white); color: var(--ink4); font-size: 14px; cursor: pointer; transition: .12s; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+.vrio-flag:hover { border-color: var(--ink3); }
+.vrio-flag.on { background: var(--green); border-color: var(--green); color: #fff; font-weight: 700; }
+.vrio-verdict { display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 11px; line-height: 1.3; text-align: center; }
+.vrio-verdict.vd-sus { background: var(--green-bg); color: var(--green); }
+.vrio-verdict.vd-unused { background: #f4f0fb; color: #6b3fa0; }
+.vrio-verdict.vd-tmp { background: var(--amber-bg); color: var(--amber); }
+.vrio-verdict.vd-par { background: var(--cream3); color: var(--ink2); }
+.vrio-verdict.vd-dis { background: var(--rust-bg); color: var(--rust); }
+.vrio-del { width: 22px; height: 22px; border: none; background: none; color: var(--ink4); cursor: pointer; font-size: 16px; border-radius: 4px; opacity: 0; transition: .15s; line-height: 1; }
+.vrio-row:hover .vrio-del { opacity: 1; }
+.vrio-del:hover { background: #fde8e3; color: var(--rust); }
+.vrio-add { display: block; width: 100%; margin-top: 12px; padding: 12px; border: 1.5px dashed var(--sand); border-radius: var(--r); background: none; color: var(--ink3); font-family: inherit; font-size: 12.5px; cursor: pointer; transition: .15s; }
+.vrio-add:hover { border-color: var(--ink3); background: var(--cream2); color: var(--ink); }
+.vrio-insight { margin-top: 18px; background: var(--white); border: 1px solid var(--sand); border-left: 3px solid var(--rust); border-radius: var(--r); padding: 16px 18px; font-size: 13px; color: var(--ink2); line-height: 1.7; box-shadow: var(--shadow-sm); }
+
+@media (max-width: 768px) {
+  .vrio-legend { grid-template-columns: 1fr 1fr; }
+  .vrio-row { grid-template-columns: 1fr 38px 38px 38px 38px; }
+  .vrio-head .vrio-c-verdict, .vrio-head .vrio-c-del { display: none; }
+  .vrio-c-verdict { grid-column: 1 / -1; padding: 0 16px 12px; }
+  .vrio-c-del { position: absolute; }
+  .vrio-row { position: relative; }
+  .vrio-c-del { top: 8px; right: 8px; }
+}

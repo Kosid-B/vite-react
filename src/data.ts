@@ -464,4 +464,13 @@ export const DEFAULT_DATA: AppData = {
     status: 'none',
     promptpayId: '0812345678',
   },
+  vrio: [
+    { id: 'vr-pc1', resource: 'Paperclip · เฟรมเวิร์ก multi-agent (CEO/CTO/CMO + Heartbeat)', note: 'โอเพนซอร์ส ลอกได้ฟรี — ตลาดมี CrewAI/AutoGen/MetaGPT เพียบ จึงไม่หายาก', v: true, r: false, i: false, o: false },
+    { id: 'vr-pc2', resource: 'Paperclip · self-host บน VPS + Docker', note: 'ใครก็ deploy ได้ เป็นความสามารถพื้นฐานของตลาด', v: true, r: false, i: false, o: false },
+    { id: 'vr-loc', resource: 'เรา · Localization เชิงลึก (ไทย + PromptPay + VAT/e-Tax + LINE OA)', note: 'มีคุณค่าสูงและหายากในเครื่องมือระดับโลก แต่ยังลอกได้ถ้าทุ่มทุน (กฎหมาย+ระบบไทย) → ชั่วคราว', v: true, r: true, i: false, o: true },
+    { id: 'vr-mng', resource: 'เรา · Managed / Zero-DevOps (ไม่ต้องตั้งเซิร์ฟเวอร์เอง)', note: 'จำเป็น (table stakes) แต่ Vercel/Replit ทำให้ไม่หายาก', v: true, r: false, i: false, o: true },
+    { id: 'vr-data', resource: 'เรา · เทมเพลต + คลังข้อมูลผลลัพธ์ SME ไทย (data/network effect)', note: 'ยิ่งใช้ยิ่งฉลาดเฉพาะตลาดไทย ลอกยาก = คูเมืองตัวจริง แต่ยังต้องจัดองค์กรเก็บเกี่ยว', v: true, r: true, i: true, o: false },
+    { id: 'vr-eco', resource: 'เรา · Ecosystem ไทย (Omise/GB Prime, FlowAccount/PEAK, Shopee-Lazada, LINE)', note: 'ดีลเชื่อมต่อ = distribution moat ลอกได้แต่แพง', v: true, r: true, i: false, o: true },
+    { id: 'vr-trust', resource: 'เรา · ความเชื่อใจ/แบรนด์ + PDPA + ซัพพอร์ตภาษาไทย', note: 'สร้างคุณค่าแต่ยังไม่หายากในช่วงเริ่มต้น — สะสมตามเวลา', v: true, r: false, i: false, o: true },
+  ],
 };

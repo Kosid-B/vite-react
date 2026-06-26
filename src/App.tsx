@@ -13,6 +13,7 @@ import ROICalculator from './pages/ROICalculator';
 import BusinessModel from './pages/BusinessModel';
 import AICompany from './pages/AICompany';
 import Billing from './pages/Billing';
+import VRIO from './pages/VRIO';
 
 const STORAGE_KEY = 'cjux2';
 
@@ -33,6 +34,7 @@ function loadData(): AppData {
       }
       if (!parsed.aiCompany) parsed.aiCompany = DEFAULT_DATA.aiCompany;
       if (!parsed.subscription) parsed.subscription = DEFAULT_DATA.subscription;
+      if (!parsed.vrio) parsed.vrio = DEFAULT_DATA.vrio;
       return parsed;
     }
   } catch {}
@@ -95,6 +97,7 @@ export default function App() {
         }
         if (!parsed.aiCompany) parsed.aiCompany = DEFAULT_DATA.aiCompany;
         if (!parsed.subscription) parsed.subscription = DEFAULT_DATA.subscription;
+        if (!parsed.vrio) parsed.vrio = DEFAULT_DATA.vrio;
         updateData(parsed);
       } catch {
         alert('ไฟล์ไม่ถูกต้อง — กรุณาเลือกไฟล์ .json ที่ export จาก CJ Planner');
@@ -144,6 +147,7 @@ export default function App() {
         {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} />}
+        {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
       </main>
 
       <div className={`toast ${toastVisible ? 'show' : ''}`}>

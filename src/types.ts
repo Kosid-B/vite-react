@@ -155,6 +155,18 @@ export interface Subscription {
   promptpayId: string; // เบอร์พร้อมเพย์ / เลขประจำตัวผู้เสียภาษีของร้านค้า
 }
 
+/* ===== VRIO Analysis ===== */
+
+export interface VrioItem {
+  id: string;
+  resource: string;   // ทรัพยากร/ความสามารถ
+  note: string;       // บริบท/เหตุผล
+  v: boolean;         // Valuable — สร้างคุณค่า/ลดต้นทุนได้
+  r: boolean;         // Rare — หายาก คู่แข่งน้อยรายมี
+  i: boolean;         // Inimitable — ลอกเลียน/ทดแทนได้ยาก
+  o: boolean;         // Organized — องค์กรพร้อมเก็บเกี่ยวคุณค่า
+}
+
 export interface AppData {
   stages: Stage[];
   personas: Persona[];
@@ -165,6 +177,7 @@ export interface AppData {
   businessModel: BusinessModelData;
   aiCompany: AICompany;
   subscription: Subscription;
+  vrio: VrioItem[];
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio';
