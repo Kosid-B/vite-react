@@ -996,3 +996,33 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
   .mk-deal { grid-template-columns: 1fr 90px; grid-template-areas: "main amt" "fee status" "del del"; }
   .mk-deal-head { display: none; }
 }
+
+/* =====================================================
+   AUTH (Supabase)
+===================================================== */
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--cream); }
+.auth-loading { color: var(--ink3); font-size: 14px; }
+.auth-card { width: 100%; max-width: 380px; background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 32px 30px; box-shadow: var(--shadow); }
+.auth-brand { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--ink); letter-spacing: -.01em; }
+.auth-sub { font-size: 12.5px; color: var(--ink3); margin-top: 4px; margin-bottom: 22px; line-height: 1.5; }
+.auth-tabs { display: flex; gap: 6px; background: var(--cream2); border-radius: var(--r); padding: 4px; margin-bottom: 20px; }
+.auth-tabs button { flex: 1; padding: 9px; border: none; background: none; font-family: inherit; font-size: 13px; color: var(--ink3); border-radius: 6px; cursor: pointer; transition: .15s; }
+.auth-tabs button.active { background: var(--white); color: var(--ink); box-shadow: var(--shadow-sm); font-weight: 600; }
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+.auth-form label { font-size: 12px; font-weight: 600; color: var(--ink2); display: flex; flex-direction: column; gap: 6px; }
+.auth-form input { padding: 11px 12px; font-size: 14px; font-family: inherit; border: 1px solid var(--sand); border-radius: var(--r); background: var(--cream); color: var(--ink); outline: none; }
+.auth-form input:focus { border-color: var(--ink3); background: var(--white); }
+.auth-msg { font-size: 12.5px; padding: 10px 12px; border-radius: var(--r); line-height: 1.5; }
+.auth-msg.err { background: var(--rust-bg); color: var(--rust); border: 1px solid #f1cabf; }
+.auth-msg.ok { background: var(--green-bg); color: var(--green); border: 1px solid #cfe8db; }
+.auth-submit { padding: 12px; min-height: 46px; background: var(--rust); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s; }
+.auth-submit:hover:not(:disabled) { background: #ad3e22; }
+.auth-submit:disabled { opacity: .6; cursor: default; }
+.auth-magic { width: 100%; margin-top: 14px; padding: 10px; background: none; border: 1px solid var(--sand); border-radius: var(--r); font-family: inherit; font-size: 12.5px; color: var(--ink2); cursor: pointer; transition: .15s; }
+.auth-magic:hover:not(:disabled) { border-color: var(--ink3); background: var(--cream); }
+.auth-magic:disabled { opacity: .6; cursor: default; }
+
+.sidebar-account { margin-top: 10px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; gap: 8px; }
+.sidebar-account-email { font-size: 11.5px; color: rgba(255,255,255,.65); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-signout { width: 100%; padding: 9px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.8); border-radius: var(--r); font-family: inherit; font-size: 12.5px; cursor: pointer; transition: .15s; }
+.sidebar-signout:hover { background: rgba(255,255,255,.12); color: #fff; }

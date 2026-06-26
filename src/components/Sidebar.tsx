@@ -10,9 +10,11 @@ interface Props {
   onClose: () => void;
   onExport: () => void;
   onImportFile: (file: File) => void;
+  userEmail?: string | null;
+  onSignOut?: () => void;
 }
 
-export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile }: Props) {
+export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut }: Props) {
   const pct = totalActions > 0 ? Math.round((doneCount / totalActions) * 100) : 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -183,6 +185,13 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           style={{ display: 'none' }}
           onChange={e => { const f = e.target.files?.[0]; if (f) { onImportFile(f); e.target.value = ''; } }}
         />
+
+        {onSignOut && (
+          <div className="sidebar-account">
+            <div className="sidebar-account-email" title={userEmail ?? ''}>{userEmail ?? 'บัญชีของฉัน'}</div>
+            <button className="sidebar-signout" onClick={onSignOut}>ออกจากระบบ</button>
+          </div>
+        )}
       </div>
     </nav>
   );
