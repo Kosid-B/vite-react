@@ -61,6 +61,8 @@ export default function VRIO({ data, onUpdate }: Props) {
           <span className="meta-chip">{items.length} ทรัพยากร</span>
           <span className="meta-chip">เทียบ Paperclip vs ระบบเรา</span>
           <span className="law-badge" data-tip={'VRIO: ประเมินว่าทรัพยากรให้ความได้เปรียบแค่ไหน\nValuable → Rare → Inimitable → Organized\nครบ 4 = ได้เปรียบยั่งยืน'}>Barney VRIO</span>
+          <span className="law-badge" data-tip={"Miller's Law: เกณฑ์ 4 ตัว (V/R/I/O) พอดี\nประเมินทีละแถวโดยไม่ล้นความจำ"}>Miller's Law</span>
+          <span className="law-badge" data-tip={"Von Restorff Effect: คำตัดสินใช้สีตามระดับ\n'ยั่งยืน' เขียว / 'เสียเปรียบ' แดง\nเห็นจุดแข็ง-จุดอ่อนได้ในแวบเดียว"}>Von Restorff</span>
         </div>
       </div>
 

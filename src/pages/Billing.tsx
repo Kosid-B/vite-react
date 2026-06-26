@@ -76,6 +76,9 @@ export default function Billing({ data, onUpdate }: Props) {
           <span className="meta-chip">ราคารวม VAT 7% แล้ว</span>
           <span className="meta-chip">ชำระผ่าน PromptPay</span>
           {sub.status === 'active' && <span className="meta-chip" style={{ borderColor: 'var(--green)', color: 'var(--green)' }}>แพ็กปัจจุบัน: {PLANS.find(p => p.id === sub.plan)?.name}</span>}
+          <span className="law-badge" data-tip={"Hick's Law: ให้เลือกแค่ 3 แพ็ก\nยิ่งตัวเลือกน้อย ยิ่งตัดสินใจซื้อเร็ว"}>Hick's Law</span>
+          <span className="law-badge" data-tip={"Von Restorff Effect: แพ็ก Growth\nถูกไฮไลต์ด้วยป้าย 'ยอดนิยม' + สีเด่น\nนำสายตาไปยังตัวเลือกที่อยากให้เลือก"}>Von Restorff</span>
+          <span className="law-badge" data-tip={"Law of Proximity: ราคา-ฟีเจอร์-ปุ่ม\nอยู่ในการ์ดเดียวกัน สมองจับเป็นชุดเดียว"}>Proximity</span>
         </div>
       </div>
 

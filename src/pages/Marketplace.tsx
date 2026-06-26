@@ -72,6 +72,9 @@ export default function Marketplace({ data, onUpdate }: Props) {
           <span className="meta-chip">{m.partners.length} คู่ค้า</span>
           <span className="meta-chip">{m.deals.length} ดีล</span>
           <span className="meta-chip" style={{ borderColor: 'var(--green)', color: 'var(--green)' }}>ค่าดำเนินการ {m.feePct}%</span>
+          <span className="law-badge" data-tip={"Jakob's Law: การ์ดคู่ค้าแบบ marketplace\nที่ผู้ใช้คุ้นจาก Fiverr/Lazada\nหาและเลือกคู่ค้าได้ทันที"}>Jakob's Law</span>
+          <span className="law-badge" data-tip={"Von Restorff Effect: การ์ดรายได้ค่าดำเนินการ 3%\nใช้สีเขียวเข้มตัดกับการ์ดอื่น\nให้ตัวเลขรายได้โดดเด่นที่สุด"}>Von Restorff</span>
+          <span className="law-badge" data-tip={"Social Proof: เรตติ้ง + ป้าย Verified\nสร้างความเชื่อใจก่อนตัดสินใจจับคู่"}>Social Proof</span>
         </div>
       </div>
 
