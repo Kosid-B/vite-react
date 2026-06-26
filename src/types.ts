@@ -147,12 +147,25 @@ export interface AICompany {
 /* ===== Billing / PromptPay ===== */
 
 export type PlanId = 'free' | 'growth' | 'scale';
-export type SubStatus = 'none' | 'pending_payment' | 'active';
+export type SubStatus = 'none' | 'pending_payment' | 'active' | 'past_due' | 'cancelled';
+
+export type InvoiceStatus = 'paid' | 'pending' | 'failed';
+
+export interface Invoice {
+  id: string;
+  date: string;        // ISO วันที่ออกใบแจ้งหนี้
+  plan: PlanId;
+  amount: number;      // บาท (รวม VAT)
+  status: InvoiceStatus;
+}
 
 export interface Subscription {
   plan: PlanId;
   status: SubStatus;
-  promptpayId: string; // เบอร์พร้อมเพย์ / เลขประจำตัวผู้เสียภาษีของร้านค้า
+  promptpayId: string;        // เบอร์พร้อมเพย์ / เลขผู้เสียภาษีของร้านค้า
+  autoRenew: boolean;         // ต่ออายุอัตโนมัติทุกรอบบิล
+  currentPeriodEnd: string | null; // ISO วันครบรอบบิลถัดไป
+  invoices: Invoice[];        // ประวัติใบแจ้งหนี้
 }
 
 /* ===== VRIO Analysis ===== */

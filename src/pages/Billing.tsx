@@ -1,6 +1,18 @@
 import { useState } from 'react';
-import type { AppData, PlanId } from '../types';
+import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
+
+function addMonths(iso: string, n: number): string {
+  const d = new Date(iso);
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString();
+}
+function thaiDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+function daysLeft(iso: string): number {
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+}
 
 interface Props {
   data: AppData;
@@ -56,7 +68,37 @@ export default function Billing({ data, onUpdate }: Props) {
   }
 
   function confirmPaid() {
-    onUpdate({ ...data, subscription: { ...sub, plan: selected, status: 'active' } });
+    const now = new Date().toISOString();
+    const invoice: Invoice = {
+      id: 'inv-' + Date.now().toString(36), date: now,
+      plan: selectedPlan.id, amount: selectedPlan.price, status: 'paid',
+    };
+    onUpdate({ ...data, subscription: {
+      ...sub, plan: selectedPlan.id, status: 'active',
+      currentPeriodEnd: addMonths(now, 1),
+      invoices: [invoice, ...sub.invoices],
+    } });
+  }
+
+  function renewNow() {
+    const base = sub.currentPeriodEnd && daysLeft(sub.currentPeriodEnd) > 0 ? sub.currentPeriodEnd : new Date().toISOString();
+    const price = PLANS.find(p => p.id === sub.plan)?.price ?? 0;
+    const invoice: Invoice = {
+      id: 'inv-' + Date.now().toString(36), date: new Date().toISOString(),
+      plan: sub.plan, amount: price, status: 'paid',
+    };
+    onUpdate({ ...data, subscription: {
+      ...sub, status: 'active', currentPeriodEnd: addMonths(base, 1), invoices: [invoice, ...sub.invoices],
+    } });
+  }
+
+  function setAutoRenew(v: boolean) {
+    onUpdate({ ...data, subscription: { ...sub, autoRenew: v } });
+  }
+
+  function cancelSub() {
+    if (!window.confirm('ยกเลิกการต่ออายุอัตโนมัติ? แพ็กจะใช้ได้จนถึงวันครบรอบบิลปัจจุบัน')) return;
+    onUpdate({ ...data, subscription: { ...sub, autoRenew: false, status: 'cancelled' } });
   }
 
   function copyPayload() {
@@ -66,7 +108,20 @@ export default function Billing({ data, onUpdate }: Props) {
     }).catch(() => {});
   }
 
-  const isActivePlan = (id: PlanId) => sub.plan === id && sub.status === 'active';
+  const isActivePlan = (id: PlanId) => sub.plan === id && (sub.status === 'active' || sub.status === 'cancelled');
+
+  // สถานะที่คำนวณจริงจากวันครบรอบบิล
+  const dLeft = sub.currentPeriodEnd ? daysLeft(sub.currentPeriodEnd) : null;
+  const effective: SubStatus = sub.status === 'active' && dLeft !== null && dLeft < 0 ? 'past_due' : sub.status;
+  const STATUS_BADGE: Record<SubStatus, { label: string; cls: string }> = {
+    none: { label: 'ยังไม่สมัคร', cls: 'sb-none' },
+    pending_payment: { label: 'รอชำระเงิน', cls: 'sb-pending' },
+    active: { label: dLeft !== null && dLeft <= 7 ? `ใกล้ครบรอบ (${dLeft} วัน)` : 'ใช้งานอยู่', cls: dLeft !== null && dLeft <= 7 ? 'sb-expiring' : 'sb-active' },
+    past_due: { label: 'เกินกำหนดชำระ', cls: 'sb-pastdue' },
+    cancelled: { label: 'ยกเลิกการต่ออายุแล้ว', cls: 'sb-cancel' },
+  };
+  const showSubCard = sub.plan !== 'free' && sub.status !== 'none' && sub.status !== 'pending_payment';
+  const INV_BADGE: Record<string, string> = { paid: 'ชำระแล้ว', pending: 'รอชำระ', failed: 'ล้มเหลว' };
 
   return (
     <div>
@@ -81,6 +136,37 @@ export default function Billing({ data, onUpdate }: Props) {
           <span className="law-badge" data-tip={"Law of Proximity: ราคา-ฟีเจอร์-ปุ่ม\nอยู่ในการ์ดเดียวกัน สมองจับเป็นชุดเดียว"}>Proximity</span>
         </div>
       </div>
+
+      {/* ===== การ์ดสถานะการสมัคร (Automated billing) ===== */}
+      {showSubCard && (
+        <div className="bill-sub-card">
+          <div className="bill-sub-main">
+            <div className="bill-sub-top">
+              <span className="bill-sub-plan">แพ็ก {PLANS.find(p => p.id === sub.plan)?.name}</span>
+              <span className={`bill-sub-badge ${STATUS_BADGE[effective].cls}`}>{STATUS_BADGE[effective].label}</span>
+            </div>
+            <div className="bill-sub-meta">
+              {sub.currentPeriodEnd
+                ? (effective === 'past_due'
+                    ? <>ครบกำหนดเมื่อ <b>{thaiDate(sub.currentPeriodEnd)}</b> — กรุณาต่ออายุ</>
+                    : <>ต่ออายุครั้งถัดไป <b>{thaiDate(sub.currentPeriodEnd)}</b>{dLeft !== null && ` (อีก ${dLeft} วัน)`}</>)
+                : 'ยังไม่มีรอบบิล'}
+            </div>
+          </div>
+          <div className="bill-sub-actions">
+            <label className="bill-autorenew">
+              <input type="checkbox" checked={sub.autoRenew} onChange={e => setAutoRenew(e.target.checked)} />
+              ต่ออายุอัตโนมัติ
+            </label>
+            {(effective === 'past_due' || (dLeft !== null && dLeft <= 7) || sub.status === 'cancelled') && (
+              <button className="bill-renew-btn" onClick={renewNow}>ต่ออายุทันที</button>
+            )}
+            {sub.status !== 'cancelled' && (
+              <button className="bill-cancel-btn" onClick={cancelSub}>ยกเลิกต่ออายุ</button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="bill-plans">
         {PLANS.map(p => (
@@ -159,6 +245,32 @@ export default function Billing({ data, onUpdate }: Props) {
           🎉 เปิดใช้งานแพ็ก <b>{PLANS.find(p => p.id === sub.plan)?.name}</b> เรียบร้อยแล้ว — ทีม AI ของคุณพร้อมทำงานเต็มรูปแบบ
         </div>
       )}
+
+      {/* ===== ประวัติใบแจ้งหนี้ ===== */}
+      {sub.invoices.length > 0 && (
+        <div className="bill-invoices">
+          <div className="bill-inv-hd">ประวัติใบแจ้งหนี้</div>
+          <div className="bill-inv-table">
+            <div className="bill-inv-row bill-inv-head">
+              <div>วันที่</div><div>แพ็ก</div><div className="bill-inv-amt">ยอด</div><div className="bill-inv-st">สถานะ</div>
+            </div>
+            {sub.invoices.map(inv => (
+              <div key={inv.id} className="bill-inv-row">
+                <div>{thaiDate(inv.date)}</div>
+                <div>{PLANS.find(p => p.id === inv.plan)?.name ?? inv.plan}</div>
+                <div className="bill-inv-amt">{baht(inv.amount)}</div>
+                <div className="bill-inv-st"><span className={`bill-inv-badge inv-${inv.status}`}>{INV_BADGE[inv.status]}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="bill-auto-note">
+        ⚙️ <b>Automate billing:</b> เมื่อเปิด "ต่ออายุอัตโนมัติ" ระบบจะออกใบแจ้งหนี้และต่ออายุให้ทุกรอบบิล
+        งานเบื้องหลังจะรันด้วย Supabase Edge Function <code>billing-cron</code> (ตั้งเวลาด้วย pg_cron รายวัน)
+        เพื่อสร้างรายการเรียกเก็บผ่าน PromptPay และอัปเดตสถานะอัตโนมัติ — ดูรายละเอียดใน <code>supabase/README.md</code>
+      </div>
     </div>
   );
 }

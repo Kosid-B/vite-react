@@ -463,6 +463,9 @@ export const DEFAULT_DATA: AppData = {
     plan: 'free',
     status: 'none',
     promptpayId: '0812345678',
+    autoRenew: true,
+    currentPeriodEnd: null,
+    invoices: [],
   },
   vrio: [
     { id: 'vr-pc1', resource: 'Paperclip · เฟรมเวิร์ก multi-agent (CEO/CTO/CMO + Heartbeat)', note: 'โอเพนซอร์ส ลอกได้ฟรี — ตลาดมี CrewAI/AutoGen/MetaGPT เพียบ จึงไม่หายาก', v: true, r: false, i: false, o: false },

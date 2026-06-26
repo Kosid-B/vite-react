@@ -1071,3 +1071,46 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
 .team-remove { width: 26px; height: 26px; border: none; background: none; color: var(--ink4); cursor: pointer; font-size: 17px; border-radius: 5px; transition: .15s; line-height: 1; }
 .team-remove:hover { background: #fde8e3; color: var(--rust); }
 .team-empty { padding: 26px 16px; text-align: center; color: var(--ink4); font-size: 13px; }
+
+/* =====================================================
+   AUTOMATED BILLING (subscription card + invoices)
+===================================================== */
+.bill-sub-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; background: var(--ink); color: #fff; border-radius: var(--r-lg); padding: 18px 22px; margin-bottom: 20px; box-shadow: var(--shadow); }
+.bill-sub-top { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.bill-sub-plan { font-family: 'DM Serif Display', serif; font-size: 20px; }
+.bill-sub-badge { font-size: 11.5px; font-weight: 600; padding: 4px 12px; border-radius: 12px; }
+.bill-sub-badge.sb-active { background: rgba(45,106,79,.3); color: #b7e4c7; }
+.bill-sub-badge.sb-expiring { background: rgba(160,92,26,.35); color: #ffd9a0; }
+.bill-sub-badge.sb-pastdue { background: rgba(196,75,43,.4); color: #ffc4b3; }
+.bill-sub-badge.sb-cancel { background: rgba(255,255,255,.14); color: rgba(255,255,255,.75); }
+.bill-sub-badge.sb-pending { background: rgba(160,92,26,.35); color: #ffd9a0; }
+.bill-sub-badge.sb-none { background: rgba(255,255,255,.14); color: rgba(255,255,255,.7); }
+.bill-sub-meta { font-size: 13px; color: rgba(255,255,255,.75); }
+.bill-sub-meta b { color: #fff; }
+.bill-sub-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bill-autorenew { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: rgba(255,255,255,.85); cursor: pointer; }
+.bill-autorenew input { width: 16px; height: 16px; accent-color: var(--rust); cursor: pointer; }
+.bill-renew-btn { background: var(--rust); color: #fff; border: none; border-radius: 7px; padding: 9px 16px; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background .15s; }
+.bill-renew-btn:hover { background: #ad3e22; }
+.bill-cancel-btn { background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.18); border-radius: 7px; padding: 9px 16px; font-family: inherit; font-size: 12.5px; cursor: pointer; transition: .15s; }
+.bill-cancel-btn:hover { background: rgba(255,255,255,.16); color: #fff; }
+
+.bill-invoices { margin-top: 22px; }
+.bill-inv-hd { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); margin-bottom: 12px; }
+.bill-inv-table { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+.bill-inv-row { display: grid; grid-template-columns: 1fr 1fr 120px 120px; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--cream2); font-size: 13px; color: var(--ink2); }
+.bill-inv-row:last-child { border-bottom: none; }
+.bill-inv-head { background: var(--cream); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink3); }
+.bill-inv-amt { font-weight: 600; color: var(--ink); }
+.bill-inv-badge { font-size: 11px; font-weight: 600; padding: 3px 11px; border-radius: 10px; }
+.bill-inv-badge.inv-paid { background: var(--green-bg); color: var(--green); }
+.bill-inv-badge.inv-pending { background: var(--amber-bg); color: var(--amber); }
+.bill-inv-badge.inv-failed { background: var(--rust-bg); color: var(--rust); }
+.bill-auto-note { margin-top: 18px; background: var(--white); border: 1px solid var(--sand); border-left: 3px solid var(--blue); border-radius: var(--r); padding: 14px 16px; font-size: 12.5px; color: var(--ink2); line-height: 1.7; box-shadow: var(--shadow-sm); }
+.bill-auto-note code { background: var(--cream2); padding: 1px 6px; border-radius: 4px; font-size: 11.5px; }
+
+@media (max-width: 768px) {
+  .bill-sub-card { flex-direction: column; align-items: stretch; }
+  .bill-inv-row { grid-template-columns: 1fr 80px 90px; }
+  .bill-inv-row > :nth-child(2) { display: none; }
+}

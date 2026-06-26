@@ -58,3 +58,15 @@ supabase secrets set WEBHOOK_SECRET=your-shared-secret
 
 > หมายเหตุ: การสร้าง charge/QR ฝั่ง gateway ต้องมีบัญชีร้านค้า + secret key ของผู้ให้บริการจริง
 > ฟังก์ชันนี้พร้อม "รับ" การยืนยันแล้ว เหลือเชื่อมขั้นสร้างรายการชำระเงินตามผู้ให้บริการที่เลือก
+
+### 3) `billing-cron` — Automate billing (ต่ออายุ/ออกใบแจ้งหนี้อัตโนมัติ)
+```bash
+supabase functions deploy billing-cron --no-verify-jwt
+supabase secrets set CRON_SECRET=your-cron-secret
+```
+รัน `supabase/migrations/0003_members.sql` (RPC จัดการสมาชิกทีม) และ
+`supabase/migrations/0004_billing_cron.sql` (ตั้ง pg_cron เรียก billing-cron รายวัน — แก้
+`<PROJECT_REF>` และ `<CRON_SECRET>` ในไฟล์ก่อนรัน)
+
+ฟังก์ชันจะสแกนทุกเวิร์กสเปซ: ถ้า `autoRenew` และถึงรอบบิล → ออกใบแจ้งหนี้ + ต่อรอบบิล 1 เดือน
+(สถานะ pending รอ `promptpay-webhook` ยืนยันเป็น paid); ถ้าไม่ต่ออายุและเกินกำหนด → ตั้ง `past_due`

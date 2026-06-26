@@ -36,7 +36,14 @@ function migrate(parsed: AppData): AppData {
     }
   }
   if (!parsed.aiCompany) parsed.aiCompany = DEFAULT_DATA.aiCompany;
-  if (!parsed.subscription) parsed.subscription = DEFAULT_DATA.subscription;
+  if (!parsed.subscription) {
+    parsed.subscription = DEFAULT_DATA.subscription;
+  } else {
+    const s = parsed.subscription;
+    if (s.autoRenew === undefined) s.autoRenew = true;
+    if (s.currentPeriodEnd === undefined) s.currentPeriodEnd = null;
+    if (!s.invoices) s.invoices = [];
+  }
   if (!parsed.vrio) parsed.vrio = DEFAULT_DATA.vrio;
   if (!parsed.marketplace) parsed.marketplace = DEFAULT_DATA.marketplace;
   return parsed;
