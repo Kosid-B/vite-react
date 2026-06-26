@@ -95,6 +95,26 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
         </button>
       </div>
 
+      <div className="nav-section">
+        <div className="nav-label">✦ องค์กร AI</div>
+
+        <button className={`nav-item ${activePage === 'aicompany' ? 'active' : ''}`} onClick={() => onNavigate('aicompany')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3m6-12h0m6 0h0m-6 4h0m6 0h0m-6 4h0m6 0h0" />
+          </svg>
+          บริษัท AI
+          <span className="nav-dot" />
+        </button>
+
+        <button className={`nav-item ${activePage === 'billing' ? 'active' : ''}`} onClick={() => onNavigate('billing')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+          แพ็กเกจ & ชำระเงิน
+          <span className="nav-dot" />
+        </button>
+      </div>
+
       <div className="nav-section" style={{ marginTop: 4 }}>
         <div className="nav-label">✦ AI Powered</div>
         <button

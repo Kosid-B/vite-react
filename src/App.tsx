@@ -11,6 +11,8 @@ import AIResearch from './pages/AIResearch';
 import ConversionFunnel from './pages/ConversionFunnel';
 import ROICalculator from './pages/ROICalculator';
 import BusinessModel from './pages/BusinessModel';
+import AICompany from './pages/AICompany';
+import Billing from './pages/Billing';
 
 const STORAGE_KEY = 'cjux2';
 
@@ -29,6 +31,8 @@ function loadData(): AppData {
           parsed.businessModel.de24 = DEFAULT_DATA.businessModel.de24;
         }
       }
+      if (!parsed.aiCompany) parsed.aiCompany = DEFAULT_DATA.aiCompany;
+      if (!parsed.subscription) parsed.subscription = DEFAULT_DATA.subscription;
       return parsed;
     }
   } catch {}
@@ -89,6 +93,8 @@ export default function App() {
             parsed.businessModel.de24 = DEFAULT_DATA.businessModel.de24;
           }
         }
+        if (!parsed.aiCompany) parsed.aiCompany = DEFAULT_DATA.aiCompany;
+        if (!parsed.subscription) parsed.subscription = DEFAULT_DATA.subscription;
         updateData(parsed);
       } catch {
         alert('ไฟล์ไม่ถูกต้อง — กรุณาเลือกไฟล์ .json ที่ export จาก CJ Planner');
@@ -136,6 +142,8 @@ export default function App() {
         {activePage === 'funnel' && <ConversionFunnel data={data} onUpdate={updateData} />}
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
         {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
+        {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} />}
+        {activePage === 'billing' && <Billing data={data} onUpdate={updateData} />}
       </main>
 
       <div className={`toast ${toastVisible ? 'show' : ''}`}>

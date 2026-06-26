@@ -84,6 +84,77 @@ export interface BusinessModelData {
   de24: Array<{ done: boolean; notes: string }>;
 }
 
+/* ===== Autonomous AI Company (Paperclip-style) ===== */
+
+export type AgentStatus = 'working' | 'idle' | 'waiting';
+
+export interface Agent {
+  id: string;
+  role: string;        // เช่น CEO, CTO, CMO
+  name: string;        // ชื่อเล่นของเอเจนต์
+  avatar: string;      // emoji
+  color: string;       // accent color
+  mandate: string;     // หน้าที่/ขอบเขตงาน
+  model: string;       // โมเดลสมอง (LLM) ที่ใช้
+  status: AgentStatus;
+  reportsTo: string | null; // id ของหัวหน้า (null = ขึ้นตรงต่อบอร์ด)
+}
+
+// Kanban: ต้องทำ → กำลังทำ → ตรวจสอบ → เสร็จ (หรือ ถูกบล็อก)
+export type TaskStatus = 'queued' | 'in_progress' | 'review' | 'done' | 'blocked';
+
+export interface AgentTask {
+  id: string;
+  agentId: string;
+  title: string;
+  detail: string;
+  status: TaskStatus;
+}
+
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
+
+export interface Approval {
+  id: string;
+  agentId: string;
+  title: string;
+  detail: string;
+  impact: string;      // ผลกระทบ เช่น "งบ ฿15,000"
+  status: ApprovalStatus;
+}
+
+export interface Integration {
+  id: string;
+  name: string;
+  desc: string;
+  icon: string;
+  connected: boolean;
+  apiKey: string;
+}
+
+export interface AICompany {
+  name: string;
+  goal: string;          // เป้าหมายหลัก (Mission) ที่บอร์ดตั้งไว้
+  industry: string;
+  running: boolean;      // ระบบอัตโนมัติกำลังทำงานอยู่หรือไม่
+  heartbeatSec: number;  // รอบการตื่นของเอเจนต์ (วินาที) — เช่น 600 = ทุก 10 นาที
+  autoHire: boolean;     // true = CEO จ้างเอเจนต์เองได้, false = ต้องให้บอร์ดอนุมัติ
+  agents: Agent[];
+  tasks: AgentTask[];
+  approvals: Approval[];
+  integrations: Integration[];
+}
+
+/* ===== Billing / PromptPay ===== */
+
+export type PlanId = 'free' | 'growth' | 'scale';
+export type SubStatus = 'none' | 'pending_payment' | 'active';
+
+export interface Subscription {
+  plan: PlanId;
+  status: SubStatus;
+  promptpayId: string; // เบอร์พร้อมเพย์ / เลขประจำตัวผู้เสียภาษีของร้านค้า
+}
+
 export interface AppData {
   stages: Stage[];
   personas: Persona[];
@@ -92,6 +163,8 @@ export interface AppData {
   funnel: FunnelStage[];
   roi: ROIInput;
   businessModel: BusinessModelData;
+  aiCompany: AICompany;
+  subscription: Subscription;
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing';

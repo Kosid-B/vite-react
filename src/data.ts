@@ -418,4 +418,50 @@ export const DEFAULT_DATA: AppData = {
     },
     de24: Array.from({ length: 24 }, () => ({ done: false, notes: '' })),
   },
+  aiCompany: {
+    name: 'บริษัท AI ของฉัน',
+    goal: 'เพิ่มยอดขายออนไลน์ของธุรกิจให้ถึง ฿500,000/เดือน ภายใน 90 วัน โดยใช้ทีม AI ทำงานแทน',
+    industry: 'อีคอมเมิร์ซ / สินค้าไลฟ์สไตล์',
+    running: false,
+    heartbeatSec: 600,
+    autoHire: false,
+    agents: [
+      {
+        id: 'a-ceo', role: 'CEO', name: 'อาทิตย์', avatar: '🧭', color: '#c44b2b',
+        mandate: 'รับเป้าหมายหลักจากบอร์ด วิเคราะห์ วางแผน จ้างทีม และมอบหมายงาน',
+        model: 'claude-opus-4-8', status: 'working', reportsTo: null,
+      },
+      {
+        id: 'a-cto', role: 'CTO', name: 'ธารา', avatar: '⚙️', color: '#1a4f8a',
+        mandate: 'ดูแลระบบ เชื่อมต่อ API เครื่องมือภายนอก และทำงานอัตโนมัติให้เสถียร',
+        model: 'claude-sonnet-4-6', status: 'working', reportsTo: 'a-ceo',
+      },
+      {
+        id: 'a-cmo', role: 'CMO', name: 'มณี', avatar: '📣', color: '#2d6a4f',
+        mandate: 'วางแผนการตลาด คอนเทนต์ และแคมเปญหาลูกค้าใหม่ผ่านช่องทางออนไลน์',
+        model: 'claude-sonnet-4-6', status: 'idle', reportsTo: 'a-ceo',
+      },
+    ],
+    tasks: [
+      { id: 't1', agentId: 'a-cmo', title: 'ร่างแคมเปญเปิดตัวสินค้าใหม่บน Facebook', detail: 'กำหนดกลุ่มเป้าหมาย งบ และข้อความโฆษณา 3 เวอร์ชัน', status: 'in_progress' },
+      { id: 't2', agentId: 'a-cto', title: 'เชื่อม Brave Search API เพื่อวิเคราะห์คู่แข่ง', detail: 'ดึงราคาและรีวิวคู่แข่ง 5 ราย', status: 'queued' },
+      { id: 't4', agentId: 'a-cmo', title: 'ตรวจร่างอีเมลนิวส์เลตเตอร์ก่อนส่ง', detail: 'รอบอร์ด/CEO รีวิวก่อนยิงจริง', status: 'review' },
+      { id: 't3', agentId: 'a-ceo', title: 'สรุปแผนรายสัปดาห์เสนอบอร์ด', detail: 'รวมความคืบหน้าและของบอนุมัติ', status: 'done' },
+    ],
+    approvals: [
+      { id: 'ap1', agentId: 'a-cmo', title: 'อนุมัติงบยิงแอด Facebook ฿15,000', detail: 'แคมเปญเปิดตัวสินค้าใหม่ คาดได้ลูกค้า ~120 ราย', impact: 'งบ ฿15,000', status: 'pending' },
+      { id: 'ap2', agentId: 'a-cto', title: 'อนุมัติสมัครเครื่องมือ Email อัตโนมัติ', detail: 'ค่าบริการ ฿590/เดือน เพื่อส่งอีเมลติดตามลูกค้า', impact: 'งบ ฿590/เดือน', status: 'pending' },
+    ],
+    integrations: [
+      { id: 'in-search', name: 'Brave Search API', desc: 'ให้เอเจนต์ค้นคว้าข้อมูลตลาด คู่แข่ง และข่าวสารแบบเรียลไทม์', icon: '🔎', connected: false, apiKey: '' },
+      { id: 'in-email', name: 'Resend (Email API)', desc: 'ส่งอีเมล รายงาน และนิวส์เลตเตอร์หาลูกค้าโดยอัตโนมัติ', icon: '✉️', connected: false, apiKey: '' },
+      { id: 'in-line', name: 'LINE Messaging API', desc: 'ตอบแชทและส่งข้อความหาลูกค้าผ่าน LINE Official Account', icon: '💬', connected: false, apiKey: '' },
+      { id: 'in-sheet', name: 'Google Sheets', desc: 'บันทึกผลงานและรายงานลงสเปรดชีตอัตโนมัติ', icon: '📊', connected: false, apiKey: '' },
+    ],
+  },
+  subscription: {
+    plan: 'free',
+    status: 'none',
+    promptpayId: '0812345678',
+  },
 };
