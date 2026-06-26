@@ -473,4 +473,20 @@ export const DEFAULT_DATA: AppData = {
     { id: 'vr-eco', resource: 'เรา · Ecosystem ไทย (Omise/GB Prime, FlowAccount/PEAK, Shopee-Lazada, LINE)', note: 'ดีลเชื่อมต่อ = distribution moat ลอกได้แต่แพง', v: true, r: true, i: false, o: true },
     { id: 'vr-trust', resource: 'เรา · ความเชื่อใจ/แบรนด์ + PDPA + ซัพพอร์ตภาษาไทย', note: 'สร้างคุณค่าแต่ยังไม่หายากในช่วงเริ่มต้น — สะสมตามเวลา', v: true, r: false, i: false, o: true },
   ],
+  marketplace: {
+    feePct: 3,
+    partners: [
+      { id: 'mp1', name: 'Studio Saraban', category: 'การตลาด & คอนเทนต์', desc: 'ทีมครีเอทีฟผลิตคอนเทนต์ + ยิงแอดสำหรับ SME', rating: 4.8, priceFrom: 15000, location: 'กรุงเทพฯ', verified: true },
+      { id: 'mp2', name: 'ไทยโออีเอ็ม แฟคทอรี่', category: 'ผลิตสินค้า OEM', desc: 'รับผลิตสินค้าความงาม/อาหารเสริม มี อย. ครบ', rating: 4.6, priceFrom: 50000, location: 'สมุทรสาคร', verified: true },
+      { id: 'mp3', name: 'Speed Logistics', category: 'ขนส่ง & โลจิสติกส์', desc: 'คลังสินค้า + จัดส่งทั่วไทย เชื่อม Shopee/Lazada', rating: 4.5, priceFrom: 8000, location: 'นนทบุรี', verified: true },
+      { id: 'mp4', name: 'สำนักงานบัญชี มั่นคง', category: 'บัญชี & ภาษี', desc: 'ทำบัญชี ยื่นภาษี VAT จดทะเบียนบริษัท', rating: 4.9, priceFrom: 3500, location: 'เชียงใหม่', verified: true },
+      { id: 'mp5', name: 'Devhouse BKK', category: 'พัฒนาซอฟต์แวร์', desc: 'ทีมพัฒนาเว็บ/แอป เชื่อม API และระบบ AI', rating: 4.7, priceFrom: 40000, location: 'กรุงเทพฯ', verified: false },
+      { id: 'mp6', name: 'ฟ้าใส ดีไซน์', category: 'ดีไซน์ & แบรนด์', desc: 'ออกแบบโลโก้ แพ็กเกจจิ้ง และ Brand Identity', rating: 4.4, priceFrom: 12000, location: 'ขอนแก่น', verified: false },
+    ],
+    deals: [
+      { id: 'dl1', partnerId: 'mp1', title: 'แคมเปญเปิดตัวสินค้าใหม่ Q3', amount: 45000, status: 'closed' },
+      { id: 'dl2', partnerId: 'mp3', title: 'เช่าคลัง + จัดส่ง 3 เดือน', amount: 24000, status: 'negotiating' },
+      { id: 'dl3', partnerId: 'mp4', title: 'วางระบบบัญชี + ยื่นภาษีรายปี', amount: 18000, status: 'matched' },
+    ],
+  },
 };

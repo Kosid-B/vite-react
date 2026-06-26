@@ -167,6 +167,35 @@ export interface VrioItem {
   o: boolean;         // Organized — องค์กรพร้อมเก็บเกี่ยวคุณค่า
 }
 
+/* ===== Marketplace (จับคู่คู่ค้า + ค่าดำเนินการ 3%) ===== */
+
+export interface MarketPartner {
+  id: string;
+  name: string;
+  category: string;    // หมวดบริการ
+  desc: string;
+  rating: number;      // 0–5
+  priceFrom: number;   // ราคาเริ่มต้น (บาท)
+  location: string;    // จังหวัด
+  verified: boolean;
+}
+
+export type DealStatus = 'matched' | 'negotiating' | 'closed' | 'cancelled';
+
+export interface Deal {
+  id: string;
+  partnerId: string;
+  title: string;
+  amount: number;      // มูลค่าดีล (บาท)
+  status: DealStatus;
+}
+
+export interface Marketplace {
+  feePct: number;      // ค่าดำเนินการแพลตฟอร์ม (%)
+  partners: MarketPartner[];
+  deals: Deal[];
+}
+
 export interface AppData {
   stages: Stage[];
   personas: Persona[];
@@ -178,6 +207,7 @@ export interface AppData {
   aiCompany: AICompany;
   subscription: Subscription;
   vrio: VrioItem[];
+  marketplace: Marketplace;
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market';
