@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import type { PageId } from '../types';
+import type { Workspace } from '../lib/workspaces';
 
 interface Props {
   activePage: PageId;
@@ -12,9 +13,13 @@ interface Props {
   onImportFile: (file: File) => void;
   userEmail?: string | null;
   onSignOut?: () => void;
+  workspaces?: Workspace[];
+  activeWs?: string | null;
+  onSwitchWs?: (id: string) => void;
+  onCreateWs?: (name: string) => void;
 }
 
-export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut }: Props) {
+export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs }: Props) {
   const pct = totalActions > 0 ? Math.round((doneCount / totalActions) * 100) : 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -24,6 +29,16 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
         <div className="brand-serif">CJ Planner</div>
         <div className="brand-sub">Strategy Consulting · SME · Inbound</div>
         <button className="sidebar-close" onClick={onClose} aria-label="ปิดเมนู">×</button>
+
+        {onSwitchWs && workspaces && workspaces.length > 0 && (
+          <div className="ws-switcher">
+            <select className="ws-select" value={activeWs ?? ''} onChange={e => onSwitchWs(e.target.value)}>
+              {workspaces.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
+            <button className="ws-new" title="สร้างบริษัท/เวิร์กสเปซใหม่"
+              onClick={() => { const n = window.prompt('ชื่อบริษัท/เวิร์กสเปซใหม่'); if (n && onCreateWs) onCreateWs(n); }}>＋</button>
+          </div>
+        )}
       </div>
 
       <div className="nav-section">

@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { AppData, PageId } from './types';
 import { DEFAULT_DATA } from './data';
-import { isSupabaseEnabled, supabase, cloudLoad, cloudSave } from './lib/supabase';
+import { isSupabaseEnabled, supabase } from './lib/supabase';
+import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
 import Auth from './components/Auth';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -57,9 +58,11 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
-  // ===== Supabase session =====
+  // ===== Supabase session + workspaces =====
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(!isSupabaseEnabled);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [activeWs, setActiveWs] = useState<string | null>(null);
   const cloudTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -69,24 +72,39 @@ export default function App() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  // โหลดข้อมูลจากคลาวด์เมื่อล็อกอิน — ถ้าคลาวด์ว่าง ให้ดันข้อมูลปัจจุบันขึ้นไป
+  // เมื่อล็อกอิน: หาเวิร์กสเปซเริ่มต้น + โหลดรายชื่อเวิร์กสเปซทั้งหมด
   useEffect(() => {
-    if (!isSupabaseEnabled || !session) return;
+    if (!isSupabaseEnabled || !session) { setWorkspaces([]); setActiveWs(null); return; }
     let cancelled = false;
     (async () => {
-      const cloud = await cloudLoad();
+      const def = await ensureDefaultWorkspace();
+      const list = await listWorkspaces();
+      if (cancelled) return;
+      setWorkspaces(list);
+      setActiveWs(prev => prev ?? def ?? list[0]?.id ?? null);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user.id]);
+
+  // โหลดข้อมูลของเวิร์กสเปซที่เลือก — ถ้าคลาวด์ว่าง ให้ดันข้อมูลปัจจุบันขึ้นไป
+  useEffect(() => {
+    if (!isSupabaseEnabled || !activeWs) return;
+    let cancelled = false;
+    (async () => {
+      const cloud = await wsLoad(activeWs);
       if (cancelled) return;
       if (cloud) {
         const merged = migrate(cloud);
         setData(merged);
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch {}
       } else {
-        cloudSave(session.user.id, data);
+        wsSave(activeWs, data);
       }
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user.id]);
+  }, [activeWs]);
 
   const showToast = useCallback(() => {
     setToastVisible(true);
@@ -102,14 +120,19 @@ export default function App() {
         try { localStorage.setItem(STORAGE_KEY, serial); } catch {}
       });
     } catch {}
-    // sync ขึ้นคลาวด์แบบ debounce เมื่อล็อกอินอยู่
-    if (isSupabaseEnabled && session) {
+    // sync ขึ้นคลาวด์แบบ debounce เมื่อล็อกอิน + เลือกเวิร์กสเปซแล้ว
+    if (isSupabaseEnabled && activeWs) {
       clearTimeout(cloudTimer.current);
-      const uid = session.user.id;
-      cloudTimer.current = setTimeout(() => cloudSave(uid, next), 800);
+      const ws = activeWs;
+      cloudTimer.current = setTimeout(() => wsSave(ws, next), 800);
     }
     showToast();
-  }, [showToast, session]);
+  }, [showToast, activeWs]);
+
+  async function handleCreateWorkspace(name: string) {
+    const id = await createWorkspace(name);
+    if (id) { setWorkspaces(await listWorkspaces()); setActiveWs(id); }
+  }
 
   useEffect(() => () => { clearTimeout(toastTimer.current); clearTimeout(cloudTimer.current); }, []);
 
@@ -170,6 +193,10 @@ export default function App() {
         onImportFile={importData}
         userEmail={session?.user.email ?? null}
         onSignOut={isSupabaseEnabled ? signOut : undefined}
+        workspaces={workspaces}
+        activeWs={activeWs}
+        onSwitchWs={setActiveWs}
+        onCreateWs={handleCreateWorkspace}
       />
 
       <main className="main">

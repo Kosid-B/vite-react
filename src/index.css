@@ -1026,3 +1026,16 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
 .sidebar-account-email { font-size: 11.5px; color: rgba(255,255,255,.65); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-signout { width: 100%; padding: 9px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.8); border-radius: var(--r); font-family: inherit; font-size: 12.5px; cursor: pointer; transition: .15s; }
 .sidebar-signout:hover { background: rgba(255,255,255,.12); color: #fff; }
+
+/* workspace switcher (team / multi-company) */
+.ws-switcher { display: flex; gap: 6px; margin-top: 14px; }
+.ws-select { flex: 1; min-width: 0; padding: 8px 10px; font-family: inherit; font-size: 12.5px; color: #fff; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 7px; outline: none; cursor: pointer; }
+.ws-select option { color: var(--ink); }
+.ws-new { width: 34px; flex-shrink: 0; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); color: #fff; border-radius: 7px; font-size: 16px; cursor: pointer; transition: background .15s; }
+.ws-new:hover { background: rgba(255,255,255,.18); }
+
+/* AI plan (Claude) button + message */
+.ai-plan-btn { display: inline-flex; align-items: center; padding: 12px 18px; min-height: 46px; background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); border-radius: var(--r); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s; white-space: nowrap; }
+.ai-plan-btn:hover:not(:disabled) { background: rgba(255,255,255,.2); }
+.ai-plan-btn:disabled { opacity: .6; cursor: default; }
+.ai-plan-msg { background: var(--white); border: 1px solid var(--sand); border-left: 3px solid var(--blue); border-radius: var(--r); padding: 10px 14px; margin-bottom: 14px; font-size: 12.5px; color: var(--ink2); box-shadow: var(--shadow-sm); }

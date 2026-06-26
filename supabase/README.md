@@ -26,10 +26,35 @@
 ทั้ง `AppData` (stages, personas, aiCompany, marketplace, subscription, ฯลฯ) ถูกเก็บเป็น JSONB
 ก้อนเดียวในแถวของผู้ใช้ — sync ขึ้นคลาวด์แบบ debounce ทุกครั้งที่แก้ไข และมี `localStorage` เป็น cache
 
-## ขั้นต่อไป (ยังไม่ทำ — ต้องมี secret/ฝั่งเซิร์ฟเวอร์)
+## แชร์เวิร์กสเปซแบบทีม / หลายบริษัท (migration 0002)
 
-- **Edge Function `ai-plan`**: ให้ CEO เรียก Claude API วางแผน/แตกงานจริง (เก็บ `ANTHROPIC_API_KEY`
-  เป็น secret ใน Supabase ไม่ใช่ฝั่ง frontend)
-- **Edge Function `promptpay-webhook`**: รับ webhook จาก Payment Gateway ไทย (Omise/GB Prime Pay)
-  เพื่อยืนยันยอด PromptPay อัตโนมัติ แล้วอัปเดต `subscription.status = active`
-- **ตาราง workspaces/members**: แชร์เวิร์กสเปซแบบทีม/หลายบริษัท (ดูคอมเมนต์ท้ายไฟล์ migration)
+รัน `supabase/migrations/0002_workspaces.sql` เพิ่ม:
+- ตาราง `workspaces`, `workspace_members`, `workspace_state` (เก็บ AppData ต่อเวิร์กสเปซ)
+- RLS อิงสมาชิก (ฟังก์ชัน `is_member` แบบ SECURITY DEFINER กัน recursion)
+- RPC: `ensure_default_workspace()`, `create_workspace(name)`, `invite_member(workspace, email)`
+
+ฝั่งแอป: หัว sidebar จะมีตัวสลับเวิร์กสเปซ + ปุ่ม ＋ สร้างใหม่ ข้อมูลแยกตามเวิร์กสเปซ
+และสมาชิกในเวิร์กสเปซเดียวกันเห็น/แก้ข้อมูลร่วมกัน
+
+## Edge Functions
+
+### 1) `ai-plan` — CEO เรียก Claude API วางแผนจริง
+```bash
+supabase functions deploy ai-plan
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-xxxx
+# (ออปชัน) supabase secrets set ANTHROPIC_MODEL=claude-sonnet-4-6
+```
+ในหน้า "บริษัท AI" จะมีปุ่ม **✦ ให้ CEO วางแผนด้วย Claude** (โผล่เมื่อเปิด Supabase)
+→ ส่ง goal/agents ไปให้ Claude → ได้ tasks + approvals กลับมาเติมลงกระดานงานอัตโนมัติ
+
+### 2) `promptpay-webhook` — ยืนยันยอด PromptPay อัตโนมัติ
+```bash
+supabase functions deploy promptpay-webhook --no-verify-jwt
+supabase secrets set WEBHOOK_SECRET=your-shared-secret
+```
+ตั้ง URL ฟังก์ชันเป็น webhook endpoint ใน Omise/GB Prime Pay และตอนสร้าง charge
+ให้ส่ง `metadata.workspace_id` + `metadata.plan_id` มาด้วย เมื่อจ่ายสำเร็จระบบจะตั้ง
+`subscription.status = active` ให้เวิร์กสเปซนั้นทันที (อัปเดตด้วย service role)
+
+> หมายเหตุ: การสร้าง charge/QR ฝั่ง gateway ต้องมีบัญชีร้านค้า + secret key ของผู้ให้บริการจริง
+> ฟังก์ชันนี้พร้อม "รับ" การยืนยันแล้ว เหลือเชื่อมขั้นสร้างรายการชำระเงินตามผู้ให้บริการที่เลือก

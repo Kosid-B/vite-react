@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AppData, Agent, AgentStatus, ApprovalStatus, TaskStatus } from '../types';
 import { autoH } from '../utils';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
 
 interface Props {
   data: AppData;
@@ -55,6 +56,8 @@ export default function AICompany({ data, onUpdate }: Props) {
   const [feed, setFeed] = useState<{ id: number; time: string; text: string; color: string }[]>([]);
   const feedRef = useRef<HTMLDivElement>(null);
   const counter = useRef(0);
+  const [planning, setPlanning] = useState(false);
+  const [planMsg, setPlanMsg] = useState<string | null>(null);
 
   // เครื่องยนต์จำลอง: ขณะ running จะสร้างกิจกรรมใหม่เรื่อย ๆ (ephemeral ไม่บันทึกลง storage)
   useEffect(() => {
@@ -81,6 +84,42 @@ export default function AICompany({ data, onUpdate }: Props) {
   function toggleRun() {
     if (!c.running) setFeed([]);
     patch({ running: !c.running });
+  }
+
+  // เรียก Edge Function ai-plan ให้ CEO วางแผนด้วย Claude จริง
+  async function runAiPlan() {
+    if (!supabase) return;
+    setPlanning(true); setPlanMsg(null);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('ai-plan', {
+        body: { goal: c.goal, industry: c.industry, agents: c.agents.map(a => ({ role: a.role, mandate: a.mandate })) },
+      });
+      if (error) throw error;
+      const roleToId = (role: string) =>
+        c.agents.find(a => a.role.toLowerCase() === String(role ?? '').toLowerCase())?.id ?? c.agents[0]?.id ?? '';
+      const ok: TaskStatus[] = ['queued', 'in_progress', 'review', 'done', 'blocked'];
+      const newTasks = (res?.tasks ?? []).map((t: { agentRole?: string; title?: string; detail?: string; status?: string }, i: number) => ({
+        id: 'ai-' + Date.now().toString(36) + i,
+        agentId: roleToId(t.agentRole ?? ''),
+        title: String(t.title ?? 'งานจาก AI'),
+        detail: String(t.detail ?? ''),
+        status: (ok.includes(t.status as TaskStatus) ? t.status : 'queued') as TaskStatus,
+      }));
+      const newApprovals = (res?.approvals ?? []).map((a: { agentRole?: string; title?: string; detail?: string; impact?: string }, i: number) => ({
+        id: 'aiap-' + Date.now().toString(36) + i,
+        agentId: roleToId(a.agentRole ?? ''),
+        title: String(a.title ?? 'ขออนุมัติ'),
+        detail: String(a.detail ?? ''),
+        impact: String(a.impact ?? ''),
+        status: 'pending' as ApprovalStatus,
+      }));
+      patch({ tasks: [...newTasks, ...c.tasks], approvals: [...newApprovals, ...c.approvals] });
+      setPlanMsg(`✓ CEO วางแผนเพิ่ม ${newTasks.length} งาน${newApprovals.length ? ` · ${newApprovals.length} เรื่องรออนุมัติ` : ''}`);
+    } catch (e) {
+      setPlanMsg('✕ วางแผนไม่สำเร็จ: ' + ((e as Error).message || 'error') + ' — ตรวจว่า deploy ai-plan + ตั้ง ANTHROPIC_API_KEY แล้ว');
+    } finally {
+      setPlanning(false);
+    }
   }
 
   function setCompanyField(field: 'name' | 'goal' | 'industry', value: string) {
@@ -180,12 +219,18 @@ export default function AICompany({ data, onUpdate }: Props) {
             <input type="checkbox" checked={c.autoHire} onChange={e => patch({ autoHire: e.target.checked })} />
             <span>ให้ CEO จ้างเอเจนต์เองได้</span>
           </label>
+          {isSupabaseEnabled && (
+            <button className="ai-plan-btn" onClick={runAiPlan} disabled={planning}>
+              {planning ? 'CEO กำลังคิด…' : '✦ ให้ CEO วางแผนด้วย Claude'}
+            </button>
+          )}
           <button className={`ai-run-btn${c.running ? ' running' : ''}`} onClick={toggleRun}>
             <span className="ai-run-dot" />
             {c.running ? 'กำลังทำงาน · กดเพื่อหยุด' : 'เริ่มให้ทีม AI ทำงาน'}
           </button>
         </div>
       </div>
+      {planMsg && <div className="ai-plan-msg">{planMsg}</div>}
 
       <div className="ai-goal-box">
         <div className="ai-goal-lbl">🎯 เป้าหมายหลักที่บอร์ดตั้งไว้</div>
