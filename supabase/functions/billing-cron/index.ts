@@ -29,34 +29,53 @@ Deno.serve(async (req) => {
   if (error) return json({ error: error.message }, 500);
 
   const now = new Date();
-  let renewed = 0, pastDue = 0;
+  const GRACE_DAYS = 7; // เกินกำหนดเกินกี่วันแล้วลดเป็นแพ็กฟรี
+  const RETRY_DAYS = 3; // ใบแจ้งหนี้ pending เกินกี่วันถือว่าเก็บเงินไม่สำเร็จ
+  let renewed = 0, pastDue = 0, downgraded = 0, failed = 0;
 
   for (const row of rows ?? []) {
     const state = (row.data ?? {}) as Record<string, any>;
     const sub = state.subscription;
     if (!sub || sub.plan === "free" || !sub.currentPeriodEnd) continue;
-    const end = new Date(sub.currentPeriodEnd);
-    if (now < end) continue; // ยังไม่ถึงรอบบิล
+    let dirty = false;
 
-    if (sub.autoRenew && sub.status !== "cancelled") {
-      // สร้างใบแจ้งหนี้รอบใหม่ (pending) — จะถูกยืนยันเป็น paid โดย promptpay-webhook
-      // เมื่อ gateway แจ้งชำระสำเร็จ. ที่นี่ต่ออายุรอบบิลแบบ optimistic
-      const amount = PRICE[sub.plan] ?? 0;
-      const invoice = { id: "inv-cron-" + Date.now().toString(36) + renewed, date: now.toISOString(), plan: sub.plan, amount, status: "pending" };
-      sub.invoices = [invoice, ...(sub.invoices ?? [])];
-      sub.currentPeriodEnd = addMonths(sub.currentPeriodEnd, 1);
-      sub.status = "active";
-      renewed++;
-    } else {
-      sub.status = "past_due";
-      pastDue++;
+    // dunning: ใบแจ้งหนี้ pending ที่ค้างเกิน RETRY_DAYS → ทำเครื่องหมายล้มเหลว
+    for (const inv of sub.invoices ?? []) {
+      if (inv.status === "pending" && (now.getTime() - new Date(inv.date).getTime()) > RETRY_DAYS * 86400000) {
+        inv.status = "failed"; failed++; dirty = true;
+      }
     }
-    state.subscription = sub;
-    await admin.from("workspace_state")
-      .upsert({ workspace_id: row.workspace_id, data: state, updated_at: now.toISOString() }, { onConflict: "workspace_id" });
+
+    const end = new Date(sub.currentPeriodEnd);
+    const overdueMs = now.getTime() - end.getTime();
+
+    if (overdueMs >= 0) {
+      if (sub.autoRenew && sub.status !== "cancelled") {
+        // ออกใบแจ้งหนี้รอบใหม่ (pending) → promptpay-webhook จะยืนยันเป็น paid เมื่อชำระสำเร็จ
+        const amount = PRICE[sub.plan] ?? 0;
+        const invoice = { id: "inv-cron-" + Date.now().toString(36) + renewed, date: now.toISOString(), plan: sub.plan, amount, status: "pending" };
+        sub.invoices = [invoice, ...(sub.invoices ?? [])];
+        sub.currentPeriodEnd = addMonths(sub.currentPeriodEnd, 1);
+        sub.status = "active";
+        renewed++; dirty = true;
+      } else if (overdueMs >= GRACE_DAYS * 86400000) {
+        // หมด grace period และไม่ต่ออายุ → ลดเป็นแพ็กฟรี
+        sub.plan = "free"; sub.status = "cancelled"; sub.autoRenew = false;
+        downgraded++; dirty = true;
+      } else if (sub.status !== "past_due") {
+        sub.status = "past_due";
+        pastDue++; dirty = true;
+      }
+    }
+
+    if (dirty) {
+      state.subscription = sub;
+      await admin.from("workspace_state")
+        .upsert({ workspace_id: row.workspace_id, data: state, updated_at: now.toISOString() }, { onConflict: "workspace_id" });
+    }
   }
 
-  return json({ ok: true, renewed, past_due: pastDue, scanned: rows?.length ?? 0 }, 200);
+  return json({ ok: true, renewed, past_due: pastDue, downgraded, failed, scanned: rows?.length ?? 0 }, 200);
 });
 
 function json(obj: unknown, status = 200): Response {

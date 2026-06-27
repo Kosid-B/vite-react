@@ -51,6 +51,7 @@ export default function Billing({ data, onUpdate }: Props) {
   const sub = data.subscription;
   const [selected, setSelected] = useState<PlanId>(sub.plan);
   const [copied, setCopied] = useState(false);
+  const [invoiceModal, setInvoiceModal] = useState<Invoice | null>(null);
 
   const selectedPlan = PLANS.find(p => p.id === selected)!;
   const needPayment = selectedPlan.price > 0;
@@ -252,7 +253,7 @@ export default function Billing({ data, onUpdate }: Props) {
           <div className="bill-inv-hd">ประวัติใบแจ้งหนี้</div>
           <div className="bill-inv-table">
             <div className="bill-inv-row bill-inv-head">
-              <div>วันที่</div><div>แพ็ก</div><div className="bill-inv-amt">ยอด</div><div className="bill-inv-st">สถานะ</div>
+              <div>วันที่</div><div>แพ็ก</div><div className="bill-inv-amt">ยอด</div><div className="bill-inv-st">สถานะ</div><div />
             </div>
             {sub.invoices.map(inv => (
               <div key={inv.id} className="bill-inv-row">
@@ -260,6 +261,7 @@ export default function Billing({ data, onUpdate }: Props) {
                 <div>{PLANS.find(p => p.id === inv.plan)?.name ?? inv.plan}</div>
                 <div className="bill-inv-amt">{baht(inv.amount)}</div>
                 <div className="bill-inv-st"><span className={`bill-inv-badge inv-${inv.status}`}>{INV_BADGE[inv.status]}</span></div>
+                <div className="bill-inv-view"><button onClick={() => setInvoiceModal(inv)}>ใบกำกับภาษี</button></div>
               </div>
             ))}
           </div>
@@ -271,6 +273,54 @@ export default function Billing({ data, onUpdate }: Props) {
         งานเบื้องหลังจะรันด้วย Supabase Edge Function <code>billing-cron</code> (ตั้งเวลาด้วย pg_cron รายวัน)
         เพื่อสร้างรายการเรียกเก็บผ่าน PromptPay และอัปเดตสถานะอัตโนมัติ — ดูรายละเอียดใน <code>supabase/README.md</code>
       </div>
+
+      {/* ===== ใบกำกับภาษี / ใบเสร็จ (พิมพ์ได้) ===== */}
+      {invoiceModal && (() => {
+        const inv = invoiceModal;
+        const base = Math.round(inv.amount / 1.07);
+        const vat = inv.amount - base;
+        const planName = PLANS.find(p => p.id === inv.plan)?.name ?? inv.plan;
+        return (
+          <div className="inv-overlay" onClick={() => setInvoiceModal(null)}>
+            <div className="inv-modal" onClick={e => e.stopPropagation()}>
+              <div className="inv-doc" id="inv-doc">
+                <div className="inv-doc-hd">
+                  <div>
+                    <div className="inv-doc-brand">CJ Planner</div>
+                    <div className="inv-doc-sub">ใบกำกับภาษี / ใบเสร็จรับเงิน<br/>Tax Invoice / Receipt</div>
+                  </div>
+                  <div className="inv-doc-no">
+                    เลขที่: <b>{inv.id.toUpperCase()}</b><br/>
+                    วันที่: {thaiDate(inv.date)}
+                  </div>
+                </div>
+                <div className="inv-doc-parties">
+                  <div><span className="inv-doc-lbl">ผู้ให้บริการ</span>CJ Planner SaaS<br/>พร้อมเพย์ผู้รับ: {sub.promptpayId}</div>
+                  <div><span className="inv-doc-lbl">ลูกค้า</span>ผู้ใช้ระบบ<br/>(แก้ชื่อ/เลขผู้เสียภาษีได้ในการตั้งค่าบริษัท)</div>
+                </div>
+                <table className="inv-doc-table">
+                  <thead><tr><th>รายการ</th><th>จำนวนเงิน</th></tr></thead>
+                  <tbody>
+                    <tr><td>แพ็กเกจ {planName} — รอบบิล 1 เดือน</td><td>{baht(base)}</td></tr>
+                  </tbody>
+                </table>
+                <div className="inv-doc-totals">
+                  <div><span>มูลค่าก่อนภาษี</span><span>{baht(base)}</span></div>
+                  <div><span>ภาษีมูลค่าเพิ่ม 7%</span><span>{baht(vat)}</span></div>
+                  <div className="inv-doc-grand"><span>ยอดรวมทั้งสิ้น</span><span>{baht(inv.amount)}</span></div>
+                </div>
+                <div className="inv-doc-foot">
+                  สถานะการชำระเงิน: <b>{INV_BADGE[inv.status]}</b> · ชำระผ่าน PromptPay (Thai QR)
+                </div>
+              </div>
+              <div className="inv-actions">
+                <button className="inv-close" onClick={() => setInvoiceModal(null)}>ปิด</button>
+                <button className="inv-print" onClick={() => window.print()}>พิมพ์ / บันทึก PDF</button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
