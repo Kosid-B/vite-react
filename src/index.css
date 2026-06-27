@@ -1267,3 +1267,67 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
   .admin-row { grid-template-columns: 1fr 60px; }
   .admin-row > :nth-child(2), .admin-row > .admin-c-date { display: none; }
 }
+
+/* ===== AI Analysis button in BusinessModel 24-step ===== */
+.bmc-step-th-desc { font-size: 12px; color: var(--ink2); line-height: 1.55; padding: 6px 0 6px 4px; border-left: 2px solid var(--cream2); margin-bottom: 6px; }
+.bmc-step-ai-btn { display: flex; align-items: center; gap: 5px; margin-top: 6px; padding: 5px 10px; font-size: 12px; font-family: inherit; background: var(--cream); border: 1px solid var(--sand); border-radius: var(--r); cursor: pointer; color: var(--ink2); }
+.bmc-step-ai-btn:hover:not(:disabled) { background: var(--cream2); color: var(--ink); }
+.bmc-step-ai-btn:disabled { opacity: .6; cursor: default; }
+.bmc-step-ai-out { margin-top: 8px; border: 1px solid var(--sand); border-radius: var(--r); overflow: hidden; }
+.bmc-step-ai-out-hd { font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink3); padding: 4px 10px; background: var(--cream); }
+.bmc-step-ai-out-body { white-space: pre-wrap; font-size: 12.5px; color: var(--ink2); line-height: 1.65; padding: 10px; max-height: 200px; overflow-y: auto; }
+
+/* ===== JD button in OcNode ===== */
+.oc-jd-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; color: var(--ink3); line-height: 1; }
+.oc-jd-btn:hover:not(:disabled) { color: var(--ink); }
+.oc-jd-btn:disabled { opacity: .5; cursor: default; }
+.oc-jd-detail { width: 100%; margin-top: 6px; border-top: 1px solid var(--cream2); }
+.oc-jd-summary { font-size: 11px; color: var(--ink3); cursor: pointer; padding: 4px 0; }
+.oc-jd-body { font-size: 11.5px; color: var(--ink2); white-space: pre-wrap; line-height: 1.6; padding: 8px; background: var(--cream); border-radius: var(--r); margin-top: 4px; max-height: 200px; overflow-y: auto; }
+
+/* ===== Knowledge Base per agent ===== */
+.ai-kb-detail { margin-top: 8px; border-top: 1px solid var(--cream2); padding-top: 6px; }
+.ai-kb-summary { font-size: 12px; color: var(--ink3); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.ai-kb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.ai-kb-body { width: 100%; margin-top: 6px; padding: 8px; font-size: 12.5px; font-family: inherit; border: 1px solid var(--sand); border-radius: var(--r); background: var(--cream); color: var(--ink); resize: vertical; outline: none; line-height: 1.55; }
+.ai-kb-body:focus { border-color: var(--ink3); background: var(--white); }
+
+/* ===== SEO Revenue Model auto button ===== */
+.ai-seo-rev-btn { display: flex; align-items: center; gap: 5px; width: 100%; margin-top: 8px; padding: 7px 12px; font-size: 12px; font-family: inherit; font-weight: 600; background: linear-gradient(135deg, #1a4f8a11, #2d6a4f11); border: 1px solid #1a4f8a44; border-radius: var(--r); cursor: pointer; color: #1a4f8a; }
+.ai-seo-rev-btn:hover:not(:disabled) { background: linear-gradient(135deg, #1a4f8a22, #2d6a4f22); }
+.ai-seo-rev-btn:disabled { opacity: .5; cursor: default; }
+
+/* ===== Product Roadmap page ===== */
+.roadmap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.roadmap-col { background: var(--cream); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 300px; }
+.roadmap-col-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.roadmap-q-label { font-size: 13px; font-weight: 700; color: var(--ink); }
+.roadmap-q-count { font-size: 11px; color: var(--ink3); }
+.roadmap-card { background: var(--white); border: 1px solid var(--sand); border-left: 3px solid var(--sand); border-radius: var(--r); padding: 10px 10px 8px; display: flex; flex-direction: column; gap: 6px; }
+.roadmap-card-hd { display: flex; align-items: flex-start; gap: 6px; }
+.roadmap-title { font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; flex: 1; line-height: 1.35; }
+.roadmap-title:hover { color: var(--rust); }
+.roadmap-title-inp { flex: 1; font-size: 13px; font-weight: 600; font-family: inherit; border: 1px solid var(--sand); border-radius: var(--r); padding: 2px 6px; background: var(--cream); color: var(--ink); outline: none; }
+.roadmap-del { background: none; border: none; font-size: 16px; line-height: 1; color: var(--ink3); cursor: pointer; padding: 0 2px; flex-shrink: 0; }
+.roadmap-del:hover { color: var(--rust); }
+.roadmap-badges { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.roadmap-badge-sel { font-size: 10.5px; font-family: inherit; border-radius: 4px; padding: 2px 5px; background: var(--cream); border-width: 1px; border-style: solid; cursor: pointer; }
+.roadmap-owner-inp { font-size: 10.5px; font-family: inherit; border: 1px solid var(--sand); border-radius: 4px; padding: 2px 6px; background: var(--cream); color: var(--ink3); max-width: 70px; outline: none; }
+.roadmap-desc { font-size: 12px; color: var(--ink2); line-height: 1.5; cursor: pointer; }
+.roadmap-desc:hover { color: var(--ink); }
+.roadmap-desc-inp { font-size: 12px; font-family: inherit; border: 1px solid var(--sand); border-radius: var(--r); padding: 6px 8px; background: var(--cream); color: var(--ink); resize: vertical; outline: none; width: 100%; line-height: 1.5; }
+.roadmap-ai-btn { font-size: 11.5px; font-family: inherit; padding: 5px 8px; background: var(--cream); border: 1px solid var(--sand); border-radius: var(--r); cursor: pointer; color: var(--ink2); }
+.roadmap-ai-btn:hover:not(:disabled) { background: var(--cream2); }
+.roadmap-ai-btn:disabled { opacity: .6; cursor: default; }
+.roadmap-ai-out { border: 1px solid var(--sand); border-radius: var(--r); overflow: hidden; }
+.roadmap-ai-out-hd { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); padding: 3px 8px; background: var(--cream); }
+.roadmap-ai-out-body { font-size: 11.5px; color: var(--ink2); white-space: pre-wrap; line-height: 1.6; padding: 8px; max-height: 160px; overflow-y: auto; }
+.roadmap-add-btn { font-size: 12px; font-family: inherit; padding: 7px 10px; background: none; border: 1px dashed var(--sand); border-radius: var(--r); cursor: pointer; color: var(--ink3); margin-top: auto; }
+.roadmap-add-btn:hover { border-color: var(--ink3); color: var(--ink); }
+
+@media (max-width: 900px) {
+  .roadmap-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .roadmap-grid { grid-template-columns: 1fr; }
+}

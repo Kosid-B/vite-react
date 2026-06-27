@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, BMCData } from '../types';
 import EditableList from '../components/EditableList';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
 
 interface Props {
   data: AppData;
@@ -55,8 +56,37 @@ const PHASES = [
   { label: 'ทดสอบและขยายธุรกิจ',      color: '#2d6a4f' },
 ];
 
+const DE24_TH: string[] = [
+  'แบ่งส่วนตลาด — ระดมสมองหาโอกาสทั้งหมด คัดเหลือ 6-12 ตลาดที่มีศักยภาพสูง',
+  'เลือกตลาดหัวหาด — 1 ตลาดเล็กที่ยึดครองได้เร็ว สร้างกระแสเงินสดทันที',
+  'สร้างแฟ้มผู้ใช้ตัวจริง — เพศ อายุ รายได้ แรงผลักดัน ความกลัว',
+  'คำนวณ TAM ตลาดหัวหาด — รายได้ต่อปีหากครองตลาด 100% (เป้า 5-100M $/ปี)',
+  'กำหนดตัวละคร (Persona) — 1 คนจริง + เกณฑ์การซื้อเรียงลำดับความสำคัญ',
+  'เขียนวงจรการใช้ผลิตภัณฑ์ — ค้นพบ ประเมิน สั่งซื้อ ติดตั้ง ใช้งาน จ่ายเงิน',
+  'ร่างภาพผลิตภัณฑ์ — สตอรีบอร์ด/แผ่นพับ แสดงประโยชน์ที่ลูกค้าได้รับ',
+  'แปลงคุณค่าเป็นตัวเลข — ประหยัดเงิน/เวลาเท่าไร เทียบ As-is vs Possible',
+  'ระบุลูกค้า 10 คนถัดไป — ติดต่อจริง ทดสอบสมมติฐาน ยืนยันความต้องการ',
+  'กำหนดแก่นธุรกิจ — Network Effect, Data Moat, IP Moat ที่คู่แข่งลอกยาก',
+  'ระบุตำแหน่งในการแข่งขัน — กราฟ 2 แกนจากเกณฑ์ซื้อ 2 อันดับแรก',
+  'ค้นหาหน่วยตัดสินใจ (DMU) — Economic Buyer, Champion, Veto Power',
+  'ร่างกระบวนการหาลูกค้า — Sales Cycle ตั้งแต่ติดต่อครั้งแรกถึงรับเงิน',
+  'คำนวณ TAM ตลาดถัดไป — ตลาดข้างเคียงหลังจากครองตลาดหัวหาดแล้ว',
+  'ออกแบบโมเดลธุรกิจ — วิธีเก็บเกี่ยวคุณค่า: Subscription, Consumables, Transaction Fee',
+  'กำหนดกรอบราคา — ราคาจากคุณค่าที่ลูกค้าได้รับ ไม่ใช่จากต้นทุน',
+  'คำนวณ LTV — NPV ของกำไรต่อลูกค้าตลอด 5 ปี หักต้นทุนเงินทุน 35-75%/ปี',
+  'ร่างกระบวนการขาย — ระยะสั้น (Demand) / กลาง (Distribution) / ยาว (Online)',
+  'คำนวณ COCA — ต้นทุนการตลาด+ขาย ÷ ลูกค้าใหม่ เป้า LTV:COCA ≥ 3:1',
+  'ระบุสมมติฐานหลัก — จัดลำดับความสำคัญสมมติฐานที่ยังไม่ได้รับการพิสูจน์',
+  'ทดสอบสมมติฐานหลัก — ออกแบบทดลองถูก เร็ว ง่าย รับ Feedback จากของจริง',
+  'กำหนด MVBP — ลูกค้าได้ประโยชน์ + ยอมจ่ายเงิน + สร้าง Feedback Loop',
+  'พิสูจน์ว่าลูกค้าจะซื้อ — วัด K-Factor (Viral Coefficient) ≥ 1 = เติบโตทวีคูณ',
+  'เขียนแผนพัฒนาผลิตภัณฑ์ — จาก MVBP สู่ Full Product + ตลาดข้างเคียง',
+];
+
 export default function BusinessModel({ data, onUpdate }: Props) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
+  const [analyzingStep, setAnalyzingStep] = useState<number | null>(null);
+  const [stepOutputs, setStepOutputs] = useState<Record<number, string>>({});
   const bm = data.businessModel;
 
   function updateBMC(key: BMCKey, items: string[]) {
@@ -71,6 +101,36 @@ export default function BusinessModel({ data, onUpdate }: Props) {
   function saveStepNote(idx: number, notes: string) {
     const de24 = bm.de24.map((s, i) => i === idx ? { ...s, notes } : s);
     onUpdate({ ...data, businessModel: { ...bm, de24 } });
+  }
+
+  async function analyzeStep(idx: number) {
+    if (!isSupabaseEnabled || !supabase) return;
+    setAnalyzingStep(idx);
+    try {
+      const step = DE24[idx];
+      const desc = DE24_TH[idx] ?? step.name;
+      const notes = bm.de24[idx]?.notes ?? '';
+      const agent = data.aiCompany?.agents.find(a => a.role === 'CEO') ?? data.aiCompany?.agents[0];
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: agent?.role ?? 'CEO',
+          mandate: agent?.mandate ?? 'วิเคราะห์ขั้นตอนการสร้างธุรกิจ MIT 24 Steps',
+          model: agent?.model ?? 'claude-sonnet-4-6',
+          title: `MIT Step ${idx + 1}: ${step.name}`,
+          detail: `${desc}${notes ? `\n\nหมายเหตุที่มีอยู่: ${notes}` : ''}`,
+          goal: `วิเคราะห์ขั้นตอนที่ ${idx + 1} (${step.name}) สำหรับธุรกิจของเรา ให้คำแนะนำเชิงปฏิบัติที่ทำได้ทันที`,
+          industry: data.aiCompany?.industry ?? '',
+          companyName: data.aiCompany?.name ?? '',
+          orgContext: data.aiCompany?.agents.map(a => ({ role: a.role, mandate: a.mandate })) ?? [],
+        },
+      });
+      if (error) throw error;
+      setStepOutputs(prev => ({ ...prev, [idx]: res?.output ?? '' }));
+    } catch (e) {
+      setStepOutputs(prev => ({ ...prev, [idx]: '✕ ' + (e as Error).message }));
+    } finally {
+      setAnalyzingStep(null);
+    }
   }
 
   function autoPopulate() {
@@ -193,6 +253,7 @@ export default function BusinessModel({ data, onUpdate }: Props) {
                   </div>
                   {isExp && (
                     <div className="bmc-step-note-wrap">
+                      <div className="bmc-step-th-desc">{DE24_TH[si]}</div>
                       <textarea
                         className="bmc-step-note"
                         placeholder="หมายเหตุ / สิ่งที่ค้นพบ / action items..."
@@ -202,6 +263,21 @@ export default function BusinessModel({ data, onUpdate }: Props) {
                         rows={2}
                         spellCheck={false}
                       />
+                      {isSupabaseEnabled && (
+                        <button
+                          className="bmc-step-ai-btn"
+                          onClick={() => analyzeStep(si)}
+                          disabled={analyzingStep === si}
+                        >
+                          {analyzingStep === si ? '⏳ กำลังวิเคราะห์…' : '🤖 AI วิเคราะห์ขั้นตอนนี้'}
+                        </button>
+                      )}
+                      {stepOutputs[si] && (
+                        <div className="bmc-step-ai-out">
+                          <div className="bmc-step-ai-out-hd">AI Insight · Step {si + 1}</div>
+                          <div className="bmc-step-ai-out-body">{stepOutputs[si]}</div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

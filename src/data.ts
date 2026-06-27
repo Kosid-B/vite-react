@@ -492,4 +492,13 @@ export const DEFAULT_DATA: AppData = {
       { id: 'dl3', partnerId: 'mp4', title: 'วางระบบบัญชี + ยื่นภาษีรายปี', amount: 18000, status: 'matched' },
     ],
   },
+  roadmap: [
+    { id: 'rm1', title: 'MVP Platform Launch', description: 'เปิดตัวแพลตฟอร์ม CEO AI Thailand เวอร์ชันแรก — Auth, Dashboard, VRIO', quarter: 'Q1', year: 2025, status: 'done', priority: 'must', owner: 'CTO' },
+    { id: 'rm2', title: 'AI Company Module', description: 'ระบบองค์กร AI อัตโนมัติ — Org Chart, Kanban, Agent Execution', quarter: 'Q2', year: 2025, status: 'done', priority: 'must', owner: 'CTO' },
+    { id: 'rm3', title: 'Business Builder (MIT 24 Steps)', description: 'wizard 24 ขั้นตอน MIT พร้อม AI วิเคราะห์แต่ละขั้นตอน', quarter: 'Q2', year: 2025, status: 'in_progress', priority: 'must', owner: 'Product' },
+    { id: 'rm4', title: 'Revenue Model Automation', description: 'SEO Agent ประมวลผล Revenue Model อัตโนมัติ — LTV / COCA / K-Factor', quarter: 'Q3', year: 2025, status: 'planned', priority: 'must', owner: 'SEO' },
+    { id: 'rm5', title: 'Knowledge Base per Department', description: 'คลังความรู้แยกตามแผนก — AI agents เรียนรู้จาก KB ของตัวเอง', quarter: 'Q3', year: 2025, status: 'planned', priority: 'should', owner: 'CTO' },
+    { id: 'rm6', title: 'Marketplace & Partner API', description: 'เชื่อมต่อพาร์ทเนอร์ผ่าน API Marketplace — จ่ายเงิน, ประเมิน, รายงาน', quarter: 'Q4', year: 2025, status: 'planned', priority: 'should', owner: 'CEO' },
+    { id: 'rm7', title: 'Multi-Workspace Enterprise', description: 'รองรับลูกค้าองค์กร — workspace แยก, RLS, billing รายทีม', quarter: 'Q4', year: 2025, status: 'planned', priority: 'nice', owner: 'CTO' },
+  ],
 };

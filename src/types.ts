@@ -98,6 +98,25 @@ export interface Agent {
   model: string;       // โมเดลสมอง (LLM) ที่ใช้
   status: AgentStatus;
   reportsTo: string | null; // id ของหัวหน้า (null = ขึ้นตรงต่อบอร์ด)
+  jd?: string;             // Job Description ที่ AI สร้าง
+  knowledgeBase?: string;  // คลังความรู้ของแผนก
+}
+
+/* ===== Product Roadmap ===== */
+export type RoadmapQuarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
+export type RoadmapStatus = 'planned' | 'in_progress' | 'done' | 'cancelled';
+export type RoadmapPriority = 'must' | 'should' | 'nice';
+
+export interface RoadmapItem {
+  id: string;
+  title: string;
+  description: string;
+  quarter: RoadmapQuarter;
+  year: number;
+  status: RoadmapStatus;
+  priority: RoadmapPriority;
+  owner: string;
+  aiOutput?: string;
 }
 
 // Kanban: ต้องทำ → กำลังทำ → ตรวจสอบ → เสร็จ (หรือ ถูกบล็อก)
@@ -223,6 +242,7 @@ export interface AppData {
   subscription: Subscription;
   vrio: VrioItem[];
   marketplace: Marketplace;
+  roadmap: RoadmapItem[];
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap';

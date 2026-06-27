@@ -10,9 +10,12 @@ interface OcNodeProps {
   onAdd: (parentId: string) => void;
   onFire: (id: string) => void;
   onSaveField: (id: string, field: keyof Agent, value: string) => void;
+  onGenJD: (id: string) => void;
+  generatingJD: string | null;
 }
-function OcNode({ agent, agents, onAdd, onFire, onSaveField }: OcNodeProps) {
+function OcNode({ agent, agents, onAdd, onFire, onSaveField, onGenJD, generatingJD }: OcNodeProps) {
   const children = agents.filter(a => a.reportsTo === agent.id);
+  const isGenJD = generatingJD === agent.id;
   return (
     <div className="oc-subtree">
       <div className="oc-node" style={{ borderTopColor: agent.color }}>
@@ -26,15 +29,25 @@ function OcNode({ agent, agents, onAdd, onFire, onSaveField }: OcNodeProps) {
             onBlur={e => onSaveField(agent.id, 'name', e.target.value)} spellCheck={false} />
         </div>
         <div className="oc-node-actions">
+          <button className="oc-jd-btn" onClick={() => onGenJD(agent.id)} disabled={isGenJD} title="สร้าง Job Description">
+            {isGenJD ? '⏳' : '📄'}
+          </button>
           <button className="oc-add-btn" onClick={() => onAdd(agent.id)} title="เพิ่มตำแหน่งใต้บังคับบัญชา">＋</button>
           <button className="oc-del-btn" onClick={() => onFire(agent.id)} title="ลบตำแหน่ง">×</button>
         </div>
+        {agent.jd && (
+          <details className="oc-jd-detail">
+            <summary className="oc-jd-summary">📄 Job Description</summary>
+            <pre className="oc-jd-body">{agent.jd}</pre>
+          </details>
+        )}
       </div>
       {children.length > 0 && (
         <div className="oc-children">
           {children.map(child => (
             <OcNode key={child.id} agent={child} agents={agents}
-              onAdd={onAdd} onFire={onFire} onSaveField={onSaveField} />
+              onAdd={onAdd} onFire={onFire} onSaveField={onSaveField}
+              onGenJD={onGenJD} generatingJD={generatingJD} />
           ))}
         </div>
       )}
@@ -108,6 +121,8 @@ export default function AICompany({ data, onUpdate }: Props) {
   const [planning, setPlanning] = useState(false);
   const [planMsg, setPlanMsg] = useState<string | null>(null);
   const [runningTaskIds, setRunningTaskIds] = useState<Set<string>>(new Set());
+  const [generatingJD, setGeneratingJD] = useState<string | null>(null);
+  const [kbEditId, setKbEditId] = useState<string | null>(null);
 
   // เครื่องยนต์จำลอง: ขณะ running จะสร้างกิจกรรมใหม่เรื่อย ๆ (ephemeral ไม่บันทึกลง storage)
   useEffect(() => {
@@ -221,6 +236,51 @@ export default function AICompany({ data, onUpdate }: Props) {
     } finally {
       setRunningTaskIds(prev => { const s = new Set(prev); s.delete(taskId); return s; });
     }
+  }
+
+  // สร้าง Job Description สำหรับตำแหน่งในผังองค์กร
+  async function generateJD(agentId: string) {
+    if (!supabase) return;
+    const agent = c.agents.find(a => a.id === agentId);
+    if (!agent) return;
+    setGeneratingJD(agentId);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: 'HR Manager',
+          mandate: 'เขียน Job Description ที่ครบถ้วน ชัดเจน ดึงดูดผู้สมัครคุณภาพ',
+          model: 'claude-sonnet-4-6',
+          title: `สร้าง JD สำหรับตำแหน่ง ${agent.role}`,
+          detail: `หน้าที่ (Mandate): ${agent.mandate}\nรายงานต่อ: ${c.agents.find(a => a.id === agent.reportsTo)?.role ?? 'บอร์ด'}`,
+          goal: `เขียน Job Description ฉบับสมบูรณ์สำหรับตำแหน่ง "${agent.role}" ในบริษัท "${c.name}" อุตสาหกรรม ${c.industry} — ให้มีหัวข้อ: ภาพรวมตำแหน่ง, ความรับผิดชอบหลัก, คุณสมบัติที่ต้องการ, สิ่งที่ได้รับ`,
+          industry: c.industry,
+          companyName: c.name,
+          orgContext: c.agents.map(a => ({ role: a.role, mandate: a.mandate })),
+        },
+      });
+      if (error) throw error;
+      patch({ agents: c.agents.map(a => a.id === agentId ? { ...a, jd: res?.output ?? '' } : a) });
+    } catch (e) {
+      patch({ agents: c.agents.map(a => a.id === agentId ? { ...a, jd: '✕ ' + (e as Error).message } : a) });
+    } finally {
+      setGeneratingJD(null);
+    }
+  }
+
+  // SEO Agent: auto-สร้างและ execute revenue model task
+  async function runSeoRevenueModel(agentId: string) {
+    const agent = c.agents.find(a => a.id === agentId);
+    if (!agent) return;
+    const taskId = 'seo-rev-' + Date.now().toString(36);
+    const newTask = {
+      id: taskId,
+      agentId,
+      title: 'Revenue Model Analysis (Auto)',
+      detail: `วิเคราะห์ Revenue Model ของ ${c.name}: LTV, COCA, K-Factor, Pricing Tiers และ Growth Projection 12 เดือน สำหรับตลาด ${c.industry}`,
+      status: 'queued' as const,
+    };
+    patch({ tasks: [...c.tasks, newTask] });
+    setTimeout(() => executeTask(taskId), 100);
   }
 
   function setCompanyField(field: 'name' | 'goal' | 'industry', value: string) {
@@ -389,7 +449,8 @@ export default function AICompany({ data, onUpdate }: Props) {
           {c.agents.filter(a => !a.reportsTo).map(root => (
             <OcNode key={root.id} agent={root} agents={c.agents}
               onAdd={hireUnder} onFire={fireAgent}
-              onSaveField={(id, field, val) => saveAgent(id, field, val)} />
+              onSaveField={(id, field, val) => saveAgent(id, field, val)}
+              onGenJD={generateJD} generatingJD={generatingJD} />
           ))}
         </div>
       </section>
@@ -437,6 +498,35 @@ export default function AICompany({ data, onUpdate }: Props) {
                     </select>
                   </label>
                 </div>
+
+                {/* Knowledge Base แผนก */}
+                <details className="ai-kb-detail" open={kbEditId === a.id}>
+                  <summary className="ai-kb-summary" onClick={() => setKbEditId(kbEditId === a.id ? null : a.id)}>
+                    📚 Knowledge Base — {a.role}
+                    {a.knowledgeBase && <span className="ai-kb-dot" />}
+                  </summary>
+                  <textarea
+                    className="ai-kb-body"
+                    placeholder="ป้อนความรู้ นโยบาย SOP และบริบทที่ AI Agent นี้ต้องรู้…"
+                    defaultValue={a.knowledgeBase ?? ''}
+                    key={'kb-' + a.id}
+                    onBlur={e => saveAgent(a.id, 'knowledgeBase', e.target.value)}
+                    rows={4}
+                    spellCheck={false}
+                  />
+                </details>
+
+                {/* SEO: ปุ่ม Auto Revenue Model */}
+                {a.role.toLowerCase().includes('seo') && isSupabaseEnabled && (
+                  <button
+                    className="ai-seo-rev-btn"
+                    onClick={() => runSeoRevenueModel(a.id)}
+                    disabled={runningTaskIds.size > 0}
+                    title="SEO Agent รัน Revenue Model อัตโนมัติ"
+                  >
+                    📊 Auto Revenue Model (SEO)
+                  </button>
+                )}
               </div>
             ))}
             <button className="ai-hire" onClick={hireAgent}>＋ จ้างเอเจนต์ใหม่</button>

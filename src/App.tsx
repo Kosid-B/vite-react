@@ -20,6 +20,7 @@ import AICompany from './pages/AICompany';
 import Billing from './pages/Billing';
 import VRIO from './pages/VRIO';
 import Marketplace from './pages/Marketplace';
+import Roadmap from './pages/Roadmap';
 import Team from './pages/Team';
 import Admin from './pages/Admin';
 
@@ -48,6 +49,7 @@ function migrate(parsed: AppData): AppData {
   }
   if (!parsed.vrio) parsed.vrio = DEFAULT_DATA.vrio;
   if (!parsed.marketplace) parsed.marketplace = DEFAULT_DATA.marketplace;
+  if (!parsed.roadmap) parsed.roadmap = DEFAULT_DATA.roadmap;
   return parsed;
 }
 
@@ -229,6 +231,7 @@ export default function App() {
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
         {activePage === 'market' && <Marketplace data={data} onUpdate={updateData} />}
+        {activePage === 'roadmap' && <Roadmap data={data} onUpdate={updateData} />}
         {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} />}
         {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} />}
       </main>

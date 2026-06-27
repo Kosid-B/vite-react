@@ -22,6 +22,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   market: { label: 'Marketplace', prompts: ['เสนอประเภทคู่ค้าที่ควรเพิ่ม', 'กลยุทธ์ matching'], context: d => `${d.marketplace.partners.length} คู่ค้า` },
   billing: { label: 'แพ็กเกจ & ราคา', prompts: ['เสนอกลยุทธ์ราคา', 'วิธีลด churn'], context: d => `แพ็กปัจจุบัน ${d.subscription.plan}` },
   vrio: { label: 'VRIO', prompts: ['วิเคราะห์จุดแข็งที่ยั่งยืน', 'เสนอทรัพยากรที่ควรสร้าง'], context: d => `${d.vrio.length} ทรัพยากร` },
+  roadmap: { label: 'Product Roadmap', prompts: ['วิเคราะห์ Roadmap ที่มีอยู่', 'เสนอ feature ที่ควรเพิ่มใน Q ถัดไป'], context: d => `${d.roadmap?.length ?? 0} features, ${d.roadmap?.filter(r => r.status === 'done').length ?? 0} เสร็จแล้ว` },
   team: { label: 'ทีม', prompts: ['เสนอโครงสร้างทีมที่เหมาะ'], context: () => 'หน้าจัดการทีม' },
   admin: { label: 'ผู้ดูแลระบบ', prompts: ['สรุปภาพรวมการใช้งานระบบ'], context: () => 'หน้าผู้ดูแลระบบ' },
 };
