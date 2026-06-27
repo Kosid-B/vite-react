@@ -1168,3 +1168,9 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
 .auth-company { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--cream2); font-size: 11px; color: var(--ink3); line-height: 1.6; text-align: center; }
 .auth-company a { color: var(--rust); text-decoration: none; }
 .auth-company a:hover { text-decoration: underline; }
+
+/* bank transfer details on payment panel */
+.bill-bank { background: var(--cream); border: 1px solid var(--cream3); border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px; max-width: 360px; }
+.bill-bank-hd { font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--ink3); text-transform: uppercase; margin-bottom: 10px; }
+.bill-bank-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; color: var(--ink3); padding: 4px 0; }
+.bill-bank-row b { color: var(--ink); text-align: right; font-weight: 600; }

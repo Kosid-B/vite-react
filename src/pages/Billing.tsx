@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
-import { BRAND, COMPANY } from '../config';
+import { BRAND, COMPANY, PAYMENT } from '../config';
 
 function addMonths(iso: string, n: number): string {
   const d = new Date(iso);
@@ -56,17 +56,14 @@ export default function Billing({ data, onUpdate }: Props) {
 
   const selectedPlan = PLANS.find(p => p.id === selected)!;
   const needPayment = selectedPlan.price > 0;
-  const payload = needPayment ? promptPayPayload(sub.promptpayId, selectedPlan.price) : '';
-  const qrUrl = needPayment ? promptPayQrUrl(sub.promptpayId, selectedPlan.price) : '';
+  // ผู้รับเงินคือบริษัทผู้ขาย (จาก config) — ลูกค้าไม่ต้องกรอกเอง
+  const payload = needPayment ? promptPayPayload(PAYMENT.promptpayId, selectedPlan.price) : '';
+  const qrUrl = needPayment ? promptPayQrUrl(PAYMENT.promptpayId, selectedPlan.price) : '';
 
   function choosePlan(id: PlanId) {
     setSelected(id);
     const plan = PLANS.find(p => p.id === id)!;
     onUpdate({ ...data, subscription: { ...sub, plan: id, status: plan.price === 0 ? 'active' : 'pending_payment' } });
-  }
-
-  function setPromptpayId(v: string) {
-    onUpdate({ ...data, subscription: { ...sub, promptpayId: v } });
   }
 
   function confirmPaid() {
@@ -200,13 +197,15 @@ export default function Billing({ data, onUpdate }: Props) {
       {needPayment && selected === sub.plan && sub.status !== 'active' && (
         <div className="bill-pay">
           <div className="bill-pay-left">
-            <div className="bill-pay-hd">ชำระเงินผ่าน PromptPay</div>
-            <div className="bill-pay-sub">สแกน QR ด้วยแอปธนาคารใดก็ได้ เพื่อชำระแพ็ก <b>{selectedPlan.name}</b></div>
+            <div className="bill-pay-hd">ชำระเงินแพ็ก {selectedPlan.name}</div>
+            <div className="bill-pay-sub">สแกน PromptPay QR หรือโอนเข้าบัญชีธนาคารด้านล่าง</div>
 
-            <div className="bill-field">
-              <label>พร้อมเพย์ผู้รับ (เบอร์มือถือ / เลขผู้เสียภาษี)</label>
-              <input defaultValue={sub.promptpayId} onBlur={e => setPromptpayId(e.target.value)}
-                placeholder="เช่น 0812345678" spellCheck={false} />
+            <div className="bill-bank">
+              <div className="bill-bank-hd">โอนเข้าบัญชีธนาคาร</div>
+              <div className="bill-bank-row"><span>ธนาคาร</span><b>{PAYMENT.bankName}</b></div>
+              <div className="bill-bank-row"><span>ชื่อบัญชี</span><b>{PAYMENT.accountName}</b></div>
+              <div className="bill-bank-row"><span>เลขที่บัญชี</span><b>{PAYMENT.accountNo}</b></div>
+              <div className="bill-bank-row"><span>สาขา</span><b>{PAYMENT.bankBranch}</b></div>
             </div>
 
             <div className="bill-amount-row">
@@ -216,12 +215,12 @@ export default function Billing({ data, onUpdate }: Props) {
 
             {payload ? (
               <>
-                <button className="bill-copy" onClick={copyPayload}>{copied ? '✓ คัดลอกแล้ว' : 'คัดลอกข้อมูล QR (payload)'}</button>
+                <button className="bill-copy" onClick={copyPayload}>{copied ? '✓ คัดลอกแล้ว' : 'คัดลอกข้อมูล PromptPay QR (payload)'}</button>
                 <button className="bill-confirm" onClick={confirmPaid}>ฉันชำระเงินแล้ว — เปิดใช้งาน</button>
-                <div className="bill-note">* ระบบจะยืนยันยอดอัตโนมัติเมื่อเชื่อมต่อ Payment Gateway จริง (เดโมนี้กดยืนยันเองได้)</div>
+                <div className="bill-note">* เมื่อเชื่อม Payment Gateway/บัญชีธนาคารจริง ระบบจะยืนยันยอดอัตโนมัติ (เดโมนี้กดยืนยันเองได้)</div>
               </>
             ) : (
-              <div className="bill-warn">กรุณากรอกเบอร์พร้อมเพย์ให้ถูกต้อง (10 หลัก) หรือเลขผู้เสียภาษี 13 หลัก</div>
+              <div className="bill-warn">ตั้งค่า PromptPay ID ของผู้รับใน <code>src/config.ts</code> ให้ถูกต้อง (เบอร์ 10 หลัก หรือเลขผู้เสียภาษี 13 หลัก)</div>
             )}
           </div>
 
@@ -302,7 +301,8 @@ export default function Billing({ data, onUpdate }: Props) {
                     {COMPANY.address}<br/>
                     โทร {COMPANY.tel} · {COMPANY.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}<br/>
                     เลขประจำตัวผู้เสียภาษี: {COMPANY.taxId || '(โปรดระบุใน config)'}<br/>
-                    พร้อมเพย์: {sub.promptpayId}
+                    {PAYMENT.bankName} เลขที่ {PAYMENT.accountNo}<br/>
+                    PromptPay: {PAYMENT.promptpayId}
                   </div>
                   <div><span className="inv-doc-lbl">ลูกค้า</span>ผู้ใช้ระบบ<br/>(แก้ชื่อ/เลขผู้เสียภาษีได้ในการตั้งค่าบริษัท)</div>
                 </div>
