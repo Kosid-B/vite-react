@@ -1451,3 +1451,73 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
   .skm-grid { grid-template-columns: 1fr 1fr; }
   .skm-cat-pill { min-width: 90px; }
 }
+
+/* ===== CEO Mission ===== */
+.ai-mission-btn { font-size: 12px; font-family: inherit; padding: 6px 12px; background: #6b3fa0; color: #fff; border: none; border-radius: var(--r); cursor: pointer; transition: background .15s; }
+.ai-mission-btn:hover:not(:disabled) { background: #522f80; }
+.ai-mission-btn:disabled { opacity: .6; cursor: default; }
+.ai-mission-wrap { margin: 0 0 12px; }
+.ai-mission-msg { font-size: 12px; padding: 8px 12px; background: #f3f0fb; border: 1px solid #6b3fa044; border-radius: var(--r); color: #6b3fa0; margin-bottom: 8px; }
+.ai-mission-box { background: linear-gradient(135deg, #6b3fa011 0%, #1a4f8a0a 100%); border: 1px solid #6b3fa033; border-left: 4px solid #6b3fa0; border-radius: var(--r); padding: 14px 16px; }
+.ai-mission-label { font-size: 11px; font-weight: 700; color: #6b3fa0; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+.ai-mission-text { font-size: 14px; color: var(--ink); line-height: 1.7; font-style: italic; }
+.ai-mission-re-btn { margin-top: 8px; font-size: 11px; font-family: inherit; padding: 4px 10px; background: transparent; border: 1px solid #6b3fa066; color: #6b3fa0; border-radius: 20px; cursor: pointer; }
+.ai-mission-re-btn:hover { background: #6b3fa011; }
+
+/* ===== HRD Skill Plan ===== */
+.hrd-no-agent-tip { font-size: 11.5px; color: #a05c1a; background: #fff8f0; padding: 3px 10px; border-radius: 20px; }
+.hrd-plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 12px; }
+.hrd-plan-card { background: var(--white); border: 1px solid var(--sand); border-top: 3px solid #0e7490; border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.hrd-plan-role { font-size: 13px; font-weight: 700; color: #0e7490; }
+.hrd-plan-process { font-size: 12px; color: var(--ink2); line-height: 1.5; }
+.hrd-plan-kpi { font-size: 11.5px; color: var(--ink); font-weight: 600; }
+.hrd-plan-skills { display: flex; flex-wrap: wrap; gap: 4px; }
+.skill-chip.owned { background: #edf7f2; color: #2d6a4f; border-color: #2d6a4f44; }
+
+/* ===== Competency Dashboard ===== */
+.competency-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 12px; }
+.competency-card { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r); padding: 12px; }
+.competency-role { font-size: 13px; font-weight: 700; color: #1a4f8a; margin-bottom: 10px; }
+.competency-skills { display: flex; flex-direction: column; gap: 10px; }
+.competency-item { background: var(--cream2); border-radius: 6px; padding: 8px 10px; }
+.competency-skill-name { font-size: 11.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.competency-level-wrap { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+.competency-level-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--sand); border: 1px solid var(--cream3); transition: background .2s; }
+.competency-level-dot.filled { border-color: transparent; }
+.competency-level-label { font-size: 11px; font-weight: 700; margin-left: 4px; }
+.competency-criteria { font-size: 11px; color: var(--ink2); line-height: 1.4; }
+.competency-method { font-size: 10.5px; color: var(--ink3); margin-top: 2px; }
+
+/* ===== Custom Skill Upload ===== */
+.skm-custom-section { margin-bottom: 14px; border: 1px solid var(--sand); border-radius: var(--r); overflow: hidden; }
+.skm-custom-hd { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--cream2); font-size: 12.5px; font-weight: 600; color: var(--ink2); }
+.skm-custom-toggle { font-size: 11px; font-family: inherit; padding: 3px 10px; background: var(--white); border: 1px solid var(--sand); border-radius: 20px; cursor: pointer; color: var(--ink2); }
+.skm-custom-toggle:hover { border-color: var(--ink2); }
+.skm-custom-form { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; background: var(--white); }
+.skm-custom-row { display: flex; flex-direction: column; gap: 3px; }
+.skm-custom-row label { font-size: 11.5px; color: var(--ink2); font-weight: 600; }
+.skm-custom-row.two-col { flex-direction: row; gap: 10px; }
+.skm-custom-row.two-col > div { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.skm-custom-inp { font-size: 12.5px; font-family: inherit; padding: 6px 10px; border: 1px solid var(--sand); border-radius: var(--r); background: var(--cream2); color: var(--ink); }
+.skm-custom-inp:focus { outline: none; border-color: #0e7490; }
+.skm-custom-sel { font-size: 12px; font-family: inherit; padding: 6px 8px; border: 1px solid var(--sand); border-radius: var(--r); background: var(--cream2); color: var(--ink); }
+.skm-custom-actions { display: flex; gap: 6px; }
+.skm-custom-note { font-size: 11px; color: var(--ink3); line-height: 1.5; }
+.req { color: #c44b2b; }
+
+.skm-custom-list { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; background: var(--white); border-top: 1px solid var(--sand); }
+.skm-custom-card { padding: 10px 12px; border: 1px solid var(--sand); border-radius: var(--r); }
+.skm-custom-card.st-pending_hrd { border-left: 3px solid #a05c1a; }
+.skm-custom-card.st-active { border-left: 3px solid #2d6a4f; }
+.skm-custom-card.st-rejected { border-left: 3px solid #c44b2b; opacity: .6; }
+.skm-custom-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.skm-custom-card-name { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.skm-custom-status { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+.skm-custom-status.st-pending_hrd { background: #fff3e0; color: #a05c1a; }
+.skm-custom-status.st-active { background: #edf7f2; color: #2d6a4f; }
+.skm-custom-status.st-rejected { background: #fdf0ef; color: #c44b2b; }
+.skm-custom-card-desc { font-size: 11.5px; color: var(--ink2); margin-bottom: 4px; }
+.skm-custom-card-meta { display: flex; gap: 12px; font-size: 11px; color: var(--ink3); margin-bottom: 4px; }
+.skm-custom-process { margin-top: 6px; }
+.skm-custom-process summary { font-size: 11.5px; font-weight: 600; color: #0e7490; cursor: pointer; }
+.skm-custom-process-body { font-size: 11px; color: var(--ink2); background: var(--cream2); border-radius: 4px; padding: 8px; margin-top: 4px; white-space: pre-wrap; line-height: 1.6; }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AppData, Agent, AgentStatus, ApprovalStatus, TaskStatus } from '../types';
+import type { AppData, Agent, AgentStatus, ApprovalStatus, TaskStatus, SkillPlanItem, CustomSkill, RoleCompetency } from '../types';
 import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
@@ -102,6 +102,8 @@ const AVAILABLE_SKILLS = [
   'data-collection-plan','data-dashboard-design','feedback-analysis','metric-definition-guide',
   'saas-metrics-dashboard','customer-lifetime-value','marketplace-metrics','impact-report','grant-report',
   'social-impact-measurement','survey-analysis','knowledge-base-builder','job-posting',
+  // HR & Team bundle
+  'team-onboarding','performance-review','training-plan','talent-acquisition','compensation-design',
 ];
 
 // ยิ่งรอบสั้น ทำงานเร็วแต่ใช้ token ถี่ (งบบานปลาย) · ยิ่งรอบยาว ประหยัดงบ
@@ -160,6 +162,14 @@ export default function AICompany({ data, onUpdate }: Props) {
   const [mktTier, setMktTier] = useState<0 | 1 | 2 | 3>(0);
   const [buyConfirm, setBuyConfirm] = useState<SkillEntry | null>(null);
   const [mktMsg, setMktMsg] = useState<string | null>(null);
+  const [proposingMission, setProposingMission] = useState(false);
+  const [missionMsg, setMissionMsg] = useState<string | null>(null);
+  const [hrdPlanningSkills, setHrdPlanningSkills] = useState(false);
+  const [skillPlanMsg, setSkillPlanMsg] = useState<string | null>(null);
+  const [addCustomSkillOpen, setAddCustomSkillOpen] = useState(false);
+  const [customSkillDraft, setCustomSkillDraft] = useState({ name: '', desc: '', category: 'hr', tier: 1 as 1|2|3 });
+  const [competencyMsg, setCompetencyMsg] = useState<string | null>(null);
+  const [designingCompetency, setDesigningCompetency] = useState(false);
 
   // เครื่องยนต์จำลอง: ขณะ running จะสร้างกิจกรรมใหม่เรื่อย ๆ (ephemeral ไม่บันทึกลง storage)
   useEffect(() => {
@@ -463,6 +473,7 @@ export default function AICompany({ data, onUpdate }: Props) {
     try {
       const meta = JSON.parse(impact);
       if (meta.type === 'hire') return `📋 เพิ่มตำแหน่ง: ${meta.role} · รายงานต่อ: ${meta.reportsToRole}`;
+      if (meta.type === 'mission') return `🧭 Mission: ${String(meta.mission ?? '').slice(0, 80)}`;
       return impact;
     } catch { return impact; }
   }
@@ -520,6 +531,209 @@ export default function AICompany({ data, onUpdate }: Props) {
       reportsToRole: 'CEO',
       reason: 'พัฒนาขีดความสามารถทีมให้สอดคล้องกับเป้าหมายบริษัท และจัดการ Skill ที่ซื้อในระบบ',
     });
+  }
+
+  // CEO ร่าง Mission Statement → สร้าง approval ประเภท 'mission' รอบอร์ดอนุมัติ
+  async function ceoProposeMission() {
+    if (!supabase) return;
+    setProposingMission(true);
+    setMissionMsg(null);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: 'CEO',
+          mandate: 'ร่าง Mission Statement ที่ชัดเจน ทะเยอทะยาน และเป็นแรงบันดาลใจ สอดคล้องกับเป้าหมายและทักษะขององค์กร',
+          model: 'claude-sonnet-4-6',
+          title: 'ร่าง Mission Statement สำหรับบริษัท',
+          detail: [
+            `บริษัท: ${c.name} | อุตสาหกรรม: ${c.industry}`,
+            `เป้าหมายหลัก: ${c.goal}`,
+            '',
+            'ทีมงาน AI:',
+            c.agents.map(a => `- ${a.role}: ${a.mandate.split('\n')[0]}`).join('\n'),
+            '',
+            `Skill ที่องค์กรมี: ${(c.purchasedSkills ?? []).join(', ') || 'ยังไม่มี'}`,
+            '',
+            'ให้ CEO ร่าง Mission Statement ที่:',
+            '1. สั้น กระชับ ทรงพลัง (2-3 ประโยค)',
+            '2. ระบุว่าองค์กรนี้ทำเพื่อใคร สร้างคุณค่าอะไร และแตกต่างอย่างไร',
+            '3. ใช้ภาษาไทยที่เข้าใจง่ายและจุดประกายแรงบันดาลใจ',
+            '',
+            'ตอบกลับในรูปแบบ JSON: {"mission": "Mission Statement ที่นี่", "rationale": "เหตุผล 2-3 บรรทัด"}',
+          ].join('\n'),
+          goal: c.goal, industry: c.industry, companyName: c.name,
+          orgContext: c.agents.map(a => ({ role: a.role, mandate: a.mandate })),
+        },
+      });
+      if (error) throw error;
+      const output: string = res?.output ?? '';
+      const match = output.match(/\{[\s\S]*\}/);
+      let mission = '', rationale = '';
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        mission = String(parsed.mission ?? '').trim();
+        rationale = String(parsed.rationale ?? '');
+      } else {
+        mission = output.trim().slice(0, 300);
+      }
+      if (!mission) throw new Error('ไม่ได้รับ Mission Statement');
+      const ceoAgent = c.agents.find(a => a.role.toLowerCase().includes('ceo')) ?? c.agents[0];
+      const approval: import('../types').Approval = {
+        id: 'mis-' + Date.now().toString(36),
+        agentId: ceoAgent?.id ?? '',
+        title: `🧭 CEO เสนอ Mission Statement`,
+        detail: `"${mission}"\n\nเหตุผล: ${rationale}`,
+        impact: JSON.stringify({ type: 'mission', mission }),
+        status: 'pending',
+      };
+      patch({ approvals: [...c.approvals, approval] });
+      setMissionMsg('✓ CEO ร่าง Mission แล้ว — เลื่อนลงไปที่กล่องอนุมัติเพื่ออนุมัติ');
+    } catch (e) {
+      setMissionMsg('✕ ' + (e as Error).message);
+    } finally {
+      setProposingMission(false);
+    }
+  }
+
+  // HRD กำหนด Skill Plan ให้ทุกตำแหน่งตาม Mission ของบริษัท
+  async function hrdDefineSkillPlan() {
+    const hrdAgent = c.agents.find(a => /hrd|hr manager/i.test(a.role));
+    if (!hrdAgent) { setSkillPlanMsg('✕ ยังไม่มี HRD Manager — กด "ขอเพิ่ม HRD" และรอ Approve ก่อน'); return; }
+    if (!supabase) return;
+    setHrdPlanningSkills(true);
+    setSkillPlanMsg(null);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: hrdAgent.role, name: hrdAgent.name, mandate: hrdAgent.mandate, model: hrdAgent.model,
+          title: 'กำหนด Skill Plan ตาม Mission ของบริษัท',
+          detail: [
+            `บริษัท: ${c.name} | Mission: ${c.mission || c.goal}`,
+            '',
+            'ทีมงาน AI (agentId → role → mandate):',
+            c.agents.map(a => `- ${a.id}: ${a.role} — ${a.mandate.split('\n')[0]}`).join('\n'),
+            '',
+            `Skills ในระบบ: ${AVAILABLE_SKILLS.join(', ')}`,
+            `Skills ที่ซื้อแล้ว: ${(c.purchasedSkills ?? []).join(', ') || 'ยังไม่มี'}`,
+            '',
+            'ให้ HRD กำหนด Skill Plan สำหรับทุกตำแหน่ง ตอบเป็น JSON array:',
+            '[{"agentId":"id","role":"ชื่อตำแหน่ง","skills":["skill1","skill2"],"process":"กระบวนการหลัก 1-2 ประโยค","kpi":"KPI ที่วัดได้"}]',
+          ].join('\n'),
+          goal: c.mission || c.goal, industry: c.industry, companyName: c.name,
+          orgContext: c.agents.map(a => ({ role: a.role, mandate: a.mandate })),
+        },
+      });
+      if (error) throw error;
+      const output: string = res?.output ?? '';
+      const match = output.match(/\[[\s\S]*\]/);
+      if (match) {
+        const parsed: SkillPlanItem[] = JSON.parse(match[0]);
+        patch({ skillPlan: parsed });
+        setSkillPlanMsg(`✓ HRD กำหนด Skill Plan ${parsed.length} ตำแหน่งแล้ว`);
+      } else {
+        setSkillPlanMsg('HRD: ' + output.slice(0, 200));
+      }
+    } catch (e) {
+      setSkillPlanMsg('✕ ' + (e as Error).message);
+    } finally {
+      setHrdPlanningSkills(false);
+    }
+  }
+
+  // User เพิ่ม Custom Skill → ส่งให้ HRD ออกแบบกระบวนการมาตรฐาน
+  function submitCustomSkill() {
+    const { name, desc, category, tier } = customSkillDraft;
+    if (!name.trim() || !desc.trim()) return;
+    const price = tier === 1 ? 1000 : tier === 2 ? 1500 : 2000;
+    const newSkill: CustomSkill = {
+      id: 'csk-' + Date.now().toString(36),
+      name: name.trim(), desc: desc.trim(), category, tier, price,
+      status: 'pending_hrd', addedAt: new Date().toLocaleDateString('th-TH'),
+    };
+    patch({ customSkills: [...(c.customSkills ?? []), newSkill] });
+    setCustomSkillDraft({ name: '', desc: '', category: 'hr', tier: 1 });
+    setAddCustomSkillOpen(false);
+  }
+
+  // HRD ออกแบบกระบวนการมาตรฐานสำหรับ Custom Skill ที่ User เพิ่ม
+  async function hrdProcessCustomSkill(skillId: string) {
+    const skill = (c.customSkills ?? []).find(s => s.id === skillId);
+    const hrdAgent = c.agents.find(a => /hrd|hr manager/i.test(a.role));
+    if (!skill || !hrdAgent || !supabase) return;
+    try {
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: hrdAgent.role, mandate: hrdAgent.mandate, model: hrdAgent.model,
+          title: `ออกแบบกระบวนการมาตรฐานสำหรับ Skill: ${skill.name}`,
+          detail: [
+            `ชื่อ Skill: ${skill.name}`,
+            `คำอธิบาย: ${skill.desc}`,
+            `หมวดหมู่: ${skill.category} | ระดับ: Tier ${skill.tier}`,
+            '',
+            'ให้ HRD ออกแบบกระบวนการมาตรฐาน (Standard Process) สำหรับ Skill นี้:',
+            '1. วัตถุประสงค์การเรียนรู้ 3-5 ข้อ',
+            '2. ขั้นตอนการฝึกอบรมที่ชัดเจน',
+            '3. วิธีประเมินความสามารถ',
+            '4. KPI ที่บ่งชี้ว่าใช้ Skill นี้ได้จริง',
+            '',
+            'ตอบเป็น JSON: {"process": "กระบวนการมาตรฐาน 3-5 ขั้นตอน"}',
+          ].join('\n'),
+          goal: c.goal, industry: c.industry, companyName: c.name, orgContext: [],
+        },
+      });
+      if (error) throw error;
+      const output: string = res?.output ?? '';
+      const match = output.match(/\{[\s\S]*\}/);
+      const process = match ? String(JSON.parse(match[0]).process ?? output) : output;
+      patch({ customSkills: (c.customSkills ?? []).map(s => s.id === skillId ? { ...s, status: 'active' as const, hrdProcess: process } : s) });
+    } catch {
+      patch({ customSkills: (c.customSkills ?? []).map(s => s.id === skillId ? { ...s, status: 'rejected' as const } : s) });
+    }
+  }
+
+  // HRD ออกแบบระบบประเมิน Competency ต่อตำแหน่ง
+  async function hrdDesignCompetencyAssessment() {
+    const hrdAgent = c.agents.find(a => /hrd|hr manager/i.test(a.role));
+    if (!hrdAgent) { setCompetencyMsg('✕ ยังไม่มี HRD Manager'); return; }
+    if (c.skillPlan.length === 0) { setCompetencyMsg('✕ กำหนด Skill Plan ก่อน แล้วค่อยออกแบบการประเมิน'); return; }
+    if (!supabase) return;
+    setDesigningCompetency(true);
+    setCompetencyMsg(null);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: hrdAgent.role, mandate: hrdAgent.mandate, model: hrdAgent.model,
+          title: 'ออกแบบ Competency Assessment Framework',
+          detail: [
+            `บริษัท: ${c.name} | Mission: ${c.mission || c.goal}`,
+            '',
+            'Skill Plan ปัจจุบัน:',
+            c.skillPlan.map(p => `- ${p.role} (${p.agentId}): ${p.skills.join(', ')} | KPI: ${p.kpi}`).join('\n'),
+            '',
+            'ระดับ Competency: 0=ไม่มี 1=Novice 2=Developing 3=Proficient 4=Expert',
+            '',
+            'ให้ HRD กำหนด Competency Framework สำหรับทุกตำแหน่ง ตอบเป็น JSON array:',
+            '[{"agentId":"id","role":"ชื่อตำแหน่ง","competencies":[{"skillId":"skill-id","level":3,"criteria":"เกณฑ์ประเมิน","assessMethod":"Portfolio/Test/Interview/Observation"}]}]',
+          ].join('\n'),
+          goal: c.goal, industry: c.industry, companyName: c.name,
+          orgContext: c.agents.map(a => ({ role: a.role, mandate: a.mandate })),
+        },
+      });
+      if (error) throw error;
+      const output: string = res?.output ?? '';
+      const match = output.match(/\[[\s\S]*\]/);
+      if (match) {
+        const parsed: RoleCompetency[] = JSON.parse(match[0]);
+        patch({ competencyMap: parsed });
+        setCompetencyMsg(`✓ HRD ออกแบบ Competency Assessment ${parsed.length} ตำแหน่งแล้ว`);
+      } else {
+        setCompetencyMsg('HRD: ' + output.slice(0, 200));
+      }
+    } catch (e) {
+      setCompetencyMsg('✕ ' + (e as Error).message);
+    } finally {
+      setDesigningCompetency(false);
+    }
   }
 
   function setCompanyField(field: 'name' | 'goal' | 'industry', value: string) {
@@ -606,6 +820,23 @@ export default function AICompany({ data, onUpdate }: Props) {
           });
           return;
         }
+        if (meta.type === 'mission') {
+          const missionTasks = c.agents.map((a, i) => ({
+            id: 'mis-' + Date.now().toString(36) + i,
+            agentId: a.id,
+            title: `พัฒนากระบวนการตาม Mission ใหม่`,
+            detail: `Mission: ${meta.mission}\n\nให้ ${a.role} วิเคราะห์ว่ากระบวนการที่ตนรับผิดชอบต้องปรับปรุงอย่างไรเพื่อสนับสนุน Mission นี้ พร้อมกำหนด 3 Action สำคัญในเดือนแรก`,
+            status: 'queued' as const,
+          }));
+          patch({
+            approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a),
+            mission: meta.mission,
+            missionApproved: true,
+            tasks: [...c.tasks, ...missionTasks],
+          });
+          setMissionMsg(`✅ Mission อนุมัติแล้ว! ส่งงานพัฒนากระบวนการให้ทีม ${missionTasks.length} คน — กด "HRD กำหนด Skill Plan" เพื่อวางแผนพัฒนาทักษะ`);
+          return;
+        }
       } catch { /* not a hire approval */ }
     }
     patch({ approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a) });
@@ -665,6 +896,11 @@ export default function AICompany({ data, onUpdate }: Props) {
               {planning ? 'CEO กำลังคิด…' : '✦ ให้ CEO วางแผนด้วย Claude'}
             </button>
           )}
+          {isSupabaseEnabled && !c.missionApproved && (
+            <button className="ai-mission-btn" onClick={ceoProposeMission} disabled={proposingMission}>
+              {proposingMission ? '⏳ CEO กำลังร่าง Mission…' : '🧭 ให้ CEO ร่าง Mission'}
+            </button>
+          )}
           <button className={`ai-run-btn${c.running ? ' running' : ''}`} onClick={toggleRun}>
             <span className="ai-run-dot" />
             {c.running ? 'กำลังทำงาน · กดเพื่อหยุด' : 'เริ่มให้ทีม AI ทำงาน'}
@@ -679,6 +915,24 @@ export default function AICompany({ data, onUpdate }: Props) {
           onBlur={e => setCompanyField('goal', e.target.value)}
           onChange={e => autoH(e.target)} ref={el => autoH(el)} spellCheck={false} />
       </div>
+
+      {/* ===== CEO Mission ===== */}
+      {(missionMsg || c.missionApproved) && (
+        <div className="ai-mission-wrap">
+          {missionMsg && <div className="ai-mission-msg">{missionMsg}</div>}
+          {c.missionApproved && c.mission && (
+            <div className="ai-mission-box">
+              <div className="ai-mission-label">🧭 Mission Statement (อนุมัติโดยบอร์ด)</div>
+              <div className="ai-mission-text">{c.mission}</div>
+              {isSupabaseEnabled && (
+                <button className="ai-mission-re-btn" onClick={ceoProposeMission} disabled={proposingMission}>
+                  {proposingMission ? '⏳…' : '✏️ ร่าง Mission ใหม่'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="ai-budget-tip">
         💰 <b>คุมงบ token:</b> รอบ Heartbeat ยิ่งยาวยิ่งประหยัด — แนะนำ “ทุก 10 นาที” ตอนตั้งค่าเริ่มต้น
@@ -1011,6 +1265,99 @@ export default function AICompany({ data, onUpdate }: Props) {
         </div>
       </section>
 
+      {/* ===== HRD Skill Plan ===== */}
+      {(() => {
+        const hrdAgent = c.agents.find(a => /hrd|hr manager/i.test(a.role));
+        return (
+          <section className="ai-panel" style={{ marginTop: 16 }}>
+            <div className="ai-panel-hd">
+              🎓 HRD Skill Plan — วางแผนพัฒนาทักษะตาม Mission
+              {hrdAgent && isSupabaseEnabled && (
+                <button className="ai-suggest-btn mandate-btn"
+                  onClick={hrdDefineSkillPlan} disabled={hrdPlanningSkills}
+                  title="HRD กำหนด Skills และกระบวนการที่ทุกตำแหน่งต้องมี">
+                  {hrdPlanningSkills ? '⏳ HRD กำลังวางแผน…' : '📋 HRD กำหนด Skill Plan'}
+                </button>
+              )}
+              {!hrdAgent && (
+                <span className="hrd-no-agent-tip">⚠️ ยังไม่มี HRD — กด "ขอเพิ่ม HRD" ในผังองค์กรก่อน</span>
+              )}
+            </div>
+            {skillPlanMsg && <div className="ai-plan-msg">{skillPlanMsg}</div>}
+            {c.skillPlan.length === 0 && !skillPlanMsg && (
+              <div className="ai-feed-empty">ยังไม่มี Skill Plan — อนุมัติ Mission แล้วให้ HRD กำหนด Skill Plan</div>
+            )}
+            {c.skillPlan.length > 0 && (
+              <div className="hrd-plan-grid">
+                {c.skillPlan.map((plan, i) => (
+                  <div key={i} className="hrd-plan-card">
+                    <div className="hrd-plan-role">🎯 {plan.role}</div>
+                    <div className="hrd-plan-process">{plan.process}</div>
+                    <div className="hrd-plan-kpi">📊 KPI: {plan.kpi}</div>
+                    <div className="hrd-plan-skills">
+                      {(plan.skills ?? []).map(sk => (
+                        <span key={sk} className={`skill-chip${(c.purchasedSkills ?? []).includes(sk) ? ' owned' : ''}`}>
+                          {(c.purchasedSkills ?? []).includes(sk) ? '✓ ' : ''}{sk}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })()}
+
+      {/* ===== HRD Competency Assessment Dashboard ===== */}
+      <section className="ai-panel" style={{ marginTop: 16 }}>
+        <div className="ai-panel-hd">
+          📊 Competency Assessment Dashboard — HRD ออกแบบการประเมิน
+          {isSupabaseEnabled && (
+            <button className="ai-suggest-btn"
+              onClick={hrdDesignCompetencyAssessment} disabled={designingCompetency}
+              title="HRD กำหนดระดับ Competency และวิธีประเมินสำหรับทุกตำแหน่ง">
+              {designingCompetency ? '⏳ HRD กำลังออกแบบ…' : '🔬 HRD ออกแบบการประเมิน'}
+            </button>
+          )}
+        </div>
+        {competencyMsg && <div className="ai-plan-msg">{competencyMsg}</div>}
+        {(c.competencyMap ?? []).length === 0 && !competencyMsg && (
+          <div className="ai-feed-empty">ยังไม่มี Competency Framework — กำหนด Skill Plan แล้วให้ HRD ออกแบบการประเมิน</div>
+        )}
+        {(c.competencyMap ?? []).length > 0 && (
+          <div className="competency-grid">
+            {(c.competencyMap ?? []).map((rc, i) => (
+              <div key={i} className="competency-card">
+                <div className="competency-role">🎯 {rc.role}</div>
+                <div className="competency-skills">
+                  {(rc.competencies ?? []).map((cs, j) => {
+                    const LEVEL_LABELS = ['ไม่มี', 'Novice', 'Developing', 'Proficient', 'Expert'];
+                    const LEVEL_COLORS = ['#9ca3af', '#6b7280', '#a05c1a', '#1a4f8a', '#2d6a4f'];
+                    return (
+                      <div key={j} className="competency-item">
+                        <div className="competency-skill-name">{cs.skillId}</div>
+                        <div className="competency-level-wrap">
+                          {[1,2,3,4].map(lv => (
+                            <div key={lv} className={`competency-level-dot${cs.level >= lv ? ' filled' : ''}`}
+                              style={cs.level >= lv ? { background: LEVEL_COLORS[cs.level] } : {}} />
+                          ))}
+                          <span className="competency-level-label" style={{ color: LEVEL_COLORS[cs.level] }}>
+                            {LEVEL_LABELS[cs.level]}
+                          </span>
+                        </div>
+                        <div className="competency-criteria">{cs.criteria}</div>
+                        <div className="competency-method">📝 {cs.assessMethod}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* ===== 🛒 Skill Marketplace ===== */}
       {(() => {
         const purchased = c.purchasedSkills ?? [];
@@ -1092,6 +1439,96 @@ export default function AICompany({ data, onUpdate }: Props) {
             {mktMsg && (
               <div className="skm-msg">{mktMsg}</div>
             )}
+
+            {/* User Custom Skill Upload */}
+            <div className="skm-custom-section">
+              <div className="skm-custom-hd">
+                ➕ เพิ่ม Custom Skill จากบริษัท
+                <button className="skm-custom-toggle" onClick={() => setAddCustomSkillOpen(!addCustomSkillOpen)}>
+                  {addCustomSkillOpen ? '▲ ซ่อนฟอร์ม' : '▼ เพิ่ม Skill ใหม่'}
+                </button>
+              </div>
+              {addCustomSkillOpen && (
+                <div className="skm-custom-form">
+                  <div className="skm-custom-row">
+                    <label>ชื่อ Skill <span className="req">*</span></label>
+                    <input className="skm-custom-inp" placeholder="เช่น Customer Success Playbook"
+                      value={customSkillDraft.name}
+                      onChange={e => setCustomSkillDraft(d => ({ ...d, name: e.target.value }))} />
+                  </div>
+                  <div className="skm-custom-row">
+                    <label>คำอธิบาย <span className="req">*</span></label>
+                    <input className="skm-custom-inp" placeholder="อธิบาย Skill นี้ทำอะไร ใช้ตอนไหน"
+                      value={customSkillDraft.desc}
+                      onChange={e => setCustomSkillDraft(d => ({ ...d, desc: e.target.value }))} />
+                  </div>
+                  <div className="skm-custom-row two-col">
+                    <div>
+                      <label>หมวดหมู่</label>
+                      <select className="skm-custom-sel"
+                        value={customSkillDraft.category}
+                        onChange={e => setCustomSkillDraft(d => ({ ...d, category: e.target.value }))}>
+                        {Object.entries(CATEGORY_META).map(([k, v]) => (
+                          <option key={k} value={k}>{v.icon} {v.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label>ระดับ</label>
+                      <select className="skm-custom-sel"
+                        value={customSkillDraft.tier}
+                        onChange={e => setCustomSkillDraft(d => ({ ...d, tier: Number(e.target.value) as 1|2|3 }))}>
+                        <option value={1}>Foundation (฿1,000)</option>
+                        <option value={2}>Professional (฿1,500)</option>
+                        <option value={3}>Enterprise (฿2,000)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="skm-custom-actions">
+                    <button className="skm-btn buy" onClick={submitCustomSkill}
+                      disabled={!customSkillDraft.name.trim() || !customSkillDraft.desc.trim()}>
+                      📨 ส่งให้ HRD ตรวจสอบ
+                    </button>
+                    <button className="skm-btn cancel" onClick={() => setAddCustomSkillOpen(false)}>ยกเลิก</button>
+                  </div>
+                  <div className="skm-custom-note">
+                    🎓 Custom Skill ต้องผ่านกระบวนการ HRD เพื่อสร้างมาตรฐานการประเมิน ก่อนจะ Active ในระบบ
+                  </div>
+                </div>
+              )}
+              {/* Custom Skills pending/active list */}
+              {(c.customSkills ?? []).length > 0 && (
+                <div className="skm-custom-list">
+                  {(c.customSkills ?? []).map(cs => (
+                    <div key={cs.id} className={`skm-custom-card st-${cs.status}`}>
+                      <div className="skm-custom-card-top">
+                        <span className="skm-custom-card-name">{cs.name}</span>
+                        <span className={`skm-custom-status st-${cs.status}`}>
+                          {cs.status === 'pending_hrd' ? '⏳ รอ HRD' : cs.status === 'active' ? '✓ Active' : '✕ ปฏิเสธ'}
+                        </span>
+                      </div>
+                      <div className="skm-custom-card-desc">{cs.desc}</div>
+                      <div className="skm-custom-card-meta">
+                        <span>Tier {cs.tier} · ฿{cs.price.toLocaleString()}</span>
+                        <span>เพิ่มเมื่อ {cs.addedAt}</span>
+                      </div>
+                      {cs.hrdProcess && (
+                        <details className="skm-custom-process">
+                          <summary>📋 กระบวนการมาตรฐาน (HRD)</summary>
+                          <pre className="skm-custom-process-body">{cs.hrdProcess}</pre>
+                        </details>
+                      )}
+                      {cs.status === 'pending_hrd' && isSupabaseEnabled && (
+                        <button className="skm-btn buy" onClick={() => hrdProcessCustomSkill(cs.id)}
+                          style={{ marginTop: 6 }}>
+                          🎓 ให้ HRD ออกแบบกระบวนการ
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Skill Grid */}
             <div className="skm-grid">

@@ -222,6 +222,47 @@ export const SKILL_CATALOG: SkillEntry[] = [
     tags: ['Product Manager', 'CTO', 'CEO'],
   },
 
+  // ── HR & Team · Tier 3 · Enterprise · ฿2,000 ────────────────────────────
+  {
+    id: 'compensation-design',
+    name: 'Compensation & Benefits Design',
+    category: 'hr', tier: 3, price: 2000, icon: '💴',
+    desc: 'ออกแบบโครงสร้างเงินเดือน Salary Band สวัสดิการ และ Incentive Plan ที่แข่งขันได้ในตลาด',
+    tags: ['HRD Manager', 'CEO', 'CFO'],
+  },
+
+  // ── HR & Team · Tier 2 · Professional · ฿1,500 ───────────────────────────
+  {
+    id: 'performance-review',
+    name: 'Performance Review System',
+    category: 'hr', tier: 2, price: 1500, icon: '⭐',
+    desc: 'ออกแบบระบบประเมินผลงาน 360 องศา Rating Scale KPI Scorecard และแผนพัฒนารายบุคคล',
+    tags: ['HRD Manager', 'HR Manager', 'CEO'],
+  },
+  {
+    id: 'training-plan',
+    name: 'Training & Development Plan',
+    category: 'hr', tier: 2, price: 1500, icon: '📖',
+    desc: 'วางแผนพัฒนาทักษะและฝึกอบรม Blended Learning ครอบคลุม OJT, Workshop, E-learning',
+    tags: ['HRD Manager', 'HR Manager', 'COO'],
+  },
+  {
+    id: 'talent-acquisition',
+    name: 'Talent Acquisition Strategy',
+    category: 'hr', tier: 2, price: 1500, icon: '🎯',
+    desc: 'กลยุทธ์สรรหาบุคลากรครบวงจร Sourcing, Interview Scorecard, Offer และ Time-to-Hire KPI',
+    tags: ['HRD Manager', 'HR Manager', 'CEO'],
+  },
+
+  // ── HR & Team · Tier 1 · Foundation · ฿1,000 ─────────────────────────────
+  {
+    id: 'team-onboarding',
+    name: 'Team Onboarding Plan',
+    category: 'hr', tier: 1, price: 1000, icon: '🚪',
+    desc: 'สร้างแผน Onboarding 30/60/90 วัน ลด Time-to-Productivity และเพิ่ม Retention พนักงานใหม่',
+    tags: ['HRD Manager', 'HR Manager', 'Team Lead'],
+  },
+
   // ── Tier 1 · Foundation · ฿1,000 ─────────────────────────────────────────
   {
     id: 'customer-win-story',

@@ -460,6 +460,11 @@ export const DEFAULT_DATA: AppData = {
     ],
     purchasedSkills: [],
     skillXP: 0,
+    mission: '',
+    missionApproved: false,
+    skillPlan: [],
+    customSkills: [],
+    competencyMap: [],
   },
   subscription: {
     plan: 'free',

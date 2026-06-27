@@ -152,6 +152,42 @@ export interface Integration {
   apiKey: string;
 }
 
+export interface SkillPlanItem {
+  agentId: string;
+  role: string;
+  skills: string[];    // skill IDs จาก SKILL_CATALOG หรือ customSkills
+  process: string;     // กระบวนการหลักที่รับผิดชอบ
+  kpi: string;         // KPI ที่วัดได้
+}
+
+export type CompetencyLevel = 0 | 1 | 2 | 3 | 4;
+// 0=ไม่มี 1=Novice 2=Developing 3=Proficient 4=Expert
+
+export interface CompetencySkill {
+  skillId: string;
+  level: CompetencyLevel;    // ระดับที่ต้องการ
+  criteria: string;          // HRD กำหนดวิธีประเมิน
+  assessMethod: string;      // Practical test / Portfolio / Interview / Observation
+}
+
+export interface RoleCompetency {
+  agentId: string;
+  role: string;
+  competencies: CompetencySkill[];
+}
+
+export interface CustomSkill {
+  id: string;
+  name: string;
+  desc: string;
+  category: string;
+  tier: 1 | 2 | 3;
+  price: number;
+  status: 'pending_hrd' | 'active' | 'rejected';
+  hrdProcess?: string;   // HRD ออกแบบกระบวนการมาตรฐาน
+  addedAt: string;
+}
+
 export interface AICompany {
   name: string;
   goal: string;          // เป้าหมายหลัก (Mission) ที่บอร์ดตั้งไว้
@@ -165,6 +201,11 @@ export interface AICompany {
   integrations: Integration[];
   purchasedSkills: string[];  // skill IDs ที่บริษัทซื้อแล้ว
   skillXP: number;            // XP สะสมจากการซื้อ Skill
+  mission: string;            // Mission Statement ที่ CEO เสนอและบอร์ดอนุมัติ
+  missionApproved: boolean;
+  skillPlan: SkillPlanItem[]; // HRD กำหนด Skills + Process ต่อตำแหน่ง
+  customSkills: CustomSkill[]; // Skills ที่ User เพิ่มเองผ่านกระบวนการ HRD
+  competencyMap: RoleCompetency[]; // HRD กำหนด Competency Level ต่อตำแหน่ง
 }
 
 /* ===== Billing / PromptPay ===== */
