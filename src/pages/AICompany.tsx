@@ -3,6 +3,45 @@ import type { AppData, Agent, AgentStatus, ApprovalStatus, TaskStatus } from '..
 import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 
+// ---- Org Chart Node (recursive) ----
+interface OcNodeProps {
+  agent: Agent;
+  agents: Agent[];
+  onAdd: (parentId: string) => void;
+  onFire: (id: string) => void;
+  onSaveField: (id: string, field: keyof Agent, value: string) => void;
+}
+function OcNode({ agent, agents, onAdd, onFire, onSaveField }: OcNodeProps) {
+  const children = agents.filter(a => a.reportsTo === agent.id);
+  return (
+    <div className="oc-subtree">
+      <div className="oc-node" style={{ borderTopColor: agent.color }}>
+        <div className="oc-node-av" style={{ background: agent.color + '22' }}>{agent.avatar}</div>
+        <div className="oc-node-info">
+          <input className="oc-role-inp"
+            defaultValue={agent.role} key={'ocr' + agent.id + agent.role}
+            onBlur={e => onSaveField(agent.id, 'role', e.target.value)} spellCheck={false} />
+          <input className="oc-name-inp"
+            defaultValue={agent.name} key={'ocn' + agent.id + agent.name}
+            onBlur={e => onSaveField(agent.id, 'name', e.target.value)} spellCheck={false} />
+        </div>
+        <div className="oc-node-actions">
+          <button className="oc-add-btn" onClick={() => onAdd(agent.id)} title="เพิ่มตำแหน่งใต้บังคับบัญชา">＋</button>
+          <button className="oc-del-btn" onClick={() => onFire(agent.id)} title="ลบตำแหน่ง">×</button>
+        </div>
+      </div>
+      {children.length > 0 && (
+        <div className="oc-children">
+          {children.map(child => (
+            <OcNode key={child.id} agent={child} agents={agents}
+              onAdd={onAdd} onFire={onFire} onSaveField={onSaveField} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
@@ -199,9 +238,24 @@ export default function AICompany({ data, onUpdate }: Props) {
       role: 'ตำแหน่งใหม่', name: 'เอเจนต์', avatar: AVATARS[i % AVATARS.length],
       color: AGENT_PALETTE[i % AGENT_PALETTE.length],
       mandate: 'อธิบายหน้าที่ของเอเจนต์นี้', model: MODELS[1],
-      // autoHire ปิด = เอเจนต์ใหม่เริ่มในสถานะ "รออนุมัติ" จนบอร์ดเปิดใช้งาน
       status: c.autoHire ? 'idle' : 'waiting',
       reportsTo: c.agents.find(a => a.role === 'CEO')?.id ?? null,
+    };
+    patch({ agents: [...c.agents, newAgent] });
+  }
+  // เพิ่มตำแหน่งใต้บังคับบัญชาของ parentId (จากปุ่ม ＋ ใน org chart)
+  function hireUnder(parentId: string) {
+    const i = c.agents.length;
+    const parent = c.agents.find(a => a.id === parentId);
+    const newAgent: Agent = {
+      id: 'a-' + Date.now().toString(36),
+      role: 'ตำแหน่งใหม่', name: 'เอเจนต์',
+      avatar: AVATARS[i % AVATARS.length],
+      color: AGENT_PALETTE[i % AGENT_PALETTE.length],
+      mandate: `รับผิดชอบต่อ ${parent?.role ?? 'หัวหน้า'} — ระบุหน้าที่ที่นี่`,
+      model: MODELS[1],
+      status: c.autoHire ? 'idle' : 'waiting',
+      reportsTo: parentId,
     };
     patch({ agents: [...c.agents, newAgent] });
   }
@@ -313,6 +367,32 @@ export default function AICompany({ data, onUpdate }: Props) {
         <div className="ai-stat"><div className="ai-stat-num">{c.tasks.filter(t => t.status === 'done').length}</div><div className="ai-stat-lbl">งานเสร็จแล้ว</div></div>
         <div className="ai-stat"><div className="ai-stat-num" style={{ color: pendingApprovals ? 'var(--rust)' : undefined }}>{pendingApprovals}</div><div className="ai-stat-lbl">รอบอร์ดอนุมัติ</div></div>
       </div>
+
+      {/* ===== ผังองค์กร ===== */}
+      <section className="ai-panel" style={{ marginTop: 16 }}>
+        <div className="ai-panel-hd">
+          🏢 ผังองค์กร — CEO กำหนดโครงสร้าง
+          <button className="ai-mini-add" onClick={() => patch({ agents: [...c.agents, {
+            id: 'a-' + Date.now().toString(36), role: 'CEO', name: 'เอเจนต์หลัก',
+            avatar: '🤖', color: AGENT_PALETTE[0], mandate: 'กำหนดทิศทางและตัดสินใจสูงสุด',
+            model: MODELS[0], status: 'idle', reportsTo: null,
+          }] })}>＋ เพิ่ม CEO</button>
+        </div>
+        <div className="oc-tip">
+          คลิกที่ชื่อตำแหน่ง / ชื่อเอเจนต์เพื่อแก้ไข · กด <b>＋</b> เพื่อเพิ่มผู้ใต้บังคับบัญชา · กด <b>×</b> เพื่อลบตำแหน่ง
+        </div>
+        {c.agents.length === 0 && (
+          <div className="ai-feed-empty">ยังไม่มีเอเจนต์ — กด "＋ เพิ่ม CEO" เพื่อเริ่มสร้างโครงสร้าง</div>
+        )}
+        <div className="oc-tree">
+          {/* root nodes = ไม่มีหัวหน้า (reportsTo null/empty) */}
+          {c.agents.filter(a => !a.reportsTo).map(root => (
+            <OcNode key={root.id} agent={root} agents={c.agents}
+              onAdd={hireUnder} onFire={fireAgent}
+              onSaveField={(id, field, val) => saveAgent(id, field, val)} />
+          ))}
+        </div>
+      </section>
 
       <div className="ai-2col">
         {/* ===== ทีมเอเจนต์ ===== */}
