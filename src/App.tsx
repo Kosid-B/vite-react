@@ -6,6 +6,7 @@ import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
 import Auth from './components/Auth';
 import Sidebar from './components/Sidebar';
+import AiAssist from './components/AiAssist';
 import Dashboard from './pages/Dashboard';
 import JourneyMap from './pages/JourneyMap';
 import Personas from './pages/Personas';
@@ -236,6 +237,8 @@ export default function App() {
         </svg>
         {isSupabaseEnabled && session ? 'ซิงก์ขึ้นคลาวด์แล้ว' : 'บันทึกอัตโนมัติแล้ว'}
       </div>
+
+      <AiAssist activePage={activePage} data={data} />
     </div>
   );
 }

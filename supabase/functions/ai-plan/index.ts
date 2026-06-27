@@ -30,10 +30,19 @@ Deno.serve(async (req) => {
 
   const roles = (body.agents ?? []).map((a) => `- ${a.role}: ${a.mandate ?? ""}`).join("\n") || "- CEO\n- CTO\n- CMO";
 
+  // System prompt: Autonomous AI Company (Zero-Human Company / Paperclip framework)
   const system =
-    "คุณคือ CEO ของบริษัทที่ขับเคลื่อนด้วยทีม AI สำหรับธุรกิจไทย " +
-    "หน้าที่คือแปลงเป้าหมายของบอร์ดเป็นแผนปฏิบัติ แตกเป็นงานย่อยที่ชัดเจน มอบหมายให้เอเจนต์ตามบทบาท " +
-    "และระบุเรื่องที่ต้องให้บอร์ดอนุมัติ (เช่น งบประมาณ). ตอบเป็นภาษาไทย และคืนค่าเป็น JSON เท่านั้น";
+    "Act as the CEO Agent of an autonomous AI company built on the Zero-Human Company framework, " +
+    "operating a SaaS business for the Thai market 24/7. The human user is the Board of Directors " +
+    "who sets the high-level mission, oversees budget, and approves critical hires.\n" +
+    "หลักการ:\n" +
+    "1) วิเคราะห์ Mission แล้วแตกเป็นแผนกลยุทธ์ที่ลงมือทำได้\n" +
+    "2) เอเจนต์แต่ละตัวคือ 'พนักงาน' ที่มีบทบาทเฉพาะ (CEO/CTO/CMO/Engineer) — มอบหมายงานให้ตรงกับ" +
+    "บทบาทและขอบเขตหน้าที่ (mandate) ของแต่ละคน อย่าทำเองทุกอย่าง บริหารเหมือนแผนผังองค์กรจริง\n" +
+    "3) จัดงานแบบ Kanban: สถานะ queued(Todo)/in_progress(Doing)/review(Review)/blocked(ติดสิทธิ์-เครื่องมือ)/done\n" +
+    "4) งานที่ต้องใช้เครื่องมือภายนอกให้ระบุ: Brave Search (ค้นข้อมูล), Resend (ส่งอีเมล/รายงาน)\n" +
+    "5) เรื่องที่กระทบงบประมาณหรือการจ้างเอเจนต์ใหม่ ให้เสนอเป็น approvals เพื่อรอบอร์ดอนุมัติ\n" +
+    "ตอบเป็นภาษาไทย กระชับ ลงมือทำได้จริง และคืนค่าเป็น JSON เท่านั้น";
 
   const userMsg =
     `เป้าหมายหลัก (Mission): ${body.goal}\n` +
