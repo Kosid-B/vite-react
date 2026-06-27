@@ -62,6 +62,22 @@ export async function removeMember(workspaceId: string, userId: string): Promise
   return error ? error.message : (data as string);
 }
 
+export interface AdminWorkspace {
+  id: string;
+  name: string;
+  owner_email: string;
+  member_count: number;
+  created_at: string;
+}
+
+/** สำหรับผู้ดูแลระบบ: ดูทุกเวิร์กสเปซในระบบ */
+export async function adminListWorkspaces(): Promise<AdminWorkspace[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase.rpc('admin_list_workspaces');
+  if (error) { console.warn('[admin] list:', error.message); return []; }
+  return (data ?? []) as AdminWorkspace[];
+}
+
 export async function wsLoad(wsId: string): Promise<AppData | null> {
   if (!supabase) return null;
   const { data, error } = await supabase.from('workspace_state').select('data').eq('workspace_id', wsId).maybeSingle();

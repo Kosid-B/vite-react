@@ -5,6 +5,14 @@ export const BRAND = {
   tagline: 'แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย',
 };
 
+// อีเมลผู้ดูแลระบบ (เห็น/จัดการทุกเวิร์กสเปซ) — เทียบแบบไม่สนตัวพิมพ์เล็ก-ใหญ่
+export const ADMIN_EMAILS = ['support@b-tctraining.com'];
+
+export function isAdminEmail(email?: string | null): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email.toLowerCase());
+}
+
 export const COMPANY = {
   name: 'B. Training Consultant (Management Engineering and Agriculture) Co., Ltd.',
   nameTh: 'บริษัท บี. เทรนนิ่ง คอนซัลแตนท์ (การจัดการวิศวกรรมและการเกษตร) จำกัด',

@@ -25,12 +25,22 @@ const TASK_COLS: { key: TaskStatus; hd: string; color: string }[] = [
 const AGENT_PALETTE = ['#c44b2b', '#1a4f8a', '#2d6a4f', '#a05c1a', '#6b3fa0', '#0e7490'];
 const AVATARS = ['🤖', '🧠', '📈', '🛠️', '🎯', '🔬', '💡', '🗂️'];
 const MODELS = ['claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'OpenAI Codex', 'gpt-4o'];
-const HEARTBEATS = [60, 300, 600, 900, 3600];
+
+// ยิ่งรอบสั้น ทำงานเร็วแต่ใช้ token ถี่ (งบบานปลาย) · ยิ่งรอบยาว ประหยัดงบ
+const HEARTBEAT_OPTS = [
+  { sec: 60, label: 'ทุก 1 นาที' },
+  { sec: 300, label: 'ทุก 5 นาที' },
+  { sec: 600, label: 'ทุก 10 นาที · แนะนำตอนเริ่ม' },
+  { sec: 1800, label: 'ทุก 30 นาที' },
+  { sec: 3600, label: 'ทุก 1 ชั่วโมง · ประหยัดงบ' },
+  { sec: 86400, label: 'วันละครั้ง · ประหยัดสุด' },
+];
 
 function fmtHeartbeat(sec: number): string {
   if (sec < 60) return sec + ' วินาที';
   if (sec < 3600) return sec / 60 + ' นาที';
-  return sec / 3600 + ' ชั่วโมง';
+  if (sec < 86400) return sec / 3600 + ' ชั่วโมง';
+  return sec / 86400 + ' วัน';
 }
 
 // เทมเพลตข้อความสำหรับ "ฟีดงานสด" จำลองการทำงาน 24 ชม.
@@ -209,10 +219,10 @@ export default function AICompany({ data, onUpdate }: Props) {
           </div>
         </div>
         <div className="ai-control-side">
-          <label className="ai-hb">
+          <label className="ai-hb" title={'Heartbeat = ความถี่ที่เอเจนต์ตื่นมาทำงาน\nรอบสั้น = เร็วแต่ใช้ token/งบมากขึ้น\nรอบยาว = ประหยัดงบ (บันทึกอัตโนมัติ)'}>
             <span>รอบทำงาน (Heartbeat)</span>
             <select value={c.heartbeatSec} onChange={e => patch({ heartbeatSec: Number(e.target.value) })}>
-              {HEARTBEATS.map(h => <option key={h} value={h}>ทุก {fmtHeartbeat(h)}</option>)}
+              {HEARTBEAT_OPTS.map(h => <option key={h.sec} value={h.sec}>{h.label}</option>)}
             </select>
           </label>
           <label className="ai-switch">
@@ -237,6 +247,11 @@ export default function AICompany({ data, onUpdate }: Props) {
         <textarea className="ai-goal-inp" rows={2} defaultValue={c.goal} key={'g' + c.goal}
           onBlur={e => setCompanyField('goal', e.target.value)}
           onChange={e => autoH(e.target)} ref={el => autoH(el)} spellCheck={false} />
+      </div>
+
+      <div className="ai-budget-tip">
+        💰 <b>คุมงบ token:</b> รอบ Heartbeat ยิ่งยาวยิ่งประหยัด — แนะนำ “ทุก 10 นาที” ตอนตั้งค่าเริ่มต้น
+        แล้วเปลี่ยนเป็น “ทุกชั่วโมง” หรือ “วันละครั้ง” เมื่อใช้งานจริง · ปรับแล้ว<b>บันทึกอัตโนมัติ</b>ทันที ไม่ต้องกด Save
       </div>
 
       {/* ===== Stat strip ===== */}

@@ -23,6 +23,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   billing: { label: 'แพ็กเกจ & ราคา', prompts: ['เสนอกลยุทธ์ราคา', 'วิธีลด churn'], context: d => `แพ็กปัจจุบัน ${d.subscription.plan}` },
   vrio: { label: 'VRIO', prompts: ['วิเคราะห์จุดแข็งที่ยั่งยืน', 'เสนอทรัพยากรที่ควรสร้าง'], context: d => `${d.vrio.length} ทรัพยากร` },
   team: { label: 'ทีม', prompts: ['เสนอโครงสร้างทีมที่เหมาะ'], context: () => 'หน้าจัดการทีม' },
+  admin: { label: 'ผู้ดูแลระบบ', prompts: ['สรุปภาพรวมการใช้งานระบบ'], context: () => 'หน้าผู้ดูแลระบบ' },
 };
 
 export default function AiAssist({ activePage, data }: Props) {
