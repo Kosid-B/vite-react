@@ -1373,3 +1373,81 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
 .agent-run-now-btn:hover:not(:disabled) { background: #e8f0fe; color: var(--blue); border-color: #1a4f8a55; }
 .agent-run-now-btn.running { background: #fff8e1; color: #a05c1a; border-color: #a05c1a44; cursor: default; }
 .agent-run-now-btn:disabled { opacity: .6; cursor: default; }
+
+/* ===== HRD Button ===== */
+.hrd-req-btn { background: #f0f4ff; border-color: #0e749044; color: #0e7490; }
+.hrd-req-btn:hover { background: #e0f0f8; border-color: #0e7490; }
+
+/* ===== Skill Marketplace ===== */
+.skill-market { }
+
+/* XP Bar */
+.skm-hd-stats { margin-left: auto; display: flex; gap: 10px; font-size: 12px; font-weight: 400; }
+.skm-bought { color: var(--ink2); }
+.skm-value { color: #2d6a4f; font-weight: 600; }
+
+.skm-xp-bar-wrap { display: flex; align-items: center; gap: 10px; margin: 12px 0 4px; }
+.skm-level-badge { font-size: 12px; font-weight: 700; color: #fff; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.skm-xp-track { flex: 1; height: 8px; background: var(--cream2); border-radius: 99px; overflow: hidden; }
+.skm-xp-fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
+.skm-xp-text { font-size: 12px; color: var(--ink2); white-space: nowrap; }
+.skm-xp-next { color: var(--ink3); }
+.skm-level-desc { font-size: 11px; color: var(--ink3); margin-bottom: 14px; }
+
+/* Category progress pills */
+.skm-cat-progress { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.skm-cat-pill { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 6px 10px; background: var(--cream2); border: 1px solid var(--sand); border-radius: var(--r); cursor: pointer; font-size: 11px; color: var(--ink2); font-family: inherit; min-width: 120px; transition: all .15s; }
+.skm-cat-pill:hover { border-color: var(--cat-color); color: var(--cat-color); }
+.skm-cat-pill.active { background: color-mix(in srgb, var(--cat-color) 10%, white); border-color: var(--cat-color); color: var(--cat-color); font-weight: 600; }
+.skm-cat-pill-pct { font-size: 10px; color: var(--ink3); }
+.skm-cat-pill-bar { width: 100%; height: 3px; background: var(--sand); border-radius: 99px; overflow: hidden; }
+.skm-cat-pill-fill { height: 100%; border-radius: 99px; transition: width .4s ease; }
+
+/* Tier filter */
+.skm-tier-filter { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.skm-filter-lbl { font-size: 12px; color: var(--ink3); }
+.skm-tier-btn { font-size: 11.5px; font-family: inherit; padding: 4px 10px; background: var(--cream2); border: 1px solid var(--sand); border-radius: 20px; cursor: pointer; color: var(--ink2); transition: all .15s; }
+.skm-tier-btn:hover { border-color: var(--ink2); }
+.skm-tier-btn.active { font-weight: 600; }
+
+/* Marketplace message */
+.skm-msg { font-size: 12px; padding: 8px 12px; background: #f0fff4; border: 1px solid #2d6a4f44; border-radius: var(--r); color: #2d6a4f; margin-bottom: 12px; }
+
+/* Skill Grid */
+.skm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+
+.skm-card { background: var(--white); border: 1px solid var(--sand); border-top: 3px solid var(--card-color, var(--sand)); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 6px; transition: box-shadow .15s; }
+.skm-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+.skm-card.owned { opacity: .7; }
+.skm-card.confirm { border-color: #a05c1a; box-shadow: 0 0 0 2px #a05c1a33; }
+
+.skm-card-top { display: flex; align-items: center; gap: 6px; }
+.skm-card-icon { font-size: 20px; }
+.skm-tier-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+.skm-owned-badge { margin-left: auto; font-size: 10px; font-weight: 700; color: #2d6a4f; background: #edf7f2; padding: 2px 7px; border-radius: 20px; }
+
+.skm-card-name { font-size: 13px; font-weight: 700; color: var(--ink); line-height: 1.3; }
+.skm-card-cat { font-size: 11px; font-weight: 600; }
+.skm-card-desc { font-size: 11.5px; color: var(--ink2); line-height: 1.5; flex: 1; }
+.skm-card-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+.skm-tag { font-size: 10px; padding: 1px 6px; background: var(--cream2); border-radius: 20px; color: var(--ink3); }
+
+.skm-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 4px; }
+.skm-price { display: flex; align-items: baseline; gap: 2px; }
+.skm-price-thb { font-size: 11px; color: var(--ink2); }
+.skm-price-num { font-size: 16px; font-weight: 800; color: var(--ink); }
+.skm-price-xp { font-size: 10px; color: #1a4f8a; margin-left: 4px; font-weight: 600; }
+
+.skm-btn { font-size: 11.5px; font-family: inherit; padding: 5px 10px; background: var(--blue); color: #fff; border: none; border-radius: var(--r); cursor: pointer; transition: background .15s; white-space: nowrap; }
+.skm-btn:hover:not(:disabled) { background: #153d6e; }
+.skm-btn.owned { background: var(--cream2); color: #2d6a4f; font-weight: 600; cursor: default; }
+.skm-btn.buy { background: #a05c1a; }
+.skm-btn.buy:hover { background: #7d4714; }
+.skm-btn.cancel { background: var(--cream2); color: var(--ink2); }
+.skm-btn.cancel:hover { background: var(--cream3); }
+.skm-confirm-row { display: flex; gap: 4px; flex-wrap: wrap; }
+
+@media (max-width: 600px) {
+  .skm-grid { grid-template-columns: 1fr 1fr; }
+  .skm-cat-pill { min-width: 90px; }
+}

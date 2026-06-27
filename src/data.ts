@@ -458,6 +458,8 @@ export const DEFAULT_DATA: AppData = {
       { id: 'in-line', name: 'LINE Messaging API', desc: 'ตอบแชทและส่งข้อความหาลูกค้าผ่าน LINE Official Account', icon: '💬', connected: false, apiKey: '' },
       { id: 'in-sheet', name: 'Google Sheets', desc: 'บันทึกผลงานและรายงานลงสเปรดชีตอัตโนมัติ', icon: '📊', connected: false, apiKey: '' },
     ],
+    purchasedSkills: [],
+    skillXP: 0,
   },
   subscription: {
     plan: 'free',

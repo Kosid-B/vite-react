@@ -163,6 +163,8 @@ export interface AICompany {
   tasks: AgentTask[];
   approvals: Approval[];
   integrations: Integration[];
+  purchasedSkills: string[];  // skill IDs ที่บริษัทซื้อแล้ว
+  skillXP: number;            // XP สะสมจากการซื้อ Skill
 }
 
 /* ===== Billing / PromptPay ===== */

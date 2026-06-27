@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { AppData, Agent, AgentStatus, ApprovalStatus, TaskStatus } from '../types';
 import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
 
 // ---- Org Chart Node (recursive) ----
 interface OcNodeProps {
@@ -78,6 +79,20 @@ const AGENT_PALETTE = ['#c44b2b', '#1a4f8a', '#2d6a4f', '#a05c1a', '#6b3fa0', '#
 const AVATARS = ['🤖', '🧠', '📈', '🛠️', '🎯', '🔬', '💡', '🗂️'];
 const MODELS = ['claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'OpenAI Codex', 'gpt-4o'];
 
+// Gamification: ระดับความสามารถของบริษัทตาม XP สะสม
+const COMPANY_LEVELS = [
+  { min: 0,    max: 999,   rank: 'Starter',      badge: '🌱', color: '#374151', desc: 'เพิ่งเริ่มต้น — ซื้อ Skill แรกเพื่อปลดล็อก' },
+  { min: 1000, max: 2999,  rank: 'Growing',       badge: '🌿', color: '#2d6a4f', desc: 'กำลังเติบโต — ทีม AI มีทักษะพื้นฐานครบ' },
+  { min: 3000, max: 5999,  rank: 'Professional',  badge: '⭐', color: '#1a4f8a', desc: 'มืออาชีพ — ใช้ข้อมูลขับเคลื่อนการตัดสินใจ' },
+  { min: 6000, max: 9999,  rank: 'Advanced',      badge: '🏆', color: '#a05c1a', desc: 'ขั้นสูง — ทีม AI มีความสามารถรอบด้าน' },
+  { min: 10000, max: Infinity, rank: 'Elite',     badge: '👑', color: '#c44b2b', desc: 'Elite — องค์กร AI ที่แข็งแกร่งระดับสูงสุด' },
+];
+const XP_PER_TIER: Record<1 | 2 | 3, number> = { 1: 100, 2: 150, 3: 200 };
+
+function getCompanyLevel(xp: number) {
+  return COMPANY_LEVELS.find(l => xp >= l.min && xp <= l.max) ?? COMPANY_LEVELS[0];
+}
+
 const AVAILABLE_SKILLS = [
   'business-building-24-step','value-proposition-canvas','risk-assessment','revenue-model','kpi-dashboard',
   'product-roadmap','saas-onboarding-flow','customer-persona','customer-segmentation','customer-journey-map',
@@ -141,6 +156,10 @@ export default function AICompany({ data, onUpdate }: Props) {
   const [mandateProposals, setMandateProposals] = useState<Array<{ role: string; mandate: string; skills?: string[]; kpi?: string }>>([]);
   const [mandateMsg, setMandateMsg] = useState<string | null>(null);
   const [runningAgentId, setRunningAgentId] = useState<string | null>(null);
+  const [mktCategory, setMktCategory] = useState<SkillCategory | 'all'>('all');
+  const [mktTier, setMktTier] = useState<0 | 1 | 2 | 3>(0);
+  const [buyConfirm, setBuyConfirm] = useState<SkillEntry | null>(null);
+  const [mktMsg, setMktMsg] = useState<string | null>(null);
 
   // เครื่องยนต์จำลอง: ขณะ running จะสร้างกิจกรรมใหม่เรื่อย ๆ (ephemeral ไม่บันทึกลง storage)
   useEffect(() => {
@@ -476,6 +495,33 @@ export default function AICompany({ data, onUpdate }: Props) {
     }, 100);
   }
 
+  // ซื้อ Skill + สะสม XP (Gamification)
+  function purchaseSkill(skill: SkillEntry) {
+    const owned = c.purchasedSkills ?? [];
+    if (owned.includes(skill.id)) return;
+    const gainXP = XP_PER_TIER[skill.tier];
+    const newXP = (c.skillXP ?? 0) + gainXP;
+    const prevLevel = getCompanyLevel(c.skillXP ?? 0);
+    const newLevel = getCompanyLevel(newXP);
+    const levelUp = prevLevel.rank !== newLevel.rank;
+    patch({ purchasedSkills: [...owned, skill.id], skillXP: newXP });
+    setBuyConfirm(null);
+    setMktMsg(levelUp
+      ? `🎉 Level Up! บริษัทเลื่อนระดับเป็น ${newLevel.badge} ${newLevel.rank} — +${gainXP} XP · ได้รับ "${skill.name}" แล้ว`
+      : `✅ ได้รับ "${skill.name}" แล้ว · +${gainXP} XP · รวม ${newXP.toLocaleString()} XP`
+    );
+  }
+
+  // CEO ขออนุมัติเพิ่มตำแหน่ง HRD Manager ผ่านบอร์ด
+  function requestHrdRole() {
+    requestHireApproval({
+      role: 'HRD Manager',
+      mandate: 'พัฒนาทักษะและศักยภาพทีม วางแผนฝึกอบรม บริหาร Skill Acquisition และสร้าง Knowledge Base องค์กร\n📌 Skills: job-posting · knowledge-base-builder · survey-analysis · feedback-analysis',
+      reportsToRole: 'CEO',
+      reason: 'พัฒนาขีดความสามารถทีมให้สอดคล้องกับเป้าหมายบริษัท และจัดการ Skill ที่ซื้อในระบบ',
+    });
+  }
+
   function setCompanyField(field: 'name' | 'goal' | 'industry', value: string) {
     patch({ [field]: value } as Partial<typeof c>);
   }
@@ -661,6 +707,9 @@ export default function AICompany({ data, onUpdate }: Props) {
               </button>
             )}
           </>)}
+          <button className="ai-mini-add hrd-req-btn" onClick={requestHrdRole} title="CEO ส่งคำขอเพิ่ม HRD Manager — ต้องผ่านการ Approve จากบอร์ด">
+            🎓 ขอเพิ่ม HRD
+          </button>
           <button className="ai-mini-add" onClick={() => patch({ agents: [...c.agents, {
             id: 'a-' + Date.now().toString(36), role: 'CEO', name: 'เอเจนต์หลัก',
             avatar: '🤖', color: AGENT_PALETTE[0], mandate: 'กำหนดทิศทางและตัดสินใจสูงสุด',
@@ -961,6 +1010,138 @@ export default function AICompany({ data, onUpdate }: Props) {
           ))}
         </div>
       </section>
+
+      {/* ===== 🛒 Skill Marketplace ===== */}
+      {(() => {
+        const purchased = c.purchasedSkills ?? [];
+        const xp = c.skillXP ?? 0;
+        const level = getCompanyLevel(xp);
+        const nextLevel = COMPANY_LEVELS.find(l => l.min > xp);
+        const xpToNext = nextLevel ? nextLevel.min - xp : 0;
+        const progressPct = nextLevel
+          ? Math.round(((xp - level.min) / (nextLevel.min - level.min)) * 100)
+          : 100;
+        const totalValue = purchased.reduce((s, id) => {
+          const sk = SKILL_CATALOG.find(sk => sk.id === id);
+          return s + (sk?.price ?? 0);
+        }, 0);
+        const filtered = SKILL_CATALOG.filter(sk =>
+          (mktCategory === 'all' || sk.category === mktCategory) &&
+          (mktTier === 0 || sk.tier === mktTier)
+        );
+        return (
+          <section className="ai-panel skill-market" style={{ marginTop: 16 }}>
+            {/* Header + XP Bar */}
+            <div className="ai-panel-hd">
+              🛒 Skill Marketplace
+              <span className="skm-hd-stats">
+                <span className="skm-bought">{purchased.length}/{SKILL_CATALOG.length} Skills</span>
+                <span className="skm-value">มูลค่า ฿{totalValue.toLocaleString()}</span>
+              </span>
+            </div>
+
+            {/* Level & XP Gamification Bar */}
+            <div className="skm-xp-bar-wrap">
+              <div className="skm-level-badge" style={{ background: level.color }}>
+                {level.badge} {level.rank}
+              </div>
+              <div className="skm-xp-track">
+                <div className="skm-xp-fill" style={{ width: progressPct + '%', background: level.color }} />
+              </div>
+              <div className="skm-xp-text">
+                {xp.toLocaleString()} XP
+                {nextLevel && <span className="skm-xp-next"> · อีก {xpToNext.toLocaleString()} XP → {nextLevel.badge} {nextLevel.rank}</span>}
+              </div>
+            </div>
+            <div className="skm-level-desc">{level.desc}</div>
+
+            {/* Category Progress Pills */}
+            <div className="skm-cat-progress">
+              {(Object.entries(CATEGORY_META) as [SkillCategory, typeof CATEGORY_META[SkillCategory]][]).map(([cat, meta]) => {
+                const total = SKILL_CATALOG.filter(s => s.category === cat).length;
+                const done = SKILL_CATALOG.filter(s => s.category === cat && purchased.includes(s.id)).length;
+                const pct = Math.round((done / total) * 100);
+                return (
+                  <button key={cat}
+                    className={`skm-cat-pill${mktCategory === cat ? ' active' : ''}`}
+                    style={{ '--cat-color': meta.color } as React.CSSProperties}
+                    onClick={() => setMktCategory(mktCategory === cat ? 'all' : cat)}>
+                    <span>{meta.icon} {meta.label}</span>
+                    <span className="skm-cat-pill-pct">{done}/{total}</span>
+                    <div className="skm-cat-pill-bar">
+                      <div className="skm-cat-pill-fill" style={{ width: pct + '%', background: meta.color }} />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Tier filter */}
+            <div className="skm-tier-filter">
+              <span className="skm-filter-lbl">กรองระดับ:</span>
+              {([0, 1, 2, 3] as const).map(t => (
+                <button key={t}
+                  className={`skm-tier-btn${mktTier === t ? ' active' : ''}`}
+                  style={mktTier === t && t !== 0 ? { background: TIER_META[t as 1|2|3]?.color, color: '#fff', borderColor: 'transparent' } : {}}
+                  onClick={() => setMktTier(t)}>
+                  {t === 0 ? 'ทั้งหมด' : `${TIER_META[t as 1|2|3].label} ฿${t === 1 ? '1,000' : t === 2 ? '1,500' : '2,000'}`}
+                </button>
+              ))}
+            </div>
+
+            {mktMsg && (
+              <div className="skm-msg">{mktMsg}</div>
+            )}
+
+            {/* Skill Grid */}
+            <div className="skm-grid">
+              {filtered.map(sk => {
+                const owned = purchased.includes(sk.id);
+                const isConfirm = buyConfirm?.id === sk.id;
+                const catMeta = CATEGORY_META[sk.category];
+                const tierMeta = TIER_META[sk.tier];
+                return (
+                  <div key={sk.id} className={`skm-card${owned ? ' owned' : ''}${isConfirm ? ' confirm' : ''}`}
+                    style={{ '--card-color': catMeta.color } as React.CSSProperties}>
+                    <div className="skm-card-top">
+                      <span className="skm-card-icon">{sk.icon}</span>
+                      <span className="skm-tier-badge" style={{ background: tierMeta.bg, color: tierMeta.color }}>
+                        {tierMeta.label}
+                      </span>
+                      {owned && <span className="skm-owned-badge">✓ โหลดแล้ว</span>}
+                    </div>
+                    <div className="skm-card-name">{sk.name}</div>
+                    <div className="skm-card-cat" style={{ color: catMeta.color }}>{catMeta.icon} {catMeta.label}</div>
+                    <div className="skm-card-desc">{sk.desc}</div>
+                    <div className="skm-card-tags">
+                      {sk.tags.slice(0, 3).map(t => <span key={t} className="skm-tag">{t}</span>)}
+                    </div>
+                    <div className="skm-card-foot">
+                      <div className="skm-price">
+                        <span className="skm-price-thb">฿</span>
+                        <span className="skm-price-num">{sk.price.toLocaleString()}</span>
+                        <span className="skm-price-xp">+{XP_PER_TIER[sk.tier]} XP</span>
+                      </div>
+                      {owned ? (
+                        <button className="skm-btn owned" disabled>✓ ใช้งานได้แล้ว</button>
+                      ) : isConfirm ? (
+                        <div className="skm-confirm-row">
+                          <button className="skm-btn buy" onClick={() => purchaseSkill(sk)}>ยืนยันซื้อ ฿{sk.price.toLocaleString()}</button>
+                          <button className="skm-btn cancel" onClick={() => setBuyConfirm(null)}>ยกเลิก</button>
+                        </div>
+                      ) : (
+                        <button className="skm-btn" onClick={() => { setMktMsg(null); setBuyConfirm(sk); }}>
+                          🛒 ซื้อ Skill
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
     </div>
   );
 }
