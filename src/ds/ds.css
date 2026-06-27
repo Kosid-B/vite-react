@@ -1,0 +1,56 @@
+/* =====================================================
+   CEO AI Thailand — Design System library
+   Self-contained tokens + component styles (warm editorial)
+===================================================== */
+:root {
+  --ds-cream: #f5f0e8; --ds-cream2: #ede7d9; --ds-cream3: #e2d9c8;
+  --ds-ink: #1c1814; --ds-ink2: #4a453e; --ds-ink3: #8a8278; --ds-ink4: #b5afa5;
+  --ds-sand: #d6cfc2; --ds-rust: #c44b2b; --ds-rust-bg: #fdf3f0;
+  --ds-green: #2d6a4f; --ds-green-bg: #edf7f2; --ds-blue: #1a4f8a; --ds-blue-bg: #eff4fb;
+  --ds-amber: #a05c1a; --ds-amber-bg: #fdf6ec; --ds-white: #fdfcf9;
+  --ds-r: 8px; --ds-r-lg: 14px;
+  --ds-shadow-sm: 0 1px 3px rgba(28,24,20,.06), 0 1px 2px rgba(28,24,20,.04);
+  --ds-shadow: 0 4px 12px rgba(28,24,20,.08), 0 1px 3px rgba(28,24,20,.05);
+  --ds-font: 'Kanit', sans-serif;
+}
+
+/* Button */
+.ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--ds-font); font-size: 13.5px; font-weight: 600; border: 1px solid transparent; border-radius: var(--ds-r); padding: 10px 18px; min-height: 44px; cursor: pointer; transition: background .15s, border-color .15s, transform .1s; }
+.ds-btn:active { transform: scale(.98); }
+.ds-btn:disabled { opacity: .55; cursor: default; }
+.ds-btn--primary { background: var(--ds-rust); color: #fff; }
+.ds-btn--primary:hover:not(:disabled) { background: #ad3e22; }
+.ds-btn--dark { background: var(--ds-ink); color: #fff; }
+.ds-btn--dark:hover:not(:disabled) { background: var(--ds-ink2); }
+.ds-btn--ghost { background: var(--ds-white); color: var(--ds-ink); border-color: var(--ds-sand); }
+.ds-btn--ghost:hover:not(:disabled) { border-color: var(--ds-ink3); background: var(--ds-cream); }
+.ds-btn--block { width: 100%; }
+
+/* Card */
+.ds-card { background: var(--ds-white); border: 1px solid var(--ds-sand); border-radius: var(--ds-r-lg); box-shadow: var(--ds-shadow-sm); padding: 18px; }
+.ds-card--pad-lg { padding: 24px; }
+.ds-card--hover { transition: box-shadow .2s; }
+.ds-card--hover:hover { box-shadow: var(--ds-shadow); }
+
+/* Badge */
+.ds-badge { display: inline-flex; align-items: center; gap: 5px; font-family: var(--ds-font); font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 12px; line-height: 1.4; }
+.ds-badge--neutral { background: var(--ds-cream3); color: var(--ds-ink2); }
+.ds-badge--rust { background: var(--ds-rust-bg); color: var(--ds-rust); }
+.ds-badge--green { background: var(--ds-green-bg); color: var(--ds-green); }
+.ds-badge--blue { background: var(--ds-blue-bg); color: var(--ds-blue); }
+.ds-badge--amber { background: var(--ds-amber-bg); color: var(--ds-amber); }
+
+/* Chip (selectable) */
+.ds-chip { font-family: var(--ds-font); font-size: 12.5px; padding: 6px 14px; min-height: 34px; border: 1.5px solid var(--ds-sand); background: var(--ds-white); border-radius: 20px; color: var(--ds-ink2); cursor: pointer; transition: .15s; }
+.ds-chip:hover { border-color: var(--ds-ink3); color: var(--ds-ink); }
+.ds-chip--active { background: var(--ds-ink); border-color: var(--ds-ink); color: #fff; }
+
+/* StatCard */
+.ds-stat { background: var(--ds-white); border: 1px solid var(--ds-sand); border-radius: var(--ds-r-lg); box-shadow: var(--ds-shadow-sm); padding: 16px; text-align: center; }
+.ds-stat__num { font-family: var(--ds-font); font-weight: 600; font-size: 28px; color: var(--ds-ink); line-height: 1; margin-bottom: 6px; }
+.ds-stat__label { font-size: 11.5px; color: var(--ds-ink3); }
+
+/* PageHeader */
+.ds-pagehd { margin-bottom: 28px; }
+.ds-pagehd__title { font-family: var(--ds-font); font-weight: 600; font-size: 26px; color: var(--ds-ink); letter-spacing: -.02em; line-height: 1.2; margin-bottom: 6px; }
+.ds-pagehd__meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
