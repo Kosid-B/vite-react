@@ -1,4 +1,4 @@
-# Welcome to CEO AI Thailand
+# Welcome to B. Training Consultant
 
 ## How We Use Claude
 
