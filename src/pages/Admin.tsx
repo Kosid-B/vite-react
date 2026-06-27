@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, type AdminWorkspace } from '../lib/workspaces';
 import { isAdminEmail, ADMIN_EMAILS } from '../config';
+import { PageHeader, Badge } from '../ds';
 
 interface Props {
   currentUserEmail: string | null;
@@ -48,14 +49,14 @@ export default function Admin({ currentUserEmail }: Props) {
 
   return (
     <div>
-      <div className="page-header">
-        <div className="page-title">ผู้ดูแลระบบ</div>
-        <div className="page-meta">
-          <span className="meta-chip" style={{ borderColor: 'var(--green)', color: 'var(--green)' }}>คุณคือแอดมิน · {currentUserEmail}</span>
-          <span className="meta-chip">{rows.length} เวิร์กสเปซ</span>
-          <span className="meta-chip">{totalMembers} สมาชิกรวม</span>
-        </div>
-      </div>
+      <PageHeader
+        title="ผู้ดูแลระบบ"
+        meta={<>
+          <Badge tone="green">คุณคือแอดมิน · {currentUserEmail}</Badge>
+          <Badge tone="neutral">{rows.length} เวิร์กสเปซ</Badge>
+          <Badge tone="neutral">{totalMembers} สมาชิกรวม</Badge>
+        </>}
+      />
 
       <div className="admin-note">
         ในฐานะผู้ดูแลระบบ คุณเห็นทุกเวิร์กสเปซในระบบ (ผ่าน Row Level Security ที่ให้สิทธิ์แอดมิน) —
