@@ -13,6 +13,7 @@ Top Skills & Commands:
   /design-sync          ████████████████████  1x/month
   /run-skill-generator  ████████████████████  1x/month
   /model                ████████████████████  1x/month
+  /team-onboarding      ████████████████████  1x/month
 
 Top MCP Servers:
   (none recorded in last 30 days)
@@ -26,9 +27,10 @@ Top MCP Servers:
   (none used yet — add recommendations here as the team adopts them)
 
 ### Skills to Know About
-- `/design-sync` — Syncs the design system to claude.ai/design so the design agent builds with real components. Use after modifying `src/ds/` components. Requires login to claude.ai/design first.
+- `/design-sync` — Syncs the design system to claude.ai/design so the design agent builds with your real components. Use after modifying `src/ds/` components. Requires login to claude.ai/design first.
 - `/run-skill-generator` — Generates a committed skill + Playwright driver to launch and screenshot the app headlessly. Run this when the app's launch process or navigation changes.
 - `/model` — Switches the Claude model mid-session (e.g. to claude-sonnet-4-6 for faster iteration on large tasks).
+- `/team-onboarding` — Generates this guide from your Claude Code usage history. Re-run whenever the team's workflow evolves.
 
 ## Team Tips
 
