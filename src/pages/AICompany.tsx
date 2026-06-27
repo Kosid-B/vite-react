@@ -68,6 +68,7 @@ export default function AICompany({ data, onUpdate }: Props) {
   const counter = useRef(0);
   const [planning, setPlanning] = useState(false);
   const [planMsg, setPlanMsg] = useState<string | null>(null);
+  const [runningTaskIds, setRunningTaskIds] = useState<Set<string>>(new Set());
 
   // เครื่องยนต์จำลอง: ขณะ running จะสร้างกิจกรรมใหม่เรื่อย ๆ (ephemeral ไม่บันทึกลง storage)
   useEffect(() => {
@@ -129,6 +130,57 @@ export default function AICompany({ data, onUpdate }: Props) {
       setPlanMsg('✕ วางแผนไม่สำเร็จ: ' + ((e as Error).message || 'error') + ' — ตรวจว่า deploy ai-plan + ตั้ง ANTHROPIC_API_KEY แล้ว');
     } finally {
       setPlanning(false);
+    }
+  }
+
+  // ให้ AI Agent ดำเนินงานจริงตามบทบาทหน้าที่ใน org chart
+  async function executeTask(taskId: string) {
+    if (!supabase) return;
+    const task = c.tasks.find(t => t.id === taskId);
+    const agent = c.agents.find(a => a.id === task?.agentId);
+    if (!task || !agent) return;
+
+    setRunningTaskIds(prev => new Set(prev).add(taskId));
+    // เริ่มงาน: เปลี่ยนสถานะเป็น in_progress
+    patch({ tasks: c.tasks.map(t => t.id === taskId ? { ...t, status: 'in_progress' as const } : t) });
+
+    try {
+      const orgContext = c.agents
+        .filter(a => a.id !== agent.id)
+        .map(a => ({ role: a.role, mandate: a.mandate }));
+
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: agent.role,
+          name: agent.name,
+          mandate: agent.mandate,
+          model: agent.model,
+          title: task.title,
+          detail: task.detail,
+          goal: c.goal,
+          industry: c.industry,
+          companyName: c.name,
+          orgContext,
+        },
+      });
+      if (error) throw error;
+
+      const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      patch({
+        tasks: c.tasks.map(t => t.id === taskId
+          ? { ...t, status: 'review' as const, output: res?.output ?? '', executedAt: now }
+          : t
+        ),
+      });
+    } catch (e) {
+      patch({
+        tasks: c.tasks.map(t => t.id === taskId
+          ? { ...t, status: 'blocked' as const, output: '✕ ดำเนินงานไม่สำเร็จ: ' + (e as Error).message }
+          : t
+        ),
+      });
+    } finally {
+      setRunningTaskIds(prev => { const s = new Set(prev); s.delete(taskId); return s; });
     }
   }
 
@@ -369,23 +421,48 @@ export default function AICompany({ data, onUpdate }: Props) {
               <div className="ai-board-col-hd" style={{ color: col.color }}>{col.hd}
                 <span className="ai-board-count">{c.tasks.filter(t => t.status === col.key).length}</span>
               </div>
-              {c.tasks.filter(t => t.status === col.key).map(t => (
-                <div key={t.id} className="ai-task">
-                  <button className="ai-task-del" onClick={() => delTask(t.id)}>×</button>
-                  <div className="ai-task-title">{t.title}</div>
-                  <div className="ai-task-detail">{t.detail}</div>
-                  <div className="ai-task-foot">
-                    <span className="ai-task-owner">{agentName(t.agentId)}</span>
-                    <select className="ai-task-move" value={t.status} onChange={e => moveTask(t.id, e.target.value as TaskStatus)}>
-                      <option value="queued">ต้องทำ</option>
-                      <option value="in_progress">กำลังทำ</option>
-                      <option value="review">ตรวจสอบ</option>
-                      <option value="done">เสร็จแล้ว</option>
-                      <option value="blocked">ถูกบล็อก</option>
-                    </select>
+              {c.tasks.filter(t => t.status === col.key).map(t => {
+                const ag = c.agents.find(a => a.id === t.agentId);
+                const isRunning = runningTaskIds.has(t.id);
+                return (
+                  <div key={t.id} className="ai-task">
+                    <button className="ai-task-del" onClick={() => delTask(t.id)}>×</button>
+                    <div className="ai-task-title">{t.title}</div>
+                    <div className="ai-task-detail">{t.detail}</div>
+                    {/* ปุ่มให้ AI ดำเนินงานจริง */}
+                    {isSupabaseEnabled && t.status !== 'done' && (
+                      <button
+                        className={`ai-task-exec${isRunning ? ' running' : ''}`}
+                        onClick={() => executeTask(t.id)}
+                        disabled={isRunning}
+                        style={{ borderLeftColor: ag?.color }}
+                      >
+                        {isRunning
+                          ? <><span className="ai-exec-dot pulse" style={{ background: ag?.color }} />{'กำลังดำเนินงาน…'}</>
+                          : <><span style={{ marginRight: 4 }}>{ag?.avatar ?? '🤖'}</span>{`${ag?.role ?? 'AI'} ดำเนินงาน`}</>
+                        }
+                      </button>
+                    )}
+                    {/* ผลลัพธ์จาก AI Agent */}
+                    {t.output && (
+                      <div className="ai-task-output">
+                        {t.executedAt && <div className="ai-task-output-meta">{ag?.role} · {t.executedAt}</div>}
+                        <div className="ai-task-output-body">{t.output}</div>
+                      </div>
+                    )}
+                    <div className="ai-task-foot">
+                      <span className="ai-task-owner" style={{ color: ag?.color }}>{agentName(t.agentId)}</span>
+                      <select className="ai-task-move" value={t.status} onChange={e => moveTask(t.id, e.target.value as TaskStatus)}>
+                        <option value="queued">ต้องทำ</option>
+                        <option value="in_progress">กำลังทำ</option>
+                        <option value="review">ตรวจสอบ</option>
+                        <option value="done">เสร็จแล้ว</option>
+                        <option value="blocked">ถูกบล็อก</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>

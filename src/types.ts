@@ -109,6 +109,8 @@ export interface AgentTask {
   title: string;
   detail: string;
   status: TaskStatus;
+  output?: string;     // ผลลัพธ์จาก AI Agent (หลังดำเนินงานจริง)
+  executedAt?: string; // เวลาที่ AI Agent ดำเนินงานสำเร็จ
 }
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
