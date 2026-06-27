@@ -123,6 +123,9 @@ export default function AICompany({ data, onUpdate }: Props) {
   const [runningTaskIds, setRunningTaskIds] = useState<Set<string>>(new Set());
   const [generatingJD, setGeneratingJD] = useState<string | null>(null);
   const [kbEditId, setKbEditId] = useState<string | null>(null);
+  const [suggestingRoles, setSuggestingRoles] = useState(false);
+  const [ceoSuggestions, setCeoSuggestions] = useState<Array<{ role: string; mandate: string; reportsToRole: string; reason: string }>>([]);
+  const [suggestMsg, setSuggestMsg] = useState<string | null>(null);
 
   // เครื่องยนต์จำลอง: ขณะ running จะสร้างกิจกรรมใหม่เรื่อย ๆ (ephemeral ไม่บันทึกลง storage)
   useEffect(() => {
@@ -283,6 +286,70 @@ export default function AICompany({ data, onUpdate }: Props) {
     setTimeout(() => executeTask(taskId), 100);
   }
 
+  // CEO วิเคราะห์ org chart และแนะนำตำแหน่งที่ขาด (รวม Sales & Marketing)
+  async function ceoSuggestRoles() {
+    if (!supabase) return;
+    setSuggestingRoles(true);
+    setSuggestMsg(null);
+    setCeoSuggestions([]);
+    try {
+      const existing = c.agents.map(a => a.role).join(', ') || 'ยังไม่มีทีม';
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: 'CEO',
+          mandate: 'วิเคราะห์โครงสร้างองค์กรและแนะนำตำแหน่งที่ควรจ้างตามเป้าหมายธุรกิจ',
+          model: 'claude-sonnet-4-6',
+          title: 'แนะนำตำแหน่งที่ขาดในผังองค์กร',
+          detail: [
+            `บริษัท: ${c.name} | อุตสาหกรรม: ${c.industry}`,
+            `เป้าหมาย: ${c.goal}`,
+            `ตำแหน่งปัจจุบัน: ${existing}`,
+            '',
+            'ให้ CEO วิเคราะห์ว่าตำแหน่งใดที่ขาดอยู่ที่จำเป็นต้องมีเพื่อบรรลุเป้าหมาย',
+            'โดยเฉพาะด้าน Sales, Marketing, CRM และ Technology (เช่น Salesforce Developer)',
+            '',
+            'ตอบกลับเป็น JSON array เท่านั้น รูปแบบ:',
+            '[{"role":"ชื่อตำแหน่ง","mandate":"หน้าที่หลัก 1-2 ประโยค","reportsToRole":"รายงานต่อตำแหน่งใด","reason":"เหตุผลที่ต้องมีตำแหน่งนี้"}]',
+            'แนะนำ 3-6 ตำแหน่ง ไม่ต้องซ้ำกับที่มีอยู่แล้ว',
+          ].join('\n'),
+          goal: c.goal,
+          industry: c.industry,
+          companyName: c.name,
+          orgContext: c.agents.map(a => ({ role: a.role, mandate: a.mandate })),
+        },
+      });
+      if (error) throw error;
+      const output: string = res?.output ?? '';
+      const match = output.match(/\[[\s\S]*?\]/);
+      if (match) {
+        const parsed: Array<{ role: string; mandate: string; reportsToRole: string; reason: string }> = JSON.parse(match[0]);
+        setCeoSuggestions(parsed);
+        setSuggestMsg(`✓ CEO แนะนำ ${parsed.length} ตำแหน่ง — เลือกเพิ่มได้เลย`);
+      } else {
+        setSuggestMsg('CEO วิเคราะห์: ' + output.slice(0, 120));
+      }
+    } catch (e) {
+      setSuggestMsg('✕ ' + (e as Error).message);
+    } finally {
+      setSuggestingRoles(false);
+    }
+  }
+
+  // CEO ขออนุมัติ User ก่อนเพิ่มตำแหน่งในผังองค์กร
+  function requestHireApproval(sug: { role: string; mandate: string; reportsToRole: string; reason: string }) {
+    const ceoAgent = c.agents.find(a => a.role.toLowerCase().includes('ceo')) ?? c.agents[0];
+    const approval: import('../types').Approval = {
+      id: 'hire-' + Date.now().toString(36),
+      agentId: ceoAgent?.id ?? '',
+      title: `📋 CEO ขอเพิ่มตำแหน่ง: ${sug.role}`,
+      detail: `หน้าที่: ${sug.mandate}\nรายงานต่อ: ${sug.reportsToRole}`,
+      impact: JSON.stringify({ type: 'hire', role: sug.role, mandate: sug.mandate, reportsToRole: sug.reportsToRole }),
+      status: 'pending',
+    };
+    patch({ approvals: [...c.approvals, approval] });
+    setCeoSuggestions(prev => prev.filter(s => s.role !== sug.role));
+  }
+
   function setCompanyField(field: 'name' | 'goal' | 'industry', value: string) {
     patch({ [field]: value } as Partial<typeof c>);
   }
@@ -343,6 +410,32 @@ export default function AICompany({ data, onUpdate }: Props) {
 
   /* ----- approvals ----- */
   function decideApproval(id: string, status: ApprovalStatus) {
+    const approval = c.approvals.find(a => a.id === id);
+    if (approval && status === 'approved') {
+      try {
+        const meta = JSON.parse(approval.impact);
+        if (meta.type === 'hire') {
+          const i = c.agents.length;
+          const parent = c.agents.find(a =>
+            a.role.toLowerCase().includes(String(meta.reportsToRole ?? '').toLowerCase()) ||
+            String(meta.reportsToRole ?? '').toLowerCase().includes(a.role.toLowerCase())
+          );
+          const newAgent: Agent = {
+            id: 'a-' + Date.now().toString(36),
+            role: meta.role, name: meta.role,
+            avatar: AVATARS[i % AVATARS.length],
+            color: AGENT_PALETTE[i % AGENT_PALETTE.length],
+            mandate: meta.mandate, model: MODELS[1],
+            status: 'idle', reportsTo: parent?.id ?? null,
+          };
+          patch({
+            approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a),
+            agents: [...c.agents, newAgent],
+          });
+          return;
+        }
+      } catch { /* not a hire approval */ }
+    }
     patch({ approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a) });
   }
 
@@ -432,6 +525,11 @@ export default function AICompany({ data, onUpdate }: Props) {
       <section className="ai-panel" style={{ marginTop: 16 }}>
         <div className="ai-panel-hd">
           🏢 ผังองค์กร — CEO กำหนดโครงสร้าง
+          {isSupabaseEnabled && (
+            <button className="ai-suggest-btn" onClick={ceoSuggestRoles} disabled={suggestingRoles} title="ให้ CEO วิเคราะห์และแนะนำตำแหน่งที่ขาด (ต้องผ่านการ Approve)">
+              {suggestingRoles ? '⏳ CEO กำลังวิเคราะห์…' : '🧠 CEO แนะนำตำแหน่ง'}
+            </button>
+          )}
           <button className="ai-mini-add" onClick={() => patch({ agents: [...c.agents, {
             id: 'a-' + Date.now().toString(36), role: 'CEO', name: 'เอเจนต์หลัก',
             avatar: '🤖', color: AGENT_PALETTE[0], mandate: 'กำหนดทิศทางและตัดสินใจสูงสุด',
@@ -453,6 +551,31 @@ export default function AICompany({ data, onUpdate }: Props) {
               onGenJD={generateJD} generatingJD={generatingJD} />
           ))}
         </div>
+
+        {/* CEO Suggestions panel */}
+        {(suggestMsg || ceoSuggestions.length > 0) && (
+          <div className="ceo-suggest-panel">
+            {suggestMsg && <div className="ceo-suggest-msg">{suggestMsg}</div>}
+            {ceoSuggestions.length > 0 && (
+              <div className="ceo-suggest-list">
+                <div className="ceo-suggest-hd">
+                  📋 CEO แนะนำตำแหน่งเหล่านี้ — กด <b>ขออนุมัติ</b> เพื่อส่งให้บอร์ด (คุณ) อนุมัติก่อนเพิ่มในผังองค์กร
+                </div>
+                {ceoSuggestions.map((sug, i) => (
+                  <div key={i} className="ceo-suggest-card">
+                    <div className="ceo-suggest-role">{sug.role}</div>
+                    <div className="ceo-suggest-mandate">{sug.mandate}</div>
+                    <div className="ceo-suggest-reason">🔍 {sug.reason}</div>
+                    <div className="ceo-suggest-reports">รายงานต่อ: <b>{sug.reportsToRole}</b></div>
+                    <button className="ceo-suggest-approve-btn" onClick={() => requestHireApproval(sug)}>
+                      📨 ขออนุมัติ (CEO Request)
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       <div className="ai-2col">

@@ -1331,3 +1331,20 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
 @media (max-width: 600px) {
   .roadmap-grid { grid-template-columns: 1fr; }
 }
+
+/* ===== CEO Suggest Roles Panel ===== */
+.ai-suggest-btn { font-size: 11.5px; font-family: inherit; padding: 4px 10px; background: var(--cream2); border: 1px solid var(--sand); border-radius: var(--r); cursor: pointer; color: var(--ink2); margin-right: 6px; }
+.ai-suggest-btn:hover:not(:disabled) { background: #e8f0fe; color: var(--ink); border-color: #1a4f8a44; }
+.ai-suggest-btn:disabled { opacity: .6; cursor: default; }
+
+.ceo-suggest-panel { margin-top: 16px; border-top: 1px solid var(--sand); padding-top: 14px; }
+.ceo-suggest-msg { font-size: 12px; color: var(--ink2); margin-bottom: 10px; }
+.ceo-suggest-hd { font-size: 12px; color: var(--ink2); margin-bottom: 10px; line-height: 1.5; padding: 8px 10px; background: #fff8e1; border-radius: var(--r); border: 1px solid #ffe08299; }
+.ceo-suggest-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.ceo-suggest-card { background: var(--white); border: 1px solid var(--sand); border-left: 3px solid #1a4f8a; border-radius: var(--r); padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; }
+.ceo-suggest-role { font-size: 13px; font-weight: 700; color: var(--ink); }
+.ceo-suggest-mandate { font-size: 12px; color: var(--ink2); line-height: 1.5; }
+.ceo-suggest-reason { font-size: 11px; color: #2d6a4f; line-height: 1.4; }
+.ceo-suggest-reports { font-size: 11px; color: var(--ink3); }
+.ceo-suggest-approve-btn { margin-top: 6px; font-size: 11.5px; font-family: inherit; padding: 5px 10px; background: #1a4f8a; color: #fff; border: none; border-radius: var(--r); cursor: pointer; align-self: flex-start; }
+.ceo-suggest-approve-btn:hover { background: #153d6e; }
