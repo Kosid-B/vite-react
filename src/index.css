@@ -1158,3 +1158,13 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
   .bill-inv-row > :nth-child(4), .bill-inv-row > :nth-child(5) { display: none; }
   .inv-doc-parties { grid-template-columns: 1fr; }
 }
+
+/* ===== branding: company info (sidebar + auth) ===== */
+.sidebar-company { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.08); }
+.sidebar-company-name { font-size: 10.5px; color: rgba(255,255,255,.5); line-height: 1.5; }
+.sidebar-company-link { display: inline-block; margin-top: 3px; font-size: 11px; color: rgba(255,190,170,.9); text-decoration: none; }
+.sidebar-company-link:hover { color: #fff; text-decoration: underline; }
+.sidebar-company-tel { font-size: 10.5px; color: rgba(255,255,255,.4); margin-top: 2px; }
+.auth-company { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--cream2); font-size: 11px; color: var(--ink3); line-height: 1.6; text-align: center; }
+.auth-company a { color: var(--rust); text-decoration: none; }
+.auth-company a:hover { text-decoration: underline; }

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import type { PageId } from '../types';
 import type { Workspace } from '../lib/workspaces';
+import { BRAND, COMPANY } from '../config';
 
 interface Props {
   activePage: PageId;
@@ -26,8 +27,8 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
   return (
     <nav className={`sidebar${isOpen ? ' open' : ''}`}>
       <div className="sidebar-brand">
-        <div className="brand-serif">CJ Planner</div>
-        <div className="brand-sub">Strategy Consulting · SME · Inbound</div>
+        <div className="brand-serif">{BRAND.product}</div>
+        <div className="brand-sub">{BRAND.tagline}</div>
         <button className="sidebar-close" onClick={onClose} aria-label="ปิดเมนู">×</button>
 
         {onSwitchWs && workspaces && workspaces.length > 0 && (
@@ -215,6 +216,12 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
             <button className="sidebar-signout" onClick={onSignOut}>ออกจากระบบ</button>
           </div>
         )}
+
+        <div className="sidebar-company">
+          <div className="sidebar-company-name">{COMPANY.nameTh}</div>
+          <a className="sidebar-company-link" href={COMPANY.website} target="_blank" rel="noreferrer">{COMPANY.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>
+          <div className="sidebar-company-tel">โทร {COMPANY.tel}</div>
+        </div>
       </div>
     </nav>
   );

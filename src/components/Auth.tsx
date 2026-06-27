@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { BRAND, COMPANY } from '../config';
 
 type Mode = 'signin' | 'signup';
 
@@ -43,8 +44,8 @@ export default function Auth() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div className="auth-brand">CJ Planner</div>
-        <div className="auth-sub">แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย</div>
+        <div className="auth-brand">{BRAND.product}</div>
+        <div className="auth-sub">{BRAND.tagline}</div>
 
         <div className="auth-tabs">
           <button className={mode === 'signin' ? 'active' : ''} onClick={() => { setMode('signin'); setMsg(null); }}>เข้าสู่ระบบ</button>
@@ -67,6 +68,11 @@ export default function Auth() {
         </form>
 
         <button className="auth-magic" onClick={magicLink} disabled={busy}>ส่งลิงก์เข้าสู่ระบบทางอีเมล (Magic Link)</button>
+
+        <div className="auth-company">
+          ให้บริการโดย {COMPANY.nameTh}<br/>
+          <a href={COMPANY.website} target="_blank" rel="noreferrer">{COMPANY.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a> · โทร {COMPANY.tel}
+        </div>
       </div>
     </div>
   );

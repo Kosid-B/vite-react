@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
+import { BRAND, COMPANY } from '../config';
 
 function addMonths(iso: string, n: number): string {
   const d = new Date(iso);
@@ -286,7 +287,7 @@ export default function Billing({ data, onUpdate }: Props) {
               <div className="inv-doc" id="inv-doc">
                 <div className="inv-doc-hd">
                   <div>
-                    <div className="inv-doc-brand">CJ Planner</div>
+                    <div className="inv-doc-brand">{BRAND.product}</div>
                     <div className="inv-doc-sub">ใบกำกับภาษี / ใบเสร็จรับเงิน<br/>Tax Invoice / Receipt</div>
                   </div>
                   <div className="inv-doc-no">
@@ -295,7 +296,14 @@ export default function Billing({ data, onUpdate }: Props) {
                   </div>
                 </div>
                 <div className="inv-doc-parties">
-                  <div><span className="inv-doc-lbl">ผู้ให้บริการ</span>CJ Planner SaaS<br/>พร้อมเพย์ผู้รับ: {sub.promptpayId}</div>
+                  <div>
+                    <span className="inv-doc-lbl">ผู้ให้บริการ / ผู้ขาย</span>
+                    {COMPANY.nameTh}<br/>
+                    {COMPANY.address}<br/>
+                    โทร {COMPANY.tel} · {COMPANY.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}<br/>
+                    เลขประจำตัวผู้เสียภาษี: {COMPANY.taxId || '(โปรดระบุใน config)'}<br/>
+                    พร้อมเพย์: {sub.promptpayId}
+                  </div>
                   <div><span className="inv-doc-lbl">ลูกค้า</span>ผู้ใช้ระบบ<br/>(แก้ชื่อ/เลขผู้เสียภาษีได้ในการตั้งค่าบริษัท)</div>
                 </div>
                 <table className="inv-doc-table">
