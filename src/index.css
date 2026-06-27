@@ -1348,3 +1348,28 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
 .ceo-suggest-reports { font-size: 11px; color: var(--ink3); }
 .ceo-suggest-approve-btn { margin-top: 6px; font-size: 11.5px; font-family: inherit; padding: 5px 10px; background: #1a4f8a; color: #fff; border: none; border-radius: var(--r); cursor: pointer; align-self: flex-start; }
 .ceo-suggest-approve-btn:hover { background: #153d6e; }
+
+/* ===== Mandate Definition Panel ===== */
+.mandate-btn { background: #f0f8f0; border-color: #2d6a4f55; color: #2d6a4f; }
+.mandate-btn:hover:not(:disabled) { background: #e0f0e8; border-color: #2d6a4f; }
+
+.mandate-panel { margin-top: 16px; border-top: 1px solid var(--sand); padding-top: 14px; }
+.mandate-msg { font-size: 12px; color: var(--ink2); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mandate-save-btn { font-size: 12px; font-family: inherit; padding: 5px 14px; background: #2d6a4f; color: #fff; border: none; border-radius: var(--r); cursor: pointer; }
+.mandate-save-btn:hover { background: #235540; }
+.mandate-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.mandate-card { background: var(--white); border: 1px solid var(--sand); border-left: 3px solid #2d6a4f; border-radius: var(--r); padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; }
+.mandate-role { font-size: 13px; font-weight: 700; color: var(--ink); }
+.mandate-body { font-size: 12px; color: var(--ink2); line-height: 1.55; }
+.mandate-kpi { font-size: 11px; color: #a05c1a; font-weight: 600; }
+.mandate-skills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+
+/* ===== Skill chips ===== */
+.skill-chip { display: inline-block; font-size: 10px; padding: 2px 7px; background: #e8f0fe; color: #1a4f8a; border: 1px solid #1a4f8a33; border-radius: 20px; }
+.ceo-suggest-skills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+
+/* ===== Agent Run Now Button ===== */
+.agent-run-now-btn { margin-top: 6px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-family: inherit; padding: 6px 10px; background: var(--cream2); border: 1px solid var(--sand); border-radius: var(--r); cursor: pointer; color: var(--ink2); transition: all .15s; }
+.agent-run-now-btn:hover:not(:disabled) { background: #e8f0fe; color: var(--blue); border-color: #1a4f8a55; }
+.agent-run-now-btn.running { background: #fff8e1; color: #a05c1a; border-color: #a05c1a44; cursor: default; }
+.agent-run-now-btn:disabled { opacity: .6; cursor: default; }

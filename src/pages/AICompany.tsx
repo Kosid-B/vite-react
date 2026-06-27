@@ -78,6 +78,17 @@ const AGENT_PALETTE = ['#c44b2b', '#1a4f8a', '#2d6a4f', '#a05c1a', '#6b3fa0', '#
 const AVATARS = ['🤖', '🧠', '📈', '🛠️', '🎯', '🔬', '💡', '🗂️'];
 const MODELS = ['claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'OpenAI Codex', 'gpt-4o'];
 
+const AVAILABLE_SKILLS = [
+  'business-building-24-step','value-proposition-canvas','risk-assessment','revenue-model','kpi-dashboard',
+  'product-roadmap','saas-onboarding-flow','customer-persona','customer-segmentation','customer-journey-map',
+  'customer-win-story','conversion-funnel-analysis','pricing-strategy','pricing-analysis','pricing-calculator',
+  'keyword-research','marketplace-seo','sentiment-analysis','salesforce-developer','automation-workflow',
+  'ab-test-plan','analytics-setup-guide','attribution-model','benchmarking-report','cohort-analysis',
+  'data-collection-plan','data-dashboard-design','feedback-analysis','metric-definition-guide',
+  'saas-metrics-dashboard','customer-lifetime-value','marketplace-metrics','impact-report','grant-report',
+  'social-impact-measurement','survey-analysis','knowledge-base-builder','job-posting',
+];
+
 // ยิ่งรอบสั้น ทำงานเร็วแต่ใช้ token ถี่ (งบบานปลาย) · ยิ่งรอบยาว ประหยัดงบ
 const HEARTBEAT_OPTS = [
   { sec: 60, label: 'ทุก 1 นาที' },
@@ -126,6 +137,10 @@ export default function AICompany({ data, onUpdate }: Props) {
   const [suggestingRoles, setSuggestingRoles] = useState(false);
   const [ceoSuggestions, setCeoSuggestions] = useState<Array<{ role: string; mandate: string; reportsToRole: string; reason: string }>>([]);
   const [suggestMsg, setSuggestMsg] = useState<string | null>(null);
+  const [definingMandates, setDefiningMandates] = useState(false);
+  const [mandateProposals, setMandateProposals] = useState<Array<{ role: string; mandate: string; skills?: string[]; kpi?: string }>>([]);
+  const [mandateMsg, setMandateMsg] = useState<string | null>(null);
+  const [runningAgentId, setRunningAgentId] = useState<string | null>(null);
 
   // เครื่องยนต์จำลอง: ขณะ running จะสร้างกิจกรรมใหม่เรื่อย ๆ (ephemeral ไม่บันทึกลง storage)
   useEffect(() => {
@@ -308,8 +323,10 @@ export default function AICompany({ data, onUpdate }: Props) {
             'ให้ CEO วิเคราะห์ว่าตำแหน่งใดที่ขาดอยู่ที่จำเป็นต้องมีเพื่อบรรลุเป้าหมาย',
             'โดยเฉพาะด้าน Sales, Marketing, CRM และ Technology (เช่น Salesforce Developer)',
             '',
+            `Skill Tools ที่ระบบ AI มีให้ใช้: ${AVAILABLE_SKILLS.join(', ')}`,
+            '',
             'ตอบกลับเป็น JSON array เท่านั้น รูปแบบ:',
-            '[{"role":"ชื่อตำแหน่ง","mandate":"หน้าที่หลัก 1-2 ประโยค","reportsToRole":"รายงานต่อตำแหน่งใด","reason":"เหตุผลที่ต้องมีตำแหน่งนี้"}]',
+            '[{"role":"ชื่อตำแหน่ง","mandate":"หน้าที่หลัก 1-2 ประโยค","reportsToRole":"รายงานต่อตำแหน่งใด","reason":"เหตุผลที่ต้องมีตำแหน่งนี้","skills":["skill1","skill2"]}]',
             'แนะนำ 3-6 ตำแหน่ง ไม่ต้องซ้ำกับที่มีอยู่แล้ว',
           ].join('\n'),
           goal: c.goal,
@@ -320,9 +337,9 @@ export default function AICompany({ data, onUpdate }: Props) {
       });
       if (error) throw error;
       const output: string = res?.output ?? '';
-      const match = output.match(/\[[\s\S]*?\]/);
+      const match = output.match(/\[[\s\S]*\]/);
       if (match) {
-        const parsed: Array<{ role: string; mandate: string; reportsToRole: string; reason: string }> = JSON.parse(match[0]);
+        const parsed: Array<{ role: string; mandate: string; reportsToRole: string; reason: string; skills?: string[] }> = JSON.parse(match[0]);
         setCeoSuggestions(parsed);
         setSuggestMsg(`✓ CEO แนะนำ ${parsed.length} ตำแหน่ง — เลือกเพิ่มได้เลย`);
       } else {
@@ -348,6 +365,115 @@ export default function AICompany({ data, onUpdate }: Props) {
     };
     patch({ approvals: [...c.approvals, approval] });
     setCeoSuggestions(prev => prev.filter(s => s.role !== sug.role));
+  }
+
+  // CEO กำหนดบทบาทหน้าที่ทุกตำแหน่งให้สอดคล้องกับ Business Process + เป้าหมาย + Skills
+  async function ceoDefineMandates() {
+    if (!supabase || c.agents.length === 0) return;
+    setDefiningMandates(true);
+    setMandateMsg(null);
+    setMandateProposals([]);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: 'CEO',
+          mandate: 'กำหนดบทบาทหน้าที่ของทุกตำแหน่งในองค์กรให้สอดคล้องกับกระบวนการธุรกิจและเป้าหมายบริษัท',
+          model: 'claude-sonnet-4-6',
+          title: 'กำหนดบทบาทหน้าที่ (Role Mandate) ทุกตำแหน่ง',
+          detail: [
+            `บริษัท: ${c.name} | อุตสาหกรรม: ${c.industry}`,
+            `เป้าหมายบริษัท: ${c.goal}`,
+            '',
+            'ตำแหน่งปัจจุบันในองค์กร:',
+            c.agents.map(a => `- ${a.role}: ${a.mandate}`).join('\n'),
+            '',
+            `Skill Tools ที่ระบบ AI มีให้ใช้งาน: ${AVAILABLE_SKILLS.join(', ')}`,
+            '',
+            'ให้ CEO กำหนดบทบาทหน้าที่ (Mandate) ให้ทุกตำแหน่งโดย:',
+            '1. สอดคล้องกับเป้าหมายบริษัทและ Business Process ตามอุตสาหกรรม',
+            '2. ระบุ Skill Tools ที่ตำแหน่งนั้นควรใช้ (2-4 skills ที่เกี่ยวข้องที่สุด)',
+            '3. กำหนด KPI หลักที่ต้องรับผิดชอบและวัดได้จริง',
+            '4. อธิบายบทบาทชัดเจน 2-3 ประโยค ครอบคลุมหน้าที่หลักและการทำงานร่วมกับทีม',
+            '',
+            'ตอบกลับเป็น JSON array เท่านั้น:',
+            '[{"role":"ชื่อตำแหน่ง","mandate":"บทบาทหน้าที่ 2-3 ประโยค","skills":["skill1","skill2"],"kpi":"KPI หลัก 1-2 ตัว"}]',
+          ].join('\n'),
+          goal: c.goal,
+          industry: c.industry,
+          companyName: c.name,
+          orgContext: c.agents.map(a => ({ role: a.role, mandate: a.mandate })),
+        },
+      });
+      if (error) throw error;
+      const output: string = res?.output ?? '';
+      const match = output.match(/\[[\s\S]*\]/);
+      if (match) {
+        const parsed: Array<{ role: string; mandate: string; skills?: string[]; kpi?: string }> = JSON.parse(match[0]);
+        setMandateProposals(parsed);
+        setMandateMsg(`✓ CEO กำหนดบทบาท ${parsed.length} ตำแหน่ง — ตรวจสอบแล้วกด "บันทึกทั้งหมด"`);
+      } else {
+        setMandateMsg('CEO วิเคราะห์: ' + output.slice(0, 200));
+      }
+    } catch (e) {
+      setMandateMsg('✕ ' + (e as Error).message);
+    } finally {
+      setDefiningMandates(false);
+    }
+  }
+
+  function applyMandateProposals() {
+    let count = 0;
+    const updated = c.agents.map(agent => {
+      const proposal = mandateProposals.find(p =>
+        p.role.toLowerCase() === agent.role.toLowerCase() ||
+        agent.role.toLowerCase().includes(p.role.toLowerCase().split(' ')[0]) ||
+        p.role.toLowerCase().includes(agent.role.toLowerCase().split(' ')[0])
+      );
+      if (!proposal) return agent;
+      count++;
+      const skillLine = proposal.skills?.length ? `\n📌 Skills: ${proposal.skills.join(' · ')}` : '';
+      const kpiLine = proposal.kpi ? `\n📊 KPI: ${proposal.kpi}` : '';
+      return { ...agent, mandate: proposal.mandate + skillLine + kpiLine };
+    });
+    patch({ agents: updated });
+    setMandateProposals([]);
+    setMandateMsg(`✅ บันทึกบทบาทหน้าที่แล้ว ${count} ตำแหน่ง`);
+  }
+
+  function fmtImpact(impact: string): string {
+    try {
+      const meta = JSON.parse(impact);
+      if (meta.type === 'hire') return `📋 เพิ่มตำแหน่ง: ${meta.role} · รายงานต่อ: ${meta.reportsToRole}`;
+      return impact;
+    } catch { return impact; }
+  }
+
+  // ทุกตำแหน่งทำงานแบบ AI Agent — สร้างและรันงานจากบทบาทหน้าที่ทันที
+  async function runAgentNow(agentId: string) {
+    const agent = c.agents.find(a => a.id === agentId);
+    if (!agent || !supabase) return;
+    setRunningAgentId(agentId);
+    const taskId = 'auto-' + Date.now().toString(36);
+    const newTask = {
+      id: taskId,
+      agentId,
+      title: `${agent.role} ดำเนินงานตามบทบาทหน้าที่`,
+      detail: [
+        `บทบาท: ${agent.mandate}`,
+        `เป้าหมายบริษัท: ${c.goal}`,
+        `อุตสาหกรรม: ${c.industry}`,
+        '',
+        `ให้ ${agent.role} วิเคราะห์สถานการณ์ปัจจุบัน ระบุปัญหา/โอกาสสำคัญ`,
+        'และดำเนินงานที่สร้างผลกระทบสูงสุดต่อเป้าหมายบริษัทในขณะนี้',
+        'พร้อมระบุผลลัพธ์ที่วัดได้และขั้นตอนถัดไป',
+      ].join('\n'),
+      status: 'queued' as const,
+    };
+    patch({ tasks: [...c.tasks, newTask] });
+    setTimeout(async () => {
+      await executeTask(taskId);
+      setRunningAgentId(null);
+    }, 100);
   }
 
   function setCompanyField(field: 'name' | 'goal' | 'industry', value: string) {
@@ -525,11 +651,16 @@ export default function AICompany({ data, onUpdate }: Props) {
       <section className="ai-panel" style={{ marginTop: 16 }}>
         <div className="ai-panel-hd">
           🏢 ผังองค์กร — CEO กำหนดโครงสร้าง
-          {isSupabaseEnabled && (
-            <button className="ai-suggest-btn" onClick={ceoSuggestRoles} disabled={suggestingRoles} title="ให้ CEO วิเคราะห์และแนะนำตำแหน่งที่ขาด (ต้องผ่านการ Approve)">
+          {isSupabaseEnabled && (<>
+            <button className="ai-suggest-btn" onClick={ceoSuggestRoles} disabled={suggestingRoles || definingMandates} title="ให้ CEO วิเคราะห์และแนะนำตำแหน่งที่ขาด (ต้องผ่านการ Approve)">
               {suggestingRoles ? '⏳ CEO กำลังวิเคราะห์…' : '🧠 CEO แนะนำตำแหน่ง'}
             </button>
-          )}
+            {c.agents.length > 0 && (
+              <button className="ai-suggest-btn mandate-btn" onClick={ceoDefineMandates} disabled={definingMandates || suggestingRoles} title="CEO กำหนดบทบาทหน้าที่ทุกตำแหน่งให้สอดคล้องกับกระบวนการธุรกิจและ Skills">
+                {definingMandates ? '⏳ CEO กำลังกำหนดบทบาท…' : '🎯 CEO กำหนดบทบาท'}
+              </button>
+            )}
+          </>)}
           <button className="ai-mini-add" onClick={() => patch({ agents: [...c.agents, {
             id: 'a-' + Date.now().toString(36), role: 'CEO', name: 'เอเจนต์หลัก',
             avatar: '🤖', color: AGENT_PALETTE[0], mandate: 'กำหนดทิศทางและตัดสินใจสูงสุด',
@@ -567,9 +698,44 @@ export default function AICompany({ data, onUpdate }: Props) {
                     <div className="ceo-suggest-mandate">{sug.mandate}</div>
                     <div className="ceo-suggest-reason">🔍 {sug.reason}</div>
                     <div className="ceo-suggest-reports">รายงานต่อ: <b>{sug.reportsToRole}</b></div>
+                    {'skills' in sug && Array.isArray((sug as { skills?: string[] }).skills) && (
+                      <div className="ceo-suggest-skills">
+                        {((sug as { skills?: string[] }).skills ?? []).map(sk => <span key={sk} className="skill-chip">{sk}</span>)}
+                      </div>
+                    )}
                     <button className="ceo-suggest-approve-btn" onClick={() => requestHireApproval(sug)}>
                       📨 ขออนุมัติ (CEO Request)
                     </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Mandate Definition panel */}
+        {(mandateMsg || mandateProposals.length > 0) && (
+          <div className="mandate-panel">
+            {mandateMsg && (
+              <div className="mandate-msg">
+                {mandateMsg}
+                {mandateProposals.length > 0 && (
+                  <button className="mandate-save-btn" onClick={applyMandateProposals}>✅ บันทึกทั้งหมด</button>
+                )}
+              </div>
+            )}
+            {mandateProposals.length > 0 && (
+              <div className="mandate-list">
+                {mandateProposals.map((p, i) => (
+                  <div key={i} className="mandate-card">
+                    <div className="mandate-role">🎯 {p.role}</div>
+                    <div className="mandate-body">{p.mandate}</div>
+                    {p.kpi && <div className="mandate-kpi">📊 KPI: {p.kpi}</div>}
+                    {p.skills && p.skills.length > 0 && (
+                      <div className="mandate-skills">
+                        {p.skills.map(sk => <span key={sk} className="skill-chip">{sk}</span>)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -601,6 +767,18 @@ export default function AICompany({ data, onUpdate }: Props) {
                 <textarea className="ai-agent-mandate" rows={2} defaultValue={a.mandate} key={'m' + a.id + a.mandate}
                   onBlur={e => saveAgent(a.id, 'mandate', e.target.value)}
                   onChange={e => autoH(e.target)} ref={el => autoH(el)} spellCheck={false} />
+                {isSupabaseEnabled && (
+                  <button
+                    className={`agent-run-now-btn${runningAgentId === a.id ? ' running' : ''}`}
+                    onClick={() => runAgentNow(a.id)}
+                    disabled={runningAgentId !== null}
+                    title={`ให้ ${a.role} ทำงานตามบทบาทหน้าที่ทันที`}
+                  >
+                    {runningAgentId === a.id
+                      ? <><span className="ai-exec-dot pulse" style={{ background: a.color }} />{'กำลังทำงาน…'}</>
+                      : <><span style={{ marginRight: 4 }}>{a.avatar}</span>{`▶ ให้ ${a.role} ทำงาน`}</>}
+                  </button>
+                )}
                 <div className="ai-agent-foot">
                   <label>สมอง (LLM)
                     <select value={a.model} onChange={e => saveAgent(a.id, 'model', e.target.value)}>
@@ -685,7 +863,7 @@ export default function AICompany({ data, onUpdate }: Props) {
                 <div className="ai-approval-detail">{ap.detail}</div>
                 <div className="ai-approval-meta">
                   <span className="ai-approval-from">เสนอโดย {agentName(ap.agentId)}</span>
-                  <span className="ai-approval-impact">{ap.impact}</span>
+                  <span className="ai-approval-impact">{fmtImpact(ap.impact)}</span>
                 </div>
               </div>
               <div className="ai-approval-actions">
