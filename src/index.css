@@ -2537,3 +2537,111 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
 .cx-msg-sub { font-size: 12px; color: var(--ink2); }
 .cx-msg-cta { font-weight: 700; color: var(--green); }
 .cx-msg-ch  { font-size: 12px; color: var(--ink3); }
+
+/* ===== SEO Strategy Tab ===== */
+.seo-wrap { padding: 0 0 48px; }
+.seo-header { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); border-radius: 12px; padding: 24px 28px; margin-bottom: 24px; }
+.seo-header-title { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.seo-header-sub   { font-size: 13px; color: #94a3b8; }
+
+.seo-section { background: var(--cream2); border: 1px solid var(--ink4); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; }
+.seo-section-title { font-size: 14px; font-weight: 700; color: var(--ink1); margin-bottom: 14px; }
+.seo-note { font-size: 12.5px; color: var(--ink2); background: #f0f9ff; border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; }
+
+/* Metrics */
+.seo-metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+@media (max-width: 700px) { .seo-metrics-grid { grid-template-columns: 1fr 1fr; } }
+.seo-metric-card { background: var(--cream2); border: 1px solid var(--ink4); border-radius: 10px; padding: 16px 18px; }
+.seo-metric-label { font-size: 11px; font-weight: 600; color: var(--ink2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.seo-metric-vals  { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+.seo-metric-cur   { font-size: 22px; font-weight: 800; color: var(--ink1); }
+.seo-metric-arrow { font-size: 14px; color: var(--ink3); }
+.seo-metric-tgt   { font-size: 14px; font-weight: 600; color: var(--green); }
+.seo-metric-bar-bg   { height: 6px; background: var(--ink4); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+.seo-metric-bar-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+.seo-metric-pct   { font-size: 11px; color: var(--ink3); }
+
+/* Keyword table */
+.seo-table-wrap { overflow-x: auto; }
+.seo-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 640px; }
+.seo-table th { text-align: left; padding: 8px 10px; background: var(--cream3); color: var(--ink2); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.seo-table td { padding: 10px 10px; border-bottom: 1px solid var(--ink4); vertical-align: top; }
+.seo-page-badge { background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+.seo-pattern  { color: var(--ink2); font-style: italic; }
+.seo-example  { color: var(--ink1); font-weight: 500; }
+.seo-vol      { font-size: 11.5px; color: var(--ink2); white-space: nowrap; }
+.seo-comp-badge { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+.seo-comp-high  { background: #fee2e2; color: #dc2626; }
+.seo-comp-mid   { background: #fef9c3; color: #854d0e; }
+.seo-comp-low   { background: #dcfce7; color: #166534; }
+.seo-intent-badge { font-size: 10.5px; padding: 2px 8px; border-radius: 10px; background: #f0f9ff; color: #0369a1; font-weight: 600; white-space: nowrap; }
+.seo-intent-informational { background: #f0f9ff; color: #0369a1; }
+.seo-intent-commercial    { background: #fdf4ff; color: #7e22ce; }
+.seo-intent-transactional { background: #f0fdf4; color: #166534; }
+.seo-intent-navigational  { background: #fff7ed; color: #9a3412; }
+
+/* Category priorities */
+.seo-cat-list { display: flex; flex-direction: column; gap: 10px; }
+.seo-cat-row { display: flex; align-items: flex-start; gap: 14px; background: #fff; border: 1px solid var(--ink4); border-radius: 10px; padding: 14px 16px; }
+.seo-cat-p1 { border-left: 4px solid #dc2626; }
+.seo-cat-p2 { border-left: 4px solid #f59e0b; }
+.seo-cat-p3 { border-left: 4px solid var(--ink3); }
+.seo-cat-pri-badge { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; flex-shrink: 0; margin-top: 2px; }
+.seo-cat-p1 .seo-cat-pri-badge { background: #fee2e2; color: #dc2626; }
+.seo-cat-p2 .seo-cat-pri-badge { background: #fef9c3; color: #854d0e; }
+.seo-cat-p3 .seo-cat-pri-badge { background: #f1f5f9; color: var(--ink2); }
+.seo-cat-info { flex: 1; }
+.seo-cat-name   { font-size: 13.5px; font-weight: 700; color: var(--ink1); margin-bottom: 4px; }
+.seo-cat-action { font-size: 12px; color: var(--ink2); }
+.seo-cat-stats  { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+.seo-cat-stat   { display: flex; align-items: center; gap: 6px; }
+.seo-cat-stat-label { font-size: 10px; color: var(--ink3); }
+.seo-cat-stat-val   { font-size: 11.5px; font-weight: 600; color: var(--ink1); }
+
+/* Schema markup */
+.seo-schema-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.seo-schema-tab { padding: 6px 14px; border-radius: 8px; border: 1.5px solid var(--ink4); background: #fff; color: var(--ink2); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.seo-schema-tab.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+.seo-schema-panel {}
+.seo-schema-desc { font-size: 12.5px; color: var(--ink2); margin-bottom: 12px; }
+.seo-code-block { background: #1e293b; color: #e2e8f0; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.65; border-radius: 8px; padding: 16px 18px; overflow-x: auto; white-space: pre; }
+
+/* Checklists */
+.seo-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+@media (max-width: 700px) { .seo-2col { grid-template-columns: 1fr; } }
+.seo-check-section {}
+.seo-check-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.seo-check-prog-bar  { flex: 1; height: 8px; background: var(--ink4); border-radius: 4px; overflow: hidden; }
+.seo-check-prog-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
+.seo-check-prog-label { font-size: 11.5px; color: var(--ink2); font-weight: 600; white-space: nowrap; }
+.seo-check-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--ink4); cursor: pointer; }
+.seo-check-row input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; accent-color: var(--accent); }
+.seo-check-text { font-size: 12.5px; color: var(--ink1); line-height: 1.5; }
+.seo-check-text.done { text-decoration: line-through; color: var(--ink3); }
+
+/* Content calendar */
+.seo-cal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 700px) { .seo-cal-grid { grid-template-columns: 1fr; } }
+.seo-cal-card { background: #fff; border: 1.5px solid var(--ink4); border-radius: 10px; padding: 14px 16px; }
+.seo-cal-planned { border-top: 3px solid var(--accent); }
+.seo-cal-draft   { border-top: 3px solid #f59e0b; }
+.seo-cal-published { border-top: 3px solid var(--green); }
+.seo-cal-top    { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.seo-cal-month  { font-size: 11px; font-weight: 700; color: var(--ink2); }
+.seo-cal-status { font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 8px; }
+.seo-cal-status-planned    { background: #e0f2fe; color: #0369a1; }
+.seo-cal-status-draft      { background: #fef9c3; color: #854d0e; }
+.seo-cal-status-published  { background: #dcfce7; color: #166534; }
+.seo-cal-title  { font-size: 12.5px; font-weight: 700; color: var(--ink1); margin-bottom: 6px; line-height: 1.5; }
+.seo-cal-kw     { font-size: 11.5px; color: var(--accent); margin-bottom: 8px; }
+.seo-cal-meta   { display: flex; gap: 8px; flex-wrap: wrap; }
+.seo-cal-intent { font-size: 10.5px; background: #f0f9ff; color: #0369a1; padding: 2px 8px; border-radius: 8px; font-weight: 600; }
+.seo-cal-target { font-size: 10.5px; color: var(--ink3); font-family: monospace; }
+
+/* Anti-patterns */
+.seo-antipatterns {}
+.seo-ap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.seo-ap-card { background: #fff7f7; border: 1px solid #fecaca; border-radius: 10px; padding: 14px 16px; }
+.seo-ap-icon  { font-size: 18px; margin-bottom: 6px; }
+.seo-ap-title { font-size: 13px; font-weight: 700; color: #dc2626; margin-bottom: 4px; }
+.seo-ap-desc  { font-size: 12px; color: var(--ink2); line-height: 1.5; }
