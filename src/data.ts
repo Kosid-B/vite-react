@@ -472,6 +472,7 @@ export const DEFAULT_DATA: AppData = {
     promptpayId: '0812345678',
     autoRenew: true,
     currentPeriodEnd: null,
+    trialEndDate: null,
     invoices: [],
   },
   vrio: [
