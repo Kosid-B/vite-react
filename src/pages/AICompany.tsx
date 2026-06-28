@@ -171,6 +171,13 @@ export default function AICompany({ data, onUpdate }: Props) {
   const [competencyMsg, setCompetencyMsg] = useState<string | null>(null);
   const [designingCompetency, setDesigningCompetency] = useState(false);
 
+  // Refs for heartbeat to avoid stale closures
+  const executeTaskRef = useRef<((taskId: string) => Promise<void>) | null>(null);
+  const cRef = useRef(c);
+  const runningIdsRef = useRef(runningTaskIds);
+  useEffect(() => { cRef.current = c; });
+  useEffect(() => { runningIdsRef.current = runningTaskIds; }, [runningTaskIds]);
+
   // เครื่องยนต์จำลอง: ขณะ running จะสร้างกิจกรรมใหม่เรื่อย ๆ (ephemeral ไม่บันทึกลง storage)
   useEffect(() => {
     if (!c.running) return;
@@ -188,6 +195,29 @@ export default function AICompany({ data, onUpdate }: Props) {
     const iv = setInterval(tick, 2600);
     return () => clearInterval(iv);
   }, [c.running, c.agents, c.goal]);
+
+  // Heartbeat: รันงาน queued จริงด้วย Claude API เมื่อ running=true และ Supabase เปิดใช้งาน
+  useEffect(() => {
+    if (!c.running || !isSupabaseEnabled || !supabase) return;
+    const run = async () => {
+      if (runningIdsRef.current.size > 0) return;
+      const first = cRef.current.tasks.find(t => t.status === 'queued');
+      if (!first) return;
+      const agent = cRef.current.agents.find(a => a.id === first.agentId);
+      counter.current += 1;
+      setFeed(prev => [{
+        id: counter.current,
+        time: nowTime(),
+        text: `⚡ Heartbeat: ${agent?.name ?? 'Agent'} เริ่มดำเนินงาน "${first.title}"`,
+        color: agent?.color ?? '#1a4f8a',
+      }, ...prev].slice(0, 40));
+      await executeTaskRef.current?.(first.id);
+    };
+    const ms = Math.max((c.heartbeatSec ?? 30) * 1000, 15000);
+    run();
+    const iv = setInterval(run, ms);
+    return () => clearInterval(iv);
+  }, [c.running, c.heartbeatSec, isSupabaseEnabled]);
 
   function patch(next: Partial<typeof c>) {
     onUpdate({ ...data, aiCompany: { ...c, ...next } });
@@ -284,6 +314,9 @@ export default function AICompany({ data, onUpdate }: Props) {
       setRunningTaskIds(prev => { const s = new Set(prev); s.delete(taskId); return s; });
     }
   }
+
+  // Keep ref in sync so heartbeat always calls latest version
+  useEffect(() => { executeTaskRef.current = executeTask; });
 
   // สร้าง Job Description สำหรับตำแหน่งในผังองค์กร
   async function generateJD(agentId: string) {
