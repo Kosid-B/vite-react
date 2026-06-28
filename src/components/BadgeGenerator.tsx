@@ -402,7 +402,7 @@ function renderBadge(
   ctx.textBaseline = 'alphabetic';
   ctx.font = `400 ${Math.round(W*0.014)}px "Kanit",Arial`;
   ctx.fillStyle = hex('#06B6D4', 0.2);
-  ctx.fillText('ceoaithailand.com', cx, H - 18);
+  ctx.fillText('ceoaithailand.org', cx, H - 18);
   ctx.restore();
 }
 
@@ -470,14 +470,14 @@ export default function BadgeGenerator({ defaultName = '', complianceScore = 98,
     }
 
     // Fallback: copy app URL
-    navigator.clipboard.writeText('https://ceoaithailand.com/').then(() => {
+    navigator.clipboard.writeText('https://ceoaithailand.org/').then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   }
 
   function handleLinkedIn() {
-    const targetUrl = encodeURIComponent(shareUrl || 'https://ceoaithailand.com/');
+    const targetUrl = encodeURIComponent(shareUrl || 'https://ceoaithailand.org/');
     const text = encodeURIComponent(
       `🏆 ${company.trim() || 'เราได้รับ'} Badge of Excellence จาก CEO AI Thailand\n` +
       `Compliance Readiness: ${score}% · Powered by AI\n\n` +
