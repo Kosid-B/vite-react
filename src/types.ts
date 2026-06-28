@@ -273,6 +273,81 @@ export interface Marketplace {
   deals: Deal[];
 }
 
+/* ===== Win Story Library ===== */
+export type WinCategory = 'revenue' | 'retention' | 'growth' | 'transformation' | 'efficiency';
+
+export interface WinMetric {
+  label: string;
+  before: string;
+  after: string;
+  change: string;
+}
+
+export interface WinStory {
+  id: string;
+  date: string;
+  customerName: string;
+  category: WinCategory;
+  headlineMetric: string;
+  situation: string;
+  challenge: string;
+  actions: string[];
+  turningPoint: string;
+  metrics: WinMetric[];
+  timeline: string;
+  quote: string;
+  lessons: string[];
+  whyItMatters: string;
+  documentedBy: string;
+}
+
+/* ===== Marketing Strategy ===== */
+export type MarketingChannelType = 'seo' | 'sem' | 'social' | 'email' | 'referral' | 'content' | 'event' | 'partner';
+
+export interface MarketingChannel {
+  id: string;
+  name: string;
+  type: MarketingChannelType;
+  budget: number;
+  leadsPerMonth: number;
+  cpl: number;
+  convRate: number;
+  active: boolean;
+  notes: string;
+}
+
+export type MarketingCampaignStatus = 'planned' | 'active' | 'done' | 'paused';
+
+export interface MarketingCampaign {
+  id: string;
+  name: string;
+  channelId: string;
+  budget: number;
+  startDate: string;
+  endDate: string;
+  goal: string;
+  kpiTarget: string;
+  status: MarketingCampaignStatus;
+  result: string;
+}
+
+export interface MarketingGoal {
+  id: string;
+  metric: string;
+  current: number;
+  target: number;
+  unit: string;
+}
+
+export interface MarketingStrategy {
+  monthlyBudget: number;
+  targetLeads: number;
+  targetCAC: number;
+  channels: MarketingChannel[];
+  campaigns: MarketingCampaign[];
+  goals: MarketingGoal[];
+}
+
 export interface AppData {
   stages: Stage[];
   personas: Persona[];
@@ -286,6 +361,8 @@ export interface AppData {
   vrio: VrioItem[];
   marketplace: Marketplace;
   roadmap: RoadmapItem[];
+  winStories: WinStory[];
+  marketing: MarketingStrategy;
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing';
