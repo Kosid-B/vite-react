@@ -3,7 +3,7 @@ import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, type AdminWorkspace } from '../lib/workspaces';
 import { isAdminEmail, ADMIN_EMAILS } from '../config';
 import { PageHeader, Badge } from '../ds';
-import type { AppData, WinStory, WinCategory } from '../types';
+import type { AppData, WinStory, WinCategory, FeedbackEntry, FeedbackSource, FeedbackSentiment, FeedbackTheme } from '../types';
 
 function thaiDate(iso: string): string {
   return new Date(iso).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
@@ -85,12 +85,38 @@ const BLANK_STORY: Omit<WinStory, 'id'> = {
   documentedBy: 'Admin',
 };
 
+const FB_SOURCES: { id: FeedbackSource; label: string }[] = [
+  { id: 'survey',  label: '📋 Survey'  },
+  { id: 'review',  label: '⭐ Review'  },
+  { id: 'support', label: '🎫 Support' },
+  { id: 'social',  label: '📱 Social'  },
+  { id: 'email',   label: '📧 Email'   },
+];
+
+type FBAction = 'fix_now' | 'plan' | 'monitor' | 'celebrate';
+const FB_ACTION: Record<FBAction, { emoji: string; label: string; cls: string; desc: (name: string, n: number) => string }> = {
+  fix_now:   { emoji: '🔥', label: 'Fix Now',   cls: 'fb-act-fix',       desc: (name, n) => `แก้ไข "${name}" โดยด่วน — มี ${n} รายการ feedback เชิงลบ` },
+  plan:      { emoji: '📅', label: 'Plan Q3',   cls: 'fb-act-plan',      desc: (name, _) => `วางแผนปรับปรุง "${name}" ใน Quarter ถัดไป` },
+  monitor:   { emoji: '👁', label: 'Monitor',   cls: 'fb-act-monitor',   desc: (name, _) => `ติดตาม "${name}" ต่อไป — ยังไม่ถึง threshold เร่งด่วน` },
+  celebrate: { emoji: '🎉', label: 'Celebrate', cls: 'fb-act-celebrate', desc: (name, _) => `"${name}" คือจุดแข็ง — นำไปใช้ใน marketing และ testimonials` },
+};
+
+const BLANK_FB = {
+  date: '',
+  source: 'survey' as FeedbackSource,
+  sentiment: 'positive' as FeedbackSentiment,
+  theme: '',
+  content: '',
+  rating: '',
+};
+type FbFormState = typeof BLANK_FB;
+
 interface Props {
   currentUserEmail: string | null;
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'finance' | 'workspaces' | 'winstories';
+type Tab = 'finance' | 'workspaces' | 'winstories' | 'feedback';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -113,6 +139,15 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [wsView, setWsView]     = useState<WinStory | null>(null);
   const [wsEdit, setWsEdit]     = useState<(Partial<WinStory> & { id?: string }) | null>(null);
 
+  // Feedback Analysis state
+  const [fbSrc, setFbSrc]       = useState<FeedbackSource | 'all'>('all');
+  const [fbThm, setFbThm]       = useState<string>('all');
+  const [fbSnt, setFbSnt]       = useState<FeedbackSentiment | 'all'>('all');
+  const [fbAddOpen, setFbAddOpen] = useState(false);
+  const [fbNew, setFbNew]       = useState<FbFormState>(
+    { ...BLANK_FB, date: new Date().toISOString().slice(0, 10) }
+  );
+
   const winStories = data.winStories ?? [];
 
   function saveStory(story: Omit<WinStory, 'id'> & { id?: string }) {
@@ -132,6 +167,72 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
     onUpdate({ ...data, winStories: winStories.filter(s => s.id !== id) });
     if (wsView?.id === id) setWsView(null);
   }
+
+  // ---- Feedback helpers ----
+  const fb      = data.feedback ?? { period: 'Q2 2026', themes: [], entries: [] };
+  const fbT     = fb.themes;
+  const fbE     = fb.entries;
+
+  function addFeedback() {
+    if (!fbNew.content.trim() || !fbNew.theme) return;
+    const entry: FeedbackEntry = {
+      id: `fb${Date.now()}`,
+      date: fbNew.date || new Date().toISOString().slice(0, 10),
+      source: fbNew.source,
+      sentiment: fbNew.sentiment,
+      theme: fbNew.theme,
+      content: fbNew.content,
+      ...(fbNew.rating ? { rating: Number(fbNew.rating) } : {}),
+    };
+    onUpdate({ ...data, feedback: { ...fb, entries: [entry, ...fbE] } });
+    setFbAddOpen(false);
+    setFbNew({ ...BLANK_FB, date: new Date().toISOString().slice(0, 10) });
+  }
+
+  function deleteFb(id: string) {
+    if (!confirm('ลบ feedback นี้?')) return;
+    onUpdate({ ...data, feedback: { ...fb, entries: fbE.filter(e => e.id !== id) } });
+  }
+
+  function updateFbTheme(id: string, key: 'impact' | 'effort', val: number) {
+    const v = Math.max(1, Math.min(5, val));
+    onUpdate({ ...data, feedback: { ...fb, themes: fbT.map(t => t.id === id ? { ...t, [key]: v } : t) } });
+  }
+
+  function fbPriority(t: FeedbackTheme, freq: number): FBAction {
+    const te  = fbE.filter(e => e.theme === t.id);
+    const tPos = te.filter(e => e.sentiment === 'positive').length;
+    const tNeg = te.filter(e => e.sentiment === 'negative').length;
+    const tNet = te.length > 0 ? ((tPos - tNeg) / te.length) * 100 : 0;
+    const score = t.effort > 0 ? (t.impact * freq) / t.effort : 0;
+    if (tNet > 30 && freq >= 3) return 'celebrate';
+    if (score >= 7) return 'fix_now';
+    if (score >= 4) return 'plan';
+    return 'monitor';
+  }
+
+  const prioritized = [...fbT]
+    .map(t => {
+      const freq  = fbE.filter(e => e.theme === t.id).length;
+      const score = t.effort > 0 ? (t.impact * freq) / t.effort : 0;
+      const action = fbPriority(t, freq);
+      return { t, freq, score, action };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const fbFiltered = [...fbE]
+    .filter(e => fbSrc === 'all' || e.source === fbSrc)
+    .filter(e => fbThm === 'all' || e.theme === fbThm)
+    .filter(e => fbSnt === 'all' || e.sentiment === fbSnt)
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  const fbPosN = fbE.filter(e => e.sentiment === 'positive').length;
+  const fbNeuN = fbE.filter(e => e.sentiment === 'neutral').length;
+  const fbNegN = fbE.filter(e => e.sentiment === 'negative').length;
+  const fbNet  = fbE.length > 0 ? Math.round(((fbPosN - fbNegN) / fbE.length) * 100) : 0;
+
+  function srcLabel(s: FeedbackSource) { return FB_SOURCES.find(x => x.id === s)?.label ?? s; }
+  function sentIcon(s: FeedbackSentiment) { return s === 'positive' ? '😊' : s === 'neutral' ? '😐' : '😞'; }
 
   useEffect(() => {
     if (!admin || !isSupabaseEnabled) return;
@@ -213,6 +314,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'workspaces' ? ' active' : ''}`} onClick={() => setTab('workspaces')}>
           🏢 เวิร์กสเปซ
+        </button>
+        <button className={`pfa-tab${tab === 'feedback' ? ' active' : ''}`} onClick={() => setTab('feedback')}>
+          📝 Feedback Analysis
         </button>
       </div>
 
@@ -630,6 +734,230 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ===== FEEDBACK TAB ===== */}
+      {tab === 'feedback' && (
+        <div className="fb-wrap">
+
+          {/* Summary strip */}
+          <div className="fb-summary">
+            <div className="fb-summary-period">📅 {fb.period}</div>
+            <div className="fb-summary-stats">
+              <span className="fb-stat-total">{fbE.length} รายการ</span>
+              <span className="fb-stat fb-stat-pos">😊 {fbPosN} <em>({pct(fbPosN, fbE.length)})</em></span>
+              <span className="fb-stat fb-stat-neu">😐 {fbNeuN} <em>({pct(fbNeuN, fbE.length)})</em></span>
+              <span className="fb-stat fb-stat-neg">😞 {fbNegN} <em>({pct(fbNegN, fbE.length)})</em></span>
+              <span className={`fb-net ${fbNet >= 0 ? 'pos' : 'neg'}`}>Net {fbNet >= 0 ? '+' : ''}{fbNet}%</span>
+            </div>
+          </div>
+
+          {/* Theme Analysis */}
+          <div className="fb-section">
+            <div className="fb-section-title">Theme Analysis</div>
+            <div className="fb-table-wrap">
+              <table className="fb-table">
+                <thead>
+                  <tr>
+                    <th>Theme</th>
+                    <th>ความถี่</th>
+                    <th>%</th>
+                    <th>😊</th>
+                    <th>😐</th>
+                    <th>😞</th>
+                    <th>Net</th>
+                    <th>Quote ตัวอย่าง</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fbT.map(t => {
+                    const te  = fbE.filter(e => e.theme === t.id);
+                    const tp  = te.filter(e => e.sentiment === 'positive').length;
+                    const tn  = te.filter(e => e.sentiment === 'neutral').length;
+                    const tng = te.filter(e => e.sentiment === 'negative').length;
+                    const tnet = te.length > 0 ? Math.round(((tp - tng) / te.length) * 100) : 0;
+                    const sample = te.find(e => e.sentiment === 'negative') ?? te.find(e => e.sentiment === 'neutral') ?? te[0];
+                    return (
+                      <tr key={t.id}>
+                        <td><b>{t.name}</b></td>
+                        <td className="fb-tc">{te.length}</td>
+                        <td className="fb-tc">{pct(te.length, fbE.length)}</td>
+                        <td className="fb-tc fb-pos">{tp}</td>
+                        <td className="fb-tc fb-neu">{tn}</td>
+                        <td className="fb-tc fb-neg">{tng}</td>
+                        <td className={`fb-tc ${tnet >= 0 ? 'fb-pos' : 'fb-neg'}`}>{tnet >= 0 ? '+' : ''}{tnet}%</td>
+                        <td className="fb-quote-cell">"{sample?.content.slice(0, 65)}{(sample?.content.length ?? 0) > 65 ? '…' : ''}"</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Priority Matrix */}
+          <div className="fb-section">
+            <div className="fb-section-title">Impact × Effort Priority Matrix <span className="fb-section-sub">คลิก Impact/Effort เพื่อปรับ</span></div>
+            <div className="fb-table-wrap">
+              <table className="fb-table">
+                <thead>
+                  <tr>
+                    <th>Theme</th>
+                    <th>ความถี่</th>
+                    <th>Impact (1-5)</th>
+                    <th>Effort (1-5)</th>
+                    <th>Score</th>
+                    <th>Priority</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {prioritized.map(({ t, freq, score, action }) => {
+                    const meta = FB_ACTION[action];
+                    return (
+                      <tr key={t.id}>
+                        <td><b>{t.name}</b></td>
+                        <td className="fb-tc">{freq}</td>
+                        <td className="fb-tc">
+                          <input type="number" min={1} max={5} value={t.impact} className="fb-score-inp"
+                            onChange={e => updateFbTheme(t.id, 'impact', +e.target.value)} />
+                        </td>
+                        <td className="fb-tc">
+                          <input type="number" min={1} max={5} value={t.effort} className="fb-score-inp"
+                            onChange={e => updateFbTheme(t.id, 'effort', +e.target.value)} />
+                        </td>
+                        <td className="fb-tc"><b>{score.toFixed(1)}</b></td>
+                        <td><span className={`fb-act-badge ${meta.cls}`}>{meta.emoji} {meta.label}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Action Plan */}
+          <div className="fb-section">
+            <div className="fb-section-title">Action Plan</div>
+            {(['fix_now', 'plan', 'monitor', 'celebrate'] as FBAction[]).map(actKey => {
+              const items = prioritized.filter(p => p.action === actKey);
+              if (items.length === 0) return null;
+              const meta = FB_ACTION[actKey];
+              return (
+                <div key={actKey} className="fb-action-group">
+                  <div className={`fb-action-group-title ${meta.cls}`}>{meta.emoji} {meta.label}</div>
+                  <div className="fb-action-cards">
+                    {items.map(({ t }) => {
+                      const negN = fbE.filter(e => e.theme === t.id && e.sentiment === 'negative').length;
+                      return (
+                        <div key={t.id} className="fb-action-card">
+                          <div className="fb-action-card-name">{t.name}</div>
+                          <div className="fb-action-card-desc">{meta.desc(t.name, negN)}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Feedback Feed */}
+          <div className="fb-section">
+            <div className="fb-feed-head">
+              <div className="fb-section-title" style={{ marginBottom: 0 }}>Feedback Feed</div>
+              <div className="fb-feed-filters">
+                <select className="fb-filter-sel" value={fbSrc} onChange={e => setFbSrc(e.target.value as FeedbackSource | 'all')}>
+                  <option value="all">ทุกแหล่ง</option>
+                  {FB_SOURCES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+                <select className="fb-filter-sel" value={fbThm} onChange={e => setFbThm(e.target.value)}>
+                  <option value="all">ทุก Theme</option>
+                  {fbT.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+                <select className="fb-filter-sel" value={fbSnt} onChange={e => setFbSnt(e.target.value as FeedbackSentiment | 'all')}>
+                  <option value="all">ทุก Sentiment</option>
+                  <option value="positive">😊 Positive</option>
+                  <option value="neutral">😐 Neutral</option>
+                  <option value="negative">😞 Negative</option>
+                </select>
+                <button className="fb-add-btn" onClick={() => setFbAddOpen(o => !o)}>+ เพิ่ม Feedback</button>
+              </div>
+            </div>
+
+            {fbAddOpen && (
+              <div className="fb-add-form">
+                <div className="fb-add-grid">
+                  <div className="fb-add-field">
+                    <label>วันที่</label>
+                    <input type="date" className="fb-inp" value={fbNew.date}
+                      onChange={e => setFbNew(p => ({ ...p, date: e.target.value }))} />
+                  </div>
+                  <div className="fb-add-field">
+                    <label>แหล่ง</label>
+                    <select className="fb-inp" value={fbNew.source}
+                      onChange={e => setFbNew(p => ({ ...p, source: e.target.value as FeedbackSource }))}>
+                      {FB_SOURCES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="fb-add-field">
+                    <label>Theme</label>
+                    <select className="fb-inp" value={fbNew.theme}
+                      onChange={e => setFbNew(p => ({ ...p, theme: e.target.value }))}>
+                      <option value="">-- เลือก Theme --</option>
+                      {fbT.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="fb-add-field">
+                    <label>Sentiment</label>
+                    <select className="fb-inp" value={fbNew.sentiment}
+                      onChange={e => setFbNew(p => ({ ...p, sentiment: e.target.value as FeedbackSentiment }))}>
+                      <option value="positive">😊 Positive</option>
+                      <option value="neutral">😐 Neutral</option>
+                      <option value="negative">😞 Negative</option>
+                    </select>
+                  </div>
+                  <div className="fb-add-field">
+                    <label>Rating (1-5)</label>
+                    <input type="number" min={1} max={5} className="fb-inp" value={fbNew.rating}
+                      onChange={e => setFbNew(p => ({ ...p, rating: e.target.value }))}
+                      placeholder="ไม่บังคับ" />
+                  </div>
+                </div>
+                <div className="fb-add-field fb-add-full">
+                  <label>เนื้อหา Feedback</label>
+                  <textarea className="fb-ta" rows={3} value={fbNew.content} placeholder="คัดลอก feedback จากลูกค้า..."
+                    onChange={e => setFbNew(p => ({ ...p, content: e.target.value }))} />
+                </div>
+                <div className="fb-add-footer">
+                  <button className="fb-save-btn" onClick={addFeedback}
+                    disabled={!fbNew.content.trim() || !fbNew.theme}>บันทึก</button>
+                  <button className="fb-cancel-btn" onClick={() => setFbAddOpen(false)}>ยกเลิก</button>
+                </div>
+              </div>
+            )}
+
+            <div className="fb-entries">
+              {fbFiltered.length === 0 && <div className="fb-empty">ไม่พบ feedback ที่ตรงกับเงื่อนไข</div>}
+              {fbFiltered.map(e => {
+                const themeName = fbT.find(t => t.id === e.theme)?.name ?? e.theme;
+                return (
+                  <div key={e.id} className={`fb-entry fb-entry-${e.sentiment}`}>
+                    <div className="fb-entry-meta">
+                      <span className="fb-entry-date">{thaiDate(e.date)}</span>
+                      <span className={`fb-src-badge fb-src-${e.source}`}>{srcLabel(e.source)}</span>
+                      <span className="fb-theme-badge">{themeName}</span>
+                      {e.rating && <span className="fb-rating">{'⭐'.repeat(e.rating)}</span>}
+                      <span className="fb-sent-icon">{sentIcon(e.sentiment)}</span>
+                    </div>
+                    <div className="fb-entry-content">{e.content}</div>
+                    <button className="fb-entry-del" onClick={() => deleteFb(e.id)} title="ลบ">×</button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
       )}
 

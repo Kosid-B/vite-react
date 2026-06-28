@@ -53,6 +53,7 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.roadmap) parsed.roadmap = DEFAULT_DATA.roadmap;
   if (!parsed.winStories) parsed.winStories = DEFAULT_DATA.winStories;
   if (!parsed.marketing) parsed.marketing = DEFAULT_DATA.marketing;
+  if (!parsed.feedback) parsed.feedback = DEFAULT_DATA.feedback;
   return parsed;
 }
 

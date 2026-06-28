@@ -301,6 +301,33 @@ export interface WinStory {
   documentedBy: string;
 }
 
+/* ===== Feedback Analysis ===== */
+export type FeedbackSentiment = 'positive' | 'neutral' | 'negative';
+export type FeedbackSource = 'survey' | 'review' | 'support' | 'social' | 'email';
+
+export interface FeedbackEntry {
+  id: string;
+  date: string;
+  source: FeedbackSource;
+  sentiment: FeedbackSentiment;
+  theme: string;
+  content: string;
+  rating?: number;
+}
+
+export interface FeedbackTheme {
+  id: string;
+  name: string;
+  impact: number;
+  effort: number;
+}
+
+export interface FeedbackAnalysis {
+  period: string;
+  themes: FeedbackTheme[];
+  entries: FeedbackEntry[];
+}
+
 /* ===== Marketing Strategy ===== */
 export type MarketingChannelType = 'seo' | 'sem' | 'social' | 'email' | 'referral' | 'content' | 'event' | 'partner';
 
@@ -363,6 +390,7 @@ export interface AppData {
   roadmap: RoadmapItem[];
   winStories: WinStory[];
   marketing: MarketingStrategy;
+  feedback: FeedbackAnalysis;
 }
 
 export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing';
