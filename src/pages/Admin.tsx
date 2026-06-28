@@ -3085,10 +3085,8 @@ serve(async (_req) => {
         // Channel readiness from existing marketing data
         const activeChannels = channels.filter(c => c.active);
 
-        // Lead magnet checklist
-        const [auditChecks, setAuditChecks] = useState<boolean[]>([
-          false, false, false, false, false, false, false,
-        ]);
+        // Lead magnet checklist (persisted via data.gtmAuditChecks)
+        const auditChecks = data.gtmAuditChecks ?? [false, false, false, false, false, false, false];
         const AUDIT_CHECKS = [
           'สร้าง Landing Page "CEO AI Business Audit" (5 คำถาม)',
           'เชื่อมฟอร์มเข้ากับ Supabase เพื่อเก็บ Lead',
@@ -3262,7 +3260,8 @@ serve(async (_req) => {
                   <div className="gtm-audit-check-title">Launch Checklist</div>
                   {AUDIT_CHECKS.map((ck, i) => (
                     <div key={i} className="gtm-audit-check-row" onClick={() => {
-                      const next = [...auditChecks]; next[i] = !next[i]; setAuditChecks(next);
+                      const next = [...auditChecks]; next[i] = !next[i];
+                      onUpdate({ ...data, gtmAuditChecks: next });
                     }}>
                       <input type="checkbox" checked={auditChecks[i]} readOnly />
                       <span className={`gtm-audit-check-text${auditChecks[i] ? ' done' : ''}`}>{ck}</span>

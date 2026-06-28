@@ -55,6 +55,7 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.winStories) parsed.winStories = DEFAULT_DATA.winStories;
   if (!parsed.marketing) parsed.marketing = DEFAULT_DATA.marketing;
   if (!parsed.feedback) parsed.feedback = DEFAULT_DATA.feedback;
+  if (!parsed.gtmAuditChecks) parsed.gtmAuditChecks = DEFAULT_DATA.gtmAuditChecks;
   return parsed;
 }
 

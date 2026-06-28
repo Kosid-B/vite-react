@@ -391,6 +391,7 @@ export interface AppData {
   winStories: WinStory[];
   marketing: MarketingStrategy;
   feedback: FeedbackAnalysis;
+  gtmAuditChecks?: boolean[];
 }
 
 export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing';

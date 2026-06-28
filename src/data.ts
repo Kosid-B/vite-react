@@ -616,4 +616,5 @@ export const DEFAULT_DATA: AppData = {
       { id: 'fb26', date: '2026-06-18', source: 'social',  sentiment: 'negative', theme: 'mobile',      content: 'บน iPad ขนาดเล็ก table columns หายออกหน้าจอ ต้อง scroll ขวางอยู่ตลอดเวลา', rating: 2 },
     ],
   },
+  gtmAuditChecks: [false, false, false, false, false, false, false],
 };
