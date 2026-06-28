@@ -1,12 +1,26 @@
 import { useEffect, useState, useCallback } from 'react';
 import { isSupabaseEnabled } from '../lib/supabase';
 import { listMembers, inviteMember, setMemberRole, removeMember, type Member, type Workspace } from '../lib/workspaces';
+import type { AppData, Agent } from '../types';
 
 interface Props {
   activeWs: string | null;
   workspaces: Workspace[];
   currentUserId: string | null;
+  data: AppData;
 }
+
+const STATUS_COLOR: Record<string, string> = {
+  working: '#22c55e',
+  idle: '#94a3b8',
+  waiting: '#f59e0b',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  working: 'กำลังทำงาน',
+  idle: 'ว่าง',
+  waiting: 'รอคำสั่ง',
+};
 
 const ROLE_LABEL: Record<string, string> = { owner: 'เจ้าของ', admin: 'แอดมิน', member: 'สมาชิก' };
 const INVITE_RESULT: Record<string, string> = {
@@ -15,7 +29,61 @@ const INVITE_RESULT: Record<string, string> = {
   forbidden: '✕ เฉพาะเจ้าของเวิร์กสเปซเท่านั้นที่เชิญได้',
 };
 
-export default function Team({ activeWs, workspaces, currentUserId }: Props) {
+type TreeNode = { agent: Agent; children: TreeNode[] };
+
+function buildTree(agents: Agent[]): TreeNode[] {
+  function gather(parentId: string | null): TreeNode[] {
+    return agents
+      .filter(a => a.reportsTo === parentId)
+      .map(a => ({ agent: a, children: gather(a.id) }));
+  }
+  return gather(null);
+}
+
+function OrgCard({ agent }: { agent: Agent }) {
+  return (
+    <div className="org-card" style={{ borderTopColor: agent.color }}>
+      <div className="org-card-header">
+        <div className="org-avatar">{agent.avatar}</div>
+        <div className="org-card-info">
+          <div className="org-role">{agent.role}</div>
+          <div className="org-name">{agent.name}</div>
+        </div>
+        <span
+          className="org-status-dot"
+          style={{ background: STATUS_COLOR[agent.status] ?? '#94a3b8' }}
+          title={STATUS_LABEL[agent.status] ?? agent.status}
+        />
+      </div>
+      <div className="org-card-body">
+        <div className="org-mandate">{agent.mandate}</div>
+        <span className="org-model-tag">{agent.model}</span>
+      </div>
+    </div>
+  );
+}
+
+function OrgLevel({ nodes }: { nodes: TreeNode[] }) {
+  if (nodes.length === 0) return null;
+  return (
+    <div className="org-level">
+      {nodes.map(({ agent, children }) => (
+        <div key={agent.id} className="org-branch">
+          <div className="org-branch-vline" />
+          <OrgCard agent={agent} />
+          {children.length > 0 && (
+            <>
+              <div className="org-down-vline" />
+              <OrgLevel nodes={children} />
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function Team({ activeWs, workspaces, currentUserId, data }: Props) {
   const ws = workspaces.find(w => w.id === activeWs) ?? null;
   const isOwner = !!ws && ws.owner_id === currentUserId;
 
@@ -26,7 +94,7 @@ export default function Team({ activeWs, workspaces, currentUserId }: Props) {
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!activeWs) return;
+    if (!isSupabaseEnabled || !activeWs) return;
     setLoading(true);
     setMembers(await listMembers(activeWs));
     setLoading(false);
@@ -57,80 +125,123 @@ export default function Team({ activeWs, workspaces, currentUserId }: Props) {
     await refresh();
   }
 
-  if (!isSupabaseEnabled) {
-    return (
-      <div>
-        <div className="page-header"><div className="page-title">ทีม / สมาชิก</div></div>
-        <div className="team-notice">
-          ฟีเจอร์ทีมต้องเปิดใช้ Supabase ก่อน — ตั้งค่า <code>VITE_SUPABASE_URL</code> / <code>VITE_SUPABASE_ANON_KEY</code>
-          แล้วรัน migration ใน <code>supabase/</code> (ดูคู่มือใน <code>supabase/README.md</code>)
-        </div>
-      </div>
-    );
-  }
+  const { aiCompany } = data;
+  const tree = buildTree(aiCompany.agents);
 
   return (
     <div>
       <div className="page-header">
-        <div className="page-title">ทีม / สมาชิก</div>
+        <div className="page-title">ทีม / ผังองค์กร</div>
         <div className="page-meta">
-          <span className="meta-chip">{ws?.name ?? 'เวิร์กสเปซ'}</span>
-          <span className="meta-chip">{members.length} สมาชิก</span>
-          {isOwner && <span className="meta-chip" style={{ borderColor: 'var(--green)', color: 'var(--green)' }}>คุณเป็นเจ้าของ</span>}
-          <span className="law-badge" data-tip={"Law of Proximity: จัดสมาชิกเป็นรายการเดียว\nบทบาท-การจัดการอยู่ติดกับชื่อ เข้าใจง่าย"}>Proximity</span>
+          <span className="meta-chip">{aiCompany.name}</span>
+          <span className="meta-chip">{aiCompany.agents.length} Agent</span>
+          {isSupabaseEnabled && ws && (
+            <span className="meta-chip">{ws.name}</span>
+          )}
         </div>
       </div>
 
-      {isOwner && (
-        <form className="team-invite" onSubmit={invite}>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-            placeholder="อีเมลสมาชิกที่ต้องการเชิญ (ต้องสมัครแล้ว)" required />
-          <button type="submit" disabled={busy}>{busy ? 'กำลังเชิญ…' : 'เชิญเข้าทีม'}</button>
-        </form>
+      {/* Org Chart */}
+      <div className="org-chart-wrap">
+        <div className="org-board-node">
+          <div className="org-board-icon">🏛️</div>
+          <div>
+            <div className="org-board-label">คณะกรรมการ / บอร์ด</div>
+            <div className="org-board-name">{aiCompany.name}</div>
+          </div>
+        </div>
+
+        {tree.length > 0 ? (
+          <>
+            <div className="org-down-vline" />
+            <OrgLevel nodes={tree} />
+          </>
+        ) : (
+          <div className="org-empty">
+            ยังไม่มีสมาชิกในองค์กร — เพิ่มได้ในหน้า AI Company
+          </div>
+        )}
+      </div>
+
+      {/* Mission statement */}
+      {aiCompany.mission && (
+        <div className="org-mission">
+          <div className="org-mission-label">Mission Statement</div>
+          <div className="org-mission-text">{aiCompany.mission}</div>
+        </div>
       )}
-      {msg && <div className={`team-msg ${msg.startsWith('✓') ? 'ok' : 'err'}`}>{msg}</div>}
 
-      <div className="team-list">
-        <div className="team-row team-head">
-          <div>สมาชิก</div>
-          <div className="team-role-col">บทบาท</div>
-          <div className="team-act-col" />
-        </div>
-        {loading && <div className="team-empty">กำลังโหลด…</div>}
-        {!loading && members.length === 0 && <div className="team-empty">ยังไม่มีสมาชิก</div>}
-        {members.map(m => {
-          const memberIsOwner = m.role === 'owner';
-          const isSelf = m.user_id === currentUserId;
-          return (
-            <div key={m.user_id} className="team-row">
-              <div className="team-member">
-                <div className="team-av">{m.email.charAt(0).toUpperCase()}</div>
-                <div className="team-email">{m.email}{isSelf && <span className="team-you"> (คุณ)</span>}</div>
-              </div>
-              <div className="team-role-col">
-                {isOwner && !memberIsOwner ? (
-                  <select className="team-role-sel" value={m.role} onChange={e => changeRole(m.user_id, e.target.value as 'admin' | 'member')}>
-                    <option value="member">สมาชิก</option>
-                    <option value="admin">แอดมิน</option>
-                  </select>
-                ) : (
-                  <span className={`team-role-badge role-${m.role}`}>{ROLE_LABEL[m.role] ?? m.role}</span>
-                )}
-              </div>
-              <div className="team-act-col">
-                {isOwner && !memberIsOwner && (
-                  <button className="team-remove" onClick={() => remove(m.user_id, m.email)} title="ลบสมาชิก">×</button>
-                )}
-              </div>
+      {/* Workspace members (Supabase only) */}
+      {isSupabaseEnabled && (
+        <div style={{ marginTop: 32 }}>
+          <div className="org-ws-section-title">สมาชิก Workspace</div>
+
+          {isOwner && (
+            <form className="team-invite" onSubmit={invite}>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="อีเมลสมาชิกที่ต้องการเชิญ (ต้องสมัครแล้ว)"
+                required
+              />
+              <button type="submit" disabled={busy}>{busy ? 'กำลังเชิญ…' : 'เชิญเข้าทีม'}</button>
+            </form>
+          )}
+          {msg && <div className={`team-msg ${msg.startsWith('✓') ? 'ok' : 'err'}`}>{msg}</div>}
+
+          <div className="team-list">
+            <div className="team-row team-head">
+              <div>สมาชิก</div>
+              <div className="team-role-col">บทบาท</div>
+              <div className="team-act-col" />
             </div>
-          );
-        })}
-      </div>
+            {loading && <div className="team-empty">กำลังโหลด…</div>}
+            {!loading && members.length === 0 && <div className="team-empty">ยังไม่มีสมาชิก</div>}
+            {members.map(m => {
+              const memberIsOwner = m.role === 'owner';
+              const isSelf = m.user_id === currentUserId;
+              return (
+                <div key={m.user_id} className="team-row">
+                  <div className="team-member">
+                    <div className="team-av">{m.email.charAt(0).toUpperCase()}</div>
+                    <div className="team-email">
+                      {m.email}{isSelf && <span className="team-you"> (คุณ)</span>}
+                    </div>
+                  </div>
+                  <div className="team-role-col">
+                    {isOwner && !memberIsOwner ? (
+                      <select
+                        className="team-role-sel"
+                        value={m.role}
+                        onChange={e => changeRole(m.user_id, e.target.value as 'admin' | 'member')}
+                      >
+                        <option value="member">สมาชิก</option>
+                        <option value="admin">แอดมิน</option>
+                      </select>
+                    ) : (
+                      <span className={`team-role-badge role-${m.role}`}>{ROLE_LABEL[m.role] ?? m.role}</span>
+                    )}
+                  </div>
+                  <div className="team-act-col">
+                    {isOwner && !memberIsOwner && (
+                      <button
+                        className="team-remove"
+                        onClick={() => remove(m.user_id, m.email)}
+                        title="ลบสมาชิก"
+                      >×</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-      <div className="team-hint">
-        เชิญสมาชิกได้เฉพาะผู้ที่สมัครบัญชีในระบบแล้ว — สมาชิกในเวิร์กสเปซเดียวกันจะเห็นและแก้ไขข้อมูลบริษัท AI ร่วมกัน
-        ผ่าน Row Level Security ของ Supabase
-      </div>
+          <div className="team-hint">
+            เชิญสมาชิกได้เฉพาะผู้ที่สมัครบัญชีในระบบแล้ว — สมาชิกในเวิร์กสเปซเดียวกันจะเห็นและแก้ไขข้อมูลร่วมกันผ่าน Row Level Security ของ Supabase
+          </div>
+        </div>
+      )}
     </div>
   );
 }
