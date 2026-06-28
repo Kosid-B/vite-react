@@ -211,7 +211,7 @@ export interface AICompany {
 /* ===== Billing / PromptPay ===== */
 
 export type PlanId = 'free' | 'growth' | 'scale';
-export type SubStatus = 'none' | 'pending_payment' | 'active' | 'past_due' | 'cancelled';
+export type SubStatus = 'none' | 'trial' | 'pending_payment' | 'active' | 'past_due' | 'cancelled';
 
 export type InvoiceStatus = 'paid' | 'pending' | 'failed';
 
@@ -229,6 +229,7 @@ export interface Subscription {
   promptpayId: string;        // เบอร์พร้อมเพย์ / เลขผู้เสียภาษีของร้านค้า
   autoRenew: boolean;         // ต่ออายุอัตโนมัติทุกรอบบิล
   currentPeriodEnd: string | null; // ISO วันครบรอบบิลถัดไป
+  trialEndDate: string | null;     // ISO วันสิ้นสุดการทดลองใช้ 15 วัน
   invoices: Invoice[];        // ประวัติใบแจ้งหนี้
 }
 
