@@ -128,8 +128,9 @@ export interface AgentTask {
   title: string;
   detail: string;
   status: TaskStatus;
-  output?: string;     // ผลลัพธ์จาก AI Agent (หลังดำเนินงานจริง)
-  executedAt?: string; // เวลาที่ AI Agent ดำเนินงานสำเร็จ
+  output?: string;           // ผลลัพธ์จาก AI Agent (หลังดำเนินงานจริง)
+  executedAt?: string;       // เวลาที่ AI Agent ดำเนินงานสำเร็จ
+  requiresApproval?: boolean; // ต้องได้รับการอนุมัติจากมนุษย์ก่อน heartbeat จะรัน
 }
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';

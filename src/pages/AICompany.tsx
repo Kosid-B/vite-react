@@ -170,6 +170,7 @@ export default function AICompany({ data, onUpdate }: Props) {
   const [customSkillDraft, setCustomSkillDraft] = useState({ name: '', desc: '', category: 'hr', tier: 1 as 1|2|3 });
   const [competencyMsg, setCompetencyMsg] = useState<string | null>(null);
   const [designingCompetency, setDesigningCompetency] = useState(false);
+  const [errorLog, setErrorLog] = useState<{ time: string; msg: string; taskTitle: string }[]>([]);
 
   // Refs for heartbeat to avoid stale closures
   const executeTaskRef = useRef<((taskId: string) => Promise<void>) | null>(null);
@@ -201,7 +202,8 @@ export default function AICompany({ data, onUpdate }: Props) {
     if (!c.running || !isSupabaseEnabled || !supabase) return;
     const run = async () => {
       if (runningIdsRef.current.size > 0) return;
-      const first = cRef.current.tasks.find(t => t.status === 'queued');
+      // ข้ามงานที่ต้องอนุมัติจากมนุษย์ก่อน
+      const first = cRef.current.tasks.find(t => t.status === 'queued' && !t.requiresApproval);
       if (!first) return;
       const agent = cRef.current.agents.find(a => a.id === first.agentId);
       counter.current += 1;
@@ -211,7 +213,19 @@ export default function AICompany({ data, onUpdate }: Props) {
         text: `⚡ Heartbeat: ${agent?.name ?? 'Agent'} เริ่มดำเนินงาน "${first.title}"`,
         color: agent?.color ?? '#1a4f8a',
       }, ...prev].slice(0, 40));
-      await executeTaskRef.current?.(first.id);
+      try {
+        await executeTaskRef.current?.(first.id);
+      } catch (e) {
+        const errMsg = (e as Error).message ?? 'Unknown error';
+        setErrorLog(prev => [{ time: nowTime(), msg: errMsg, taskTitle: first.title }, ...prev].slice(0, 20));
+        counter.current += 1;
+        setFeed(prev => [{
+          id: counter.current,
+          time: nowTime(),
+          text: `🔴 Error: "${first.title}" — ${errMsg}`,
+          color: '#c44b2b',
+        }, ...prev].slice(0, 40));
+      }
     };
     const ms = Math.max((c.heartbeatSec ?? 30) * 1000, 15000);
     run();
@@ -1231,24 +1245,48 @@ export default function AICompany({ data, onUpdate }: Props) {
               {c.tasks.filter(t => t.status === col.key).map(t => {
                 const ag = c.agents.find(a => a.id === t.agentId);
                 const isRunning = runningTaskIds.has(t.id);
+                const needsApproval = !!t.requiresApproval;
                 return (
-                  <div key={t.id} className="ai-task">
-                    <button className="ai-task-del" onClick={() => delTask(t.id)}>×</button>
+                  <div key={t.id} className={`ai-task${needsApproval ? ' ai-task-locked' : ''}`}>
+                    <div className="ai-task-top-row">
+                      <button className="ai-task-del" onClick={() => delTask(t.id)}>×</button>
+                      <button
+                        className={`ai-task-lock-btn${needsApproval ? ' locked' : ''}`}
+                        title={needsApproval ? 'ต้องอนุมัติก่อนรัน — คลิกเพื่อปลดล็อก' : 'คลิกเพื่อตั้งให้ต้องอนุมัติก่อนรัน'}
+                        onClick={() => patch({ tasks: c.tasks.map(tt => tt.id === t.id ? { ...tt, requiresApproval: !tt.requiresApproval } : tt) })}
+                      >{needsApproval ? '🔒' : '🔓'}</button>
+                    </div>
+                    {needsApproval && (
+                      <div className="ai-task-approval-badge">Human Approval Required</div>
+                    )}
                     <div className="ai-task-title">{t.title}</div>
                     <div className="ai-task-detail">{t.detail}</div>
                     {/* ปุ่มให้ AI ดำเนินงานจริง */}
                     {isSupabaseEnabled && t.status !== 'done' && (
-                      <button
-                        className={`ai-task-exec${isRunning ? ' running' : ''}`}
-                        onClick={() => executeTask(t.id)}
-                        disabled={isRunning}
-                        style={{ borderLeftColor: ag?.color }}
-                      >
-                        {isRunning
-                          ? <><span className="ai-exec-dot pulse" style={{ background: ag?.color }} />{'กำลังดำเนินงาน…'}</>
-                          : <><span style={{ marginRight: 4 }}>{ag?.avatar ?? '🤖'}</span>{`${ag?.role ?? 'AI'} ดำเนินงาน`}</>
-                        }
-                      </button>
+                      needsApproval ? (
+                        <button
+                          className="ai-task-approve-run"
+                          onClick={() => {
+                            patch({ tasks: c.tasks.map(tt => tt.id === t.id ? { ...tt, requiresApproval: false } : tt) });
+                            executeTask(t.id);
+                          }}
+                          disabled={isRunning}
+                        >
+                          ✅ อนุมัติ & รัน
+                        </button>
+                      ) : (
+                        <button
+                          className={`ai-task-exec${isRunning ? ' running' : ''}`}
+                          onClick={() => executeTask(t.id)}
+                          disabled={isRunning}
+                          style={{ borderLeftColor: ag?.color }}
+                        >
+                          {isRunning
+                            ? <><span className="ai-exec-dot pulse" style={{ background: ag?.color }} />{'กำลังดำเนินงาน…'}</>
+                            : <><span style={{ marginRight: 4 }}>{ag?.avatar ?? '🤖'}</span>{`${ag?.role ?? 'AI'} ดำเนินงาน`}</>
+                          }
+                        </button>
+                      )
                     )}
                     {/* ผลลัพธ์จาก AI Agent */}
                     {t.output && (
@@ -1273,6 +1311,24 @@ export default function AICompany({ data, onUpdate }: Props) {
             </div>
           ))}
         </div>
+
+        {/* System Error Log */}
+        {errorLog.length > 0 && (
+          <div className="ai-error-log">
+            <div className="ai-error-log-hd">
+              <span className="ai-error-dot" />
+              System Alerts — {errorLog.length} รายการ
+              <button className="ai-error-clear" onClick={() => setErrorLog([])}>ล้าง</button>
+            </div>
+            {errorLog.slice(0, 5).map((e, i) => (
+              <div key={i} className="ai-error-row">
+                <span className="ai-error-time">{e.time}</span>
+                <span className="ai-error-task">{e.taskTitle}</span>
+                <span className="ai-error-msg">{e.msg}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ===== Integrations ===== */}
