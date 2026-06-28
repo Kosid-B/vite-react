@@ -116,13 +116,13 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'finance' | 'workspaces' | 'winstories' | 'feedback';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
   const [rows, setRows] = useState<AdminWorkspace[]>([]);
   const [loading, setLoading] = useState(false);
-  const [tab, setTab] = useState<Tab>('finance');
+  const [tab, setTab] = useState<Tab>('dashboard');
 
   // Simulator state
   const [nGrowth, setNGrowth] = useState(15);
@@ -293,6 +293,23 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
 
   const totalMembers = rows.reduce((s, r) => s + Number(r.member_count), 0);
 
+  // ---- Dashboard computations ----
+  const mktHealth = (() => {
+    const goals = data.marketing?.goals ?? [];
+    if (!goals.length) return 0;
+    const scores = goals.map(g => {
+      const isLower = g.metric.toLowerCase().includes('cac') || g.metric.toLowerCase().includes('cost');
+      return isLower
+        ? (g.current <= g.target ? 100 : Math.round((g.target / g.current) * 100))
+        : Math.min(100, Math.round((g.current / g.target) * 100));
+    });
+    return scores.reduce((a, b) => a + b, 0) / scores.length;
+  })();
+  const revHealth    = Math.min(100, Math.max(0, (grossMargin / 25) * 100));
+  const custHealth   = Math.min(100, (ltvcacGrowth / 3) * 100);
+  const prodHealth   = Math.min(100, Math.max(0, (fbNet + 100) / 2));
+  const overallScore = Math.round((revHealth + custHealth + prodHealth + mktHealth) / 4);
+
   return (
     <div>
       <PageHeader
@@ -306,6 +323,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
 
       {/* Tab bar */}
       <div className="pfa-tabs">
+        <button className={`pfa-tab${tab === 'dashboard' ? ' active' : ''}`} onClick={() => setTab('dashboard')}>
+          📊 Dashboard
+        </button>
         <button className={`pfa-tab${tab === 'finance' ? ' active' : ''}`} onClick={() => setTab('finance')}>
           📊 วิเคราะห์การเงิน & ราคา
         </button>
@@ -319,6 +339,224 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
           📝 Feedback Analysis
         </button>
       </div>
+
+      {/* ===== DASHBOARD TAB ===== */}
+      {tab === 'dashboard' && (
+        <div className="adm-dash">
+
+          {/* Overall score banner */}
+          <div className={`adm-score-banner ${overallScore >= 75 ? 'green' : overallScore >= 50 ? 'yellow' : 'red'}`}>
+            <div className="adm-score-num">{overallScore}</div>
+            <div className="adm-score-label">Business Health Score <span>/100</span></div>
+            <div className="adm-score-hint">
+              {overallScore >= 75 ? '✅ ระบบสุขภาพดี — เร่งเติบโต' : overallScore >= 50 ? '⚠️ มีจุดที่ต้องปรับปรุง' : '🔴 ต้องดำเนินการด่วน'}
+            </div>
+          </div>
+
+          {/* KPI Grid */}
+          <div className="adm-kpi-grid">
+            <div className="adm-kpi-card">
+              <div className="adm-kpi-label">MRR (เดือนนี้)</div>
+              <div className="adm-kpi-val">{baht(mrr)}</div>
+              <div className="adm-kpi-sub">ARR · {baht(arr)}</div>
+              <div className={`adm-kpi-badge ${grossMargin >= 20 ? 'adm-badge-green' : grossMargin >= 10 ? 'adm-badge-yellow' : 'adm-badge-red'}`}>
+                Margin {grossMargin.toFixed(1)}%
+              </div>
+            </div>
+            <div className="adm-kpi-card">
+              <div className="adm-kpi-label">Active Subscribers</div>
+              <div className="adm-kpi-val">{totalSubs} ราย</div>
+              <div className="adm-kpi-sub">Growth {nGrowth} · Scale {nScale}</div>
+              <div className={`adm-kpi-badge ${totalSubs >= breakEven ? 'adm-badge-green' : 'adm-badge-yellow'}`}>
+                {totalSubs >= breakEven ? '✅ กำไร' : `Break-even: ${breakEven} ราย`}
+              </div>
+            </div>
+            <div className="adm-kpi-card">
+              <div className="adm-kpi-label">LTV:CAC (Growth)</div>
+              <div className="adm-kpi-val">{ltvcacGrowth.toFixed(1)}x</div>
+              <div className="adm-kpi-sub">Payback {paybackGrowth} เดือน · Churn {churnPct}%</div>
+              <div className={`adm-kpi-badge ${ltvcacGrowth >= 3 ? 'adm-badge-green' : ltvcacGrowth >= 1.5 ? 'adm-badge-yellow' : 'adm-badge-red'}`}>
+                {ltvcacGrowth >= 3 ? '✅ ดี (≥3x)' : ltvcacGrowth >= 1.5 ? '⚠️ ระวัง' : '🔴 ต่ำกว่าเกณฑ์'}
+              </div>
+            </div>
+            <div className="adm-kpi-card">
+              <div className="adm-kpi-label">Net Sentiment</div>
+              <div className={`adm-kpi-val ${fbNet < 0 ? 'adm-val-red' : ''}`}>{fbNet >= 0 ? '+' : ''}{fbNet}%</div>
+              <div className="adm-kpi-sub">{fbE.length} feedback · 😊 {fbPosN} 😞 {fbNegN}</div>
+              <div className={`adm-kpi-badge ${fbNet >= 20 ? 'adm-badge-green' : fbNet >= 0 ? 'adm-badge-yellow' : 'adm-badge-red'}`}>
+                {fbNet >= 20 ? '😊 ดี' : fbNet >= 0 ? '😐 ปกติ' : '😞 ต้องปรับปรุง'}
+              </div>
+            </div>
+          </div>
+
+          {/* Revenue + Action Items */}
+          <div className="adm-dash-2col">
+
+            {/* Revenue Snapshot */}
+            <div className="adm-dash-card">
+              <div className="adm-dash-card-title">💰 Revenue Snapshot</div>
+              <div className="adm-rev-table">
+                {[
+                  { label: 'MRR',          val: baht(mrr),         ok: mrr > 0 },
+                  { label: 'ARR',          val: baht(arr),         ok: arr > 0 },
+                  { label: 'Gross Profit', val: baht(grossProfit), ok: grossProfit >= 0 },
+                  { label: 'Op Cost/เดือน', val: baht(totalOpCost), ok: true },
+                  { label: 'Break-even',   val: `${breakEven} ราย`, ok: totalSubs >= breakEven },
+                ].map(r => (
+                  <div key={r.label} className="adm-rev-row">
+                    <span className="adm-rev-label">{r.label}</span>
+                    <b className={r.ok ? '' : 'adm-val-red'}>{r.val}</b>
+                  </div>
+                ))}
+              </div>
+              <div className="adm-mix-title">แผน</div>
+              {[
+                { label: 'Growth', count: nGrowth, max: Math.max(nGrowth, nScale, 1), color: 'var(--accent)' },
+                { label: 'Scale',  count: nScale,  max: Math.max(nGrowth, nScale, 1), color: 'var(--green)' },
+              ].map(p => (
+                <div key={p.label} className="adm-bar-row">
+                  <span className="adm-bar-label">{p.label}</span>
+                  <div className="adm-bar-bg">
+                    <div className="adm-bar-fill" style={{ width: `${(p.count / p.max) * 100}%`, background: p.color }} />
+                  </div>
+                  <span className="adm-bar-count">{p.count} ราย</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Action Items */}
+            <div className="adm-dash-card">
+              <div className="adm-dash-card-title">⚡ Action Items (จาก Feedback)</div>
+              <div className="adm-action-list">
+                {prioritized.filter(p => p.action === 'fix_now').map(({ t, score }) => (
+                  <div key={t.id} className="adm-action-item adm-ai-fix">
+                    <span className="adm-ai-icon">🔥</span>
+                    <div className="adm-ai-body">
+                      <div className="adm-ai-name">{t.name}</div>
+                      <div className="adm-ai-meta">Fix Now · Score {score.toFixed(1)} · Impact {t.impact}/5</div>
+                    </div>
+                  </div>
+                ))}
+                {prioritized.filter(p => p.action === 'plan').map(({ t }) => (
+                  <div key={t.id} className="adm-action-item adm-ai-plan">
+                    <span className="adm-ai-icon">📅</span>
+                    <div className="adm-ai-body">
+                      <div className="adm-ai-name">{t.name}</div>
+                      <div className="adm-ai-meta">Plan Q3</div>
+                    </div>
+                  </div>
+                ))}
+                {prioritized.filter(p => p.action === 'celebrate').map(({ t }) => (
+                  <div key={t.id} className="adm-action-item adm-ai-celebrate">
+                    <span className="adm-ai-icon">🎉</span>
+                    <div className="adm-ai-body">
+                      <div className="adm-ai-name">{t.name}</div>
+                      <div className="adm-ai-meta">Celebrate — ใช้ใน marketing</div>
+                    </div>
+                  </div>
+                ))}
+                {prioritized.filter(p => p.action === 'monitor').map(({ t }) => (
+                  <div key={t.id} className="adm-action-item adm-ai-monitor">
+                    <span className="adm-ai-icon">👁</span>
+                    <div className="adm-ai-body">
+                      <div className="adm-ai-name">{t.name}</div>
+                      <div className="adm-ai-meta">Monitor</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="adm-mix-title" style={{ marginTop: 16 }}>Feedback Sentiment</div>
+              {[
+                { label: '😊 Positive', n: fbPosN, total: fbE.length, color: '#22c55e' },
+                { label: '😐 Neutral',  n: fbNeuN, total: fbE.length, color: '#f59e0b' },
+                { label: '😞 Negative', n: fbNegN, total: fbE.length, color: '#ef4444' },
+              ].map(s => (
+                <div key={s.label} className="adm-bar-row">
+                  <span className="adm-bar-label" style={{ width: 100 }}>{s.label}</span>
+                  <div className="adm-bar-bg">
+                    <div className="adm-bar-fill" style={{ width: `${s.total > 0 ? (s.n / s.total) * 100 : 0}%`, background: s.color }} />
+                  </div>
+                  <span className="adm-bar-count">{s.n}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Business Health Scores */}
+          <div className="adm-dash-card">
+            <div className="adm-dash-card-title">🏥 Business Health Breakdown</div>
+            <div className="adm-health-grid">
+              {[
+                { label: 'Revenue Health',     score: revHealth,  hint: `Gross Margin ${grossMargin.toFixed(1)}% / Target 25%` },
+                { label: 'Customer Health',    score: custHealth, hint: `LTV:CAC ${ltvcacGrowth.toFixed(1)}x / Target ≥3x` },
+                { label: 'Product Sentiment',  score: prodHealth, hint: `Net Sentiment ${fbNet >= 0 ? '+' : ''}${fbNet}%` },
+                { label: 'Marketing Goals',    score: mktHealth,  hint: `Goal achievement avg ${mktHealth.toFixed(0)}%` },
+              ].map(h => (
+                <div key={h.label} className="adm-health-item">
+                  <div className="adm-health-label">{h.label}</div>
+                  <div className="adm-health-track">
+                    <div className="adm-health-fill" style={{
+                      width: `${h.score}%`,
+                      background: h.score >= 75 ? '#22c55e' : h.score >= 50 ? '#f59e0b' : '#ef4444',
+                    }} />
+                  </div>
+                  <div className="adm-health-right">
+                    <span className={`adm-health-pct ${h.score >= 75 ? 'green' : h.score >= 50 ? 'yellow' : 'red'}`}>{h.score.toFixed(0)}%</span>
+                    <span className="adm-health-hint">{h.hint}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Win Stories + Marketing Goals */}
+          <div className="adm-dash-2col">
+
+            {/* Win Stories */}
+            <div className="adm-dash-card">
+              <div className="adm-dash-card-title">🏆 Win Stories by Category</div>
+              {(['revenue', 'growth', 'efficiency', 'retention', 'transformation'] as const).map(cat => {
+                const n = winStories.filter(s => s.category === cat).length;
+                return (
+                  <div key={cat} className="adm-bar-row">
+                    <span className="adm-bar-label">{WIN_CAT_LABEL[cat]}</span>
+                    <div className="adm-bar-bg">
+                      <div className="adm-bar-fill" style={{ width: `${Math.min(100, n * 25)}%`, background: WIN_CAT_COLOR[cat] }} />
+                    </div>
+                    <span className="adm-bar-count">{n}</span>
+                  </div>
+                );
+              })}
+              <div className="adm-ws-total">{winStories.length} stories รวม · {rows.length} workspaces</div>
+            </div>
+
+            {/* Marketing Goals */}
+            <div className="adm-dash-card">
+              <div className="adm-dash-card-title">🎯 Marketing Goals Progress</div>
+              {(data.marketing?.goals ?? []).map(g => {
+                const isLower = g.metric.toLowerCase().includes('cac') || g.metric.toLowerCase().includes('cost');
+                const pv = isLower
+                  ? (g.current <= g.target ? 100 : Math.round((g.target / g.current) * 100))
+                  : Math.min(100, Math.round((g.current / g.target) * 100));
+                return (
+                  <div key={g.id} className="adm-mkt-row">
+                    <div className="adm-mkt-label">{g.metric}</div>
+                    <div className="adm-bar-bg">
+                      <div className="adm-bar-fill" style={{
+                        width: `${pv}%`,
+                        background: pv >= 80 ? '#22c55e' : pv >= 50 ? '#f59e0b' : '#ef4444',
+                      }} />
+                    </div>
+                    <span className="adm-mkt-pct">{pv}%</span>
+                    <span className="adm-mkt-vals">{g.current.toLocaleString()} / {g.target.toLocaleString()} {g.unit}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+        </div>
+      )}
 
       {/* ===== FINANCE TAB ===== */}
       {tab === 'finance' && (
