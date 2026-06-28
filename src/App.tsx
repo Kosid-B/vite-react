@@ -239,7 +239,7 @@ export default function App() {
         {activePage === 'market' && <Marketplace data={data} onUpdate={updateData} />}
         {activePage === 'roadmap' && <Roadmap data={data} onUpdate={updateData} />}
         {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} />}
-        {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} />}
+        {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data} />}
         {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} data={data} onUpdate={updateData} />}
       </main>
 
