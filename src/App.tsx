@@ -24,6 +24,7 @@ import Roadmap from './pages/Roadmap';
 import Team from './pages/Team';
 import Admin from './pages/Admin';
 import Marketing from './pages/Marketing';
+import ISO9001 from './pages/ISO9001';
 import CmdK from './components/CmdK';
 
 const STORAGE_KEY = 'cjux2';
@@ -56,6 +57,7 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.marketing) parsed.marketing = DEFAULT_DATA.marketing;
   if (!parsed.feedback) parsed.feedback = DEFAULT_DATA.feedback;
   if (!parsed.gtmAuditChecks) parsed.gtmAuditChecks = DEFAULT_DATA.gtmAuditChecks;
+  if (!parsed.iso9001) parsed.iso9001 = DEFAULT_DATA.iso9001;
   return parsed;
 }
 
@@ -241,6 +243,7 @@ export default function App() {
         {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} />}
         {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data} />}
         {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} data={data} onUpdate={updateData} />}
+        {activePage === 'iso9001' && <ISO9001 data={data} onUpdate={updateData} />}
       </main>
 
       <div className={`toast ${toastVisible ? 'show' : ''}`}>

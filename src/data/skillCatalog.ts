@@ -338,8 +338,8 @@ export const SKILL_CATALOG: SkillEntry[] = [
     id: 'social-impact-measurement',
     name: 'Social Impact Measurement',
     category: 'impact', tier: 1, price: 1000, icon: '🌱',
-    desc: 'ออกแบบกรอบวัดผลกระทบทางสังคม Logic Model พร้อมตัวชี้วัดที่เหมาะสม',
-    tags: ['COO', 'CEO'],
+    desc: 'ออกแบบกรอบวัดผลกระทบทางสังคม Logic Model ตัวชี้วัด Output/Outcome/Impact เก็บข้อมูล วิเคราะห์ผล และรายงาน Social ROI สำหรับทีมขายและการตลาด',
+    tags: ['COO', 'CEO', 'Sales Manager', 'CMO'],
   },
 ];
 
