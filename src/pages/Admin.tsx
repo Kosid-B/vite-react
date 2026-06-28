@@ -116,7 +116,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback' | 'pricing';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -138,6 +138,13 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [wsFilter, setWsFilter] = useState<WinCategory | 'all'>('all');
   const [wsView, setWsView]     = useState<WinStory | null>(null);
   const [wsEdit, setWsEdit]     = useState<(Partial<WinStory> & { id?: string }) | null>(null);
+
+  // Pricing Strategy state
+  const [valTeamSize, setValTeamSize]     = useState(5);
+  const [valHourlyRate, setValHourlyRate] = useState(800);
+  const [valMonthlyRev, setValMonthlyRev] = useState(500000);
+  const [simNewPrice, setSimNewPrice]     = useState(1690);
+  const [simRetention, setSimRetention]   = useState(85);
 
   // Feedback Analysis state
   const [fbSrc, setFbSrc]       = useState<FeedbackSource | 'all'>('all');
@@ -310,6 +317,28 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const prodHealth   = Math.min(100, Math.max(0, (fbNet + 100) / 2));
   const overallScore = Math.round((revHealth + custHealth + prodHealth + mktHealth) / 4);
 
+  // ---- Pricing Strategy computations ----
+  const valTimeSaved   = valTeamSize * 8 * valHourlyRate;          // 8 hrs/person/month
+  const valAiCostSaved = 5000;                                     // API + tools cost avoided
+  const valRevenueUp   = Math.round(valMonthlyRev * 0.01);         // 1% revenue uplift
+  const valRiskReduced = 3000;                                     // risk & compliance
+  const totalValue     = valTimeSaved + valAiCostSaved + valRevenueUp + valRiskReduced;
+  const recRangeLow    = Math.round(totalValue * 0.10);
+  const recRangeHigh   = Math.round(totalValue * 0.20);
+  const growthPct      = totalValue > 0 ? (gp.price / totalValue * 100).toFixed(1) : '—';
+  const scalePct       = totalValue > 0 ? (sp.price / totalValue * 100).toFixed(1) : '—';
+
+  const simCurrentSubs = totalSubs || 20;
+  const simNewSubs     = Math.round(simCurrentSubs * (simRetention / 100));
+  const simLostSubs    = simCurrentSubs - simNewSubs;
+  const simNewMrr      = simNewSubs * simNewPrice + nScale * sp.price;
+  const simOldMrr      = mrr > 0 ? mrr : simCurrentSubs * gp.price;
+  const simMrrDelta    = simNewMrr - simOldMrr;
+  const simAnnualImp   = simMrrDelta * 12;
+  const simBreakEven   = simNewPrice > gp.price && (simNewPrice - gp.price) > 0
+    ? Math.ceil((simLostSubs * gp.price) / (simNewPrice - gp.price))
+    : 0;
+
   return (
     <div>
       <PageHeader
@@ -337,6 +366,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'feedback' ? ' active' : ''}`} onClick={() => setTab('feedback')}>
           📝 Feedback Analysis
+        </button>
+        <button className={`pfa-tab${tab === 'pricing' ? ' active' : ''}`} onClick={() => setTab('pricing')}>
+          💸 Pricing Strategy
         </button>
       </div>
 
@@ -1193,6 +1225,243 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* ===== PRICING STRATEGY TAB ===== */}
+      {tab === 'pricing' && (
+        <div className="ps-wrap">
+
+          {/* 1. Value-Based Pricing Calculator */}
+          <div className="ps-section">
+            <div className="ps-section-title">💎 Value-Based Pricing Calculator</div>
+            <div className="ps-hint">กำหนดราคาจากคุณค่าที่ลูกค้าได้รับ ไม่ใช่จากต้นทุนการผลิต</div>
+            <div className="ps-val-layout">
+              <div className="ps-val-inputs">
+                <div className="ps-val-row">
+                  <label className="ps-val-label">ขนาดทีมลูกค้า</label>
+                  <input type="number" className="ps-val-inp" min={1} max={100} value={valTeamSize}
+                    onChange={e => setValTeamSize(Math.max(1, +e.target.value))} />
+                  <span className="ps-val-unit">คน</span>
+                </div>
+                <div className="ps-val-row">
+                  <label className="ps-val-label">มูลค่าชั่วโมงทำงาน</label>
+                  <input type="number" className="ps-val-inp" min={100} step={100} value={valHourlyRate}
+                    onChange={e => setValHourlyRate(Math.max(100, +e.target.value))} />
+                  <span className="ps-val-unit">฿/ชั่วโมง</span>
+                </div>
+                <div className="ps-val-row">
+                  <label className="ps-val-label">รายได้เดือนของลูกค้า</label>
+                  <input type="number" className="ps-val-inp" min={0} step={50000} value={valMonthlyRev}
+                    onChange={e => setValMonthlyRev(Math.max(0, +e.target.value))} />
+                  <span className="ps-val-unit">฿</span>
+                </div>
+              </div>
+
+              <div className="ps-val-table-wrap">
+                <table className="ps-val-table">
+                  <thead>
+                    <tr>
+                      <th>มูลค่าที่ลูกค้าได้รับ</th>
+                      <th>วิธีคำนวณ</th>
+                      <th className="ps-num">฿/เดือน</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { label: '⏱ เวลาที่ประหยัด', formula: `${valTeamSize} คน × 8 ชม. × ฿${valHourlyRate.toLocaleString()}`, val: valTimeSaved },
+                      { label: '🤖 ลดต้นทุน AI tools', formula: 'API cost + tools ที่ไม่ต้องซื้อแยก', val: valAiCostSaved },
+                      { label: '📈 รายได้ที่เพิ่มขึ้น', formula: '1% ของรายได้เดือน', val: valRevenueUp },
+                      { label: '🛡 ลดความเสี่ยง', formula: 'Compliance + error prevention', val: valRiskReduced },
+                    ].map(r => (
+                      <tr key={r.label}>
+                        <td>{r.label}</td>
+                        <td className="ps-val-formula">{r.formula}</td>
+                        <td className="ps-num ps-val-num">{baht(r.val)}</td>
+                      </tr>
+                    ))}
+                    <tr className="ps-total-row">
+                      <td colSpan={2}><b>รวมมูลค่าทั้งหมด / เดือน</b></td>
+                      <td className="ps-num"><b>{baht(totalValue)}</b></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div className="ps-val-result">
+                  <div className="ps-val-range">
+                    <span>ช่วงราคาที่แนะนำ (10–20% ของมูลค่า):</span>
+                    <strong>{baht(recRangeLow)} – {baht(recRangeHigh)}</strong>
+                  </div>
+                  <div className="ps-val-verdict">
+                    {[
+                      { plan: 'Growth ฿1,490', pct: growthPct, ok: Number(growthPct) <= 15 },
+                      { plan: 'Scale ฿5,900',  pct: scalePct,  ok: Number(scalePct)  <= 15 },
+                    ].map(v => (
+                      <span key={v.plan} className={`ps-verdict-badge ${v.ok ? 'ps-ok' : 'ps-high'}`}>
+                        {v.plan} = {v.pct}% {v.ok ? '✅ เหมาะสม' : '⚠️ สูงเกินไป'}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Tier Structure & Price Anchoring */}
+          <div className="ps-section">
+            <div className="ps-section-title">🏗 Tier Structure & Price Anchoring</div>
+            <div className="ps-hint">นำเสนอ tier สูงสุดก่อนเพื่อ anchor ราคา — ลูกค้ามักเลือก tier กลาง</div>
+            <div className="ps-tier-grid">
+              {[
+                {
+                  name: 'Free Trial',
+                  price: 0,
+                  annual: null,
+                  color: 'var(--ink3)',
+                  badge: null,
+                  features: ['5 AI agents (ทดสอบ)', '24 Steps Guide', 'Export PDF', 'จำกัด 100 calls/เดือน'],
+                  target: 'Prospect & Evaluation',
+                },
+                {
+                  name: 'Growth',
+                  price: 1490,
+                  annual: 14900,
+                  color: 'var(--accent)',
+                  badge: '⭐ ยอดนิยม',
+                  features: ['AI Company Builder', '1,000 calls/เดือน', 'VRIO + 24 Steps', 'PromptPay Billing', 'Workspace team'],
+                  target: 'Thai SME / Solopreneurs',
+                },
+                {
+                  name: 'Scale',
+                  price: 5900,
+                  annual: 56400,
+                  color: 'var(--green)',
+                  badge: '🚀 Multi-company',
+                  features: ['ทุกอย่างใน Growth', '5,000 calls/เดือน', 'หลายบริษัทในบัญชีเดียว', 'API Access', 'Priority support'],
+                  target: 'Holding / Agency / Enterprise',
+                },
+              ].map(tier => (
+                <div key={tier.name} className={`ps-tier-card ${tier.badge ? 'ps-tier-featured' : ''}`}
+                  style={{ borderColor: tier.badge ? tier.color : undefined }}>
+                  {tier.badge && <div className="ps-tier-badge" style={{ background: tier.color }}>{tier.badge}</div>}
+                  <div className="ps-tier-name">{tier.name}</div>
+                  <div className="ps-tier-price">
+                    {tier.price === 0 ? 'ฟรี' : baht(tier.price)}
+                    {tier.price > 0 && <span className="ps-tier-per">/เดือน</span>}
+                  </div>
+                  {tier.annual && (
+                    <div className="ps-tier-annual">
+                      หรือ {baht(tier.annual)}/ปี
+                      <span className="ps-tier-save"> ประหยัด {Math.round((1 - tier.annual / (tier.price * 12)) * 100)}%</span>
+                    </div>
+                  )}
+                  <ul className="ps-tier-features">
+                    {tier.features.map(f => <li key={f}>✓ {f}</li>)}
+                  </ul>
+                  <div className="ps-tier-target">🎯 {tier.target}</div>
+                </div>
+              ))}
+            </div>
+            <div className="ps-anchor-note">
+              💡 <b>Anchoring:</b> Scale (฿5,900) ทำให้ Growth (฿1,490) ดูคุ้มค่ามาก — ลูกค้า 80%+ เลือก Growth
+              หลังเห็น Scale ก่อน เพิ่ม Annual Plan ลด Churn ได้ ~30%
+            </div>
+          </div>
+
+          {/* 3. Price Change Simulator */}
+          <div className="ps-section">
+            <div className="ps-section-title">🔄 Price Change Simulator</div>
+            <div className="ps-hint">จำลองผลกระทบก่อนปรับราคา — ดูว่าสูญเสียลูกค้าเท่าไหร่ถึงจะยังได้กำไรมากขึ้น</div>
+            <div className="ps-sim-layout">
+              <div className="ps-sim-inputs">
+                <div className="ps-val-row">
+                  <label className="ps-val-label">ราคาใหม่ Growth plan</label>
+                  <input type="number" className="ps-val-inp" min={500} step={100} value={simNewPrice}
+                    onChange={e => setSimNewPrice(Math.max(500, +e.target.value))} />
+                  <span className="ps-val-unit">฿/เดือน</span>
+                </div>
+                <div className="ps-val-row">
+                  <label className="ps-val-label">อัตราลูกค้าที่รักษาไว้ได้</label>
+                  <input type="number" className="ps-val-inp" min={0} max={100} step={5} value={simRetention}
+                    onChange={e => setSimRetention(Math.min(100, Math.max(0, +e.target.value)))} />
+                  <span className="ps-val-unit">%</span>
+                </div>
+                <div className="ps-sim-baseline">
+                  ฐาน: Growth subs ปัจจุบัน {simCurrentSubs} ราย × ฿{gp.price.toLocaleString()} = {baht(simCurrentSubs * gp.price)}/เดือน
+                </div>
+              </div>
+
+              <div className="ps-sim-result-grid">
+                {[
+                  { label: 'Growth subs ที่รักษา', val: `${simNewSubs} ราย`, ok: true },
+                  { label: 'Growth subs ที่สูญเสีย', val: `${simLostSubs} ราย`, ok: simLostSubs === 0 },
+                  { label: 'MRR ใหม่ (ประมาณ)', val: baht(simNewMrr), ok: simMrrDelta >= 0 },
+                  { label: 'MRR Delta', val: `${simMrrDelta >= 0 ? '+' : ''}${baht(simMrrDelta)}`, ok: simMrrDelta >= 0 },
+                  { label: 'ผลกระทบต่อปี', val: `${simAnnualImp >= 0 ? '+' : ''}${baht(simAnnualImp)}`, ok: simAnnualImp >= 0 },
+                  { label: 'Break-even (ลูกค้าสูญเสียได้ไม่เกิน)', val: simBreakEven > 0 ? `${simBreakEven} ราย` : '—', ok: simLostSubs <= simBreakEven || simBreakEven === 0 },
+                ].map(r => (
+                  <div key={r.label} className="ps-sim-kpi">
+                    <div className="ps-sim-kpi-label">{r.label}</div>
+                    <div className={`ps-sim-kpi-val ${r.ok ? 'ps-ok-val' : 'ps-bad-val'}`}>{r.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className={`ps-sim-verdict ${simMrrDelta >= 0 ? 'ps-sim-ok' : 'ps-sim-warn'}`}>
+              {simMrrDelta >= 0
+                ? `✅ ที่ retention ${simRetention}% → ราคา ฿${simNewPrice.toLocaleString()} ยังคุ้มค่า — MRR เพิ่มขึ้น ${baht(simMrrDelta)}/เดือน`
+                : `⚠️ ที่ retention ${simRetention}% → ราคา ฿${simNewPrice.toLocaleString()} ทำให้ MRR ลดลง ${baht(Math.abs(simMrrDelta))} — ต้องรักษาลูกค้าได้ ${simBreakEven > 0 ? `มากกว่า ${simBreakEven} ราย` : 'มากกว่านี้'}`}
+            </div>
+          </div>
+
+          {/* 4. A/B Price Testing Plan */}
+          <div className="ps-section">
+            <div className="ps-section-title">🧪 A/B Price Testing Plan</div>
+            <div className="ps-hint">ทดสอบ 2–3 ราคาพร้อมกัน (minimum 100 visitors/variant) ก่อน commit ราคาถาวร</div>
+            <table className="ps-ab-table">
+              <thead>
+                <tr>
+                  <th>Variant</th>
+                  <th className="ps-num">ราคา Growth</th>
+                  <th>สมมติฐาน</th>
+                  <th>เป้า Conversion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { variant: 'A (ต่ำ / Control)', price: 1290, hypothesis: 'Conversion สูงขึ้น +30%, revenue/visitor ต่ำกว่า', target: '≥5%', cls: '' },
+                  { variant: 'B (ปัจจุบัน)',      price: 1490, hypothesis: 'Balanced — baseline สำหรับเปรียบเทียบ', target: '≥4%', cls: 'ps-ab-cur' },
+                  { variant: 'C (สูง)',            price: 1790, hypothesis: 'Conversion ลด ~20% แต่ revenue/visitor สูงกว่า', target: '≥3%', cls: '' },
+                ].map(r => (
+                  <tr key={r.variant} className={r.cls}>
+                    <td>{r.variant} {r.cls && <span className="pfa-cur-badge">ปัจจุบัน</span>}</td>
+                    <td className="ps-num">{baht(r.price)}/เดือน</td>
+                    <td className="ps-ab-hypo">{r.hypothesis}</td>
+                    <td className="ps-num">{r.target}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="ps-ab-signals">
+              <div className="ps-ab-signal-title">สัญญาณที่ต้องจับตา</div>
+              <div className="ps-ab-signal-grid">
+                {[
+                  { icon: '📉', label: 'Conversion ลด >30%', action: 'ราคาสูงเกินไป → ลดกลับ' },
+                  { icon: '📊', label: 'Conversion ไม่เปลี่ยน', action: 'มีพื้นที่ขึ้นราคาอีก' },
+                  { icon: '🔄', label: 'Refund rate สูง', action: 'ปัญหา value delivery ไม่ใช่ราคา' },
+                  { icon: '✅', label: '20–30% บอกว่าแพงเกิน', action: 'ราคาพอดีแล้ว (ปกติ)' },
+                ].map(s => (
+                  <div key={s.label} className="ps-ab-signal-item">
+                    <span className="ps-ab-signal-icon">{s.icon}</span>
+                    <div>
+                      <div className="ps-ab-signal-label">{s.label}</div>
+                      <div className="ps-ab-signal-action">{s.action}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
