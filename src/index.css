@@ -2945,3 +2945,39 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
 .gtm-tactic-text { flex: 1; }
 .gtm-tactic-title { font-size: 13px; font-weight: 700; color: var(--ink1); margin-bottom: 4px; }
 .gtm-tactic-desc  { font-size: 12.5px; color: var(--ink2); line-height: 1.6; }
+
+/* ===================================================
+   TIS/ISO ARTICLE SEEDS (tis-seed-*)
+   =================================================== */
+.tis-seed-list { display: flex; flex-direction: column; gap: 14px; }
+.tis-seed-card { background: #fff; border: 1.5px solid var(--ink4); border-radius: 12px; overflow: hidden; }
+.tis-seed-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 14px 16px; background: var(--cream2); flex-wrap: wrap; }
+.tis-seed-meta   { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tis-seed-cluster { font-size: 12px; font-weight: 700; color: var(--ink1); }
+.tis-seed-persona { font-size: 11.5px; color: var(--ink2); }
+.tis-seed-month   { font-size: 11.5px; color: var(--ink3); }
+.tis-seed-status  { font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 8px; }
+.tis-status-queued      { background: #fef9c3; color: #854d0e; }
+.tis-status-in_progress { background: #e0f2fe; color: #0369a1; }
+.tis-status-review      { background: #fdf4ff; color: #7e22ce; }
+.tis-status-done        { background: #dcfce7; color: #166534; }
+.tis-status-blocked     { background: #fee2e2; color: #dc2626; }
+.tis-seed-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+.tis-seed-toggle  { padding: 5px 12px; border-radius: 8px; border: 1.5px solid var(--ink4); background: #fff; color: var(--ink2); font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.tis-seed-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.tis-seed-assign  { padding: 6px 14px; border-radius: 8px; border: 1.5px solid var(--accent); background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+.tis-seed-assign:hover   { opacity: .85; }
+.tis-seed-assign.loading { opacity: .6; cursor: not-allowed; }
+.tis-seed-assign:disabled { opacity: .5; cursor: not-allowed; }
+.tis-seed-title { font-size: 14px; font-weight: 700; color: var(--ink1); padding: 12px 16px 4px; line-height: 1.45; }
+.tis-seed-kw    { font-size: 12px; color: var(--accent); padding: 0 16px 12px; }
+.tis-seed-intent { background: #f0f9ff; color: #0369a1; font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 8px; }
+.tis-seed-detail { border-top: 1px solid var(--ink4); padding: 16px 18px; }
+.tis-seed-hook   { font-size: 13px; font-style: italic; color: var(--ink1); background: #f8fafc; border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 8px 12px; margin-bottom: 14px; line-height: 1.55; }
+.tis-seed-struct { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.tis-struct-row  { display: flex; gap: 10px; align-items: flex-start; }
+.tis-struct-sec  { font-size: 10px; font-weight: 800; color: #fff; background: var(--ink2); padding: 2px 8px; border-radius: 6px; flex-shrink: 0; margin-top: 2px; }
+.tis-struct-text { font-size: 12.5px; color: var(--ink1); line-height: 1.5; }
+.tis-seed-output { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-top: 10px; }
+.tis-seed-output-title { font-size: 11px; font-weight: 700; color: #166534; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+.tis-seed-output-text  { font-size: 12.5px; color: #166534; line-height: 1.7; white-space: pre-wrap; }

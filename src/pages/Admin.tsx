@@ -374,6 +374,89 @@ const SEO_SCHEMA_TEMPLATES = [
   },
 ];
 
+const TIS_ARTICLE_SEEDS = [
+  {
+    id: 'tis-steel',
+    cluster: 'เหล็กและก่อสร้าง',
+    clusterIcon: '🏗️',
+    persona: 'สมชาย',
+    month: 'ก.ค. 2026',
+    title: 'SME เตรียมพร้อมขอรับรอง TIS 50-2565 ด้วย AI: Checklist ฉบับสมบูรณ์ปี 2569',
+    keyword: 'ขอรับรอง TIS 50-2565 โรงงานเหล็ก AI',
+    intent: 'Informational',
+    target: '/market?cat=iso-consult',
+    hook: '"สมชายเสียเวลา 3 เดือนรวบรวมเอกสาร — AI ช่วยทำได้ใน 3 วัน"',
+    structure: [
+      { sec: 'Hook',      text: 'สมชายเจ้าของโรงงานเหล็กเสียเวลา 3 เดือนรวบรวมเอกสาร TIS — AI ช่วยทำได้ใน 3 วัน' },
+      { sec: 'Section 1', text: 'ทำความเข้าใจ TIS 50-2565 ต้องการอะไรบ้าง (Gap Analysis)' },
+      { sec: 'Section 2', text: 'เอกสาร 12 รายการที่ต้องเตรียมและ Template ที่ AI ช่วยสร้าง' },
+      { sec: 'Section 3', text: 'กระบวนการ Internal Audit ก่อนยื่นขอรับรอง' },
+      { sec: 'Section 4', text: 'Case Study: โรงงานเหล็ก X ผ่าน TIS ใน 45 วัน (เทียบ: เดิม 4 เดือน)' },
+      { sec: 'CTA',       text: 'ทำ CEO AI Business Audit ฟรี → เพื่อดู Gap ของธุรกิจคุณทันที' },
+    ],
+  },
+  {
+    id: 'tis-logistics',
+    cluster: 'โลจิสติกส์และขนส่ง',
+    clusterIcon: '🚛',
+    persona: 'สมชาย',
+    month: 'ก.ค. 2026',
+    title: 'ISO 9001:2015 สำหรับธุรกิจขนส่งไทย — ลดต้นทุน 20% ด้วย AI Document Automation',
+    keyword: 'ISO 9001 ธุรกิจขนส่ง ลดต้นทุน AI',
+    intent: 'Commercial',
+    target: '/market?cat=iso-consult',
+    hook: '"ถ้าบริษัทขนส่งของคุณยังไม่มี ISO 9001 คุณกำลังเสียโอกาสประมูลงานใหญ่ทุกปี"',
+    structure: [
+      { sec: 'Hook',      text: 'ถ้าบริษัทขนส่งยังไม่มี ISO 9001 — กำลังเสียโอกาสประมูลงานใหญ่ทุกปี' },
+      { sec: 'Section 1', text: 'ทำไม ISO 9001 ถึงเป็นข้อกำหนดในการประมูลงานภาครัฐ' },
+      { sec: 'Section 2', text: 'ขั้นตอนขอ ISO 9001 สำหรับบริษัทขนส่งขนาดกลาง (Timeline 90 วัน)' },
+      { sec: 'Section 3', text: 'เอกสารที่ต้องเตรียม + Template ฟรีจาก CEO AI Thailand' },
+      { sec: 'Section 4', text: 'วิธีใช้ AI วิเคราะห์ Route Efficiency ควบคู่ ISO Quality Management' },
+      { sec: 'CTA',       text: 'รับ ISO 9001 Readiness Report ฟรี — วิเคราะห์ความพร้อมธุรกิจของคุณใน 5 นาที' },
+    ],
+  },
+  {
+    id: 'tis-food',
+    cluster: 'อาหารและส่งออก',
+    clusterIcon: '🥗',
+    persona: 'วนิดา',
+    month: 'ส.ค. 2026',
+    title: 'HACCP + GMP สำหรับผู้ผลิตอาหาร SME ที่อยากส่งออก: AI ช่วยผ่านการตรวจสอบใน 60 วัน',
+    keyword: 'HACCP GMP ผู้ผลิตอาหาร SME ส่งออก AI',
+    intent: 'Informational',
+    target: '/market?cat=iso-consult',
+    hook: '"วนิดาธุรกิจครอบครัวผลิตซอสพริก — ฝันอยากส่งออกแต่ไม่รู้ว่าต้องทำ HACCP ยังไง"',
+    structure: [
+      { sec: 'Hook',      text: 'วนิดาทายาทธุรกิจซอสพริกรุ่น 2 อยากส่งออกแต่ติด HACCP/GMP — AI ช่วยสร้างระบบใน 60 วัน' },
+      { sec: 'Section 1', text: 'ความแตกต่างระหว่าง HACCP และ GMP และธุรกิจอาหารต้องมีอะไรบ้าง' },
+      { sec: 'Section 2', text: 'Hazard Analysis 7 ขั้นตอนที่ AI ช่วยวิเคราะห์โดยอัตโนมัติ' },
+      { sec: 'Section 3', text: 'เอกสาร Critical Control Points (CCP) + Monitoring Records Template' },
+      { sec: 'Section 4', text: 'Case Study: SME ขนมไทยผ่าน GMP แล้วส่งออก Japan ได้ภายใน 4 เดือน' },
+      { sec: 'CTA',       text: 'ทำ Food Business Compliance Audit ฟรี → เริ่มเส้นทางส่งออกของคุณวันนี้' },
+    ],
+  },
+  {
+    id: 'tis-service',
+    cluster: 'บริการและที่ปรึกษา',
+    clusterIcon: '💼',
+    persona: 'ชาญกิจ',
+    month: 'ส.ค. 2026',
+    title: 'ISO 20000 IT Service Management ฉบับ SME ไทย — ที่ปรึกษาดูแลลูกค้าได้ 3 เท่าด้วย AI',
+    keyword: 'ISO 20000 IT Service SME ที่ปรึกษา AI',
+    intent: 'Commercial',
+    target: '/market?cat=consult',
+    hook: '"ชาญกิจที่ปรึกษา IT ดูแลลูกค้า 12 รายด้วยตัวคนเดียว — AI ช่วยให้รับลูกค้าได้ 36 ราย"',
+    structure: [
+      { sec: 'Hook',      text: 'ชาญกิจดูแลลูกค้า 12 รายด้วยตัวคนเดียว — AI ช่วยให้รับงานได้เพิ่ม 3 เท่าโดยไม่จ้างพนักงานเพิ่ม' },
+      { sec: 'Section 1', text: 'ISO 20000 คืออะไรและทำไมบริษัท IT ที่ดูแลระบบ SME ต้องมี' },
+      { sec: 'Section 2', text: 'วิธีใช้ AI สร้าง Service Management Documentation อัตโนมัติ' },
+      { sec: 'Section 3', text: 'Partner Program: ที่ปรึกษาที่ใช้ CEO AI Thailand ดูแลลูกค้าได้อย่างไร' },
+      { sec: 'Section 4', text: 'ROI Calculation: ลงทุน ฿5,000/เดือน ประหยัดเวลา 120 ชม./เดือน = คุ้มค่า 24 เท่า' },
+      { sec: 'CTA',       text: 'สมัคร Partner Program ฟรี → รับ Commission 15% จากลูกค้าที่แนะนำ' },
+    ],
+  },
+];
+
 const SEO_CONTENT_CALENDAR = [
   { month: 'ก.ค. 2026', title: 'วิธีเลือก Digital Marketing Agency ที่เหมาะกับ SME ไทย',  keyword: 'Digital Marketing Agency SME ไทย',   target: '/market?cat=digital',   intent: 'Informational', status: 'planned'  as const },
   { month: 'ก.ค. 2026', title: 'ค่าจ้าง AI Developer ปี 2026 ในไทย — ราคาจริงจากตลาด',   keyword: 'ค่าจ้าง AI Developer ปี 2026',         target: '/market?cat=ai-dev',    intent: 'Informational', status: 'planned'  as const },
@@ -518,6 +601,8 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [techChecks, setTechChecks]     = useState<boolean[]>(TECH_SEO_CHECKS_INIT.map(() => false));
   const [qualityChecks, setQualityChecks] = useState<boolean[]>(QUALITY_SEO_CHECKS_INIT.map(() => false));
   const [seoSchemaIdx, setSeoSchemaIdx] = useState(0);
+  const [seoArticleExpanded, setSeoArticleExpanded] = useState<string | null>(null);
+  const [seoAssigning, setSeoAssigning] = useState<string | null>(null);
 
   // Financial Forecasting state
   const [fcastGrowthRate, setFcastGrowthRate] = useState(5);   // % new subs added per month
@@ -3606,6 +3691,125 @@ serve(async (_req) => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* TIS/ISO Article Seeds — AI Agent Generator */}
+          <div className="seo-section">
+            <div className="seo-section-title">🤖 TIS/ISO Content Seeds — Assign to AI Agent</div>
+            <div className="seo-note">
+              บทความเหล่านี้สร้างมาจาก GTM Cluster Strategy — กด <strong>🤖 Assign to AI Agent</strong> เพื่อให้ CMO Agent สร้าง Draft แรกใน AI Company Tab
+            </div>
+            <div className="tis-seed-list">
+              {TIS_ARTICLE_SEEDS.map((seed) => {
+                const existingTask = data.aiCompany?.tasks?.find(t =>
+                  t.title.includes(seed.id) || t.detail.includes(seed.id)
+                );
+                const taskStatus = existingTask?.status;
+                const taskOutput = existingTask?.output;
+                const isExpanded = seoArticleExpanded === seed.id;
+                const cmkAgent = data.aiCompany?.agents?.find(a =>
+                  a.role.toLowerCase().includes('cmo') ||
+                  a.role.toLowerCase().includes('content') ||
+                  a.role.toLowerCase().includes('marketing')
+                ) ?? data.aiCompany?.agents?.[0];
+
+                return (
+                  <div key={seed.id} className="tis-seed-card">
+                    <div className="tis-seed-header">
+                      <div className="tis-seed-meta">
+                        <span className="tis-seed-cluster">{seed.clusterIcon} {seed.cluster}</span>
+                        <span className="tis-seed-persona">👤 Persona: {seed.persona}</span>
+                        <span className="tis-seed-month">📅 {seed.month}</span>
+                        {taskStatus && (
+                          <span className={`tis-seed-status tis-status-${taskStatus}`}>
+                            {taskStatus === 'queued' ? '⏳ รอดำเนินการ'
+                              : taskStatus === 'in_progress' ? '⚙️ กำลังสร้าง'
+                              : taskStatus === 'review' ? '🔍 รอตรวจ'
+                              : taskStatus === 'done' ? '✅ Draft พร้อม'
+                              : '⛔ Blocked'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="tis-seed-actions">
+                        <button
+                          className="tis-seed-toggle"
+                          onClick={() => setSeoArticleExpanded(isExpanded ? null : seed.id)}
+                        >
+                          {isExpanded ? '▲ ซ่อน' : '▼ ดู Structure'}
+                        </button>
+                        {!taskStatus && (
+                          <button
+                            className={`tis-seed-assign${seoAssigning === seed.id ? ' loading' : ''}`}
+                            disabled={seoAssigning === seed.id}
+                            onClick={() => {
+                              if (!cmkAgent) return;
+                              setSeoAssigning(seed.id);
+                              const taskId = `seo-tis-${seed.id}-${Date.now().toString(36)}`;
+                              const detail = [
+                                `[ARTICLE_SEED_ID:${seed.id}]`,
+                                `Cluster: ${seed.cluster}`,
+                                `Persona หลัก: ${seed.persona}`,
+                                `Keyword เป้าหมาย: ${seed.keyword}`,
+                                `Hook: ${seed.hook}`,
+                                '',
+                                'โครงสร้างบทความ:',
+                                ...seed.structure.map(s => `[${s.sec}] ${s.text}`),
+                                '',
+                                'งาน: สร้าง Draft บทความ How-to ภาษาไทย ความยาว 1,200–1,500 คำ',
+                                'โดยใช้ Persona ที่กำหนดเป็นตัวเอก ใส่ Internal Link ไปยัง CEO AI Business Audit',
+                                'และ CTA ตามที่ระบุในโครงสร้าง',
+                              ].join('\n');
+                              const next = {
+                                ...data,
+                                aiCompany: {
+                                  ...data.aiCompany,
+                                  tasks: [
+                                    ...(data.aiCompany?.tasks ?? []),
+                                    { id: taskId, agentId: cmkAgent.id, title: `[SEO Draft] ${seed.title} [${seed.id}]`, detail, status: 'queued' as const },
+                                  ],
+                                },
+                              };
+                              onUpdate(next);
+                              setTimeout(() => setSeoAssigning(null), 800);
+                            }}
+                          >
+                            {seoAssigning === seed.id ? '⏳ กำลัง Assign…' : `🤖 Assign to ${cmkAgent?.role ?? 'AI Agent'}`}
+                          </button>
+                        )}
+                        {taskStatus === 'done' && taskOutput && (
+                          <button className="tis-seed-toggle" onClick={() => setSeoArticleExpanded(isExpanded ? null : seed.id)}>
+                            📄 ดู Draft
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="tis-seed-title">{seed.title}</div>
+                    <div className="tis-seed-kw">🔑 {seed.keyword} &nbsp;·&nbsp; <span className="tis-seed-intent">{seed.intent}</span></div>
+
+                    {isExpanded && (
+                      <div className="tis-seed-detail">
+                        <div className="tis-seed-hook">&ldquo;{seed.hook}&rdquo;</div>
+                        <div className="tis-seed-struct">
+                          {seed.structure.map((s, si) => (
+                            <div key={si} className="tis-struct-row">
+                              <span className="tis-struct-sec">{s.sec}</span>
+                              <span className="tis-struct-text">{s.text}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {taskOutput && (
+                          <div className="tis-seed-output">
+                            <div className="tis-seed-output-title">📝 AI Draft</div>
+                            <div className="tis-seed-output-text">{taskOutput}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
