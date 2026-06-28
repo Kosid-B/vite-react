@@ -470,14 +470,14 @@ export default function BadgeGenerator({ defaultName = '', complianceScore = 98,
     }
 
     // Fallback: copy app URL
-    navigator.clipboard.writeText('https://kosid-b.github.io/vite-react/').then(() => {
+    navigator.clipboard.writeText('https://ceoaithailand.com/').then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   }
 
   function handleLinkedIn() {
-    const targetUrl = encodeURIComponent(shareUrl || 'https://kosid-b.github.io/vite-react/');
+    const targetUrl = encodeURIComponent(shareUrl || 'https://ceoaithailand.com/');
     const text = encodeURIComponent(
       `🏆 ${company.trim() || 'เราได้รับ'} Badge of Excellence จาก CEO AI Thailand\n` +
       `Compliance Readiness: ${score}% · Powered by AI\n\n` +

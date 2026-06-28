@@ -22,9 +22,9 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          # GitHub Pages เสิร์ฟที่ /vite-react/ จึงตั้ง base path ที่นี่
-          # (Vercel/Netlify/dev ใช้ '/' โดยไม่ต้องตั้ง)
-          BASE_PATH: /vite-react/
+          # Custom domain ceoaithailand.com → serve from root '/'
+          # (ถ้ากลับไปใช้ GitHub Pages subdomain ให้ตั้งเป็น /vite-react/)
+          BASE_PATH: /
           # ตั้งค่าใน repo: Settings → Secrets and variables → Actions
           # ถ้าไม่ตั้ง แอปจะ deploy ในโหมด local (ใช้งานได้ แต่ไม่มี cloud/login)
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
