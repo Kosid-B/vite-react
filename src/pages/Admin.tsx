@@ -481,7 +481,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback' | 'pricing' | 'salesforce' | 'cxpersona' | 'seo';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback' | 'pricing' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -518,6 +518,16 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [techChecks, setTechChecks]     = useState<boolean[]>(TECH_SEO_CHECKS_INIT.map(() => false));
   const [qualityChecks, setQualityChecks] = useState<boolean[]>(QUALITY_SEO_CHECKS_INIT.map(() => false));
   const [seoSchemaIdx, setSeoSchemaIdx] = useState(0);
+
+  // Financial Forecasting state
+  const [fcastGrowthRate, setFcastGrowthRate] = useState(5);   // % new subs added per month
+  const [fcastChurnOverride, setFcastChurnOverride] = useState<number | null>(null);
+
+  // Grant/Loan Proposal state
+  const [proposalBank, setProposalBank]         = useState<'sme'|'exim'|'bot'|'kasikorn'>('sme');
+  const [proposalLoanAmt, setProposalLoanAmt]   = useState(500000);
+  const [proposalLoanTerm, setProposalLoanTerm] = useState(36);
+  const [proposalPurpose, setProposalPurpose]   = useState('ขยายระบบ AI Platform และทีมพัฒนา');
 
   // Salesforce integration state
   const [sfStatus, setSfStatus]           = useState<SfSyncStatus>('not_connected');
@@ -764,6 +774,12 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'seo' ? ' active' : ''}`} onClick={() => setTab('seo')}>
           🔍 SEO Strategy
+        </button>
+        <button className={`pfa-tab${tab === 'forecast' ? ' active' : ''}`} onClick={() => setTab('forecast')}>
+          📈 Financial Forecast
+        </button>
+        <button className={`pfa-tab${tab === 'proposal' ? ' active' : ''}`} onClick={() => setTab('proposal')}>
+          📋 Loan Proposal
         </button>
       </div>
 
@@ -2112,6 +2128,36 @@ serve(async (_req) => {
       {/* ===== CUSTOMER PERSONA TAB ===== */}
       {tab === 'cxpersona' && (() => {
         const p = CX_PERSONAS.find(x => x.id === cxPersonaId) ?? CX_PERSONAS[0];
+
+        // ---- Persona Health Score ----
+        const planWinCats = p.plan === 'growth'
+          ? ['efficiency','revenue','growth'] as const
+          : ['transformation','retention','growth'] as const;
+        const planWins = winStories.filter(w => (planWinCats as readonly string[]).includes(w.category));
+        const winScore = Math.min(40, planWins.length * 8);
+
+        // Feedback score: positive ratio among entries related to persona plan
+        const planFb = fbE.filter(e =>
+          p.plan === 'growth'
+            ? ['UX/UI', 'ราคา', 'ภาษาไทย', 'Onboarding', 'AI Features'].some(k => e.theme.includes(k) || e.content.includes(k))
+            : ['API', 'Multi-workspace', 'Performance', 'Customization'].some(k => e.theme.includes(k) || e.content.includes(k))
+        );
+        const planFbPos = planFb.filter(e => e.sentiment === 'positive').length;
+        const fbScore   = planFb.length > 0 ? Math.round((planFbPos / planFb.length) * 30) : 15;
+
+        // Validation score
+        const valOk    = p.validationChecks.filter(v => v.ok).length;
+        const valScore = Math.round((valOk / p.validationChecks.length) * 30);
+
+        const healthTotal = winScore + fbScore + valScore;
+        const healthColor = healthTotal >= 75 ? 'var(--green)' : healthTotal >= 50 ? 'var(--accent)' : '#dc2626';
+
+        const healthRecs: string[] = [];
+        if (winScore < 24) healthRecs.push(`เพิ่ม Win Story จากลูกค้า ${p.plan.toUpperCase()} อย่างน้อย ${3 - planWins.length} เรื่อง`);
+        if (fbScore  < 18) healthRecs.push('ปรับ messaging ให้ตรงกับ pain point ที่ได้รับ feedback เชิงลบ');
+        if (valScore < 24) healthRecs.push('ตรวจสอบ Validation Checklist — ยังมีข้อที่ยังไม่ผ่าน');
+        if (healthTotal >= 75) healthRecs.push('✅ Persona แข็งแกร่ง — เน้น amplify ใน marketing channels ที่ทำงานดีอยู่แล้ว');
+
         return (
           <div className="cx-wrap">
 
@@ -2127,6 +2173,64 @@ serve(async (_req) => {
                 </button>
               ))}
               <span className="cx-switch-label">Anti-persona →</span>
+            </div>
+
+            {/* Persona Health Score */}
+            <div className="phs-card" style={{ borderLeft: `4px solid ${healthColor}` }}>
+              <div className="phs-top">
+                <div>
+                  <div className="phs-title">🎯 Persona Health Score — {p.name.split(' ')[0]}</div>
+                  <div className="phs-sub">วัดความแข็งแกร่งของ persona นี้ด้วยข้อมูลจริงจาก Win Stories + Feedback</div>
+                </div>
+                <div className="phs-score-wrap">
+                  <svg width="70" height="70" viewBox="0 0 70 70">
+                    <circle cx="35" cy="35" r="30" fill="none" stroke="var(--ink4)" strokeWidth="6" />
+                    <circle cx="35" cy="35" r="30" fill="none" stroke={healthColor} strokeWidth="6"
+                      strokeDasharray={`${(healthTotal / 100) * 188.5} 188.5`}
+                      strokeLinecap="round" transform="rotate(-90 35 35)" />
+                    <text x="35" y="40" textAnchor="middle" fontSize="16" fontWeight="800" fill={healthColor}>{healthTotal}</text>
+                  </svg>
+                  <div className="phs-score-label" style={{ color: healthColor }}>/100</div>
+                </div>
+              </div>
+              <div className="phs-components">
+                {[
+                  { label: '🏆 Win Stories', score: winScore, max: 40, detail: `${planWins.length} เรื่องที่ตรงกับ ${p.plan} plan` },
+                  { label: '💬 Feedback', score: fbScore, max: 30, detail: `${planFbPos}/${planFb.length} positive จาก relevant feedback` },
+                  { label: '✅ Validation', score: valScore, max: 30, detail: `${valOk}/${p.validationChecks.length} checks ผ่าน` },
+                ].map(c => (
+                  <div key={c.label} className="phs-component">
+                    <div className="phs-comp-top">
+                      <span className="phs-comp-label">{c.label}</span>
+                      <span className="phs-comp-score">{c.score}/{c.max}</span>
+                    </div>
+                    <div className="phs-bar-bg">
+                      <div className="phs-bar-fill" style={{ width: `${(c.score / c.max) * 100}%`, background: healthColor }} />
+                    </div>
+                    <div className="phs-comp-detail">{c.detail}</div>
+                  </div>
+                ))}
+              </div>
+              {healthRecs.length > 0 && (
+                <div className="phs-recs">
+                  <div className="phs-recs-title">📌 AI แนะนำ</div>
+                  {healthRecs.map((r, i) => <div key={i} className="phs-rec-item">{r}</div>)}
+                </div>
+              )}
+              {planWins.length > 0 && (
+                <div className="phs-wins">
+                  <div className="phs-wins-title">Win Stories ที่เชื่อมกับ persona นี้</div>
+                  <div className="phs-wins-list">
+                    {planWins.slice(0, 3).map(w => (
+                      <div key={w.id} className="phs-win-item">
+                        <span style={{ color: WIN_CAT_COLOR[w.category] }}>{WIN_CAT_LABEL[w.category]}</span>
+                        <span className="phs-win-name">{w.customerName}</span>
+                        <span className="phs-win-metric">{w.headlineMetric}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 1. Identity card */}
@@ -2310,6 +2414,457 @@ serve(async (_req) => {
 
           </div>
         );
+      })()}
+
+      {/* ===== FINANCIAL FORECAST TAB ===== */}
+      {tab === 'forecast' && (() => {
+        const effectiveChurn = fcastChurnOverride ?? churnPct;
+        const baseGrowth     = fcastGrowthRate;
+
+        // 3 scenarios: conservative, base, optimistic
+        const SCEN = [
+          { key: 'conservative', label: '🛡️ Conservative', factor: 0.5, color: '#94a3b8' },
+          { key: 'base',         label: '📊 Base',          factor: 1.0, color: 'var(--accent)' },
+          { key: 'optimistic',   label: '🚀 Optimistic',    factor: 2.0, color: 'var(--green)' },
+        ] as const;
+
+        function project(growthFactor: number) {
+          const g = (baseGrowth * growthFactor) / 100;
+          const c = effectiveChurn / 100;
+          let cur = mrr || 50000;
+          const pts: number[] = [cur];
+          for (let i = 1; i < 12; i++) {
+            cur = Math.round(cur * (1 + g) * (1 - c) + cur * g);
+            pts.push(cur);
+          }
+          return pts;
+        }
+
+        const scenData = SCEN.map(s => ({ ...s, pts: project(s.factor) }));
+        const allVals  = scenData.flatMap(s => s.pts);
+        const maxVal   = Math.max(...allVals);
+        const MONTHS   = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+        // Chart dimensions
+        const W = 540, H = 160, PAD = 40;
+        const xStep  = (W - PAD) / 11;
+        function cx(i: number) { return PAD + i * xStep; }
+        function cy(v: number) { return H - PAD - ((v / maxVal) * (H - PAD - 10)); }
+        function polyline(pts: number[]) {
+          return pts.map((v, i) => `${cx(i)},${cy(v)}`).join(' ');
+        }
+
+        // Milestones
+        const MILESTONES = [100000, 250000, 500000, 1000000];
+
+        return (
+          <div className="fc-wrap">
+            <div className="fc-header">
+              <div className="fc-header-title">📈 Financial Forecasting — 12 เดือนข้างหน้า</div>
+              <div className="fc-header-sub">จำลองการเติบโตจาก MRR ปัจจุบัน ด้วย 3 สถานการณ์</div>
+            </div>
+
+            {/* Controls */}
+            <div className="fc-controls">
+              <div className="fc-control-group">
+                <label className="fc-ctrl-label">Growth Rate (สมาชิกใหม่/เดือน %)</label>
+                <div className="fc-ctrl-row">
+                  <input type="range" min={1} max={30} value={fcastGrowthRate}
+                    onChange={e => setFcastGrowthRate(Number(e.target.value))} />
+                  <span className="fc-ctrl-val">{fcastGrowthRate}%</span>
+                </div>
+              </div>
+              <div className="fc-control-group">
+                <label className="fc-ctrl-label">Churn Rate (%/เดือน)</label>
+                <div className="fc-ctrl-row">
+                  <input type="range" min={1} max={20}
+                    value={fcastChurnOverride ?? churnPct}
+                    onChange={e => setFcastChurnOverride(Number(e.target.value))} />
+                  <span className="fc-ctrl-val">{fcastChurnOverride ?? churnPct}%</span>
+                  {fcastChurnOverride !== null && (
+                    <button className="fc-reset-btn" onClick={() => setFcastChurnOverride(null)}>Reset</button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Chart */}
+            <div className="fc-chart-wrap">
+              <svg viewBox={`0 0 ${W} ${H}`} className="fc-chart">
+                {/* Milestone lines */}
+                {MILESTONES.filter(m => m < maxVal).map(m => (
+                  <g key={m}>
+                    <line x1={PAD} y1={cy(m)} x2={W} y2={cy(m)} stroke="var(--ink4)" strokeDasharray="4 4" strokeWidth="1" />
+                    <text x={PAD - 4} y={cy(m) + 4} textAnchor="end" fontSize="9" fill="var(--ink3)">
+                      {m >= 1000000 ? `฿${m/1000000}M` : `฿${m/1000}k`}
+                    </text>
+                  </g>
+                ))}
+                {/* Month labels */}
+                {MONTHS.map((m, i) => (
+                  <text key={m} x={cx(i)} y={H - 4} textAnchor="middle" fontSize="9" fill="var(--ink3)">{m}</text>
+                ))}
+                {/* Scenario lines */}
+                {scenData.map(s => (
+                  <g key={s.key}>
+                    <polyline points={polyline(s.pts)} fill="none" stroke={s.color} strokeWidth="2.5" strokeLinejoin="round" />
+                    {s.pts.map((v, i) => (
+                      <circle key={i} cx={cx(i)} cy={cy(v)} r="3" fill={s.color} />
+                    ))}
+                  </g>
+                ))}
+              </svg>
+              <div className="fc-legend">
+                {scenData.map(s => (
+                  <div key={s.key} className="fc-legend-item">
+                    <span className="fc-legend-dot" style={{ background: s.color }} />
+                    <span>{s.label}</span>
+                    <span className="fc-legend-final">{baht(s.pts[11])}/เดือน</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Scenario detail cards */}
+            <div className="fc-scen-grid">
+              {scenData.map(s => {
+                const finalMrr  = s.pts[11];
+                const finalArr  = finalMrr * 12;
+                const milestone = MILESTONES.find(m => s.pts.findIndex(v => v >= m) >= 0);
+                const milMonth  = milestone ? s.pts.findIndex(v => v >= milestone) : -1;
+                return (
+                  <div key={s.key} className="fc-scen-card" style={{ borderTop: `3px solid ${s.color}` }}>
+                    <div className="fc-scen-label" style={{ color: s.color }}>{s.label}</div>
+                    <div className="fc-scen-mrr">{baht(finalMrr)}<span>/เดือน</span></div>
+                    <div className="fc-scen-arr">ARR {baht(finalArr)}</div>
+                    {milestone && milMonth >= 0 && (
+                      <div className="fc-scen-milestone">
+                        🎯 ถึง {milestone >= 1000000 ? `฿${milestone/1000000}M` : `฿${milestone/1000}k`} ในเดือนที่ {milMonth + 1}
+                      </div>
+                    )}
+                    <div className="fc-scen-growth">
+                      Growth: {(((finalMrr / (mrr || 50000)) - 1) * 100).toFixed(0)}% ใน 12 เดือน
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Sensitivity: churn impact */}
+            <div className="fc-section">
+              <div className="fc-section-title">📉 ผลกระทบของ Churn Rate ต่อ ARR (12 เดือน)</div>
+              <div className="fc-table-wrap">
+                <table className="fc-table">
+                  <thead><tr>
+                    <th>Churn/เดือน</th>
+                    <th>Lifespan</th>
+                    <th>ARR Conservative</th>
+                    <th>ARR Base</th>
+                    <th>ARR Optimistic</th>
+                  </tr></thead>
+                  <tbody>
+                    {[1,2,3,5,7,10].map(c => {
+                      const rows2 = SCEN.map(s => {
+                        function proj2(f: number) {
+                          const g = (baseGrowth * f) / 100; const ch = c / 100;
+                          let cur2 = mrr || 50000;
+                          for (let i = 0; i < 12; i++) cur2 = Math.round(cur2 * (1 + g) * (1 - ch) + cur2 * g);
+                          return cur2;
+                        }
+                        return proj2(s.factor);
+                      });
+                      const isCur = c === (fcastChurnOverride ?? churnPct);
+                      return (
+                        <tr key={c} style={isCur ? { background: 'var(--cream3)', fontWeight: 700 } : {}}>
+                          <td>{c}% {isCur ? '← ปัจจุบัน' : ''}</td>
+                          <td>{Math.round(1/(c/100))} เดือน</td>
+                          {rows2.map((v, i) => <td key={i}>{baht(v * 12)}</td>)}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* LTV impact */}
+            <div className="fc-section">
+              <div className="fc-section-title">💡 Insight: ทุก 1% ที่ลด Churn เพิ่ม LTV เท่าไหร่?</div>
+              <div className="fc-insights">
+                {[
+                  { label: 'Growth LTV ที่ Churn 5%', val: baht(clvGrowth), cls: '' },
+                  { label: 'Growth LTV ถ้า Churn ลดเป็น 4%', val: baht(Math.round(gpProfit / 0.04)), cls: 'fc-insight-green' },
+                  { label: 'เพิ่มขึ้น', val: baht(Math.round(gpProfit / 0.04) - clvGrowth), cls: 'fc-insight-green' },
+                  { label: 'Max CAC ที่ยั่งยืน (3:1)', val: baht(maxCacGrowth), cls: '' },
+                ].map(ins => (
+                  <div key={ins.label} className={`fc-insight-item ${ins.cls}`}>
+                    <div className="fc-insight-label">{ins.label}</div>
+                    <div className="fc-insight-val">{ins.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        );
+      })()}
+
+      {/* ===== GRANT/LOAN PROPOSAL TAB ===== */}
+      {tab === 'proposal' && (() => {
+        const vrio        = data.vrio ?? [];
+        const bmc         = data.businessModel?.bmc;
+        const aiCo        = data.aiCompany;
+        const mktStrategy = data.marketing;
+        const vrioStars   = vrio.filter(v => v.v && v.r && v.i && v.o);
+        const channels    = (mktStrategy?.channels ?? []).filter(c => c.active);
+
+        const BANK_OPTIONS = [
+          { id: 'sme',      name: 'ธนาคาร SME Bank',       rate: 5.5,  maxYrs: 7  },
+          { id: 'exim',     name: 'EXIM Bank',              rate: 4.5,  maxYrs: 10 },
+          { id: 'kasikorn', name: 'KBank SME',              rate: 6.25, maxYrs: 5  },
+          { id: 'bot',      name: 'ออมสิน (SME Loan)',       rate: 4.0,  maxYrs: 7  },
+        ] as const;
+        const bank = BANK_OPTIONS.find(b => b.id === proposalBank) ?? BANK_OPTIONS[0];
+        const monthlyRate  = bank.rate / 100 / 12;
+        const monthlyPmt   = proposalLoanAmt > 0 && monthlyRate > 0
+          ? Math.round(proposalLoanAmt * monthlyRate / (1 - Math.pow(1 + monthlyRate, -proposalLoanTerm)))
+          : 0;
+        const totalRepay   = monthlyPmt * proposalLoanTerm;
+        const totalInterest = totalRepay - proposalLoanAmt;
+        const dscr         = mrr > 0 ? (mrr / monthlyPmt).toFixed(2) : '—';
+
+        return (
+          <div className="prop-wrap">
+
+            {/* Config bar */}
+            <div className="prop-config">
+              <div className="prop-config-group">
+                <label>สถาบันการเงิน</label>
+                <select value={proposalBank} onChange={e => setProposalBank(e.target.value as typeof proposalBank)}>
+                  {BANK_OPTIONS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+              <div className="prop-config-group">
+                <label>วงเงินกู้ (฿)</label>
+                <input type="number" value={proposalLoanAmt} min={100000} step={50000}
+                  onChange={e => setProposalLoanAmt(Number(e.target.value))} />
+              </div>
+              <div className="prop-config-group">
+                <label>ระยะเวลา (เดือน)</label>
+                <select value={proposalLoanTerm} onChange={e => setProposalLoanTerm(Number(e.target.value))}>
+                  {[12,24,36,48,60,84].filter(t => t <= bank.maxYrs * 12).map(t =>
+                    <option key={t} value={t}>{t} เดือน ({t/12} ปี)</option>
+                  )}
+                </select>
+              </div>
+              <div className="prop-config-group">
+                <label>วัตถุประสงค์</label>
+                <input type="text" value={proposalPurpose} onChange={e => setProposalPurpose(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Loan summary */}
+            <div className="prop-summary">
+              {[
+                { label: 'วงเงินกู้',       val: baht(proposalLoanAmt) },
+                { label: 'อัตราดอกเบี้ย',  val: `${bank.rate}% ต่อปี` },
+                { label: 'งวดชำระ/เดือน',  val: baht(monthlyPmt) },
+                { label: 'ดอกเบี้ยรวม',    val: baht(totalInterest) },
+                { label: 'รวมทั้งสิ้น',     val: baht(totalRepay) },
+                { label: 'DSCR (MRR/งวด)', val: `${dscr}x`, note: Number(dscr) >= 1.5 ? '✅ ผ่านเกณฑ์' : '⚠️ ต่ำ' },
+              ].map(s => (
+                <div key={s.label} className="prop-sum-item">
+                  <div className="prop-sum-label">{s.label}</div>
+                  <div className="prop-sum-val">{s.val}</div>
+                  {s.note && <div className={`prop-sum-note ${Number(dscr) >= 1.5 ? 'green' : 'warn'}`}>{s.note}</div>}
+                </div>
+              ))}
+            </div>
+
+            {/* ===== Document ===== */}
+            <div className="prop-doc">
+
+              {/* Cover */}
+              <div className="prop-doc-section prop-cover">
+                <div className="prop-cover-logo">🤖</div>
+                <div className="prop-cover-name">{aiCo?.name || 'CEO AI Thailand'}</div>
+                <div className="prop-cover-title">แผนธุรกิจและคำขอสินเชื่อ</div>
+                <div className="prop-cover-bank">{bank.name} | วงเงิน {baht(proposalLoanAmt)}</div>
+                <div className="prop-cover-date">วันที่: {new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+              </div>
+
+              {/* 1. Executive Summary */}
+              <div className="prop-doc-section">
+                <div className="prop-section-num">1</div>
+                <div className="prop-section-title">บทสรุปผู้บริหาร</div>
+                <p className="prop-body">
+                  {aiCo?.name || 'CEO AI Thailand'} เป็นแพลตฟอร์ม AI SaaS สำหรับ SME ไทย
+                  ให้บริการระบบวางแผนธุรกิจอัตโนมัติด้วย AI ในราคา ฿1,490–฿5,900/เดือน
+                  ปัจจุบันมีรายได้ประจำ MRR {baht(mrr || 75000)}/เดือน
+                  และมีสมาชิก {totalSubs || 50} ราย
+                </p>
+                <p className="prop-body">
+                  บริษัทขอสินเชื่อจำนวน {baht(proposalLoanAmt)} จาก{bank.name}
+                  เพื่อ{proposalPurpose} ระยะเวลา {proposalLoanTerm} เดือน
+                  อัตราดอกเบี้ย {bank.rate}% ต่อปี ผ่อนชำระ {baht(monthlyPmt)}/เดือน
+                </p>
+                <div className="prop-kpi-row">
+                  {[
+                    { label: 'MRR', val: baht(mrr || 75000) },
+                    { label: 'LTV:CAC', val: `${ltvcacGrowth.toFixed(1)}x` },
+                    { label: 'Win Stories', val: `${winStories.length} เรื่อง` },
+                    { label: 'Gross Margin', val: `${grossMargin.toFixed(1)}%` },
+                  ].map(k => (
+                    <div key={k.label} className="prop-kpi-item">
+                      <div className="prop-kpi-val">{k.val}</div>
+                      <div className="prop-kpi-label">{k.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. Business Overview */}
+              <div className="prop-doc-section">
+                <div className="prop-section-num">2</div>
+                <div className="prop-section-title">รายละเอียดธุรกิจ</div>
+                <div className="prop-field-grid">
+                  <div className="prop-field"><span>ประเภทธุรกิจ</span>{aiCo?.industry || 'AI SaaS / Digital Platform'}</div>
+                  <div className="prop-field"><span>โมเดลรายได้</span>Subscription (MRR) + API Usage</div>
+                  <div className="prop-field"><span>กลุ่มเป้าหมาย</span>SME ไทย พนักงาน 10–200 คน / Consultants</div>
+                  <div className="prop-field"><span>Mission</span>{(aiCo?.mission || aiCo?.goal || 'สร้างระบบ AI ที่เข้าใจธุรกิจไทย').slice(0, 100)}</div>
+                </div>
+                {bmc?.value && bmc.value.length > 0 && (
+                  <>
+                    <div className="prop-sub-title">คุณค่าที่นำเสนอ (Value Proposition)</div>
+                    <ul className="prop-list">{bmc.value.slice(0, 4).map((v, i) => <li key={i}>{v}</li>)}</ul>
+                  </>
+                )}
+              </div>
+
+              {/* 3. Market Analysis */}
+              <div className="prop-doc-section">
+                <div className="prop-section-num">3</div>
+                <div className="prop-section-title">การวิเคราะห์ตลาด</div>
+                <div className="prop-field-grid">
+                  <div className="prop-field"><span>ตลาดเป้าหมาย (TAM)</span>SME ไทย 3.1 ล้านราย × ฿1,490 = ฿46B/ปี</div>
+                  <div className="prop-field"><span>SOM ระยะ 3 ปี</span>฿30M ARR (0.065% market share)</div>
+                  <div className="prop-field"><span>CAGR ตลาด AI SaaS (SEA)</span>28.5% ต่อปี (2024–2028)</div>
+                  <div className="prop-field"><span>คู่แข่งหลัก</span>Zapier, Monday.com AI, Custom GPT Teams</div>
+                </div>
+                {channels.length > 0 && (
+                  <>
+                    <div className="prop-sub-title">ช่องทางการตลาดที่ใช้งานอยู่</div>
+                    <table className="prop-table">
+                      <thead><tr><th>Channel</th><th>Leads/เดือน</th><th>CPL</th><th>Conv Rate</th></tr></thead>
+                      <tbody>
+                        {channels.slice(0, 4).map(c => (
+                          <tr key={c.id}>
+                            <td>{c.name}</td>
+                            <td>{c.leadsPerMonth}</td>
+                            <td>{baht(c.cpl)}</td>
+                            <td>{c.convRate}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                )}
+              </div>
+
+              {/* 4. VRIO / Competitive Advantage */}
+              <div className="prop-doc-section">
+                <div className="prop-section-num">4</div>
+                <div className="prop-section-title">ความได้เปรียบในการแข่งขัน (VRIO Analysis)</div>
+                <p className="prop-body">
+                  บริษัทมีทรัพยากรและความสามารถที่ผ่านเกณฑ์ VRIO ครบทั้ง 4 ข้อ (Valuable, Rare, Inimitable, Organized)
+                  จำนวน {vrioStars.length} รายการ ซึ่งสร้าง Sustained Competitive Advantage ในตลาด AI สำหรับ SME ไทย
+                </p>
+                {vrioStars.length > 0 && (
+                  <ul className="prop-list">
+                    {vrioStars.slice(0, 4).map(v => <li key={v.id}><b>{v.resource}</b> — {v.note}</li>)}
+                  </ul>
+                )}
+                {winStories.length > 0 && (
+                  <>
+                    <div className="prop-sub-title">ผลลัพธ์จากลูกค้าจริง (Win Stories)</div>
+                    <table className="prop-table">
+                      <thead><tr><th>ลูกค้า</th><th>ผลลัพธ์หลัก</th><th>ระยะเวลา</th></tr></thead>
+                      <tbody>
+                        {winStories.slice(0, 4).map(w => (
+                          <tr key={w.id}>
+                            <td>{w.customerName}</td>
+                            <td>{w.headlineMetric}</td>
+                            <td>{w.timeline}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                )}
+              </div>
+
+              {/* 5. Financial Plan */}
+              <div className="prop-doc-section">
+                <div className="prop-section-num">5</div>
+                <div className="prop-section-title">แผนการเงิน</div>
+                <div className="prop-field-grid">
+                  <div className="prop-field"><span>MRR ปัจจุบัน</span>{baht(mrr || 75000)}</div>
+                  <div className="prop-field"><span>ARR ปัจจุบัน</span>{baht((mrr || 75000) * 12)}</div>
+                  <div className="prop-field"><span>Gross Margin</span>{grossMargin.toFixed(1)}%</div>
+                  <div className="prop-field"><span>LTV:CAC (Growth)</span>{ltvcacGrowth.toFixed(1)}x</div>
+                  <div className="prop-field"><span>Payback Period</span>{paybackGrowth} เดือน</div>
+                  <div className="prop-field"><span>ARR คาดการณ์ 12 เดือน</span>{baht(project12MrrBase() * 12)}</div>
+                </div>
+                <div className="prop-sub-title">แผนการใช้เงินกู้</div>
+                <ul className="prop-list">
+                  <li>พัฒนาระบบ AI และ Infrastructure 40% — {baht(proposalLoanAmt * 0.40)}</li>
+                  <li>Marketing & Customer Acquisition 35% — {baht(proposalLoanAmt * 0.35)}</li>
+                  <li>ทีมงาน (Engineering + Sales) 20% — {baht(proposalLoanAmt * 0.20)}</li>
+                  <li>สำรองฉุกเฉิน 5% — {baht(proposalLoanAmt * 0.05)}</li>
+                </ul>
+                <div className="prop-sub-title">ความสามารถในการชำระหนี้</div>
+                <div className="prop-field-grid">
+                  <div className="prop-field"><span>งวดชำระ/เดือน</span>{baht(monthlyPmt)}</div>
+                  <div className="prop-field"><span>DSCR (MRR ÷ งวด)</span>{dscr}x {Number(dscr) >= 1.5 ? '✅' : '⚠️'}</div>
+                  <div className="prop-field"><span>งวดชำระ % of MRR</span>{mrr > 0 ? pct(monthlyPmt, mrr) : '—'}</div>
+                  <div className="prop-field"><span>Breakeven เพิ่มสมาชิก</span>
+                    {Math.ceil(monthlyPmt / (gp.price - gp.cost))} ราย Growth plan
+                  </div>
+                </div>
+              </div>
+
+              {/* 6. Risk */}
+              <div className="prop-doc-section">
+                <div className="prop-section-num">6</div>
+                <div className="prop-section-title">การวิเคราะห์และบริหารความเสี่ยง</div>
+                <table className="prop-table">
+                  <thead><tr><th>ความเสี่ยง</th><th>ระดับ</th><th>มาตรการรับมือ</th></tr></thead>
+                  <tbody>
+                    {[
+                      { risk: 'Customer Churn สูง', level: '⚠️ กลาง', mitigation: 'Onboarding ที่ดี + Win Story documentation + VRIO competitive moat' },
+                      { risk: 'Competition จากต่างชาติ', level: '🟡 ต่ำ-กลาง', mitigation: 'Thai-first positioning + ภาษาไทย + ราคาที่เหมาะกับ SME ไทย' },
+                      { risk: 'AI Cost ผันผวน (API)', level: '⚠️ กลาง', mitigation: 'Cost cap per plan + multi-vendor LLM strategy' },
+                      { risk: 'Cash Flow ขาด', level: '🟢 ต่ำ', mitigation: `DSCR ${dscr}x — MRR ปัจจุบันรองรับงวดชำระได้` },
+                    ].map((r, i) => (
+                      <tr key={i}><td>{r.risk}</td><td>{r.level}</td><td>{r.mitigation}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+
+            <div className="prop-print-hint">💡 กด Ctrl+P (หรือ ⌘+P) เพื่อพิมพ์เอกสารนี้</div>
+
+          </div>
+        );
+
+        function project12MrrBase() {
+          const g = fcastGrowthRate / 100; const c = churnPct / 100;
+          let cur = mrr || 50000;
+          for (let i = 0; i < 12; i++) cur = Math.round(cur * (1 + g) * (1 - c) + cur * g);
+          return cur;
+        }
       })()}
 
       {/* ===== SEO STRATEGY TAB ===== */}

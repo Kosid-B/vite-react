@@ -24,6 +24,7 @@ import Roadmap from './pages/Roadmap';
 import Team from './pages/Team';
 import Admin from './pages/Admin';
 import Marketing from './pages/Marketing';
+import CmdK from './components/CmdK';
 
 const STORAGE_KEY = 'cjux2';
 
@@ -248,6 +249,7 @@ export default function App() {
         {isSupabaseEnabled && session ? 'ซิงก์ขึ้นคลาวด์แล้ว' : 'บันทึกอัตโนมัติแล้ว'}
       </div>
 
+      <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
       <AiAssist activePage={activePage} data={data} />
     </div>
   );
