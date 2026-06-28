@@ -1766,3 +1766,52 @@ input:focus, textarea:focus { outline: 2px solid rgba(196,75,43,.3); outline-off
 .pfa-rec-icon { font-size: 22px; flex-shrink: 0; line-height: 1; margin-top: 1px; }
 .pfa-rec-title { font-size: 13.5px; font-weight: 700; color: var(--ink1); margin-bottom: 4px; }
 .pfa-rec-body { font-size: 12.5px; color: var(--ink2); line-height: 1.65; }
+
+/* ===== Customer Lifetime Value (CLV) ===== */
+.clv-plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+@media (max-width: 640px) { .clv-plan-grid { grid-template-columns: 1fr; } }
+
+.clv-card {
+  border: 1.5px solid var(--ink4); border-radius: 12px;
+  padding: 18px; display: flex; flex-direction: column; gap: 10px;
+}
+.clv-card-name { font-size: 14px; font-weight: 700; color: var(--ink1); }
+.clv-formula { font-size: 11px; color: var(--ink3); background: var(--cream2); border-radius: 5px; padding: 5px 8px; }
+.clv-main-val { font-size: 30px; font-weight: 800; color: var(--accent); letter-spacing: -.02em; }
+.clv-main-lbl { font-size: 11px; color: var(--ink3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-top: -6px; }
+
+.clv-rows { display: flex; flex-direction: column; gap: 0; }
+.clv-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12.5px; color: var(--ink2); padding: 6px 0;
+  border-bottom: 1px dashed var(--ink4);
+}
+.clv-row:last-child { border-bottom: none; }
+
+/* LTV:CAC Gauge */
+.clv-gauge-wrap { margin-top: 4px; }
+.clv-gauge-track {
+  position: relative; height: 10px; border-radius: 5px;
+  overflow: visible; display: flex;
+}
+.clv-gauge-danger  { flex: 1; background: #fca5a5; border-radius: 5px 0 0 5px; }
+.clv-gauge-warning { flex: 1; background: #fde68a; }
+.clv-gauge-ok      { flex: 1; background: #86efac; border-radius: 0 5px 5px 0; }
+.clv-gauge-needle {
+  position: absolute; top: -3px; width: 3px; height: 16px;
+  background: #1e293b; border-radius: 2px;
+  transform: translateX(-50%); transition: left .4s;
+}
+.clv-gauge-lbls {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: var(--ink3); margin-top: 4px;
+}
+.clv-ratio-status { font-size: 12px; font-weight: 700; margin-top: 4px; }
+
+.clv-sens-title { font-size: 13px; font-weight: 700; color: var(--ink1); margin-bottom: 8px; }
+
+.clv-insight {
+  margin-top: 14px; font-size: 12.5px; color: var(--ink2);
+  background: #fffbeb; border-left: 3px solid #f59e0b;
+  padding: 10px 14px; border-radius: 6px; line-height: 1.6;
+}

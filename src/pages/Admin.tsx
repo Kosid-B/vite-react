@@ -65,6 +65,11 @@ export default function Admin({ currentUserEmail }: Props) {
   const [nScale, setNScale]   = useState(4);
   const [overhead, setOverhead] = useState(8000);
 
+  // CLV state
+  const [churnPct, setChurnPct]   = useState(5);     // monthly churn %
+  const [cacGrowth, setCacGrowth] = useState(2000);
+  const [cacScale, setCacScale]   = useState(8000);
+
   useEffect(() => {
     if (!admin || !isSupabaseEnabled) return;
     setLoading(true);
@@ -101,6 +106,27 @@ export default function Admin({ currentUserEmail }: Props) {
     ? ((nGrowth * (gp.price - gp.cost)) + (nScale * (sp.price - sp.cost))) / totalSubs
     : (gp.price - gp.cost);
   const breakEven = overhead > 0 && wMarginPerSub > 0 ? Math.ceil(overhead / wMarginPerSub) : 0;
+
+  // ---- CLV computations ----
+  const monthlyChurn = churnPct / 100;
+  const lifespanMonths = monthlyChurn > 0 ? Math.round(1 / monthlyChurn) : 0;
+  const gpProfit = gp.price - gp.cost;   // ฿300
+  const spProfit = sp.price - sp.cost;   // ฿1,250
+  const clvGrowth = monthlyChurn > 0 ? Math.round(gpProfit / monthlyChurn) : 0;
+  const clvScale  = monthlyChurn > 0 ? Math.round(spProfit / monthlyChurn) : 0;
+  const ltvcacGrowth = cacGrowth > 0 ? clvGrowth / cacGrowth : 0;
+  const ltvcacScale  = cacScale  > 0 ? clvScale  / cacScale  : 0;
+  const paybackGrowth = gpProfit > 0 ? Math.ceil(cacGrowth / gpProfit) : 0;
+  const paybackScale  = spProfit > 0 ? Math.ceil(cacScale  / spProfit) : 0;
+  const maxCacGrowth = Math.round(clvGrowth / 3);
+  const maxCacScale  = Math.round(clvScale  / 3);
+  const CHURN_SCENARIOS = [1, 2, 3, 5, 7, 10].map(c => ({
+    c,
+    lifespan: Math.round(1 / (c / 100)),
+    clvG: Math.round(gpProfit / (c / 100)),
+    clvS: Math.round(spProfit / (c / 100)),
+    isCurrent: c === churnPct,
+  }));
 
   const totalMembers = rows.reduce((s, r) => s + Number(r.member_count), 0);
 
@@ -279,7 +305,110 @@ export default function Admin({ currentUserEmail }: Props) {
             </div>
           </div>
 
-          {/* 5. Recommendations */}
+          {/* 5. Customer Lifetime Value */}
+          <div className="pfa-section">
+            <div className="pfa-section-title">Customer Lifetime Value (CLV / LTV)</div>
+
+            {/* CLV inputs */}
+            <div className="pfa-sim-inputs" style={{ marginBottom: 20 }}>
+              <div className="pfa-sim-row">
+                <label className="pfa-sim-label">Monthly Churn Rate</label>
+                <input type="number" className="pfa-sim-inp" min={0.5} max={50} step={0.5}
+                  value={churnPct} onChange={e => setChurnPct(Math.max(0.1, +e.target.value))} />
+                <span className="pfa-sim-unit">% ต่อเดือน → ลูกค้าอยู่เฉลี่ย <b>{lifespanMonths} เดือน</b></span>
+              </div>
+              <div className="pfa-sim-row">
+                <label className="pfa-sim-label">CAC — Growth</label>
+                <input type="number" className="pfa-sim-inp" min={0} step={500}
+                  value={cacGrowth} onChange={e => setCacGrowth(Math.max(0, +e.target.value))} />
+                <span className="pfa-sim-unit">บาท/ลูกค้า (ต้นทุนการหาลูกค้าใหม่)</span>
+              </div>
+              <div className="pfa-sim-row">
+                <label className="pfa-sim-label">CAC — Scale</label>
+                <input type="number" className="pfa-sim-inp" min={0} step={1000}
+                  value={cacScale} onChange={e => setCacScale(Math.max(0, +e.target.value))} />
+                <span className="pfa-sim-unit">บาท/ลูกค้า (ต้นทุนการหาลูกค้าใหม่)</span>
+              </div>
+            </div>
+
+            {/* CLV cards */}
+            <div className="clv-plan-grid">
+              {([
+                { plan: gp, clv: clvGrowth, ltvcac: ltvcacGrowth, payback: paybackGrowth, maxCac: maxCacGrowth, cac: cacGrowth, profit: gpProfit },
+                { plan: sp, clv: clvScale,  ltvcac: ltvcacScale,  payback: paybackScale,  maxCac: maxCacScale,  cac: cacScale,  profit: spProfit },
+              ] as const).map(({ plan, clv, ltvcac, payback, maxCac, cac, profit }) => {
+                const ratioColor = ltvcac >= 3 ? '#15803d' : ltvcac >= 1 ? '#ca8a04' : '#dc2626';
+                const ratioLabel = ltvcac >= 3 ? '✅ Healthy (≥3:1)' : ltvcac >= 1 ? '⚠️ Warning (1–3:1)' : '🔴 Danger (<1:1)';
+                const needleLeft = Math.min(95, (ltvcac / 6) * 100);
+                return (
+                  <div key={plan.id} className="clv-card">
+                    <div className="clv-card-name">แพ็ก {plan.name}</div>
+                    <div className="clv-formula">กำไร {baht(profit)}/เดือน ÷ Churn {churnPct}% = CLV</div>
+                    <div className="clv-main-val">{baht(clv)}</div>
+                    <div className="clv-main-lbl">Customer Lifetime Value</div>
+
+                    <div className="clv-rows">
+                      <div className="clv-row"><span>อายุลูกค้าเฉลี่ย</span><b>{lifespanMonths} เดือน</b></div>
+                      <div className="clv-row"><span>CAC (ต้นทุนหาลูกค้า)</span><b>{baht(cac)}</b></div>
+                      <div className="clv-row">
+                        <span>LTV : CAC</span>
+                        <b style={{ color: ratioColor }}>{ltvcac.toFixed(1)} : 1</b>
+                      </div>
+                      <div className="clv-row"><span>Payback Period</span><b>{payback > 0 ? `${payback} เดือน` : '—'}</b></div>
+                      <div className="clv-row"><span>Max CAC แนะนำ (CLV÷3)</span><b className="pfa-val-green">{baht(maxCac)}</b></div>
+                    </div>
+
+                    {/* LTV:CAC gauge */}
+                    <div className="clv-gauge-wrap">
+                      <div className="clv-gauge-track">
+                        <div className="clv-gauge-danger" />
+                        <div className="clv-gauge-warning" />
+                        <div className="clv-gauge-ok" />
+                        <div className="clv-gauge-needle" style={{ left: `${needleLeft}%` }} />
+                      </div>
+                      <div className="clv-gauge-lbls">
+                        <span>0</span><span>1:1</span><span>3:1</span><span>6:1+</span>
+                      </div>
+                      <div className="clv-ratio-status" style={{ color: ratioColor }}>{ratioLabel}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Churn sensitivity table */}
+            <div className="clv-sens-title">ผลกระทบของ Churn ต่อ CLV (Sensitivity Analysis)</div>
+            <div className="pfa-sens-table">
+              <div className="pfa-sens-head">
+                <div>Monthly Churn</div>
+                <div>อายุลูกค้า</div>
+                <div>CLV — Growth</div>
+                <div>CLV — Scale</div>
+                <div>Max CAC Growth</div>
+              </div>
+              {CHURN_SCENARIOS.map(sc => (
+                <div key={sc.c} className={`pfa-sens-row${sc.isCurrent ? ' pfa-current' : ''}`}>
+                  <div className="pfa-sens-price">
+                    {sc.c}%
+                    {sc.isCurrent && <span className="pfa-curr-badge">ปัจจุบัน</span>}
+                  </div>
+                  <div>{sc.lifespan} เดือน</div>
+                  <div className={sc.c <= 2 ? 'pfa-green' : sc.c >= 7 ? 'pfa-neg' : ''}>{baht(sc.clvG)}</div>
+                  <div className={sc.c <= 2 ? 'pfa-green' : sc.c >= 7 ? 'pfa-neg' : ''}>{baht(sc.clvS)}</div>
+                  <div>{baht(Math.round(sc.clvG / 3))}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="clv-insight">
+              💡 <b>Key Insight:</b> ลด Churn จาก 5% → 3% เพิ่ม CLV Growth จาก{' '}
+              {baht(Math.round(gpProfit / 0.05))} → {baht(Math.round(gpProfit / 0.03))}{' '}
+              (+{Math.round(((gpProfit / 0.03 - gpProfit / 0.05) / (gpProfit / 0.05)) * 100)}%) —
+              Churn คือ lever ที่มีผลต่อ CLV มากที่สุดใน SaaS subscription model
+            </div>
+          </div>
+
+          {/* 6. Recommendations */}
           <div className="pfa-section">
             <div className="pfa-section-title">คำแนะนำเชิงกลยุทธ์ด้านราคา</div>
             <div className="pfa-recs">
