@@ -577,6 +577,42 @@ export default function Billing({ data, onUpdate }: Props) {
         </div>
       )}
 
+      {/* ISO 9001 Add-on */}
+      <div className="bill-addon-section">
+        <div className="bill-addon-hd">🏆 Add-on พิเศษ — ระบบมาตรฐานสากล</div>
+        <div className="bill-addon-cards">
+          <div className="bill-addon-card">
+            <div className="bill-addon-badge">ISO 9001:2015 Add-on</div>
+            <div className="bill-addon-name">ระบบบริหารคุณภาพ ISO 9001</div>
+            <div className="bill-addon-tagline">สำหรับองค์กรที่มีหรือกำลังเตรียมรับรอง ISO 9001:2015</div>
+            <div className="bill-addon-price-row">
+              <span className="bill-addon-price">฿30,000</span>
+              <span className="bill-addon-per">–49,999/ปี</span>
+            </div>
+            <ul className="bill-addon-feats">
+              <li>ตรวจสอบ 28 ข้อกำหนด ISO 9001:2015 (ข้อ 4–10)</li>
+              <li>บันทึก NC Log (ความไม่เป็นไปตามข้อกำหนด)</li>
+              <li>ระบบควบคุมเอกสาร QMS ครบวงจร</li>
+              <li>ตารางวางแผนการตรวจประเมินภายใน</li>
+              <li>Readiness Score พร้อมใช้กับทุกหน่วยรับรอง</li>
+              <li>รองรับ SGS, Bureau Veritas, TÜV SÜD</li>
+            </ul>
+            <button
+              className={`bill-addon-btn${data.iso9001?.enabled ? ' active' : ''}`}
+              onClick={() => {
+                if (!data.iso9001?.enabled) {
+                  const updated = { ...data, iso9001: { ...data.iso9001!, enabled: true, tier: 'basic' as const } };
+                  onUpdate(updated);
+                }
+              }}
+              disabled={data.iso9001?.enabled}
+            >
+              {data.iso9001?.enabled ? '✓ เปิดใช้งานแล้ว' : 'ติดต่อขอใช้งาน / เปิดใช้'}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="bill-auto-note">
         ⚙️ <b>Automate billing:</b> เมื่อเปิด "ต่ออายุอัตโนมัติ"
         ระบบจะออกใบแจ้งหนี้และต่ออายุให้ทุกรอบบิล งานเบื้องหลังจะรันด้วย Supabase Edge

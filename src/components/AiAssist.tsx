@@ -26,6 +26,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   team: { label: 'ทีม', prompts: ['เสนอโครงสร้างทีมที่เหมาะ'], context: () => 'หน้าจัดการทีม' },
   admin: { label: 'ผู้ดูแลระบบ', prompts: ['สรุปภาพรวมการใช้งานระบบ'], context: () => 'หน้าผู้ดูแลระบบ' },
   marketing: { label: 'กลยุทธ์การตลาด', prompts: ['วิเคราะห์ช่องทางที่ดีที่สุด', 'เสนอแคมเปญที่ควรทำถัดไป', 'วิธีลด CAC'], context: d => `งบ ${d.marketing?.monthlyBudget ?? 0} บาท, ${d.marketing?.channels?.length ?? 0} ช่องทาง` },
+  iso9001: { label: 'ISO 9001:2015 QMS', prompts: ['สรุปสถานะการรับรอง ISO', 'เสนอวิธีแก้ NC ที่เปิดอยู่', 'แนะนำการเตรียมตรวจ Internal Audit'], context: d => `ISO QMS: ${d.iso9001?.clauses?.filter(c => c.status === 'green').length ?? 0}/${d.iso9001?.clauses?.length ?? 0} ข้อผ่าน` },
 };
 
 export default function AiAssist({ activePage, data }: Props) {

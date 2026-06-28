@@ -377,6 +377,62 @@ export interface MarketingStrategy {
   goals: MarketingGoal[];
 }
 
+/* ===== ISO 9001:2015 QMS ===== */
+export type ISOStatus = 'green' | 'amber' | 'red' | 'na';
+
+export interface ISOClauseCheck {
+  id: string;        // e.g. "4.1"
+  title: string;
+  status: ISOStatus;
+  evidence: string;  // หลักฐาน/เอกสารที่อ้างอิง
+  notes: string;
+}
+
+export interface Nonconformity {
+  id: string;
+  date: string;
+  clause: string;    // เช่น "8.7"
+  description: string;
+  severity: 'major' | 'minor' | 'observation';
+  rootCause: string;
+  status: 'open' | 'in_progress' | 'closed';
+  closedDate?: string;
+}
+
+export interface ISODocument {
+  id: string;
+  docNo: string;
+  title: string;
+  clause: string;
+  revision: string;
+  effectiveDate: string;
+  owner: string;
+}
+
+export interface InternalAudit {
+  id: string;
+  plannedDate: string;
+  scope: string;       // ขอบเขตของการตรวจ
+  auditor: string;
+  status: 'planned' | 'completed' | 'overdue';
+  findings: string;    // สรุปผลการตรวจ
+}
+
+export interface ISO9001Data {
+  enabled: boolean;
+  tier: 'basic' | 'certified'; // basic=กำลังเตรียม, certified=ได้รับรองแล้ว
+  certBody: string;     // หน่วยงานรับรอง เช่น "SGS", "Bureau Veritas"
+  certExpiry: string;   // วันหมดอายุใบรับรอง ISO
+  scope: string;        // ขอบเขตระบบ QMS
+  clauses: ISOClauseCheck[];
+  nonconformities: Nonconformity[];
+  documents: ISODocument[];
+  audits: InternalAudit[];
+  nextAuditDate: string;
+  qualityPolicy: string;
+  qualityObjectives: string[];
+}
+
 export interface AppData {
   stages: Stage[];
   personas: Persona[];
@@ -394,6 +450,7 @@ export interface AppData {
   marketing: MarketingStrategy;
   feedback: FeedbackAnalysis;
   gtmAuditChecks?: boolean[];
+  iso9001?: ISO9001Data;
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001';
