@@ -104,6 +104,8 @@ const AVAILABLE_SKILLS = [
   'social-impact-measurement','survey-analysis','knowledge-base-builder','job-posting',
   // HR & Team bundle
   'team-onboarding','performance-review','training-plan','talent-acquisition','compensation-design',
+  // ISO Compliance
+  'iso-9001-compliance-autopilot',
 ];
 
 // ยิ่งรอบสั้น ทำงานเร็วแต่ใช้ token ถี่ (งบบานปลาย) · ยิ่งรอบยาว ประหยัดงบ

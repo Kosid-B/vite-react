@@ -341,6 +341,14 @@ export const SKILL_CATALOG: SkillEntry[] = [
     desc: 'ออกแบบกรอบวัดผลกระทบทางสังคม Logic Model ตัวชี้วัด Output/Outcome/Impact เก็บข้อมูล วิเคราะห์ผล และรายงาน Social ROI สำหรับทีมขายและการตลาด',
     tags: ['COO', 'CEO', 'Sales Manager', 'CMO'],
   },
+  // ── ISO Compliance ──────────────────────────────────────────────────────────
+  {
+    id: 'iso-9001-compliance-autopilot',
+    name: 'ISO-9001-Compliance-Autopilot',
+    category: 'strategy', tier: 3, price: 2000, icon: '🛡️',
+    desc: 'Automated Auditor ประจำองค์กร: สแกน Gap Analysis, ร่างเอกสาร QMS, จำลอง Internal Audit และเสนอ Corrective Action ภาษาไทย 100% ตามมาตรฐาน TIS/ISO 9001:2015',
+    tags: ['CEO', 'COO', 'Quality Manager', 'Consultant'],
+  },
 ];
 
 export const SKILL_TOTAL_VALUE = SKILL_CATALOG.reduce((s, sk) => s + sk.price, 0);
