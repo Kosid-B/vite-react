@@ -23,6 +23,8 @@ import Marketplace from './pages/Marketplace';
 import Roadmap from './pages/Roadmap';
 import Team from './pages/Team';
 import Admin from './pages/Admin';
+import Marketing from './pages/Marketing';
+import CmdK from './components/CmdK';
 
 const STORAGE_KEY = 'cjux2';
 
@@ -50,6 +52,10 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.vrio) parsed.vrio = DEFAULT_DATA.vrio;
   if (!parsed.marketplace) parsed.marketplace = DEFAULT_DATA.marketplace;
   if (!parsed.roadmap) parsed.roadmap = DEFAULT_DATA.roadmap;
+  if (!parsed.winStories) parsed.winStories = DEFAULT_DATA.winStories;
+  if (!parsed.marketing) parsed.marketing = DEFAULT_DATA.marketing;
+  if (!parsed.feedback) parsed.feedback = DEFAULT_DATA.feedback;
+  if (!parsed.gtmAuditChecks) parsed.gtmAuditChecks = DEFAULT_DATA.gtmAuditChecks;
   return parsed;
 }
 
@@ -232,8 +238,9 @@ export default function App() {
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
         {activePage === 'market' && <Marketplace data={data} onUpdate={updateData} />}
         {activePage === 'roadmap' && <Roadmap data={data} onUpdate={updateData} />}
+        {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} />}
         {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} />}
-        {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} />}
+        {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} data={data} onUpdate={updateData} />}
       </main>
 
       <div className={`toast ${toastVisible ? 'show' : ''}`}>
@@ -243,6 +250,7 @@ export default function App() {
         {isSupabaseEnabled && session ? 'ซิงก์ขึ้นคลาวด์แล้ว' : 'บันทึกอัตโนมัติแล้ว'}
       </div>
 
+      <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
       <AiAssist activePage={activePage} data={data} />
     </div>
   );
