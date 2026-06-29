@@ -191,6 +191,82 @@ export default function CaseStudies() {
           </div>
         </div>
       )}
+
+      {/* Brave Search API Setup Guide (Paperclip) */}
+      {cs.id === 'paperclip' && (
+        <div className="cs-brave-guide">
+          <div className="cs-brave-guide-title">
+            <span className="cs-brave-icon">🔍</span>
+            วิธีต่อ Brave Search API — ให้ AI ค้นหาข้อมูลจริงจากอินเทอร์เน็ต
+          </div>
+
+          <div className="cs-brave-steps">
+            <div className="cs-brave-step">
+              <div className="cs-brave-step-num" style={{ background: cs.color }}>1</div>
+              <div className="cs-brave-step-body">
+                <div className="cs-brave-step-title">ควบคุมค่าใช้จ่าย — ตั้งลิมิต $5/เดือน</div>
+                <div className="cs-brave-step-desc">
+                  Brave Search API คิดค่าบริการ <strong>$5 ต่อ 1,000 calls</strong> และให้ฟรี <strong>$5 ต่อเดือน</strong> (≈1,000 calls/เดือน)
+                  สำหรับ SaaS ขนาดเล็กเพียงพอมาก — แนะนำให้ตั้ง Usage Limit ไว้ที่ $5/เดือนก่อน เพื่อควบคุมต้นทุนและป้องกัน Agent วิ่งเกินโควต้า
+                </div>
+              </div>
+            </div>
+
+            <div className="cs-brave-step">
+              <div className="cs-brave-step-num" style={{ background: cs.color }}>2</div>
+              <div className="cs-brave-step-body">
+                <div className="cs-brave-step-title">เพิ่ม Skill เข้า AI Agent — ตั้งค่า API Key อย่างปลอดภัย</div>
+                <div className="cs-brave-step-desc">
+                  ใน Paperclip AI ไปที่ <strong>Skills → Add Skill</strong> แล้วเลือก <code>web_search</code>{' '}
+                  กรอก Environment Variable ชื่อ <code>BRAVE_SEARCH_API</code> แล้วคลิก <strong>"Seal"</strong>{' '}
+                  เพื่อเข้ารหัสและซ่อนค่า API Key ไม่ให้ Agent อ่านหรือรั่วไหลออกไป
+                </div>
+                <div className="cs-brave-env-box">
+                  <span className="cs-brave-env-key">BRAVE_SEARCH_API</span>
+                  <span className="cs-brave-env-eq">=</span>
+                  <span className="cs-brave-env-val">BSAxxxxxxxxxxxxxxxx</span>
+                  <span className="cs-brave-env-seal">🔒 Seal</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="cs-brave-step">
+              <div className="cs-brave-step-num" style={{ background: cs.color }}>3</div>
+              <div className="cs-brave-step-body">
+                <div className="cs-brave-step-title">มอบหมายงานให้ CTO Agent — สร้าง Issue ใน Kanban</div>
+                <div className="cs-brave-step-desc">
+                  หลังตั้งค่า API เสร็จ ให้สร้าง <strong>New Issue</strong> ใน Kanban Board แล้วมอบหมายให้ <strong>CTO Agent</strong>{' '}
+                  เพราะ CTO จะมีสิทธิ์เข้าถึง Tool ทั้งหมดรวมถึง Brave Search API ตัวอย่าง Task Description:
+                </div>
+                <div className="cs-brave-task-box">
+                  <div className="cs-brave-task-label">ตัวอย่าง Task สำหรับ CTO Agent</div>
+                  <div className="cs-brave-task-text">
+                    "คุณมีสิทธิ์เข้าถึง Brave Search API แล้ว จงใช้เครื่องมือนี้เพื่อค้นคว้าเทรนด์ธุรกิจ SaaS ในประเทศไทย รวบรวมข้อมูลเชิงลึก และส่งมอบผลลัพธ์ผ่านอีเมล"
+                  </div>
+                  <button
+                    className="cs-copy-btn"
+                    style={{ marginTop: 8 }}
+                    onClick={() => copyPrompt(
+                      'คุณมีสิทธิ์เข้าถึง Brave Search API แล้ว จงใช้เครื่องมือนี้เพื่อค้นคว้าเทรนด์ธุรกิจ SaaS ในประเทศไทย รวบรวมข้อมูลเชิงลึก และส่งมอบผลลัพธ์ผ่านอีเมล',
+                      'brave-task'
+                    )}
+                  >
+                    {copied === 'brave-task' ? '✓ คัดลอกแล้ว' : 'คัดลอก Task'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="cs-brave-summary">
+            <div className="cs-brave-summary-row">
+              <span className="cs-brave-summary-item"><strong>ราคา:</strong> $5/1,000 calls · ฟรี $5/เดือน</span>
+              <span className="cs-brave-summary-item"><strong>Security:</strong> ใช้ "Seal" เข้ารหัส API Key</span>
+              <span className="cs-brave-summary-item"><strong>ผู้รับงาน:</strong> CTO Agent via Kanban</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

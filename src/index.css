@@ -3464,3 +3464,60 @@ input:focus, textarea:focus, select:focus {
   .db-insight-grid { grid-template-columns: 1fr; }
   .cs-tabs { flex-direction: column; }
 }
+
+/* ===== Brave Search API Guide (CaseStudies) ===== */
+.cs-brave-guide {
+  margin-top: 28px; background: var(--cream3); border: 1px solid var(--sand);
+  border-radius: var(--r); padding: 22px 24px;
+}
+.cs-brave-guide-title {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 20px;
+}
+.cs-brave-icon { font-size: 20px; }
+.cs-brave-steps { display: flex; flex-direction: column; gap: 18px; }
+.cs-brave-step { display: flex; gap: 14px; align-items: flex-start; }
+.cs-brave-step-num {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: #fff; margin-top: 1px;
+}
+.cs-brave-step-body { flex: 1; }
+.cs-brave-step-title { font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.cs-brave-step-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.65; }
+.cs-brave-step-desc code {
+  background: rgba(0,0,0,.06); border-radius: 4px; padding: 1px 5px;
+  font-size: 11.5px; font-family: 'Courier New', monospace; color: var(--ink);
+}
+.cs-brave-env-box {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: #1a1a2e; border-radius: 6px; padding: 10px 14px; margin-top: 10px;
+  font-family: 'Courier New', monospace; font-size: 12px;
+}
+.cs-brave-env-key { color: #f59e0b; font-weight: 700; }
+.cs-brave-env-eq { color: #9ca3af; }
+.cs-brave-env-val { color: #86efac; }
+.cs-brave-env-seal {
+  margin-left: auto; background: rgba(245,158,11,.15); color: #f59e0b;
+  padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;
+  font-family: inherit; letter-spacing: .03em;
+}
+.cs-brave-task-box {
+  background: var(--cream); border: 1px solid var(--sand);
+  border-radius: 8px; padding: 14px 16px; margin-top: 10px;
+}
+.cs-brave-task-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.cs-brave-task-text {
+  font-size: 13px; color: var(--ink); line-height: 1.65; font-style: italic;
+}
+.cs-brave-summary {
+  margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--sand);
+}
+.cs-brave-summary-row {
+  display: flex; flex-wrap: wrap; gap: 12px 24px;
+}
+.cs-brave-summary-item { font-size: 12px; color: var(--ink3); }
+.cs-brave-summary-item strong { color: var(--ink); }
