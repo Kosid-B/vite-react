@@ -175,7 +175,7 @@ export default function AIResearch({ activeStage, onAddToJourney, data, onNaviga
       <div className="ai-case-banner">
         <div className="ai-case-banner-ico">📚</div>
         <div>
-          <div className="ai-case-banner-title">บทเรียนจาก Tencent &amp; Paperclip AI</div>
+          <div className="ai-case-banner-title">บทเรียนจาก Tencent &amp; Mission-Driven AI</div>
           <div className="ai-case-banner-sub">กลยุทธ์ M&A "นั่งรอผู้ชนะแล้วใช้เงินซื้อ" + วิธีเขียน Mission Prompt ให้ AI สร้าง SaaS แทนคุณ</div>
         </div>
         {onNavigate && (

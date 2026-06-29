@@ -37,7 +37,7 @@ const CASES = [
   {
     id: 'paperclip',
     tag: 'AI Agent Strategy',
-    company: 'Paperclip AI',
+    company: 'Mission-Driven AI',
     title: 'เขียน Mission Prompt — สั่ง AI CEO สร้างบริษัท SaaS อัตโนมัติ',
     industry: 'AI · SaaS · Automation',
     origin: '🌐 Global',
@@ -218,7 +218,7 @@ export default function CaseStudies() {
               <div className="cs-brave-step-body">
                 <div className="cs-brave-step-title">เพิ่ม Skill เข้า AI Agent — ตั้งค่า API Key อย่างปลอดภัย</div>
                 <div className="cs-brave-step-desc">
-                  ใน Paperclip AI ไปที่ <strong>Skills → Add Skill</strong> แล้วเลือก <code>web_search</code>{' '}
+                  ใน Mission-Driven AI ไปที่ <strong>Skills → Add Skill</strong> แล้วเลือก <code>web_search</code>{' '}
                   กรอก Environment Variable ชื่อ <code>BRAVE_SEARCH_API</code> แล้วคลิก <strong>"Seal"</strong>{' '}
                   เพื่อเข้ารหัสและซ่อนค่า API Key ไม่ให้ Agent อ่านหรือรั่วไหลออกไป
                 </div>
