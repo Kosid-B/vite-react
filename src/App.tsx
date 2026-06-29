@@ -27,6 +27,7 @@ import Admin from './pages/Admin';
 import Marketing from './pages/Marketing';
 import ISO9001 from './pages/ISO9001';
 import CaseStudies from './pages/CaseStudies';
+import Analytics from './pages/Analytics';
 import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
 
@@ -253,6 +254,7 @@ export default function App() {
         {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} data={data} onUpdate={updateData} />}
         {activePage === 'iso9001' && <ISO9001 data={data} onUpdate={updateData} />}
         {activePage === 'cases' && <CaseStudies />}
+        {activePage === 'analytics' && <Analytics data={data} />}
 
         <footer className="app-footer">
           <span className="app-footer__name">B. Training Consultant (M.E.A) Co., Ltd.</span>
