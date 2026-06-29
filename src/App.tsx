@@ -25,6 +25,7 @@ import Team from './pages/Team';
 import Admin from './pages/Admin';
 import Marketing from './pages/Marketing';
 import ISO9001 from './pages/ISO9001';
+import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
 
 const STORAGE_KEY = 'cjux2';
@@ -76,6 +77,7 @@ export default function App() {
   const [activeMonth, setActiveMonth] = useState(0);
   const [toastVisible, setToastVisible] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showBadge, setShowBadge] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // ===== Supabase session + workspaces =====
@@ -252,6 +254,21 @@ export default function App() {
         </svg>
         {isSupabaseEnabled && session ? 'ซิงก์ขึ้นคลาวด์แล้ว' : 'บันทึกอัตโนมัติแล้ว'}
       </div>
+
+      <button
+        className="badge-fab"
+        onClick={() => setShowBadge(true)}
+        title="สร้าง Badge of Excellence"
+      >
+        🏆
+      </button>
+
+      {showBadge && (
+        <BadgeGenerator
+          defaultName={data.personas[0]?.name ?? ''}
+          onClose={() => setShowBadge(false)}
+        />
+      )}
 
       <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
       <AiAssist activePage={activePage} data={data} />
