@@ -706,6 +706,7 @@ input:focus, textarea:focus, select:focus {
   .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 200; }
   .sidebar.open { transform: translateX(0); }
   .main { margin-left: 0; padding: 64px 16px 20px; }
+  .app-footer { margin: 32px -16px -20px; padding: 14px 16px; }
   .journey-grid { grid-template-columns: 1fr; }
   .persona-grid { grid-template-columns: 1fr; }
   .cp-grid { grid-template-columns: 1fr 1fr; }
@@ -3362,3 +3363,23 @@ input:focus, textarea:focus, select:focus {
   .badge-modal { max-height: 100vh; border-radius: 12px 12px 0 0; align-self: flex-end; }
   .badge-overlay { align-items: flex-end; padding: 0; }
 }
+
+/* ===== App Footer ===== */
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  margin: 48px -40px -36px;
+  padding: 14px 40px;
+  font-size: 12px;
+  color: var(--ink4);
+  border-top: 1px solid var(--sand);
+  background: var(--cream2);
+  line-height: 1.6;
+}
+.app-footer__name { color: var(--ink3); font-weight: 500; }
+.app-footer__sep { color: var(--sand); }
+.app-footer__link { color: var(--rust); text-decoration: none; }
+.app-footer__link:hover { text-decoration: underline; }

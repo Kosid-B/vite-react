@@ -251,6 +251,18 @@ export default function App() {
         {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data} />}
         {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} data={data} onUpdate={updateData} />}
         {activePage === 'iso9001' && <ISO9001 data={data} onUpdate={updateData} />}
+
+        <footer className="app-footer">
+          <span className="app-footer__name">B. Training Consultant (M.E.A) Co., Ltd.</span>
+          <span className="app-footer__sep">·</span>
+          <span>72/76 หมู่ที่ 1 ตำบลเนินพระ อำเภอเมืองระยอง จังหวัดระยอง 21000</span>
+          <span className="app-footer__sep">·</span>
+          <span>Tel. <a href="tel:0817817773" className="app-footer__link">0817817773</a></span>
+          <span className="app-footer__sep">·</span>
+          <a href="https://www.b-tctraining.com/" target="_blank" rel="noopener noreferrer" className="app-footer__link">
+            www.b-tctraining.com
+          </a>
+        </footer>
       </main>
 
       <div className={`toast ${toastVisible ? 'show' : ''}`}>
