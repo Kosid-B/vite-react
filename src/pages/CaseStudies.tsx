@@ -428,6 +428,88 @@ export default function CaseStudies() {
             </div>
           </div>
         </div>
+
+        {/* Gap Analysis Mission Prompt */}
+        <div className="cs-mission-block cs-mission-block--purple">
+          <div className="cs-mission-header">
+            <div className="cs-mission-badge cs-mission-badge--purple">🔍 Agent ที่ 2 — Internal Auditor</div>
+            <div className="cs-mission-title">ISO Compliance Gap Analysis Agent</div>
+            <div className="cs-mission-sub">ตรวจหาช่องว่าง (Gap) ระหว่างการปฏิบัติงานจริงกับข้อกำหนด ISO 9001:2015 โดยอัตโนมัติ</div>
+          </div>
+
+          <div className="cs-mission-prompt-wrap">
+            <div className="cs-mission-prompt-label">Mission Prompt (คัดลอกแล้วใส่ใน Agent ที่ 2)</div>
+            <div className="cs-mission-prompt-text">
+              <div className="cs-mp-section">
+                <span className="cs-mp-key cs-mp-key--purple">Role:</span> คุณคือ Internal Auditor อัจฉริยะที่มีหน้าที่ตรวจสอบ "ช่องว่าง" (Gap) ระหว่างการปฏิบัติงานจริงภายในองค์กร กับข้อกำหนดของมาตรฐาน ISO 9001:2015 โดยเฉพาะ
+              </div>
+              <div className="cs-mp-section">
+                <span className="cs-mp-key cs-mp-key--purple">Objective:</span> ตรวจสอบเอกสารสารสนเทศ (Documented Information) และบันทึกการปฏิบัติงานภายในระบบ ให้สอดคล้องกับข้อกำหนดมาตรฐาน เพื่อระบุสิ่งที่ยังขาด (Gap) หรือสิ่งที่ต้องปรับปรุง
+              </div>
+              <div className="cs-mp-section">
+                <span className="cs-mp-key cs-mp-key--purple">Steps:</span>
+                <ol className="cs-mp-steps">
+                  <li><strong>Data Retrieval:</strong> เข้าถึงเอกสารที่เกี่ยวข้องกับกระบวนการ (Processes) และผลลัพธ์จากการดำเนินการ (Outputs) ภายในระบบ</li>
+                  <li><strong>Gap Assessment:</strong> วิเคราะห์บันทึกการปฏิบัติงานเทียบกับข้อกำหนด ISO 9001:2015 (เน้น 4.4, 7.5 และ 8.1) เพื่อหาความไม่สอดคล้อง (Nonconformity)</li>
+                  <li><strong>Risk Identification:</strong> ประเมินว่าความไม่สอดคล้องส่งผลต่อความสามารถในการบรรลุผลลัพธ์หรือไม่ (อ้างอิงข้อกำหนด 6.1)</li>
+                  <li><strong>Reporting:</strong> สรุปรายการ Gap พร้อมเสนอแนวทางการปรับปรุงอย่างต่อเนื่องตามข้อกำหนด 10.3</li>
+                </ol>
+              </div>
+              <div className="cs-mp-section">
+                <span className="cs-mp-key cs-mp-key--purple">Constraints:</span> Evidence-based จากเอกสารองค์กรเท่านั้น · เป็นกลางและเที่ยงธรรม (Objectivity &amp; Impartiality) · ระบุข้อกำหนด ISO ที่เกี่ยวข้องให้ชัดเจน
+              </div>
+              <div className="cs-mp-section">
+                <span className="cs-mp-key cs-mp-key--purple">Output:</span> กระบวนการที่ตรวจสอบ · สิ่งที่พบ (Finding) · ช่องว่างที่พบ (Gap) · ข้อกำหนด ISO ที่เกี่ยวข้อง · ข้อเสนอแนะปรับปรุงตาม 10.2
+              </div>
+            </div>
+            <button
+              className="cs-copy-btn cs-copy-btn--full"
+              onClick={() => copyPrompt(
+                `Role: คุณคือ Internal Auditor อัจฉริยะที่มีหน้าที่ตรวจสอบ "ช่องว่าง" (Gap) ระหว่างการปฏิบัติงานจริงภายในองค์กร กับข้อกำหนดของมาตรฐาน ISO 9001:2015 โดยเฉพาะ\n\nObjective: ตรวจสอบเอกสารสารสนเทศ (Documented Information) และบันทึกการปฏิบัติงานภายในระบบ ให้สอดคล้องกับข้อกำหนดมาตรฐาน เพื่อระบุสิ่งที่ยังขาด (Gap) หรือสิ่งที่ต้องปรับปรุง\n\nSteps:\n1. Data Retrieval: เข้าถึงเอกสารที่เกี่ยวข้องกับกระบวนการ (Processes) และผลลัพธ์จากการดำเนินการ (Outputs) ภายในระบบ\n2. Gap Assessment: วิเคราะห์บันทึกการปฏิบัติงานเทียบกับข้อกำหนด ISO 9001:2015 (เน้น 4.4, 7.5 และ 8.1) เพื่อหาความไม่สอดคล้อง (Nonconformity)\n3. Risk Identification: ประเมินว่าความไม่สอดคล้องส่งผลต่อความสามารถในการบรรลุผลลัพธ์หรือไม่ (อ้างอิงข้อกำหนด 6.1)\n4. Reporting: สรุปรายการ Gap พร้อมเสนอแนวทางการปรับปรุงอย่างต่อเนื่องตามข้อกำหนด 10.3\n\nConstraints: Evidence-based จากเอกสารองค์กรเท่านั้น · เป็นกลางและเที่ยงธรรม · ระบุข้อกำหนด ISO ที่เกี่ยวข้องให้ชัดเจน\n\nOutput: กระบวนการที่ตรวจสอบ · สิ่งที่พบ (Finding) · ช่องว่างที่พบ (Gap) · ข้อกำหนด ISO ที่เกี่ยวข้อง · ข้อเสนอแนะปรับปรุงตาม 10.2`,
+                'gap-prompt'
+              )}
+            >
+              {copied === 'gap-prompt' ? '✓ คัดลอก Mission Prompt แล้ว' : '📋 คัดลอก Mission Prompt ทั้งหมด'}
+            </button>
+          </div>
+
+          <div className="cs-mission-tips">
+            <div className="cs-mission-tips-title">Integration Strategy — รัน 2 Agent คู่กัน</div>
+            <div className="cs-mission-tips-grid">
+              <div className="cs-mission-tip">
+                <div className="cs-mission-tip-ico">⚡</div>
+                <div>
+                  <div className="cs-mission-tip-title">Workflow Integration</div>
+                  <div className="cs-mission-tip-body">ตั้งให้ Agent ตรวจสอบอัตโนมัติทุกครั้งที่มีการอัปเดตเอกสาร Documented Information ในระบบ</div>
+                </div>
+              </div>
+              <div className="cs-mission-tip">
+                <div className="cs-mission-tip-ico">📋</div>
+                <div>
+                  <div className="cs-mission-tip-title">Proactive Action</div>
+                  <div className="cs-mission-tip-body">เมื่อ Agent รายงาน Gap ให้ระบบสร้าง Kanban Task ใหม่โดยอัตโนมัติตามข้อกำหนด 10.2.1e</div>
+                </div>
+              </div>
+              <div className="cs-mission-tip">
+                <div className="cs-mission-tip-ico">✅</div>
+                <div>
+                  <div className="cs-mission-tip-title">Performance Tracking</div>
+                  <div className="cs-mission-tip-body">เมื่อแก้ Gap แล้ว Agent ตรวจประเมินซ้ำ (Verify) และจัดเก็บเป็นหลักฐาน Correction สำหรับ Internal Audit ประจำปี</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="cs-mission-self-govern">
+              <div className="cs-mission-self-govern-ico">🏆</div>
+              <div>
+                <div className="cs-mission-self-govern-title">Self-Governing Quality System</div>
+                <div className="cs-mission-self-govern-body">
+                  Agent 1 (หาเทรนด์มาตรฐานใหม่จากภายนอก) + Agent 2 (เช็คช่องว่างภายใน) = ระบบบริหารคุณภาพที่อัปเดตและตรวจสอบตัวเองได้ตลอด 24 ชั่วโมง
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         </>
       )}
     </div>
