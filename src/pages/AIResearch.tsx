@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
-import type { AppData } from '../types';
+import type { AppData, PageId } from '../types';
 
 interface Props {
   activeStage: number;
   onAddToJourney: (data: AppData) => void;
   data: AppData;
+  onNavigate?: (page: PageId) => void;
 }
 
 interface Insights {
@@ -42,7 +43,7 @@ const LOADING_TEXTS = [
   'เกือบเสร็จแล้ว — กำลังจัดเรียง insight…',
 ];
 
-export default function AIResearch({ activeStage, onAddToJourney, data }: Props) {
+export default function AIResearch({ activeStage, onAddToJourney, data, onNavigate }: Props) {
   const [topic, setTopic] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingText, setLoadingText] = useState(LOADING_TEXTS[0]);
@@ -168,6 +169,20 @@ export default function AIResearch({ activeStage, onAddToJourney, data }: Props)
             <button key={p} onClick={() => { setTopic(p); runSearch(p); }} className="ai-qp-btn">{p}</button>
           ))}
         </div>
+      </div>
+
+      {/* Case Study Banner */}
+      <div className="ai-case-banner">
+        <div className="ai-case-banner-ico">📚</div>
+        <div>
+          <div className="ai-case-banner-title">บทเรียนจาก Tencent &amp; Paperclip AI</div>
+          <div className="ai-case-banner-sub">กลยุทธ์ M&A "นั่งรอผู้ชนะแล้วใช้เงินซื้อ" + วิธีเขียน Mission Prompt ให้ AI สร้าง SaaS แทนคุณ</div>
+        </div>
+        {onNavigate && (
+          <button className="ai-case-banner-btn" onClick={() => onNavigate('cases')}>
+            อ่าน Case Studies →
+          </button>
+        )}
       </div>
 
       {loading && (

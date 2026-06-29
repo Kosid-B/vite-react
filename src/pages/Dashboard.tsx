@@ -502,6 +502,29 @@ export default function Dashboard({ data, onNavigate }: Props) {
           <button className="db-link" onClick={() => onNavigate('content')}>ดู Content Plan →</button>
         </div>
       </div>
+
+      {/* Featured Insight */}
+      <div className="db-insight" style={{ marginTop: 14 }}>
+        <div className="db-insight-eyebrow">✦ บทเรียนธุรกิจวันนี้</div>
+        <div className="db-insight-grid">
+          <div className="db-insight-card db-insight-tencent">
+            <div className="db-insight-tag">Case Study · Tencent</div>
+            <div className="db-insight-title">ไม่ต้องสร้างจากศูนย์ — ใช้เงินซื้อผู้ชนะ</div>
+            <div className="db-insight-body">
+              Tencent ครองวงการเกมโลกโดยไม่ได้เขียนเกมเองทั้งหมด — แต่ซื้อหุ้น Riot, Epic, Supercell แล้วเชื่อมระบบเติมเงินกับฐานผู้ใช้ QQ ที่มีอยู่แล้ว บทเรียน: หา "เพชรในตม" แล้วงัดมูลค่าด้วยทรัพยากรที่มีอยู่
+            </div>
+            <button className="db-link" onClick={() => onNavigate('cases')}>อ่าน Case Study →</button>
+          </div>
+          <div className="db-insight-card db-insight-ai">
+            <div className="db-insight-tag">AI Strategy · Paperclip</div>
+            <div className="db-insight-title">สร้าง SaaS ด้วย Mission Prompt — AI ทำงาน 24/7</div>
+            <div className="db-insight-body">
+              เขียนเป้าหมายให้ชัด AI จะเป็น CEO สั่งการทีม AI ด้วยกันเอง ตัวอย่าง: "สรุปข่าว SET ส่งอีเมลหลังตลาดปิดทุกวัน" — ไม่ต้องเขียนโค้ดทั้งหมดเอง
+            </div>
+            <button className="db-link" onClick={() => onNavigate('cases')}>ดูตัวอย่าง Mission Prompts →</button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

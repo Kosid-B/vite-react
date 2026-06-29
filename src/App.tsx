@@ -26,6 +26,7 @@ import Team from './pages/Team';
 import Admin from './pages/Admin';
 import Marketing from './pages/Marketing';
 import ISO9001 from './pages/ISO9001';
+import CaseStudies from './pages/CaseStudies';
 import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
 
@@ -237,7 +238,7 @@ export default function App() {
         )}
         {activePage === 'actions' && <PriorityActions data={data} onUpdate={updateData} />}
         {activePage === 'aisearch' && (
-          <AIResearch data={data} activeStage={activeStage} onAddToJourney={updateData} />
+          <AIResearch data={data} activeStage={activeStage} onAddToJourney={updateData} onNavigate={setActivePage} />
         )}
         {activePage === 'funnel' && <ConversionFunnel data={data} onUpdate={updateData} />}
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
@@ -251,6 +252,7 @@ export default function App() {
         {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data} />}
         {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} data={data} onUpdate={updateData} />}
         {activePage === 'iso9001' && <ISO9001 data={data} onUpdate={updateData} />}
+        {activePage === 'cases' && <CaseStudies />}
 
         <footer className="app-footer">
           <span className="app-footer__name">B. Training Consultant (M.E.A) Co., Ltd.</span>
