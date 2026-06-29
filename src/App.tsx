@@ -5,6 +5,7 @@ import { DEFAULT_DATA } from './data';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
 import Auth from './components/Auth';
+import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
 import AiAssist from './components/AiAssist';
 import Dashboard from './pages/Dashboard';
@@ -78,6 +79,7 @@ export default function App() {
   const [toastVisible, setToastVisible] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // ===== Supabase session + workspaces =====
@@ -187,7 +189,10 @@ export default function App() {
   }
 
   // หน้า Auth: เปิดใช้ Supabase แต่ยังไม่ได้ล็อกอิน
-  if (isSupabaseEnabled && authReady && !session) return <Auth />;
+  if (isSupabaseEnabled && authReady && !session) {
+    if (showAuth) return <Auth />;
+    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+  }
   if (isSupabaseEnabled && !authReady) {
     return <div className="auth-wrap"><div className="auth-loading">กำลังโหลด…</div></div>;
   }
