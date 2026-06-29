@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { supabase, isSupabaseEnabled } from '../lib/supabase';
 
 interface Props {
   defaultName?: string;
@@ -414,9 +413,8 @@ export default function BadgeGenerator({ defaultName = '', complianceScore = 98,
   const [subtitle, setSubtitle] = useState('');
   const [score,    setScore]    = useState(complianceScore);
   const [fmt,      setFmt]      = useState<Format>('square');
-  const [copied,     setCopied]     = useState(false);
-  const [shareUrl,   setShareUrl]   = useState('');
-  const [uploading,  setUploading]  = useState(false);
+  const [copied,   setCopied]   = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
 
   const redraw = useCallback(() => {
     if (canvasRef.current) renderBadge(canvasRef.current, company, subtitle, score, fmt);
@@ -433,51 +431,30 @@ export default function BadgeGenerator({ defaultName = '', complianceScore = 98,
     a.click();
   }
 
+  // Build Edge Function URL → image/png (og:image ready)
+  function buildEdgeUrl(): string {
+    const base = import.meta.env.VITE_SUPABASE_URL;
+    if (!base) return 'https://ceoaithailand.org/';
+    const params = new URLSearchParams({
+      company:  company.trim() || 'บริษัทของคุณ',
+      subtitle: subtitle.trim(),
+      score:    String(score),
+      fmt,
+    });
+    return `${base}/functions/v1/generate-badge?${params}`;
+  }
+
   async function handleCopyLink() {
-    // If we already have a URL, just copy it
-    if (shareUrl) {
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      });
-      return;
-    }
-
-    const c = canvasRef.current;
-    if (!c) return;
-
-    // Try to upload to Supabase Storage for a real shareable image URL
-    if (isSupabaseEnabled && supabase) {
-      setUploading(true);
-      try {
-        const blob = await new Promise<Blob>((res) => c.toBlob(b => res(b!), 'image/png'));
-        const fileName = `badge-${Date.now()}-${(company.trim() || 'company').replace(/\s+/g, '-').slice(0, 30)}.png`;
-        const { data, error } = await supabase.storage
-          .from('badges')
-          .upload(fileName, blob, { contentType: 'image/png', upsert: false });
-        if (!error && data) {
-          const { data: pub } = supabase.storage.from('badges').getPublicUrl(data.path);
-          const url = pub.publicUrl;
-          setShareUrl(url);
-          navigator.clipboard.writeText(url);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-          setUploading(false);
-          return;
-        }
-      } catch {}
-      setUploading(false);
-    }
-
-    // Fallback: copy app URL
-    navigator.clipboard.writeText('https://ceoaithailand.org/').then(() => {
+    const url = shareUrl || buildEdgeUrl();
+    if (!shareUrl) setShareUrl(url);
+    navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   }
 
   function handleLinkedIn() {
-    const targetUrl = encodeURIComponent(shareUrl || 'https://ceoaithailand.org/');
+    const targetUrl = encodeURIComponent(shareUrl || buildEdgeUrl());
     const text = encodeURIComponent(
       `🏆 ${company.trim() || 'เราได้รับ'} Badge of Excellence จาก CEO AI Thailand\n` +
       `Compliance Readiness: ${score}% · Powered by AI\n\n` +
@@ -540,8 +517,8 @@ export default function BadgeGenerator({ defaultName = '', complianceScore = 98,
               </svg>
               แชร์ LinkedIn
             </button>
-            <button className="badge-btn-copy" onClick={handleCopyLink} disabled={uploading}>
-              {uploading ? '⏳ อัปโหลด...' : copied ? '✓ คัดลอกแล้ว' : '🔗 คัดลอกลิงก์'}
+            <button className="badge-btn-copy" onClick={handleCopyLink}>
+              {copied ? '✓ คัดลอกแล้ว' : '🔗 คัดลอกลิงก์'}
             </button>
           </div>
         </div>
