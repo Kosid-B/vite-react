@@ -2971,7 +2971,7 @@ serve(async (_req) => {
             hook: 'จัดการคลังสินค้าเหล็กและเอกสาร TIS ด้วย AI ลดเวลา 80%',
             keyword: 'ระบบจัดการมาตรฐาน TIS เหล็ก AI',
             urgency: 'สูงมาก',
-            color: '#6b7280',
+            color: '#94a3b8',
           },
           {
             id: 'logistics',
@@ -2991,7 +2991,7 @@ serve(async (_req) => {
             hook: 'ทำ HACCP/GMP เพื่อส่งออกอาหารไทยด้วย AI ลดเวลา 60%',
             keyword: 'ระบบ HACCP GMP อาหาร AI ส่งออก',
             urgency: 'สูง',
-            color: '#16a34a',
+            color: '#10b981',
           },
           {
             id: 'service',
@@ -3040,7 +3040,7 @@ serve(async (_req) => {
             ltv: '฿89,400',
             strategy: 'VRIO Business Audit Tool (Lead Magnet)',
             channels: ['audit', 'facebook'],
-            color: '#4b5563',
+            color: '#94a3b8',
             persona: 'วนิดา',
           },
         ] as const;
@@ -3067,7 +3067,7 @@ serve(async (_req) => {
             body: 'Partner กับ CEO AI Thailand — ใช้แพลตฟอร์ม AI สร้าง Business Plan, Financial Forecast, และ Grant Proposal ให้ลูกค้าได้เร็วกว่าเดิม 10 เท่า',
             cta: 'ดูโปรแกรม Partner สำหรับที่ปรึกษา →',
             targeting: 'Consultant, CFO, นักบัญชี, LinkedIn, อายุ 30–50',
-            color: '#0369a1',
+            color: '#38bdf8',
           },
           {
             persona: 'วนิดา',
@@ -3385,8 +3385,8 @@ serve(async (_req) => {
                 </div>
 
                 {/* Tactical Outreach */}
-                <div style={{ background: '#fff', border: '1.5px solid var(--ink4)', borderRadius: 12, padding: '18px 20px' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink1)', marginBottom: 12 }}>3 Tactical Outreach สำหรับ Tier 1</div>
+                <div style={{ background: 'var(--cream2)', border: '1.5px solid var(--ink4)', borderRadius: 12, padding: '18px 20px' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 12 }}>3 Tactical Outreach สำหรับ Tier 1</div>
                   <div className="gtm-tactic-list">
                     {[
                       {
@@ -3441,8 +3441,8 @@ serve(async (_req) => {
                 </div>
 
                 {/* TIS Article Content Idea */}
-                <div style={{ background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: 12, padding: '18px 20px' }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#166534', marginBottom: 10 }}>📝 TIS How-to Article Structure — เริ่มต้นจาก Persona สมชาย</div>
+                <div style={{ background: 'var(--green-bg)', border: '1.5px solid rgba(16,185,129,.2)', borderRadius: 12, padding: '18px 20px' }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--green)', marginBottom: 10 }}>📝 TIS How-to Article Structure — เริ่มต้นจาก Persona สมชาย</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {[
                       { sec: 'Title', content: '"SME เตรียมพร้อมขอรับรอง TIS 50-2565 ด้วย AI: Checklist ฉบับสมบูรณ์ปี 2569"' },
@@ -3453,8 +3453,8 @@ serve(async (_req) => {
                       { sec: 'CTA', content: 'ทำ CEO AI Business Audit ฟรี → เพื่อดู Gap ของธุรกิจคุณทันที' },
                     ].map((s, i) => (
                       <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: 6, flexShrink: 0, marginTop: 2 }}>{s.sec}</span>
-                        <span style={{ fontSize: 12.5, color: '#166534' }}>{s.content}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, background: 'rgba(16,185,129,.15)', color: 'var(--green)', padding: '2px 8px', borderRadius: 6, flexShrink: 0, marginTop: 2 }}>{s.sec}</span>
+                        <span style={{ fontSize: 12.5, color: 'var(--ink2)' }}>{s.content}</span>
                       </div>
                     ))}
                   </div>

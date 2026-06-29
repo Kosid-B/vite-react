@@ -125,7 +125,7 @@ export default function ISO9001({ data, onUpdate }: Props) {
           <span className="meta-chip">{iso.tier === 'certified' ? '✓ ได้รับรองแล้ว' : 'กำลังเตรียมการรับรอง'}</span>
           {iso.certBody && <span className="meta-chip">{iso.certBody}</span>}
           {iso.certExpiry && <span className="meta-chip">หมดอายุ {iso.certExpiry}</span>}
-          <span className="meta-chip iso-readiness-chip" style={{ background: readinessScore>=70?'#dcfce7':readinessScore>=40?'#fef3c7':'#fee2e2', color: readinessScore>=70?'#166534':readinessScore>=40?'#92400e':'#991b1b' }}>
+          <span className="meta-chip iso-readiness-chip" style={{ background: readinessScore>=70?'rgba(16,185,129,.15)':readinessScore>=40?'rgba(245,158,11,.15)':'rgba(239,68,68,.15)', color: readinessScore>=70?'#10b981':readinessScore>=40?'#fbbf24':'#f87171' }}>
             Readiness {readinessScore}%
           </span>
         </div>
