@@ -3521,3 +3521,61 @@ input:focus, textarea:focus, select:focus {
 }
 .cs-brave-summary-item { font-size: 12px; color: var(--ink3); }
 .cs-brave-summary-item strong { color: var(--ink); }
+
+/* ===== ISO Mission Prompt Block (CaseStudies) ===== */
+.cs-mission-block {
+  margin-top: 20px; border: 1px solid var(--sand);
+  border-top: 3px solid #10b981; border-radius: var(--r);
+  overflow: hidden;
+}
+.cs-mission-header {
+  background: linear-gradient(135deg, rgba(16,185,129,.06), rgba(6,182,212,.04));
+  padding: 18px 24px 14px; border-bottom: 1px solid var(--sand);
+}
+.cs-mission-badge {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  background: rgba(16,185,129,.12); color: #059669;
+  padding: 3px 10px; border-radius: 20px; margin-bottom: 8px;
+  letter-spacing: .04em;
+}
+.cs-mission-title { font-size: 16px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
+.cs-mission-sub { font-size: 12.5px; color: var(--ink3); }
+.cs-mission-prompt-wrap { padding: 20px 24px; background: var(--cream3); border-bottom: 1px solid var(--sand); }
+.cs-mission-prompt-label {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ink4); margin-bottom: 12px;
+}
+.cs-mission-prompt-text {
+  background: #0f172a; border-radius: 8px; padding: 18px 20px;
+  margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px;
+}
+.cs-mp-section { font-size: 12.5px; line-height: 1.7; color: #cbd5e1; }
+.cs-mp-key {
+  font-weight: 800; color: #10b981; margin-right: 6px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+}
+.cs-mp-steps {
+  margin: 8px 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 6px;
+}
+.cs-mp-steps li { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+.cs-mp-steps li strong { color: #f59e0b; }
+.cs-copy-btn--full {
+  width: 100%; justify-content: center; padding: 10px;
+  font-size: 13px; font-weight: 700;
+}
+.cs-mission-tips { padding: 20px 24px; }
+.cs-mission-tips-title {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--ink4); margin-bottom: 14px;
+}
+.cs-mission-tips-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.cs-mission-tip {
+  display: flex; gap: 10px; background: var(--cream); border: 1px solid var(--sand);
+  border-radius: var(--r); padding: 12px 14px;
+}
+.cs-mission-tip-ico { font-size: 18px; flex-shrink: 0; }
+.cs-mission-tip-title { font-size: 12.5px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.cs-mission-tip-body { font-size: 11.5px; color: var(--ink3); line-height: 1.55; }
+@media (max-width: 700px) {
+  .cs-mission-tips-grid { grid-template-columns: 1fr; }
+}

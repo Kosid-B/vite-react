@@ -356,6 +356,78 @@ export default function CaseStudies() {
             </div>
           </div>
         </div>
+
+        {/* ISO Compliance Mission Prompt */}
+        <div className="cs-mission-block">
+          <div className="cs-mission-header">
+            <div className="cs-mission-badge">🏭 ตัวอย่าง Mission Prompt จริง</div>
+            <div className="cs-mission-title">ISO/TIS Standard Intelligence Update</div>
+            <div className="cs-mission-sub">สำหรับ Compliance Agent — ดึงข้อมูลมาตรฐานอุตสาหกรรมใหม่โดยอัตโนมัติ</div>
+          </div>
+
+          <div className="cs-mission-prompt-wrap">
+            <div className="cs-mission-prompt-label">Mission Prompt (คัดลอกแล้วใส่ใน Paperclip)</div>
+            <div className="cs-mission-prompt-text">
+              <div className="cs-mp-section">
+                <span className="cs-mp-key">Role:</span> คุณคือ Senior ISO Consultant และผู้เชี่ยวชาญด้านมาตรฐานอุตสาหกรรมไทย (TIS) หน้าที่ของคุณคือเฝ้าระวังและอัปเดตข้อมูลมาตรฐานเพื่อให้องค์กรมีความสอดคล้องกับกฎระเบียบอยู่เสมอ
+              </div>
+              <div className="cs-mp-section">
+                <span className="cs-mp-key">Objective:</span> ค้นหาการเปลี่ยนแปลงหรือประกาศมาตรฐานใหม่ล่าสุดจากหน่วยงานที่เกี่ยวข้อง (เช่น สมอ. หรือ ISO.org) ที่ส่งผลกระทบต่อธุรกิจเหล็กหรืออุตสาหกรรมการผลิต และนำมาสรุปเพื่อปรับปรุงระบบบริหารคุณภาพ (QMS) ของเรา
+              </div>
+              <div className="cs-mp-section">
+                <span className="cs-mp-key">Steps:</span>
+                <ol className="cs-mp-steps">
+                  <li><strong>Search &amp; Research:</strong> ใช้ Brave Search API ค้นหาประกาศจาก สมอ. หรือการอัปเดต ISO 9001:2015 ในช่วง 30 วันที่ผ่านมา</li>
+                  <li><strong>Filter &amp; Validate:</strong> ตรวจสอบว่าเป็น "ประกาศอย่างเป็นทางการ" และ "มีผลบังคับใช้กับธุรกิจอุตสาหกรรมในไทย"</li>
+                  <li><strong>Drafting:</strong> สรุปสาระสำคัญของมาตรฐานที่เปลี่ยนไป และร่างเป็น "บันทึกการเปลี่ยนแปลง" (Change Record)</li>
+                  <li><strong>Integration:</strong> หากพบการเปลี่ยนแปลงสำคัญ ให้ร่าง Action Plan บูรณาการเข้าสู่ระบบ QMS ตามข้อกำหนด 4.4 และ 6.3</li>
+                </ol>
+              </div>
+              <div className="cs-mp-section">
+                <span className="cs-mp-key">Constraints:</span> อ้างอิงจากแหล่งที่เชื่อถือได้เท่านั้น · เฉพาะอุตสาหกรรมการผลิตในไทย · ภาษาไทยทางการตามศัพท์เทคนิค ISO
+              </div>
+              <div className="cs-mp-section">
+                <span className="cs-mp-key">Output:</span> หัวข้อประกาศ · สาระสำคัญ · ผลกระทบต่อองค์กร · แนวทางแก้ไขตามข้อกำหนด 10.1 และ 10.3
+              </div>
+            </div>
+            <button
+              className="cs-copy-btn cs-copy-btn--full"
+              onClick={() => copyPrompt(
+                `Role: คุณคือ Senior ISO Consultant และผู้เชี่ยวชาญด้านมาตรฐานอุตสาหกรรมไทย (TIS) หน้าที่ของคุณคือเฝ้าระวังและอัปเดตข้อมูลมาตรฐานเพื่อให้องค์กรมีความสอดคล้องกับกฎระเบียบอยู่เสมอ\n\nObjective: ค้นหาการเปลี่ยนแปลงหรือประกาศมาตรฐานใหม่ล่าสุดจากหน่วยงานที่เกี่ยวข้อง (เช่น สมอ. หรือ ISO.org) ที่ส่งผลกระทบต่อธุรกิจเหล็กหรืออุตสาหกรรมการผลิต และนำมาสรุปเพื่อปรับปรุงระบบบริหารคุณภาพ (QMS) ของเรา\n\nSteps:\n1. Search & Research: ใช้ Brave Search API ค้นหาประกาศจาก สมอ. หรือการอัปเดต ISO 9001:2015 ในช่วง 30 วันที่ผ่านมา\n2. Filter & Validate: ตรวจสอบว่าเป็น "ประกาศอย่างเป็นทางการ" และ "มีผลบังคับใช้กับธุรกิจอุตสาหกรรมในไทย"\n3. Drafting: สรุปสาระสำคัญของมาตรฐานที่เปลี่ยนไป และร่างเป็น "บันทึกการเปลี่ยนแปลง" (Change Record)\n4. Integration: หากพบการเปลี่ยนแปลงสำคัญ ให้ร่าง Action Plan บูรณาการเข้าสู่ระบบ QMS ตามข้อกำหนด 4.4 และ 6.3\n\nConstraints: อ้างอิงจากแหล่งที่เชื่อถือได้เท่านั้น · เฉพาะอุตสาหกรรมการผลิตในไทย · ภาษาไทยทางการตามศัพท์เทคนิค ISO\n\nOutput: หัวข้อประกาศ · สาระสำคัญ · ผลกระทบต่อองค์กร · แนวทางแก้ไขตามข้อกำหนด 10.1 และ 10.3`,
+                'iso-prompt'
+              )}
+            >
+              {copied === 'iso-prompt' ? '✓ คัดลอก Mission Prompt แล้ว' : '📋 คัดลอก Mission Prompt ทั้งหมด'}
+            </button>
+          </div>
+
+          <div className="cs-mission-tips">
+            <div className="cs-mission-tips-title">วิธีรัน Mission นี้ให้ได้ผลสูงสุด</div>
+            <div className="cs-mission-tips-grid">
+              <div className="cs-mission-tip">
+                <div className="cs-mission-tip-ico">🔄</div>
+                <div>
+                  <div className="cs-mission-tip-title">Recurring Task</div>
+                  <div className="cs-mission-tip-body">สร้าง Kanban Issue ตั้งเป็น Recurring Task รันทุกวันจันทร์แรกของเดือน — ไม่ต้องจำ ระบบทำให้เอง</div>
+                </div>
+              </div>
+              <div className="cs-mission-tip">
+                <div className="cs-mission-tip-ico">⭐</div>
+                <div>
+                  <div className="cs-mission-tip-title">Feedback Loop</div>
+                  <div className="cs-mission-tip-body">หลังรันเสร็จให้ Rating ผลลัพธ์ใน Admin — Agent จะเรียนรู้ว่าข้อมูลแบบไหนที่คุณต้องการมากที่สุด</div>
+                </div>
+              </div>
+              <div className="cs-mission-tip">
+                <div className="cs-mission-tip-ico">✉️</div>
+                <div>
+                  <div className="cs-mission-tip-title">Automated Email</div>
+                  <div className="cs-mission-tip-body">สั่งให้ Agent ส่งผลสรุปทางอีเมล (ผ่าน Resend API) ทันทีหลังงานเสร็จ — ไม่ต้องเปิด Dashboard เอง</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         </>
       )}
     </div>
