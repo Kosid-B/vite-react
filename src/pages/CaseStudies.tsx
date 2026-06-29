@@ -194,6 +194,7 @@ export default function CaseStudies() {
 
       {/* Brave Search API Setup Guide (Paperclip) */}
       {cs.id === 'paperclip' && (
+        <>
         <div className="cs-brave-guide">
           <div className="cs-brave-guide-title">
             <span className="cs-brave-icon">🔍</span>
@@ -266,6 +267,96 @@ export default function CaseStudies() {
             </div>
           </div>
         </div>
+
+        {/* Resend API Setup Guide */}
+        <div className="cs-brave-guide" style={{ marginTop: 16, borderLeftColor: '#6366f1', borderLeftWidth: 3, borderLeftStyle: 'solid' }}>
+          <div className="cs-brave-guide-title">
+            <span className="cs-brave-icon">✉️</span>
+            วิธีต่อ Resend API — ให้ AI ส่งอีเมลอัตโนมัติ 24 ชั่วโมง
+          </div>
+
+          <div className="cs-brave-steps">
+            <div className="cs-brave-step">
+              <div className="cs-brave-step-num" style={{ background: '#6366f1' }}>1</div>
+              <div className="cs-brave-step-body">
+                <div className="cs-brave-step-title">สมัครและสร้าง API Key จาก Resend</div>
+                <div className="cs-brave-step-desc">
+                  เปิดแท็บใหม่ไปที่ <strong>resend.com</strong> แล้วคลิก "Get Started"
+                  สมัครบัญชีด้วย Google, GitHub หรืออีเมล ยืนยันผ่านลิงก์ในกล่องจดหมาย
+                  จากนั้นคลิก <strong>"Add API Key"</strong> แล้วคัดลอกคีย์ไว้
+                </div>
+              </div>
+            </div>
+
+            <div className="cs-brave-step">
+              <div className="cs-brave-step-num" style={{ background: '#6366f1' }}>2</div>
+              <div className="cs-brave-step-body">
+                <div className="cs-brave-step-title">ตั้งค่า Environment Variable ให้ Agent — Seal เพื่อความปลอดภัย</div>
+                <div className="cs-brave-step-desc">
+                  กลับมาที่ Paperclip → เลือก Agent (เช่น CTO) → แท็บ <strong>Configuration</strong>{' '}
+                  → ส่วน <strong>Environment Variables</strong> พิมพ์ชื่อ <code>RESEND_API</code>{' '}
+                  วางคีย์ลงในช่อง Value แล้วคลิก <strong>"Seal"</strong> เพื่อเข้ารหัสเป็น Secret
+                  จากนั้น Save เพื่อล็อกการตั้งค่า
+                </div>
+                <div className="cs-brave-env-box">
+                  <span className="cs-brave-env-key">RESEND_API</span>
+                  <span className="cs-brave-env-eq">=</span>
+                  <span className="cs-brave-env-val">re_xxxxxxxxxxxxxxxx</span>
+                  <span className="cs-brave-env-seal">🔒 Seal</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="cs-brave-step">
+              <div className="cs-brave-step-num" style={{ background: '#6366f1' }}>3</div>
+              <div className="cs-brave-step-body">
+                <div className="cs-brave-step-title">ขยายสิทธิ์ให้ Agent อื่น (Scaling Permissions)</div>
+                <div className="cs-brave-step-desc">
+                  หาก Agent ตัวอื่นต้องการส่งอีเมลด้วย ให้ตั้งค่า <code>RESEND_API</code>{' '}
+                  แล้วสลับจาก "Plain text" เป็นการเลือก Secret ที่ Seal ไว้แล้วจาก Dropdown
+                  ระบบนี้ออกแบบเหมือนการจำกัดสิทธิ์พนักงานจริง — ระบุได้เลยว่า Agent ไหนควรเข้าถึงเครื่องมือใดบ้าง
+                </div>
+              </div>
+            </div>
+
+            <div className="cs-brave-step">
+              <div className="cs-brave-step-num" style={{ background: '#6366f1' }}>4</div>
+              <div className="cs-brave-step-body">
+                <div className="cs-brave-step-title">ทดสอบระบบด้วย Kanban Issue</div>
+                <div className="cs-brave-step-desc">
+                  คลิก <strong>"Create New Issue"</strong> มุมบนซ้าย ตั้งชื่อว่า "เครื่องมือทดสอบ"
+                  มอบหมายให้ Agent ที่ได้รับสิทธิ์แล้ว พร้อมคำสั่งด้านล่าง
+                  เมื่องานย้ายสู่สถานะ "Done" และอีเมลสรุปถึงกล่องจดหมายของคุณ — ระบบพร้อมขยายสเกลแล้ว
+                </div>
+                <div className="cs-brave-task-box">
+                  <div className="cs-brave-task-label">ตัวอย่าง Task ทดสอบ Resend API</div>
+                  <div className="cs-brave-task-text">
+                    "คุณมีสิทธิ์เข้าถึง Resend API แล้ว ให้ทำการทดสอบโดยการค้นคว้าข้อมูล รวบรวมตัวอย่างสรุป และส่งอีเมลพร้อมผลลัพธ์มาให้ฉัน"
+                  </div>
+                  <button
+                    className="cs-copy-btn"
+                    style={{ marginTop: 8 }}
+                    onClick={() => copyPrompt(
+                      'คุณมีสิทธิ์เข้าถึง Resend API แล้ว ให้ทำการทดสอบโดยการค้นคว้าข้อมูล รวบรวมตัวอย่างสรุป และส่งอีเมลพร้อมผลลัพธ์มาให้ฉัน',
+                      'resend-task'
+                    )}
+                  >
+                    {copied === 'resend-task' ? '✓ คัดลอกแล้ว' : 'คัดลอก Task'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="cs-brave-summary">
+            <div className="cs-brave-summary-row">
+              <span className="cs-brave-summary-item"><strong>ราคา:</strong> ฟรีสำหรับ 3,000 emails/เดือน</span>
+              <span className="cs-brave-summary-item"><strong>Variable:</strong> <code style={{ fontSize: 11 }}>RESEND_API</code> + Seal</span>
+              <span className="cs-brave-summary-item"><strong>ทดสอบ:</strong> สร้าง Kanban Issue → รอรับอีเมล</span>
+            </div>
+          </div>
+        </div>
+        </>
       )}
     </div>
   );
