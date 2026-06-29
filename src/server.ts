@@ -1,9 +1,4 @@
-/**
- * Cloudflare Worker entry point
- * - Routes /api/agent/* → CeoAiAgent (Durable Object via `agents` package)
- * - Everything else → static SPA assets
- */
-import { routeAgentRequest } from 'agents';
+/// <reference types="@cloudflare/workers-types" />
 
 export { CeoAiAgent } from './agent/CeoAiAgent';
 
@@ -14,13 +9,14 @@ interface Env {
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // Route /api/agent/* to the Durable Object via the agents SDK
-    if (url.pathname.startsWith('/api/agent')) {
-      const agentRes = await routeAgentRequest(request, env);
-      if (agentRes) return agentRes;
+    // Route /api/agent/* → CeoAiAgent Durable Object
+    if (url.pathname.startsWith('/api/agent/')) {
+      const id = env.CeoAiAgent.idFromName('default');
+      const stub = env.CeoAiAgent.get(id);
+      return stub.fetch(request);
     }
 
     // Health check
@@ -28,7 +24,7 @@ export default {
       return Response.json({ ok: true, ts: Date.now() });
     }
 
-    // Fall through to Vite-built SPA (static assets)
+    // Serve static SPA assets
     return env.ASSETS.fetch(request);
   },
 } satisfies ExportedHandler<Env>;

@@ -1,8 +1,7 @@
-import { Agent, type Connection, unstable_callable as callable } from 'agents';
+/// <reference types="@cloudflare/workers-types" />
 
 interface Env {
   ANTHROPIC_API_KEY: string;
-  CeoAiAgent: DurableObjectNamespace;
 }
 
 interface ChatMessage {
@@ -13,98 +12,106 @@ interface ChatMessage {
 interface IncomingMsg {
   type: 'chat';
   text: string;
-  page?: string;
   pageLabel?: string;
   context?: string;
-  history?: ChatMessage[];
+}
+
+interface OutgoingMsg {
+  type: 'ready' | 'response' | 'error';
+  summary?: string;
+  suggestions?: string[];
+  error?: string;
+  agentId?: string;
 }
 
 const SYSTEM = `คุณคือ AI ที่ปรึกษาธุรกิจของ CEO AI Thailand — แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย
 ให้คำแนะนำที่กระชับ ตรงประเด็น เป็นรายข้อ ใช้ภาษาไทยเป็นหลัก
 วิเคราะห์ตามกรอบ: VRIO, 24 Steps MIT, Business Model Canvas, ISO 9001
-ตอบในรูปแบบ JSON: { "summary": "สรุป 1-2 ประโยค", "suggestions": ["ข้อ1","ข้อ2","ข้อ3"] }`;
+ตอบในรูปแบบ JSON เท่านั้น: { "summary": "สรุป 1-2 ประโยค", "suggestions": ["ข้อ1","ข้อ2","ข้อ3"] }`;
 
-export class CeoAiAgent extends Agent<Env> {
+export class CeoAiAgent implements DurableObject {
+  private state: DurableObjectState;
+  private env: Env;
   private history: ChatMessage[] = [];
 
-  async onConnect(connection: Connection) {
-    connection.send(JSON.stringify({ type: 'ready', agentId: this.name }));
+  constructor(state: DurableObjectState, env: Env) {
+    this.state = state;
+    this.env = env;
   }
 
-  async onMessage(connection: Connection, message: string) {
+  async fetch(request: Request): Promise<Response> {
+    const upgrade = request.headers.get('Upgrade') ?? '';
+
+    // WebSocket connection
+    if (upgrade.toLowerCase() === 'websocket') {
+      const pair = new WebSocketPair();
+      const [client, server] = [pair[0], pair[1]];
+
+      this.state.acceptWebSocket(server);
+      const id = this.state.id.toString().slice(0, 8);
+      server.send(JSON.stringify({ type: 'ready', agentId: id } satisfies OutgoingMsg));
+
+      return new Response(null, { status: 101, webSocket: client });
+    }
+
+    // REST fallback: POST { text, pageLabel, context }
+    if (request.method === 'POST') {
+      try {
+        const body = await request.json() as { text: string; pageLabel?: string; context?: string };
+        const result = await this.callClaude(body.text, body.pageLabel, body.context);
+        return Response.json(result);
+      } catch (e) {
+        return Response.json({ error: String(e) }, { status: 500 });
+      }
+    }
+
+    return new Response('CEO AI Agent is running', { status: 200 });
+  }
+
+  // WebSocket Hibernation API handlers
+  async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
+    const text = typeof raw === 'string' ? raw : new TextDecoder().decode(raw);
     let msg: IncomingMsg;
     try {
-      msg = JSON.parse(message) as IncomingMsg;
+      msg = JSON.parse(text) as IncomingMsg;
     } catch {
-      connection.send(JSON.stringify({ type: 'error', error: 'Invalid JSON' }));
+      ws.send(JSON.stringify({ type: 'error', error: 'Invalid JSON' } satisfies OutgoingMsg));
       return;
     }
 
     if (msg.type !== 'chat') return;
 
-    // Build prompt with page context
-    const userContent = [
-      msg.pageLabel ? `[หน้า: ${msg.pageLabel}]` : '',
-      msg.context   ? `[บริบท: ${msg.context}]`   : '',
-      msg.text,
-    ].filter(Boolean).join('\n');
-
-    // Merge incoming history + current turn
-    const messages: ChatMessage[] = [
-      ...(msg.history ?? this.history).slice(-10),
-      { role: 'user', content: userContent },
-    ];
-
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1024,
-          system: SYSTEM,
-          messages,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.text();
-        connection.send(JSON.stringify({ type: 'error', error: `Anthropic error: ${res.status} ${err}` }));
-        return;
-      }
-
-      const json = (await res.json()) as { content: { type: string; text: string }[] };
-      const raw = json.content?.[0]?.text ?? '';
-
-      // Parse structured JSON from Claude
-      let parsed: { summary: string; suggestions: string[] };
-      try {
-        const match = raw.match(/\{[\s\S]*\}/);
-        parsed = match ? JSON.parse(match[0]) : { summary: raw, suggestions: [] };
-      } catch {
-        parsed = { summary: raw, suggestions: [] };
-      }
-
-      // Persist to history
-      this.history = [
-        ...messages,
-        { role: 'assistant', content: raw },
-      ].slice(-20);
-
-      connection.send(JSON.stringify({ type: 'response', ...parsed }));
+      const result = await this.callClaude(msg.text, msg.pageLabel, msg.context);
+      ws.send(JSON.stringify({ type: 'response', ...result } satisfies OutgoingMsg));
     } catch (e) {
-      connection.send(JSON.stringify({ type: 'error', error: String(e) }));
+      ws.send(JSON.stringify({ type: 'error', error: String(e) } satisfies OutgoingMsg));
     }
   }
 
-  // REST endpoint — callable from non-WS clients
-  @callable()
-  async ask(text: string, page = '', pageLabel = '', context = ''): Promise<{ summary: string; suggestions: string[] }> {
-    const userContent = [pageLabel && `[หน้า: ${pageLabel}]`, context && `[บริบท: ${context}]`, text].filter(Boolean).join('\n');
+  async webSocketClose(ws: WebSocket): Promise<void> {
+    ws.close();
+  }
+
+  async webSocketError(ws: WebSocket): Promise<void> {
+    ws.close();
+  }
+
+  private async callClaude(
+    text: string,
+    pageLabel?: string,
+    context?: string,
+  ): Promise<{ summary: string; suggestions: string[] }> {
+    const userContent = [
+      pageLabel ? `[หน้า: ${pageLabel}]` : '',
+      context   ? `[บริบท: ${context}]`  : '',
+      text,
+    ].filter(Boolean).join('\n');
+
+    const messages: ChatMessage[] = [
+      ...this.history.slice(-10),
+      { role: 'user', content: userContent },
+    ];
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -117,17 +124,25 @@ export class CeoAiAgent extends Agent<Env> {
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 1024,
         system: SYSTEM,
-        messages: [{ role: 'user', content: userContent }],
+        messages,
       }),
     });
 
-    const json = (await res.json()) as { content: { type: string; text: string }[] };
+    if (!res.ok) {
+      throw new Error(`Anthropic ${res.status}: ${await res.text()}`);
+    }
+
+    const json = await res.json() as { content: { type: string; text: string }[] };
     const raw = json.content?.[0]?.text ?? '';
+
+    // Persist history
+    this.history = [...messages, { role: 'assistant', content: raw }].slice(-20);
+
+    // Parse structured JSON
     try {
       const match = raw.match(/\{[\s\S]*\}/);
-      return match ? JSON.parse(match[0]) : { summary: raw, suggestions: [] };
-    } catch {
-      return { summary: raw, suggestions: [] };
-    }
+      if (match) return JSON.parse(match[0]) as { summary: string; suggestions: string[] };
+    } catch {}
+    return { summary: raw, suggestions: [] };
   }
 }

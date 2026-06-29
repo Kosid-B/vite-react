@@ -19,7 +19,7 @@
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["CeoAiAgent"]
+      "new_classes": ["CeoAiAgent"]
     }
   ],
   "vars": {
