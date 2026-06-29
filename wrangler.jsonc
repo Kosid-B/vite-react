@@ -1,8 +1,28 @@
 {
   "name": "ceo-ai-thailand",
-  "compatibility_date": "2025-01-01",
+  "main": "src/server.ts",
+  "compatibility_date": "2026-06-11",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CeoAiAgent",
+        "class_name": "CeoAiAgent"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["CeoAiAgent"]
+    }
+  ],
+  "vars": {
+    "ANTHROPIC_API_KEY": ""
   }
 }
