@@ -104,6 +104,7 @@ export default function App() {
   const [activeStage, setActiveStage] = useState(0);
   const [activeMonth, setActiveMonth] = useState(0);
   const [toastVisible, setToastVisible] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -157,10 +158,23 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWs]);
 
-  const showToast = useCallback(() => {
+  // Auto-start 15-day trial for new users (Supabase mode, status=none)
+  useEffect(() => {
+    if (!isSupabaseEnabled || !session || data.subscription.status !== 'none') return;
+    const trialEnd = new Date(Date.now() + 15 * 86400000).toISOString();
+    const next = { ...data, subscription: { ...data.subscription, plan: 'free' as const, status: 'trial' as const, trialEndDate: trialEnd } };
+    setData(next);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+    if (activeWs) wsSave(activeWs, next);
+    showToast('ยินดีต้อนรับ! เริ่มทดลองใช้ฟรี 15 วันแล้ว 🎉');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user.id, data.subscription.status, activeWs]);
+
+  const showToast = useCallback((msg?: string) => {
+    if (msg) setToastMsg(msg);
     setToastVisible(true);
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToastVisible(false), 1600);
+    toastTimer.current = setTimeout(() => { setToastVisible(false); setToastMsg(''); }, msg ? 3000 : 1600);
   }, []);
 
   const updateData = useCallback((next: AppData) => {
@@ -322,7 +336,7 @@ export default function App() {
         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
           <path d="M5 13l4 4L19 7" />
         </svg>
-        {isSupabaseEnabled && session ? 'ซิงก์ขึ้นคลาวด์แล้ว' : 'บันทึกอัตโนมัติแล้ว'}
+        {toastMsg || (isSupabaseEnabled && session ? 'ซิงก์ขึ้นคลาวด์แล้ว' : 'บันทึกอัตโนมัติแล้ว')}
       </div>
 
       <button
