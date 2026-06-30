@@ -6,34 +6,67 @@ const cors = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// แมปชื่อโมเดลที่แสดงในหน้า UI → Model ID จริงของ Anthropic
 const MODEL_MAP: Record<string, string> = {
   'claude-opus-4-8': 'claude-opus-4-8',
   'claude-sonnet-4-6': 'claude-sonnet-4-6',
   'claude-haiku-4-5': 'claude-haiku-4-5-20251001',
 };
 
+// ─── Brave Search helper ──────────────────────────────────────────────────────
+const BRAVE_KEY = Deno.env.get('BRAVE_SEARCH_API_KEY') ?? '';
+
+async function braveSearch(query: string, count = 5): Promise<string> {
+  if (!BRAVE_KEY) return '';
+  const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${count}&search_lang=th&country=TH&freshness=pw`;
+  const r = await fetch(url, {
+    headers: {
+      'Accept': 'application/json',
+      'Accept-Encoding': 'gzip',
+      'X-Subscription-Token': BRAVE_KEY,
+    },
+  }).catch(() => null);
+  if (!r?.ok) return '';
+  const data = await r.json();
+  const results: any[] = (data?.web?.results ?? []).slice(0, count);
+  if (!results.length) return '';
+  return results
+    .map((x, i) => `[${i + 1}] ${x.title}\n${x.url}\n${x.description ?? ''}`)
+    .join('\n\n');
+}
+
+// ─── Handler ──────────────────────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
   try {
     const {
-      role,        // ตำแหน่ง เช่น CEO, CTO, CMO
-      name,        // ชื่อเล่น เช่น Aria
-      mandate,     // หน้าที่/ขอบเขตงานของ agent
-      model,       // โมเดลที่ agent นี้ใช้
-      title,       // ชื่องาน
-      detail,      // รายละเอียดงาน
-      goal,        // เป้าหมายบริษัท
-      industry,    // อุตสาหกรรม
-      companyName, // ชื่อบริษัท
-      orgContext,  // รายชื่อ agent อื่นในทีม [{role, mandate}]
+      role,
+      name,
+      mandate,
+      model,
+      title,
+      detail,
+      goal,
+      industry,
+      companyName,
+      orgContext,
+      useWebSearch,    // เปิดใช้ Brave Search สำหรับงานนี้
+      searchQuery,     // custom query (ถ้าไม่ระบุ ใช้ title + industry)
     } = await req.json();
+
+    // ─── Brave Search (ถ้าเปิดใช้และมี API key) ──────────────────────────
+    let webContext = '';
+    if (useWebSearch) {
+      const q = searchQuery ?? `${title} ${industry ?? ''} ไทย 2025`.trim();
+      const raw = await braveSearch(q, 5);
+      if (raw) {
+        webContext = `\n\n--- ข้อมูลล่าสุดจาก Web (Brave Search) ---\nQuery: "${q}"\n\n${raw}\n--- สิ้นสุดข้อมูลจาก Web ---`;
+      }
+    }
 
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY')! });
     const actualModel = MODEL_MAP[model] ?? 'claude-sonnet-4-6';
 
-    // สร้าง context ของผังองค์กรเพื่อให้ agent รู้ว่าทีมมีใครบ้าง
     const orgLines = (orgContext ?? [])
       .map((a: { role: string; mandate: string }) => `  • ${a.role}: ${a.mandate}`)
       .join('\n');
@@ -47,11 +80,10 @@ serve(async (req) => {
       `เป้าหมายหลักของบริษัท:`,
       goal,
       '',
-      orgLines
-        ? `ผังองค์กร — เพื่อนร่วมทีม:\n${orgLines}`
-        : '',
+      orgLines ? `ผังองค์กร — เพื่อนร่วมทีม:\n${orgLines}` : '',
       '',
       `คุณเป็น AI Agent ที่ดำเนินงานจริงในฐานะ ${role}`,
+      webContext ? `คุณมีสิทธิ์เข้าถึงข้อมูลจาก Web Search แบบ real-time — ใช้ข้อมูลนี้เพื่อให้ผลลัพธ์ที่ทันสมัยและแม่นยำ` : '',
       `ตอบเป็นภาษาไทย ให้ผลลัพธ์ที่เป็นรูปธรรม ชัดเจน พร้อมนำไปใช้ได้ทันที`,
       `ไม่ต้องแนะนำตัว ไม่ต้องพูดว่า "ในฐานะ AI" — ลงมือทำงานเลย`,
     ].filter(Boolean).join('\n');
@@ -60,6 +92,7 @@ serve(async (req) => {
       `งานที่ได้รับมอบหมาย: ${title}`,
       '',
       detail ? `รายละเอียด: ${detail}` : '',
+      webContext,
       '',
       `ดำเนินงานนี้ตามบทบาทหน้าที่ของคุณ ส่งผลลัพธ์ที่ชัดเจนและนำไปใช้ได้จริง`,
     ].filter(Boolean).join('\n');
@@ -72,8 +105,9 @@ serve(async (req) => {
     });
 
     const output = (response.content[0] as { text: string }).text;
+    const webSearchUsed = useWebSearch && !!webContext;
 
-    return new Response(JSON.stringify({ output }), {
+    return new Response(JSON.stringify({ output, webSearchUsed }), {
       headers: { ...cors, 'Content-Type': 'application/json' },
     });
   } catch (e) {

@@ -308,14 +308,17 @@ export default function AICompany({ data, onUpdate }: Props) {
           industry: c.industry,
           companyName: c.name,
           orgContext,
+          useWebSearch: task.useWebSearch ?? false,
+          searchQuery: task.searchQuery,
         },
       });
       if (error) throw error;
 
+      const webTag = res?.webSearchUsed ? ' 🌐' : '';
       const now = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
       patch({
         tasks: c.tasks.map(t => t.id === taskId
-          ? { ...t, status: 'review' as const, output: res?.output ?? '', executedAt: now }
+          ? { ...t, status: 'review' as const, output: (res?.output ?? '') + webTag, executedAt: now }
           : t
         ),
       });
@@ -1257,6 +1260,12 @@ export default function AICompany({ data, onUpdate }: Props) {
                         title={needsApproval ? 'ต้องอนุมัติก่อนรัน — คลิกเพื่อปลดล็อก' : 'คลิกเพื่อตั้งให้ต้องอนุมัติก่อนรัน'}
                         onClick={() => patch({ tasks: c.tasks.map(tt => tt.id === t.id ? { ...tt, requiresApproval: !tt.requiresApproval } : tt) })}
                       >{needsApproval ? '🔒' : '🔓'}</button>
+                      <button
+                        className={`ai-task-lock-btn${t.useWebSearch ? ' locked' : ''}`}
+                        title={t.useWebSearch ? 'Web Search เปิดอยู่ — คลิกเพื่อปิด (Brave Search)' : 'คลิกเพื่อเปิด Web Search (Brave Search API)'}
+                        onClick={() => patch({ tasks: c.tasks.map(tt => tt.id === t.id ? { ...tt, useWebSearch: !tt.useWebSearch } : tt) })}
+                        style={{ opacity: t.useWebSearch ? 1 : 0.45 }}
+                      >🌐</button>
                     </div>
                     {needsApproval && (
                       <div className="ai-task-approval-badge">Human Approval Required</div>

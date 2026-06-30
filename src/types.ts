@@ -131,6 +131,8 @@ export interface AgentTask {
   output?: string;           // ผลลัพธ์จาก AI Agent (หลังดำเนินงานจริง)
   executedAt?: string;       // เวลาที่ AI Agent ดำเนินงานสำเร็จ
   requiresApproval?: boolean; // ต้องได้รับการอนุมัติจากมนุษย์ก่อน heartbeat จะรัน
+  useWebSearch?: boolean;    // เปิดใช้ Brave Search เพื่อดึงข้อมูล real-time
+  searchQuery?: string;      // custom search query (ถ้าไม่ระบุ ใช้ title + industry)
 }
 
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
