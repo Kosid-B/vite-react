@@ -12,7 +12,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
 
-const PRICE: Record<string, number> = { free: 0, growth: 990, scale: 2990 };
+const PRICE: Record<string, number> = { free: 0, growth: 1490, scale: 5900 };
 
 function addMonths(iso: string, n: number): string {
   const d = new Date(iso);

@@ -5,6 +5,7 @@ import { DEFAULT_DATA } from './data';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
 import Auth from './components/Auth';
+import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
 import AiAssist from './components/AiAssist';
 import Dashboard from './pages/Dashboard';
@@ -25,6 +26,8 @@ import Team from './pages/Team';
 import Admin from './pages/Admin';
 import Marketing from './pages/Marketing';
 import ISO9001 from './pages/ISO9001';
+import CaseStudies from './pages/CaseStudies';
+import Analytics from './pages/Analytics';
 import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
 
@@ -78,6 +81,7 @@ export default function App() {
   const [toastVisible, setToastVisible] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // ===== Supabase session + workspaces =====
@@ -187,7 +191,10 @@ export default function App() {
   }
 
   // หน้า Auth: เปิดใช้ Supabase แต่ยังไม่ได้ล็อกอิน
-  if (isSupabaseEnabled && authReady && !session) return <Auth />;
+  if (isSupabaseEnabled && authReady && !session) {
+    if (showAuth) return <Auth />;
+    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+  }
   if (isSupabaseEnabled && !authReady) {
     return <div className="auth-wrap"><div className="auth-loading">กำลังโหลด…</div></div>;
   }
@@ -232,7 +239,7 @@ export default function App() {
         )}
         {activePage === 'actions' && <PriorityActions data={data} onUpdate={updateData} />}
         {activePage === 'aisearch' && (
-          <AIResearch data={data} activeStage={activeStage} onAddToJourney={updateData} />
+          <AIResearch data={data} activeStage={activeStage} onAddToJourney={updateData} onNavigate={setActivePage} />
         )}
         {activePage === 'funnel' && <ConversionFunnel data={data} onUpdate={updateData} />}
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
@@ -246,6 +253,20 @@ export default function App() {
         {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data} />}
         {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} data={data} onUpdate={updateData} />}
         {activePage === 'iso9001' && <ISO9001 data={data} onUpdate={updateData} />}
+        {activePage === 'cases' && <CaseStudies />}
+        {activePage === 'analytics' && <Analytics data={data} />}
+
+        <footer className="app-footer">
+          <span className="app-footer__name">B. Training Consultant (M.E.A) Co., Ltd.</span>
+          <span className="app-footer__sep">·</span>
+          <span>72/76 หมู่ที่ 1 ตำบลเนินพระ อำเภอเมืองระยอง จังหวัดระยอง 21000</span>
+          <span className="app-footer__sep">·</span>
+          <span>Tel. <a href="tel:0817817773" className="app-footer__link">0817817773</a></span>
+          <span className="app-footer__sep">·</span>
+          <a href="https://www.b-tctraining.com/" target="_blank" rel="noopener noreferrer" className="app-footer__link">
+            www.b-tctraining.com
+          </a>
+        </footer>
       </main>
 
       <div className={`toast ${toastVisible ? 'show' : ''}`}>

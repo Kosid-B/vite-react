@@ -1,16 +1,16 @@
 /* =====================================================
    CEO AI Thailand — Design System library
-   Self-contained tokens + component styles (warm editorial)
+   Aesthetic: Dark tech — slate, cyan, amber
 ===================================================== */
 :root {
-  --ds-cream: #f5f0e8; --ds-cream2: #ede7d9; --ds-cream3: #e2d9c8;
-  --ds-ink: #1c1814; --ds-ink2: #4a453e; --ds-ink3: #8a8278; --ds-ink4: #b5afa5;
-  --ds-sand: #d6cfc2; --ds-rust: #c44b2b; --ds-rust-bg: #fdf3f0;
-  --ds-green: #2d6a4f; --ds-green-bg: #edf7f2; --ds-blue: #1a4f8a; --ds-blue-bg: #eff4fb;
-  --ds-amber: #a05c1a; --ds-amber-bg: #fdf6ec; --ds-white: #fdfcf9;
+  --ds-cream: #020617; --ds-cream2: #0f172a; --ds-cream3: #1e293b;
+  --ds-ink: #f8fafc; --ds-ink2: #e2e8f0; --ds-ink3: #94a3b8; --ds-ink4: #64748b;
+  --ds-sand: #334155; --ds-rust: #06b6d4; --ds-rust-bg: rgba(6,182,212,0.08);
+  --ds-green: #10b981; --ds-green-bg: rgba(16,185,129,0.10); --ds-blue: #3b82f6; --ds-blue-bg: rgba(59,130,246,0.10);
+  --ds-amber: #f59e0b; --ds-amber-bg: rgba(245,158,11,0.10); --ds-white: #0f172a;
   --ds-r: 8px; --ds-r-lg: 14px;
-  --ds-shadow-sm: 0 1px 3px rgba(28,24,20,.06), 0 1px 2px rgba(28,24,20,.04);
-  --ds-shadow: 0 4px 12px rgba(28,24,20,.08), 0 1px 3px rgba(28,24,20,.05);
+  --ds-shadow-sm: 0 1px 3px rgba(0,0,0,.30), 0 1px 2px rgba(0,0,0,.20);
+  --ds-shadow: 0 4px 12px rgba(0,0,0,.40), 0 1px 3px rgba(0,0,0,.25);
   --ds-font: 'Kanit', sans-serif;
 }
 
@@ -19,11 +19,11 @@
 .ds-btn:active { transform: scale(.98); }
 .ds-btn:disabled { opacity: .55; cursor: default; }
 .ds-btn--primary { background: var(--ds-rust); color: #fff; }
-.ds-btn--primary:hover:not(:disabled) { background: #ad3e22; }
-.ds-btn--dark { background: var(--ds-ink); color: #fff; }
-.ds-btn--dark:hover:not(:disabled) { background: var(--ds-ink2); }
-.ds-btn--ghost { background: var(--ds-white); color: var(--ds-ink); border-color: var(--ds-sand); }
-.ds-btn--ghost:hover:not(:disabled) { border-color: var(--ds-ink3); background: var(--ds-cream); }
+.ds-btn--primary:hover:not(:disabled) { background: #0891b2; }
+.ds-btn--dark { background: var(--ds-ink3); color: #fff; }
+.ds-btn--dark:hover:not(:disabled) { background: var(--ds-ink2); color: var(--ds-cream); }
+.ds-btn--ghost { background: var(--ds-cream3); color: var(--ds-ink2); border-color: var(--ds-sand); }
+.ds-btn--ghost:hover:not(:disabled) { border-color: var(--ds-ink3); background: var(--ds-cream2); }
 .ds-btn--block { width: 100%; }
 
 /* Card */
@@ -41,9 +41,9 @@
 .ds-badge--amber { background: var(--ds-amber-bg); color: var(--ds-amber); }
 
 /* Chip (selectable) */
-.ds-chip { font-family: var(--ds-font); font-size: 12.5px; padding: 6px 14px; min-height: 34px; border: 1.5px solid var(--ds-sand); background: var(--ds-white); border-radius: 20px; color: var(--ds-ink2); cursor: pointer; transition: .15s; }
-.ds-chip:hover { border-color: var(--ds-ink3); color: var(--ds-ink); }
-.ds-chip--active { background: var(--ds-ink); border-color: var(--ds-ink); color: #fff; }
+.ds-chip { font-family: var(--ds-font); font-size: 12.5px; padding: 6px 14px; min-height: 34px; border: 1.5px solid var(--ds-sand); background: var(--ds-cream3); border-radius: 20px; color: var(--ds-ink3); cursor: pointer; transition: .15s; }
+.ds-chip:hover { border-color: var(--ds-rust); color: var(--ds-ink); }
+.ds-chip--active { background: var(--ds-rust); border-color: var(--ds-rust); color: #fff; }
 
 /* StatCard */
 .ds-stat { background: var(--ds-white); border: 1px solid var(--ds-sand); border-radius: var(--ds-r-lg); box-shadow: var(--ds-shadow-sm); padding: 16px; text-align: center; }

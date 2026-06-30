@@ -238,12 +238,12 @@ export default function Dashboard({ data, onNavigate }: Props) {
         </div>
         <div className="db-card">
           <div className="db-card-label">Pain Points ทั้งหมด</div>
-          <div className="db-card-value" style={{ color: '#c44b2b' }}>{totalPain}</div>
+          <div className="db-card-value" style={{ color: 'var(--rust)' }}>{totalPain}</div>
           <div className="db-card-sub">ใน {stages.length} stages</div>
         </div>
         <div className="db-card">
           <div className="db-card-label">Opportunities</div>
-          <div className="db-card-value" style={{ color: '#2d6a4f' }}>{totalOpp}</div>
+          <div className="db-card-value" style={{ color: 'var(--green)' }}>{totalOpp}</div>
           <div className="db-card-sub">รอดำเนินการ</div>
         </div>
         <div className="db-card db-card-warn">
@@ -270,7 +270,7 @@ export default function Dashboard({ data, onNavigate }: Props) {
                 <div key={f.stageId} className={`db-f-row${isWorst ? ' db-f-worst' : ''}`}>
                   <div className="db-f-name">{stages[i]?.label ?? `S${i + 1}`}</div>
                   <div className="db-f-bar-wrap">
-                    <div className="db-f-bar" style={{ width: `${pct}%`, background: isWorst ? '#c44b2b' : '#1a4f8a' }} />
+                    <div className="db-f-bar" style={{ width: `${pct}%`, background: isWorst ? 'var(--rust)' : 'var(--blue)' }} />
                   </div>
                   <div className="db-f-val">{f.leads.toLocaleString()}</div>
                 </div>
@@ -333,16 +333,16 @@ export default function Dashboard({ data, onNavigate }: Props) {
               <div className="db-ai-stat-lbl">Queued</div>
             </div>
             <div className="db-ai-stat">
-              <div className="db-ai-stat-val" style={{ color: '#1a4f8a' }}>{taskInProgress}</div>
+              <div className="db-ai-stat-val" style={{ color: 'var(--blue)' }}>{taskInProgress}</div>
               <div className="db-ai-stat-lbl">In Progress</div>
             </div>
             <div className="db-ai-stat">
-              <div className="db-ai-stat-val" style={{ color: '#2d6a4f' }}>{taskDone}</div>
+              <div className="db-ai-stat-val" style={{ color: 'var(--green)' }}>{taskDone}</div>
               <div className="db-ai-stat-lbl">Done</div>
             </div>
             {taskBlocked > 0 && (
               <div className="db-ai-stat">
-                <div className="db-ai-stat-val" style={{ color: '#c44b2b' }}>{taskBlocked}</div>
+                <div className="db-ai-stat-val" style={{ color: 'var(--rust)' }}>{taskBlocked}</div>
                 <div className="db-ai-stat-lbl">Blocked</div>
               </div>
             )}
@@ -402,11 +402,11 @@ export default function Dashboard({ data, onNavigate }: Props) {
               <div className="db-roadmap-pct">{roadmapPct}% เสร็จแล้ว</div>
               <div className="db-ai-stats" style={{ marginTop: 12 }}>
                 <div className="db-ai-stat">
-                  <div className="db-ai-stat-val" style={{ color: '#2d6a4f' }}>{roadmapDone}</div>
+                  <div className="db-ai-stat-val" style={{ color: 'var(--green)' }}>{roadmapDone}</div>
                   <div className="db-ai-stat-lbl">Done</div>
                 </div>
                 <div className="db-ai-stat">
-                  <div className="db-ai-stat-val" style={{ color: '#1a4f8a' }}>{roadmapInProgress}</div>
+                  <div className="db-ai-stat-val" style={{ color: 'var(--blue)' }}>{roadmapInProgress}</div>
                   <div className="db-ai-stat-lbl">In Progress</div>
                 </div>
                 <div className="db-ai-stat">
@@ -427,7 +427,7 @@ export default function Dashboard({ data, onNavigate }: Props) {
               </div>
             </>
           ) : (
-            <div style={{ color: '#aaa', fontSize: 13, padding: '12px 0' }}>ยังไม่มีรายการ Roadmap</div>
+            <div style={{ color: 'var(--ink3)', fontSize: 13, padding: '12px 0' }}>ยังไม่มีรายการ Roadmap</div>
           )}
           <button className="db-link" onClick={() => onNavigate('roadmap')}>ดู Roadmap →</button>
         </div>
@@ -445,7 +445,7 @@ export default function Dashboard({ data, onNavigate }: Props) {
           </div>
           {stages.map((s, i) => {
             const counts = [s.touch.length, s.action.length, s.pain.length, s.opp.length];
-            const cols = ['#1a4f8a', '#1c1814', '#c44b2b', '#2d6a4f'];
+            const cols = ['var(--blue)', 'var(--ink)', 'var(--rust)', 'var(--green)'];
             return (
               <div key={s.id} className="db-mx-row">
                 <div className="db-mx-stage"><span className="db-mx-num">{i + 1}</span>{s.label}</div>
@@ -500,6 +500,29 @@ export default function Dashboard({ data, onNavigate }: Props) {
             </div>
           ))}
           <button className="db-link" onClick={() => onNavigate('content')}>ดู Content Plan →</button>
+        </div>
+      </div>
+
+      {/* Featured Insight */}
+      <div className="db-insight" style={{ marginTop: 14 }}>
+        <div className="db-insight-eyebrow">✦ บทเรียนธุรกิจวันนี้</div>
+        <div className="db-insight-grid">
+          <div className="db-insight-card db-insight-tencent">
+            <div className="db-insight-tag">Case Study · Tencent</div>
+            <div className="db-insight-title">ไม่ต้องสร้างจากศูนย์ — ใช้เงินซื้อผู้ชนะ</div>
+            <div className="db-insight-body">
+              Tencent ครองวงการเกมโลกโดยไม่ได้เขียนเกมเองทั้งหมด — แต่ซื้อหุ้น Riot, Epic, Supercell แล้วเชื่อมระบบเติมเงินกับฐานผู้ใช้ QQ ที่มีอยู่แล้ว บทเรียน: หา "เพชรในตม" แล้วงัดมูลค่าด้วยทรัพยากรที่มีอยู่
+            </div>
+            <button className="db-link" onClick={() => onNavigate('cases')}>อ่าน Case Study →</button>
+          </div>
+          <div className="db-insight-card db-insight-ai">
+            <div className="db-insight-tag">AI Strategy · Paperclip</div>
+            <div className="db-insight-title">สร้าง SaaS ด้วย Mission Prompt — AI ทำงาน 24/7</div>
+            <div className="db-insight-body">
+              เขียนเป้าหมายให้ชัด AI จะเป็น CEO สั่งการทีม AI ด้วยกันเอง ตัวอย่าง: "สรุปข่าว SET ส่งอีเมลหลังตลาดปิดทุกวัน" — ไม่ต้องเขียนโค้ดทั้งหมดเอง
+            </div>
+            <button className="db-link" onClick={() => onNavigate('cases')}>ดูตัวอย่าง Mission Prompts →</button>
+          </div>
         </div>
       </div>
     </div>
