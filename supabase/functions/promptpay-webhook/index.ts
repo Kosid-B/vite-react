@@ -40,15 +40,55 @@ Deno.serve(async (req) => {
     .from("workspace_state").select("data").eq("workspace_id", workspaceId).maybeSingle();
   if (selErr) return new Response("db_error", { status: 500 });
 
+  const PLAN_PRICE: Record<string, number> = { free: 0, growth: 1490, scale: 5900 };
+
+  // ดึง amount จาก charge หรือคำนวณจาก plan
+  const paidAmount: number =
+    (typeof charge?.amount === "number" ? charge.amount / 100 : 0) ||
+    (PLAN_PRICE[planId] ?? 0);
+
   const state = (row?.data ?? {}) as Record<string, any>;
-  state.subscription = { ...(state.subscription ?? {}), plan: planId, status: "active" };
+  const sub = state.subscription ?? {};
+
+  // หา pending invoice ที่ตรงกับ plan นี้ แล้วทำเครื่องหมาย paid
+  const existingInvoices: any[] = sub.invoices ?? [];
+  let markedPending = false;
+  for (const inv of existingInvoices) {
+    if (inv.status === "pending" && inv.plan === planId) {
+      inv.status = "paid";
+      inv.amount = paidAmount || inv.amount;
+      markedPending = true;
+      break;
+    }
+  }
+
+  // ถ้าไม่มี pending invoice → สร้างใหม่เป็น paid
+  if (!markedPending) {
+    existingInvoices.unshift({
+      id: "inv-" + Date.now().toString(36),
+      date: new Date().toISOString(),
+      plan: planId,
+      amount: paidAmount,
+      status: "paid",
+    });
+  }
+
+  state.subscription = {
+    ...sub,
+    plan: planId,
+    status: "active",
+    invoices: existingInvoices,
+    currentPeriodEnd: (() => {
+      const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString();
+    })(),
+  };
 
   const { error: upErr } = await admin
     .from("workspace_state")
     .upsert({ workspace_id: workspaceId, data: state, updated_at: new Date().toISOString() }, { onConflict: "workspace_id" });
   if (upErr) return new Response("db_error", { status: 500 });
 
-  return new Response(JSON.stringify({ ok: true, workspace_id: workspaceId, plan: planId }), {
+  return new Response(JSON.stringify({ ok: true, workspace_id: workspaceId, plan: planId, amount: paidAmount }), {
     status: 200, headers: { "content-type": "application/json" },
   });
 });
