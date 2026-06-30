@@ -63,7 +63,12 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.feedback) parsed.feedback = DEFAULT_DATA.feedback;
   if (!parsed.gtmAuditChecks) parsed.gtmAuditChecks = DEFAULT_DATA.gtmAuditChecks;
   if (!parsed.iso9001) parsed.iso9001 = DEFAULT_DATA.iso9001;
-  if (!parsed.factory) parsed.factory = DEFAULT_DATA.factory;
+  if (!parsed.factory) {
+    parsed.factory = DEFAULT_DATA.factory!;
+  } else {
+    if (!parsed.factory.tpm) parsed.factory.tpm = DEFAULT_DATA.factory!.tpm;
+    if (!parsed.factory.inventory) parsed.factory.inventory = DEFAULT_DATA.factory!.inventory;
+  }
   return parsed;
 }
 

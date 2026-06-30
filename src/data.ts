@@ -441,6 +441,16 @@ export const DEFAULT_DATA: AppData = {
         mandate: 'วางแผนการตลาด คอนเทนต์ และแคมเปญหาลูกค้าใหม่ผ่านช่องทางออนไลน์',
         model: 'claude-sonnet-4-6', status: 'idle', reportsTo: 'a-ceo',
       },
+      {
+        id: 'a-coo', role: 'COO (Operations)', name: 'วิชัย', avatar: '🏭', color: '#7c3aed',
+        mandate: 'บริหารการผลิต/บริการ คลังวัตถุดิบ คลังสินค้า และเครื่องมือเครื่องจักรตามหลัก TPM — ดูแล OEE สาย Production ทั้งหมด วางแผน Planned/Autonomous Maintenance ลด Downtime และควบคุมคุณภาพตามมาตรฐาน',
+        model: 'claude-sonnet-4-6', status: 'idle', reportsTo: 'a-ceo',
+      },
+      {
+        id: 'a-cqo', role: 'CQO (Quality)', name: 'สุภาพร', avatar: '🔬', color: '#0d9488',
+        mandate: 'บริหารคุณภาพทั้งองค์กรตามหลัก TQM — ควบคุมกระบวนการผลิต ลดของเสียให้เป็น Zero Defect วิเคราะห์ Root Cause Poka-Yoke SPC และดูแลระบบ ISO/มาตรฐานคุณภาพ',
+        model: 'claude-sonnet-4-6', status: 'idle', reportsTo: 'a-coo',
+      },
     ],
     tasks: [
       { id: 't1', agentId: 'a-cmo', title: 'ร่างแคมเปญเปิดตัวสินค้าใหม่บน Facebook', detail: 'กำหนดกลุ่มเป้าหมาย งบ และข้อความโฆษณา 3 เวอร์ชัน', status: 'in_progress' },
@@ -707,6 +717,21 @@ export const DEFAULT_DATA: AppData = {
     ],
     kaizen: [
       { id: 'k1', title: 'ลดของเสียไลน์ B จาก 5% เหลือ 2%', proposer: 'QC Manager', type: 'quality' as const, status: 'doing' as const, result: 'ติดตั้ง Poka-Yoke ที่จุดตรวจสอบ — ลดได้ 1.5% แล้ว' },
+    ],
+    tpm: [
+      { id: 'tpm1', pillar: 1, name: 'Jishu Hozen (JH)', nameEn: 'Autonomous Maintenance', description: 'พนักงานผู้ใช้เครื่องจักรดูแลรักษาเบื้องต้นด้วยตนเอง ตรวจสอบ ทำความสะอาด หล่อลื่น ขันสกรู', score: 20, status: 'planning' as const, notes: '' },
+      { id: 'tpm2', pillar: 2, name: 'Keikaku Hozen (KH)', nameEn: 'Planned Maintenance', description: 'ฝ่ายซ่อมบำรุงวางแผน PM/PdM ล่วงหน้า ลด Breakdown และต้นทุนการซ่อม', score: 30, status: 'implementing' as const, notes: 'กำลังทำตารางซ่อม PM รายเดือน' },
+      { id: 'tpm3', pillar: 3, name: 'Hinshitsu Hozen (HH)', nameEn: 'Quality Maintenance', description: 'รักษาสภาพเครื่องจักรเพื่อให้ผลผลิตมีคุณภาพ Zero Defect จากแหล่งต้นตอ', score: 15, status: 'planning' as const, notes: '' },
+      { id: 'tpm4', pillar: 4, name: 'Kobetsu Kaizen (KK)', nameEn: 'Focused Improvement', description: 'ทีมโครงการปรับปรุงเฉพาะจุด (Loss & Waste) อย่างต่อเนื่อง', score: 40, status: 'implementing' as const, notes: 'โครงการลดของเสียไลน์ B กำลังดำเนินการ' },
+      { id: 'tpm5', pillar: 5, name: 'Early Management (EM)', nameEn: 'Early Equipment Management', description: 'ออกแบบเครื่องจักรและกระบวนการใหม่ให้ Maintenance-free ตั้งแต่ต้น', score: 10, status: 'not_started' as const, notes: '' },
+      { id: 'tpm6', pillar: 6, name: 'Education & Training (ET)', nameEn: 'Training & Education', description: 'พัฒนาทักษะพนักงานให้รู้จักเครื่องจักรและสามารถแก้ไขเบื้องต้นได้', score: 25, status: 'planning' as const, notes: '' },
+      { id: 'tpm7', pillar: 7, name: 'Safety Health Environment (SHE)', nameEn: 'Safety, Health & Environment', description: 'สร้างสถานที่ทำงานที่ปลอดภัย Zero Accident ลดมลพิษและดูแลสุขภาพพนักงาน', score: 35, status: 'implementing' as const, notes: '' },
+      { id: 'tpm8', pillar: 8, name: 'Office TPM', nameEn: 'Administrative TPM', description: 'ขยายหลักการ TPM ไปสู่สำนักงาน คลังสินค้า จัดซื้อ และทุกหน่วยงานสนับสนุน', score: 5, status: 'not_started' as const, notes: '' },
+    ],
+    inventory: [
+      { id: 'inv1', name: 'เหล็กแผ่น SS400', category: 'raw' as const, unit: 'แผ่น', qty: 500, minQty: 100, location: 'คลัง A-01' },
+      { id: 'inv2', name: 'น้ำมันหล่อลื่น ISO VG 46', category: 'spare' as const, unit: 'ลิตร', qty: 50, minQty: 20, location: 'คลังอะไหล่ B-03' },
+      { id: 'inv3', name: 'ชิ้นส่วน A-101 สำเร็จรูป', category: 'finished' as const, unit: 'ชิ้น', qty: 185, minQty: 50, location: 'คลังสินค้า FG-01' },
     ],
   },
 };

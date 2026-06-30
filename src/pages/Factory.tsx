@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { AppData, FactoryData, FactoryMachine, WorkOrder, MachineStatus, WorkOrderStatus, KaizenItem } from '../types';
+import type { AppData, FactoryData, FactoryMachine, WorkOrder, MachineStatus, WorkOrderStatus, KaizenItem, TPMPillarStatus, InventoryItem } from '../types';
+import { DBD_SECTORS } from '../data/dbd';
 
 interface Props { data: AppData; onUpdate: (d: AppData) => void; }
 
@@ -34,6 +35,17 @@ const DEFAULT_FACTORY = (): FactoryData => ({
     { id: 'S5c', s: 5, text: 'มีระบบ Reward สำหรับทีมที่รักษา 5S ได้ดี', checked: false },
   ],
   kaizen: [],
+  tpm: [
+    { id: 'tpm1', pillar: 1, name: 'Jishu Hozen (JH)', nameEn: 'Autonomous Maintenance', description: 'พนักงานดูแลรักษาเครื่องจักรด้วยตนเอง ทำความสะอาด หล่อลื่น ขันสกรู', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
+    { id: 'tpm2', pillar: 2, name: 'Keikaku Hozen (KH)', nameEn: 'Planned Maintenance', description: 'วางแผน PM/PdM ล่วงหน้า ลด Breakdown และต้นทุนการซ่อม', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
+    { id: 'tpm3', pillar: 3, name: 'Hinshitsu Hozen (HH)', nameEn: 'Quality Maintenance', description: 'รักษาสภาพเครื่องจักรให้ผลผลิตได้คุณภาพ Zero Defect', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
+    { id: 'tpm4', pillar: 4, name: 'Kobetsu Kaizen (KK)', nameEn: 'Focused Improvement', description: 'โครงการปรับปรุงเฉพาะจุด Loss & Waste อย่างต่อเนื่อง', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
+    { id: 'tpm5', pillar: 5, name: 'Early Management (EM)', nameEn: 'Early Equipment Management', description: 'ออกแบบเครื่องจักรและกระบวนการใหม่ให้ Maintenance-free', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
+    { id: 'tpm6', pillar: 6, name: 'Education & Training (ET)', nameEn: 'Training & Education', description: 'พัฒนาทักษะพนักงานให้รู้จักเครื่องจักรและแก้ไขเบื้องต้นได้', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
+    { id: 'tpm7', pillar: 7, name: 'Safety Health Env (SHE)', nameEn: 'Safety, Health & Environment', description: 'สถานที่ทำงานปลอดภัย Zero Accident ลดมลพิษ ดูแลสุขภาพ', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
+    { id: 'tpm8', pillar: 8, name: 'Office TPM', nameEn: 'Administrative TPM', description: 'ขยายหลัก TPM ไปสู่สำนักงาน คลังสินค้า และทุกหน่วยสนับสนุน', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
+  ],
+  inventory: [],
 });
 
 const MACHINE_STATUS_LABEL: Record<MachineStatus, string> = { running: '🟢 Running', idle: '🟡 Idle', maintenance: '🔧 Maintenance', breakdown: '🔴 Breakdown' };
@@ -45,7 +57,7 @@ const WO_COLS: { key: WorkOrderStatus; hd: string; color: string }[] = [
   { key: 'done', hd: '✅ เสร็จแล้ว', color: '#22c55e' },
   { key: 'on_hold', hd: '⏸ พัก/รอ', color: '#ef4444' },
 ];
-const LEAN_TABS = ['มูดะ 7 ประการ', '5S Checklist', 'Kaizen Log', 'Takt Time'];
+const LEAN_TABS = ['มูดะ 7 ประการ', '5S Checklist', 'Kaizen Log', 'Takt Time', 'TPM 8 เสาหลัก'];
 const FIVE_S_NAMES = ['', 'สะสาง (Seiri)', 'สะดวก (Seiton)', 'สะอาด (Seiso)', 'สุขลักษณะ (Seiketsu)', 'สร้างนิสัย (Shitsuke)'];
 const KAIZEN_TYPE_LABEL: Record<KaizenItem['type'], string> = { quality: 'คุณภาพ', cost: 'ต้นทุน', safety: 'ความปลอดภัย', delivery: 'ส่งมอบ', morale: 'ขวัญกำลังใจ' };
 const KAIZEN_STATUS_LABEL: Record<KaizenItem['status'], string> = { idea: '💡 ไอเดีย', doing: '🔄 ดำเนินการ', done: '✅ เสร็จแล้ว' };
@@ -149,10 +161,10 @@ export default function Factory({ data, onUpdate }: Props) {
 
   // ─── Factory agent suggestions ────────────────────────────────────────────
   const FACTORY_AGENTS = [
-    { avatar: '🏭', role: 'Production Manager', mandate: 'วางแผนการผลิต ติดตาม OEE บริหาร Work Order และ Capacity Planning' },
-    { avatar: '🔬', role: 'QC Manager', mandate: 'ควบคุมคุณภาพ ลดของเสีย วิเคราะห์ Root Cause และดูแลระบบ Poka-Yoke' },
-    { avatar: '🔧', role: 'Maintenance Manager', mandate: 'วางแผน Preventive Maintenance บริหารเครื่องจักร ลด Downtime' },
-    { avatar: '🚛', role: 'Supply Chain Manager', mandate: 'จัดการ Supplier วัตถุดิบ JIT Inventory และส่งมอบตรงเวลา' },
+    { avatar: '🏭', role: 'COO (Operations)', mandate: 'บริหารการผลิต OEE ทุกสาย วางแผน PM/AM ตามหลัก TPM ดูแลคลังวัตถุดิบและคลังสินค้า', isClevel: true },
+    { avatar: '🔬', role: 'CQO (Quality)', mandate: 'ควบคุมคุณภาพตามหลัก TQM ลดของเสีย วิเคราะห์ Root Cause และดูแลระบบ Poka-Yoke / SPC', isClevel: true },
+    { avatar: '🔧', role: 'Maintenance Manager', mandate: 'วางแผน Preventive Maintenance บริหารเครื่องจักร ลด Downtime ตาม MTBF/MTTR', isClevel: false },
+    { avatar: '🚛', role: 'Supply Chain Manager', mandate: 'จัดการ Supplier วัตถุดิบ JIT Inventory Safety Stock และส่งมอบตรงเวลา', isClevel: false },
   ];
 
   return (
@@ -161,18 +173,28 @@ export default function Factory({ data, onUpdate }: Props) {
       <p className="page-subtitle">OEE + Lean Management — ระบบบริหารโรงงานแบบอัตโนมัติด้วย AI</p>
 
       {/* ── Factory Profile ── */}
+      <datalist id="dbd-factory-types">
+        {DBD_SECTORS.map(s => s.items.map(item => (
+          <option key={s.code + item} value={`[${s.code}] ${item}`} />
+        )))}
+      </datalist>
       <div className="factory-profile-row">
-        {[
-          { label: 'ชื่อโรงงาน', field: 'name' as const, value: f.name, width: '180px' },
-          { label: 'ประเภท', field: 'type' as const, value: f.type, width: '160px' },
-          { label: 'ที่ตั้ง', field: 'location' as const, value: f.location, width: '180px' },
-        ].map(({ label, field, value, width }) => (
-          <div key={field} className="factory-profile-field">
-            <span className="factory-profile-label">{label}</span>
-            <input className="factory-profile-inp" style={{ width }} defaultValue={value} key={field + value}
-              onBlur={e => patch({ [field]: e.target.value })} />
-          </div>
-        ))}
+        <div className="factory-profile-field">
+          <span className="factory-profile-label">ชื่อโรงงาน</span>
+          <input className="factory-profile-inp" style={{ width: '180px' }} defaultValue={f.name} key={'name' + f.name}
+            onBlur={e => patch({ name: e.target.value })} />
+        </div>
+        <div className="factory-profile-field">
+          <span className="factory-profile-label">ประเภทธุรกิจ (DBD)</span>
+          <input className="factory-profile-inp" style={{ width: '220px' }} list="dbd-factory-types"
+            defaultValue={f.type} key={'type' + f.type} placeholder="พิมพ์หรือเลือก..."
+            onBlur={e => patch({ type: e.target.value })} />
+        </div>
+        <div className="factory-profile-field">
+          <span className="factory-profile-label">ที่ตั้ง</span>
+          <input className="factory-profile-inp" style={{ width: '180px' }} defaultValue={f.location} key={'loc' + f.location}
+            onBlur={e => patch({ location: e.target.value })} />
+        </div>
         <div className="factory-profile-field">
           <span className="factory-profile-label">กำลังผลิต/วัน</span>
           <input className="factory-profile-inp" style={{ width: '90px' }} type="number" value={f.capacityPerDay}
@@ -533,21 +555,162 @@ export default function Factory({ data, onUpdate }: Props) {
             </div>
           </div>
         )}
+
+        {/* Tab 4: TPM 8 เสาหลัก */}
+        {leanTab === 4 && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ fontSize: 13, color: '#64748b' }}>
+                TPM Score รวม: <strong style={{ color: 'var(--rust)' }}>
+                  {Math.round(f.tpm.reduce((s, t) => s + t.score, 0) / Math.max(1, f.tpm.length))}%
+                </strong>
+                <span style={{ marginLeft: 12, fontSize: 11, color: '#94a3b8' }}>— COO AI รับผิดชอบ TPM ทุกเสา</span>
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {f.tpm.map(t => {
+                const statusColor: Record<TPMPillarStatus, string> = {
+                  not_started: '#64748b', planning: '#f59e0b', implementing: '#06b6d4', sustaining: '#22c55e'
+                };
+                const statusLabel: Record<TPMPillarStatus, string> = {
+                  not_started: '⬜ ยังไม่เริ่ม', planning: '📋 วางแผน', implementing: '🔄 ดำเนินการ', sustaining: '✅ คงสภาพ'
+                };
+                return (
+                  <div key={t.id} style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 8, padding: 12 }}>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 6 }}>
+                      <div style={{ background: 'var(--rust)', color: '#fff', borderRadius: 6, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>{t.pillar}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13 }}>{t.name}</div>
+                        <div style={{ fontSize: 11, color: '#64748b' }}>{t.nameEn}</div>
+                      </div>
+                      <select value={t.status}
+                        onChange={e => patch({ tpm: f.tpm.map(x => x.id === t.id ? { ...x, status: e.target.value as TPMPillarStatus } : x) })}
+                        style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '3px 8px', color: statusColor[t.status], fontSize: 11, fontWeight: 700 }}>
+                        <option value="not_started">ยังไม่เริ่ม</option>
+                        <option value="planning">วางแผน</option>
+                        <option value="implementing">ดำเนินการ</option>
+                        <option value="sustaining">คงสภาพ</option>
+                      </select>
+                    </div>
+                    <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>{t.description}</div>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <span style={{ fontSize: 11, color: '#64748b', flexShrink: 0 }}>คะแนน (0-100%)</span>
+                      <input type="range" min={0} max={100} value={t.score}
+                        onChange={e => patch({ tpm: f.tpm.map(x => x.id === t.id ? { ...x, score: +e.target.value } : x) })}
+                        style={{ flex: 1, accentColor: 'var(--rust)' }} />
+                      <span style={{ fontSize: 13, fontWeight: 700, color: t.score >= 70 ? '#22c55e' : t.score >= 40 ? '#f59e0b' : '#ef4444', minWidth: 36 }}>{t.score}%</span>
+                    </div>
+                    <div className="factory-oee-bar" style={{ marginTop: 4 }}>
+                      <div className="factory-oee-fill" style={{ width: t.score + '%', background: t.score >= 70 ? '#22c55e' : t.score >= 40 ? '#f59e0b' : '#ef4444' }} />
+                    </div>
+                    <input defaultValue={t.notes} key={'tn' + t.id} placeholder="บันทึก / แผนงาน..."
+                      onBlur={e => patch({ tpm: f.tpm.map(x => x.id === t.id ? { ...x, notes: e.target.value } : x) })}
+                      style={{ marginTop: 8, width: '100%', background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '4px 8px', color: '#94a3b8', fontSize: 12, boxSizing: 'border-box' }} />
+                    <div style={{ marginTop: 6, fontSize: 11 }}>
+                      <span style={{ color: statusColor[t.status], fontWeight: 700 }}>{statusLabel[t.status]}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ marginTop: 16, background: 'var(--cream2)', borderRadius: 8, padding: '12px 16px', fontSize: 12 }}>
+              <div style={{ fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>🏭 COO AI — บทบาทในแต่ละเสา TPM</div>
+              <ul style={{ color: '#94a3b8', margin: 0, paddingLeft: 16, lineHeight: 1.9 }}>
+                <li><strong style={{ color: 'var(--ink)' }}>เสา 1-2 (JH/KH):</strong> วางแผนตาราง PM/AM มอบหมายงานซ่อมให้ทีม ติดตาม Downtime</li>
+                <li><strong style={{ color: 'var(--ink)' }}>เสา 3-4 (HH/KK):</strong> วิเคราะห์ Root Cause ของเสีย ตั้ง Project Kaizen เฉพาะจุด</li>
+                <li><strong style={{ color: 'var(--ink)' }}>เสา 5-6 (EM/ET):</strong> ออกแบบ Checklist ฝึกอบรมพนักงาน สร้าง OPL (One Point Lesson)</li>
+                <li><strong style={{ color: 'var(--ink)' }}>เสา 7-8 (SHE/Office):</strong> Audit Safety รายเดือน ขยาย TPM ไปสู่คลังสินค้าและสำนักงาน</li>
+              </ul>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── Inventory Management ── */}
+      <section className="ai-panel" style={{ marginTop: 16 }}>
+        <div className="ai-panel-hd">📦 คลังวัตถุดิบ / คลังสินค้า (Inventory)
+          <button className="ai-mini-add" onClick={() => {
+            const item: InventoryItem = { id: 'i' + Date.now().toString(36), name: 'รายการใหม่', category: 'raw', unit: 'ชิ้น', qty: 0, minQty: 10, location: '' };
+            patch({ inventory: [...(f.inventory ?? []), item] });
+          }}>＋ เพิ่มรายการ</button>
+        </div>
+        {(f.inventory ?? []).length === 0 && <p style={{ color: '#64748b', fontSize: 13 }}>ยังไม่มีรายการ — กด "+ เพิ่มรายการ"</p>}
+        <table className="muda-table" style={{ marginTop: 8 }}>
+          <thead>
+            <tr><th>รายการ</th><th>หมวด</th><th>หน่วย</th><th style={{ textAlign: 'right' }}>คงเหลือ</th><th style={{ textAlign: 'right' }}>ขั้นต่ำ</th><th>ที่เก็บ</th><th>สถานะ</th><th></th></tr>
+          </thead>
+          <tbody>
+            {(f.inventory ?? []).map(item => {
+              const low = item.qty <= item.minQty;
+              return (
+                <tr key={item.id}>
+                  <td>
+                    <input defaultValue={item.name} key={'in' + item.id}
+                      onBlur={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, name: e.target.value } : x) })}
+                      style={{ background: 'none', border: 'none', color: 'var(--ink)', fontWeight: 600, fontSize: 13, width: 140 }} />
+                  </td>
+                  <td>
+                    <select value={item.category}
+                      onChange={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, category: e.target.value as InventoryItem['category'] } : x) })}
+                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: 'var(--ink)', fontSize: 12 }}>
+                      <option value="raw">วัตถุดิบ</option>
+                      <option value="wip">WIP</option>
+                      <option value="finished">สำเร็จรูป</option>
+                      <option value="spare">อะไหล่</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input defaultValue={item.unit} key={'iu' + item.id}
+                      onBlur={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, unit: e.target.value } : x) })}
+                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: 'var(--ink)', fontSize: 12, width: 60 }} />
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <input type="number" value={item.qty}
+                      onChange={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, qty: +e.target.value } : x) })}
+                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: low ? '#ef4444' : '#22c55e', fontSize: 12, width: 70, textAlign: 'right', fontWeight: 700 }} />
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <input type="number" value={item.minQty}
+                      onChange={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, minQty: +e.target.value } : x) })}
+                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: '#64748b', fontSize: 12, width: 70, textAlign: 'right' }} />
+                  </td>
+                  <td>
+                    <input defaultValue={item.location} key={'il' + item.id}
+                      onBlur={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, location: e.target.value } : x) })}
+                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: 'var(--ink)', fontSize: 12, width: 90 }} />
+                  </td>
+                  <td style={{ fontSize: 13 }}>{low ? '⚠️ ต่ำกว่าขั้นต่ำ' : '🟢 ปกติ'}</td>
+                  <td>
+                    <button className="ai-task-del"
+                      onClick={() => patch({ inventory: (f.inventory ?? []).filter(x => x.id !== item.id) })}>×</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </section>
 
       {/* ── AI Agent Suggestions ── */}
       <section className="ai-panel" style={{ marginTop: 16 }}>
-        <div className="ai-panel-hd">🤖 ทีม AI แนะนำสำหรับโรงงาน</div>
+        <div className="ai-panel-hd">🤖 ทีม AI สำหรับโรงงาน
+          <span style={{ fontSize: 12, fontWeight: 400, color: '#64748b' }}>C-Level = มีใน บริษัท AI แล้ว</span>
+        </div>
         <div className="factory-agent-grid">
           {FACTORY_AGENTS.map(a => (
-            <div key={a.role} className="factory-agent-card">
-              <div style={{ fontSize: 28, marginBottom: 6 }}>{a.avatar}</div>
+            <div key={a.role} className="factory-agent-card" style={{ border: a.isClevel ? '1px solid rgba(124,58,237,.4)' : '1px solid var(--sand)' }}>
+              <div style={{ fontSize: 28, marginBottom: 4 }}>{a.avatar}</div>
+              {a.isClevel && (
+                <div style={{ display: 'inline-block', background: 'rgba(124,58,237,.12)', color: '#7c3aed', borderRadius: 10, padding: '1px 8px', fontSize: 10, fontWeight: 700, marginBottom: 4 }}>C-Level AI</div>
+              )}
               <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{a.role}</div>
               <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6, marginBottom: 10 }}>{a.mandate}</div>
               <button
-                style={{ width: '100%', background: 'var(--rust)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 0', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
-                onClick={() => alert(`✅ เพิ่ม "${a.role}" ในหน้า บริษัท AI แล้ว\n\nไปที่เมนู "บริษัท AI" เพื่อกำหนดหน้าที่และเริ่มดำเนินงาน`)}>
-                ＋ เพิ่มใน บริษัท AI
+                style={{ width: '100%', background: a.isClevel ? '#7c3aed' : 'var(--rust)', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 0', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                onClick={() => alert(a.isClevel
+                  ? `✅ "${a.role}" เป็น C-Level AI ที่มีอยู่แล้วใน บริษัท AI\n\nไปที่เมนู "บริษัท AI" เพื่อมอบหมายงานและติดตามผล`
+                  : `✅ เพิ่ม "${a.role}" ในหน้า บริษัท AI แล้ว\n\nไปที่เมนู "บริษัท AI" เพื่อกำหนดหน้าที่และเริ่มดำเนินงาน`)}>
+                {a.isClevel ? '→ ดูใน บริษัท AI' : '＋ เพิ่มใน บริษัท AI'}
               </button>
             </div>
           ))}

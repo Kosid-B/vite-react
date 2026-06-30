@@ -513,6 +513,29 @@ export interface KaizenItem {
   result: string;
 }
 
+export type TPMPillarStatus = 'not_started' | 'planning' | 'implementing' | 'sustaining';
+
+export interface TPMPillar {
+  id: string;
+  pillar: number;
+  name: string;
+  nameEn: string;
+  description: string;
+  score: number;
+  status: TPMPillarStatus;
+  notes: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  category: 'raw' | 'wip' | 'finished' | 'spare';
+  unit: string;
+  qty: number;
+  minQty: number;
+  location: string;
+}
+
 export interface FactoryData {
   name: string;
   type: string;
@@ -526,4 +549,6 @@ export interface FactoryData {
   fiveS: FiveSCheck[];
   kaizen: KaizenItem[];
   taktDemand: number;
+  tpm: TPMPillar[];
+  inventory: InventoryItem[];
 }

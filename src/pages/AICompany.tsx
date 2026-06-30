@@ -3,6 +3,7 @@ import type { AppData, Agent, AgentStatus, ApprovalStatus, TaskStatus, SkillPlan
 import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
+import { DBD_SECTORS } from '../data/dbd';
 
 // ---- Org Chart Node (recursive) ----
 interface OcNodeProps {
@@ -928,9 +929,15 @@ export default function AICompany({ data, onUpdate }: Props) {
           <input className="ai-co-name" defaultValue={c.name} key={'n' + c.name}
             onBlur={e => setCompanyField('name', e.target.value)} spellCheck={false} />
           <div className="ai-co-industry">
-            <span className="ai-co-lbl">อุตสาหกรรม</span>
-            <input className="ai-co-ind-inp" defaultValue={c.industry} key={'i' + c.industry}
-              onBlur={e => setCompanyField('industry', e.target.value)} spellCheck={false} />
+            <span className="ai-co-lbl">อุตสาหกรรม (DBD)</span>
+            <datalist id="dbd-industry-list">
+              {DBD_SECTORS.map(s => s.items.map(item => (
+                <option key={s.code + item} value={`[${s.code}] ${item}`} />
+              )))}
+            </datalist>
+            <input className="ai-co-ind-inp" list="dbd-industry-list" defaultValue={c.industry} key={'i' + c.industry}
+              onBlur={e => setCompanyField('industry', e.target.value)} spellCheck={false}
+              placeholder="พิมพ์หรือเลือกประเภทธุรกิจ DBD..." />
           </div>
         </div>
         <div className="ai-control-side">
