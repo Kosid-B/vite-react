@@ -29,3 +29,6 @@ dist-ssr
 # local env
 .env
 .env.local
+
+# Claude Code agent worktrees (runtime artifacts)
+.claude/worktrees/
