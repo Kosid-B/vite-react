@@ -1,12 +1,18 @@
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -20,11 +26,9 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          # Custom domain ceoaithailand.com → serve from root '/'
-          # (ถ้ากลับไปใช้ GitHub Pages subdomain ให้ตั้งเป็น /vite-react/)
           BASE_PATH: /
           # ตั้งค่าใน repo: Settings → Secrets and variables → Actions
-          # ถ้าไม่ตั้ง แอปจะ deploy ในโหมด local (ใช้งานได้ แต่ไม่มี cloud/login)
+          # ถ้าไม่ตั้ง แอปจะทำงานในโหมด local (ไม่มี cloud sync / ไม่ต้อง login)
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - uses: actions/configure-pages@v4
