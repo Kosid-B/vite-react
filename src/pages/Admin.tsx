@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { isSupabaseEnabled } from '../lib/supabase';
-import { adminListWorkspaces, type AdminWorkspace } from '../lib/workspaces';
+import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { isAdminEmail, ADMIN_EMAILS } from '../config';
 import { PageHeader, Badge } from '../ds';
 import type { AppData, WinStory, WinCategory, FeedbackEntry, FeedbackSource, FeedbackSentiment, FeedbackTheme } from '../types';
@@ -564,7 +564,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback' | 'pricing' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback' | 'pricing' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -629,6 +629,46 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [fbNew, setFbNew]       = useState<FbFormState>(
     { ...BLANK_FB, date: new Date().toISOString().slice(0, 10) }
   );
+
+  // Manual Activation state
+  const [actWsId, setActWsId] = useState('');
+  const [actPlan, setActPlan] = useState<'growth' | 'scale'>('growth');
+  const [actAmount, setActAmount] = useState(1490);
+  const [actNote, setActNote] = useState('');
+  const [actBusy, setActBusy] = useState(false);
+  const [actMsg, setActMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function handleActivate() {
+    if (!actWsId) { setActMsg({ ok: false, text: 'กรุณาเลือกเวิร์กสเปซ' }); return; }
+    setActBusy(true); setActMsg(null);
+    try {
+      const state = (await wsLoad(actWsId)) ?? ({} as Record<string, any>);
+      const sub = (state as any).subscription ?? {};
+      const now = new Date().toISOString();
+      const invoice = {
+        id: 'inv-admin-' + Date.now().toString(36),
+        date: now,
+        plan: actPlan,
+        amount: actAmount,
+        status: 'paid',
+        note: actNote || 'เปิดใช้งานโดยแอดมิน',
+      };
+      const newSub = {
+        ...sub,
+        plan: actPlan,
+        status: 'active',
+        autoRenew: true,
+        currentPeriodEnd: (() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString(); })(),
+        trialEndDate: null,
+        invoices: [invoice, ...(sub.invoices ?? [])],
+      };
+      await wsSave(actWsId, { ...(state as any), subscription: newSub });
+      setActMsg({ ok: true, text: `✅ เปิดใช้งานแพ็ก ${actPlan} สำหรับ workspace เรียบร้อยแล้ว` });
+    } catch (e: any) {
+      setActMsg({ ok: false, text: '❌ เกิดข้อผิดพลาด: ' + (e?.message ?? String(e)) });
+    }
+    setActBusy(false);
+  }
 
   const winStories = data.winStories ?? [];
 
@@ -868,6 +908,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'gtm' ? ' active' : ''}`} onClick={() => setTab('gtm')}>
           🎯 GTM Strategy
+        </button>
+        <button className={`pfa-tab${tab === 'activate' ? ' active' : ''}`} onClick={() => setTab('activate')}>
+          💳 เปิดใช้งานสมาชิก
         </button>
       </div>
 
@@ -3867,6 +3910,108 @@ serve(async (_req) => {
                 ))}
               </div>
             </>
+          )}
+        </div>
+      )}
+
+      {/* ===== ACTIVATE TAB ===== */}
+      {tab === 'activate' && (
+        <div className="adm-activate">
+          <div className="adm-act-hd">💳 เปิดใช้งานสมาชิกด้วยตนเอง (Manual Activation)</div>
+          <div className="adm-act-desc">
+            ใช้เมื่อลูกค้าชำระเงินผ่านโอนธนาคาร / PromptPay และแอดมินยืนยันสลิปแล้ว
+            — ระบบจะบันทึกใบแจ้งหนี้ "paid" และเปิดแพ็กให้ทันที
+          </div>
+
+          {!isSupabaseEnabled ? (
+            <div className="team-notice">ต้องเปิดใช้ Supabase ก่อนจึงจะเปิดใช้งานสมาชิกได้</div>
+          ) : (
+            <div className="adm-act-form">
+              <div className="adm-act-field">
+                <label className="adm-act-label">เวิร์กสเปซ (Workspace ID)</label>
+                <select
+                  className="adm-act-select"
+                  value={actWsId}
+                  onChange={e => setActWsId(e.target.value)}
+                >
+                  <option value="">— เลือกเวิร์กสเปซ —</option>
+                  {rows.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.name} · {r.owner_email}
+                    </option>
+                  ))}
+                </select>
+                {rows.length === 0 && (
+                  <div className="adm-act-hint">
+                    ยังไม่มีข้อมูลเวิร์กสเปซ — ไปที่แท็บ "เวิร์กสเปซ" ก่อนเพื่อโหลดข้อมูล หรือพิมพ์ ID เองด้านล่าง
+                  </div>
+                )}
+                <input
+                  className="adm-act-input"
+                  placeholder="หรือพิมพ์ Workspace ID โดยตรง (UUID)"
+                  value={actWsId}
+                  onChange={e => setActWsId(e.target.value)}
+                />
+              </div>
+
+              <div className="adm-act-field">
+                <label className="adm-act-label">แพ็กที่เปิดใช้งาน</label>
+                <div className="adm-act-plan-btns">
+                  {([
+                    { id: 'growth', label: 'Growth — ฿1,490/เดือน', price: 1490 },
+                    { id: 'scale',  label: 'Scale — ฿5,900/เดือน',  price: 5900 },
+                  ] as const).map(p => (
+                    <button
+                      key={p.id}
+                      className={`adm-act-plan-btn${actPlan === p.id ? ' active' : ''}`}
+                      onClick={() => { setActPlan(p.id); setActAmount(p.price); }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="adm-act-field">
+                <label className="adm-act-label">ยอดที่รับชำระจริง (บาท)</label>
+                <input
+                  type="number"
+                  className="adm-act-input"
+                  value={actAmount}
+                  onChange={e => setActAmount(Number(e.target.value))}
+                  min={0}
+                />
+              </div>
+
+              <div className="adm-act-field">
+                <label className="adm-act-label">หมายเหตุ (ไม่บังคับ)</label>
+                <input
+                  className="adm-act-input"
+                  placeholder="เช่น โอนเข้า Kbank xxx วันที่ 30/06/2569"
+                  value={actNote}
+                  onChange={e => setActNote(e.target.value)}
+                />
+              </div>
+
+              <button
+                className="adm-act-submit"
+                onClick={handleActivate}
+                disabled={actBusy || !actWsId}
+              >
+                {actBusy ? 'กำลังบันทึก…' : '✅ ยืนยันการชำระและเปิดใช้งาน'}
+              </button>
+
+              {actMsg && (
+                <div className={`adm-act-msg${actMsg.ok ? ' ok' : ' err'}`}>
+                  {actMsg.text}
+                </div>
+              )}
+
+              <div className="adm-act-warn">
+                ⚠️ การดำเนินการนี้จะอัปเดตข้อมูลใน Supabase ทันที
+                — ตรวจสอบสลิปจากลูกค้าก่อนกดยืนยันทุกครั้ง
+              </div>
+            </div>
           )}
         </div>
       )}

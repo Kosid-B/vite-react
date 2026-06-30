@@ -490,6 +490,30 @@ export default function Billing({ data, onUpdate }: Props) {
               </div>
             </div>
 
+            <div className="bill-slip-box">
+              <div className="bill-slip-hd">📎 ส่งสลิปหลังโอนเงิน</div>
+              <div className="bill-slip-desc">
+                หลังโอนเงินแล้ว กรุณาส่งสลิปพร้อม Workspace ID มาที่ช่องทางด้านล่าง
+                แอดมินจะเปิดใช้งานให้ภายใน 1 ชั่วโมง (วันทำการ)
+              </div>
+              <div className="bill-slip-btns">
+                <a
+                  className="bill-slip-btn bill-slip-line"
+                  href={`https://line.me/ti/p/0817817773`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  📱 ส่งสลิปผ่าน LINE
+                </a>
+                <a
+                  className="bill-slip-btn bill-slip-email"
+                  href={`mailto:support@b-tctraining.com?subject=ยืนยันการชำระเงิน - แพ็ก ${selectedPlan.name}&body=สวัสดีครับ%0A%0Aชำระแพ็ก ${selectedPlan.name} ฿${selectedPlan.price} แล้ว%0AWorkspace ID: (กรอก ID ของคุณ)%0A%0Aแนบสลิปมาด้วยครับ`}
+                >
+                  📧 ส่งสลิปทางอีเมล
+                </a>
+              </div>
+            </div>
+
             <div className="bill-amount-row">
               <span>ยอดชำระ</span>
               <span className="bill-amount">{baht(selectedPlan.price)}</span>
