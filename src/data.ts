@@ -441,16 +441,6 @@ export const DEFAULT_DATA: AppData = {
         mandate: 'วางแผนการตลาด คอนเทนต์ และแคมเปญหาลูกค้าใหม่ผ่านช่องทางออนไลน์',
         model: 'claude-sonnet-4-6', status: 'idle', reportsTo: 'a-ceo',
       },
-      {
-        id: 'a-coo', role: 'COO (Operations)', name: 'วิชัย', avatar: '🏭', color: '#7c3aed',
-        mandate: 'บริหารการผลิต/บริการ คลังวัตถุดิบ คลังสินค้า และเครื่องมือเครื่องจักรตามหลัก TPM — ดูแล OEE สาย Production ทั้งหมด วางแผน Planned/Autonomous Maintenance ลด Downtime และควบคุมคุณภาพตามมาตรฐาน',
-        model: 'claude-sonnet-4-6', status: 'idle', reportsTo: 'a-ceo',
-      },
-      {
-        id: 'a-cqo', role: 'CQO (Quality)', name: 'สุภาพร', avatar: '🔬', color: '#0d9488',
-        mandate: 'บริหารคุณภาพทั้งองค์กรตามหลัก TQM — ควบคุมกระบวนการผลิต ลดของเสียให้เป็น Zero Defect วิเคราะห์ Root Cause Poka-Yoke SPC และดูแลระบบ ISO/มาตรฐานคุณภาพ',
-        model: 'claude-sonnet-4-6', status: 'idle', reportsTo: 'a-coo',
-      },
     ],
     tasks: [
       { id: 't1', agentId: 'a-cmo', title: 'ร่างแคมเปญเปิดตัวสินค้าใหม่บน Facebook', detail: 'กำหนดกลุ่มเป้าหมาย งบ และข้อความโฆษณา 3 เวอร์ชัน', status: 'in_progress' },
@@ -461,6 +451,22 @@ export const DEFAULT_DATA: AppData = {
     approvals: [
       { id: 'ap1', agentId: 'a-cmo', title: 'อนุมัติงบยิงแอด Facebook ฿15,000', detail: 'แคมเปญเปิดตัวสินค้าใหม่ คาดได้ลูกค้า ~120 ราย', impact: 'งบ ฿15,000', status: 'pending' },
       { id: 'ap2', agentId: 'a-cto', title: 'อนุมัติสมัครเครื่องมือ Email อัตโนมัติ', detail: 'ค่าบริการ ฿590/เดือน เพื่อส่งอีเมลติดตามลูกค้า', impact: 'งบ ฿590/เดือน', status: 'pending' },
+      {
+        id: 'ap-coo',
+        agentId: 'a-ceo',
+        title: '📋 CEO เสนอ: เพิ่มตำแหน่ง COO (Operations)',
+        detail: 'บริหารการผลิต/บริการ คลังวัตถุดิบ คลังสินค้า เครื่องมือเครื่องจักรตามหลัก TPM — ดูแล OEE ลด Downtime วางแผน PM/AM และควบคุมกำลังผลิต',
+        impact: JSON.stringify({ type: 'hire', role: 'COO (Operations)', mandate: 'บริหารการผลิต/บริการ คลังวัตถุดิบ คลังสินค้า และเครื่องมือเครื่องจักรตามหลัก TPM — ดูแล OEE สาย Production ทั้งหมด วางแผน Planned/Autonomous Maintenance ลด Downtime และควบคุมคุณภาพตามมาตรฐาน', reportsToRole: 'CEO' }),
+        status: 'pending',
+      },
+      {
+        id: 'ap-cqo',
+        agentId: 'a-ceo',
+        title: '📋 CEO เสนอ: เพิ่มตำแหน่ง CQO (Quality)',
+        detail: 'บริหารคุณภาพทั้งองค์กรตามหลัก TQM — Zero Defect Root Cause Analysis Poka-Yoke SPC และดูแล ISO/มาตรฐานคุณภาพ รายงานต่อ COO',
+        impact: JSON.stringify({ type: 'hire', role: 'CQO (Quality)', mandate: 'บริหารคุณภาพทั้งองค์กรตามหลัก TQM — ควบคุมกระบวนการผลิต ลดของเสียให้เป็น Zero Defect วิเคราะห์ Root Cause Poka-Yoke SPC และดูแลระบบ ISO/มาตรฐานคุณภาพ', reportsToRole: 'COO (Operations)' }),
+        status: 'pending',
+      },
     ],
     integrations: [
       { id: 'in-search', name: 'Brave Search API', desc: 'ให้เอเจนต์ค้นคว้าข้อมูลตลาด คู่แข่ง และข่าวสารแบบเรียลไทม์', icon: '🔎', connected: false, apiKey: '' },
