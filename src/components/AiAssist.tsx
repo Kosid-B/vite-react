@@ -29,6 +29,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   iso9001: { label: 'ISO 9001:2015 QMS', prompts: ['สรุปสถานะการรับรอง ISO', 'เสนอวิธีแก้ NC ที่เปิดอยู่', 'แนะนำการเตรียมตรวจ Internal Audit'], context: d => `ISO QMS: ${d.iso9001?.clauses?.filter(c => c.status === 'green').length ?? 0}/${d.iso9001?.clauses?.length ?? 0} ข้อผ่าน` },
   cases: { label: 'Case Studies', prompts: ['สรุปบทเรียนจาก Tencent', 'แนะนำ Mission Prompt สำหรับ SaaS ไทย', 'เปรียบเทียบกลยุทธ์ M&A กับธุรกิจของเรา'], context: () => 'หน้า Case Studies — บทเรียนธุรกิจจาก Tencent & Mission-Driven AI' },
   analytics: { label: 'SaaS Analytics', prompts: ['วิเคราะห์ LTV:CAC ของเราเทียบ benchmark', 'แนะนำวิธีลด churn rate', 'เสนอกลยุทธ์เพิ่ม MRR ไตรมาสนี้'], context: d => `แผน: ${d.subscription.plan}, สถานะ: ${d.subscription.status}, invoices: ${d.subscription.invoices.length} รายการ` },
+  factory: { label: 'โรงงานอัจฉริยะ', prompts: ['วิเคราะห์ OEE และเสนอวิธีเพิ่มประสิทธิภาพ', 'หาต้นเหตุของเสียและแนวทางแก้ไข', 'เสนอแผน Lean / Kaizen ที่ควรทำต่อไป'], context: d => `โรงงาน: ${d.factory?.name ?? '-'}, เครื่องจักร: ${d.factory?.machines.length ?? 0}, OEE เฉลี่ย: ${d.factory ? Math.round(d.factory.machines.reduce((s, m) => s + m.oee, 0) / Math.max(1, d.factory.machines.length)) : 0}%` },
 };
 
 export default function AiAssist({ activePage, data }: Props) {

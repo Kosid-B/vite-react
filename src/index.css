@@ -3739,3 +3739,47 @@ input:focus, textarea:focus, select:focus {
   border-radius: var(--r-lg);
   padding: 16px 20px;
 }
+
+/* ── Factory Page ── */
+.factory-profile-row { display:flex; flex-wrap:wrap; gap:12px; background: var(--cream3); border-radius: var(--r); padding:14px; border:1px solid var(--sand); margin-bottom:16px; align-items:center; }
+.factory-profile-field { display:flex; flex-direction:column; gap:2px; }
+.factory-profile-label { font-size:11px; color: var(--ink); opacity:.5; text-transform:uppercase; letter-spacing:.05em; }
+.factory-profile-inp { background: var(--cream2); border: 1px solid var(--sand); border-radius:6px; padding:4px 8px; color: var(--ink); font-size:13px; }
+
+.factory-oee-breakdown { background: var(--cream3); border:1px solid var(--sand); border-radius: var(--r); padding:16px 20px; margin-bottom:16px; }
+.factory-oee-breakdown-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink); opacity:.5; margin-bottom:14px; }
+.factory-oee-components { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.factory-oee-component { flex:1; min-width:90px; text-align:center; }
+.factory-oee-component-val { font-size:26px; font-weight:800; line-height:1; }
+.factory-oee-component-label { font-size:11px; font-weight:700; color:var(--ink); opacity:.7; margin:2px 0; }
+.factory-oee-component-sub { font-size:10px; color:var(--ink); opacity:.45; }
+.factory-oee-op { font-size:24px; font-weight:300; color:var(--ink); opacity:.3; flex-shrink:0; }
+.factory-oee-bar { height:6px; background: var(--sand); border-radius:3px; margin-top:6px; overflow:hidden; }
+.factory-oee-fill { height:100%; border-radius:3px; transition: width .3s; }
+
+.factory-kpi-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:12px; margin-bottom:20px; }
+.factory-kpi-card { background: var(--cream3); border-radius: var(--r); padding: 16px; border: 1px solid var(--sand); }
+.factory-kpi-val { font-size: 28px; font-weight: 800; margin: 4px 0; }
+.factory-kpi-label { font-size: 12px; color: var(--ink); opacity: .6; }
+.factory-kpi-sub { font-size: 11px; color: var(--ink); opacity: .4; }
+
+.factory-machine-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:12px; margin-top:12px; }
+.factory-machine-card { background: var(--cream3); border-radius: var(--r); padding: 14px; border: 1px solid var(--sand); }
+
+.factory-agent-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:12px; }
+.factory-agent-card { background: var(--cream3); border-radius: var(--r); padding: 16px; border: 1px solid var(--sand); text-align:center; }
+
+/* Lean Management */
+.lean-tab-row { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.lean-tab { background: var(--cream3); border:1px solid var(--sand); color:var(--ink); padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; opacity:.6; transition: all .15s; }
+.lean-tab.active { background: var(--rust); border-color: var(--rust); color:#fff; opacity:1; }
+.muda-table { width:100%; border-collapse:collapse; font-size:13px; }
+.muda-table th { text-align:left; padding:8px; background:var(--cream2); color:var(--ink); opacity:.6; font-size:11px; text-transform:uppercase; border-bottom:1px solid var(--sand); }
+.muda-table td { padding:8px; border-bottom:1px solid var(--sand); vertical-align:top; }
+.fives-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap:12px; }
+.fives-card { background:var(--cream3); border:1px solid var(--sand); border-radius:var(--r); padding:14px; }
+.fives-card-hd { font-weight:700; font-size:13px; margin-bottom:8px; color:var(--rust); }
+.fives-score-bar { height:6px; background:var(--sand); border-radius:3px; overflow:hidden; margin-top:6px; }
+.fives-score-fill { height:100%; background:var(--rust); border-radius:3px; transition:width .3s; }
+.takt-card { background:var(--cream3); border:1px solid var(--sand); border-radius:var(--r); padding:20px; display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start; }
+.takt-result { font-size:28px; font-weight:800; color:var(--rust); margin:4px 0; }

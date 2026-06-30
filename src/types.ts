@@ -453,6 +453,77 @@ export interface AppData {
   feedback: FeedbackAnalysis;
   gtmAuditChecks?: boolean[];
   iso9001?: ISO9001Data;
+  factory?: FactoryData;
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory';
+
+/* ===== Factory / โรงงานอัจฉริยะ ===== */
+export type MachineStatus = 'running' | 'idle' | 'maintenance' | 'breakdown';
+export type WorkOrderStatus = 'planned' | 'in_progress' | 'done' | 'on_hold';
+
+export interface FactoryMachine {
+  id: string;
+  name: string;
+  line: string;
+  status: MachineStatus;
+  oee: number;
+  plannedTime: number;    // minutes/shift
+  downtime: number;       // minutes actual downtime
+  idealCycleTime: number; // minutes per unit (ideal)
+  lastMaintenance: string | null;
+  nextMaintenance: string | null;
+}
+
+export interface WorkOrder {
+  id: string;
+  product: string;
+  targetQty: number;
+  actualQty: number;
+  defectQty: number;
+  status: WorkOrderStatus;
+  dueDate: string;
+  machineId: string;
+  shift: 1 | 2 | 3;
+  note: string;
+}
+
+export interface MudaEntry {
+  type: string;
+  typeEn: string;
+  description: string;
+  fix: string;
+  level: 'low' | 'medium' | 'high';
+  note: string;
+}
+
+export interface FiveSCheck {
+  id: string;
+  s: 1 | 2 | 3 | 4 | 5;
+  text: string;
+  checked: boolean;
+}
+
+export interface KaizenItem {
+  id: string;
+  title: string;
+  proposer: string;
+  type: 'quality' | 'cost' | 'safety' | 'delivery' | 'morale';
+  status: 'idea' | 'doing' | 'done';
+  result: string;
+}
+
+export interface FactoryData {
+  name: string;
+  type: string;
+  location: string;
+  capacityPerDay: number;
+  shifts: number;
+  machines: FactoryMachine[];
+  workOrders: WorkOrder[];
+  kpi: { targetOEE: number; targetDefectRate: number; targetOnTimeDelivery: number; };
+  mudaLog: MudaEntry[];
+  fiveS: FiveSCheck[];
+  kaizen: KaizenItem[];
+  taktDemand: number;
+}

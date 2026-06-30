@@ -27,6 +27,7 @@ import Admin from './pages/Admin';
 import Marketing from './pages/Marketing';
 import ISO9001 from './pages/ISO9001';
 import CaseStudies from './pages/CaseStudies';
+import Factory from './pages/Factory';
 import Analytics from './pages/Analytics';
 import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
@@ -62,6 +63,7 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.feedback) parsed.feedback = DEFAULT_DATA.feedback;
   if (!parsed.gtmAuditChecks) parsed.gtmAuditChecks = DEFAULT_DATA.gtmAuditChecks;
   if (!parsed.iso9001) parsed.iso9001 = DEFAULT_DATA.iso9001;
+  if (!parsed.factory) parsed.factory = DEFAULT_DATA.factory;
   return parsed;
 }
 
@@ -255,6 +257,7 @@ export default function App() {
         {activePage === 'iso9001' && <ISO9001 data={data} onUpdate={updateData} />}
         {activePage === 'cases' && <CaseStudies />}
         {activePage === 'analytics' && <Analytics data={data} />}
+        {activePage === 'factory' && <Factory data={data} onUpdate={updateData} />}
 
         <footer className="app-footer">
           <span className="app-footer__name">B. Training Consultant (M.E.A) Co., Ltd.</span>
