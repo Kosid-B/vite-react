@@ -67,7 +67,23 @@ function migrate(parsed: AppData): AppData {
     parsed.factory = DEFAULT_DATA.factory!;
   } else {
     if (!parsed.factory.tpm) parsed.factory.tpm = DEFAULT_DATA.factory!.tpm;
-    if (!parsed.factory.inventory) parsed.factory.inventory = DEFAULT_DATA.factory!.inventory;
+    if (!parsed.factory.inventory) {
+      parsed.factory.inventory = DEFAULT_DATA.factory!.inventory;
+    } else {
+      // Migrate old InventoryItem (qty: number) → new format (lots: InventoryLot[])
+      parsed.factory.inventory = (parsed.factory.inventory as any[]).map((item: any) => {
+        if (!item.lots) {
+          return {
+            id: item.id, name: item.name, sku: item.sku ?? '',
+            category: item.category, unit: item.unit,
+            minQty: item.minQty, maxQty: item.maxQty ?? item.minQty * 3,
+            location: item.location ?? '', supplier: item.supplier ?? '', costPerUnit: item.costPerUnit ?? 0,
+            lots: [{ id: 'lot-init-' + item.id, lotNo: 'LOT-001', receivedDate: new Date().toISOString().slice(0, 10), mfgDate: '', expDate: null, qty: item.qty ?? 0 }],
+          };
+        }
+        return { sku: '', maxQty: item.minQty * 3, supplier: '', costPerUnit: 0, ...item };
+      });
+    }
   }
   return parsed;
 }

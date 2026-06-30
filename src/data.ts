@@ -735,9 +735,32 @@ export const DEFAULT_DATA: AppData = {
       { id: 'tpm8', pillar: 8, name: 'Office TPM', nameEn: 'Administrative TPM', description: 'ขยายหลักการ TPM ไปสู่สำนักงาน คลังสินค้า จัดซื้อ และทุกหน่วยงานสนับสนุน', score: 5, status: 'not_started' as const, notes: '' },
     ],
     inventory: [
-      { id: 'inv1', name: 'เหล็กแผ่น SS400', category: 'raw' as const, unit: 'แผ่น', qty: 500, minQty: 100, location: 'คลัง A-01' },
-      { id: 'inv2', name: 'น้ำมันหล่อลื่น ISO VG 46', category: 'spare' as const, unit: 'ลิตร', qty: 50, minQty: 20, location: 'คลังอะไหล่ B-03' },
-      { id: 'inv3', name: 'ชิ้นส่วน A-101 สำเร็จรูป', category: 'finished' as const, unit: 'ชิ้น', qty: 185, minQty: 50, location: 'คลังสินค้า FG-01' },
+      {
+        id: 'inv1', name: 'เหล็กแผ่น SS400', sku: 'RAW-SS400-01',
+        category: 'raw' as const, unit: 'แผ่น', minQty: 100, maxQty: 600,
+        location: 'คลัง A-01', supplier: 'บจก. เหล็กไทย', costPerUnit: 350,
+        lots: [
+          { id: 'l1a', lotNo: 'SS400-2606-01', receivedDate: '2026-06-01', mfgDate: '2026-05-20', expDate: null, qty: 300 },
+          { id: 'l1b', lotNo: 'SS400-2606-02', receivedDate: '2026-06-15', mfgDate: '2026-06-01', expDate: null, qty: 200 },
+        ],
+      },
+      {
+        id: 'inv2', name: 'น้ำมันหล่อลื่น ISO VG 46', sku: 'SP-OIL-VG46',
+        category: 'spare' as const, unit: 'ลิตร', minQty: 20, maxQty: 100,
+        location: 'คลังอะไหล่ B-03', supplier: 'Castrol Thailand', costPerUnit: 120,
+        lots: [
+          { id: 'l2a', lotNo: 'OIL-2604-B', receivedDate: '2026-04-05', mfgDate: '2026-03-01', expDate: '2026-07-05', qty: 20 },
+          { id: 'l2b', lotNo: 'OIL-2606-A', receivedDate: '2026-06-10', mfgDate: '2026-05-01', expDate: '2026-07-15', qty: 12 },
+        ],
+      },
+      {
+        id: 'inv3', name: 'ชิ้นส่วน A-101 สำเร็จรูป', sku: 'FG-A101',
+        category: 'finished' as const, unit: 'ชิ้น', minQty: 50, maxQty: 300,
+        location: 'คลังสินค้า FG-01', supplier: '', costPerUnit: 850,
+        lots: [
+          { id: 'l3a', lotNo: 'A101-WO01-260628', receivedDate: '2026-06-28', mfgDate: '2026-06-28', expDate: '2027-06-28', qty: 185 },
+        ],
+      },
     ],
   },
 };

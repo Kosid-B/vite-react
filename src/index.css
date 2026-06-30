@@ -3783,3 +3783,26 @@ input:focus, textarea:focus, select:focus {
 .fives-score-fill { height:100%; background:var(--rust); border-radius:3px; transition:width .3s; }
 .takt-card { background:var(--cream3); border:1px solid var(--sand); border-radius:var(--r); padding:20px; display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start; }
 .takt-result { font-size:28px; font-weight:800; color:var(--rust); margin:4px 0; }
+
+/* ── Inventory FEFO ── */
+.inv-alert-banner { background:#ef44441a; border:1px solid #ef44442a; border-radius:var(--r); padding:10px 16px; margin-bottom:12px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+.inv-alert-item { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; }
+.inv-kpi-strip { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+.inv-kpi-box { background:var(--cream3); border:1px solid var(--sand); border-radius:8px; padding:10px 16px; flex:1; min-width:110px; }
+.inv-kpi-box-val { font-size:20px; font-weight:800; }
+.inv-kpi-box-lbl { font-size:11px; color:var(--ink); opacity:.45; margin-top:2px; }
+.inv-cat-tabs { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+.inv-cat-tab { background:var(--cream3); border:1px solid var(--sand); border-radius:20px; padding:5px 14px; font-size:12px; cursor:pointer; color:var(--ink); opacity:.55; transition:all .15s; }
+.inv-cat-tab.active { background:var(--rust); border-color:var(--rust); color:#fff; opacity:1; }
+.inv-table { width:100%; border-collapse:collapse; font-size:13px; }
+.inv-table th { padding:8px 10px; text-align:left; font-size:11px; font-weight:700; color:var(--ink); opacity:.5; border-bottom:1px solid var(--sand); white-space:nowrap; }
+.inv-table td { padding:11px 10px; border-bottom:1px solid var(--sand); vertical-align:middle; }
+.inv-table tbody tr:last-child td { border-bottom:none; }
+.inv-table tbody tr:hover > td:not(.inv-lot-section) { background:var(--cream2); }
+.inv-fefo-chip { display:inline-flex; align-items:center; gap:3px; border-radius:10px; padding:3px 9px; font-size:11px; font-weight:600; white-space:nowrap; }
+.inv-lot-section { background:var(--cream2); border-top:1px solid var(--sand); padding:0 !important; cursor:default; }
+.inv-lot-table { width:100%; border-collapse:collapse; font-size:12px; }
+.inv-lot-table th { padding:6px 12px; font-size:10px; font-weight:700; opacity:.5; border-bottom:1px solid var(--sand); white-space:nowrap; text-align:left; }
+.inv-lot-table td { padding:8px 12px; border-bottom:1px solid var(--sand); vertical-align:middle; }
+.inv-lot-table tr:last-child td { border-bottom:none; }
+.fefo-first-badge { background:#06b6d41a; color:#06b6d4; border:1px solid #06b6d433; border-radius:10px; padding:2px 8px; font-size:10px; font-weight:700; white-space:nowrap; }

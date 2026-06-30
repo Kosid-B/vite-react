@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { AppData, FactoryData, FactoryMachine, WorkOrder, MachineStatus, WorkOrderStatus, KaizenItem, TPMPillarStatus, InventoryItem } from '../types';
+import type { AppData, FactoryData, FactoryMachine, WorkOrder, MachineStatus, WorkOrderStatus, KaizenItem, TPMPillarStatus, InventoryItem, InventoryLot } from '../types';
 import { DBD_SECTORS } from '../data/dbd';
 
 interface Props { data: AppData; onUpdate: (d: AppData) => void; }
@@ -45,7 +45,7 @@ const DEFAULT_FACTORY = (): FactoryData => ({
     { id: 'tpm7', pillar: 7, name: 'Safety Health Env (SHE)', nameEn: 'Safety, Health & Environment', description: 'สถานที่ทำงานปลอดภัย Zero Accident ลดมลพิษ ดูแลสุขภาพ', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
     { id: 'tpm8', pillar: 8, name: 'Office TPM', nameEn: 'Administrative TPM', description: 'ขยายหลัก TPM ไปสู่สำนักงาน คลังสินค้า และทุกหน่วยสนับสนุน', score: 0, status: 'not_started' as TPMPillarStatus, notes: '' },
   ],
-  inventory: [],
+  inventory: [] as InventoryItem[],
 });
 
 const MACHINE_STATUS_LABEL: Record<MachineStatus, string> = { running: '🟢 Running', idle: '🟡 Idle', maintenance: '🔧 Maintenance', breakdown: '🔴 Breakdown' };
@@ -79,6 +79,8 @@ export default function Factory({ data, onUpdate }: Props) {
 
   const [leanTab, setLeanTab] = useState(0);
   const [newWOProduct, setNewWOProduct] = useState('');
+  const [invCat, setInvCat] = useState<'all' | InventoryItem['category']>('all');
+  const [expandedInvId, setExpandedInvId] = useState<string | null>(null);
 
   // ─── KPI calculations ───────────────────────────────────────────────────────
   const avgOEE = f.machines.length ? Math.round(f.machines.reduce((s, m) => s + m.oee, 0) / f.machines.length) : 0;
@@ -150,6 +152,71 @@ export default function Factory({ data, onUpdate }: Props) {
   }
   function patchKaizen(id: string, p: Partial<KaizenItem>) { patch({ kaizen: f.kaizen.map(k => k.id === id ? { ...k, ...p } : k) }); }
   function delKaizen(id: string) { patch({ kaizen: f.kaizen.filter(k => k.id !== id) }); }
+
+  // ─── Inventory helpers ────────────────────────────────────────────────────
+  const inv = f.inventory ?? [];
+  function patchInv(id: string, p: Partial<InventoryItem>) {
+    patch({ inventory: inv.map(x => x.id === id ? { ...x, ...p } : x) });
+  }
+  function delInv(id: string) { patch({ inventory: inv.filter(x => x.id !== id) }); }
+  function addInv() {
+    const item: InventoryItem = {
+      id: 'i' + Date.now().toString(36), name: 'รายการใหม่', sku: '',
+      category: 'raw', unit: 'ชิ้น', minQty: 10, maxQty: 50,
+      location: '', supplier: '', costPerUnit: 0, lots: [],
+    };
+    patch({ inventory: [...inv, item] });
+  }
+  function addLot(itemId: string) {
+    const lot: InventoryLot = {
+      id: 'lot' + Date.now().toString(36),
+      lotNo: 'LOT-' + String(Date.now()).slice(-4),
+      receivedDate: new Date().toISOString().slice(0, 10),
+      mfgDate: '', expDate: null, qty: 0,
+    };
+    const item = inv.find(x => x.id === itemId);
+    if (item) patchInv(itemId, { lots: [...item.lots, lot] });
+  }
+  function patchLot(itemId: string, lotId: string, p: Partial<InventoryLot>) {
+    const item = inv.find(x => x.id === itemId);
+    if (!item) return;
+    patchInv(itemId, { lots: item.lots.map(l => l.id === lotId ? { ...l, ...p } : l) });
+  }
+  function delLot(itemId: string, lotId: string) {
+    const item = inv.find(x => x.id === itemId);
+    if (!item) return;
+    patchInv(itemId, { lots: item.lots.filter(l => l.id !== lotId) });
+  }
+
+  // ─── Inventory FEFO computations ──────────────────────────────────────────
+  const today = new Date().toISOString().slice(0, 10);
+  const totalQty = (item: InventoryItem) => item.lots.reduce((s, l) => s + l.qty, 0);
+  const fefoLots = (item: InventoryItem) =>
+    [...item.lots].sort((a, b) => {
+      if (!a.expDate && !b.expDate) return 0;
+      if (!a.expDate) return 1;
+      if (!b.expDate) return -1;
+      return a.expDate.localeCompare(b.expDate);
+    });
+  const nearestExp = (item: InventoryItem): string | null =>
+    fefoLots(item).find(l => l.expDate && l.qty > 0)?.expDate ?? null;
+  const expStatus = (expDate: string | null): 'expired' | 'critical' | 'warning' | 'ok' | 'none' => {
+    if (!expDate) return 'none';
+    if (expDate < today) return 'expired';
+    const days = Math.ceil((new Date(expDate).getTime() - Date.now()) / 86400000);
+    if (days <= 7) return 'critical';
+    if (days <= 30) return 'warning';
+    return 'ok';
+  };
+  const EXP_COLOR: Record<string, string> = { expired: '#ef4444', critical: '#ef4444', warning: '#f59e0b', ok: '#22c55e', none: '#64748b' };
+  const EXP_LABEL: Record<string, string> = { expired: 'หมดอายุแล้ว', critical: '< 7 วัน', warning: '< 30 วัน', ok: 'ปกติ', none: 'ไม่ระบุ' };
+  const invAlerts = inv.filter(item => totalQty(item) <= item.minQty).length;
+  const expiringSoon = inv.reduce((n, item) =>
+    n + item.lots.filter(l => l.qty > 0 && l.expDate && expStatus(l.expDate) !== 'ok' && expStatus(l.expDate) !== 'none').length, 0);
+  const totalInvValue = inv.reduce((s, item) => s + totalQty(item) * item.costPerUnit, 0);
+  const filteredInv = invCat === 'all' ? inv : inv.filter(x => x.category === invCat);
+  const CAT_LABEL: Record<InventoryItem['category'], string> = { raw: 'วัตถุดิบ', wip: 'WIP', finished: 'สำเร็จรูป', spare: 'อะไหล่' };
+  const CAT_COLOR: Record<InventoryItem['category'], string> = { raw: '#06b6d4', wip: '#f59e0b', finished: '#22c55e', spare: '#a855f7' };
 
   // ─── Quality summary ─────────────────────────────────────────────────────
   const qualByProduct = Object.values(f.workOrders.reduce((acc, w) => {
@@ -626,69 +693,278 @@ export default function Factory({ data, onUpdate }: Props) {
         )}
       </section>
 
-      {/* ── Inventory Management ── */}
+      {/* ── Inventory Management (FEFO) ── */}
       <section className="ai-panel" style={{ marginTop: 16 }}>
-        <div className="ai-panel-hd">📦 คลังวัตถุดิบ / คลังสินค้า (Inventory)
-          <button className="ai-mini-add" onClick={() => {
-            const item: InventoryItem = { id: 'i' + Date.now().toString(36), name: 'รายการใหม่', category: 'raw', unit: 'ชิ้น', qty: 0, minQty: 10, location: '' };
-            patch({ inventory: [...(f.inventory ?? []), item] });
-          }}>＋ เพิ่มรายการ</button>
+        <div className="ai-panel-hd">📦 Inventory Management — FEFO (First Expired, First Out)
+          <button className="ai-mini-add" onClick={addInv}>＋ เพิ่มรายการ</button>
         </div>
-        {(f.inventory ?? []).length === 0 && <p style={{ color: '#64748b', fontSize: 13 }}>ยังไม่มีรายการ — กด "+ เพิ่มรายการ"</p>}
-        <table className="muda-table" style={{ marginTop: 8 }}>
-          <thead>
-            <tr><th>รายการ</th><th>หมวด</th><th>หน่วย</th><th style={{ textAlign: 'right' }}>คงเหลือ</th><th style={{ textAlign: 'right' }}>ขั้นต่ำ</th><th>ที่เก็บ</th><th>สถานะ</th><th></th></tr>
-          </thead>
-          <tbody>
-            {(f.inventory ?? []).map(item => {
-              const low = item.qty <= item.minQty;
-              return (
-                <tr key={item.id}>
-                  <td>
-                    <input defaultValue={item.name} key={'in' + item.id}
-                      onBlur={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, name: e.target.value } : x) })}
-                      style={{ background: 'none', border: 'none', color: 'var(--ink)', fontWeight: 600, fontSize: 13, width: 140 }} />
-                  </td>
-                  <td>
-                    <select value={item.category}
-                      onChange={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, category: e.target.value as InventoryItem['category'] } : x) })}
-                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: 'var(--ink)', fontSize: 12 }}>
-                      <option value="raw">วัตถุดิบ</option>
-                      <option value="wip">WIP</option>
-                      <option value="finished">สำเร็จรูป</option>
-                      <option value="spare">อะไหล่</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input defaultValue={item.unit} key={'iu' + item.id}
-                      onBlur={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, unit: e.target.value } : x) })}
-                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: 'var(--ink)', fontSize: 12, width: 60 }} />
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <input type="number" value={item.qty}
-                      onChange={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, qty: +e.target.value } : x) })}
-                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: low ? '#ef4444' : '#22c55e', fontSize: 12, width: 70, textAlign: 'right', fontWeight: 700 }} />
-                  </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <input type="number" value={item.minQty}
-                      onChange={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, minQty: +e.target.value } : x) })}
-                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: '#64748b', fontSize: 12, width: 70, textAlign: 'right' }} />
-                  </td>
-                  <td>
-                    <input defaultValue={item.location} key={'il' + item.id}
-                      onBlur={e => patch({ inventory: (f.inventory ?? []).map(x => x.id === item.id ? { ...x, location: e.target.value } : x) })}
-                      style={{ background: 'var(--cream2)', border: '1px solid var(--sand)', borderRadius: 6, padding: '2px 6px', color: 'var(--ink)', fontSize: 12, width: 90 }} />
-                  </td>
-                  <td style={{ fontSize: 13 }}>{low ? '⚠️ ต่ำกว่าขั้นต่ำ' : '🟢 ปกติ'}</td>
-                  <td>
-                    <button className="ai-task-del"
-                      onClick={() => patch({ inventory: (f.inventory ?? []).filter(x => x.id !== item.id) })}>×</button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+
+        {/* Alert Banner */}
+        {(invAlerts > 0 || expiringSoon > 0) && (
+          <div className="inv-alert-banner">
+            {invAlerts > 0 && (
+              <span className="inv-alert-item">🔴 {invAlerts} รายการต่ำกว่า Safety Stock</span>
+            )}
+            {expiringSoon > 0 && (
+              <span className="inv-alert-item" style={{ color: '#f59e0b' }}>⚠️ {expiringSoon} ล็อตหมดอายุภายใน 30 วัน</span>
+            )}
+            <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 'auto' }}>FEFO = ใช้ล็อตที่หมดอายุก่อนออกก่อนเสมอ</span>
+          </div>
+        )}
+
+        {/* KPI Strip */}
+        <div className="inv-kpi-strip">
+          {[
+            { lbl: 'มูลค่าสินค้าคงคลัง', val: '฿' + totalInvValue.toLocaleString(), color: 'var(--rust)' },
+            { lbl: 'รายการทั้งหมด', val: String(inv.length), color: 'var(--ink)' },
+            { lbl: 'ต้องเติมสต็อก', val: String(invAlerts), color: invAlerts > 0 ? '#ef4444' : '#22c55e' },
+            { lbl: 'ล็อตใกล้หมดอายุ', val: String(expiringSoon), color: expiringSoon > 0 ? '#f59e0b' : '#22c55e' },
+          ].map(k => (
+            <div key={k.lbl} className="inv-kpi-box">
+              <div className="inv-kpi-box-val" style={{ color: k.color }}>{k.val}</div>
+              <div className="inv-kpi-box-lbl">{k.lbl}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Category Filter */}
+        <div className="inv-cat-tabs">
+          {(['all', 'raw', 'wip', 'finished', 'spare'] as const).map(cat => (
+            <button key={cat} className={`inv-cat-tab${invCat === cat ? ' active' : ''}`}
+              onClick={() => setInvCat(cat)}>
+              {cat === 'all' ? `ทั้งหมด (${inv.length})` : `${CAT_LABEL[cat as InventoryItem['category']]} (${inv.filter(x => x.category === cat).length})`}
+            </button>
+          ))}
+        </div>
+
+        {filteredInv.length === 0 && <p style={{ color: '#64748b', fontSize: 13 }}>ยังไม่มีรายการ — กด "+ เพิ่มรายการ"</p>}
+
+        <div style={{ overflowX: 'auto' }}>
+          <table className="inv-table">
+            <thead>
+              <tr>
+                <th>ชื่อสินค้า / SKU</th>
+                <th>หมวด</th>
+                <th style={{ textAlign: 'right' }}>คงเหลือ</th>
+                <th style={{ textAlign: 'right' }}>Min / Max</th>
+                <th>FEFO — หมดอายุล็อตแรก</th>
+                <th style={{ textAlign: 'right' }}>ราคา/หน่วย</th>
+                <th style={{ textAlign: 'right' }}>มูลค่า</th>
+                <th>สถานะ</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInv.map(item => {
+                const qty = totalQty(item);
+                const low = qty <= item.minQty;
+                const near = qty <= item.minQty * 1.5 && qty > item.minQty;
+                const exp = nearestExp(item);
+                const es = expStatus(exp);
+                const isExpanded = expandedInvId === item.id;
+                const lotsSorted = fefoLots(item);
+
+                return (
+                  <>
+                    <tr key={item.id} style={{ cursor: 'pointer' }} onClick={() => setExpandedInvId(isExpanded ? null : item.id)}>
+                      <td>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>{item.name}</div>
+                        <div style={{ fontSize: 10, color: '#64748b', marginTop: 1 }}>
+                          {item.sku && <span>{item.sku}</span>}
+                          {item.sku && item.supplier && <span style={{ margin: '0 4px' }}>·</span>}
+                          {item.supplier && <span>{item.supplier}</span>}
+                        </div>
+                      </td>
+                      <td>
+                        <span className="inv-fefo-chip" style={{ background: CAT_COLOR[item.category] + '1a', color: CAT_COLOR[item.category], border: '1px solid ' + CAT_COLOR[item.category] + '33' }}>
+                          {CAT_LABEL[item.category]}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 800, fontSize: 15, color: low ? '#ef4444' : near ? '#f59e0b' : '#22c55e' }}>
+                        {qty.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 400, color: '#64748b' }}>{item.unit}</span>
+                      </td>
+                      <td style={{ textAlign: 'right', fontSize: 12, color: '#64748b' }}>
+                        {item.minQty} / {item.maxQty}
+                      </td>
+                      <td>
+                        {exp ? (
+                          <span className="inv-fefo-chip" style={{ background: EXP_COLOR[es] + '1a', color: EXP_COLOR[es], border: '1px solid ' + EXP_COLOR[es] + '33' }}>
+                            📅 {exp} &nbsp;·&nbsp; {EXP_LABEL[es]}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 11, color: '#64748b' }}>— ไม่มีวันหมดอายุ</span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'right', fontSize: 12 }}>
+                        {item.costPerUnit > 0 ? '฿' + item.costPerUnit.toLocaleString() : '—'}
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, color: 'var(--rust)' }}>
+                        {item.costPerUnit > 0 ? '฿' + (qty * item.costPerUnit).toLocaleString() : '—'}
+                      </td>
+                      <td style={{ fontSize: 12 }}>
+                        {low ? <span style={{ color: '#ef4444', fontWeight: 700 }}>🔴 เติมด่วน</span>
+                          : near ? <span style={{ color: '#f59e0b', fontWeight: 700 }}>🟡 ใกล้ขั้นต่ำ</span>
+                          : <span style={{ color: '#22c55e' }}>🟢 ปกติ</span>}
+                      </td>
+                      <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                        <button className="lean-tab" style={{ fontSize: 11, padding: '3px 8px', marginRight: 4, opacity: 1 }}
+                          onClick={() => setExpandedInvId(isExpanded ? null : item.id)}>
+                          {isExpanded ? '▼' : '▶'} ล็อต ({item.lots.length})
+                        </button>
+                        <button className="ai-task-del" onClick={() => delInv(item.id)}>×</button>
+                      </td>
+                    </tr>
+
+                    {/* Expanded Lot Section */}
+                    {isExpanded && (
+                      <tr key={item.id + '-lots'}>
+                        <td colSpan={9} className="inv-lot-section" style={{ padding: '0 0 12px 0' }}>
+                          <div style={{ padding: '10px 16px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <span style={{ fontSize: 12, fontWeight: 700, color: '#06b6d4' }}>📦 ล็อตสินค้า — เรียงตาม FEFO (ล็อตที่หมดอายุก่อน = ใช้ก่อน)</span>
+                              <span style={{ fontSize: 11, color: '#64748b', marginLeft: 10 }}>รวมทุกล็อต: {qty.toLocaleString()} {item.unit}</span>
+                            </div>
+                            <button className="ai-mini-add" onClick={e => { e.stopPropagation(); addLot(item.id); }}>＋ รับล็อตใหม่</button>
+                          </div>
+
+                          {/* Editable fields row */}
+                          <div style={{ padding: '0 16px 10px', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: 10, color: '#64748b' }}>SKU</span>
+                              <input defaultValue={item.sku} key={'sku' + item.id}
+                                onBlur={e => patchInv(item.id, { sku: e.target.value })}
+                                style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '3px 8px', color: 'var(--ink)', fontSize: 12, width: 110 }} />
+                            </label>
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: 10, color: '#64748b' }}>หน่วย</span>
+                              <input defaultValue={item.unit} key={'unit' + item.id}
+                                onBlur={e => patchInv(item.id, { unit: e.target.value })}
+                                style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '3px 8px', color: 'var(--ink)', fontSize: 12, width: 70 }} />
+                            </label>
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: 10, color: '#64748b' }}>Safety Stock (ขั้นต่ำ)</span>
+                              <input type="number" value={item.minQty}
+                                onChange={e => patchInv(item.id, { minQty: +e.target.value })}
+                                style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '3px 8px', color: 'var(--ink)', fontSize: 12, width: 80 }} />
+                            </label>
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: 10, color: '#64748b' }}>Max Stock</span>
+                              <input type="number" value={item.maxQty}
+                                onChange={e => patchInv(item.id, { maxQty: +e.target.value })}
+                                style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '3px 8px', color: 'var(--ink)', fontSize: 12, width: 80 }} />
+                            </label>
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: 10, color: '#64748b' }}>ที่เก็บ</span>
+                              <input defaultValue={item.location} key={'loc' + item.id}
+                                onBlur={e => patchInv(item.id, { location: e.target.value })}
+                                style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '3px 8px', color: 'var(--ink)', fontSize: 12, width: 100 }} />
+                            </label>
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: 10, color: '#64748b' }}>ซัพพลายเออร์</span>
+                              <input defaultValue={item.supplier} key={'sup' + item.id}
+                                onBlur={e => patchInv(item.id, { supplier: e.target.value })}
+                                style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '3px 8px', color: 'var(--ink)', fontSize: 12, width: 130 }} />
+                            </label>
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: 10, color: '#64748b' }}>ราคา/หน่วย (฿)</span>
+                              <input type="number" value={item.costPerUnit}
+                                onChange={e => patchInv(item.id, { costPerUnit: +e.target.value })}
+                                style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '3px 8px', color: 'var(--rust)', fontSize: 12, width: 90 }} />
+                            </label>
+                            <label style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span style={{ fontSize: 10, color: '#64748b' }}>หมวดหมู่</span>
+                              <select value={item.category}
+                                onChange={e => patchInv(item.id, { category: e.target.value as InventoryItem['category'] })}
+                                style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 6, padding: '3px 8px', color: 'var(--ink)', fontSize: 12 }}>
+                                <option value="raw">วัตถุดิบ</option>
+                                <option value="wip">WIP</option>
+                                <option value="finished">สำเร็จรูป</option>
+                                <option value="spare">อะไหล่</option>
+                              </select>
+                            </label>
+                          </div>
+
+                          {item.lots.length === 0 && (
+                            <p style={{ padding: '0 16px', color: '#64748b', fontSize: 12 }}>ยังไม่มีล็อต — กด "＋ รับล็อตใหม่"</p>
+                          )}
+
+                          <table className="inv-lot-table">
+                            <thead>
+                              <tr>
+                                <th style={{ width: 90 }}>FEFO</th>
+                                <th>เลขล็อต / Batch</th>
+                                <th>วันรับเข้า</th>
+                                <th>วันผลิต</th>
+                                <th>วันหมดอายุ</th>
+                                <th style={{ textAlign: 'right' }}>จำนวน ({item.unit})</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {lotsSorted.map((lot, idx) => {
+                                const ls = expStatus(lot.expDate);
+                                const isFirst = idx === 0 && lot.qty > 0;
+                                return (
+                                  <tr key={lot.id} style={{ background: ls === 'expired' ? '#ef44440a' : ls === 'critical' ? '#ef44440a' : undefined }}>
+                                    <td>
+                                      {isFirst
+                                        ? <span className="fefo-first-badge">🔵 ใช้ก่อน</span>
+                                        : <span style={{ fontSize: 11, color: '#64748b' }}>#{idx + 1}</span>}
+                                    </td>
+                                    <td>
+                                      <input defaultValue={lot.lotNo} key={'ln' + lot.id}
+                                        onBlur={e => patchLot(item.id, lot.id, { lotNo: e.target.value })}
+                                        style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 5, padding: '2px 7px', color: 'var(--ink)', fontSize: 12, width: 140 }} />
+                                    </td>
+                                    <td>
+                                      <input type="date" value={lot.receivedDate}
+                                        onChange={e => patchLot(item.id, lot.id, { receivedDate: e.target.value })}
+                                        style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 5, padding: '2px 6px', color: 'var(--ink)', fontSize: 11 }} />
+                                    </td>
+                                    <td>
+                                      <input type="date" value={lot.mfgDate}
+                                        onChange={e => patchLot(item.id, lot.id, { mfgDate: e.target.value })}
+                                        style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 5, padding: '2px 6px', color: 'var(--ink)', fontSize: 11 }} />
+                                    </td>
+                                    <td>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <input type="date" value={lot.expDate ?? ''}
+                                          onChange={e => patchLot(item.id, lot.id, { expDate: e.target.value || null })}
+                                          style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 5, padding: '2px 6px', color: EXP_COLOR[ls], fontSize: 11, fontWeight: ls !== 'ok' && ls !== 'none' ? 700 : 400 }} />
+                                        {lot.expDate && ls !== 'ok' && (
+                                          <span className="inv-fefo-chip" style={{ background: EXP_COLOR[ls] + '1a', color: EXP_COLOR[ls], border: '1px solid ' + EXP_COLOR[ls] + '33', fontSize: 10 }}>
+                                            {EXP_LABEL[ls]}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td style={{ textAlign: 'right' }}>
+                                      <input type="number" min={0} value={lot.qty}
+                                        onChange={e => patchLot(item.id, lot.id, { qty: Math.max(0, +e.target.value) })}
+                                        style={{ background: 'var(--cream3)', border: '1px solid var(--sand)', borderRadius: 5, padding: '2px 7px', color: 'var(--ink)', fontSize: 12, width: 80, textAlign: 'right', fontWeight: 700 }} />
+                                    </td>
+                                    <td>
+                                      <button className="ai-task-del" onClick={e => { e.stopPropagation(); delLot(item.id, lot.id); }}>×</button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+
+                          {/* FEFO explainer */}
+                          <div style={{ padding: '10px 16px 0', fontSize: 11, color: '#64748b' }}>
+                            💡 <strong style={{ color: 'var(--ink)' }}>FEFO:</strong> เบิกจ่ายล็อตที่มี "🔵 ใช้ก่อน" เสมอ — ป้องกันสินค้าหมดอายุในคลัง
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       {/* ── AI Agent Suggestions ── */}

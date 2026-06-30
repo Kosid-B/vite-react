@@ -526,14 +526,27 @@ export interface TPMPillar {
   notes: string;
 }
 
+export interface InventoryLot {
+  id: string;
+  lotNo: string;          // เลขล็อต / Batch No.
+  receivedDate: string;   // วันรับเข้าคลัง (ISO date)
+  mfgDate: string;        // วันผลิต (ISO date)
+  expDate: string | null; // วันหมดอายุ (ISO date) — null = ไม่มีวันหมดอายุ
+  qty: number;            // จำนวนในล็อตนี้
+}
+
 export interface InventoryItem {
   id: string;
   name: string;
+  sku: string;            // รหัสสินค้า / วัตถุดิบ
   category: 'raw' | 'wip' | 'finished' | 'spare';
   unit: string;
-  qty: number;
-  minQty: number;
+  minQty: number;         // Safety Stock ขั้นต่ำ
+  maxQty: number;         // Max Stock
   location: string;
+  supplier: string;       // ซัพพลายเออร์
+  costPerUnit: number;    // ราคาต่อหน่วย (บาท)
+  lots: InventoryLot[];   // ล็อตสินค้า — เรียงตาม FEFO
 }
 
 export interface FactoryData {
