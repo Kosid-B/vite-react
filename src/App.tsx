@@ -303,11 +303,7 @@ export default function App() {
             ? <Analytics data={data} />
             : <UpgradeWall page="analytics" data={data} onNavigate={setActivePage} />
         )}
-        {activePage === 'factory' && (
-          canAccess(data, 'factory')
-            ? <Factory data={data} onUpdate={updateData} />
-            : <UpgradeWall page="factory" data={data} onNavigate={setActivePage} />
-        )}
+        {activePage === 'factory' && <Factory data={data} onUpdate={updateData} />}
 
         <footer className="app-footer">
           <span className="app-footer__name">B. Training Consultant (M.E.A) Co., Ltd.</span>

@@ -15,7 +15,6 @@ const GROWTH_FEATURES = [
   'AI Research — วิจัยตลาดด้วย AI',
   'Marketplace — จัดการสินค้า/บริการ',
   'ทีม / สมาชิก — บริหารทีม',
-  'โรงงานอัจฉริยะ — TPM + คลังสินค้า FEFO',
   'SaaS Analytics — วิเคราะห์ข้อมูล',
   'ISO 9001:2015 QMS — มาตรฐานคุณภาพ',
 ];

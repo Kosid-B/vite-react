@@ -181,12 +181,12 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           {locked('team') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
 
-        <button className={`nav-item ${activePage === 'factory' ? 'active' : ''}${locked('factory') ? ' nav-locked' : ''}`} onClick={() => onNavigate('factory')}>
+        <button className={`nav-item ${activePage === 'factory' ? 'active' : ''}`} onClick={() => onNavigate('factory')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21V10.5M15 21V10.5M9 7h.01M15 7h.01M5 21V9.5l7-4 7 4V21" />
           </svg>
           โรงงานอัจฉริยะ
-          {locked('factory') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+          <span className="nav-dot" />
         </button>
 
         <button className={`nav-item ${activePage === 'billing' ? 'active' : ''}`} onClick={() => onNavigate('billing')}>

@@ -27,7 +27,6 @@ export const PAGE_MIN_PLAN: Partial<Record<PageId, PlanId>> = {
   market:    'growth',
   team:      'growth',
   iso9001:   'growth',
-  factory:   'growth',
   analytics: 'growth',
   admin:     'scale',
 };
