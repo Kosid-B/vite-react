@@ -48,8 +48,9 @@ On success it prints `OK url=… nav=… title="…" -> <out>`.
 
 Sidebar labels you can pass to `--nav`: `Dashboard`, `Journey Map`,
 `Conversion Funnel`, `ROI Calculator`, `Personas`, `Content Plan`,
-`Priority Actions`, `Business Model`, `VRIO Analysis`, `บริษัท AI`,
-`Marketplace`, `ทีม / สมาชิก`, `แพ็กเกจ`, `AI Research`.
+`Priority Actions`, `Business Model · MIT24`, `VRIO Analysis`, `บริษัท AI`,
+`Marketplace`, `ทีม / สมาชิก`, `แพ็กเกจ`, `SaaS Analytics`,
+`ISO 9001:2015 QMS`, `AI Research`, `Case Studies`.
 
 Stop the server when done: `pkill -f "vite"`.
 
