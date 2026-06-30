@@ -31,6 +31,8 @@ import Factory from './pages/Factory';
 import Analytics from './pages/Analytics';
 import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
+import UpgradeWall from './components/UpgradeWall';
+import { canAccess } from './lib/access';
 
 const STORAGE_KEY = 'cjux2';
 
@@ -249,6 +251,7 @@ export default function App() {
         activeWs={activeWs}
         onSwitchWs={setActiveWs}
         onCreateWs={handleCreateWorkspace}
+        data={data}
       />
 
       <main className="main">
@@ -262,7 +265,9 @@ export default function App() {
         )}
         {activePage === 'actions' && <PriorityActions data={data} onUpdate={updateData} />}
         {activePage === 'aisearch' && (
-          <AIResearch data={data} activeStage={activeStage} onAddToJourney={updateData} onNavigate={setActivePage} />
+          canAccess(data, 'aisearch')
+            ? <AIResearch data={data} activeStage={activeStage} onAddToJourney={updateData} onNavigate={setActivePage} />
+            : <UpgradeWall page="aisearch" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'funnel' && <ConversionFunnel data={data} onUpdate={updateData} />}
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
@@ -270,15 +275,39 @@ export default function App() {
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
-        {activePage === 'market' && <Marketplace data={data} onUpdate={updateData} />}
+        {activePage === 'market' && (
+          canAccess(data, 'market')
+            ? <Marketplace data={data} onUpdate={updateData} />
+            : <UpgradeWall page="market" data={data} onNavigate={setActivePage} />
+        )}
         {activePage === 'roadmap' && <Roadmap data={data} onUpdate={updateData} />}
         {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} />}
-        {activePage === 'team' && <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data} />}
-        {activePage === 'admin' && <Admin currentUserEmail={session?.user.email ?? null} data={data} onUpdate={updateData} />}
-        {activePage === 'iso9001' && <ISO9001 data={data} onUpdate={updateData} />}
+        {activePage === 'team' && (
+          canAccess(data, 'team')
+            ? <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data} />
+            : <UpgradeWall page="team" data={data} onNavigate={setActivePage} />
+        )}
+        {activePage === 'admin' && (
+          canAccess(data, 'admin')
+            ? <Admin currentUserEmail={session?.user.email ?? null} data={data} onUpdate={updateData} />
+            : <UpgradeWall page="admin" data={data} onNavigate={setActivePage} />
+        )}
+        {activePage === 'iso9001' && (
+          canAccess(data, 'iso9001')
+            ? <ISO9001 data={data} onUpdate={updateData} />
+            : <UpgradeWall page="iso9001" data={data} onNavigate={setActivePage} />
+        )}
         {activePage === 'cases' && <CaseStudies />}
-        {activePage === 'analytics' && <Analytics data={data} />}
-        {activePage === 'factory' && <Factory data={data} onUpdate={updateData} />}
+        {activePage === 'analytics' && (
+          canAccess(data, 'analytics')
+            ? <Analytics data={data} />
+            : <UpgradeWall page="analytics" data={data} onNavigate={setActivePage} />
+        )}
+        {activePage === 'factory' && (
+          canAccess(data, 'factory')
+            ? <Factory data={data} onUpdate={updateData} />
+            : <UpgradeWall page="factory" data={data} onNavigate={setActivePage} />
+        )}
 
         <footer className="app-footer">
           <span className="app-footer__name">B. Training Consultant (M.E.A) Co., Ltd.</span>

@@ -1,7 +1,8 @@
 import { useRef } from 'react';
-import type { PageId } from '../types';
+import type { AppData, PageId } from '../types';
 import type { Workspace } from '../lib/workspaces';
 import { BRAND, COMPANY, isAdminEmail } from '../config';
+import { canAccess, planLabel, PLAN_COLOR, PAGE_MIN_PLAN } from '../lib/access';
 
 interface Props {
   activePage: PageId;
@@ -18,11 +19,13 @@ interface Props {
   activeWs?: string | null;
   onSwitchWs?: (id: string) => void;
   onCreateWs?: (name: string) => void;
+  data?: AppData;
 }
 
-export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs }: Props) {
+export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs, data }: Props) {
   const pct = totalActions > 0 ? Math.round((doneCount / totalActions) * 100) : 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const locked = (page: PageId) => !!(data && PAGE_MIN_PLAN[page] && !canAccess(data, page));
 
   return (
     <nav className={`sidebar${isOpen ? ' open' : ''}`}>
@@ -30,6 +33,20 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
         <div className="brand-serif">{BRAND.product}</div>
         <div className="brand-sub">{BRAND.tagline}</div>
         <button className="sidebar-close" onClick={onClose} aria-label="ปิดเมนู">×</button>
+
+        {data && (() => {
+          const label = planLabel(data);
+          const planColor = PLAN_COLOR[data.subscription.plan];
+          return (
+            <div
+              className="sidebar-plan-badge"
+              style={{ background: `${planColor}18`, color: planColor, borderColor: `${planColor}35` }}
+              onClick={() => onNavigate('billing')}
+            >
+              {label}
+            </div>
+          );
+        })()}
 
         {onSwitchWs && workspaces && workspaces.length > 0 && (
           <div className="ws-switcher">
@@ -148,28 +165,28 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <span className="nav-dot" />
         </button>
 
-        <button className={`nav-item ${activePage === 'market' ? 'active' : ''}`} onClick={() => onNavigate('market')}>
+        <button className={`nav-item ${activePage === 'market' ? 'active' : ''}${locked('market') ? ' nav-locked' : ''}`} onClick={() => onNavigate('market')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           Marketplace
-          <span className="nav-dot" />
+          {locked('market') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
 
-        <button className={`nav-item ${activePage === 'team' ? 'active' : ''}`} onClick={() => onNavigate('team')}>
+        <button className={`nav-item ${activePage === 'team' ? 'active' : ''}${locked('team') ? ' nav-locked' : ''}`} onClick={() => onNavigate('team')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           ทีม / สมาชิก
-          <span className="nav-dot" />
+          {locked('team') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
 
-        <button className={`nav-item ${activePage === 'factory' ? 'active' : ''}`} onClick={() => onNavigate('factory')}>
+        <button className={`nav-item ${activePage === 'factory' ? 'active' : ''}${locked('factory') ? ' nav-locked' : ''}`} onClick={() => onNavigate('factory')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21V10.5M15 21V10.5M9 7h.01M15 7h.01M5 21V9.5l7-4 7 4V21" />
           </svg>
           โรงงานอัจฉริยะ
-          <span className="nav-dot" />
+          {locked('factory') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
 
         <button className={`nav-item ${activePage === 'billing' ? 'active' : ''}`} onClick={() => onNavigate('billing')}>
@@ -180,40 +197,40 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <span className="nav-dot" />
         </button>
 
-        <button className={`nav-item ${activePage === 'analytics' ? 'active' : ''}`} onClick={() => onNavigate('analytics')}>
+        <button className={`nav-item ${activePage === 'analytics' ? 'active' : ''}${locked('analytics') ? ' nav-locked' : ''}`} onClick={() => onNavigate('analytics')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           SaaS Analytics
-          <span className="nav-dot" />
+          {locked('analytics') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
 
         {isAdminEmail(userEmail) && (
-          <button className={`nav-item ${activePage === 'admin' ? 'active' : ''}`} onClick={() => onNavigate('admin')}>
+          <button className={`nav-item ${activePage === 'admin' ? 'active' : ''}${locked('admin') ? ' nav-locked' : ''}`} onClick={() => onNavigate('admin')}>
             <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
               <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             ผู้ดูแลระบบ
-            <span className="nav-dot" />
+            {locked('admin') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
           </button>
         )}
       </div>
 
       <div className="nav-section">
         <div className="nav-label">มาตรฐาน ISO</div>
-        <button className={`nav-item ${activePage === 'iso9001' ? 'active' : ''}`} onClick={() => onNavigate('iso9001')}>
+        <button className={`nav-item ${activePage === 'iso9001' ? 'active' : ''}${locked('iso9001') ? ' nav-locked' : ''}`} onClick={() => onNavigate('iso9001')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
           ISO 9001:2015 QMS
-          <span className="nav-dot" />
+          {locked('iso9001') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
       </div>
 
       <div className="nav-section" style={{ marginTop: 4 }}>
         <div className="nav-label">✦ AI Powered</div>
         <button
-          className={`nav-item ${activePage === 'aisearch' ? 'active' : ''}`}
+          className={`nav-item ${activePage === 'aisearch' ? 'active' : ''}${locked('aisearch') ? ' nav-locked' : ''}`}
           onClick={() => onNavigate('aisearch')}
           style={{ color: 'rgba(255,190,170,.9)' }}
         >
@@ -221,6 +238,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
             <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
           </svg>
           AI Research
+          {locked('aisearch') && <span className="nav-lock">🔒</span>}
         </button>
 
         <button

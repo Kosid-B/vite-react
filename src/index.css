@@ -3806,3 +3806,25 @@ input:focus, textarea:focus, select:focus {
 .inv-lot-table td { padding:8px 12px; border-bottom:1px solid var(--sand); vertical-align:middle; }
 .inv-lot-table tr:last-child td { border-bottom:none; }
 .fefo-first-badge { background:#06b6d41a; color:#06b6d4; border:1px solid #06b6d433; border-radius:10px; padding:2px 8px; font-size:10px; font-weight:700; white-space:nowrap; }
+
+/* ── Plan Badge (Sidebar) ── */
+.sidebar-plan-badge { display:inline-block; margin:8px 0 4px; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700; border:1px solid; cursor:pointer; transition:opacity .15s; letter-spacing:.02em; }
+.sidebar-plan-badge:hover { opacity:.8; }
+.nav-lock { margin-left:auto; font-size:10px; opacity:.7; }
+.nav-locked { opacity:.55; }
+
+/* ── UpgradeWall ── */
+.upgrade-wall { display:flex; align-items:center; justify-content:center; min-height:70vh; padding:32px 16px; }
+.upgrade-wall__card { background:var(--cream3); border:1.5px solid var(--sand); border-radius:16px; padding:40px 36px; max-width:480px; width:100%; text-align:center; box-shadow:0 4px 24px rgba(0,0,0,.1); }
+.upgrade-wall__lock { font-size:48px; margin-bottom:16px; }
+.upgrade-wall__expired-badge { display:inline-block; background:#ef44441a; color:#ef4444; border:1px solid #ef444430; border-radius:20px; padding:4px 14px; font-size:12px; font-weight:600; margin-bottom:14px; }
+.upgrade-wall__title { font-size:20px; font-weight:700; color:var(--ink); margin:0 0 10px; }
+.upgrade-wall__desc { font-size:14px; color:var(--ink2); margin:0 0 20px; line-height:1.65; }
+.upgrade-wall__features { list-style:none; padding:0; margin:0 0 24px; text-align:left; display:inline-block; }
+.upgrade-wall__features li { font-size:13px; color:var(--ink2); padding:3px 0; }
+.upgrade-wall__check { color:#22c55e; font-weight:700; margin-right:6px; }
+.upgrade-wall__actions { display:flex; flex-direction:column; gap:8px; }
+.upgrade-wall__btn-primary { border:none; color:#fff; font-size:15px; font-weight:700; padding:12px 24px; border-radius:10px; cursor:pointer; transition:opacity .15s; }
+.upgrade-wall__btn-primary:hover { opacity:.85; }
+.upgrade-wall__btn-secondary { background:transparent; border:1.5px solid var(--sand); color:var(--ink3); font-size:13px; padding:9px 20px; border-radius:10px; cursor:pointer; transition:border-color .15s, color .15s; }
+.upgrade-wall__btn-secondary:hover { border-color:var(--rust); color:var(--rust); }
