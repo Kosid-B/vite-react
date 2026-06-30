@@ -145,6 +145,7 @@ function nowTime(): string {
 
 export default function AICompany({ data, onUpdate }: Props) {
   const c = data.aiCompany;
+  const canWebSearch = data.subscription?.plan === 'growth' || data.subscription?.plan === 'scale';
   const [feed, setFeed] = useState<{ id: number; time: string; text: string; color: string }[]>([]);
   const feedRef = useRef<HTMLDivElement>(null);
   const counter = useRef(0);
@@ -1262,9 +1263,18 @@ export default function AICompany({ data, onUpdate }: Props) {
                       >{needsApproval ? '🔒' : '🔓'}</button>
                       <button
                         className={`ai-task-lock-btn${t.useWebSearch ? ' locked' : ''}`}
-                        title={t.useWebSearch ? 'Web Search เปิดอยู่ — คลิกเพื่อปิด (Brave Search)' : 'คลิกเพื่อเปิด Web Search (Brave Search API)'}
-                        onClick={() => patch({ tasks: c.tasks.map(tt => tt.id === t.id ? { ...tt, useWebSearch: !tt.useWebSearch } : tt) })}
-                        style={{ opacity: t.useWebSearch ? 1 : 0.45 }}
+                        title={
+                          !canWebSearch
+                            ? '🌐 Web Search — ต้องการแพ็กเกจ Growth หรือสูงกว่า'
+                            : t.useWebSearch
+                              ? 'Web Search เปิดอยู่ — คลิกเพื่อปิด (Brave Search)'
+                              : 'คลิกเพื่อเปิด Web Search real-time (Brave Search API)'
+                        }
+                        onClick={() => {
+                          if (!canWebSearch) return;
+                          patch({ tasks: c.tasks.map(tt => tt.id === t.id ? { ...tt, useWebSearch: !tt.useWebSearch } : tt) });
+                        }}
+                        style={{ opacity: canWebSearch ? (t.useWebSearch ? 1 : 0.45) : 0.2, cursor: canWebSearch ? 'pointer' : 'not-allowed' }}
                       >🌐</button>
                     </div>
                     {needsApproval && (
