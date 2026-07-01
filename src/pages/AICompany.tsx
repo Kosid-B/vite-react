@@ -1274,8 +1274,8 @@ export default function AICompany({ data, onUpdate }: Props) {
                           !canWebSearch
                             ? '🌐 Web Search — ต้องการแพ็กเกจ Growth หรือสูงกว่า'
                             : t.useWebSearch
-                              ? 'Web Search เปิดอยู่ — คลิกเพื่อปิด (Brave Search)'
-                              : 'คลิกเพื่อเปิด Web Search real-time (Brave Search API)'
+                              ? 'Web Search เปิดอยู่ — คลิกเพื่อปิด (Google Search)'
+                              : 'คลิกเพื่อเปิด Web Search real-time (Serper.dev / Google)'
                         }
                         onClick={() => {
                           if (!canWebSearch) return;

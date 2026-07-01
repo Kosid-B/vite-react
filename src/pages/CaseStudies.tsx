@@ -57,7 +57,7 @@ const CASES = [
       {
         icon: '🔌',
         title: 'ต่อยอดจากสิ่งที่มีอยู่ (ตามแนวทาง Tencent)',
-        body: 'ไม่ต้องเขียน AI เอง — ใช้ OpenAI Codex ที่มีอยู่แล้ว, ใช้ Brave Search API สำหรับค้นหาข้อมูล, ใช้ Resend API สำหรับส่งอีเมล แล้วให้ AI Agents ประกอบร่างสิ่งเหล่านั้นเพื่อสร้าง SaaS ที่มีคุณค่า',
+        body: 'ไม่ต้องเขียน AI เอง — ใช้ OpenAI Codex ที่มีอยู่แล้ว, ใช้ Serper.dev สำหรับค้นหาข้อมูลจาก Google, ใช้ Resend API สำหรับส่งอีเมล แล้วให้ AI Agents ประกอบร่างสิ่งเหล่านั้นเพื่อสร้าง SaaS ที่มีคุณค่า',
       },
     ],
     keyLesson: 'การทำธุรกิจในยุค AI ไม่ต้องเขียนโค้ดทุกอย่างเอง — ให้ AI Agent ทำหน้าที่เป็น CEO ที่สั่งการทีม AI ด้วยกันเอง คุณแค่ต้องเขียน "ภารกิจ" ให้ชัดเจน',
@@ -66,12 +66,12 @@ const CASES = [
       {
         label: 'SaaS B2B Newsletter ไทย',
         prompt: 'ค้นหาข่าวสารล่าสุดที่สำคัญที่สุดเกี่ยวกับวงการธุรกิจและเทคโนโลยี SaaS ในประเทศไทย รวบรวมข้อมูลเชิงลึก วิเคราะห์แนวโน้มตลาด และจัดทำอีเมลสรุปข่าวสารเป็นภาษาไทยส่งให้ลูกค้าทุกเช้า',
-        api: 'Brave Search + Resend',
+        api: 'Serper.dev + Resend',
       },
       {
         label: 'SaaS วิเคราะห์เทรนด์ E-commerce',
         prompt: 'ค้นคว้าและติดตามสินค้าหรือบริการที่กำลังเป็นกระแส (Trending Products) ในตลาดออนไลน์ของประเทศไทย วิเคราะห์จุดเด่นของสินค้าเหล่านั้น และจัดทำรายงานสรุปโอกาสทางธุรกิจรายสัปดาห์ส่งผ่านอีเมล',
-        api: 'Brave Search + Resend',
+        api: 'Serper.dev + Resend',
       },
       {
         label: 'SaaS Financial Insights — ตลาดหุ้น SET',
@@ -192,23 +192,23 @@ export default function CaseStudies() {
         </div>
       )}
 
-      {/* Brave Search API Setup Guide (Paperclip) */}
+      {/* Serper.dev (Google Search) Setup Guide (Paperclip) */}
       {cs.id === 'paperclip' && (
         <>
         <div className="cs-brave-guide">
           <div className="cs-brave-guide-title">
             <span className="cs-brave-icon">🔍</span>
-            วิธีต่อ Brave Search API — ให้ AI ค้นหาข้อมูลจริงจากอินเทอร์เน็ต
+            วิธีต่อ Serper.dev — ให้ AI ค้นหาข้อมูลจริงจาก Google แบบเรียลไทม์
           </div>
 
           <div className="cs-brave-steps">
             <div className="cs-brave-step">
               <div className="cs-brave-step-num" style={{ background: cs.color }}>1</div>
               <div className="cs-brave-step-body">
-                <div className="cs-brave-step-title">ควบคุมค่าใช้จ่าย — ตั้งลิมิต $5/เดือน</div>
+                <div className="cs-brave-step-title">สมัครและรับ API Key จาก Serper.dev</div>
                 <div className="cs-brave-step-desc">
-                  Brave Search API คิดค่าบริการ <strong>$5 ต่อ 1,000 calls</strong> และให้ฟรี <strong>$5 ต่อเดือน</strong> (≈1,000 calls/เดือน)
-                  สำหรับ SaaS ขนาดเล็กเพียงพอมาก — แนะนำให้ตั้ง Usage Limit ไว้ที่ $5/เดือนก่อน เพื่อควบคุมต้นทุนและป้องกัน Agent วิ่งเกินโควต้า
+                  Serper.dev ให้ฟรี <strong>2,500 searches</strong> แรก (ไม่หมดอายุ) — เพียงพอสำหรับ SaaS ขนาดเล็ก
+                  ไปที่ <strong>serper.dev</strong> → Sign Up → Copy API Key จากหน้า Dashboard
                 </div>
               </div>
             </div>
@@ -216,16 +216,15 @@ export default function CaseStudies() {
             <div className="cs-brave-step">
               <div className="cs-brave-step-num" style={{ background: cs.color }}>2</div>
               <div className="cs-brave-step-body">
-                <div className="cs-brave-step-title">เพิ่ม Skill เข้า AI Agent — ตั้งค่า API Key อย่างปลอดภัย</div>
+                <div className="cs-brave-step-title">ตั้งค่า API Key ใน Supabase Edge Function Secrets</div>
                 <div className="cs-brave-step-desc">
-                  ใน Mission-Driven AI ไปที่ <strong>Skills → Add Skill</strong> แล้วเลือก <code>web_search</code>{' '}
-                  กรอก Environment Variable ชื่อ <code>BRAVE_SEARCH_API</code> แล้วคลิก <strong>"Seal"</strong>{' '}
-                  เพื่อเข้ารหัสและซ่อนค่า API Key ไม่ให้ Agent อ่านหรือรั่วไหลออกไป
+                  ไปที่ <strong>Supabase Dashboard → Project Settings → Edge Functions → Secrets</strong>{' '}
+                  แล้วเพิ่ม secret ชื่อ <code>SERPER_API_KEY</code> — ระบบจะใช้ key นี้ทุกครั้งที่ Agent เปิด Web Search
                 </div>
                 <div className="cs-brave-env-box">
-                  <span className="cs-brave-env-key">BRAVE_SEARCH_API</span>
+                  <span className="cs-brave-env-key">SERPER_API_KEY</span>
                   <span className="cs-brave-env-eq">=</span>
-                  <span className="cs-brave-env-val">BSAxxxxxxxxxxxxxxxx</span>
+                  <span className="cs-brave-env-val">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
                   <span className="cs-brave-env-seal">🔒 Seal</span>
                 </div>
               </div>
@@ -234,21 +233,21 @@ export default function CaseStudies() {
             <div className="cs-brave-step">
               <div className="cs-brave-step-num" style={{ background: cs.color }}>3</div>
               <div className="cs-brave-step-body">
-                <div className="cs-brave-step-title">มอบหมายงานให้ CTO Agent — สร้าง Issue ใน Kanban</div>
+                <div className="cs-brave-step-title">มอบหมายงานให้ CTO Agent — เปิด Web Search ใน Task</div>
                 <div className="cs-brave-step-desc">
-                  หลังตั้งค่า API เสร็จ ให้สร้าง <strong>New Issue</strong> ใน Kanban Board แล้วมอบหมายให้ <strong>CTO Agent</strong>{' '}
-                  เพราะ CTO จะมีสิทธิ์เข้าถึง Tool ทั้งหมดรวมถึง Brave Search API ตัวอย่าง Task Description:
+                  สร้าง Task ใน Kanban แล้วมอบหมายให้ <strong>CTO Agent</strong> — เปิด toggle Web Search ใน Task{' '}
+                  เพื่อให้ Agent ดึงข้อมูลจาก Google ก่อนตอบ ตัวอย่าง Task:
                 </div>
                 <div className="cs-brave-task-box">
                   <div className="cs-brave-task-label">ตัวอย่าง Task สำหรับ CTO Agent</div>
                   <div className="cs-brave-task-text">
-                    "คุณมีสิทธิ์เข้าถึง Brave Search API แล้ว จงใช้เครื่องมือนี้เพื่อค้นคว้าเทรนด์ธุรกิจ SaaS ในประเทศไทย รวบรวมข้อมูลเชิงลึก และส่งมอบผลลัพธ์ผ่านอีเมล"
+                    "ค้นคว้าเทรนด์ธุรกิจ SaaS ในประเทศไทย รวบรวมข้อมูลเชิงลึก และส่งมอบผลลัพธ์พร้อมแหล่งอ้างอิง"
                   </div>
                   <button
                     className="cs-copy-btn"
                     style={{ marginTop: 8 }}
                     onClick={() => copyPrompt(
-                      'คุณมีสิทธิ์เข้าถึง Brave Search API แล้ว จงใช้เครื่องมือนี้เพื่อค้นคว้าเทรนด์ธุรกิจ SaaS ในประเทศไทย รวบรวมข้อมูลเชิงลึก และส่งมอบผลลัพธ์ผ่านอีเมล',
+                      'ค้นคว้าเทรนด์ธุรกิจ SaaS ในประเทศไทย รวบรวมข้อมูลเชิงลึก และส่งมอบผลลัพธ์พร้อมแหล่งอ้างอิง',
                       'brave-task'
                     )}
                   >
@@ -261,9 +260,9 @@ export default function CaseStudies() {
 
           <div className="cs-brave-summary">
             <div className="cs-brave-summary-row">
-              <span className="cs-brave-summary-item"><strong>ราคา:</strong> $5/1,000 calls · ฟรี $5/เดือน</span>
-              <span className="cs-brave-summary-item"><strong>Security:</strong> ใช้ "Seal" เข้ารหัส API Key</span>
-              <span className="cs-brave-summary-item"><strong>ผู้รับงาน:</strong> CTO Agent via Kanban</span>
+              <span className="cs-brave-summary-item"><strong>ราคา:</strong> ฟรี 2,500 searches · $50/เดือน สำหรับ 50,000 searches</span>
+              <span className="cs-brave-summary-item"><strong>Secret:</strong> <code style={{ fontSize: 11 }}>SERPER_API_KEY</code> ใน Supabase</span>
+              <span className="cs-brave-summary-item"><strong>ผู้รับงาน:</strong> CTO Agent via Kanban + Web Search toggle</span>
             </div>
           </div>
         </div>
@@ -377,7 +376,7 @@ export default function CaseStudies() {
               <div className="cs-mp-section">
                 <span className="cs-mp-key">Steps:</span>
                 <ol className="cs-mp-steps">
-                  <li><strong>Search &amp; Research:</strong> ใช้ Brave Search API ค้นหาประกาศจาก สมอ. หรือการอัปเดต ISO 9001:2015 ในช่วง 30 วันที่ผ่านมา</li>
+                  <li><strong>Search &amp; Research:</strong> ใช้ Web Search (Serper.dev) ค้นหาประกาศจาก สมอ. หรือการอัปเดต ISO 9001:2015 ในช่วง 30 วันที่ผ่านมา</li>
                   <li><strong>Filter &amp; Validate:</strong> ตรวจสอบว่าเป็น "ประกาศอย่างเป็นทางการ" และ "มีผลบังคับใช้กับธุรกิจอุตสาหกรรมในไทย"</li>
                   <li><strong>Drafting:</strong> สรุปสาระสำคัญของมาตรฐานที่เปลี่ยนไป และร่างเป็น "บันทึกการเปลี่ยนแปลง" (Change Record)</li>
                   <li><strong>Integration:</strong> หากพบการเปลี่ยนแปลงสำคัญ ให้ร่าง Action Plan บูรณาการเข้าสู่ระบบ QMS ตามข้อกำหนด 4.4 และ 6.3</li>
@@ -393,7 +392,7 @@ export default function CaseStudies() {
             <button
               className="cs-copy-btn cs-copy-btn--full"
               onClick={() => copyPrompt(
-                `Role: คุณคือ Senior ISO Consultant และผู้เชี่ยวชาญด้านมาตรฐานอุตสาหกรรมไทย (TIS) หน้าที่ของคุณคือเฝ้าระวังและอัปเดตข้อมูลมาตรฐานเพื่อให้องค์กรมีความสอดคล้องกับกฎระเบียบอยู่เสมอ\n\nObjective: ค้นหาการเปลี่ยนแปลงหรือประกาศมาตรฐานใหม่ล่าสุดจากหน่วยงานที่เกี่ยวข้อง (เช่น สมอ. หรือ ISO.org) ที่ส่งผลกระทบต่อธุรกิจเหล็กหรืออุตสาหกรรมการผลิต และนำมาสรุปเพื่อปรับปรุงระบบบริหารคุณภาพ (QMS) ของเรา\n\nSteps:\n1. Search & Research: ใช้ Brave Search API ค้นหาประกาศจาก สมอ. หรือการอัปเดต ISO 9001:2015 ในช่วง 30 วันที่ผ่านมา\n2. Filter & Validate: ตรวจสอบว่าเป็น "ประกาศอย่างเป็นทางการ" และ "มีผลบังคับใช้กับธุรกิจอุตสาหกรรมในไทย"\n3. Drafting: สรุปสาระสำคัญของมาตรฐานที่เปลี่ยนไป และร่างเป็น "บันทึกการเปลี่ยนแปลง" (Change Record)\n4. Integration: หากพบการเปลี่ยนแปลงสำคัญ ให้ร่าง Action Plan บูรณาการเข้าสู่ระบบ QMS ตามข้อกำหนด 4.4 และ 6.3\n\nConstraints: อ้างอิงจากแหล่งที่เชื่อถือได้เท่านั้น · เฉพาะอุตสาหกรรมการผลิตในไทย · ภาษาไทยทางการตามศัพท์เทคนิค ISO\n\nOutput: หัวข้อประกาศ · สาระสำคัญ · ผลกระทบต่อองค์กร · แนวทางแก้ไขตามข้อกำหนด 10.1 และ 10.3`,
+                `Role: คุณคือ Senior ISO Consultant และผู้เชี่ยวชาญด้านมาตรฐานอุตสาหกรรมไทย (TIS) หน้าที่ของคุณคือเฝ้าระวังและอัปเดตข้อมูลมาตรฐานเพื่อให้องค์กรมีความสอดคล้องกับกฎระเบียบอยู่เสมอ\n\nObjective: ค้นหาการเปลี่ยนแปลงหรือประกาศมาตรฐานใหม่ล่าสุดจากหน่วยงานที่เกี่ยวข้อง (เช่น สมอ. หรือ ISO.org) ที่ส่งผลกระทบต่อธุรกิจเหล็กหรืออุตสาหกรรมการผลิต และนำมาสรุปเพื่อปรับปรุงระบบบริหารคุณภาพ (QMS) ของเรา\n\nSteps:\n1. Search & Research: ใช้ Web Search (Serper.dev) ค้นหาประกาศจาก สมอ. หรือการอัปเดต ISO 9001:2015 ในช่วง 30 วันที่ผ่านมา\n2. Filter & Validate: ตรวจสอบว่าเป็น "ประกาศอย่างเป็นทางการ" และ "มีผลบังคับใช้กับธุรกิจอุตสาหกรรมในไทย"\n3. Drafting: สรุปสาระสำคัญของมาตรฐานที่เปลี่ยนไป และร่างเป็น "บันทึกการเปลี่ยนแปลง" (Change Record)\n4. Integration: หากพบการเปลี่ยนแปลงสำคัญ ให้ร่าง Action Plan บูรณาการเข้าสู่ระบบ QMS ตามข้อกำหนด 4.4 และ 6.3\n\nConstraints: อ้างอิงจากแหล่งที่เชื่อถือได้เท่านั้น · เฉพาะอุตสาหกรรมการผลิตในไทย · ภาษาไทยทางการตามศัพท์เทคนิค ISO\n\nOutput: หัวข้อประกาศ · สาระสำคัญ · ผลกระทบต่อองค์กร · แนวทางแก้ไขตามข้อกำหนด 10.1 และ 10.3`,
                 'iso-prompt'
               )}
             >
