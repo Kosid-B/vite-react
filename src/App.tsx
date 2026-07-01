@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { AppData, PageId } from './types';
 import { DEFAULT_DATA } from './data';
@@ -8,31 +8,32 @@ import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
 import AiAssist from './components/AiAssist';
-import Dashboard from './pages/Dashboard';
-import JourneyMap from './pages/JourneyMap';
-import Personas from './pages/Personas';
-import ContentPlan from './pages/ContentPlan';
-import PriorityActions from './pages/PriorityActions';
-import AIResearch from './pages/AIResearch';
-import ConversionFunnel from './pages/ConversionFunnel';
-import ROICalculator from './pages/ROICalculator';
-import BusinessModel from './pages/BusinessModel';
-import AICompany from './pages/AICompany';
-import Billing from './pages/Billing';
-import VRIO from './pages/VRIO';
-import Marketplace from './pages/Marketplace';
-import Roadmap from './pages/Roadmap';
-import Team from './pages/Team';
-import Admin from './pages/Admin';
-import Marketing from './pages/Marketing';
-import ISO9001 from './pages/ISO9001';
-import CaseStudies from './pages/CaseStudies';
-import Factory from './pages/Factory';
-import Analytics from './pages/Analytics';
 import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
 import UpgradeWall from './components/UpgradeWall';
 import { canAccess } from './lib/access';
+
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const JourneyMap = lazy(() => import('./pages/JourneyMap'));
+const Personas = lazy(() => import('./pages/Personas'));
+const ContentPlan = lazy(() => import('./pages/ContentPlan'));
+const PriorityActions = lazy(() => import('./pages/PriorityActions'));
+const AIResearch = lazy(() => import('./pages/AIResearch'));
+const ConversionFunnel = lazy(() => import('./pages/ConversionFunnel'));
+const ROICalculator = lazy(() => import('./pages/ROICalculator'));
+const BusinessModel = lazy(() => import('./pages/BusinessModel'));
+const AICompany = lazy(() => import('./pages/AICompany'));
+const Billing = lazy(() => import('./pages/Billing'));
+const VRIO = lazy(() => import('./pages/VRIO'));
+const Marketplace = lazy(() => import('./pages/Marketplace'));
+const Roadmap = lazy(() => import('./pages/Roadmap'));
+const Team = lazy(() => import('./pages/Team'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Marketing = lazy(() => import('./pages/Marketing'));
+const ISO9001 = lazy(() => import('./pages/ISO9001'));
+const CaseStudies = lazy(() => import('./pages/CaseStudies'));
+const Factory = lazy(() => import('./pages/Factory'));
+const Analytics = lazy(() => import('./pages/Analytics'));
 
 const STORAGE_KEY = 'cjux2';
 
@@ -269,6 +270,7 @@ export default function App() {
       />
 
       <main className="main">
+        <Suspense fallback={<div className="page-loading" />}>
         {activePage === 'dashboard' && <Dashboard data={data} onNavigate={setActivePage} />}
         {activePage === 'journey' && (
           <JourneyMap data={data} activeStage={activeStage} onStageChange={setActiveStage} onUpdate={updateData} />
@@ -318,6 +320,7 @@ export default function App() {
             : <UpgradeWall page="analytics" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'factory' && <Factory data={data} onUpdate={updateData} />}
+        </Suspense>
 
         <footer className="app-footer">
           <span className="app-footer__name">B. Training Consultant (M.E.A) Co., Ltd.</span>
