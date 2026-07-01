@@ -12,25 +12,25 @@ const MODEL_MAP: Record<string, string> = {
   'claude-haiku-4-5': 'claude-haiku-4-5-20251001',
 };
 
-// ─── Brave Search helper ──────────────────────────────────────────────────────
-const BRAVE_KEY = Deno.env.get('BRAVE_SEARCH_API_KEY') ?? '';
+// ─── Serper.dev Search helper ─────────────────────────────────────────────────
+const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 
-async function braveSearch(query: string, count = 5): Promise<string> {
-  if (!BRAVE_KEY) return '';
-  const url = `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=${count}&search_lang=th&country=TH&freshness=pw`;
-  const r = await fetch(url, {
+async function serperSearch(query: string, count = 5): Promise<string> {
+  if (!SERPER_KEY) return '';
+  const r = await fetch('https://google.serper.dev/search', {
+    method: 'POST',
     headers: {
-      'Accept': 'application/json',
-      'Accept-Encoding': 'gzip',
-      'X-Subscription-Token': BRAVE_KEY,
+      'X-API-KEY': SERPER_KEY,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ q: query, gl: 'th', hl: 'th', num: count }),
   }).catch(() => null);
   if (!r?.ok) return '';
   const data = await r.json();
-  const results: any[] = (data?.web?.results ?? []).slice(0, count);
+  const results: any[] = (data?.organic ?? []).slice(0, count);
   if (!results.length) return '';
   return results
-    .map((x, i) => `[${i + 1}] ${x.title}\n${x.url}\n${x.description ?? ''}`)
+    .map((x, i) => `[${i + 1}] ${x.title}\n${x.link}\n${x.snippet ?? ''}`)
     .join('\n\n');
 }
 
@@ -58,7 +58,7 @@ serve(async (req) => {
     let webContext = '';
     if (useWebSearch) {
       const q = searchQuery ?? `${title} ${industry ?? ''} ไทย 2025`.trim();
-      const raw = await braveSearch(q, 5);
+      const raw = await serperSearch(q, 5);
       if (raw) {
         webContext = `\n\n--- ข้อมูลล่าสุดจาก Web (Brave Search) ---\nQuery: "${q}"\n\n${raw}\n--- สิ้นสุดข้อมูลจาก Web ---`;
       }

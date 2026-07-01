@@ -71,7 +71,7 @@ public.app_admins         — system admins (support@b-tctraining.com)
 |---|---|---|
 | ai-assist | ✅ | AI แนะนำทุกหน้า (Claude API) |
 | ai-plan | ✅ | CEO วางแผน + มอบงาน |
-| agent-run | ✅ | รันเอเจนต์ + Brave Search |
+| agent-run | ✅ | รันเอเจนต์ + Serper.dev (Google Search) |
 | generate-badge | ❌ | ISO badge PNG (public GET) |
 | billing-cron | ❌ | ต่ออายุ/downgrade อัตโนมัติ |
 | promptpay-webhook | ❌ | รับ webhook จาก payment gateway |
@@ -79,7 +79,7 @@ public.app_admins         — system admins (support@b-tctraining.com)
 ## Secrets Required
 ```
 GitHub Actions : VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
-Supabase Fn   : ANTHROPIC_API_KEY (จำเป็น), CRON_SECRET, RESEND_API_KEY
+Supabase Fn   : ANTHROPIC_API_KEY (จำเป็น), CRON_SECRET, RESEND_API_KEY, SERPER_API_KEY
 Pending        : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
 ```
 
@@ -104,6 +104,7 @@ Custom domain: ceoaithailand.org (CNAME file in public/)
 ## Pending Items
 - [ ] DNS propagation สำหรับ ceoaithailand.org (A records + CNAME → GitHub Pages)
 - [ ] ตั้ง Supabase Auth redirect URL: https://ceoaithailand.org
-- [ ] Analytics (Google Analytics / Plausible)
+- [x] Analytics — Google Analytics 4 (G-CHJ99RY1Q1) ใส่ใน index.html แล้ว
 - [ ] Payment Gateway (Omise / GB Prime Pay) + ตั้ง WEBHOOK_SECRET
 - [ ] RESEND_API_KEY สำหรับ email notifications
+- [ ] ตั้ง SERPER_API_KEY ใน Supabase Edge Function secrets (serper.dev)
