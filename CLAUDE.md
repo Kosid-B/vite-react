@@ -71,7 +71,7 @@ public.app_admins         — system admins (support@b-tctraining.com)
 |---|---|---|
 | ai-assist | ✅ | AI แนะนำทุกหน้า (Claude API) |
 | ai-plan | ✅ | CEO วางแผน + มอบงาน |
-| agent-run | ✅ | รันเอเจนต์ + Brave Search |
+| agent-run | ✅ | รันเอเจนต์ + Serper.dev (Google Search) |
 | generate-badge | ❌ | ISO badge PNG (public GET) |
 | billing-cron | ❌ | ต่ออายุ/downgrade อัตโนมัติ |
 | promptpay-webhook | ❌ | รับ webhook จาก payment gateway |
@@ -79,7 +79,7 @@ public.app_admins         — system admins (support@b-tctraining.com)
 ## Secrets Required
 ```
 GitHub Actions : VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
-Supabase Fn   : ANTHROPIC_API_KEY (จำเป็น), CRON_SECRET, RESEND_API_KEY
+Supabase Fn   : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅
 Pending        : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
 ```
 
@@ -101,9 +101,36 @@ push to main → GitHub Actions → npm run build (BASE_PATH=/) → deploy to Gi
 Custom domain: ceoaithailand.org (CNAME file in public/)
 ```
 
+## Email DNS Records (ceoaithailand.org)
+ต้องเพิ่มที่ domain registrar:
+```
+# MX — Zoho Mail (free)
+@   MX 10  mx.zoho.com
+@   MX 20  mx2.zoho.com
+@   MX 50  mx3.zoho.com
+
+# SPF — Resend (noreply) + Zoho (mailbox)
+@   TXT "v=spf1 include:_spf.resend.com include:zoho.com ~all"
+
+# DKIM — Resend (TXT, จาก Resend Dashboard > Domains)
+resend._domainkey   TXT     <value from Resend — starts with p=MIGf...>
+# SPF bounce subdomain — Resend (จาก Resend Dashboard)
+send                MX  10  feedback-smtp.us-east-1.amazonses.com
+send                TXT     "v=spf1 include:amazonses.com ~all"
+
+# DKIM — Zoho (TXT, จาก Zoho Admin > Domains)
+zoho._domainkey     TXT     <value from Zoho>
+
+# DMARC — quarantine spoofed email, รายงานมาที่ admin
+_dmarc  TXT "v=DMARC1; p=quarantine; rua=mailto:support@b-tctraining.com; pct=100"
+```
+FROM_EMAIL ใน Edge Functions: `CEO AI Thailand <noreply@ceoaithailand.org>`
+
 ## Pending Items
-- [ ] DNS propagation สำหรับ ceoaithailand.org (A records + CNAME → GitHub Pages)
+- [ ] DNS propagation สำหรับ ceoaithailand.org (A/MX/SPF/DKIM/DMARC records)
 - [ ] ตั้ง Supabase Auth redirect URL: https://ceoaithailand.org
-- [ ] Analytics (Google Analytics / Plausible)
+- [x] Analytics — Google Analytics 4 (G-CHJ99RY1Q1) ใส่ใน index.html แล้ว
 - [ ] Payment Gateway (Omise / GB Prime Pay) + ตั้ง WEBHOOK_SECRET
-- [ ] RESEND_API_KEY สำหรับ email notifications
+- [x] RESEND_API_KEY ตั้งใน Supabase secrets แล้ว
+- [ ] Zoho Mail setup — Add domain ceoaithailand.org (รับอีเมล)
+- [x] ตั้ง SERPER_API_KEY ใน Supabase Edge Function secrets (serper.dev)
