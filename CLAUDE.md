@@ -79,7 +79,7 @@ public.app_admins         — system admins (support@b-tctraining.com)
 ## Secrets Required
 ```
 GitHub Actions : VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
-Supabase Fn   : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY (pending)
+Supabase Fn   : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅
 Pending        : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
 ```
 
@@ -131,6 +131,6 @@ FROM_EMAIL ใน Edge Functions: `CEO AI Thailand <noreply@ceoaithailand.org>`
 - [ ] ตั้ง Supabase Auth redirect URL: https://ceoaithailand.org
 - [x] Analytics — Google Analytics 4 (G-CHJ99RY1Q1) ใส่ใน index.html แล้ว
 - [ ] Payment Gateway (Omise / GB Prime Pay) + ตั้ง WEBHOOK_SECRET
-- [ ] RESEND_API_KEY สำหรับ email notifications (verify domain ใน Resend ก่อน)
+- [x] RESEND_API_KEY ตั้งใน Supabase secrets แล้ว
 - [ ] Zoho Mail setup — Add domain ceoaithailand.org (รับอีเมล)
 - [x] ตั้ง SERPER_API_KEY ใน Supabase Edge Function secrets (serper.dev)
