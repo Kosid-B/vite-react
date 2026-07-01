@@ -112,8 +112,11 @@ Custom domain: ceoaithailand.org (CNAME file in public/)
 # SPF — Resend (noreply) + Zoho (mailbox)
 @   TXT "v=spf1 include:_spf.resend.com include:zoho.com ~all"
 
-# DKIM — Resend (CNAME, จาก Resend Dashboard > Domains)
-resend._domainkey   CNAME   resend._domainkey.resend.com
+# DKIM — Resend (TXT, จาก Resend Dashboard > Domains)
+resend._domainkey   TXT     <value from Resend — starts with p=MIGf...>
+# SPF bounce subdomain — Resend (จาก Resend Dashboard)
+send                MX  10  feedback-smtp.us-east-1.amazonses.com
+send                TXT     "v=spf1 include:amazonses.com ~all"
 
 # DKIM — Zoho (TXT, จาก Zoho Admin > Domains)
 zoho._domainkey     TXT     <value from Zoho>
