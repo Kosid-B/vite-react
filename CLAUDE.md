@@ -102,35 +102,36 @@ Custom domain: ceoaithailand.org (CNAME file in public/)
 ```
 
 ## Email DNS Records (ceoaithailand.org)
-ต้องเพิ่มที่ domain registrar:
+ไม่ใช้ mailbox @ceoaithailand.org — รับอีเมลที่ support@b-tctraining.com เท่านั้น
+ต้องเพิ่มที่ domain registrar (Cloudflare):
 ```
-# MX — Zoho Mail (free)
-@   MX 10  mx.zoho.com
-@   MX 20  mx2.zoho.com
-@   MX 50  mx3.zoho.com
+# GitHub Pages
+@       A       185.199.108.153
+@       A       185.199.109.153
+@       A       185.199.110.153
+@       A       185.199.111.153
+www     CNAME   kosid-b.github.io
 
-# SPF — Resend (noreply) + Zoho (mailbox)
-@   TXT "v=spf1 include:_spf.resend.com include:zoho.com ~all"
+# SPF — Resend เท่านั้น (ส่ง noreply@ceoaithailand.org)
+@       TXT     "v=spf1 include:_spf.resend.com ~all"
 
 # DKIM — Resend (TXT, จาก Resend Dashboard > Domains)
 resend._domainkey   TXT     <value from Resend — starts with p=MIGf...>
-# SPF bounce subdomain — Resend (จาก Resend Dashboard)
-send                MX  10  feedback-smtp.us-east-1.amazonses.com
-send                TXT     "v=spf1 include:amazonses.com ~all"
 
-# DKIM — Zoho (TXT, จาก Zoho Admin > Domains)
-zoho._domainkey     TXT     <value from Zoho>
+# Resend bounce subdomain (จาก Resend Dashboard)
+send    MX  10  feedback-smtp.us-east-1.amazonses.com
+send    TXT     "v=spf1 include:amazonses.com ~all"
 
 # DMARC — quarantine spoofed email, รายงานมาที่ admin
-_dmarc  TXT "v=DMARC1; p=quarantine; rua=mailto:support@b-tctraining.com; pct=100"
+_dmarc  TXT     "v=DMARC1; p=quarantine; rua=mailto:support@b-tctraining.com; pct=100"
 ```
 FROM_EMAIL ใน Edge Functions: `CEO AI Thailand <noreply@ceoaithailand.org>`
 
 ## Pending Items
-- [ ] DNS propagation สำหรับ ceoaithailand.org (A/MX/SPF/DKIM/DMARC records)
+- [ ] DNS propagation สำหรับ ceoaithailand.org (A + SPF/DKIM/DMARC records)
+- [ ] Verify domain ใน Resend dashboard → ได้ DKIM records
 - [ ] ตั้ง Supabase Auth redirect URL: https://ceoaithailand.org
 - [x] Analytics — Google Analytics 4 (G-CHJ99RY1Q1) ใส่ใน index.html แล้ว
 - [ ] Payment Gateway (Omise / GB Prime Pay) + ตั้ง WEBHOOK_SECRET
 - [x] RESEND_API_KEY ตั้งใน Supabase secrets แล้ว
-- [ ] Zoho Mail setup — Add domain ceoaithailand.org (รับอีเมล)
 - [x] ตั้ง SERPER_API_KEY ใน Supabase Edge Function secrets (serper.dev)
