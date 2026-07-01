@@ -8,7 +8,8 @@ Sidebar `button.nav-item` switches pages. Deployed on GitHub Pages + Supabase ba
 - **Frontend**: Vite + React + TypeScript, CSS variables (dark theme `#0f172a`)
 - **Backend**: Supabase (Auth, Postgres RLS, Edge Functions)
 - **Deploy**: GitHub Actions → GitHub Pages (`main` branch auto-deploy)
-- **Email**: Resend API (via Edge Functions)
+- **Email**: Resend API (via Edge Functions) — ส่งจาก `noreply@ceoaithailand.org`
+- **Search**: Serper.dev (Google Search API) — ใช้ใน agent-run Edge Function
 - **Billing**: pg_cron + billing-cron Edge Function (daily 02:00 UTC)
 
 ## Production Credentials
@@ -16,22 +17,27 @@ Sidebar `button.nav-item` switches pages. Deployed on GitHub Pages + Supabase ba
 Supabase Project ID : rsjbqmnvocvtveelselj
 Supabase URL        : https://rsjbqmnvocvtveelselj.supabase.co
 Anon Key            : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzamJxbW52b2N2dHZlZWxzZWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NDUyODEsImV4cCI6MjA5ODQyMTI4MX0.a0AkDAxtDMuit-xv5dk7wsp9l_uEKCwiysVuGlXbT4I
-Custom Domain       : ceoaithailand.org (DNS in progress)
+Custom Domain       : ceoaithailand.org
 Admin Email         : support@b-tctraining.com
+GA4                 : G-CHJ99RY1Q1 (ใส่ใน index.html แล้ว)
 ```
 
 ## Local Dev vs Production
-- **Local mode** (no `.env`): ข้อมูลเก็บใน `localStorage`, ไม่ต้อง login, plan = Scale (full access)
+- **Local mode** (ไม่มี `.env`): ข้อมูลเก็บใน `localStorage`, ไม่ต้อง login, plan = Scale (full access)
 - **Production mode** (มี `VITE_SUPABASE_URL`): ต้อง login, sync ขึ้น Supabase, plan บังคับใช้
-- ห้ามสร้าง `.env` ใน repo — ตั้งผ่าน GitHub Secrets เท่านั้น
+- **ห้ามสร้าง `.env` ใน repo** — ตั้งผ่าน GitHub Secrets เท่านั้น
 
 ## Key Source Files
 ```
 src/App.tsx                    — root component, routing state, auto-trial logic
+src/types.ts                   — TypeScript interfaces (AppData, Task, Agent, etc.)
+src/data.ts                    — default data / task templates
 src/lib/access.ts              — plan access control (canAccess, effectiveRank, PAGE_MIN_PLAN)
 src/components/Sidebar.tsx     — navigation + plan badge + lock icons
 src/components/UpgradeWall.tsx — locked page overlay
 src/components/Billing.tsx     — subscription management UI
+src/pages/AICompany.tsx        — บริษัท AI page (factory, agent tasks)
+src/pages/CaseStudies.tsx      — case studies + integration guides
 src/index.css                  — all styles (dark theme, CSS vars)
 supabase/functions/            — 6 Edge Functions
 supabase/migrations/           — 0001–0005 (ทั้งหมด applied แล้ว)
@@ -76,9 +82,18 @@ public.app_admins         — system admins (support@b-tctraining.com)
 | billing-cron | ❌ | ต่ออายุ/downgrade อัตโนมัติ |
 | promptpay-webhook | ❌ | รับ webhook จาก payment gateway |
 
-## Secrets Required
+### agent-run — Serper.dev Integration
+```typescript
+// POST https://google.serper.dev/search
+// Header: X-API-KEY, Content-Type: application/json
+// Body: { q, gl: 'th', hl: 'th', num: 5 }
+// Response: data.organic[].{ title, link, snippet }
+const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 ```
-GitHub Actions : VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+
+## Secrets
+```
+GitHub Actions : VITE_SUPABASE_URL ✅, VITE_SUPABASE_ANON_KEY ✅
 Supabase Fn   : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅
 Pending        : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
 ```
@@ -101,37 +116,45 @@ push to main → GitHub Actions → npm run build (BASE_PATH=/) → deploy to Gi
 Custom domain: ceoaithailand.org (CNAME file in public/)
 ```
 
-## Email DNS Records (ceoaithailand.org)
-ไม่ใช้ mailbox @ceoaithailand.org — รับอีเมลที่ support@b-tctraining.com เท่านั้น
-ต้องเพิ่มที่ domain registrar (Cloudflare):
+## Email / DNS (ceoaithailand.org)
+ไม่ใช้ mailbox @ceoaithailand.org — **รับอีเมลที่ support@b-tctraining.com เท่านั้น**
+ส่งอีเมลผ่าน Resend จาก `noreply@ceoaithailand.org`
+
+DNS records ที่ต้องตั้งใน Cloudflare:
 ```
-# GitHub Pages
+# GitHub Pages — A records
 @       A       185.199.108.153
 @       A       185.199.109.153
 @       A       185.199.110.153
 @       A       185.199.111.153
 www     CNAME   kosid-b.github.io
 
-# SPF — Resend เท่านั้น (ส่ง noreply@ceoaithailand.org)
+# SPF (ส่งผ่าน Resend เท่านั้น)
 @       TXT     "v=spf1 include:_spf.resend.com ~all"
 
-# DKIM — Resend (TXT, จาก Resend Dashboard > Domains)
+# DKIM — Resend (TXT record จาก Resend Dashboard > Domains)
 resend._domainkey   TXT     <value from Resend — starts with p=MIGf...>
 
-# Resend bounce subdomain (จาก Resend Dashboard)
+# Resend bounce tracking
 send    MX  10  feedback-smtp.us-east-1.amazonses.com
 send    TXT     "v=spf1 include:amazonses.com ~all"
 
-# DMARC — quarantine spoofed email, รายงานมาที่ admin
+# DMARC
 _dmarc  TXT     "v=DMARC1; p=quarantine; rua=mailto:support@b-tctraining.com; pct=100"
 ```
-FROM_EMAIL ใน Edge Functions: `CEO AI Thailand <noreply@ceoaithailand.org>`
+
+**หมายเหตุ Cloudflare**: `www` CNAME ต้องเป็น DNS only (grey cloud) ไม่ใช่ orange cloud
+เพราะ GitHub Pages ต้องตรวจสอบ IP ตรงๆ
 
 ## Pending Items
-- [ ] DNS propagation สำหรับ ceoaithailand.org (A + SPF/DKIM/DMARC records)
-- [ ] Verify domain ใน Resend dashboard → ได้ DKIM records
-- [ ] ตั้ง Supabase Auth redirect URL: https://ceoaithailand.org
-- [x] Analytics — Google Analytics 4 (G-CHJ99RY1Q1) ใส่ใน index.html แล้ว
-- [ ] Payment Gateway (Omise / GB Prime Pay) + ตั้ง WEBHOOK_SECRET
-- [x] RESEND_API_KEY ตั้งใน Supabase secrets แล้ว
-- [x] ตั้ง SERPER_API_KEY ใน Supabase Edge Function secrets (serper.dev)
+- [ ] ตั้ง A records + www CNAME (grey cloud) ใน Cloudflare
+- [ ] Verify domain ใน Resend dashboard → ได้ค่า DKIM TXT → ใส่ใน Cloudflare
+- [ ] ตั้ง SPF + DMARC records ใน Cloudflare
+- [ ] GitHub repo Settings → Pages → Custom domain → `ceoaithailand.org`
+- [ ] ตั้ง Supabase Auth redirect URL: `https://ceoaithailand.org`
+- [ ] Payment Gateway (Omise / GB Prime Pay) + ตั้ง `WEBHOOK_SECRET`
+- [x] Google Analytics 4 (G-CHJ99RY1Q1) ใส่ใน index.html
+- [x] RESEND_API_KEY ตั้งใน Supabase secrets
+- [x] SERPER_API_KEY ตั้งใน Supabase Edge Function secrets
+- [x] agent-run: เปลี่ยนจาก Brave Search → Serper.dev
+- [x] ลบ Brave Search references ออกจาก UI ทั้งหมด

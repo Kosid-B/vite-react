@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#020617"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#06b6d4"/>
+      <stop offset="100%" style="stop-color:#c44b2b"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Grid lines (subtle) -->
+  <line x1="0" y1="1" x2="1200" y2="1" stroke="#1e293b" stroke-width="1"/>
+  <line x1="0" y1="629" x2="1200" y2="629" stroke="#1e293b" stroke-width="1"/>
+
+  <!-- Accent bar top -->
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
+
+  <!-- Left content -->
+  <!-- Logo icon placeholder -->
+  <rect x="80" y="200" width="56" height="56" rx="12" fill="#c44b2b"/>
+  <text x="108" y="240" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">AI</text>
+
+  <!-- Brand name -->
+  <text x="80" y="330" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="white">CEO AI Thailand</text>
+
+  <!-- Tagline TH -->
+  <text x="80" y="390" font-family="Arial, sans-serif" font-size="30" fill="#94a3b8">จ้าง AI เป็นทีมงานบริษัทคุณ — 24 ชม. ไม่มีวันหยุด</text>
+
+  <!-- Sub tagline EN -->
+  <text x="80" y="435" font-family="Arial, sans-serif" font-size="22" fill="#64748b">Automated AI Company for Thai SMEs</text>
+
+  <!-- Stats row -->
+  <rect x="80" y="490" width="200" height="70" rx="12" fill="#1e293b"/>
+  <text x="180" y="522" font-family="Arial, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">เริ่มต้น</text>
+  <text x="180" y="548" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#22d3ee" text-anchor="middle">฿1,490/เดือน</text>
+
+  <rect x="300" y="490" width="200" height="70" rx="12" fill="#1e293b"/>
+  <text x="400" y="522" font-family="Arial, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">ทดลองฟรี</text>
+  <text x="400" y="548" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#22d3ee" text-anchor="middle">15 วัน</text>
+
+  <rect x="520" y="490" width="200" height="70" rx="12" fill="#1e293b"/>
+  <text x="620" y="522" font-family="Arial, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">AI Models</text>
+  <text x="620" y="548" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#22d3ee" text-anchor="middle">20+ ฟีเจอร์</text>
+
+  <!-- Right side visual -->
+  <!-- Dashboard mockup -->
+  <rect x="780" y="120" width="360" height="420" rx="16" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <!-- Dashboard header -->
+  <rect x="780" y="120" width="360" height="48" rx="16" fill="#1e293b"/>
+  <rect x="780" y="148" width="360" height="20" fill="#1e293b"/>
+  <circle cx="810" cy="144" r="6" fill="#ef4444"/>
+  <circle cx="830" cy="144" r="6" fill="#f59e0b"/>
+  <circle cx="850" cy="144" r="6" fill="#22c55e"/>
+  <text x="1000" y="149" font-family="Arial, sans-serif" font-size="12" fill="#64748b" text-anchor="middle">CEO AI Dashboard</text>
+
+  <!-- Metric cards inside dashboard -->
+  <rect x="800" y="188" width="148" height="70" rx="8" fill="#1e293b"/>
+  <text x="874" y="212" font-family="Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">Monthly Revenue</text>
+  <text x="874" y="240" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#22c55e" text-anchor="middle">+32%</text>
+
+  <rect x="972" y="188" width="148" height="70" rx="8" fill="#1e293b"/>
+  <text x="1046" y="212" font-family="Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">AI Tasks Done</text>
+  <text x="1046" y="240" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#22d3ee" text-anchor="middle">1,248</text>
+
+  <!-- Chart bars -->
+  <rect x="800" y="278" width="320" height="100" rx="8" fill="#1e293b"/>
+  <rect x="820" y="340" width="28" height="28" rx="3" fill="#1d4ed8" opacity="0.7"/>
+  <rect x="860" y="320" width="28" height="48" rx="3" fill="#1d4ed8" opacity="0.8"/>
+  <rect x="900" y="305" width="28" height="63" rx="3" fill="#1d4ed8" opacity="0.9"/>
+  <rect x="940" y="295" width="28" height="73" rx="3" fill="#2563eb"/>
+  <rect x="980" y="280" width="28" height="88" rx="3" fill="#3b82f6"/>
+  <rect x="1020" y="270" width="28" height="98" rx="3" fill="#60a5fa"/>
+  <rect x="1060" y="258" width="28" height="110" rx="3" fill="#22d3ee"/>
+  <text x="960" y="298" font-family="Arial, sans-serif" font-size="9" fill="#64748b" text-anchor="middle">Revenue Trend ↑</text>
+
+  <!-- AI agents list -->
+  <rect x="800" y="398" width="320" height="120" rx="8" fill="#1e293b"/>
+  <circle cx="820" cy="420" r="8" fill="#22c55e"/>
+  <text x="840" y="424" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">🤖 ISO 9001 Compliance Agent</text>
+  <circle cx="820" cy="448" r="8" fill="#22c55e"/>
+  <text x="840" y="452" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">📊 Financial Forecast Agent</text>
+  <circle cx="820" cy="476" r="8" fill="#f59e0b"/>
+  <text x="840" y="480" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">🎯 GTM Strategy Agent</text>
+  <circle cx="820" cy="504" r="8" fill="#22c55e"/>
+  <text x="840" y="508" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">🔍 SEO Marketplace Agent</text>
+
+  <!-- Domain watermark -->
+  <text x="600" y="600" font-family="Arial, sans-serif" font-size="18" fill="#334155" text-anchor="middle">ceoaithailand.org</text>
+</svg>
