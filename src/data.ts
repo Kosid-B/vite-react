@@ -444,7 +444,7 @@ export const DEFAULT_DATA: AppData = {
     ],
     tasks: [
       { id: 't1', agentId: 'a-cmo', title: 'ร่างแคมเปญเปิดตัวสินค้าใหม่บน Facebook', detail: 'กำหนดกลุ่มเป้าหมาย งบ และข้อความโฆษณา 3 เวอร์ชัน', status: 'in_progress' },
-      { id: 't2', agentId: 'a-cto', title: 'เชื่อม Brave Search API เพื่อวิเคราะห์คู่แข่ง', detail: 'ดึงราคาและรีวิวคู่แข่ง 5 ราย', status: 'queued' },
+      { id: 't2', agentId: 'a-cto', title: 'วิเคราะห์คู่แข่ง 5 รายด้วย Web Search', detail: 'ดึงราคาและรีวิวคู่แข่ง 5 ราย ผ่าน Serper.dev (Google Search)', status: 'queued', useWebSearch: true },
       { id: 't4', agentId: 'a-cmo', title: 'ตรวจร่างอีเมลนิวส์เลตเตอร์ก่อนส่ง', detail: 'รอบอร์ด/CEO รีวิวก่อนยิงจริง', status: 'review' },
       { id: 't3', agentId: 'a-ceo', title: 'สรุปแผนรายสัปดาห์เสนอบอร์ด', detail: 'รวมความคืบหน้าและของบอนุมัติ', status: 'done' },
     ],
@@ -469,7 +469,7 @@ export const DEFAULT_DATA: AppData = {
       },
     ],
     integrations: [
-      { id: 'in-search', name: 'Brave Search API', desc: 'ให้เอเจนต์ค้นคว้าข้อมูลตลาด คู่แข่ง และข่าวสารแบบเรียลไทม์', icon: '🔎', connected: false, apiKey: '' },
+      { id: 'in-search', name: 'Google Search (Serper.dev)', desc: 'ให้เอเจนต์ค้นคว้าข้อมูลตลาด คู่แข่ง และข่าวสารแบบเรียลไทม์ผ่าน Google Search', icon: '🔎', connected: true, apiKey: '' },
       { id: 'in-email', name: 'Resend (Email API)', desc: 'ส่งอีเมล รายงาน และนิวส์เลตเตอร์หาลูกค้าโดยอัตโนมัติ', icon: '✉️', connected: false, apiKey: '' },
       { id: 'in-line', name: 'LINE Messaging API', desc: 'ตอบแชทและส่งข้อความหาลูกค้าผ่าน LINE Official Account', icon: '💬', connected: false, apiKey: '' },
       { id: 'in-sheet', name: 'Google Sheets', desc: 'บันทึกผลงานและรายงานลงสเปรดชีตอัตโนมัติ', icon: '📊', connected: false, apiKey: '' },
