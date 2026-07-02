@@ -41,6 +41,39 @@ const features = [
   { icon: '🚀', title: 'ขยายธุรกิจอย่างเป็นระบบ', desc: 'ระบบ 6G Growth Intelligence พร้อมแผนขยาย TAM' },
 ];
 
+const plans = [
+  {
+    id: 'free',
+    name: 'ทดลองใช้ฟรี',
+    price: '฿0',
+    period: '15 วัน',
+    tagline: 'ลองใช้ฟรี ไม่ต้องผูกบัตรเครดิต',
+    features: ['เอเจนต์ AI สูงสุด 3 ตัว', 'AI calls 200 ครั้ง', 'งาน 20 งาน', 'รองรับภาษาไทยเต็มรูปแบบ'],
+    highlight: false,
+    cta: 'เริ่มทดลองฟรี',
+  },
+  {
+    id: 'growth',
+    name: 'Growth',
+    price: '฿1,490',
+    period: '/เดือน',
+    tagline: 'สำหรับ SME ที่ต้องการทีม AI ทำงานจริง',
+    features: ['เอเจนต์ AI ไม่จำกัด', 'AI calls 1,000 ครั้ง/เดือน', 'งานในระบบไม่จำกัด', 'บอร์ดอนุมัติ + แจ้งเตือน', 'รายงานผลรายสัปดาห์'],
+    highlight: true,
+    cta: 'เริ่มต้นเลย',
+  },
+  {
+    id: 'scale',
+    name: 'Scale',
+    price: '฿5,900',
+    period: '/เดือน',
+    tagline: 'สำหรับองค์กรที่ต้องการหลายทีม AI พร้อมกัน',
+    features: ['ทุกอย่างในแพ็ก Growth', 'AI calls 5,000 ครั้ง/เดือน', 'หลายบริษัท AI พร้อมกัน', 'API ส่วนตัว + Webhook', 'ผู้ดูแลบัญชีเฉพาะ'],
+    highlight: false,
+    cta: 'ติดต่อทีมงาน',
+  },
+];
+
 export default function LandingPage({ onGetStarted }: Props) {
   const [ctaHover, setCtaHover] = useState(false);
   const [navHover, setNavHover] = useState(false);
@@ -53,14 +86,17 @@ export default function LandingPage({ onGetStarted }: Props) {
         <span style={{ fontWeight: 700, fontSize: 18, color: C.cyan4, letterSpacing: '-0.5px' }}>
           CEO AI Thailand
         </span>
-        <button
-          onClick={onGetStarted}
-          onMouseEnter={() => setNavHover(true)}
-          onMouseLeave={() => setNavHover(false)}
-          style={{ padding: '8px 20px', borderRadius: 8, border: `1px solid ${C.cyan5}`, background: navHover ? 'rgba(6,182,212,0.15)' : 'transparent', color: C.cyan4, fontFamily: 'inherit', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all .2s' }}
-        >
-          เข้าสู่ระบบ
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <a href="#pricing" style={{ color: C.slate4, fontSize: 14, textDecoration: 'none', padding: '8px 12px' }}>แพ็กเกจ</a>
+          <button
+            onClick={onGetStarted}
+            onMouseEnter={() => setNavHover(true)}
+            onMouseLeave={() => setNavHover(false)}
+            style={{ padding: '8px 20px', borderRadius: 8, border: `1px solid ${C.cyan5}`, background: navHover ? 'rgba(6,182,212,0.15)' : 'transparent', color: C.cyan4, fontFamily: 'inherit', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all .2s' }}
+          >
+            เข้าสู่ระบบ
+          </button>
+        </div>
       </nav>
 
       {/* ─── Hero ─── */}
@@ -102,7 +138,7 @@ export default function LandingPage({ onGetStarted }: Props) {
               boxShadow: '0 0 32px rgba(245,158,11,0.45)',
             }}
           >
-            จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 7 วัน
+            จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 15 วัน
           </button>
           <div style={{ marginTop: 12, color: C.slate5, fontSize: 13 }}>
             เหลือสิทธิ์จ้างงานวันนี้อีก <strong style={{ color: C.amber4 }}>8 บริษัท</strong>
@@ -166,12 +202,74 @@ export default function LandingPage({ onGetStarted }: Props) {
         </div>
       </section>
 
+      {/* ─── Pricing ─── */}
+      <section id="pricing" style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12, color: C.white }}>
+            แพ็กเกจ <span style={{ color: C.cyan4 }}>สำหรับทุกขนาดธุรกิจ</span>
+          </h2>
+          <p style={{ textAlign: 'center', color: C.slate4, marginBottom: 48, fontSize: 16 }}>
+            ทดลองฟรี 15 วัน — ไม่ต้องผูกบัตรเครดิต
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
+            {plans.map(p => (
+              <div key={p.id} style={{
+                padding: 32,
+                borderRadius: 16,
+                border: `2px solid ${p.highlight ? C.cyan5 : C.border}`,
+                backgroundColor: p.highlight ? 'rgba(6,182,212,0.06)' : C.bg3,
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+              }}>
+                {p.highlight && (
+                  <div style={{ position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)', background: C.cyan5, color: '#fff', fontSize: 12, fontWeight: 700, padding: '4px 16px', borderRadius: 100, letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                    แนะนำ
+                  </div>
+                )}
+                <div style={{ fontSize: 18, fontWeight: 700, color: C.white, marginBottom: 4 }}>{p.name}</div>
+                <div style={{ color: C.slate4, fontSize: 13, marginBottom: 20 }}>{p.tagline}</div>
+                <div style={{ marginBottom: 24 }}>
+                  <span style={{ fontSize: 38, fontWeight: 700, color: p.highlight ? C.cyan4 : C.white }}>{p.price}</span>
+                  <span style={{ color: C.slate5, fontSize: 14, marginLeft: 4 }}>{p.period}</span>
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', flexGrow: 1 }}>
+                  {p.features.map(f => (
+                    <li key={f} style={{ color: C.slate4, fontSize: 14, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ color: C.cyan4, fontWeight: 700, flexShrink: 0 }}>✓</span> {f}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={onGetStarted}
+                  style={{
+                    width: '100%',
+                    padding: '12px 0',
+                    borderRadius: 10,
+                    border: p.highlight ? 'none' : `1px solid ${C.border2}`,
+                    background: p.highlight ? C.cyan5 : 'transparent',
+                    color: p.highlight ? C.white : C.slate4,
+                    fontFamily: 'inherit',
+                    fontWeight: 600,
+                    fontSize: 15,
+                    cursor: 'pointer',
+                    transition: 'all .2s',
+                  }}
+                >
+                  {p.cta}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── Bottom CTA ─── */}
       <section style={{ padding: '80px 24px', textAlign: 'center', borderTop: `1px solid ${C.border}`, background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.06) 0%, transparent 70%)' }}>
         <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 700, marginBottom: 16 }}>
           พร้อมจ้าง AI <span style={{ color: C.amber5 }}>ทำงานแทนคุณ</span> แล้วหรือยัง?
         </h2>
-        <p style={{ color: C.slate4, marginBottom: 40, fontSize: 16 }}>ทดลองฟรี 7 วัน ไม่ต้องใช้บัตรเครดิต</p>
+        <p style={{ color: C.slate4, marginBottom: 40, fontSize: 16 }}>ทดลองฟรี 15 วัน ไม่ต้องใช้บัตรเครดิต</p>
         <button
           onClick={onGetStarted}
           style={{ padding: '16px 48px', borderRadius: 12, border: 'none', background: C.cyan5, color: C.white, fontFamily: 'inherit', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 0 32px rgba(6,182,212,0.4)' }}
