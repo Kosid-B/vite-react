@@ -210,6 +210,9 @@ export interface AICompany {
   customSkills: CustomSkill[]; // Skills ที่ User เพิ่มเองผ่านกระบวนการ HRD
   competencyMap: RoleCompetency[]; // HRD กำหนด Competency Level ต่อตำแหน่ง
   toolOwners?: Record<string, string>; // toolId → agentId — C-level ที่ CEO มอบหมายให้ดูแลเครื่องมือแต่ละตัว
+  productDesc?: string; // บอร์ดอธิบายผลิตภัณฑ์/บริการของบริษัท (ใช้ให้ CEO ร่าง BMC)
+  productDbd?: string;  // หมวดผลิตภัณฑ์/บริการตาม DBD (TSIC) — ใช้จัดกลุ่มใน Marketplace และงานการตลาด
+  bmcDraft?: { bmc: BMCData; note: string; proposedAt: string }; // ร่าง BMC จาก CEO รอบอร์ดอนุมัติ
 }
 
 /* ===== Billing / PromptPay ===== */
