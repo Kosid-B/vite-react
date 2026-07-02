@@ -366,7 +366,11 @@ export default function App() {
             : <UpgradeWall page="analytics" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'factory' && <Factory data={data} onUpdate={updateData} />}
-        {activePage === 'sipoc' && <Sipoc data={data} onUpdate={updateData} />}
+        {activePage === 'sipoc' && (
+          canAccess(data, 'sipoc')
+            ? <Sipoc data={data} onUpdate={updateData} />
+            : <UpgradeWall page="sipoc" data={data} onNavigate={setActivePage} />
+        )}
         </Suspense>
 
         {/* ปุ่ม ย้อนกลับ / หน้าถัดไป — ลำดับตาม sidebar */}

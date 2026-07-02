@@ -133,12 +133,13 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <div className="nav-sub">
             <div className="nav-label">เครื่องมือ</div>
             {TOOL_ITEMS.map(t => (
-              <button key={t.id} className={`nav-item ${activePage === t.id ? 'active' : ''}`} onClick={() => onNavigate(t.id)} title={t.desc}>
+              <button key={t.id} className={`nav-item ${activePage === t.id ? 'active' : ''}${locked(t.id) ? ' nav-locked' : ''}`}
+                onClick={() => onNavigate(t.id)} title={t.desc}>
                 <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
                   <path d={t.icon} />
                 </svg>
                 {t.label}
-                <span className="nav-dot" />
+                {locked(t.id) ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
               </button>
             ))}
           </div>
