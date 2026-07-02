@@ -209,6 +209,7 @@ export interface AICompany {
   skillPlan: SkillPlanItem[]; // HRD กำหนด Skills + Process ต่อตำแหน่ง
   customSkills: CustomSkill[]; // Skills ที่ User เพิ่มเองผ่านกระบวนการ HRD
   competencyMap: RoleCompetency[]; // HRD กำหนด Competency Level ต่อตำแหน่ง
+  toolOwners?: Record<string, string>; // toolId → agentId — C-level ที่ CEO มอบหมายให้ดูแลเครื่องมือแต่ละตัว
 }
 
 /* ===== Billing / PromptPay ===== */

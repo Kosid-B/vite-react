@@ -119,6 +119,38 @@ body {
 .nav-ico { width: 16px; height: 16px; opacity: .7; flex-shrink: 0; }
 .nav-item.active .nav-ico { opacity: 1; }
 
+/* nav parent + collapsible sub-menu (เครื่องมือ ใต้ บริษัท AI) */
+.nav-parent { position: relative; }
+.nav-parent > .nav-item { padding-right: 40px; }
+.nav-caret {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(255,255,255,.45);
+  transition: background .15s, color .15s;
+}
+.nav-caret:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.9); }
+.nav-caret svg { transition: transform .15s; }
+.nav-caret.open svg { transform: rotate(180deg); }
+.nav-sub {
+  margin: 2px 0 6px 15px;
+  padding-left: 7px;
+  border-left: 1px solid rgba(255,255,255,.09);
+}
+.nav-sub .nav-label { padding: 4px 10px 2px; margin-bottom: 2px; }
+.nav-sub .nav-item { padding: 8px 10px; min-height: 38px; font-size: 12.5px; gap: 10px; }
+.nav-sub .nav-ico { width: 14px; height: 14px; }
+
 .progress-block {
   margin: 0 12px 12px;
   background: rgba(255,255,255,.06);
@@ -761,6 +793,21 @@ input:focus, textarea:focus, select:focus {
 .ai-co-industry { display: flex; align-items: center; gap: 8px; }
 .ai-co-lbl { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink4); }
 .ai-co-ind-inp { font-size: 12.5px; color: rgba(255,255,255,.8); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 4px 10px; outline: none; font-family: inherit; flex: 1; max-width: 320px; }
+
+/* Tool owners — CEO มอบหมาย C-level ดูแลเครื่องมือ */
+.tool-owner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 10px; }
+.tool-owner-row { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 8px; padding: 8px 12px; min-width: 0; }
+.tool-owner-tool { font-size: 12.5px; color: rgba(255,255,255,.85); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tool-owner-agent { font-size: 12px; white-space: nowrap; }
+.tool-owner-agent.none { color: rgba(255,255,255,.35); font-style: italic; }
+.tool-owner-sel { font-size: 11.5px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 3px 6px; max-width: 150px; font-family: inherit; cursor: pointer; }
+.tool-owner-sel option { background: #1e293b; }
+@media (max-width: 900px) { .tool-owner-grid { grid-template-columns: 1fr; } }
+
+/* DBD business-type dropdown (select + custom input) */
+.dbd-select { display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap; min-width: 0; }
+.dbd-select select { cursor: pointer; min-width: 0; }
+.dbd-select select option, .dbd-select select optgroup { background: #1e293b; color: rgba(255,255,255,.85); }
 .ai-control-side { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .ai-hb { display: flex; flex-direction: column; gap: 4px; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink4); }
 .ai-hb select { font-family: inherit; font-size: 12px; padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); color: #fff; outline: none; cursor: pointer; }
