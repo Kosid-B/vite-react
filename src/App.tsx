@@ -12,6 +12,7 @@ import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
 import UpgradeWall from './components/UpgradeWall';
 import { canAccess } from './lib/access';
+import { isAdminEmail } from './config';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const JourneyMap = lazy(() => import('./pages/JourneyMap'));
@@ -36,6 +37,31 @@ const Factory = lazy(() => import('./pages/Factory'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 
 const STORAGE_KEY = 'cjux2';
+
+// ลำดับหน้า (ตาม sidebar) สำหรับปุ่ม ย้อนกลับ / หน้าถัดไป ท้ายทุกหน้า
+const PAGE_FLOW: { id: PageId; label: string }[] = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'aicompany', label: 'บริษัท AI' },
+  { id: 'journey', label: 'Journey Map' },
+  { id: 'funnel', label: 'Conversion Funnel' },
+  { id: 'roi', label: 'ROI Calculator' },
+  { id: 'personas', label: 'Personas' },
+  { id: 'content', label: 'Content Plan' },
+  { id: 'actions', label: 'Priority Actions' },
+  { id: 'bmc', label: 'Business Model · MIT24' },
+  { id: 'roadmap', label: 'Product Roadmap' },
+  { id: 'marketing', label: 'กลยุทธ์การตลาด' },
+  { id: 'vrio', label: 'VRIO Analysis' },
+  { id: 'market', label: 'Marketplace' },
+  { id: 'team', label: 'ทีม / สมาชิก' },
+  { id: 'factory', label: 'โรงงานอัจฉริยะ' },
+  { id: 'billing', label: 'แพ็กเกจ & ชำระเงิน' },
+  { id: 'analytics', label: 'SaaS Analytics' },
+  { id: 'admin', label: 'ผู้ดูแลระบบ' },
+  { id: 'iso9001', label: 'ISO 9001:2015 QMS' },
+  { id: 'aisearch', label: 'AI Research' },
+  { id: 'cases', label: 'Case Studies' },
+];
 
 /** เติม field ที่ขาดให้ครบตาม schema ปัจจุบัน (รองรับข้อมูลเก่า/จากคลาวด์) */
 function migrate(parsed: AppData): AppData {
@@ -338,6 +364,33 @@ export default function App() {
         )}
         {activePage === 'factory' && <Factory data={data} onUpdate={updateData} />}
         </Suspense>
+
+        {/* ปุ่ม ย้อนกลับ / หน้าถัดไป — ลำดับตาม sidebar */}
+        {(() => {
+          const flow = PAGE_FLOW.filter(p => p.id !== 'admin' || isAdminEmail(session?.user.email ?? null));
+          const idx = flow.findIndex(p => p.id === activePage);
+          if (idx === -1) return null;
+          const prev = flow[idx - 1];
+          const next = flow[idx + 1];
+          const go = (id: PageId) => { setActivePage(id); window.scrollTo({ top: 0 }); };
+          return (
+            <nav className="page-nav">
+              {prev ? (
+                <button className="page-nav-btn" onClick={() => go(prev.id)}>
+                  <span className="page-nav-dir">← ย้อนกลับ</span>
+                  <span className="page-nav-label">{prev.label}</span>
+                </button>
+              ) : <span className="page-nav-spacer" />}
+              <span className="page-nav-pos">{idx + 1} / {flow.length}</span>
+              {next ? (
+                <button className="page-nav-btn next" onClick={() => go(next.id)}>
+                  <span className="page-nav-dir">หน้าถัดไป →</span>
+                  <span className="page-nav-label">{next.label}</span>
+                </button>
+              ) : <span className="page-nav-spacer" />}
+            </nav>
+          );
+        })()}
 
         <footer className="app-footer">
           <span className="app-footer__name">B. Training Consultant (M.E.A) Co., Ltd.</span>

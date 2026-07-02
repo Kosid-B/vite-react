@@ -797,6 +797,17 @@ input:focus, textarea:focus, select:focus {
 .name-prop-keep { font-size: 11px; font-family: inherit; color: rgba(255,255,255,.45); background: none; border: 1px solid rgba(255,255,255,.15); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
 .name-prop-all { margin-top: 10px; font-size: 12px; font-weight: 600; font-family: inherit; color: #0f172a; background: #4ade80; border: none; border-radius: 7px; padding: 6px 14px; cursor: pointer; }
 
+/* Page nav — ย้อนกลับ / หน้าถัดไป ท้ายทุกหน้า */
+.page-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 28px 0 4px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.08); }
+.page-nav-btn { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; font-family: inherit; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 9px 16px; cursor: pointer; transition: background .15s, border-color .15s; max-width: 44%; min-width: 0; text-align: left; }
+.page-nav-btn.next { align-items: flex-end; text-align: right; }
+.page-nav-btn:hover { background: rgba(255,255,255,.09); border-color: rgba(56,189,248,.4); }
+.page-nav-dir { font-size: 10.5px; letter-spacing: .05em; color: rgba(255,255,255,.45); }
+.page-nav-label { font-size: 13px; font-weight: 600; color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.page-nav-pos { font-size: 11px; color: rgba(255,255,255,.35); white-space: nowrap; }
+.page-nav-spacer { width: 44%; }
+@media print { .page-nav { display: none !important; } }
+
 /* Billing — payment guide PDF links */
 a.bill-guide-link { text-decoration: none; cursor: pointer; color: #38bdf8; border-color: rgba(56,189,248,.4); }
 a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
