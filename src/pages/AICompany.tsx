@@ -163,6 +163,19 @@ const C_LEVEL_SPECS: Record<string, { avatar: string; color: string; name: strin
   CPO: { avatar: '🛠️', color: '#0e7490', name: 'ดารา', mandate: 'บริหารผลิตภัณฑ์ — ดูแล Product Roadmap จัดลำดับฟีเจอร์และแผนการพัฒนา' },
 };
 
+// ชื่อไทยที่ CEO ใช้เสนอเป็นชื่อเรียกเอเจนต์แต่ละตำแหน่ง (บอร์ดเลือก/อนุมัติ)
+const NAME_POOLS: Record<string, string[]> = {
+  CEO: ['ปัญญา', 'ภูมิพัฒน์', 'ธนากร', 'อาทิตย์'],
+  CTO: ['ธารา', 'ปกรณ์', 'ศิวกร', 'เมธา'],
+  CMO: ['มณี', 'แพรวา', 'พิมพ์มาดา', 'ชุติมา'],
+  CFO: ['บุญมี', 'ธนัชพร', 'กันตพงศ์', 'รัตนา'],
+  COO: ['สมชาย', 'วรากร', 'ชลธิชา', 'ประเสริฐ'],
+  CSO: ['วิชัย', 'ปริญญา', 'ณัฐวุฒิ', 'สุขุม'],
+  CPO: ['ดารา', 'ภาสกร', 'ชนิกานต์', 'นวัต'],
+  HRD: ['อารีย์', 'สุภาพร', 'พัชราภา', 'เมตตา'],
+};
+const GENERIC_NAMES = ['จันทรา', 'นภา', 'คีรี', 'วารี', 'อรุณ', 'เสาวลักษณ์', 'พฤกษ์', 'ไผท'];
+
 // วิธีชำระเงินตอนซื้อ Skill (payment gateway จริงเปิดใช้เมื่อ WEBHOOK_SECRET พร้อม)
 const PAY_METHODS = [
   { id: 'promptpay', label: 'PromptPay QR', icon: '📱' },
@@ -207,6 +220,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [designingCompetency, setDesigningCompetency] = useState(false);
   const [errorLog, setErrorLog] = useState<{ time: string; msg: string; taskTitle: string }[]>([]);
   const [adminSkillList, setAdminSkillList] = useState<SkillEntry[]>([]);
+  const [nameProposals, setNameProposals] = useState<Array<{ agentId: string; role: string; avatar: string; color: string; current: string; options: string[] }>>([]);
+  const [nameMsg, setNameMsg] = useState<string | null>(null);
 
   // โหลด skill ที่ Admin ระบบเพิ่มเข้า Marketplace (แสดงให้ทุกบริษัท)
   useEffect(() => {
@@ -881,6 +896,44 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     });
   }
 
+  /* ----- CEO เสนอชื่อเรียกแต่ละตำแหน่ง → บอร์ด (User) เลือก/อนุมัติ ----- */
+  function ceoProposeNames() {
+    if (c.agents.length === 0) return;
+    const proposals = c.agents.map(a => {
+      const key = Object.keys(NAME_POOLS).find(k => a.role.toUpperCase().includes(k));
+      const pool = [...new Set([...(key ? NAME_POOLS[key] : []), ...GENERIC_NAMES])]
+        .filter(n => n !== a.name)
+        .sort(() => Math.random() - 0.5);
+      return { agentId: a.id, role: a.role, avatar: a.avatar, color: a.color, current: a.name, options: pool.slice(0, 3) };
+    });
+    setNameProposals(proposals);
+    setNameMsg(`🧠 CEO เสนอชื่อเรียกสำหรับ ${proposals.length} ตำแหน่ง — บอร์ดคลิกชื่อที่ต้องการเพื่ออนุมัติ หรือคงชื่อเดิม`);
+    setFeed(prev => [
+      { id: ++counter.current, time: nowTime(), text: `CEO เสนอชื่อเรียกเอเจนต์ ${proposals.length} ตำแหน่ง รอบอร์ดอนุมัติ`, color: AGENT_PALETTE[0] },
+      ...prev,
+    ].slice(0, 40));
+  }
+  function approveName(agentId: string, name: string) {
+    const ag = c.agents.find(a => a.id === agentId);
+    saveAgent(agentId, 'name', name);
+    setNameProposals(prev => prev.filter(p => p.agentId !== agentId));
+    setFeed(prev => [
+      { id: ++counter.current, time: nowTime(), text: `บอร์ดอนุมัติชื่อ "${name}" สำหรับตำแหน่ง ${ag?.role ?? ''}`, color: ag?.color ?? AGENT_PALETTE[0] },
+      ...prev,
+    ].slice(0, 40));
+  }
+  function keepName(agentId: string) {
+    setNameProposals(prev => prev.filter(p => p.agentId !== agentId));
+  }
+  function approveAllFirstNames() {
+    const chosen = Object.fromEntries(
+      nameProposals.filter(p => p.options[0]).map(p => [p.agentId, p.options[0]]),
+    );
+    patch({ agents: c.agents.map(a => chosen[a.id] ? { ...a, name: chosen[a.id] } : a) });
+    setNameProposals([]);
+    setNameMsg(`✅ บอร์ดอนุมัติชื่อใหม่ ${Object.keys(chosen).length} ตำแหน่งเรียบร้อย`);
+  }
+
   /* ----- tool owners: CEO เลือก/สร้าง C-level ดูแลเครื่องมือแต่ละตัว ----- */
   function setToolOwner(toolId: string, agentId: string) {
     const owners = { ...(c.toolOwners ?? {}) };
@@ -1234,7 +1287,36 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       <div className="ai-2col">
         {/* ===== ทีมเอเจนต์ ===== */}
         <section className="ai-panel">
-          <div className="ai-panel-hd">👥 ทีมเอเจนต์ AI</div>
+          <div className="ai-panel-hd">
+            👥 ทีมเอเจนต์ AI
+            <button className="ai-suggest-btn" onClick={ceoProposeNames} disabled={c.agents.length === 0}
+              title="CEO เสนอชื่อเรียกแต่ละตำแหน่ง — บอร์ด (คุณ) เลือกหรืออนุมัติก่อนบันทึก">
+              ✦ CEO เสนอชื่อเอเจนต์
+            </button>
+          </div>
+          {(nameMsg || nameProposals.length > 0) && (
+            <div className="name-prop-panel">
+              {nameMsg && <div className="name-prop-msg">{nameMsg}</div>}
+              {nameProposals.map(p => (
+                <div key={p.agentId} className="name-prop-row">
+                  <span className="name-prop-role" style={{ color: p.color }}>{p.avatar} {p.role}</span>
+                  <span className="name-prop-cur">ปัจจุบัน: {p.current}</span>
+                  <span className="name-prop-opts">
+                    {p.options.map(n => (
+                      <button key={n} className="name-prop-opt" onClick={() => approveName(p.agentId, n)}
+                        title={`อนุมัติชื่อ "${n}"`}>{n}</button>
+                    ))}
+                    <button className="name-prop-keep" onClick={() => keepName(p.agentId)}>คงชื่อเดิม</button>
+                  </span>
+                </div>
+              ))}
+              {nameProposals.length > 1 && (
+                <button className="name-prop-all" onClick={approveAllFirstNames}>
+                  ✅ อนุมัติตัวเลือกแรกทั้งหมด ({nameProposals.length} ตำแหน่ง)
+                </button>
+              )}
+            </div>
+          )}
           <div className="ai-agent-list">
             {c.agents.map(a => (
               <div key={a.id} className="ai-agent" style={{ borderLeftColor: a.color }}>
