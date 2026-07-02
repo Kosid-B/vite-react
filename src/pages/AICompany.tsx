@@ -90,6 +90,7 @@ const AVAILABLE_SKILLS = [
   'product-roadmap','saas-onboarding-flow','customer-persona','customer-segmentation','customer-journey-map',
   'customer-win-story','conversion-funnel-analysis','pricing-strategy','pricing-analysis','pricing-calculator',
   'keyword-research','marketplace-seo','sentiment-analysis','salesforce-developer','automation-workflow',
+  'data-driven-ai-agent',
   'ab-test-plan','analytics-setup-guide','attribution-model','benchmarking-report','cohort-analysis',
   'data-collection-plan','data-dashboard-design','feedback-analysis','metric-definition-guide',
   'saas-metrics-dashboard','customer-lifetime-value','marketplace-metrics','impact-report','grant-report',

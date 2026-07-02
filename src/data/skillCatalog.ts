@@ -187,6 +187,13 @@ export const SKILL_CATALOG: SkillEntry[] = [
     tags: ['CEO', 'COO', 'CTO'],
   },
   {
+    id: 'data-driven-ai-agent',
+    name: 'Data-Driven AI Agent',
+    category: 'technology', tier: 3, price: 2000, icon: '🧬',
+    desc: 'เอเจนต์ Data-Driven: ตีความมาตรฐาน TIS/ISO (9001·14001·22301) เป็น Logic, ออกแบบ Database/Supabase ตาม Law of UX, การตลาดเพิ่ม Conversion และ Lean JIT/Kanban',
+    tags: ['CTO', 'CEO', 'Data Manager'],
+  },
+  {
     id: 'salesforce-developer',
     name: 'Salesforce Developer',
     category: 'technology', tier: 2, price: 1500, icon: '☁️',
