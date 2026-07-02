@@ -9,6 +9,7 @@ export interface Storefront {
   workspaceId?: string; // เจ้าของหน้าร้าน — ใช้ตอนสร้างออเดอร์ (M3)
   name: string;
   dbd: string;
+  vp: string;           // Value Proposition — จุดขายหนึ่งประโยค (AI Agent ช่วยเขียน)
   description: string;
   services: string[];
   phone: string;
@@ -22,18 +23,21 @@ export interface Storefront {
 const LS_KEY = 'ceo_ai_storefront';
 
 function loadLocal(): Storefront | null {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) ?? 'null') as Storefront | null; } catch { return null; }
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY) ?? 'null') as Storefront | null;
+    return s ? { ...s, vp: s.vp ?? '' } : null; // ข้อมูลเก่าอาจยังไม่มี vp
+  } catch { return null; }
 }
 
 interface Row {
-  slug: string; workspace_id?: string; name: string; dbd: string; description: string;
+  slug: string; workspace_id?: string; name: string; dbd: string; vp?: string; description: string;
   services: string[]; phone: string; line_id: string; email: string; website: string;
   published: boolean; updated_at?: string;
 }
 
 function rowToStorefront(r: Row): Storefront {
   return {
-    slug: r.slug, workspaceId: r.workspace_id, name: r.name, dbd: r.dbd, description: r.description,
+    slug: r.slug, workspaceId: r.workspace_id, name: r.name, dbd: r.dbd, vp: r.vp ?? '', description: r.description,
     services: r.services ?? [], phone: r.phone, lineId: r.line_id,
     email: r.email, website: r.website, published: r.published,
     updatedAt: r.updated_at?.slice(0, 10),
@@ -75,7 +79,7 @@ export async function saveStorefront(wsId: string | null, sf: Storefront): Promi
   if (isSupabaseEnabled && supabase) {
     if (!wsId) return 'ยังไม่พบ workspace — ลองรีเฟรชหน้า';
     const { error } = await supabase.from('storefronts').upsert({
-      slug: sf.slug, workspace_id: wsId, name: sf.name, dbd: sf.dbd,
+      slug: sf.slug, workspace_id: wsId, name: sf.name, dbd: sf.dbd, vp: sf.vp,
       description: sf.description, services: sf.services, phone: sf.phone,
       line_id: sf.lineId, email: sf.email, website: sf.website,
       published: sf.published, updated_at: new Date().toISOString(),

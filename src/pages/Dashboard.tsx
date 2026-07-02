@@ -2,11 +2,13 @@ import { useState } from 'react';
 import type { AppData, BMCData, PageId } from '../types';
 import { companyXP, getCompanyLevel, COMPANY_LEVELS, QUESTS, ACHIEVEMENTS, ACTIVITY_XP } from '../lib/gamification';
 import DBDSelect from '../components/DBDSelect';
+import FirstDealWidget from '../components/FirstDealWidget';
 
 interface Props {
   data: AppData;
   onNavigate: (page: PageId) => void;
   onUpdate: (data: AppData) => void;
+  wsId?: string | null;
 }
 
 // CEO ร่าง BMC 9 ช่องจากคำอธิบายผลิตภัณฑ์/บริการ + หมวด DBD ที่บอร์ดให้ไว้
@@ -233,7 +235,7 @@ ${vrioRows ? `<h2>VRIO Analysis</h2>
   URL.revokeObjectURL(url);
 }
 
-export default function Dashboard({ data, onNavigate, onUpdate }: Props) {
+export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: Props) {
   const { stages, actions, funnel, contentPlan, aiCompany, roadmap } = data;
   const [openBadge, setOpenBadge] = useState<string | null>(null);
   const [bmcApprovedMsg, setBmcApprovedMsg] = useState(false);
@@ -329,6 +331,9 @@ export default function Dashboard({ data, onNavigate, onUpdate }: Props) {
           </button>
         </div>
       </div>
+
+      {/* ===== First Revenue Engine: ภารกิจดีลแรกใน 30 วัน (แก้ churn) ===== */}
+      <FirstDealWidget data={data} wsId={wsId} onNavigate={onNavigate} />
 
       {/* ===== Gamification: ระดับบริษัท + Setup Quest + Badges ===== */}
       <div className="gm-panel">

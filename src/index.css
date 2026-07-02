@@ -4238,3 +4238,37 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .start-final-cta { margin-top:36px; }
 .start-foot { text-align:center; font-size:12px; color:#64748b; padding:22px; border-top:1px solid #1e293b; margin-top:auto; }
 .start-foot a { color:#67e8f9; }
+
+/* ── First Revenue Engine: ภารกิจดีลแรกใน 30 วัน (แก้ churn) ── */
+.fd-panel { background:var(--cream3); border:1.5px solid #f59e0b66; border-radius:14px; padding:18px 20px; margin-bottom:18px; }
+.fd-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.fd-title { font-size:15.5px; font-weight:800; }
+.fd-count { font-size:12.5px; color:var(--ink3); }
+.fd-count b { color:#f59e0b; }
+.fd-track { height:8px; border-radius:999px; background:rgba(148,163,184,.2); margin:10px 0 12px; overflow:hidden; }
+.fd-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#f59e0b,#fbbf24); transition:width .3s; }
+.fd-steps { display:flex; flex-wrap:wrap; gap:8px; }
+.fd-step { display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink2); background:var(--cream2); border:1px solid var(--sand); border-radius:999px; padding:7px 13px; cursor:pointer; transition:border-color .15s; }
+.fd-step:hover { border-color:#f59e0b; }
+.fd-step.done { opacity:.65; text-decoration:line-through; }
+.fd-step.next { border-color:#f59e0b; background:#f59e0b14; color:var(--ink); }
+.fd-go { color:#f59e0b; font-weight:800; }
+.fd-nudge { margin-top:10px; font-size:12.5px; color:var(--ink2); background:rgba(245,158,11,.08); border-left:3px solid #f59e0b; border-radius:6px; padding:8px 12px; }
+.fd-done { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-size:13.5px; background:#22c55e14; border:1.5px solid #22c55e66; border-radius:12px; padding:12px 16px; margin-bottom:18px; }
+.fd-done-btn { font-family:inherit; font-size:12.5px; font-weight:700; color:#0f172a; background:#22c55e; border:none; border-radius:999px; padding:7px 16px; cursor:pointer; margin-left:auto; }
+
+/* ── ประกาศงานกลาง (Open RFQ) ── */
+.trade-open-sec { border-color:#f59e0b55; }
+.trade-open-sub { font-size:12.5px; color:var(--ink3); margin:4px 0 12px; }
+.trade-open-sub b { color:#f59e0b; }
+.trade-post-btn { margin-left:auto; }
+.trade-open-form select { font-family:inherit; font-size:13px; background:var(--cream2); color:var(--ink); border:1px solid var(--sand); border-radius:8px; padding:8px 10px; }
+.trade-match { border-color:#22c55e88; }
+.trade-match-chip { display:inline-block; margin-left:8px; font-size:10.5px; font-weight:800; color:#0f172a; background:#22c55e; border-radius:999px; padding:2px 9px; vertical-align:middle; }
+
+/* ── Value Proposition (หน้าร้าน) ── */
+.sf-vp-row { display:flex; gap:8px; }
+.sf-vp-row input { flex:1; }
+.sf-vp-btn { font-family:inherit; font-size:12.5px; font-weight:700; color:#0f172a; background:linear-gradient(90deg,#38bdf8,#22d3ee); border:none; border-radius:8px; padding:8px 14px; cursor:pointer; white-space:nowrap; }
+.sf-vp-btn:disabled { opacity:.6; cursor:wait; }
+.pub-vp { font-size:16.5px; font-weight:700; color:#67e8f9; line-height:1.6; margin:6px 0 10px; }

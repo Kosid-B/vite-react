@@ -12,7 +12,8 @@ export interface Rfq {
   id: string;
   buyerWs: string;
   buyerName: string;
-  sellerSlug: string;
+  sellerSlug: string | null;   // null = ประกาศงานกลาง (Open RFQ) รอผู้ขายรับ
+  sector: string;              // หมวด DBD ของงาน (ใช้จับคู่ประกาศกลาง)
   title: string;
   detail: string;
   budget: number;
@@ -47,8 +48,8 @@ function lsSave<T>(key: string, list: T[]) { localStorage.setItem(key, JSON.stri
 /* ---------- mapping ---------- */
 // deno-friendly snake_case rows
 interface RfqRow {
-  id: string; buyer_ws: string; buyer_name: string; seller_slug: string;
-  title: string; detail: string; budget: number; contact: string;
+  id: string; buyer_ws: string; buyer_name: string; seller_slug: string | null;
+  sector?: string; title: string; detail: string; budget: number; contact: string;
   status: RfqStatus; quote_amount: number; quote_note: string; created_at: string;
 }
 interface OrderRow {
@@ -57,7 +58,7 @@ interface OrderRow {
 }
 const toRfq = (r: RfqRow): Rfq => ({
   id: r.id, buyerWs: r.buyer_ws, buyerName: r.buyer_name, sellerSlug: r.seller_slug,
-  title: r.title, detail: r.detail, budget: Number(r.budget), contact: r.contact,
+  sector: r.sector ?? '', title: r.title, detail: r.detail, budget: Number(r.budget), contact: r.contact,
   status: r.status, quoteAmount: Number(r.quote_amount), quoteNote: r.quote_note,
   createdAt: r.created_at?.slice(0, 10) ?? '',
 });
@@ -73,13 +74,41 @@ export async function createRfq(input: Omit<Rfq, 'id' | 'status' | 'quoteAmount'
   if (isSupabaseEnabled && supabase) {
     const { error } = await supabase.from('rfqs').insert({
       buyer_ws: input.buyerWs, buyer_name: input.buyerName, seller_slug: input.sellerSlug,
-      title: input.title, detail: input.detail, budget: input.budget, contact: input.contact,
+      sector: input.sector, title: input.title, detail: input.detail, budget: input.budget, contact: input.contact,
     });
     return error ? error.message : '';
   }
   const list = lsLoad<Rfq>(LS_RFQ);
   list.unshift({ ...input, id: 'rfq-' + Date.now().toString(36), status: 'open', quoteAmount: 0, quoteNote: '', createdAt: new Date().toISOString().slice(0, 10) });
   lsSave(LS_RFQ, list);
+  return '';
+}
+
+/* ---------- ประกาศงานกลาง (Open RFQ) — กลไก "ดีลแรก" ---------- */
+
+/** งานประกาศกลางที่ยังเปิดรับใบเสนอราคา (ทุกหมวด — UI กรองเอง) */
+export async function listOpenRfqs(): Promise<Rfq[]> {
+  if (isSupabaseEnabled && supabase) {
+    const { data } = await supabase.from('rfqs').select('*')
+      .is('seller_slug', null).eq('status', 'open')
+      .order('created_at', { ascending: false }).limit(100);
+    return (data as RfqRow[] ?? []).map(toRfq);
+  }
+  return lsLoad<Rfq>(LS_RFQ).filter(r => r.sellerSlug === null && r.status === 'open');
+}
+
+/** ผู้ขายรับงานกลาง: claim เป็นของหน้าร้านตัวเอง + ส่งใบเสนอราคาในคลิกเดียว */
+export async function claimOpenRfq(id: string, mySlug: string, quoteAmount: number, quoteNote: string): Promise<string> {
+  if (isSupabaseEnabled && supabase) {
+    const { error } = await supabase.from('rfqs')
+      .update({ seller_slug: mySlug, status: 'quoted', quote_amount: quoteAmount, quote_note: quoteNote, updated_at: new Date().toISOString() })
+      .eq('id', id).is('seller_slug', null).eq('status', 'open');
+    return error ? error.message : '';
+  }
+  lsSave(LS_RFQ, lsLoad<Rfq>(LS_RFQ).map(r =>
+    r.id === id && r.sellerSlug === null
+      ? { ...r, sellerSlug: mySlug, status: 'quoted' as const, quoteAmount, quoteNote }
+      : r));
   return '';
 }
 
