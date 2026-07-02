@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { trackAiCall } from '../lib/usage';
 import type { AppData, RoadmapItem, RoadmapQuarter, RoadmapStatus, RoadmapPriority } from '../types';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { withSkillDirectives } from '../lib/skillDirectives';
@@ -62,6 +63,7 @@ export default function Roadmap({ data, onUpdate }: Props) {
     setGeneratingId(item.id);
     try {
       const agent = data.aiCompany?.agents.find(a => a.role === item.owner) ?? data.aiCompany?.agents[0];
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: agent?.role ?? 'Product Manager',

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { trackAiCall } from '../lib/usage';
 import type { AppData, PageId } from '../types';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 
@@ -51,6 +52,7 @@ export default function AiAssist({ activePage, data }: Props) {
     }
     setBusy(true); setError(null); setResult(null);
     try {
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('ai-assist', {
         body: { page: activePage, pageLabel: info.label, instruction: q, context: info.context(data) },
       });

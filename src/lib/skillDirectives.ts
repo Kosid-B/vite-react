@@ -13,6 +13,16 @@ export const SKILL_DIRECTIVES: Record<string, string> = {
 • Accuracy: หากข้อมูลมาตรฐานมีการอัปเดต ต้องแจ้งผู้ใช้ก่อนเริ่มออกแบบเสมอ`,
 };
 
+/** หลักการออกแบบระดับระบบ — ใช้กับเอเจนต์ทุกตัวเมื่องานเกี่ยวข้องกับ
+ *  การออกแบบระบบ/ฟีเจอร์/ผลิตภัณฑ์ (ไม่ต้องซื้อ skill) */
+export const SYSTEM_DESIGN_DIRECTIVE = `[หลักการออกแบบระบบ: Product-Led Growth (PLG)]
+• ให้ผลิตภัณฑ์เป็นตัวขับเคลื่อนการเติบโตเอง: ผู้ใช้ต้องเริ่มใช้ได้เอง (self-serve) โดยไม่ต้องผ่านทีมขาย
+• Time-to-Value สั้นที่สุด: ออกแบบให้ผู้ใช้ถึง "Aha Moment" ได้ในไม่กี่นาทีแรก
+• Freemium → Upgrade ตามการใช้งานจริง: จำกัดด้วยโควตา/ฟีเจอร์ แล้วชวนอัปเกรด ณ จุดที่ผู้ใช้เจอ limit (contextual upsell) ไม่ใช่โฆษณาคั่น
+• Viral Loop: ทุกฟีเจอร์ใหม่ให้พิจารณาว่ามีช่องให้ผู้ใช้ชวน/แชร์/เชิญทีมได้อย่างไร
+• Instrument ทุกอย่าง: วัด Activation, Feature Adoption, Usage ต่อ Plan เพื่อใช้ตัดสินใจ (Data-Driven)
+• ราคาผูกกับ Value Metric ที่ผู้ใช้เข้าใจ (เช่น จำนวน AI calls / เอเจนต์ / งานที่ทำเสร็จ)`;
+
 /** รวม directive ของทุก skill ที่บริษัทซื้อแล้ว ('' ถ้าไม่มี) */
 export function skillDirectives(purchasedSkills: string[] | undefined): string {
   return (purchasedSkills ?? [])
@@ -21,8 +31,9 @@ export function skillDirectives(purchasedSkills: string[] | undefined): string {
     .join('\n\n');
 }
 
-/** ต่อ directive ท้าย mandate ก่อนส่งเข้า agent-run */
+/** ต่อ directive ท้าย mandate ก่อนส่งเข้า agent-run
+ *  — PLG เป็นหลักการออกแบบระดับระบบ ใส่ให้เสมอ · skill อื่นใส่เมื่อซื้อแล้ว */
 export function withSkillDirectives(mandate: string, purchasedSkills: string[] | undefined): string {
-  const dir = skillDirectives(purchasedSkills);
-  return dir ? `${mandate}\n\n${dir}` : mandate;
+  const parts = [mandate, SYSTEM_DESIGN_DIRECTIVE, skillDirectives(purchasedSkills)].filter(Boolean);
+  return parts.join('\n\n');
 }
