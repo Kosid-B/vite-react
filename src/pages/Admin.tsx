@@ -182,7 +182,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
     if (!actWsId) { setActMsg({ ok: false, text: 'กรุณาเลือกเวิร์กสเปซ' }); return; }
     setActBusy(true); setActMsg(null);
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const state = (await wsLoad(actWsId)) ?? ({} as Record<string, any>);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sub = (state as any).subscription ?? {};
       const now = new Date().toISOString();
       const invoice = {
@@ -202,10 +204,12 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         trialEndDate: null,
         invoices: [invoice, ...(sub.invoices ?? [])],
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await wsSave(actWsId, { ...(state as any), subscription: newSub });
       setActMsg({ ok: true, text: `✅ เปิดใช้งานแพ็ก ${actPlan} สำหรับ workspace เรียบร้อยแล้ว` });
-    } catch (e: any) {
-      setActMsg({ ok: false, text: '❌ เกิดข้อผิดพลาด: ' + (e?.message ?? String(e)) });
+    } catch (e: unknown) {
+      const err = e as { message?: string };
+      setActMsg({ ok: false, text: '❌ เกิดข้อผิดพลาด: ' + (err?.message ?? String(e)) });
     }
     setActBusy(false);
   }

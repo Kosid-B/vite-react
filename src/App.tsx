@@ -74,6 +74,7 @@ function migrate(parsed: AppData): AppData {
       parsed.factory.inventory = DEFAULT_DATA.factory!.inventory;
     } else {
       // Migrate old InventoryItem (qty: number) → new format (lots: InventoryLot[])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       parsed.factory.inventory = (parsed.factory.inventory as any[]).map((item: any) => {
         if (!item.lots) {
           return {
@@ -95,7 +96,7 @@ function loadData(): AppData {
   try {
     const s = localStorage.getItem(STORAGE_KEY);
     if (s) return migrate(JSON.parse(s) as AppData);
-  } catch {}
+  } catch { /* empty */ }
   return JSON.parse(JSON.stringify(DEFAULT_DATA)) as AppData;
 }
 
@@ -150,7 +151,7 @@ export default function App() {
       if (cloud) {
         const merged = migrate(cloud);
         setData(merged);
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch {}
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* empty */ }
       } else {
         wsSave(activeWs, data);
       }
@@ -165,7 +166,7 @@ export default function App() {
     const trialEnd = new Date(Date.now() + 15 * 86400000).toISOString();
     const next = { ...data, subscription: { ...data.subscription, plan: 'free' as const, status: 'trial' as const, trialEndDate: trialEnd } };
     setData(next);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* empty */ }
     if (activeWs) wsSave(activeWs, next);
     showToast('ยินดีต้อนรับ! เริ่มทดลองใช้ฟรี 15 วันแล้ว 🎉');
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -183,9 +184,9 @@ export default function App() {
     try {
       const serial = JSON.stringify(next);
       requestAnimationFrame(() => {
-        try { localStorage.setItem(STORAGE_KEY, serial); } catch {}
+        try { localStorage.setItem(STORAGE_KEY, serial); } catch { /* empty */ }
       });
-    } catch {}
+    } catch { /* empty */ }
     // sync ขึ้นคลาวด์แบบ debounce เมื่อล็อกอิน + เลือกเวิร์กสเปซแล้ว
     if (isSupabaseEnabled && activeWs) {
       clearTimeout(cloudTimer.current);

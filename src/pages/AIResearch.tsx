@@ -110,7 +110,7 @@ export default function AIResearch({ activeStage, onAddToJourney, data, onNaviga
       let parsedInsights: Insights | null = null;
       const jsonMatch = fullText.match(/```json\s*([\s\S]*?)\s*```/);
       if (jsonMatch) {
-        try { parsedInsights = JSON.parse(jsonMatch[1]) as Insights; } catch {}
+        try { parsedInsights = JSON.parse(jsonMatch[1]) as Insights; } catch { /* empty */ }
       }
 
       setAnswer(fullText.replace(/```json[\s\S]*?```/g, '').trim());
