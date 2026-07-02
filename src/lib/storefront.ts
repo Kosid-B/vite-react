@@ -6,6 +6,7 @@ import { isSupabaseEnabled, supabase } from './supabase';
 
 export interface Storefront {
   slug: string;
+  workspaceId?: string; // เจ้าของหน้าร้าน — ใช้ตอนสร้างออเดอร์ (M3)
   name: string;
   dbd: string;
   description: string;
@@ -32,7 +33,7 @@ interface Row {
 
 function rowToStorefront(r: Row): Storefront {
   return {
-    slug: r.slug, name: r.name, dbd: r.dbd, description: r.description,
+    slug: r.slug, workspaceId: r.workspace_id, name: r.name, dbd: r.dbd, description: r.description,
     services: r.services ?? [], phone: r.phone, lineId: r.line_id,
     email: r.email, website: r.website, published: r.published,
     updatedAt: r.updated_at?.slice(0, 10),

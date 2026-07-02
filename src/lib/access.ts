@@ -29,6 +29,7 @@ export const PAGE_MIN_PLAN: Partial<Record<PageId, PlanId>> = {
   iso9001:   'growth',
   analytics: 'growth',
   sipoc:     'growth', // SIPOC Process — ฟีเจอร์ในแพ็กเกจเสียเงิน
+  trade:     'growth', // ซื้อขาย B2B (RFQ/Orders) — ฟีเจอร์ในแพ็กเกจเสียเงิน
   admin:     'scale',
 };
 
