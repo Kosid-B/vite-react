@@ -199,7 +199,7 @@ export const SKILL_CATALOG: SkillEntry[] = [
     id: 'market-insight-thailand',
     name: 'Market Insight & Strategy (Thailand)',
     category: 'marketing', tier: 2, price: 1990, icon: '🇹🇭',
-    desc: 'ข้อมูลประชากรไทยล่าสุด + กลยุทธ์เจาะตลาดตาม Generation (X/Y/Z/Boomer), จังหวัดกำลังซื้อสูง, ตลาด Expat — เอเจนต์การตลาดใช้กำหนดกลุ่มเป้าหมาย โทนสื่อสาร และพื้นที่ยิง Ads',
+    desc: 'ฉบับใช้งานปี 2569 — ข้อมูลประชากรไทย (ทะเบียนราษฎร์ ณ ธ.ค. 2568) + กลยุทธ์เจาะตลาดตาม Generation (X/Y/Z/Boomer), จังหวัดกำลังซื้อสูง, ตลาด Expat — เอเจนต์การตลาดใช้กำหนดกลุ่มเป้าหมาย โทนสื่อสาร และพื้นที่ยิง Ads',
     tags: ['CMO', 'CEO', 'Marketing Manager'],
     official: true,
     valueNote: 'เทียบรายงานวิจัยตลาด ฿15,000+ · ลดงบ Ads ที่ยิงผิดกลุ่ม ~฿1,000+/เดือน — คืนทุนใน 2 เดือน',
