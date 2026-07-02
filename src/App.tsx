@@ -110,6 +110,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [seenLanding, setSeenLanding] = useState(() => !!localStorage.getItem('ceo_ai_seen'));
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // ===== Supabase session + workspaces =====
@@ -231,13 +232,28 @@ export default function App() {
     reader.readAsText(file);
   }
 
-  // หน้า Auth: เปิดใช้ Supabase แต่ยังไม่ได้ล็อกอิน
-  if (isSupabaseEnabled && authReady && !session) {
-    if (showAuth) return <Auth />;
-    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
-  }
+  // Loading Supabase session
   if (isSupabaseEnabled && !authReady) {
     return <div className="auth-wrap"><div className="auth-loading">กำลังโหลด…</div></div>;
+  }
+
+  // LandingPage: แสดงเสมอถ้ายังไม่เคยผ่าน (ทั้ง local และ Supabase mode)
+  if (!seenLanding && !(isSupabaseEnabled && session)) {
+    if (showAuth) return <Auth />;
+    return (
+      <LandingPage
+        onGetStarted={() => {
+          localStorage.setItem('ceo_ai_seen', '1');
+          setSeenLanding(true);
+          if (isSupabaseEnabled) setShowAuth(true);
+        }}
+      />
+    );
+  }
+
+  // Supabase mode + ยังไม่ได้ล็อกอิน (เคยเห็น landing แล้วแต่ยัง auth ไม่เสร็จ)
+  if (isSupabaseEnabled && authReady && !session) {
+    return <Auth />;
   }
 
   const doneCount = data.actions.filter(a => a.done).length;
