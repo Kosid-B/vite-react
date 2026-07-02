@@ -93,7 +93,7 @@ export const QUESTS: Quest[] = [
     done: d => d.aiCompany.tasks.some(t => t.status === 'done'),
   },
   {
-    id: 'action', icon: '✅', label: 'ทำ Priority Action แรกให้เสร็จ', page: 'actions',
+    id: 'action', icon: '📌', label: 'ทำ Priority Action แรกให้เสร็จ', page: 'actions',
     desc: 'ลงมือทำแผนงานสำคัญข้อแรกและติ๊กเสร็จ',
     done: d => d.actions.some(a => a.done),
   },
@@ -111,48 +111,60 @@ export interface Achievement {
   label: string;
   desc: string;
   earned: (d: AppData) => boolean;
+  /** ความคืบหน้าปัจจุบัน (แสดงบน badge ที่ยังไม่ได้รับ) */
+  progress: (d: AppData) => { cur: number; target: number };
 }
+
+const assignedTools = (d: AppData) => Object.entries(d.aiCompany.toolOwners ?? {})
+  .filter(([, id]) => d.aiCompany.agents.some(a => a.id === id)).length;
 
 export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first-hire', icon: '🤝', label: 'First Hire',
     desc: 'มีเอเจนต์ตัวแรกในผังองค์กร',
     earned: d => d.aiCompany.agents.length >= 1,
+    progress: d => ({ cur: Math.min(d.aiCompany.agents.length, 1), target: 1 }),
   },
   {
     id: 'c-suite', icon: '🏛️', label: 'Full C-Suite',
-    desc: 'มีผู้บริหารระดับ C-level ครบ 5 สาย (CEO/CMO/CFO/COO + อีก 1)',
+    desc: 'มีผู้บริหารในผังองค์กรอย่างน้อย 5 ตำแหน่ง',
     earned: d => d.aiCompany.agents.length >= 5,
+    progress: d => ({ cur: Math.min(d.aiCompany.agents.length, 5), target: 5 }),
   },
   {
     id: 'tool-master', icon: '🧰', label: 'Tool Master',
     desc: 'เครื่องมือทั้ง 10 ตัวมี C-level ดูแลครบ',
-    earned: d => Object.entries(d.aiCompany.toolOwners ?? {})
-      .filter(([, id]) => d.aiCompany.agents.some(a => a.id === id)).length >= 10,
+    earned: d => assignedTools(d) >= 10,
+    progress: d => ({ cur: Math.min(assignedTools(d), 10), target: 10 }),
   },
   {
     id: 'ten-tasks', icon: '⚙️', label: 'Machine at Work',
     desc: 'ทีม AI ทำงานเสร็จ 10 ชิ้น',
     earned: d => d.aiCompany.tasks.filter(t => t.status === 'done').length >= 10,
+    progress: d => ({ cur: Math.min(d.aiCompany.tasks.filter(t => t.status === 'done').length, 10), target: 10 }),
   },
   {
     id: 'skill-collector', icon: '📚', label: 'Skill Collector',
     desc: 'สะสม Skill ครบ 5 ตัว',
     earned: d => (d.aiCompany.purchasedSkills ?? []).length >= 5,
+    progress: d => ({ cur: Math.min((d.aiCompany.purchasedSkills ?? []).length, 5), target: 5 }),
   },
   {
     id: 'mission-ready', icon: '🧭', label: 'Mission Ready',
     desc: 'Mission Statement ผ่านการอนุมัติจากบอร์ด',
     earned: d => d.aiCompany.missionApproved,
+    progress: d => ({ cur: d.aiCompany.missionApproved ? 1 : 0, target: 1 }),
   },
   {
-    id: 'executor', icon: '✅', label: 'Executor',
+    id: 'executor', icon: '🏁', label: 'Executor',
     desc: 'ทำ Priority Actions เสร็จครบทุกข้อ',
     earned: d => d.actions.length > 0 && d.actions.every(a => a.done),
+    progress: d => ({ cur: d.actions.filter(a => a.done).length, target: Math.max(d.actions.length, 1) }),
   },
   {
     id: 'iso-ready', icon: '🛡️', label: 'ISO Ready',
-    desc: 'เริ่มทำระบบคุณภาพ ISO 9001:2015',
-    earned: d => !!d.iso9001,
+    desc: 'เปิดใช้ระบบคุณภาพ ISO 9001:2015 ในหน้า ISO 9001 QMS',
+    earned: d => !!d.iso9001?.enabled,
+    progress: d => ({ cur: d.iso9001?.enabled ? 1 : 0, target: 1 }),
   },
 ];
