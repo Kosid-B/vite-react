@@ -1,35 +1,38 @@
 import type { AppData, PageId, PlanId } from '../types';
 import { isSupabaseEnabled } from './supabase';
 
-export const PLAN_RANK: Record<PlanId, number> = { free: 0, growth: 1, scale: 2 };
+export const PLAN_RANK: Record<PlanId, number> = { free: 0, starter: 1, growth: 2, scale: 3 };
 
 export const PLAN_NAME: Record<PlanId, string> = {
   free: 'ทดลองใช้ฟรี',
+  starter: 'Starter',
   growth: 'Growth',
   scale: 'Scale',
 };
 
 export const PLAN_COLOR: Record<PlanId, string> = {
   free: '#64748b',
+  starter: '#22c55e',
   growth: '#06b6d4',
   scale: '#7c3aed',
 };
 
 export const PLAN_PRICE: Record<PlanId, string> = {
   free: 'ฟรี 15 วัน',
+  starter: '฿390/เดือน',
   growth: '฿1,490/เดือน',
   scale: '฿5,900/เดือน',
 };
 
 /** หน้าที่ต้องการ plan ขั้นต่ำกว่า free */
 export const PAGE_MIN_PLAN: Partial<Record<PageId, PlanId>> = {
+  trade:     'starter', // ซื้อขาย B2B (RFQ/Orders) — เริ่มมีรายได้ = เริ่มจ่ายเบาๆ
   aisearch:  'growth',
   market:    'growth',
   team:      'growth',
   iso9001:   'growth',
   analytics: 'growth',
   sipoc:     'growth', // SIPOC Process — ฟีเจอร์ในแพ็กเกจเสียเงิน
-  trade:     'growth', // ซื้อขาย B2B (RFQ/Orders) — ฟีเจอร์ในแพ็กเกจเสียเงิน
   admin:     'scale',
 };
 

@@ -14,6 +14,7 @@ import UpgradeWall from './components/UpgradeWall';
 import { canAccess } from './lib/access';
 import { isAdminEmail } from './config';
 import { PublicStorefrontPage, PublicDirectoryPage } from './pages/PublicStorefront';
+import StartLanding from './pages/StartLanding';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const JourneyMap = lazy(() => import('./pages/JourneyMap'));
@@ -280,6 +281,10 @@ export default function App() {
   if (pubPath === '/b' || pubPath === '/b/' || pubPath.startsWith('/b/')) {
     const slug = pubPath.split('/')[2] ?? '';
     return slug ? <PublicStorefrontPage slug={slug} /> : <PublicDirectoryPage />;
+  }
+  // Landing ไวรัล "เริ่มธุรกิจ" — กลุ่ม Gen Z จบใหม่ + เสมือนว่างงาน (สาธารณะ)
+  if (pubPath === '/start' || pubPath === '/start/') {
+    return <StartLanding />;
   }
 
   // Loading Supabase session

@@ -235,7 +235,7 @@ export interface AICompany {
 
 /* ===== Billing / PromptPay ===== */
 
-export type PlanId = 'free' | 'growth' | 'scale';
+export type PlanId = 'free' | 'starter' | 'growth' | 'scale';
 export type SubStatus = 'none' | 'trial' | 'pending_payment' | 'active' | 'past_due' | 'cancelled';
 
 export type InvoiceStatus = 'paid' | 'pending' | 'failed';

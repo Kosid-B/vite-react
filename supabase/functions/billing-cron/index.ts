@@ -15,7 +15,7 @@ const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
 const ADMIN_EMAIL = "support@b-tctraining.com";
 const FROM_EMAIL = "CEO AI Thailand <noreply@ceoaithailand.org>";
 
-const PRICE: Record<string, number> = { free: 0, growth: 1490, scale: 5900 };
+const PRICE: Record<string, number> = { free: 0, starter: 390, growth: 1490, scale: 5900 };
 
 // ─── Resend helper ────────────────────────────────────────────────────────────
 async function sendMail(to: string, subject: string, html: string): Promise<void> {
@@ -37,7 +37,7 @@ async function getUserEmail(admin: ReturnType<typeof createClient>, wsId: string
 
 // ─── Email templates ──────────────────────────────────────────────────────────
 function renewalReminderHtml(plan: string, amount: number): string {
-  const planLabel = plan === "growth" ? "Growth ฿1,490/เดือน" : plan === "scale" ? "Scale ฿5,900/เดือน" : plan;
+  const planLabel = plan === "starter" ? "Starter ฿390/เดือน" : plan === "growth" ? "Growth ฿1,490/เดือน" : plan === "scale" ? "Scale ฿5,900/เดือน" : plan;
   return `
 <div style="font-family:Kanit,sans-serif;max-width:560px;margin:auto;background:#0f172a;color:#f8fafc;padding:32px;border-radius:12px">
   <h2 style="color:#06b6d4;margin-top:0">🔔 ครบกำหนดชำระค่าบริการ</h2>
@@ -53,7 +53,7 @@ function renewalReminderHtml(plan: string, amount: number): string {
 }
 
 function paymentFailedHtml(plan: string): string {
-  const planLabel = plan === "growth" ? "Growth" : plan === "scale" ? "Scale" : plan;
+  const planLabel = plan === "starter" ? "Starter" : plan === "growth" ? "Growth" : plan === "scale" ? "Scale" : plan;
   return `
 <div style="font-family:Kanit,sans-serif;max-width:560px;margin:auto;background:#0f172a;color:#f8fafc;padding:32px;border-radius:12px">
   <h2 style="color:#ef4444;margin-top:0">⚠️ การชำระเงินล้มเหลว</h2>

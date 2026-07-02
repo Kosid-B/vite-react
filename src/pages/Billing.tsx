@@ -41,6 +41,16 @@ interface CostItem { label: string; amount: number; note: string; }
 interface PlanCost { items: CostItem[]; total: number; price: number; margin: number; }
 
 const COST: Record<string, PlanCost> = {
+  starter: {
+    items: [
+      { label: 'Claude AI API', amount: 228, note: '300 calls × ~฿0.76/call (Sonnet model)' },
+      { label: 'Supabase + Hosting', amount: 60, note: 'Database, Edge Functions, Storage' },
+      { label: 'Support & Development', amount: 25, note: 'ทีมพัฒนาและดูแลระบบ' },
+    ],
+    total: 313,
+    price: 390,
+    margin: 19.7,
+  },
   growth: {
     items: [
       { label: 'Claude AI API', amount: 760, note: '1,000 calls × ~฿0.76/call (Sonnet model)' },
@@ -80,6 +90,21 @@ const PLANS: Plan[] = [
     ],
   },
   {
+    id: 'starter',
+    name: 'Starter',
+    price: 390,
+    tagline: 'เพิ่งเริ่มธุรกิจ — จ่ายเบาๆ เมื่อเริ่มมีรายได้',
+    apiCalls: 300,
+    costPerMonth: 313,
+    features: [
+      'ทุกอย่างในแพ็กฟรี',
+      'AI calls 300 ครั้ง/เดือน',
+      'ซื้อขาย B2B (RFQ) + ออเดอร์',
+      'หน้าร้านสาธารณะ + สารบัญธุรกิจ',
+      'เอเจนต์ AI สูงสุด 5 ตัว',
+    ],
+  },
+  {
     id: 'growth',
     name: 'Growth',
     price: 1490,
@@ -115,7 +140,7 @@ const PLANS: Plan[] = [
 ];
 
 // แพ็กรายปี — จ่ายเท่า ~10 เดือน (ประหยัด ~17% และลด churn)
-const YEARLY_PRICE: Record<PlanId, number> = { free: 0, growth: 14900, scale: 59000 };
+const YEARLY_PRICE: Record<PlanId, number> = { free: 0, starter: 3900, growth: 14900, scale: 59000 };
 
 export default function Billing({ data, onUpdate }: Props) {
   // PLG: usage meter + referral link
@@ -303,8 +328,8 @@ export default function Billing({ data, onUpdate }: Props) {
           </div>
           {aiPct >= 80 && sub.plan !== 'scale' && (
             <div className="plg-nudge">
-              🚀 ใกล้เต็มโควตาแล้ว — อัปเกรดเป็น {sub.plan === 'free' ? 'Growth (1,000 calls/เดือน)' : 'Scale (5,000 calls/เดือน)'}
-              <button className="plg-nudge-btn" onClick={() => choosePlan(sub.plan === 'free' ? 'growth' : 'scale')}>
+              🚀 ใกล้เต็มโควตาแล้ว — อัปเกรดเป็น {sub.plan === 'growth' ? 'Scale (5,000 calls/เดือน)' : 'Growth (1,000 calls/เดือน)'}
+              <button className="plg-nudge-btn" onClick={() => choosePlan(sub.plan === 'growth' ? 'scale' : 'growth')}>
                 อัปเกรดเลย →
               </button>
             </div>
@@ -480,7 +505,7 @@ export default function Billing({ data, onUpdate }: Props) {
               บวกกำไรบริษัท <b>~20%</b> เพื่อความยั่งยืนของแพลตฟอร์ม
             </div>
             <div className="bill-cost-grid">
-              {(['growth', 'scale'] as const).map(key => {
+              {(['starter', 'growth', 'scale'] as const).map(key => {
                 const c = COST[key];
                 const plan = PLANS.find(p => p.id === key)!;
                 return (
