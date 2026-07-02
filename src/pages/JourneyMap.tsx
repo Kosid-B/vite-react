@@ -17,17 +17,6 @@ const SECTIONS = [
   { key: 'opp' as const, title: 'โอกาส (Opportunities)', color: '#2d6a4f' },
 ];
 
-const LAWS = [
-  { name: "Fitts's Law", desc: 'Target ใหญ่ → คลิกเร็วกว่า', example: "Stage chips มี min 36px height\nและ padding넉넉 → คลิกง่าย" },
-  { name: "Hick's Law", desc: 'ตัวเลือกน้อย → ตัดสินใจเร็ว', example: "8 stages แต่แสดงทีละ 1\nลด cognitive load ลงมาก" },
-  { name: 'Von Restorff', desc: 'สิ่งที่ต่างออกไป → จำได้มากกว่า', example: 'Active chip มีสีดำ contrast สูง\nแยกจาก chip อื่นอย่างชัดเจน' },
-  { name: 'Common Region', desc: 'Frame เดียวกัน → เกี่ยวข้องกัน', example: 'Touchpoints / Actions / Pain / Opp\nแต่ละกลุ่มอยู่ใน card ของตัวเอง' },
-  { name: "Miller's Law", desc: 'จำได้ดีสุด 7±2 chunks', example: 'แต่ละ stage ≤ 4 รายการต่อกลุ่ม\nไม่เกิน 7 เพื่อไม่ล้น working memory' },
-  { name: 'Doherty Threshold', desc: 'Feedback <400ms → ไม่รอ', example: 'บันทึกอัตโนมัติทันทีหลังแก้ไข\nไม่ต้องรอ → ลด friction' },
-  { name: "Jakob's Law", desc: 'Pattern คุ้นเคย → ใช้งานง่าย', example: 'Sidebar nav ใช้รูปแบบที่คุ้นเคย\nไม่ต้องเรียนรู้ใหม่' },
-  { name: 'Aesthetic-Usability', desc: 'สวย → รู้สึกใช้ง่ายกว่า', example: 'Design สะอาด อ่านง่าย →\nผู้ใช้รู้สึกว่าใช้งานง่ายขึ้นด้วย' },
-];
-
 export default function JourneyMap({ data, activeStage, onStageChange, onUpdate }: Props) {
   const emotionRef = useRef<HTMLTextAreaElement>(null);
 
@@ -117,24 +106,6 @@ export default function JourneyMap({ data, activeStage, onStageChange, onUpdate 
           <span className="law-badge" data-tip={"Hick's Law: ยิ่งมีตัวเลือกน้อย\nตัดสินใจได้เร็วขึ้น — stage strip\nแสดงทีละ 1 stage เสมอ"}>Hick's Law</span>
           <span className="law-badge" data-tip={"Von Restorff Effect: stage ที่ active\nโดดเด่นจาก chip อื่นด้วยสี contrast สูง"}>Von Restorff</span>
           <span className="law-badge" data-tip={"Law of Proximity: ข้อมูลที่เกี่ยวข้องกัน\nอยู่ใน quadrant เดียวกัน"}>Proximity</span>
-        </div>
-      </div>
-
-      {/* Laws Legend */}
-      <div className="laws-legend">
-        <div className="laws-legend-title">
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-            <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Laws of UX ที่ใช้ในหน้านี้ — hover เพื่อดูตัวอย่าง
-        </div>
-        <div className="laws-grid">
-          {LAWS.map(law => (
-            <div key={law.name} className="law-pill" data-example={law.example}>
-              <div className="law-pill-name">{law.name}</div>
-              <div className="law-pill-desc">{law.desc}</div>
-            </div>
-          ))}
         </div>
       </div>
 
