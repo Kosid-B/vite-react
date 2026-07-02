@@ -32,7 +32,7 @@ function connect(agentId = 'default'): Promise<WebSocket> {
           pendingReject(new Error(msg.error ?? 'Agent error'));
           pendingResolve = null; pendingReject = null;
         }
-      } catch {}
+      } catch { /* empty */ }
     };
     socket.onclose = () => { ws = null; };
   });

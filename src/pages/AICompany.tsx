@@ -235,7 +235,7 @@ export default function AICompany({ data, onUpdate }: Props) {
     run();
     const iv = setInterval(run, ms);
     return () => clearInterval(iv);
-  }, [c.running, c.heartbeatSec, isSupabaseEnabled]);
+  }, [c.running, c.heartbeatSec]);
 
   function patch(next: Partial<typeof c>) {
     onUpdate({ ...data, aiCompany: { ...c, ...next } });

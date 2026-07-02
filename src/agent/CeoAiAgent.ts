@@ -142,7 +142,7 @@ export class CeoAiAgent implements DurableObject {
     try {
       const match = raw.match(/\{[\s\S]*\}/);
       if (match) return JSON.parse(match[0]) as { summary: string; suggestions: string[] };
-    } catch {}
+    } catch { /* empty */ }
     return { summary: raw, suggestions: [] };
   }
 }
