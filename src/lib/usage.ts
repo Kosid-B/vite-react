@@ -5,6 +5,7 @@ import type { PlanId } from '../types';
 
 export const PLAN_AI_CALLS: Record<PlanId, number> = {
   free: 200,     // ช่วงทดลอง
+  starter: 300,  // ต่อเดือน — แพ็กเริ่มต้นสำหรับคนเพิ่งเริ่มธุรกิจ
   growth: 1000,  // ต่อเดือน
   scale: 5000,   // ต่อเดือน
 };

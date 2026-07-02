@@ -13,13 +13,21 @@ const PAGE_TITLE: Partial<Record<PageId, string>> = {
   admin:     'ผู้ดูแลระบบ',
 };
 
-const GROWTH_FEATURES = [
-  'AI Research — วิจัยตลาดด้วย AI',
-  'Marketplace — จัดการสินค้า/บริการ',
-  'ทีม / สมาชิก — บริหารทีม',
-  'SaaS Analytics — วิเคราะห์ข้อมูล',
-  'ISO 9001:2015 QMS — มาตรฐานคุณภาพ',
-];
+const PLAN_FEATURES: Partial<Record<string, string[]>> = {
+  starter: [
+    'ซื้อขาย B2B (RFQ) — หาคู่ค้า รับงานจริง',
+    'ออเดอร์ + ติดตามสถานะจนปิดดีล',
+    'AI calls 300 ครั้ง/เดือน',
+    'เอเจนต์ AI สูงสุด 5 ตัว',
+  ],
+  growth: [
+    'AI Research — วิจัยตลาดด้วย AI',
+    'Marketplace — จัดการสินค้า/บริการ',
+    'ทีม / สมาชิก — บริหารทีม',
+    'SaaS Analytics — วิเคราะห์ข้อมูล',
+    'ISO 9001:2015 QMS — มาตรฐานคุณภาพ',
+  ],
+};
 
 interface Props {
   page: PageId;
@@ -60,7 +68,7 @@ export default function UpgradeWall({ page, data, onNavigate }: Props) {
 
         {!isScalePlan && (
           <ul className="upgrade-wall__features">
-            {GROWTH_FEATURES.map(f => (
+            {(PLAN_FEATURES[requiredPlan] ?? PLAN_FEATURES.growth!).map(f => (
               <li key={f}>
                 <span className="upgrade-wall__check">✓</span> {f}
               </li>

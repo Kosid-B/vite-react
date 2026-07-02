@@ -37,7 +37,7 @@ async function getUserEmail(admin: ReturnType<typeof createClient>, wsId: string
 }
 
 function paymentConfirmedHtml(plan: string, amount: number, wsId: string): string {
-  const planLabel = plan === "growth" ? "Growth ฿1,490/เดือน" : plan === "scale" ? "Scale ฿5,900/เดือน" : plan;
+  const planLabel = plan === "starter" ? "Starter ฿390/เดือน" : plan === "growth" ? "Growth ฿1,490/เดือน" : plan === "scale" ? "Scale ฿5,900/เดือน" : plan;
   return `
 <div style="font-family:Kanit,sans-serif;max-width:560px;margin:auto;background:#0f172a;color:#f8fafc;padding:32px;border-radius:12px">
   <h2 style="color:#06b6d4;margin-top:0">✅ ยืนยันการชำระเงินสำเร็จ</h2>
@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
     .from("workspace_state").select("data").eq("workspace_id", workspaceId).maybeSingle();
   if (selErr) return new Response("db_error", { status: 500 });
 
-  const PLAN_PRICE: Record<string, number> = { free: 0, growth: 1490, scale: 5900 };
+  const PLAN_PRICE: Record<string, number> = { free: 0, starter: 390, growth: 1490, scale: 5900 };
   const paidAmount: number =
     (typeof charge?.amount === "number" ? charge.amount / 100 : 0) ||
     (PLAN_PRICE[planId] ?? 0);
