@@ -85,6 +85,23 @@ export interface BusinessModelData {
   de24Owners?: (string | null)[]; // agentId ของ C-level เจ้าของแต่ละ Phase (CEO มอบหมาย)
 }
 
+/* ===== SIPOC — Process Management =====
+ * เก็บใน AppData (workspace_state.data) เช่นเดียวกับข้อมูลธุรกิจอื่น
+ * → sync Supabase อัตโนมัติ ไม่ต้องมีตารางแยก */
+export interface SipocProcess {
+  id: string;
+  name: string;        // ชื่อกระบวนการ (ระบุจุดเริ่มต้น–จุดสิ้นสุด)
+  goal: string;        // ขอบเขต/ผลลัพธ์ที่คาดหวังของกระบวนการ
+  suppliers: string[]; // S — ผู้ส่งมอบปัจจัยนำเข้า
+  inputs: string[];    // I — ปัจจัยนำเข้า (ทรัพยากร/ข้อมูล/วัตถุดิบ)
+  process: string[];   // P — ขั้นตอนหลักเรียงลำดับ
+  outputs: string[];   // O — ผลลัพธ์ (ผลิตภัณฑ์/บริการ)
+  customers: string[]; // C — ผู้รับผลลัพธ์ (ภายใน/ภายนอก)
+  ownerId?: string;    // agentId ผู้รับผิดชอบกระบวนการ (M-level)
+  dataStore?: string[]; // การจัดเก็บข้อมูลของกระบวนการ — ออกแบบโดย M-level agent
+  updatedAt: string;
+}
+
 /* ===== Autonomous AI Company (Paperclip-style) ===== */
 
 export type AgentStatus = 'working' | 'idle' | 'waiting';
@@ -459,9 +476,10 @@ export interface AppData {
   gtmAuditChecks?: boolean[];
   iso9001?: ISO9001Data;
   factory?: FactoryData;
+  sipoc?: SipocProcess[];
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc';
 
 /* ===== Factory / โรงงานอัจฉริยะ ===== */
 export type MachineStatus = 'running' | 'idle' | 'maintenance' | 'breakdown';

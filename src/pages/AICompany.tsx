@@ -152,6 +152,8 @@ const TOOL_SPECS: { id: string; label: string; icon: string; owner: string; desc
     desc: 'วางแผนช่องทางการตลาด งบประมาณ, CPL และอัตราแปลงต่อช่องทาง' },
   { id: 'vrio', label: 'VRIO Analysis', icon: '🏆', owner: 'CSO',
     desc: 'วิเคราะห์ความได้เปรียบเชิงแข่งขัน — Value, Rarity, Imitability, Organization' },
+  { id: 'sipoc', label: 'SIPOC Process', icon: '🔄', owner: 'COO',
+    desc: 'แผนผังกระบวนการ Supplier → Input → Process → Output → Customer หา Gap และคอขวด' },
 ];
 
 // สเปกตำแหน่ง C-level ที่ CEO สร้างอัตโนมัติเมื่อยังไม่มีในผังองค์กร
