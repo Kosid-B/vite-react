@@ -32,6 +32,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   analytics: { label: 'SaaS Analytics', prompts: ['วิเคราะห์ LTV:CAC ของเราเทียบ benchmark', 'แนะนำวิธีลด churn rate', 'เสนอกลยุทธ์เพิ่ม MRR ไตรมาสนี้'], context: d => `แผน: ${d.subscription.plan}, สถานะ: ${d.subscription.status}, invoices: ${d.subscription.invoices.length} รายการ` },
   factory: { label: 'โรงงานอัจฉริยะ', prompts: ['วิเคราะห์ OEE และเสนอวิธีเพิ่มประสิทธิภาพ', 'หาต้นเหตุของเสียและแนวทางแก้ไข', 'เสนอแผน Lean / Kaizen ที่ควรทำต่อไป'], context: d => `โรงงาน: ${d.factory?.name ?? '-'}, เครื่องจักร: ${d.factory?.machines.length ?? 0}, OEE เฉลี่ย: ${d.factory ? Math.round(d.factory.machines.reduce((s, m) => s + m.oee, 0) / Math.max(1, d.factory.machines.length)) : 0}%` },
   sipoc: { label: 'SIPOC Process', prompts: ['หา Gap และคอขวดในกระบวนการนี้', 'เสนอวิธีลดความซ้ำซ้อนของขั้นตอน', 'ประเมินว่ากระบวนการนี้พร้อมทำ Automation หรือยัง'], context: d => `กระบวนการ SIPOC: ${(d.sipoc ?? []).map(p => p.name).join(', ') || 'ยังไม่มี'}` },
+  storefront: { label: 'หน้าร้านของฉัน', prompts: ['เขียนคำอธิบายธุรกิจให้ดึงดูดลูกค้า', 'เสนอสินค้า/บริการเด่นที่ควรโชว์', 'แนะนำวิธีโปรโมตลิงก์หน้าร้าน'], context: d => `ธุรกิจ: ${d.aiCompany.name} · หมวด: ${d.aiCompany.productDbd ?? d.aiCompany.industry}` },
 };
 
 export default function AiAssist({ activePage, data }: Props) {
