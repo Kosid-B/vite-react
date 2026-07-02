@@ -250,6 +250,10 @@ export default function Billing({ data, onUpdate }: Props) {
         <div className="page-meta">
           <span className="meta-chip">ราคารวม VAT 7% แล้ว</span>
           <span className="meta-chip">ชำระผ่าน PromptPay</span>
+          <a className="meta-chip bill-guide-link" href={`${import.meta.env.BASE_URL}payment-guide.pdf`}
+            target="_blank" rel="noopener noreferrer">
+            📄 คู่มือการชำระเงิน (PDF)
+          </a>
           {isTrial && !trialExpired && (
             <span className="meta-chip" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}>
               ทดลองใช้เหลือ {trialDaysLeft} วัน
@@ -467,7 +471,11 @@ export default function Billing({ data, onUpdate }: Props) {
           <div className="bill-pay-left">
             <div className="bill-pay-hd">ชำระเงินแพ็ก {selectedPlan.name}</div>
             <div className="bill-pay-sub">
-              สแกน PromptPay QR หรือโอนเข้าบัญชีธนาคารด้านล่าง
+              สแกน PromptPay QR หรือโอนเข้าบัญชีธนาคารด้านล่าง ·{' '}
+              <a className="bill-guide-inline" href={`${import.meta.env.BASE_URL}payment-guide.pdf`}
+                target="_blank" rel="noopener noreferrer">
+                ดูคู่มือทีละขั้นตอน (PDF)
+              </a>
             </div>
 
             <div className="bill-bank">

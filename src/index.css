@@ -794,6 +794,11 @@ input:focus, textarea:focus, select:focus {
 .ai-co-lbl { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink4); }
 .ai-co-ind-inp { font-size: 12.5px; color: rgba(255,255,255,.8); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 4px 10px; outline: none; font-family: inherit; flex: 1; max-width: 320px; }
 
+/* Billing — payment guide PDF links */
+a.bill-guide-link { text-decoration: none; cursor: pointer; color: #38bdf8; border-color: rgba(56,189,248,.4); }
+a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
+.bill-guide-inline { color: #38bdf8; text-decoration: underline; }
+
 /* Gamification — Dashboard: company level + setup quest + badges */
 .gm-panel { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; }
 .gm-level-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
