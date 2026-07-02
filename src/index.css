@@ -674,7 +674,7 @@ body {
 .bmc-block-cs { grid-area: cs; background: var(--blue-bg); }
 .bmc-block-kr { grid-area: kr; }
 .bmc-block-ch { grid-area: ch; }
-.bmc-block-co { grid-area: co; background: #f9f5f2; min-height: auto; }
+.bmc-block-co { grid-area: co; background: rgba(239,68,68,.08); min-height: auto; }
 .bmc-block-re { grid-area: re; background: var(--green-bg); min-height: auto; }
 .bmc-block-hd { margin-bottom: 6px; }
 .bmc-block-title { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; display: block; }

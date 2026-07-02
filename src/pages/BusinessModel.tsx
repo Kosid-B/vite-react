@@ -11,15 +11,15 @@ interface Props {
 type BMCKey = keyof BMCData;
 
 const BMC_CONFIG: Array<{ key: BMCKey; title: string; sub: string; color: string; area: string }> = [
-  { key: 'partners',      title: 'Key Partners',          sub: 'พันธมิตรหลัก',         color: '#1a4f8a', area: 'kp' },
-  { key: 'activities',   title: 'Key Activities',         sub: 'กิจกรรมหลัก',          color: '#2d6a4f', area: 'ka' },
-  { key: 'value',        title: 'Value Propositions',     sub: 'คุณค่าที่นำเสนอ',      color: '#c44b2b', area: 'vp' },
-  { key: 'relationships',title: 'Customer Relationships', sub: 'ความสัมพันธ์ลูกค้า',   color: '#a05c1a', area: 'cr' },
-  { key: 'segments',     title: 'Customer Segments',      sub: 'กลุ่มลูกค้าเป้าหมาย',  color: '#1a4f8a', area: 'cs' },
-  { key: 'resources',    title: 'Key Resources',          sub: 'ทรัพยากรหลัก',         color: '#2d6a4f', area: 'kr' },
-  { key: 'channels',     title: 'Channels',               sub: 'ช่องทางเข้าถึงลูกค้า', color: '#a05c1a', area: 'ch' },
-  { key: 'costs',        title: 'Cost Structure',         sub: 'โครงสร้างต้นทุน',      color: '#1c1814', area: 'co' },
-  { key: 'revenue',      title: 'Revenue Streams',        sub: 'กระแสรายได้',           color: '#2d6a4f', area: 're' },
+  { key: 'partners',      title: 'Key Partners',          sub: 'พันธมิตรหลัก',         color: '#6aa9e9', area: 'kp' },
+  { key: 'activities',   title: 'Key Activities',         sub: 'กิจกรรมหลัก',          color: '#52b788', area: 'ka' },
+  { key: 'value',        title: 'Value Propositions',     sub: 'คุณค่าที่นำเสนอ',      color: '#e0704f', area: 'vp' },
+  { key: 'relationships',title: 'Customer Relationships', sub: 'ความสัมพันธ์ลูกค้า',   color: '#d98e3d', area: 'cr' },
+  { key: 'segments',     title: 'Customer Segments',      sub: 'กลุ่มลูกค้าเป้าหมาย',  color: '#6aa9e9', area: 'cs' },
+  { key: 'resources',    title: 'Key Resources',          sub: 'ทรัพยากรหลัก',         color: '#52b788', area: 'kr' },
+  { key: 'channels',     title: 'Channels',               sub: 'ช่องทางเข้าถึงลูกค้า', color: '#d98e3d', area: 'ch' },
+  { key: 'costs',        title: 'Cost Structure',         sub: 'โครงสร้างต้นทุน',      color: '#e05d5d', area: 'co' },
+  { key: 'revenue',      title: 'Revenue Streams',        sub: 'กระแสรายได้',           color: '#52b788', area: 're' },
 ];
 
 const DE24: Array<{ name: string; phase: number }> = [
