@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { CATEGORY_META, TIER_META, type SkillCategory, type SkillTier } from '../../data/skillCatalog';
+import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillTier } from '../../data/skillCatalog';
 import { listAdminSkills, createAdminSkill, setAdminSkillActive, deleteAdminSkill, type AdminSkill } from '../../lib/adminSkills';
+import { adminGetSkillStats, type SkillPurchaseEvent, type SkillAdoption } from '../../lib/skillStats';
 import { XP_PER_TIER } from '../../lib/gamification';
 
 const DEFAULT_PRICE: Record<SkillTier, number> = { 1: 500, 2: 1200, 3: 2000 };
@@ -16,13 +17,39 @@ export default function SkillMarketTab() {
   const [draft, setDraft] = useState({ ...EMPTY_DRAFT });
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [events, setEvents] = useState<SkillPurchaseEvent[]>([]);
+  const [adoption, setAdoption] = useState<SkillAdoption[]>([]);
+  const [statsMsg, setStatsMsg] = useState<string | null>(null);
 
   useEffect(() => {
     listAdminSkills(true)
       .then(setSkills)
       .catch(e => setMsg('⚠️ โหลดรายการไม่สำเร็จ: ' + (e as { message?: string }).message))
       .finally(() => setLoading(false));
+    adminGetSkillStats()
+      .then(s => { setEvents(s.events); setAdoption(s.adoption); })
+      .catch(e => setStatsMsg('⚠️ โหลดสถิติไม่สำเร็จ: ' + (e as { message?: string }).message));
   }, []);
+
+  // ชื่อ Skill จาก id (catalog ในตัว + skill ที่ Admin เพิ่ม)
+  const skillName = (id: string) =>
+    SKILL_CATALOG.find(s => s.id === id)?.name ?? skills.find(s => s.id === id)?.name ?? id;
+
+  // สรุปสถิติเพื่อการตลาด
+  const totalRevenue = events.reduce((s, e) => s + e.price, 0);
+  const bySkill = Object.values(events.reduce((acc, e) => {
+    if (!acc[e.skillId]) acc[e.skillId] = { skillId: e.skillId, name: e.skillName, purchases: 0, revenue: 0 };
+    acc[e.skillId].purchases += 1;
+    acc[e.skillId].revenue += e.price;
+    return acc;
+  }, {} as Record<string, { skillId: string; name: string; purchases: number; revenue: number }>))
+    .sort((a, b) => b.purchases - a.purchases);
+  const byPay = Object.entries(events.reduce((acc, e) => {
+    const k = e.payMethod || 'ไม่ระบุ';
+    acc[k] = (acc[k] ?? 0) + 1;
+    return acc;
+  }, {} as Record<string, number>)).sort((a, b) => b[1] - a[1]);
+  const PAY_LABEL: Record<string, string> = { promptpay: '📱 PromptPay', card: '💳 บัตรเครดิต/เดบิต', transfer: '🏦 โอนธนาคาร' };
 
   async function submit() {
     if (!draft.name.trim() || !draft.desc.trim()) {
@@ -72,6 +99,99 @@ export default function SkillMarketTab() {
 
   return (
     <div className="pfa-tab-body">
+      {/* ===== สถิติการเลือกใช้ Skill (Marketing Analytics) ===== */}
+      <div className="pfa-section">
+        <div className="pfa-section-title">📊 สถิติการเลือกใช้ Skill ของผู้ใช้</div>
+        <p className="adm-skill-hint">
+          ข้อมูลจาก event การซื้อ Skill ของทุกบริษัท — ใช้วางแผนการตลาด เช่น Skill ไหนขายดี,
+          หมวดไหนควรเพิ่ม Skill ใหม่, ลูกค้านิยมจ่ายผ่านช่องทางไหน
+        </p>
+        {statsMsg && <div className="adm-skill-msg">{statsMsg}</div>}
+        <div className="adm-stat-cards">
+          <div className="adm-stat-card">
+            <div className="adm-stat-num">{events.length.toLocaleString()}</div>
+            <div className="adm-stat-lbl">ยอดซื้อทั้งหมด (ครั้ง)</div>
+          </div>
+          <div className="adm-stat-card">
+            <div className="adm-stat-num">฿{totalRevenue.toLocaleString()}</div>
+            <div className="adm-stat-lbl">มูลค่ารวม</div>
+          </div>
+          <div className="adm-stat-card">
+            <div className="adm-stat-num">{bySkill[0] ? bySkill[0].name : '—'}</div>
+            <div className="adm-stat-lbl">Skill ขายดีที่สุด</div>
+          </div>
+          <div className="adm-stat-card">
+            <div className="adm-stat-num">{byPay[0] ? (PAY_LABEL[byPay[0][0]] ?? byPay[0][0]) : '—'}</div>
+            <div className="adm-stat-lbl">ช่องทางชำระยอดนิยม</div>
+          </div>
+        </div>
+
+        <div className="adm-stat-2col">
+          <div>
+            <div className="adm-stat-subhd">🏆 Skill ยอดนิยม (จาก event การซื้อ)</div>
+            {bySkill.length === 0 && <div className="adm-skill-hint">ยังไม่มี event การซื้อ</div>}
+            <table className="adm-stat-table">
+              <tbody>
+                {bySkill.slice(0, 10).map((s, i) => (
+                  <tr key={s.skillId}>
+                    <td className="adm-stat-rank">#{i + 1}</td>
+                    <td>{s.name}</td>
+                    <td className="adm-stat-n">{s.purchases} ครั้ง</td>
+                    <td className="adm-stat-n">฿{s.revenue.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {byPay.length > 0 && (
+              <>
+                <div className="adm-stat-subhd" style={{ marginTop: 14 }}>💳 ช่องทางชำระเงิน</div>
+                <table className="adm-stat-table">
+                  <tbody>
+                    {byPay.map(([method, n]) => (
+                      <tr key={method}>
+                        <td>{PAY_LABEL[method] ?? method}</td>
+                        <td className="adm-stat-n">{n} ครั้ง ({Math.round((n / Math.max(events.length, 1)) * 100)}%)</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </div>
+          <div>
+            <div className="adm-stat-subhd">🏢 Skill ที่บริษัทใช้งานอยู่ (ทุกบริษัท)</div>
+            {adoption.length === 0 && <div className="adm-skill-hint">ยังไม่มีข้อมูล (local mode ไม่รวบรวมข้ามบริษัท)</div>}
+            <table className="adm-stat-table">
+              <tbody>
+                {adoption.slice(0, 10).map((a, i) => (
+                  <tr key={a.skillId}>
+                    <td className="adm-stat-rank">#{i + 1}</td>
+                    <td>{skillName(a.skillId)}</td>
+                    <td className="adm-stat-n">{a.companies} บริษัท</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {events.length > 0 && (
+              <>
+                <div className="adm-stat-subhd" style={{ marginTop: 14 }}>🕐 การซื้อล่าสุด</div>
+                <div className="adm-stat-recent">
+                  {events.slice(0, 6).map((e, i) => (
+                    <div key={i} className="adm-stat-recent-row">
+                      <span className="adm-stat-recent-time">{e.createdAt.slice(0, 16).replace('T', ' ')}</span>
+                      <span className="adm-stat-recent-name">{e.skillName}</span>
+                      <span className="adm-stat-n">฿{e.price.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="pfa-section">
         <div className="pfa-section-title">🛒 เพิ่ม Skill ใหม่เข้า Marketplace</div>
         <p className="adm-skill-hint">

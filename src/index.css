@@ -823,6 +823,23 @@ input:focus, textarea:focus, select:focus {
 .skm-pay-btn { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-family: inherit; color: rgba(255,255,255,.85); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 6px; padding: 5px 9px; cursor: pointer; transition: background .15s; text-align: left; }
 .skm-pay-btn:hover { background: rgba(255,255,255,.16); }
 
+/* Admin — Skill usage statistics (marketing) */
+.adm-stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0 16px; }
+.adm-stat-card { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.adm-stat-num { font-size: 17px; font-weight: 700; color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.adm-stat-lbl { font-size: 10.5px; color: rgba(255,255,255,.45); margin-top: 3px; }
+.adm-stat-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.adm-stat-subhd { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,.8); margin-bottom: 6px; }
+.adm-stat-table { width: 100%; border-collapse: collapse; }
+.adm-stat-table td { font-size: 12px; color: rgba(255,255,255,.75); padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.adm-stat-rank { color: rgba(255,255,255,.4); width: 34px; }
+.adm-stat-n { text-align: right; white-space: nowrap; color: rgba(255,255,255,.55); }
+.adm-stat-recent { display: flex; flex-direction: column; gap: 4px; }
+.adm-stat-recent-row { display: flex; align-items: center; gap: 10px; font-size: 11.5px; padding: 4px 8px; background: rgba(255,255,255,.03); border-radius: 6px; }
+.adm-stat-recent-time { color: rgba(255,255,255,.4); white-space: nowrap; }
+.adm-stat-recent-name { flex: 1; color: rgba(255,255,255,.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 900px) { .adm-stat-cards { grid-template-columns: 1fr 1fr; } .adm-stat-2col { grid-template-columns: 1fr; } }
+
 /* Admin — Skill Marketplace management tab */
 .adm-skill-hint { font-size: 12px; color: rgba(255,255,255,.55); line-height: 1.6; margin: 4px 0 10px; }
 .adm-skill-form { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 12px; }
