@@ -194,6 +194,13 @@ export const SKILL_CATALOG: SkillEntry[] = [
     tags: ['CTO', 'CEO', 'Data Manager'],
   },
   {
+    id: 'market-insight-thailand',
+    name: 'Market Insight & Strategy (Thailand)',
+    category: 'marketing', tier: 2, price: 1500, icon: '🇹🇭',
+    desc: 'ข้อมูลประชากรไทยล่าสุด + กลยุทธ์เจาะตลาดตาม Generation (X/Y/Z/Boomer), จังหวัดกำลังซื้อสูง, ตลาด Expat — เอเจนต์การตลาดใช้กำหนดกลุ่มเป้าหมาย โทนสื่อสาร และพื้นที่ยิง Ads',
+    tags: ['CMO', 'CEO', 'Marketing Manager'],
+  },
+  {
     id: 'salesforce-developer',
     name: 'Salesforce Developer',
     category: 'technology', tier: 2, price: 1500, icon: '☁️',
