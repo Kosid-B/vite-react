@@ -4310,3 +4310,37 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .auc-bid-form button:disabled { opacity:.5; cursor:not-allowed; }
 .auc-close-btn { font-family:inherit; font-size:12.5px; font-weight:700; color:#fff; background:#c44b2b; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; }
 .auc-claim-btn { font-family:inherit; font-size:13px; font-weight:800; color:#0f172a; background:#22c55e; border:none; border-radius:10px; padding:10px 16px; cursor:pointer; }
+
+/* ===== สมัครร้านตลาดฝากขายสินค้า (/shop) ===== */
+.shop-pkg-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px; max-width:1100px; margin:0 auto; }
+.shop-pkg { position:relative; display:flex; flex-direction:column; background:rgba(15,23,42,.6); border:1.5px solid #1e293b; border-radius:16px; padding:22px 20px 18px; text-align:left; }
+.shop-pkg.hot { border-color:#22d3ee; background:rgba(6,182,212,.07); }
+.shop-pkg.auction { border-color:#f59e0b; background:rgba(245,158,11,.06); }
+.shop-pkg.picked { outline:2px solid #22c55e; outline-offset:2px; }
+.shop-pkg-name { font-weight:700; font-size:16px; color:#fff; margin-bottom:6px; }
+.shop-pkg-price { font-size:26px; font-weight:800; color:#22d3ee; line-height:1.1; }
+.shop-pkg.auction .shop-pkg-price { font-size:19px; color:#fbbf24; }
+.shop-pkg-price span { font-size:13px; font-weight:500; color:#64748b; margin-left:3px; }
+.shop-pkg-perday { font-size:12px; color:#22c55e; font-weight:600; margin:4px 0 10px; }
+.shop-pkg p { font-size:13.5px; color:#94a3b8; line-height:1.55; margin:0 0 10px; flex-grow:1; }
+.shop-pkg-note { font-size:12px; color:#64748b; margin-bottom:12px; }
+.shop-pkg-btn { font-family:inherit; font-size:13.5px; font-weight:700; padding:10px 0; border-radius:10px; border:1px solid #334155; background:transparent; color:#94a3b8; cursor:pointer; transition:all .2s; }
+.shop-pkg.hot .shop-pkg-btn { background:#06b6d4; border:none; color:#fff; }
+.shop-pkg.auction .shop-pkg-btn { background:#f59e0b; border:none; color:#0f172a; }
+.shop-pkg.picked .shop-pkg-btn { background:#22c55e; border:none; color:#052e16; }
+.shop-auction-note { max-width:760px; margin:22px auto 0; font-size:13.5px; color:#94a3b8; line-height:1.65; background:rgba(245,158,11,.07); border:1px solid rgba(245,158,11,.3); border-radius:12px; padding:14px 18px; }
+.shop-auction-note b { color:#fbbf24; }
+.shop-form { max-width:520px; margin:0 auto; display:flex; flex-direction:column; gap:14px; text-align:left; }
+.shop-form label { display:flex; flex-direction:column; gap:6px; font-size:13.5px; font-weight:600; color:#94a3b8; }
+.shop-form input, .shop-form select { font-family:inherit; font-size:15px; background:#0f172a; color:#fff; border:1px solid #334155; border-radius:10px; padding:12px 14px; }
+.shop-form input:focus, .shop-form select:focus { outline:none; border-color:#22d3ee; }
+.shop-form-pkg { font-size:14px; color:#94a3b8; background:rgba(6,182,212,.07); border:1px solid rgba(6,182,212,.3); border-radius:10px; padding:11px 14px; }
+.shop-form-pkg b { color:#22d3ee; }
+.shop-submit { border:none; cursor:pointer; font-size:16.5px; }
+.shop-submit:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+.shop-form-note { text-align:center; font-size:12.5px; color:#64748b; }
+.shop-sent { max-width:520px; margin:0 auto; text-align:center; background:rgba(34,197,94,.07); border:1px solid rgba(34,197,94,.35); border-radius:16px; padding:34px 26px; }
+.shop-sent-ico { font-size:44px; margin-bottom:10px; }
+.shop-sent-title { font-size:22px; font-weight:800; color:#22c55e; margin-bottom:10px; }
+.shop-sent p { font-size:14.5px; color:#94a3b8; line-height:1.7; margin:0 0 18px; }
+.shop-sent b { color:#fff; }

@@ -15,6 +15,7 @@ import { canAccess } from './lib/access';
 import { isAdminEmail } from './config';
 import { PublicStorefrontPage, PublicDirectoryPage } from './pages/PublicStorefront';
 import StartLanding from './pages/StartLanding';
+import ShopSignup from './pages/ShopSignup';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const JourneyMap = lazy(() => import('./pages/JourneyMap'));
@@ -285,6 +286,10 @@ export default function App() {
   // Landing ไวรัล "เริ่มธุรกิจ" — กลุ่ม Gen Z จบใหม่ + เสมือนว่างงาน (สาธารณะ)
   if (pubPath === '/start' || pubPath === '/start/') {
     return <StartLanding />;
+  }
+  // สมัครร้านตลาดฝากขายสินค้า — ฟอร์มสาธารณะ เบอร์โทร + LINE
+  if (pubPath === '/shop' || pubPath === '/shop/') {
+    return <ShopSignup />;
   }
 
   // Loading Supabase session
