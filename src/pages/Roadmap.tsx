@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, RoadmapItem, RoadmapQuarter, RoadmapStatus, RoadmapPriority } from '../types';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { withSkillDirectives } from '../lib/skillDirectives';
 
 interface Props {
   data: AppData;
@@ -64,7 +65,7 @@ export default function Roadmap({ data, onUpdate }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: agent?.role ?? 'Product Manager',
-          mandate: agent?.mandate ?? 'วางแผนผลิตภัณฑ์',
+          mandate: withSkillDirectives(agent?.mandate ?? 'วางแผนผลิตภัณฑ์', data.aiCompany?.purchasedSkills),
           model: agent?.model ?? 'claude-sonnet-4-6',
           title: `วิเคราะห์ Roadmap Feature: ${item.title}`,
           detail: item.description,
