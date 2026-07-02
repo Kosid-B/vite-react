@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { AppData, PageId } from '../types';
 import { companyXP, getCompanyLevel, COMPANY_LEVELS, QUESTS, ACHIEVEMENTS, ACTIVITY_XP } from '../lib/gamification';
 
@@ -167,6 +168,7 @@ ${vrioRows ? `<h2>VRIO Analysis</h2>
 
 export default function Dashboard({ data, onNavigate }: Props) {
   const { stages, actions, funnel, contentPlan, aiCompany, roadmap } = data;
+  const [openBadge, setOpenBadge] = useState<string | null>(null);
 
   const doneActions = actions.filter(a => a.done).length;
   const actionPct = actions.length > 0 ? Math.round((doneActions / actions.length) * 100) : 0;
@@ -269,20 +271,47 @@ export default function Dashboard({ data, onNavigate }: Props) {
           </div>
         )}
 
-        {earnedBadges.length > 0 && (
-          <div className="gm-badge-row">
-            <span className="gm-badge-lbl">🏅 Badges:</span>
-            {ACHIEVEMENTS.map(a => {
-              const earned = a.earned(data);
-              return (
-                <span key={a.id} className={`gm-badge${earned ? '' : ' locked'}`}
-                  title={`${a.label} — ${a.desc}${earned ? '' : ' (ยังไม่ได้รับ)'}`}>
-                  {a.icon} {a.label}
-                </span>
-              );
-            })}
-          </div>
-        )}
+        <div className="gm-badge-row">
+          <span className="gm-badge-lbl">🏅 Badges ({earnedBadges.length}/{ACHIEVEMENTS.length}):</span>
+          {ACHIEVEMENTS.map(a => {
+            const earned = a.earned(data);
+            return (
+              <button key={a.id} className={`gm-badge${earned ? '' : ' locked'}${openBadge === a.id ? ' open' : ''}`}
+                onClick={() => setOpenBadge(openBadge === a.id ? null : a.id)}
+                title={`${a.label} — แตะเพื่อดูรายละเอียด`}>
+                {a.icon} {a.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {openBadge && (() => {
+          const a = ACHIEVEMENTS.find(x => x.id === openBadge);
+          if (!a) return null;
+          const earned = a.earned(data);
+          const { cur, target } = a.progress(data);
+          const pct = Math.round((cur / target) * 100);
+          return (
+            <div className="gm-badge-detail">
+              <span className="gm-badge-detail-ico">{a.icon}</span>
+              <div className="gm-badge-detail-body">
+                <div className="gm-badge-detail-name">
+                  {a.label}
+                  {earned
+                    ? <span className="gm-badge-detail-earned">✓ ได้รับแล้ว</span>
+                    : <span className="gm-badge-detail-locked">ยังไม่ได้รับ · {cur}/{target}</span>}
+                </div>
+                <div className="gm-badge-detail-desc">{a.desc}</div>
+                {!earned && (
+                  <div className="gm-badge-detail-track">
+                    <div className="gm-badge-detail-fill" style={{ width: pct + '%' }} />
+                  </div>
+                )}
+              </div>
+              <button className="gm-badge-detail-close" onClick={() => setOpenBadge(null)} aria-label="ปิด">×</button>
+            </div>
+          );
+        })()}
       </div>
 
       {/* KPI Cards */}
