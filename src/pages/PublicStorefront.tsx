@@ -54,6 +54,7 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
       <div className="pub-card">
         <div className="pub-dbd">{sectorLabel(sf.dbd)}</div>
         <h1 className="pub-name">{sf.name}</h1>
+        {sf.vp && <p className="pub-vp">“{sf.vp}”</p>}
         {sf.description && <p className="pub-desc">{sf.description}</p>}
 
         {sf.services.length > 0 && (

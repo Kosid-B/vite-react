@@ -3,10 +3,12 @@ import type { AppData } from '../types';
 import { listStorefronts, getMyStorefront, type Storefront } from '../lib/storefront';
 import {
   createRfq, listMyRfqs, listIncomingRfqs, answerRfq, acceptQuote,
+  listOpenRfqs, claimOpenRfq,
   listOrders, updateOrderStatus, PLATFORM_FEE_RATE, LOCAL_WS,
   type Rfq, type Order, type OrderStatus,
 } from '../lib/trade';
 import { isSupabaseEnabled } from '../lib/supabase';
+import { DBD_SECTORS } from '../data/dbd';
 
 interface Props {
   data: AppData;
@@ -37,8 +39,16 @@ export default function Trade({ data, wsId }: Props) {
   const [mySf, setMySf] = useState<Storefront | null>(null);
   const [outgoing, setOutgoing] = useState<Rfq[]>([]);
   const [incoming, setIncoming] = useState<Rfq[]>([]);
+  const [openJobs, setOpenJobs] = useState<Rfq[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
+
+  // ฟอร์มประกาศงานกลาง (Open RFQ)
+  const [postOpen, setPostOpen] = useState(false);
+  const [openDraft, setOpenDraft] = useState({ title: '', detail: '', budget: 0, contact: '', sector: '' });
+  // ฟอร์มรับงานกลาง (claim + เสนอราคา)
+  const [claimFor, setClaimFor] = useState<string | null>(null);
+  const [claimDraft, setClaimDraft] = useState({ amount: 0, note: '' });
 
   // ฟอร์มส่ง RFQ (เปิดต่อร้าน)
   const [rfqFor, setRfqFor] = useState<string | null>(() => sessionStorage.getItem('rfq_seller'));
@@ -51,13 +61,15 @@ export default function Trade({ data, wsId }: Props) {
     const [st, my] = await Promise.all([listStorefronts(), getMyStorefront(wsId)]);
     setStores(st);
     setMySf(my);
-    const [out, inc, ord] = await Promise.all([
+    const [out, inc, open, ord] = await Promise.all([
       listMyRfqs(myWs),
       listIncomingRfqs(my?.slug ?? null),
+      listOpenRfqs(),
       listOrders(myWs),
     ]);
     setOutgoing(out);
     setIncoming(inc);
+    setOpenJobs(open);
     setOrders(ord);
   }
   useEffect(() => {
@@ -68,7 +80,7 @@ export default function Trade({ data, wsId }: Props) {
   async function submitRfq(sellerSlug: string) {
     if (!rfqDraft.title.trim()) { setMsg('⚠️ ระบุหัวข้อสิ่งที่ต้องการก่อน'); return; }
     const err = await createRfq({
-      buyerWs: myWs, buyerName: data.aiCompany.name, sellerSlug,
+      buyerWs: myWs, buyerName: data.aiCompany.name, sellerSlug, sector: '',
       title: rfqDraft.title.trim(), detail: rfqDraft.detail.trim(),
       budget: rfqDraft.budget, contact: rfqDraft.contact.trim(),
     });
@@ -97,7 +109,37 @@ export default function Trade({ data, wsId }: Props) {
     reload();
   }
 
+  async function postOpenRfq() {
+    if (!openDraft.title.trim()) { setMsg('⚠️ ระบุหัวข้องานก่อน'); return; }
+    const err = await createRfq({
+      buyerWs: myWs, buyerName: data.aiCompany.name, sellerSlug: null,
+      sector: openDraft.sector, title: openDraft.title.trim(), detail: openDraft.detail.trim(),
+      budget: openDraft.budget, contact: openDraft.contact.trim(),
+    });
+    if (err) { setMsg('⚠️ ' + err); return; }
+    setMsg('✅ ประกาศงานกลางแล้ว — ธุรกิจในระบบจะเห็นและส่งใบเสนอราคาเข้ามา');
+    setPostOpen(false);
+    setOpenDraft({ title: '', detail: '', budget: 0, contact: '', sector: '' });
+    reload();
+  }
+
+  async function claimJob(id: string) {
+    if (!mySf) { setMsg('⚠️ ต้องมีหน้าร้านก่อนรับงาน — เปิดจากเมนู "หน้าร้านของฉัน"'); return; }
+    const err = await claimOpenRfq(id, mySf.slug, claimDraft.amount, claimDraft.note.trim());
+    if (err) { setMsg('⚠️ ' + err); return; }
+    setMsg(`✅ รับงานและส่งใบเสนอราคา ${baht(claimDraft.amount)} แล้ว — รอผู้ซื้อกดรับ`);
+    setClaimFor(null);
+    setClaimDraft({ amount: 0, note: '' });
+    reload();
+  }
+
   const otherStores = stores.filter(s => s.slug !== mySf?.slug);
+  const mySector = (mySf?.dbd ?? '').match(/^\[([A-Z])\]/)?.[1] ?? '';
+  const visibleJobs = openJobs.filter(j => j.buyerWs !== myWs);
+  const sectorLabelOf = (code: string) => {
+    const sec = DBD_SECTORS.find(s => s.code === code);
+    return sec ? `หมวด ${sec.code} · ${sec.label}` : 'ทุกหมวด';
+  };
 
   return (
     <div>
@@ -152,6 +194,82 @@ export default function Trade({ data, wsId }: Props) {
         </div>
       </section>
 
+      {/* ── ประกาศงานกลาง (Open RFQ) — กลไก "ดีลแรก" ── */}
+      <section className="trade-sec trade-open-sec">
+        <div className="trade-sec-hd">
+          📣 ประกาศงานกลาง ({visibleJobs.length})
+          <button className="trade-rfq-btn trade-post-btn" onClick={() => setPostOpen(!postOpen)}>
+            {postOpen ? '× ปิดฟอร์ม' : '＋ ประกาศหางาน/หาผู้ขาย'}
+          </button>
+        </div>
+        <div className="trade-open-sub">
+          งานที่เปิดให้ทุกธุรกิจในระบบส่งใบเสนอราคา — <b>ธุรกิจใหม่เริ่มที่นี่:</b> เสนอราคางานแรกของคุณวันนี้
+        </div>
+
+        {postOpen && (
+          <div className="trade-rfq-form trade-open-form">
+            <input placeholder="ต้องการซื้อ/จ้างอะไร เช่น ออกแบบโลโก้ + CI ครบชุด" value={openDraft.title}
+              onChange={e => setOpenDraft({ ...openDraft, title: e.target.value })} />
+            <textarea rows={2} placeholder="รายละเอียด สเปก กำหนดส่ง…" value={openDraft.detail}
+              onChange={e => setOpenDraft({ ...openDraft, detail: e.target.value })} />
+            <div className="trade-rfq-row">
+              <select value={openDraft.sector} onChange={e => setOpenDraft({ ...openDraft, sector: e.target.value })}>
+                <option value="">หมวดผู้ขายที่ต้องการ (ทุกหมวด)</option>
+                {DBD_SECTORS.map(s => <option key={s.code} value={s.code}>หมวด {s.code} · {s.label}</option>)}
+              </select>
+              <input type="number" min={0} placeholder="งบประมาณ (฿)" value={openDraft.budget || ''}
+                onChange={e => setOpenDraft({ ...openDraft, budget: Math.max(0, +e.target.value) })} />
+            </div>
+            <input placeholder="ช่องทางติดต่อกลับ (เบอร์/LINE/อีเมล)" value={openDraft.contact}
+              onChange={e => setOpenDraft({ ...openDraft, contact: e.target.value })} />
+            <button className="trade-rfq-send" onClick={postOpenRfq}>📣 ประกาศงาน</button>
+          </div>
+        )}
+
+        {visibleJobs.length === 0 && (
+          <div className="trade-empty">ยังไม่มีงานประกาศอยู่ — เป็นคนแรกที่ประกาศหาผู้ขาย หรือแชร์ให้คู่ค้ามาโพสต์งาน</div>
+        )}
+        {visibleJobs.map(j => {
+          const matchMine = !!mySector && (j.sector === '' || j.sector === mySector);
+          return (
+            <div key={j.id} className={`trade-rfq-card${matchMine ? ' trade-match' : ''}`}>
+              <div className="trade-rfq-main">
+                <div className="trade-rfq-title">
+                  {j.title}
+                  {matchMine && <span className="trade-match-chip">ตรงหมวดคุณ</span>}
+                </div>
+                {j.detail && <div className="trade-rfq-detail">{j.detail}</div>}
+                <div className="trade-rfq-meta">
+                  {sectorLabelOf(j.sector)} · งบ {baht(j.budget)} · จาก {j.buyerName || 'ผู้ซื้อในระบบ'} · {j.createdAt}
+                </div>
+              </div>
+              <div className="trade-rfq-side">
+                {claimFor === j.id ? (
+                  <div className="trade-quote-form">
+                    <input type="number" min={0} placeholder="เสนอราคา (฿)" value={claimDraft.amount || ''}
+                      onChange={e => setClaimDraft({ ...claimDraft, amount: Math.max(0, +e.target.value) })} />
+                    <input placeholder="เงื่อนไข/กำหนดส่ง (ถ้ามี)" value={claimDraft.note}
+                      onChange={e => setClaimDraft({ ...claimDraft, note: e.target.value })} />
+                    <div className="trade-quote-actions">
+                      <button className="trade-accept" onClick={() => claimJob(j.id)} disabled={claimDraft.amount <= 0}>
+                        ส่งใบเสนอราคา
+                      </button>
+                      <button className="trade-decline" onClick={() => setClaimFor(null)}>ยกเลิก</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button className="trade-rfq-btn" disabled={!mySf}
+                    title={mySf ? '' : 'ต้องมีหน้าร้านก่อนรับงาน'}
+                    onClick={() => { setClaimFor(j.id); setClaimDraft({ amount: j.budget, note: '' }); }}>
+                    🙋 รับงานนี้ — เสนอราคา
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </section>
+
       {/* ── RFQ ที่ส่งออก (ผู้ซื้อ) ── */}
       <section className="trade-sec">
         <div className="trade-sec-hd">📤 RFQ ที่ฉันส่งออก ({outgoing.length})</div>
@@ -159,7 +277,7 @@ export default function Trade({ data, wsId }: Props) {
         {outgoing.map(r => (
           <div key={r.id} className="trade-rfq-card">
             <div className="trade-rfq-main">
-              <div className="trade-rfq-title">{r.title} <span className="trade-rfq-to">→ {r.sellerSlug}</span></div>
+              <div className="trade-rfq-title">{r.title} <span className="trade-rfq-to">→ {r.sellerSlug ?? '📣 ประกาศกลาง'}</span></div>
               {r.detail && <div className="trade-rfq-detail">{r.detail}</div>}
               <div className="trade-rfq-meta">งบ {baht(r.budget)} · {r.createdAt}</div>
             </div>

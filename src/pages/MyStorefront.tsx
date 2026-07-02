@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { AppData } from '../types';
 import { getMyStorefront, saveStorefront, type Storefront } from '../lib/storefront';
-import { isSupabaseEnabled } from '../lib/supabase';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { draftVpLocal } from '../lib/firstDeal';
+import { trackAiCall } from '../lib/usage';
 import DBDSelect from '../components/DBDSelect';
 import EditableList from '../components/EditableList';
 
@@ -23,6 +25,7 @@ export default function MyStorefront({ data, wsId }: Props) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [vpBusy, setVpBusy] = useState(false);
 
   useEffect(() => {
     getMyStorefront(wsId).then(existing => {
@@ -31,6 +34,7 @@ export default function MyStorefront({ data, wsId }: Props) {
         slug: defaultSlug(c.name),
         name: c.name,
         dbd: c.productDbd ?? c.industry ?? '',
+        vp: '',
         description: c.productDesc ?? data.businessModel.bmc.value[0] ?? '',
         services: data.businessModel.bmc.value.slice(0, 3),
         phone: '', lineId: '', email: '', website: '',
@@ -43,6 +47,39 @@ export default function MyStorefront({ data, wsId }: Props) {
 
   const publicUrl = `${APP_ORIGIN}/b/${encodeURIComponent(sf.slug)}`;
   const patch = (p: Partial<Storefront>) => setSf({ ...sf, ...p });
+
+  /** AI Agent เขียน Value Proposition — prod: Claude ผ่าน ai-assist · local: template จากข้อมูลจริง */
+  async function generateVp() {
+    if (!sf) return;
+    setVpBusy(true);
+    setMsg(null);
+    try {
+      if (isSupabaseEnabled && supabase) {
+        trackAiCall();
+        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
+          body: {
+            page: 'storefront',
+            pageLabel: 'หน้าร้านของฉัน',
+            instruction: 'เขียน Value Proposition หนึ่งประโยค (ไม่เกิน 160 ตัวอักษร ภาษาไทย) ตามโครง: ช่วย[ลูกค้ากลุ่มไหน] แก้[ปัญหาอะไร] ด้วย[สิ่งที่เราให้] ต่างจากคู่แข่งตรง[จุดแข็ง] — ตอบเฉพาะประโยค VP ใน summary',
+            context: `ธุรกิจ: ${sf.name} · หมวด DBD: ${sf.dbd} · คำอธิบาย: ${sf.description} · บริการ: ${sf.services.join(', ')}`,
+          },
+        });
+        if (error) throw error;
+        const vp = (res?.summary ?? '').trim().replace(/^["']|["']$/g, '');
+        if (!vp) throw new Error('AI ไม่ตอบกลับ');
+        patch({ vp: vp.slice(0, 200) });
+        setMsg('✨ AI Agent เขียนจุดขายให้แล้ว — ปรับแก้ได้ตามใจ แล้วกดเผยแพร่');
+      } else {
+        patch({ vp: draftVpLocal(sf.name, sf.dbd, sf.description, sf.services) });
+        setMsg('✨ ร่างจุดขายจากข้อมูลของคุณแล้ว (local mode) — ปรับแก้ได้ตามใจ');
+      }
+    } catch (e) {
+      setMsg('⚠️ เรียก AI ไม่สำเร็จ: ' + ((e as Error).message || 'error') + ' — ใช้ร่างอัตโนมัติแทน');
+      patch({ vp: draftVpLocal(sf.name, sf.dbd, sf.description, sf.services) });
+    } finally {
+      setVpBusy(false);
+    }
+  }
 
   async function save(published: boolean) {
     if (!sf) return;
@@ -88,6 +125,16 @@ export default function MyStorefront({ data, wsId }: Props) {
             <span>หมวดธุรกิจ (DBD) — ใช้จัดกลุ่มในสารบัญ</span>
             <DBDSelect className="sf-inp" value={sf.dbd} onChange={v => patch({ dbd: v })} />
           </label>
+          <div className="sf-field">
+            <span>✨ จุดขาย (Value Proposition) — ประโยคแรกที่ลูกค้าเห็น</span>
+            <div className="sf-vp-row">
+              <input value={sf.vp} onChange={e => patch({ vp: e.target.value })} spellCheck={false}
+                placeholder='เช่น "ช่วยโรงงานอาหาร SME ผ่าน audit ISO ในครึ่งเวลา ด้วยระบบเอกสารอัตโนมัติ"' />
+              <button className="sf-vp-btn" onClick={generateVp} disabled={vpBusy}>
+                {vpBusy ? '⏳ AI กำลังคิด…' : '✨ ให้ AI Agent เขียน'}
+              </button>
+            </div>
+          </div>
           <label className="sf-field">
             <span>คำอธิบายธุรกิจ</span>
             <textarea rows={3} value={sf.description} onChange={e => patch({ description: e.target.value })} spellCheck={false} />
