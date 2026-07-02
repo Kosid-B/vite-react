@@ -4,6 +4,7 @@ import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
 import { listAdminSkills } from '../lib/adminSkills';
+import { trackSkillPurchase } from '../lib/skillStats';
 import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamification';
 import DBDSelect from '../components/DBDSelect';
 
@@ -62,6 +63,7 @@ function OcNode({ agent, agents, onAdd, onFire, onSaveField, onGenJD, generating
 interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
+  wsId?: string | null; // workspace ปัจจุบัน — ใช้ประกอบสถิติการซื้อ Skill
 }
 
 const STATUS_LABEL: Record<AgentStatus, string> = {
@@ -173,7 +175,7 @@ function nowTime(): string {
   return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
-export default function AICompany({ data, onUpdate }: Props) {
+export default function AICompany({ data, onUpdate, wsId }: Props) {
   const c = data.aiCompany;
   const canWebSearch = data.subscription?.plan === 'growth' || data.subscription?.plan === 'scale';
   const [feed, setFeed] = useState<{ id: number; time: string; text: string; color: string }[]>([]);
@@ -611,6 +613,8 @@ export default function AICompany({ data, onUpdate }: Props) {
     const levelUp = prevLevel.rank !== newLevel.rank;
     patch({ purchasedSkills: [...owned, skill.id], skillXP: newXP });
     setBuyConfirm(null);
+    // สถิติการตลาด: บันทึก event ไปหลังบ้าน (fire-and-forget ไม่ block การซื้อ)
+    trackSkillPurchase(skill, payMethod ?? 'unknown', wsId).catch(() => { /* วิเคราะห์ภายหลังได้จาก workspace_state */ });
     const payLabel = PAY_METHODS.find(m => m.id === payMethod)?.label;
     const paidVia = payLabel ? ` · ชำระผ่าน ${payLabel}` : '';
     setMktMsg(levelUp

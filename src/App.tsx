@@ -305,7 +305,7 @@ export default function App() {
         {activePage === 'funnel' && <ConversionFunnel data={data} onUpdate={updateData} />}
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
         {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
-        {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} />}
+        {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
         {activePage === 'market' && (
