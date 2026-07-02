@@ -114,6 +114,9 @@ const PLANS: Plan[] = [
   },
 ];
 
+// แพ็กรายปี — จ่ายเท่า ~10 เดือน (ประหยัด ~17% และลด churn)
+const YEARLY_PRICE: Record<PlanId, number> = { free: 0, growth: 14900, scale: 59000 };
+
 export default function Billing({ data, onUpdate }: Props) {
   // PLG: usage meter + referral link
   const [refCopied, setRefCopied] = useState(false);
@@ -128,15 +131,18 @@ export default function Billing({ data, onUpdate }: Props) {
     });
   };
   const sub = data.subscription;
+  const [cycle, setCycle] = useState<'monthly' | 'yearly'>(sub.billingCycle ?? 'monthly');
+  const priceFor = (id: PlanId) => cycle === 'yearly' ? YEARLY_PRICE[id] : (PLANS.find(p => p.id === id)?.price ?? 0);
   const [selected, setSelected] = useState<PlanId>(sub.plan === 'free' && sub.status !== 'trial' ? 'growth' : sub.plan);
   const [copied, setCopied] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState<Invoice | null>(null);
   const [showCost, setShowCost] = useState(false);
 
   const selectedPlan = PLANS.find(p => p.id === selected)!;
-  const needPayment = selectedPlan.price > 0;
-  const payload = needPayment ? promptPayPayload(PAYMENT.promptpayId, selectedPlan.price) : '';
-  const qrUrl = needPayment ? promptPayQrUrl(PAYMENT.promptpayId, selectedPlan.price) : '';
+  const chargeAmount = priceFor(selected);
+  const needPayment = chargeAmount > 0;
+  const payload = needPayment ? promptPayPayload(PAYMENT.promptpayId, chargeAmount) : '';
+  const qrUrl = needPayment ? promptPayQrUrl(PAYMENT.promptpayId, chargeAmount) : '';
 
   const isTrial = sub.status === 'trial';
   const trialDaysLeft = sub.trialEndDate ? daysLeft(sub.trialEndDate) : 0;
@@ -170,7 +176,7 @@ export default function Billing({ data, onUpdate }: Props) {
       id: 'inv-' + Date.now().toString(36),
       date: now,
       plan: selectedPlan.id,
-      amount: selectedPlan.price,
+      amount: chargeAmount,
       status: 'paid',
     };
     onUpdate({
@@ -179,7 +185,8 @@ export default function Billing({ data, onUpdate }: Props) {
         ...sub,
         plan: selectedPlan.id,
         status: 'active',
-        currentPeriodEnd: addMonths(now, 1),
+        billingCycle: cycle,
+        currentPeriodEnd: addMonths(now, cycle === 'yearly' ? 12 : 1),
         trialEndDate: null,
         invoices: [invoice, ...sub.invoices],
       },
@@ -191,7 +198,8 @@ export default function Billing({ data, onUpdate }: Props) {
       sub.currentPeriodEnd && daysLeft(sub.currentPeriodEnd) > 0
         ? sub.currentPeriodEnd
         : new Date().toISOString();
-    const price = PLANS.find(p => p.id === sub.plan)?.price ?? 0;
+    const yearly = sub.billingCycle === 'yearly';
+    const price = yearly ? YEARLY_PRICE[sub.plan] : (PLANS.find(p => p.id === sub.plan)?.price ?? 0);
     const invoice: Invoice = {
       id: 'inv-' + Date.now().toString(36),
       date: new Date().toISOString(),
@@ -204,7 +212,7 @@ export default function Billing({ data, onUpdate }: Props) {
       subscription: {
         ...sub,
         status: 'active',
-        currentPeriodEnd: addMonths(base, 1),
+        currentPeriodEnd: addMonths(base, yearly ? 12 : 1),
         invoices: [invoice, ...sub.invoices],
       },
     });
@@ -392,6 +400,14 @@ export default function Billing({ data, onUpdate }: Props) {
         </div>
       )}
 
+      {/* Billing cycle toggle — รายปีจ่ายเท่า ~10 เดือน */}
+      <div className="bill-cycle">
+        <button className={`bill-cycle-btn${cycle === 'monthly' ? ' active' : ''}`} onClick={() => setCycle('monthly')}>รายเดือน</button>
+        <button className={`bill-cycle-btn${cycle === 'yearly' ? ' active' : ''}`} onClick={() => setCycle('yearly')}>
+          รายปี <span className="bill-cycle-save">ประหยัด ~17%</span>
+        </button>
+      </div>
+
       {/* Plan Cards */}
       <div className="bill-plans">
         {PLANS.map(p => (
@@ -402,9 +418,12 @@ export default function Billing({ data, onUpdate }: Props) {
             {p.highlight && <div className="bill-ribbon">ยอดนิยม</div>}
             <div className="bill-plan-name">{p.name}</div>
             <div className="bill-plan-price">
-              {p.price === 0 ? 'ฟรี' : baht(p.price)}
-              {p.price > 0 && <span className="bill-plan-per">/เดือน</span>}
+              {p.price === 0 ? 'ฟรี' : baht(priceFor(p.id))}
+              {p.price > 0 && <span className="bill-plan-per">/{cycle === 'yearly' ? 'ปี' : 'เดือน'}</span>}
             </div>
+            {p.price > 0 && cycle === 'yearly' && (
+              <div className="bill-plan-save">เท่ากับจ่าย 10 เดือน — ฟรี 2 เดือน (จาก {baht(p.price * 12)})</div>
+            )}
             {p.price > 0 && COST[p.id] && (
               <div className="bill-plan-margin-badge">
                 กำไรบริษัท {COST[p.id].margin.toFixed(0)}% · ต้นทุน {baht(COST[p.id].total)}
@@ -559,7 +578,7 @@ export default function Billing({ data, onUpdate }: Props) {
                 </a>
                 <a
                   className="bill-slip-btn bill-slip-email"
-                  href={`mailto:support@b-tctraining.com?subject=ยืนยันการชำระเงิน - แพ็ก ${selectedPlan.name}&body=สวัสดีครับ%0A%0Aชำระแพ็ก ${selectedPlan.name} ฿${selectedPlan.price} แล้ว%0AWorkspace ID: (กรอก ID ของคุณ)%0A%0Aแนบสลิปมาด้วยครับ`}
+                  href={`mailto:support@b-tctraining.com?subject=ยืนยันการชำระเงิน - แพ็ก ${selectedPlan.name}&body=สวัสดีครับ%0A%0Aชำระแพ็ก ${selectedPlan.name} (${cycle === 'yearly' ? 'รายปี' : 'รายเดือน'}) ฿${chargeAmount} แล้ว%0AWorkspace ID: (กรอก ID ของคุณ)%0A%0Aแนบสลิปมาด้วยครับ`}
                 >
                   📧 ส่งสลิปทางอีเมล
                 </a>
@@ -568,7 +587,7 @@ export default function Billing({ data, onUpdate }: Props) {
 
             <div className="bill-amount-row">
               <span>ยอดชำระ</span>
-              <span className="bill-amount">{baht(selectedPlan.price)}</span>
+              <span className="bill-amount">{baht(chargeAmount)}</span>
             </div>
 
             {payload ? (

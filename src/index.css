@@ -882,6 +882,13 @@ input:focus, textarea:focus, select:focus {
 .page-nav-spacer { width: 44%; }
 @media print { .page-nav { display: none !important; } }
 
+/* Billing cycle toggle — รายเดือน/รายปี */
+.bill-cycle { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; }
+.bill-cycle-btn { font-size: 13px; font-family: inherit; color: var(--ink3); background: var(--white); border: 1px solid var(--sand); border-radius: 999px; padding: 8px 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .15s, color .15s; }
+.bill-cycle-btn.active { background: rgba(56,189,248,.15); color: #67e8f9; border-color: rgba(56,189,248,.5); font-weight: 700; }
+.bill-cycle-save { font-size: 10px; font-weight: 700; color: #0f172a; background: #4ade80; border-radius: 999px; padding: 2px 8px; }
+.bill-plan-save { font-size: 11px; color: #4ade80; margin: 2px 0 4px; }
+
 /* PLG — usage meter + referral (หน้า Billing) */
 .plg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
 .plg-card { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 14px 18px; min-width: 0; }
