@@ -139,6 +139,29 @@ const FEED_TEMPLATES: ((role: string, name: string, goal: string) => string)[] =
   (r, n) => `${r} ${n} อัปเดตรายงานผลลัพธ์ลง Google Sheets`,
 ];
 
+// เครื่องมือ (sub-menu ของ บริษัท AI) + ตำแหน่ง C-level ที่เหมาะจะดูแลแต่ละตัว
+const TOOL_SPECS: { id: string; label: string; icon: string; owner: string }[] = [
+  { id: 'journey', label: 'Journey Map', icon: '🗺️', owner: 'CMO' },
+  { id: 'funnel', label: 'Conversion Funnel', icon: '⏬', owner: 'CMO' },
+  { id: 'roi', label: 'ROI Calculator', icon: '💹', owner: 'CFO' },
+  { id: 'personas', label: 'Personas', icon: '👥', owner: 'CMO' },
+  { id: 'content', label: 'Content Plan', icon: '📝', owner: 'CMO' },
+  { id: 'actions', label: 'Priority Actions', icon: '✅', owner: 'COO' },
+  { id: 'bmc', label: 'Business Model · MIT24', icon: '🧩', owner: 'CSO' },
+  { id: 'roadmap', label: 'Product Roadmap', icon: '🛣️', owner: 'CPO' },
+  { id: 'marketing', label: 'กลยุทธ์การตลาด', icon: '📣', owner: 'CMO' },
+  { id: 'vrio', label: 'VRIO Analysis', icon: '🏆', owner: 'CSO' },
+];
+
+// สเปกตำแหน่ง C-level ที่ CEO สร้างอัตโนมัติเมื่อยังไม่มีในผังองค์กร
+const C_LEVEL_SPECS: Record<string, { avatar: string; color: string; name: string; mandate: string }> = {
+  CMO: { avatar: '📣', color: '#c44b2b', name: 'มณี', mandate: 'บริหารการตลาดและลูกค้า — ดูแล Journey Map, Conversion Funnel, Personas, Content Plan และกลยุทธ์การตลาด' },
+  CFO: { avatar: '💰', color: '#2d6a4f', name: 'บุญมี', mandate: 'บริหารการเงินและการลงทุน — ดูแล ROI Calculator วิเคราะห์ความคุ้มค่าและงบประมาณ' },
+  COO: { avatar: '⚙️', color: '#a05c1a', name: 'สมชาย', mandate: 'บริหารปฏิบัติการ — ดูแล Priority Actions ติดตามงานสำคัญให้เสร็จตามแผน' },
+  CSO: { avatar: '🧭', color: '#6b3fa0', name: 'วิชัย', mandate: 'บริหารกลยุทธ์องค์กร — ดูแล Business Model (MIT24) และ VRIO Analysis' },
+  CPO: { avatar: '🛠️', color: '#0e7490', name: 'ดารา', mandate: 'บริหารผลิตภัณฑ์ — ดูแล Product Roadmap จัดลำดับฟีเจอร์และแผนการพัฒนา' },
+};
+
 function nowTime(): string {
   const d = new Date();
   return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -827,10 +850,58 @@ export default function AICompany({ data, onUpdate }: Props) {
     patch({ agents: [...c.agents, newAgent] });
   }
   function fireAgent(id: string) {
+    const owners = Object.fromEntries(Object.entries(c.toolOwners ?? {}).filter(([, aid]) => aid !== id));
     patch({
       agents: c.agents.filter(a => a.id !== id).map(a => a.reportsTo === id ? { ...a, reportsTo: null } : a),
       tasks: c.tasks.filter(t => t.agentId !== id),
+      toolOwners: owners,
     });
+  }
+
+  /* ----- tool owners: CEO เลือก/สร้าง C-level ดูแลเครื่องมือแต่ละตัว ----- */
+  function setToolOwner(toolId: string, agentId: string) {
+    const owners = { ...(c.toolOwners ?? {}) };
+    if (agentId) owners[toolId] = agentId; else delete owners[toolId];
+    patch({ toolOwners: owners });
+  }
+  function ceoAssignToolOwners() {
+    const agents = [...c.agents];
+    let ceo = agents.find(a => a.role.toUpperCase().includes('CEO'));
+    if (!ceo) {
+      ceo = {
+        id: 'a-' + Date.now().toString(36) + '-ceo', role: 'CEO', name: 'เอเจนต์หลัก',
+        avatar: '🤖', color: AGENT_PALETTE[0], mandate: 'กำหนดทิศทางและตัดสินใจสูงสุด',
+        model: MODELS[0], status: 'idle', reportsTo: null,
+      };
+      agents.push(ceo);
+    }
+    const owners: Record<string, string> = { ...(c.toolOwners ?? {}) };
+    const msgs: { text: string; color: string }[] = [];
+    for (const tool of TOOL_SPECS) {
+      if (owners[tool.id] && agents.some(a => a.id === owners[tool.id])) continue; // มีผู้รับผิดชอบอยู่แล้ว
+      let agent = agents.find(a => a.role.toUpperCase().includes(tool.owner));
+      if (!agent) {
+        const spec = C_LEVEL_SPECS[tool.owner];
+        agent = {
+          id: 'a-' + Date.now().toString(36) + '-' + tool.owner.toLowerCase(),
+          role: tool.owner, name: spec.name, avatar: spec.avatar, color: spec.color,
+          mandate: spec.mandate, model: MODELS[1],
+          status: c.autoHire ? 'idle' : 'waiting', reportsTo: ceo.id,
+        };
+        agents.push(agent);
+        msgs.push({ text: `CEO สร้างตำแหน่ง ${tool.owner} (${spec.name}) รายงานตรงต่อ CEO`, color: spec.color });
+      }
+      owners[tool.id] = agent.id;
+      msgs.push({ text: `CEO มอบหมาย ${agent.role} ${agent.name} ดูแล ${tool.label}`, color: agent.color });
+    }
+    patch({ agents, toolOwners: owners });
+    if (msgs.length === 0) {
+      msgs.push({ text: 'CEO ตรวจสอบแล้ว — เครื่องมือทุกตัวมี C-level ดูแลครบ', color: AGENT_PALETTE[0] });
+    }
+    setFeed(prev => [
+      ...msgs.map(m => ({ id: ++counter.current, time: nowTime(), text: m.text, color: m.color })),
+      ...prev,
+    ].slice(0, 40));
   }
 
   /* ----- tasks ----- */
@@ -1099,6 +1170,37 @@ export default function AICompany({ data, onUpdate }: Props) {
             )}
           </div>
         )}
+      </section>
+
+      {/* ===== เครื่องมือ & C-level ผู้รับผิดชอบ ===== */}
+      <section className="ai-panel" style={{ marginTop: 16 }}>
+        <div className="ai-panel-hd">
+          🧰 เครื่องมือ & ผู้รับผิดชอบ (C-level)
+          <button className="ai-suggest-btn" onClick={ceoAssignToolOwners}
+            title="CEO เลือกเอเจนต์ที่เหมาะสม หรือสร้างตำแหน่ง C-level ใหม่ให้ดูแลเครื่องมือแต่ละตัว">
+            ✦ ให้ CEO จัดผู้รับผิดชอบ
+          </button>
+        </div>
+        <div className="oc-tip">
+          CEO เลือกเอเจนต์ C-level ที่เหมาะกับเครื่องมือแต่ละตัว — ถ้ายังไม่มีตำแหน่งที่ต้องการ CEO จะสร้างให้อัตโนมัติ (ปรับเองได้จาก dropdown)
+        </div>
+        <div className="tool-owner-grid">
+          {TOOL_SPECS.map(t => {
+            const owner = c.agents.find(a => a.id === (c.toolOwners ?? {})[t.id]);
+            return (
+              <div key={t.id} className="tool-owner-row">
+                <span className="tool-owner-tool">{t.icon} {t.label}</span>
+                {owner
+                  ? <span className="tool-owner-agent" style={{ color: owner.color }}>{owner.avatar} {owner.role} · {owner.name}</span>
+                  : <span className="tool-owner-agent none">ยังไม่มีผู้รับผิดชอบ</span>}
+                <select className="tool-owner-sel" value={owner?.id ?? ''} onChange={e => setToolOwner(t.id, e.target.value)}>
+                  <option value="">— เลือกเอเจนต์ —</option>
+                  {c.agents.map(a => <option key={a.id} value={a.id}>{a.role} · {a.name}</option>)}
+                </select>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <div className="ai-2col">
