@@ -314,7 +314,7 @@ export default function App() {
 
       <main className="main">
         <Suspense fallback={<div className="page-loading" />}>
-        {activePage === 'dashboard' && <Dashboard data={data} onNavigate={setActivePage} />}
+        {activePage === 'dashboard' && <Dashboard data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'journey' && (
           <JourneyMap data={data} activeStage={activeStage} onStageChange={setActiveStage} onUpdate={updateData} />
         )}

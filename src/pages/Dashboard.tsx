@@ -1,11 +1,78 @@
 import { useState } from 'react';
-import type { AppData, PageId } from '../types';
+import type { AppData, BMCData, PageId } from '../types';
 import { companyXP, getCompanyLevel, COMPANY_LEVELS, QUESTS, ACHIEVEMENTS, ACTIVITY_XP } from '../lib/gamification';
+import DBDSelect from '../components/DBDSelect';
 
 interface Props {
   data: AppData;
   onNavigate: (page: PageId) => void;
+  onUpdate: (data: AppData) => void;
 }
+
+// CEO ร่าง BMC 9 ช่องจากคำอธิบายผลิตภัณฑ์/บริการ + หมวด DBD ที่บอร์ดให้ไว้
+function ceoDraftBMC(desc: string, productDbd: string, industry: string, goal: string): BMCData {
+  const product = desc.trim().length > 60 ? desc.trim().slice(0, 57) + '…' : desc.trim();
+  const ind = productDbd?.trim() || industry?.trim() || 'ธุรกิจของบริษัท';
+  return {
+    value: [
+      product,
+      'แก้ปัญหาลูกค้าได้จริง วัดผลได้ ใช้งานง่าย',
+      'คุ้มค่ากว่าทางเลือกเดิมในตลาดไทย',
+    ],
+    segments: [
+      `ลูกค้าหลักในหมวด ${ind}`,
+      'SME ไทยที่ต้องการยกระดับด้วยโซลูชันนี้',
+      'ลูกค้าองค์กรที่ต้องการบริการครบวงจร',
+    ],
+    channels: [
+      'เว็บไซต์ + Social Media (Facebook / LINE OA)',
+      'พาร์ทเนอร์และการแนะนำแบบปากต่อปาก',
+      'ทีมขายตรง / กิจกรรมและสัมมนา',
+    ],
+    relationships: [
+      'ดูแลหลังการขายและ Success Review ต่อเนื่อง',
+      'คอนเทนต์ให้ความรู้ + Community ลูกค้า',
+      'รับ Feedback มาปรับปรุงผลิตภัณฑ์สม่ำเสมอ',
+    ],
+    activities: [
+      `พัฒนาและส่งมอบ: ${product}`,
+      'การตลาด การขาย และการสร้างแบรนด์',
+      'บริการลูกค้าและควบคุมคุณภาพ',
+    ],
+    resources: [
+      'ทีมงานและความเชี่ยวชาญเฉพาะทาง',
+      'เทคโนโลยี / เครื่องมือหลักในการส่งมอบ',
+      'แบรนด์ ฐานลูกค้า และข้อมูล',
+    ],
+    partners: [
+      'ซัพพลายเออร์ / ผู้ให้บริการหลัก',
+      'พาร์ทเนอร์ช่องทางขายและจัดจำหน่าย',
+      'ที่ปรึกษา/ผู้เชี่ยวชาญเฉพาะด้าน',
+    ],
+    costs: [
+      'ต้นทุนพัฒนา/ผลิตและส่งมอบ',
+      'การตลาดและการขาย',
+      'บุคลากร ระบบ และค่าดำเนินงาน',
+    ],
+    revenue: [
+      `รายได้หลักจากการขาย: ${product}`,
+      'บริการเสริม / สัญญาดูแลระยะยาว',
+      `รายได้ประจำที่หนุนเป้าหมาย: ${goal?.trim().slice(0, 40) || 'การเติบโตของบริษัท'}…`,
+    ],
+  };
+}
+
+const BMC_BLOCK_LABELS: { key: keyof BMCData; label: string }[] = [
+  { key: 'value', label: '💎 คุณค่าที่ส่งมอบ' },
+  { key: 'segments', label: '👥 กลุ่มลูกค้า' },
+  { key: 'channels', label: '📡 ช่องทาง' },
+  { key: 'relationships', label: '🤝 ความสัมพันธ์ลูกค้า' },
+  { key: 'activities', label: '⚙️ กิจกรรมหลัก' },
+  { key: 'resources', label: '🧱 ทรัพยากรหลัก' },
+  { key: 'partners', label: '🔗 พาร์ทเนอร์หลัก' },
+  { key: 'costs', label: '💸 โครงสร้างต้นทุน' },
+  { key: 'revenue', label: '💰 กระแสรายได้' },
+];
 
 function exportReport(data: AppData) {
   const { actions, funnel, aiCompany, roadmap, vrio } = data;
@@ -166,9 +233,35 @@ ${vrioRows ? `<h2>VRIO Analysis</h2>
   URL.revokeObjectURL(url);
 }
 
-export default function Dashboard({ data, onNavigate }: Props) {
+export default function Dashboard({ data, onNavigate, onUpdate }: Props) {
   const { stages, actions, funnel, contentPlan, aiCompany, roadmap } = data;
   const [openBadge, setOpenBadge] = useState<string | null>(null);
+  const [bmcApprovedMsg, setBmcApprovedMsg] = useState(false);
+
+  /* ----- บอร์ดอธิบายผลิตภัณฑ์/บริการ → CEO ร่าง BMC → บอร์ดอนุมัติ ----- */
+  const saveCompany = (patch: Partial<typeof aiCompany>) =>
+    onUpdate({ ...data, aiCompany: { ...aiCompany, ...patch } });
+  const proposeBMC = () => {
+    setBmcApprovedMsg(false);
+    const bmc = ceoDraftBMC(aiCompany.productDesc ?? '', aiCompany.productDbd ?? '', aiCompany.industry, aiCompany.goal);
+    saveCompany({
+      bmcDraft: {
+        bmc,
+        note: `CEO ร่างจากคำอธิบายผลิตภัณฑ์/บริการของบอร์ด · หมวด DBD: ${aiCompany.productDbd || 'ยังไม่ระบุ'}`,
+        proposedAt: new Date().toISOString().slice(0, 10),
+      },
+    });
+  };
+  const approveBMC = () => {
+    if (!aiCompany.bmcDraft) return;
+    onUpdate({
+      ...data,
+      businessModel: { ...data.businessModel, bmc: aiCompany.bmcDraft.bmc },
+      aiCompany: { ...aiCompany, bmcDraft: undefined },
+    });
+    setBmcApprovedMsg(true);
+  };
+  const rejectBMC = () => saveCompany({ bmcDraft: undefined });
 
   const doneActions = actions.filter(a => a.done).length;
   const actionPct = actions.length > 0 ? Math.round((doneActions / actions.length) * 100) : 0;
@@ -312,6 +405,57 @@ export default function Dashboard({ data, onNavigate }: Props) {
             </div>
           );
         })()}
+      </div>
+
+      {/* ===== ผลิตภัณฑ์/บริการ → CEO ร่าง BMC → บอร์ดอนุมัติ ===== */}
+      <div className="gm-panel bmc-prop">
+        <div className="bmc-prop-hd">🧩 ผลิตภัณฑ์ / บริการของบริษัท → ให้ CEO ทำ BMC เสนอบอร์ด</div>
+        <div className="bmc-prop-sub">
+          บอร์ด (คุณ) อธิบายผลิตภัณฑ์/บริการ และจัดหมวดตาม DBD (ใช้จัดกลุ่มใน Marketplace และงานการตลาด)
+          จากนั้น CEO จะร่าง Business Model Canvas เสนอกลับมาให้บอร์ดอนุมัติ
+        </div>
+        <textarea className="bmc-prop-desc" rows={2}
+          placeholder="อธิบายผลิตภัณฑ์/บริการของบริษัท เช่น แพลตฟอร์ม SaaS สร้างบริษัท AI อัตโนมัติสำหรับ SME ไทย…"
+          defaultValue={aiCompany.productDesc ?? ''} key={'pd' + (aiCompany.productDesc ?? '')}
+          onBlur={e => saveCompany({ productDesc: e.target.value })} spellCheck={false} />
+        <div className="bmc-prop-row">
+          <span className="bmc-prop-lbl">หมวดผลิตภัณฑ์/บริการ (DBD)</span>
+          <DBDSelect className="bmc-prop-dbd" value={aiCompany.productDbd ?? ''}
+            onChange={v => saveCompany({ productDbd: v })} />
+          <button className="bmc-prop-btn" onClick={proposeBMC}
+            disabled={!(aiCompany.productDesc ?? '').trim()}
+            title={(aiCompany.productDesc ?? '').trim() ? 'CEO ร่าง BMC จากคำอธิบายด้านบน' : 'กรอกคำอธิบายผลิตภัณฑ์/บริการก่อน'}>
+            ✦ ให้ CEO ร่าง BMC เสนอบอร์ด
+          </button>
+        </div>
+
+        {bmcApprovedMsg && (
+          <div className="bmc-prop-approved">
+            ✅ บอร์ดอนุมัติ BMC แล้ว — บันทึกลงหน้า Business Model เรียบร้อย
+            <button className="db-link" onClick={() => onNavigate('bmc')}>ดู Business Model · MIT24 →</button>
+          </div>
+        )}
+
+        {aiCompany.bmcDraft && (
+          <div className="bmc-prop-draft">
+            <div className="bmc-prop-note">🧠 {aiCompany.bmcDraft.note} — <b>รอบอร์ดอนุมัติ</b></div>
+            <div className="bmc-prop-grid">
+              {BMC_BLOCK_LABELS.map(b => (
+                <div key={b.key} className="bmc-prop-block">
+                  <div className="bmc-prop-block-hd">{b.label}</div>
+                  <ul>
+                    {aiCompany.bmcDraft!.bmc[b.key].map((x, i) => <li key={i}>{x}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="bmc-prop-actions">
+              <button className="bmc-prop-approve" onClick={approveBMC}>✅ บอร์ดอนุมัติ — บันทึกลง Business Model</button>
+              <button className="bmc-prop-redo" onClick={proposeBMC}>🔁 ให้ CEO ร่างใหม่</button>
+              <button className="bmc-prop-reject" onClick={rejectBMC}>✕ ปฏิเสธ</button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* KPI Cards */}
