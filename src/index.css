@@ -4277,3 +4277,36 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .skm-card.official { border-color:#f59e0b; box-shadow:0 0 0 1px #f59e0b44, 0 4px 18px rgba(245,158,11,.12); }
 .skm-official-badge { font-size:10px; font-weight:800; color:#7a4a00; background:#fef3c7; border:1px solid #f59e0b66; border-radius:999px; padding:2px 9px; white-space:nowrap; }
 .skm-value-note { font-size:11px; color:#a05c1a; background:#fdf6ec; border-radius:8px; padding:6px 10px; margin-top:6px; line-height:1.55; }
+
+/* ── ประมูล Skill (English Auction) ── */
+.skm-auction { border:1.5px solid #f59e0b66; border-radius:14px; padding:16px 18px; margin:14px 0; background:rgba(245,158,11,.05); }
+.skm-auction-hd { font-size:14.5px; font-weight:800; margin-bottom:10px; }
+.skm-auction-sub { font-size:11.5px; font-weight:600; color:var(--ink3); margin-left:8px; }
+.auc-form { background:var(--cream3); border:1px solid var(--sand); border-radius:12px; padding:16px; margin-bottom:16px; }
+.auc-form-hd { font-size:14px; font-weight:800; margin-bottom:10px; }
+.auc-form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+.auc-form-grid label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--ink3); font-weight:600; }
+.auc-form-grid input, .auc-form-grid select { font-family:inherit; font-size:13px; background:var(--cream2); color:var(--ink); border:1px solid var(--sand); border-radius:8px; padding:8px 10px; }
+.auc-submit { margin-top:12px; font-family:inherit; font-size:13.5px; font-weight:700; color:#0f172a; background:#f59e0b; border:none; border-radius:10px; padding:10px 22px; cursor:pointer; }
+.auc-submit:disabled { opacity:.6; }
+.auc-card { display:flex; gap:14px; align-items:flex-start; justify-content:space-between; background:var(--cream3); border:1px solid var(--sand); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+.auc-card.win { border-color:#22c55e; box-shadow:0 0 0 1px #22c55e44; }
+.auc-main { flex:1; min-width:0; }
+.auc-title { font-size:14px; font-weight:800; }
+.auc-desc { font-size:12.5px; color:var(--ink2); margin-top:3px; }
+.auc-meta { font-size:11.5px; color:var(--ink3); margin-top:5px; }
+.auc-status { font-size:10.5px; font-weight:700; margin-left:8px; border-radius:999px; padding:2px 9px; border:1px solid var(--sand); }
+.auc-status.open { color:#22c55e; border-color:#22c55e66; }
+.auc-status.closed { color:#f59e0b; border-color:#f59e0b66; }
+.auc-mine { font-size:10.5px; font-weight:800; color:#0f172a; background:#fbbf24; border-radius:999px; padding:2px 9px; margin-left:8px; }
+.auc-bids { margin-top:8px; }
+.auc-bid-row { font-size:12px; color:var(--ink3); padding:2px 0; }
+.auc-bid-row.top { color:var(--ink); font-weight:600; }
+.auc-side { display:flex; flex-direction:column; align-items:flex-end; gap:8px; min-width:170px; }
+.auc-top-bid { font-size:20px; font-weight:800; color:#f59e0b; }
+.auc-bid-form { display:flex; gap:6px; }
+.auc-bid-form input { width:110px; font-family:inherit; font-size:13px; background:var(--cream2); color:var(--ink); border:1px solid var(--sand); border-radius:8px; padding:7px 9px; }
+.auc-bid-form button { font-family:inherit; font-size:12.5px; font-weight:700; color:#0f172a; background:#f59e0b; border:none; border-radius:8px; padding:7px 14px; cursor:pointer; }
+.auc-bid-form button:disabled { opacity:.5; cursor:not-allowed; }
+.auc-close-btn { font-family:inherit; font-size:12.5px; font-weight:700; color:#fff; background:#c44b2b; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; }
+.auc-claim-btn { font-family:inherit; font-size:13px; font-weight:800; color:#0f172a; background:#22c55e; border:none; border-radius:10px; padding:10px 16px; cursor:pointer; }

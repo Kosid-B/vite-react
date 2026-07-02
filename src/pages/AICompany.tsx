@@ -5,6 +5,8 @@ import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
 import { listAdminSkills } from '../lib/adminSkills';
+import SkillAuction from '../components/SkillAuction';
+import type { Auction } from '../lib/auctions';
 import { trackSkillPurchase } from '../lib/skillStats';
 import { withSkillDirectives } from '../lib/skillDirectives';
 import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamification';
@@ -713,6 +715,19 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       ? `🎉 Level Up! บริษัทเลื่อนระดับเป็น ${newLevel.badge} ${newLevel.rank} — +${gainXP} XP · ได้รับ "${skill.name}" แล้ว${paidVia}`
       : `✅ ได้รับ "${skill.name}" แล้ว · +${gainXP} XP · รวม ${newXP.toLocaleString()} XP${paidVia}`
     );
+  }
+
+  /** ผู้ชนะประมูลชำระเงิน → รับ skill เข้าบริษัท (+XP ตามมูลค่าที่บิดได้) */
+  function claimAuctionSkill(a: Auction, payMethod: string) {
+    const ownedNow = c.purchasedSkills ?? [];
+    if (ownedNow.includes(a.skillId)) return;
+    const gainXP = a.winningBid >= 2000 ? 200 : 150;
+    patch({ purchasedSkills: [...ownedNow, a.skillId], skillXP: (c.skillXP ?? 0) + gainXP });
+    trackSkillPurchase(
+      { id: a.skillId, name: a.skillName, category: 'strategy', tier: 3, price: a.winningBid, desc: a.skillDesc, icon: a.icon, tags: [] },
+      'auction:' + payMethod, wsId,
+    ).catch(() => { /* วิเคราะห์ภายหลังได้ */ });
+    setMktMsg(`🏆 รับ "${a.skillName}" จากการประมูลแล้ว (${'฿' + a.winningBid.toLocaleString()}) · +${gainXP} XP`);
   }
 
   // CEO ขออนุมัติเพิ่มตำแหน่ง HRD Manager ผ่านบอร์ด
@@ -1889,6 +1904,10 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
             {mktMsg && (
               <div className="skm-msg">{mktMsg}</div>
             )}
+
+            {/* 🔨 ประมูล Skill จากบริษัท (English Auction) */}
+            <SkillAuction wsId={wsId ?? 'local'} companyName={c.name} owned={purchased}
+              payMethods={PAY_METHODS} onClaim={claimAuctionSkill} />
 
             {/* User Custom Skill Upload */}
             <div className="skm-custom-section">
