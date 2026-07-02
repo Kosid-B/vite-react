@@ -71,21 +71,21 @@ git fetch origin main
 git rebase origin/main
 ```
 
-**Auto-deploy (ตาม workflow ใน repo)**: push ไป `main` → GitHub Actions (`deploy.yml`) build → **GitHub Pages**
-(custom domain `ceoaithailand.org` ผ่าน `public/CNAME` — workflow `static.yml` / `hostinger-deploy.yml` ปิดใช้งานแล้ว)
+**Production**: `ceoaithailand.org` เสิร์ฟจาก **Cloudflare Workers** (worker `ceo-ai-thailand` — ยืนยันโดย Board ก.ค. 2569)
+deploy ด้วย `npx wrangler deploy` (ดู section ถัดไป)
 
 **Vercel**: เชื่อม repo ไว้สำหรับ **PR preview** — ทุก PR ได้ URL preview อัตโนมัติ (ไม่ใช่ production)
 
-> **หมายเหตุ**: repo มี `wrangler.jsonc` + `src/server.ts` สำหรับ Cloudflare Workers ด้วย (ดู section ถัดไป)
-> ตรวจว่า production ตัวจริงเสิร์ฟจากไหน: `dig ceoaithailand.org` —
-> ถ้าได้ `185.199.108-111.153` = GitHub Pages, ถ้าได้ IP Cloudflare = Workers
+> **หมายเหตุ**: workflow `deploy.yml` (GitHub Pages) ยังรันอยู่เมื่อ push `main` แต่เป็น **legacy** —
+> production ตัวจริงคือ Cloudflare Workers (workflow `static.yml` / `hostinger-deploy.yml` ปิดใช้งานแล้ว)
 
 ---
 
 ## Cloudflare Workers
 
-> Worker `ceo-ai-thailand` (config ใน `wrangler.jsonc`, entry `src/server.ts` + Durable Object `CeoAiAgent`)
-> deploy **manual ผ่าน wrangler เท่านั้น** — ไม่มี GitHub Actions workflow สำหรับ Cloudflare ใน repo นี้
+> **Production ตัวจริง** — worker `ceo-ai-thailand` (config ใน `wrangler.jsonc`, entry `src/server.ts` + Durable Object `CeoAiAgent`)
+> deploy ผ่าน wrangler (ไม่มี GitHub Actions workflow สำหรับ Cloudflare ใน repo — ถ้าเปิด Workers Builds ใน
+> Cloudflare dashboard จะ auto-deploy เมื่อ push `main` ได้)
 
 ```bash
 # deploy manual

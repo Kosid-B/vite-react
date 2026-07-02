@@ -143,6 +143,25 @@ export default function LandingPage({ onGetStarted }: Props) {
           <div style={{ marginTop: 12, color: C.slate5, fontSize: 13 }}>
             เหลือสิทธิ์จ้างงานวันนี้อีก <strong style={{ color: C.amber4 }}>8 บริษัท</strong>
           </div>
+          <a
+            href="/shop"
+            style={{
+              display: 'inline-block',
+              marginTop: 20,
+              padding: '13px 32px',
+              borderRadius: 12,
+              border: `1px solid ${C.cyan5}`,
+              background: 'rgba(6,182,212,0.08)',
+              color: C.cyan4,
+              fontFamily: 'inherit',
+              fontWeight: 600,
+              fontSize: 16,
+              textDecoration: 'none',
+              transition: 'all .2s',
+            }}
+          >
+            🏪 สมัครร้านตลาดฝากขายสินค้า — เริ่มฟรี · รายวันแค่ ฿19
+          </a>
         </div>
       </section>
 
