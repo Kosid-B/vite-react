@@ -1820,10 +1820,12 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           const sk = allSkills.find(sk => sk.id === id);
           return s + (sk?.price ?? 0);
         }, 0);
-        const filtered = allSkills.filter(sk =>
-          (mktCategory === 'all' || sk.category === mktCategory) &&
-          (mktTier === 0 || sk.tier === mktTier)
-        );
+        const filtered = allSkills
+          .filter(sk =>
+            (mktCategory === 'all' || sk.category === mktCategory) &&
+            (mktTier === 0 || sk.tier === mktTier))
+          // Skill ที่เสนอโดยบริษัทขึ้นก่อนเสมอ
+          .sort((a, b) => Number(!!(b as SkillEntry).official) - Number(!!(a as SkillEntry).official));
         return (
           <section className="ai-panel skill-market" style={{ marginTop: 16 }}>
             {/* Header + XP Bar */}
@@ -1986,11 +1988,14 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                 const catMeta = CATEGORY_META[sk.category];
                 const tierMeta = TIER_META[sk.tier];
                 const isAdminSkill = adminSkillList.some(a => a.id === sk.id);
+                const official = !!(sk as SkillEntry).official;
+                const valueNote = (sk as SkillEntry).valueNote;
                 return (
-                  <div key={sk.id} className={`skm-card${owned ? ' owned' : ''}${isConfirm ? ' confirm' : ''}`}
+                  <div key={sk.id} className={`skm-card${owned ? ' owned' : ''}${isConfirm ? ' confirm' : ''}${official ? ' official' : ''}`}
                     style={{ '--card-color': catMeta.color } as React.CSSProperties}>
                     <div className="skm-card-top">
                       <span className="skm-card-icon">{sk.icon}</span>
+                      {official && <span className="skm-official-badge">🏢 เสนอโดยบริษัท</span>}
                       {isAdminSkill && <span className="skm-new-badge">🆕 ใหม่</span>}
                       <span className="skm-tier-badge" style={{ background: tierMeta.bg, color: tierMeta.color }}>
                         {tierMeta.label}
@@ -2003,6 +2008,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                     <div className="skm-card-tags">
                       {sk.tags.slice(0, 3).map(t => <span key={t} className="skm-tag">{t}</span>)}
                     </div>
+                    {valueNote && <div className="skm-value-note">💎 {valueNote}</div>}
                     <div className="skm-card-foot">
                       <div className="skm-price">
                         <span className="skm-price-thb">฿</span>

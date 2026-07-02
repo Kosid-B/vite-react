@@ -10,6 +10,8 @@ export interface SkillEntry {
   desc: string;           // คำอธิบาย 1 ประโยค
   icon: string;
   tags: string[];         // role ที่เหมาะสม
+  official?: boolean;     // Skill ที่เสนอโดยบริษัท (B. Training Consultant) — ขึ้นก่อนเสมอ
+  valueNote?: string;     // เหตุผลราคา/มูลค่าเทียบตลาด แสดงบนการ์ด
 }
 
 export const CATEGORY_META: Record<SkillCategory, { label: string; icon: string; color: string }> = {
@@ -196,9 +198,11 @@ export const SKILL_CATALOG: SkillEntry[] = [
   {
     id: 'market-insight-thailand',
     name: 'Market Insight & Strategy (Thailand)',
-    category: 'marketing', tier: 2, price: 1500, icon: '🇹🇭',
+    category: 'marketing', tier: 2, price: 1990, icon: '🇹🇭',
     desc: 'ข้อมูลประชากรไทยล่าสุด + กลยุทธ์เจาะตลาดตาม Generation (X/Y/Z/Boomer), จังหวัดกำลังซื้อสูง, ตลาด Expat — เอเจนต์การตลาดใช้กำหนดกลุ่มเป้าหมาย โทนสื่อสาร และพื้นที่ยิง Ads',
     tags: ['CMO', 'CEO', 'Marketing Manager'],
+    official: true,
+    valueNote: 'เทียบรายงานวิจัยตลาด ฿15,000+ · ลดงบ Ads ที่ยิงผิดกลุ่ม ~฿1,000+/เดือน — คืนทุนใน 2 เดือน',
   },
   {
     id: 'salesforce-developer',
