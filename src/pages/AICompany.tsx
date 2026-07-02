@@ -140,17 +140,27 @@ const FEED_TEMPLATES: ((role: string, name: string, goal: string) => string)[] =
 ];
 
 // เครื่องมือ (sub-menu ของ บริษัท AI) + ตำแหน่ง C-level ที่เหมาะจะดูแลแต่ละตัว
-const TOOL_SPECS: { id: string; label: string; icon: string; owner: string }[] = [
-  { id: 'journey', label: 'Journey Map', icon: '🗺️', owner: 'CMO' },
-  { id: 'funnel', label: 'Conversion Funnel', icon: '⏬', owner: 'CMO' },
-  { id: 'roi', label: 'ROI Calculator', icon: '💹', owner: 'CFO' },
-  { id: 'personas', label: 'Personas', icon: '👥', owner: 'CMO' },
-  { id: 'content', label: 'Content Plan', icon: '📝', owner: 'CMO' },
-  { id: 'actions', label: 'Priority Actions', icon: '✅', owner: 'COO' },
-  { id: 'bmc', label: 'Business Model · MIT24', icon: '🧩', owner: 'CSO' },
-  { id: 'roadmap', label: 'Product Roadmap', icon: '🛣️', owner: 'CPO' },
-  { id: 'marketing', label: 'กลยุทธ์การตลาด', icon: '📣', owner: 'CMO' },
-  { id: 'vrio', label: 'VRIO Analysis', icon: '🏆', owner: 'CSO' },
+const TOOL_SPECS: { id: string; label: string; icon: string; owner: string; desc: string }[] = [
+  { id: 'journey', label: 'Journey Map', icon: '🗺️', owner: 'CMO',
+    desc: 'แผนที่เส้นทางลูกค้า 8 ขั้น — touchpoints, ความรู้สึก, pain points และโอกาสในแต่ละ stage' },
+  { id: 'funnel', label: 'Conversion Funnel', icon: '⏬', owner: 'CMO',
+    desc: 'วิเคราะห์อัตราแปลงลูกค้าแต่ละขั้น หาจุดที่ lead หลุดมากที่สุดเพื่อแก้ให้ตรงจุด' },
+  { id: 'roi', label: 'ROI Calculator', icon: '💹', owner: 'CFO',
+    desc: 'คำนวณผลตอบแทนการลงทุน เทียบต้นทุน–รายได้ เพื่อตัดสินใจใช้งบอย่างคุ้มค่า' },
+  { id: 'personas', label: 'Personas', icon: '👥', owner: 'CMO',
+    desc: 'โปรไฟล์ลูกค้าในอุดมคติ — พฤติกรรม แรงจูงใจ ปัญหา และช่องทางที่เข้าถึงได้' },
+  { id: 'content', label: 'Content Plan', icon: '📝', owner: 'CMO',
+    desc: 'แผนคอนเทนต์รายเดือนต่อช่องทาง (Blog/SEO, Social, Email) พร้อมหัวข้อและ keyword' },
+  { id: 'actions', label: 'Priority Actions', icon: '✅', owner: 'COO',
+    desc: 'รายการงานสำคัญเรียงตามความเร่งด่วน (P1–P3) พร้อมติดตามสถานะจนเสร็จ' },
+  { id: 'bmc', label: 'Business Model · MIT24', icon: '🧩', owner: 'CSO',
+    desc: 'กรอบสร้างธุรกิจ 24 ขั้นตอนของ MIT — ตั้งแต่ Beachhead Market จนถึง MVBP' },
+  { id: 'roadmap', label: 'Product Roadmap', icon: '🛣️', owner: 'CPO',
+    desc: 'แผนพัฒนาผลิตภัณฑ์รายไตรมาส จัดลำดับฟีเจอร์ must / should / nice-to-have' },
+  { id: 'marketing', label: 'กลยุทธ์การตลาด', icon: '📣', owner: 'CMO',
+    desc: 'วางแผนช่องทางการตลาด งบประมาณ, CPL และอัตราแปลงต่อช่องทาง' },
+  { id: 'vrio', label: 'VRIO Analysis', icon: '🏆', owner: 'CSO',
+    desc: 'วิเคราะห์ความได้เปรียบเชิงแข่งขัน — Value, Rarity, Imitability, Organization' },
 ];
 
 // สเปกตำแหน่ง C-level ที่ CEO สร้างอัตโนมัติเมื่อยังไม่มีในผังองค์กร
@@ -1189,14 +1199,19 @@ export default function AICompany({ data, onUpdate }: Props) {
             const owner = c.agents.find(a => a.id === (c.toolOwners ?? {})[t.id]);
             return (
               <div key={t.id} className="tool-owner-row">
-                <span className="tool-owner-tool">{t.icon} {t.label}</span>
-                {owner
-                  ? <span className="tool-owner-agent" style={{ color: owner.color }}>{owner.avatar} {owner.role} · {owner.name}</span>
-                  : <span className="tool-owner-agent none">ยังไม่มีผู้รับผิดชอบ</span>}
-                <select className="tool-owner-sel" value={owner?.id ?? ''} onChange={e => setToolOwner(t.id, e.target.value)}>
-                  <option value="">— เลือกเอเจนต์ —</option>
-                  {c.agents.map(a => <option key={a.id} value={a.id}>{a.role} · {a.name}</option>)}
-                </select>
+                <div className="tool-owner-info">
+                  <span className="tool-owner-tool">{t.icon} {t.label}</span>
+                  <span className="tool-owner-desc">{t.desc}</span>
+                </div>
+                <div className="tool-owner-side">
+                  {owner
+                    ? <span className="tool-owner-agent" style={{ color: owner.color }}>{owner.avatar} {owner.role} · {owner.name}</span>
+                    : <span className="tool-owner-agent none">ยังไม่มีผู้รับผิดชอบ</span>}
+                  <select className="tool-owner-sel" value={owner?.id ?? ''} onChange={e => setToolOwner(t.id, e.target.value)}>
+                    <option value="">— เลือกเอเจนต์ —</option>
+                    {c.agents.map(a => <option key={a.id} value={a.id}>{a.role} · {a.name}</option>)}
+                  </select>
+                </div>
               </div>
             );
           })}
