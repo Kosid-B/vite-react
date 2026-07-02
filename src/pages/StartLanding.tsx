@@ -190,6 +190,8 @@ export default function StartLanding() {
         CEO AI Thailand — แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย ·{' '}
         <a href="/b">สารบัญธุรกิจ</a> ·{' '}
         โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
+        <br />
+        เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a href="tel:08178177773">081-7817-7773</a>
       </footer>
     </div>
   );

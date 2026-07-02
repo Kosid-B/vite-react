@@ -145,7 +145,10 @@ export default function ShopSignup() {
               onClick={submit}>
               {busy ? 'กำลังส่ง…' : '🏪 ส่งใบสมัครร้านค้า'}
             </button>
-            <div className="shop-form-note">ไม่ต้องสร้างบัญชี ไม่ต้องผูกบัตร — ทีมงานติดต่อกลับเปิดร้านให้</div>
+            <div className="shop-form-note">
+              ไม่ต้องสร้างบัญชี ไม่ต้องผูกบัตร — ทีมงานติดต่อกลับเปิดร้านให้
+              หรือโทรหาเราเลย <a href="tel:08178177773" style={{ color: '#22d3ee', fontWeight: 600 }}>081-7817-7773</a>
+            </div>
           </div>
         )}
       </section>
@@ -155,6 +158,8 @@ export default function ShopSignup() {
         <a href="/b">สารบัญธุรกิจ</a> ·{' '}
         <a href="/start">เริ่มธุรกิจกับทีม AI</a> ·{' '}
         โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
+        <br />
+        เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a href="tel:08178177773">081-7817-7773</a>
       </footer>
     </div>
   );
