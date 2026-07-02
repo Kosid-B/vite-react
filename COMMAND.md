@@ -34,10 +34,24 @@ node .claude/skills/run-ceo-ai-thailand/driver.mjs --out /tmp/shot.png --full   
 pkill -f "vite"
 ```
 
-**Nav labels ที่ใช้ได้**: `Dashboard`, `Journey Map`, `Conversion Funnel`, `ROI Calculator`,
-`Personas`, `Content Plan`, `Priority Actions`, `Business Model · MIT24`, `VRIO Analysis`,
-`บริษัท AI`, `Marketplace`, `ทีม / สมาชิก`, `แพ็กเกจ`, `SaaS Analytics`,
+**Nav labels ที่ใช้ได้** (ตาม `src/components/Sidebar.tsx` ปัจจุบัน):
+`Dashboard`, `บริษัท AI`, `Marketplace`, `หน้าร้านของฉัน`, `ซื้อขาย B2B (RFQ)`,
+`ทีม / สมาชิก`, `โรงงานอัจฉริยะ`, `แพ็กเกจ & ชำระเงิน`, `SaaS Analytics`,
 `ISO 9001:2015 QMS`, `AI Research`, `Case Studies`
+
+**เครื่องมือ (sub-menu ใต้ "บริษัท AI"** — ต้องกด caret เปิดก่อนถึงคลิกได้**)**:
+`Journey Map`, `Conversion Funnel`, `ROI Calculator`, `Personas`, `Content Plan`,
+`Priority Actions`, `Business Model · MIT24`, `Product Roadmap`, `กลยุทธ์การตลาด`,
+`VRIO Analysis`, `SIPOC Process`
+
+> `ผู้ดูแลระบบ` แสดงเฉพาะ admin email (support@b-tctraining.com) — ไม่เห็นใน local mode
+
+**Public routes (ไม่ต้อง login)**:
+```
+/start        — viral landing "เริ่มธุรกิจหลังตกงาน" (กลุ่ม Gen Z / เสมือนว่างงาน)
+/b            — รวมหน้าร้านสาธารณะ
+/b/<slug>     — หน้าร้านสาธารณะของแต่ละธุรกิจ
+```
 
 ---
 
@@ -57,14 +71,24 @@ git fetch origin main
 git rebase origin/main
 ```
 
-**Auto-deploy**: push ไป `main` → GitHub Actions build → Cloudflare Workers deploy อัตโนมัติ
+**Auto-deploy (ตาม workflow ใน repo)**: push ไป `main` → GitHub Actions (`deploy.yml`) build → **GitHub Pages**
+(custom domain `ceoaithailand.org` ผ่าน `public/CNAME` — workflow `static.yml` / `hostinger-deploy.yml` ปิดใช้งานแล้ว)
+
+**Vercel**: เชื่อม repo ไว้สำหรับ **PR preview** — ทุก PR ได้ URL preview อัตโนมัติ (ไม่ใช่ production)
+
+> **หมายเหตุ**: repo มี `wrangler.jsonc` + `src/server.ts` สำหรับ Cloudflare Workers ด้วย (ดู section ถัดไป)
+> ตรวจว่า production ตัวจริงเสิร์ฟจากไหน: `dig ceoaithailand.org` —
+> ถ้าได้ `185.199.108-111.153` = GitHub Pages, ถ้าได้ IP Cloudflare = Workers
 
 ---
 
 ## Cloudflare Workers
 
+> Worker `ceo-ai-thailand` (config ใน `wrangler.jsonc`, entry `src/server.ts` + Durable Object `CeoAiAgent`)
+> deploy **manual ผ่าน wrangler เท่านั้น** — ไม่มี GitHub Actions workflow สำหรับ Cloudflare ใน repo นี้
+
 ```bash
-# deploy manual (ปกติ auto จาก GitHub Actions)
+# deploy manual
 npx wrangler deploy
 
 # ดู logs real-time
@@ -103,6 +127,23 @@ npx supabase secrets set CRON_SECRET=<key>       --project-ref rsjbqmnvocvtveels
 npx supabase db push --project-ref rsjbqmnvocvtveelselj
 ```
 
+### Migrations (applied บน production ครบแล้วทั้ง 0001–0012)
+
+| ไฟล์ | เนื้อหา |
+|---|---|
+| 0001_init.sql | app_state (legacy) |
+| 0002_workspaces.sql | workspaces + workspace_state |
+| 0003_members.sql | workspace_members + roles |
+| 0004_billing_cron.sql | pg_cron ต่ออายุ/downgrade |
+| 0005_admin.sql | app_admins + is_app_admin() |
+| 0006_marketplace_skills.sql | ตลาด skill + skill_purchases |
+| 0007_skill_stats.sql | สถิติซื้อ skill |
+| 0008_weekly_report_cron.sql | รายงานรายสัปดาห์ |
+| 0009_storefronts.sql | หน้าร้านสาธารณะ (slug) |
+| 0010_rfq_orders.sql | RFQ + orders (ค่าธรรมเนียม 3%) |
+| 0011_open_rfq_vp.sql | ประกาศงานกลาง (open RFQ) + storefronts.vp |
+| 0012_skill_auctions.sql | ประมูล skill (English Auction) |
+
 ---
 
 ## Supabase SQL (ตรวจสอบ / debug)
@@ -121,6 +162,26 @@ JOIN auth.users u ON u.id = w.owner_id;
 
 -- reset trial (สำหรับ test)
 UPDATE public.workspaces SET trial_ends_at = NOW() + INTERVAL '15 days' WHERE owner_id = '<user-id>';
+
+-- หน้าร้านที่เผยแพร่แล้ว
+SELECT slug, name, published, vp FROM public.storefronts ORDER BY updated_at DESC;
+
+-- RFQ ล่าสุด (seller_slug IS NULL = ประกาศงานกลาง)
+SELECT id, buyer_name, seller_slug, sector, status, budget, quote_amount, created_at
+FROM public.rfqs ORDER BY created_at DESC LIMIT 20;
+
+-- ออเดอร์ + GMV + ค่าธรรมเนียม 3%
+SELECT status, COUNT(*), SUM(amount) AS gmv, SUM(fee) AS fees
+FROM public.orders GROUP BY status;
+
+-- ประมูล skill ที่เปิดอยู่ + บิดสูงสุด
+SELECT a.skill_name, a.status, a.ends_at,
+       (SELECT MAX(b.amount) FROM public.skill_bids b WHERE b.auction_id = a.id) AS top_bid
+FROM public.skill_auctions a ORDER BY a.created_at DESC;
+
+-- ยอดขาย skill (รวมที่มาจากประมูล — pay_method ขึ้นต้น 'auction:')
+SELECT skill_id, pay_method, COUNT(*), SUM(price) FROM public.skill_purchases
+GROUP BY skill_id, pay_method ORDER BY SUM(price) DESC;
 ```
 
 ---
@@ -130,6 +191,8 @@ UPDATE public.workspaces SET trial_ends_at = NOW() + INTERVAL '15 days' WHERE ow
 | รายการ | URL |
 |---|---|
 | Production | https://ceoaithailand.org |
+| Viral Landing | https://ceoaithailand.org/start |
+| หน้าร้านสาธารณะ | https://ceoaithailand.org/b/<slug> |
 | Supabase Dashboard | https://supabase.com/dashboard/project/rsjbqmnvocvtveelselj |
 | Supabase Auth Config | https://supabase.com/dashboard/project/rsjbqmnvocvtveelselj/auth/url-configuration |
 | Cloudflare Workers | https://dash.cloudflare.com → Workers → ceo-ai-thailand |

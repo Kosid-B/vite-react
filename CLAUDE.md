@@ -40,7 +40,7 @@ src/pages/AICompany.tsx        — บริษัท AI page (factory, agent ta
 src/pages/CaseStudies.tsx      — case studies + integration guides
 src/index.css                  — all styles (dark theme, CSS vars)
 supabase/functions/            — 6 Edge Functions
-supabase/migrations/           — 0001–0005 (ทั้งหมด applied แล้ว)
+supabase/migrations/           — 0001–0012 (ทั้งหมด applied แล้ว)
 public/CNAME                   — custom domain (ceoaithailand.org)
 .github/workflows/deploy.yml   — GitHub Pages auto-deploy
 ```
@@ -49,19 +49,27 @@ public/CNAME                   — custom domain (ceoaithailand.org)
 ```typescript
 // src/lib/access.ts
 PAGE_MIN_PLAN = {
+  trade: 'starter',
   aisearch: 'growth', market: 'growth', team: 'growth',
-  iso9001: 'growth', analytics: 'growth', admin: 'scale',
+  iso9001: 'growth', analytics: 'growth', sipoc: 'growth',
+  admin: 'scale',
   // factory = FREE (part of AI Company feature)
 }
-Plans: free(0) → growth(1) ฿1,490/mo → scale(2) ฿5,900/mo
+Plans: free(0) → starter(1) ฿390/mo → growth(2) ฿1,490/mo → scale(3) ฿5,900/mo
 Trial: 15 วัน auto-start เมื่อ login ครั้งแรก
 ```
 
 ## Sidebar Pages (nav labels)
-`Dashboard`, `Journey Map`, `Conversion Funnel`, `ROI Calculator`, `Personas`,
-`Content Plan`, `Priority Actions`, `Business Model · MIT24`, `VRIO Analysis`,
-`บริษัท AI`, `Marketplace`, `ทีม / สมาชิก`, `แพ็กเกจ`, `SaaS Analytics`,
-`ISO 9001:2015 QMS`, `AI Research`, `Case Studies`
+`Dashboard`, `บริษัท AI`, `Marketplace`, `หน้าร้านของฉัน`, `ซื้อขาย B2B (RFQ)`,
+`ทีม / สมาชิก`, `โรงงานอัจฉริยะ`, `แพ็กเกจ & ชำระเงิน`, `SaaS Analytics`,
+`ผู้ดูแลระบบ` (admin email เท่านั้น), `ISO 9001:2015 QMS`, `AI Research`, `Case Studies`
+
+เครื่องมือ (sub-menu ใต้ `บริษัท AI`): `Journey Map`, `Conversion Funnel`, `ROI Calculator`,
+`Personas`, `Content Plan`, `Priority Actions`, `Business Model · MIT24`, `Product Roadmap`,
+`กลยุทธ์การตลาด`, `VRIO Analysis`, `SIPOC Process`
+
+Public routes (ไม่ต้อง login): `/start` (viral landing), `/b`, `/b/<slug>` (หน้าร้านสาธารณะ)
+Command reference: ดู `COMMAND.md`
 
 ## Supabase Schema
 ```
@@ -70,6 +78,13 @@ public.workspaces         — workspace per company
 public.workspace_members  — members + roles (owner/admin/member)
 public.workspace_state    — AppData JSON per workspace (main store)
 public.app_admins         — system admins (support@b-tctraining.com)
+public.marketplace_skills — skill ที่ admin วางขาย (0006)
+public.skill_purchases    — บันทึกการซื้อ skill + pay_method (0007)
+public.storefronts        — หน้าร้านสาธารณะ slug + vp (0009, 0011)
+public.rfqs               — ใบขอเสนอราคา B2B; seller_slug NULL = ประกาศงานกลาง (0010, 0011)
+public.orders             — ออเดอร์ + ค่าธรรมเนียม 3% (0010)
+public.skill_auctions     — ประมูล skill แบบ English Auction (0012)
+public.skill_bids         — บิดประมูล โปร่งใสเห็นกันหมด (0012)
 ```
 
 ## Edge Functions
