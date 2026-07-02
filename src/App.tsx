@@ -13,6 +13,7 @@ import CmdK from './components/CmdK';
 import UpgradeWall from './components/UpgradeWall';
 import { canAccess } from './lib/access';
 import { isAdminEmail } from './config';
+import { PublicStorefrontPage, PublicDirectoryPage } from './pages/PublicStorefront';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const JourneyMap = lazy(() => import('./pages/JourneyMap'));
@@ -36,6 +37,7 @@ const CaseStudies = lazy(() => import('./pages/CaseStudies'));
 const Factory = lazy(() => import('./pages/Factory'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Sipoc = lazy(() => import('./pages/Sipoc'));
+const MyStorefront = lazy(() => import('./pages/MyStorefront'));
 
 const STORAGE_KEY = 'cjux2';
 
@@ -55,6 +57,7 @@ const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'vrio', label: 'VRIO Analysis' },
   { id: 'sipoc', label: 'SIPOC Process' },
   { id: 'market', label: 'Marketplace' },
+  { id: 'storefront', label: 'หน้าร้านของฉัน' },
   { id: 'team', label: 'ทีม / สมาชิก' },
   { id: 'factory', label: 'โรงงานอัจฉริยะ' },
   { id: 'billing', label: 'แพ็กเกจ & ชำระเงิน' },
@@ -261,6 +264,14 @@ export default function App() {
     reader.readAsText(file);
   }
 
+  // Marketplace M1: หน้าสาธารณะ /b (สารบัญธุรกิจ) และ /b/<slug> (หน้าร้าน)
+  // เข้าถึงได้โดยไม่ต้องล็อกอิน — มาก่อน gate ทุกตัว
+  const pubPath = window.location.pathname;
+  if (pubPath === '/b' || pubPath === '/b/' || pubPath.startsWith('/b/')) {
+    const slug = pubPath.split('/')[2] ?? '';
+    return slug ? <PublicStorefrontPage slug={slug} /> : <PublicDirectoryPage />;
+  }
+
   // Loading Supabase session
   if (isSupabaseEnabled && !authReady) {
     return <div className="auth-wrap"><div className="auth-loading">กำลังโหลด…</div></div>;
@@ -371,6 +382,7 @@ export default function App() {
             ? <Sipoc data={data} onUpdate={updateData} />
             : <UpgradeWall page="sipoc" data={data} onNavigate={setActivePage} />
         )}
+        {activePage === 'storefront' && <MyStorefront data={data} wsId={activeWs} />}
         </Suspense>
 
         {/* ปุ่ม ย้อนกลับ / หน้าถัดไป — ลำดับตาม sidebar */}

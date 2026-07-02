@@ -153,6 +153,15 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           {locked('market') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
 
+        <button className={`nav-item ${activePage === 'storefront' ? 'active' : ''}`} onClick={() => onNavigate('storefront')}
+          title="หน้าร้านสาธารณะของธุรกิจคุณ — ลูกค้าเข้าชมและติดต่อได้โดยไม่ต้องล็อกอิน">
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M3 9l1-5h16l1 5M3 9a3 3 0 006 0 3 3 0 006 0 3 3 0 006 0M5 9v11a1 1 0 001 1h12a1 1 0 001-1V9M9 21v-6h6v6" />
+          </svg>
+          หน้าร้านของฉัน
+          <span className="nav-dot" />
+        </button>
+
         <button className={`nav-item ${activePage === 'team' ? 'active' : ''}${locked('team') ? ' nav-locked' : ''}`} onClick={() => onNavigate('team')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
