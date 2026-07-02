@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Agent, AppData, BMCData } from '../types';
 import EditableList from '../components/EditableList';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { withSkillDirectives } from '../lib/skillDirectives';
 
 interface Props {
   data: AppData;
@@ -177,7 +178,7 @@ export default function BusinessModel({ data, onUpdate }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: agent?.role ?? 'CEO',
-          mandate: agent?.mandate ?? 'วิเคราะห์ขั้นตอนการสร้างธุรกิจ MIT 24 Steps',
+          mandate: withSkillDirectives(agent?.mandate ?? 'วิเคราะห์ขั้นตอนการสร้างธุรกิจ MIT 24 Steps', data.aiCompany?.purchasedSkills),
           model: agent?.model ?? 'claude-sonnet-4-6',
           title: `MIT Step ${idx + 1}: ${step.name}`,
           detail: `${desc}${notes ? `\n\nหมายเหตุที่มีอยู่: ${notes}` : ''}`,

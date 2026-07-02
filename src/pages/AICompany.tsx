@@ -5,6 +5,7 @@ import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
 import { listAdminSkills } from '../lib/adminSkills';
 import { trackSkillPurchase } from '../lib/skillStats';
+import { withSkillDirectives } from '../lib/skillDirectives';
 import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamification';
 import DBDSelect from '../components/DBDSelect';
 
@@ -408,7 +409,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
         body: {
           role: agent.role,
           name: agent.name,
-          mandate: agent.mandate,
+          mandate: withSkillDirectives(agent.mandate, c.purchasedSkills),
           model: agent.model,
           title: task.title,
           detail: task.detail,
@@ -455,7 +456,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'HR Manager',
-          mandate: 'เขียน Job Description ที่ครบถ้วน ชัดเจน ดึงดูดผู้สมัครคุณภาพ',
+          mandate: withSkillDirectives('เขียน Job Description ที่ครบถ้วน ชัดเจน ดึงดูดผู้สมัครคุณภาพ', c.purchasedSkills),
           model: 'claude-sonnet-4-6',
           title: `สร้าง JD สำหรับตำแหน่ง ${agent.role}`,
           detail: `หน้าที่ (Mandate): ${agent.mandate}\nรายงานต่อ: ${c.agents.find(a => a.id === agent.reportsTo)?.role ?? 'บอร์ด'}`,
@@ -501,7 +502,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'CEO',
-          mandate: 'วิเคราะห์โครงสร้างองค์กรและแนะนำตำแหน่งที่ควรจ้างตามเป้าหมายธุรกิจ',
+          mandate: withSkillDirectives('วิเคราะห์โครงสร้างองค์กรและแนะนำตำแหน่งที่ควรจ้างตามเป้าหมายธุรกิจ', c.purchasedSkills),
           model: 'claude-sonnet-4-6',
           title: 'แนะนำตำแหน่งที่ขาดในผังองค์กร',
           detail: [
@@ -586,7 +587,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'CEO',
-          mandate: 'กำหนดบทบาทหน้าที่ของทุกตำแหน่งในองค์กรให้สอดคล้องกับกระบวนการธุรกิจและเป้าหมายบริษัท',
+          mandate: withSkillDirectives('กำหนดบทบาทหน้าที่ของทุกตำแหน่งในองค์กรให้สอดคล้องกับกระบวนการธุรกิจและเป้าหมายบริษัท', c.purchasedSkills),
           model: 'claude-sonnet-4-6',
           title: 'กำหนดบทบาทหน้าที่ (Role Mandate) ทุกตำแหน่ง',
           detail: [
@@ -726,7 +727,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'CEO',
-          mandate: 'ร่าง Mission Statement ที่ชัดเจน ทะเยอทะยาน และเป็นแรงบันดาลใจ สอดคล้องกับเป้าหมายและทักษะขององค์กร',
+          mandate: withSkillDirectives('ร่าง Mission Statement ที่ชัดเจน ทะเยอทะยาน และเป็นแรงบันดาลใจ สอดคล้องกับเป้าหมายและทักษะขององค์กร', c.purchasedSkills),
           model: 'claude-sonnet-4-6',
           title: 'ร่าง Mission Statement สำหรับบริษัท',
           detail: [
@@ -789,7 +790,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     try {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
-          role: hrdAgent.role, name: hrdAgent.name, mandate: hrdAgent.mandate, model: hrdAgent.model,
+          role: hrdAgent.role, name: hrdAgent.name, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
           title: 'กำหนด Skill Plan ตาม Mission ของบริษัท',
           detail: [
             `บริษัท: ${c.name} | Mission: ${c.mission || c.goal}`,
@@ -847,7 +848,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     try {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
-          role: hrdAgent.role, mandate: hrdAgent.mandate, model: hrdAgent.model,
+          role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
           title: `ออกแบบกระบวนการมาตรฐานสำหรับ Skill: ${skill.name}`,
           detail: [
             `ชื่อ Skill: ${skill.name}`,
@@ -886,7 +887,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     try {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
-          role: hrdAgent.role, mandate: hrdAgent.mandate, model: hrdAgent.model,
+          role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
           title: 'ออกแบบ Competency Assessment Framework',
           detail: [
             `บริษัท: ${c.name} | Mission: ${c.mission || c.goal}`,
