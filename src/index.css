@@ -119,6 +119,38 @@ body {
 .nav-ico { width: 16px; height: 16px; opacity: .7; flex-shrink: 0; }
 .nav-item.active .nav-ico { opacity: 1; }
 
+/* nav parent + collapsible sub-menu (เครื่องมือ ใต้ บริษัท AI) */
+.nav-parent { position: relative; }
+.nav-parent > .nav-item { padding-right: 40px; }
+.nav-caret {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(255,255,255,.45);
+  transition: background .15s, color .15s;
+}
+.nav-caret:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.9); }
+.nav-caret svg { transition: transform .15s; }
+.nav-caret.open svg { transform: rotate(180deg); }
+.nav-sub {
+  margin: 2px 0 6px 15px;
+  padding-left: 7px;
+  border-left: 1px solid rgba(255,255,255,.09);
+}
+.nav-sub .nav-label { padding: 4px 10px 2px; margin-bottom: 2px; }
+.nav-sub .nav-item { padding: 8px 10px; min-height: 38px; font-size: 12.5px; gap: 10px; }
+.nav-sub .nav-ico { width: 14px; height: 14px; }
+
 .progress-block {
   margin: 0 12px 12px;
   background: rgba(255,255,255,.06);
