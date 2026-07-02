@@ -793,6 +793,11 @@ input:focus, textarea:focus, select:focus {
 .ai-co-industry { display: flex; align-items: center; gap: 8px; }
 .ai-co-lbl { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink4); }
 .ai-co-ind-inp { font-size: 12.5px; color: rgba(255,255,255,.8); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 4px 10px; outline: none; font-family: inherit; flex: 1; max-width: 320px; }
+
+/* DBD business-type dropdown (select + custom input) */
+.dbd-select { display: flex; align-items: center; gap: 6px; flex: 1; flex-wrap: wrap; min-width: 0; }
+.dbd-select select { cursor: pointer; min-width: 0; }
+.dbd-select select option, .dbd-select select optgroup { background: #1e293b; color: rgba(255,255,255,.85); }
 .ai-control-side { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .ai-hb { display: flex; flex-direction: column; gap: 4px; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink4); }
 .ai-hb select { font-family: inherit; font-size: 12px; padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); color: #fff; outline: none; cursor: pointer; }

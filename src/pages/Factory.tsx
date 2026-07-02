@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { AppData, FactoryData, FactoryMachine, WorkOrder, MachineStatus, WorkOrderStatus, KaizenItem, TPMPillarStatus, InventoryItem, InventoryLot } from '../types';
-import { DBD_SECTORS } from '../data/dbd';
+import DBDSelect from '../components/DBDSelect';
 
 interface Props { data: AppData; onUpdate: (d: AppData) => void; }
 
@@ -240,11 +240,6 @@ export default function Factory({ data, onUpdate }: Props) {
       <p className="page-subtitle">OEE + Lean Management — ระบบบริหารโรงงานแบบอัตโนมัติด้วย AI</p>
 
       {/* ── Factory Profile ── */}
-      <datalist id="dbd-factory-types">
-        {DBD_SECTORS.map(s => s.items.map(item => (
-          <option key={s.code + item} value={`[${s.code}] ${item}`} />
-        )))}
-      </datalist>
       <div className="factory-profile-row">
         <div className="factory-profile-field">
           <span className="factory-profile-label">ชื่อโรงงาน</span>
@@ -253,9 +248,8 @@ export default function Factory({ data, onUpdate }: Props) {
         </div>
         <div className="factory-profile-field">
           <span className="factory-profile-label">ประเภทธุรกิจ (DBD)</span>
-          <input className="factory-profile-inp" style={{ width: '220px' }} list="dbd-factory-types"
-            defaultValue={f.type} key={'type' + f.type} placeholder="พิมพ์หรือเลือก..."
-            onBlur={e => patch({ type: e.target.value })} />
+          <DBDSelect className="factory-profile-inp" style={{ minWidth: '220px' }} value={f.type}
+            onChange={v => patch({ type: v })} />
         </div>
         <div className="factory-profile-field">
           <span className="factory-profile-label">ที่ตั้ง</span>
