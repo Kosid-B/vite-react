@@ -35,6 +35,7 @@ const ISO9001 = lazy(() => import('./pages/ISO9001'));
 const CaseStudies = lazy(() => import('./pages/CaseStudies'));
 const Factory = lazy(() => import('./pages/Factory'));
 const Analytics = lazy(() => import('./pages/Analytics'));
+const Sipoc = lazy(() => import('./pages/Sipoc'));
 
 const STORAGE_KEY = 'cjux2';
 
@@ -52,6 +53,7 @@ const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'roadmap', label: 'Product Roadmap' },
   { id: 'marketing', label: 'กลยุทธ์การตลาด' },
   { id: 'vrio', label: 'VRIO Analysis' },
+  { id: 'sipoc', label: 'SIPOC Process' },
   { id: 'market', label: 'Marketplace' },
   { id: 'team', label: 'ทีม / สมาชิก' },
   { id: 'factory', label: 'โรงงานอัจฉริยะ' },
@@ -92,6 +94,7 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.feedback) parsed.feedback = DEFAULT_DATA.feedback;
   if (!parsed.gtmAuditChecks) parsed.gtmAuditChecks = DEFAULT_DATA.gtmAuditChecks;
   if (!parsed.iso9001) parsed.iso9001 = DEFAULT_DATA.iso9001;
+  if (!parsed.sipoc) parsed.sipoc = DEFAULT_DATA.sipoc;
   if (!parsed.factory) {
     parsed.factory = DEFAULT_DATA.factory!;
   } else {
@@ -363,6 +366,7 @@ export default function App() {
             : <UpgradeWall page="analytics" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'factory' && <Factory data={data} onUpdate={updateData} />}
+        {activePage === 'sipoc' && <Sipoc data={data} onUpdate={updateData} />}
         </Suspense>
 
         {/* ปุ่ม ย้อนกลับ / หน้าถัดไป — ลำดับตาม sidebar */}

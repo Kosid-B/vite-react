@@ -763,4 +763,19 @@ export const DEFAULT_DATA: AppData = {
       },
     ],
   },
+
+  // ===== SIPOC — Process Management (ตัวอย่าง: จัดทำ Compliance Report) =====
+  sipoc: [
+    {
+      id: 'sp1',
+      name: 'จัดทำ Compliance Report (มาตรฐาน TIS/ISO)',
+      goal: 'แปลงข้อกำหนดมาตรฐานเป็นรายงาน Compliance ที่ Auditor ตรวจสอบได้ ภายใน 5 วันทำการ',
+      suppliers: ['สมอ. / หน่วยงานออกมาตรฐาน', 'ฝ่ายคุณภาพ (QA)', 'หัวหน้าแผนกที่เกี่ยวข้อง'],
+      inputs: ['ข้อกำหนด TIS/ISO ฉบับล่าสุด', 'บันทึกกระบวนการและหลักฐานการปฏิบัติ', 'ผล Internal Audit ครั้งก่อน'],
+      process: ['รวบรวมข้อกำหนดและ Gap Analysis', 'จับคู่หลักฐานกับข้อกำหนดแต่ละข้อ', 'ตรวจทานความครบถ้วนโดย QA', 'สรุปเป็น Compliance Report'],
+      outputs: ['Compliance Report พร้อมหลักฐานอ้างอิง', 'รายการ NC/ข้อสังเกตที่ต้องแก้ไข'],
+      customers: ['Auditor ภายนอก', 'ผู้บริหาร (Management Review)', 'ฝ่ายปฏิบัติการ'],
+      updatedAt: '2026-07-02',
+    },
+  ],
 };
