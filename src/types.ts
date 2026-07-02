@@ -82,6 +82,7 @@ export interface BMCData {
 export interface BusinessModelData {
   bmc: BMCData;
   de24: Array<{ done: boolean; notes: string }>;
+  de24Owners?: (string | null)[]; // agentId ของ C-level เจ้าของแต่ละ Phase (CEO มอบหมาย)
 }
 
 /* ===== Autonomous AI Company (Paperclip-style) ===== */

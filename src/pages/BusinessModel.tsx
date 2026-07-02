@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { AppData, BMCData } from '../types';
+import type { Agent, AppData, BMCData } from '../types';
 import EditableList from '../components/EditableList';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 
@@ -56,6 +56,14 @@ const PHASES = [
   { label: 'ทดสอบและขยายธุรกิจ',      color: '#2d6a4f' },
 ];
 
+// C-level ที่เหมาะเป็นเจ้าของแต่ละ Phase — CEO เลือก/สร้างแล้วสั่งงาน
+const PHASE_OWNERS: { role: string; name: string; avatar: string; color: string; mandate: string }[] = [
+  { role: 'CMO', name: 'มณี', avatar: '📣', color: '#c44b2b', mandate: 'บริหารการตลาดและลูกค้า — เจ้าของ 24 Steps Phase 1: ลูกค้าของคุณคือใคร' },
+  { role: 'CPO', name: 'ดารา', avatar: '🛠️', color: '#0e7490', mandate: 'บริหารผลิตภัณฑ์ — เจ้าของ 24 Steps Phase 2: คุณค่าที่นำเสนอคืออะไร' },
+  { role: 'CFO', name: 'บุญมี', avatar: '💰', color: '#2d6a4f', mandate: 'บริหารการเงินและรายได้ — เจ้าของ 24 Steps Phase 3: กระบวนการขายและรายได้' },
+  { role: 'COO', name: 'สมชาย', avatar: '⚙️', color: '#a05c1a', mandate: 'บริหารปฏิบัติการ — เจ้าของ 24 Steps Phase 4: ทดสอบและขยายธุรกิจ' },
+];
+
 const DE24_TH: string[] = [
   'แบ่งส่วนตลาด — ระดมสมองหาโอกาสทั้งหมด คัดเหลือ 6-12 ตลาดที่มีศักยภาพสูง',
   'เลือกตลาดหัวหาด — 1 ตลาดเล็กที่ยึดครองได้เร็ว สร้างกระแสเงินสดทันที',
@@ -87,7 +95,62 @@ export default function BusinessModel({ data, onUpdate }: Props) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [analyzingStep, setAnalyzingStep] = useState<number | null>(null);
   const [stepOutputs, setStepOutputs] = useState<Record<number, string>>({});
+  const [assignMsg, setAssignMsg] = useState<string | null>(null);
   const bm = data.businessModel;
+
+  // CEO เลือก/สร้าง C-level เจ้าของแต่ละ Phase แล้วสั่งงานให้เติมข้อมูล
+  // ให้สอดคล้องกับ BMC ที่บอร์ดอนุมัติแล้ว (งานเข้า Kanban หน้า บริษัท AI)
+  function ceoAssignDe24() {
+    const c = data.aiCompany;
+    const agents = [...c.agents];
+    let ceo = agents.find(a => a.role.toUpperCase().includes('CEO'));
+    if (!ceo) {
+      ceo = {
+        id: 'a-' + Date.now().toString(36) + '-ceo', role: 'CEO', name: 'เอเจนต์หลัก',
+        avatar: '🤖', color: '#c44b2b', mandate: 'กำหนดทิศทางและตัดสินใจสูงสุด',
+        model: 'claude-opus-4-8', status: 'idle', reportsTo: null,
+      };
+      agents.push(ceo);
+    }
+    const owners: (string | null)[] = [];
+    // ลบงานมอบหมายชุดเก่า (กันสั่งซ้ำ) แล้วสร้างชุดใหม่จาก BMC ล่าสุด
+    const tasks = c.tasks.filter(t => !t.id.startsWith('t-de24-'));
+    const lines: string[] = [];
+    PHASE_OWNERS.forEach((spec, pi) => {
+      let agent: Agent | undefined = agents.find(a => a.role.toUpperCase().includes(spec.role));
+      if (!agent) {
+        agent = {
+          id: 'a-' + Date.now().toString(36) + '-' + spec.role.toLowerCase(),
+          role: spec.role, name: spec.name, avatar: spec.avatar, color: spec.color,
+          mandate: spec.mandate, model: 'claude-sonnet-4-6',
+          status: c.autoHire ? 'idle' : 'waiting', reportsTo: ceo!.id,
+        };
+        agents.push(agent);
+      }
+      owners[pi] = agent.id;
+      const stepNums = DE24.map((s, i) => (s.phase === pi ? i + 1 : null)).filter((n): n is number => n !== null);
+      tasks.push({
+        id: `t-de24-${pi}-` + Date.now().toString(36),
+        agentId: agent.id,
+        title: `24 Steps Phase ${pi + 1}: ${PHASES[pi].label} (ขั้น ${stepNums[0]}–${stepNums[stepNums.length - 1]})`,
+        detail: [
+          `CEO สั่งงาน: เติมข้อมูล/หมายเหตุขั้นตอนที่ ${stepNums.join(', ')} ในหน้า Business Model · MIT24`,
+          `ให้สอดคล้องกับ BMC ที่บอร์ดอนุมัติแล้ว:`,
+          `• คุณค่าที่ส่งมอบ: ${bm.bmc.value[0] ?? '-'}`,
+          `• กลุ่มลูกค้า: ${bm.bmc.segments[0] ?? '-'}`,
+          `• กระแสรายได้: ${bm.bmc.revenue[0] ?? '-'}`,
+        ].join('\n'),
+        status: 'queued',
+      });
+      lines.push(`Phase ${pi + 1} → ${spec.role} ${agent.name}`);
+    });
+    onUpdate({
+      ...data,
+      aiCompany: { ...c, agents, tasks },
+      businessModel: { ...bm, de24Owners: owners },
+    });
+    setAssignMsg(`✅ CEO มอบหมายแล้ว: ${lines.join(' · ')} — สั่งงาน 4 งานเข้า Kanban ในหน้า บริษัท AI`);
+  }
 
   function updateBMC(key: BMCKey, items: string[]) {
     onUpdate({ ...data, businessModel: { ...bm, bmc: { ...bm.bmc, [key]: items } } });
@@ -214,6 +277,10 @@ export default function BusinessModel({ data, onUpdate }: Props) {
           <div className="bmc-de24-author">Bill Aulet, MIT</div>
         </div>
         <div className="bmc-de24-progress">
+          <button className="bmc-auto-btn" onClick={ceoAssignDe24}
+            title="CEO เลือก C-level เจ้าของแต่ละ Phase (ลูกค้า→CMO, คุณค่า→CPO, รายได้→CFO, ทดสอบ→COO) แล้วสั่งงานให้เติมข้อมูลตาม BMC ที่บอร์ดอนุมัติ">
+            ✦ ให้ CEO มอบหมาย C-level + สั่งงาน
+          </button>
           <div className="bmc-de24-bar">
             <div className="bmc-de24-bar-fill" style={{ width: `${pct}%` }} />
           </div>
@@ -221,12 +288,19 @@ export default function BusinessModel({ data, onUpdate }: Props) {
         </div>
       </div>
 
+      {assignMsg && <div className="bmc-de24-assign-msg">{assignMsg}</div>}
+
       <div className="bmc-de24-grid">
-        {PHASES.map((phase, pi) => (
+        {PHASES.map((phase, pi) => {
+          const owner = data.aiCompany.agents.find(a => a.id === bm.de24Owners?.[pi]);
+          return (
           <div key={pi} className="bmc-phase-card" style={{ borderTopColor: phase.color }}>
             <div className="bmc-phase-hd">
               <span className="bmc-phase-num" style={{ color: phase.color }}>Phase {pi + 1}</span>
               <span className="bmc-phase-label" style={{ color: phase.color }}>{phase.label}</span>
+              {owner
+                ? <span className="bmc-phase-owner" title={`เจ้าของ Phase — CEO มอบหมายให้ ${owner.role} ${owner.name}`}>{owner.avatar} {owner.role} · {owner.name}</span>
+                : <span className="bmc-phase-owner none">ยังไม่มีเจ้าของ</span>}
             </div>
             {DE24.map((step, si) => {
               if (step.phase !== pi) return null;
@@ -284,7 +358,8 @@ export default function BusinessModel({ data, onUpdate }: Props) {
               );
             })}
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
