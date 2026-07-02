@@ -1,4 +1,5 @@
 import type { AppData, PageId } from '../types';
+import { companyXP, getCompanyLevel, COMPANY_LEVELS, QUESTS, ACHIEVEMENTS, ACTIVITY_XP } from '../lib/gamification';
 
 interface Props {
   data: AppData;
@@ -209,6 +210,16 @@ export default function Dashboard({ data, onNavigate }: Props) {
   const roadmapPlanned = roadmap.filter(r => r.status === 'planned').length;
   const roadmapPct = roadmap.length > 0 ? Math.round((roadmapDone / roadmap.length) * 100) : 0;
 
+  // Gamification: ระดับบริษัท + Setup Quest + Badges
+  const xp = companyXP(data);
+  const level = getCompanyLevel(xp);
+  const nextLevel = COMPANY_LEVELS.find(l => l.min > xp);
+  const xpPct = nextLevel
+    ? Math.round(((xp - level.min) / (nextLevel.min - level.min)) * 100)
+    : 100;
+  const questsDone = QUESTS.filter(q => q.done(data)).length;
+  const earnedBadges = ACHIEVEMENTS.filter(a => a.earned(data));
+
   return (
     <div>
       <div className="page-header">
@@ -222,6 +233,56 @@ export default function Dashboard({ data, onNavigate }: Props) {
             ⬇ Export รายงาน
           </button>
         </div>
+      </div>
+
+      {/* ===== Gamification: ระดับบริษัท + Setup Quest + Badges ===== */}
+      <div className="gm-panel">
+        <div className="gm-level-row">
+          <div className="gm-level-badge" style={{ background: level.color }}>{level.badge} {level.rank}</div>
+          <div className="gm-xp-wrap">
+            <div className="gm-xp-track"><div className="gm-xp-fill" style={{ width: xpPct + '%', background: level.color }} /></div>
+            <div className="gm-xp-text">
+              {xp.toLocaleString()} XP
+              {nextLevel && <span> · อีก {(nextLevel.min - xp).toLocaleString()} XP → {nextLevel.badge} {nextLevel.rank}</span>}
+            </div>
+          </div>
+          <div className="gm-quest-count">
+            🎯 Quest {questsDone}/{QUESTS.length}
+            <span className="gm-quest-bonus">+{ACTIVITY_XP.questBonus} XP/ข้อ</span>
+          </div>
+        </div>
+
+        {questsDone < QUESTS.length && (
+          <div className="gm-quest-list">
+            {QUESTS.map(q => {
+              const done = q.done(data);
+              return (
+                <button key={q.id} className={`gm-quest${done ? ' done' : ''}`} onClick={() => onNavigate(q.page)}
+                  title={q.desc}>
+                  <span className="gm-quest-check">{done ? '✅' : '⬜'}</span>
+                  <span className="gm-quest-ico">{q.icon}</span>
+                  <span className="gm-quest-label">{q.label}</span>
+                  {!done && <span className="gm-quest-go">ไปทำ →</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {earnedBadges.length > 0 && (
+          <div className="gm-badge-row">
+            <span className="gm-badge-lbl">🏅 Badges:</span>
+            {ACHIEVEMENTS.map(a => {
+              const earned = a.earned(data);
+              return (
+                <span key={a.id} className={`gm-badge${earned ? '' : ' locked'}`}
+                  title={`${a.label} — ${a.desc}${earned ? '' : ' (ยังไม่ได้รับ)'}`}>
+                  {a.icon} {a.label}
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* KPI Cards */}

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 
 const SalesforceTab = lazy(() => import('./AdminTabs/SalesforceTab'));
+const SkillMarketTab = lazy(() => import('./AdminTabs/SkillMarketTab'));
 const CXPersonaTab  = lazy(() => import('./AdminTabs/CXPersonaTab'));
 const GTMTab        = lazy(() => import('./AdminTabs/GTMTab'));
 const SEOTab        = lazy(() => import('./AdminTabs/SEOTab'));
@@ -121,7 +122,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback' | 'pricing' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback' | 'pricing' | 'skills' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -425,6 +426,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'feedback' ? ' active' : ''}`} onClick={() => setTab('feedback')}>
           📝 Feedback Analysis
+        </button>
+        <button className={`pfa-tab${tab === 'skills' ? ' active' : ''}`} onClick={() => setTab('skills')}>
+          🛒 Skill Market
         </button>
         <button className={`pfa-tab${tab === 'pricing' ? ' active' : ''}`} onClick={() => setTab('pricing')}>
           💸 Pricing Strategy
@@ -1546,6 +1550,13 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
           </div>
 
         </div>
+      )}
+
+      {/* ===== SKILL MARKETPLACE TAB ===== */}
+      {tab === 'skills' && (
+        <Suspense fallback={<div className="page-loading" />}>
+          <SkillMarketTab />
+        </Suspense>
       )}
 
       {/* ===== SALESFORCE CRM TAB ===== */}

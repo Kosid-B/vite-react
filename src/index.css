@@ -794,6 +794,59 @@ input:focus, textarea:focus, select:focus {
 .ai-co-lbl { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink4); }
 .ai-co-ind-inp { font-size: 12.5px; color: rgba(255,255,255,.8); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 4px 10px; outline: none; font-family: inherit; flex: 1; max-width: 320px; }
 
+/* Gamification — Dashboard: company level + setup quest + badges */
+.gm-panel { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; }
+.gm-level-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.gm-level-badge { font-size: 12.5px; font-weight: 700; color: #fff; border-radius: 8px; padding: 5px 12px; white-space: nowrap; }
+.gm-xp-wrap { flex: 1; min-width: 180px; }
+.gm-xp-track { height: 8px; background: rgba(255,255,255,.08); border-radius: 999px; overflow: hidden; }
+.gm-xp-fill { height: 100%; border-radius: 999px; transition: width .4s; }
+.gm-xp-text { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 4px; }
+.gm-quest-count { font-size: 12.5px; font-weight: 600; color: rgba(255,255,255,.85); display: flex; flex-direction: column; align-items: flex-end; }
+.gm-quest-bonus { font-size: 10px; font-weight: 400; color: rgba(255,255,255,.4); }
+.gm-quest-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 10px; margin-top: 12px; }
+.gm-quest { display: flex; align-items: center; gap: 7px; font-size: 12px; font-family: inherit; color: rgba(255,255,255,.75); background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 8px; padding: 7px 10px; cursor: pointer; text-align: left; transition: background .15s; min-width: 0; }
+.gm-quest:hover { background: rgba(255,255,255,.08); }
+.gm-quest.done { opacity: .55; text-decoration: line-through; cursor: default; }
+.gm-quest-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gm-quest-go { font-size: 10.5px; color: #38bdf8; white-space: nowrap; }
+.gm-badge-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+.gm-badge-lbl { font-size: 11.5px; color: rgba(255,255,255,.55); }
+.gm-badge { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.85); background: rgba(250,204,21,.12); border: 1px solid rgba(250,204,21,.3); border-radius: 999px; padding: 3px 10px; }
+.gm-badge.locked { color: rgba(255,255,255,.3); background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.08); filter: grayscale(1); }
+@media (max-width: 900px) { .gm-quest-list { grid-template-columns: 1fr; } }
+
+/* Skill Marketplace — payment selection + admin skill badge */
+.skm-new-badge { font-size: 9.5px; font-weight: 700; color: #0f172a; background: #4ade80; border-radius: 5px; padding: 2px 6px; letter-spacing: .02em; }
+.skm-pay-box { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.skm-pay-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.75); margin-bottom: 2px; }
+.skm-pay-btn { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-family: inherit; color: rgba(255,255,255,.85); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 6px; padding: 5px 9px; cursor: pointer; transition: background .15s; text-align: left; }
+.skm-pay-btn:hover { background: rgba(255,255,255,.16); }
+
+/* Admin — Skill Marketplace management tab */
+.adm-skill-hint { font-size: 12px; color: rgba(255,255,255,.55); line-height: 1.6; margin: 4px 0 10px; }
+.adm-skill-form { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 12px; }
+.adm-skill-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.adm-skill-field label { font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: rgba(255,255,255,.45); }
+.adm-skill-field input, .adm-skill-field select { font-size: 12.5px; font-family: inherit; color: rgba(255,255,255,.85); background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 6px 10px; outline: none; }
+.adm-skill-field select option { background: #1e293b; }
+.adm-skill-submit { margin-top: 12px; font-size: 12.5px; font-weight: 600; font-family: inherit; color: #0f172a; background: #38bdf8; border: none; border-radius: 7px; padding: 8px 16px; cursor: pointer; }
+.adm-skill-submit:disabled { opacity: .55; cursor: default; }
+.adm-skill-msg { margin-top: 10px; font-size: 12px; color: rgba(255,255,255,.75); background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); border-radius: 7px; padding: 8px 12px; }
+.adm-skill-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.adm-skill-row { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; padding: 10px 14px; }
+.adm-skill-row.inactive { opacity: .5; }
+.adm-skill-ico { font-size: 20px; }
+.adm-skill-info { flex: 1; min-width: 0; }
+.adm-skill-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.9); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.adm-skill-cat { font-size: 10.5px; font-weight: 500; }
+.adm-skill-tier { font-size: 9.5px; font-weight: 700; border-radius: 5px; padding: 2px 6px; }
+.adm-skill-desc { font-size: 11.5px; color: rgba(255,255,255,.5); margin-top: 2px; }
+.adm-skill-price { font-size: 13px; font-weight: 700; color: #4ade80; white-space: nowrap; }
+.adm-skill-toggle { font-size: 11px; font-family: inherit; color: rgba(255,255,255,.7); background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.adm-skill-del { font-size: 15px; color: rgba(255,120,120,.8); background: none; border: none; cursor: pointer; padding: 4px 8px; }
+@media (max-width: 900px) { .adm-skill-form { grid-template-columns: 1fr 1fr; } }
+
 /* Tool owners — CEO มอบหมาย C-level ดูแลเครื่องมือ */
 .tool-owner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 10px; }
 .tool-owner-row { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 8px; padding: 8px 12px; min-width: 0; }
