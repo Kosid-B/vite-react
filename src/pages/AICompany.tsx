@@ -3,6 +3,8 @@ import type { AppData, Agent, AgentStatus, ApprovalStatus, TaskStatus, SkillPlan
 import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
+import { listAdminSkills } from '../lib/adminSkills';
+import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamification';
 import DBDSelect from '../components/DBDSelect';
 
 // ---- Org Chart Node (recursive) ----
@@ -80,19 +82,6 @@ const AGENT_PALETTE = ['#c44b2b', '#1a4f8a', '#2d6a4f', '#a05c1a', '#6b3fa0', '#
 const AVATARS = ['🤖', '🧠', '📈', '🛠️', '🎯', '🔬', '💡', '🗂️'];
 const MODELS = ['claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'OpenAI Codex', 'gpt-4o'];
 
-// Gamification: ระดับความสามารถของบริษัทตาม XP สะสม
-const COMPANY_LEVELS = [
-  { min: 0,    max: 999,   rank: 'Starter',      badge: '🌱', color: '#374151', desc: 'เพิ่งเริ่มต้น — ซื้อ Skill แรกเพื่อปลดล็อก' },
-  { min: 1000, max: 2999,  rank: 'Growing',       badge: '🌿', color: '#2d6a4f', desc: 'กำลังเติบโต — ทีม AI มีทักษะพื้นฐานครบ' },
-  { min: 3000, max: 5999,  rank: 'Professional',  badge: '⭐', color: '#1a4f8a', desc: 'มืออาชีพ — ใช้ข้อมูลขับเคลื่อนการตัดสินใจ' },
-  { min: 6000, max: 9999,  rank: 'Advanced',      badge: '🏆', color: '#a05c1a', desc: 'ขั้นสูง — ทีม AI มีความสามารถรอบด้าน' },
-  { min: 10000, max: Infinity, rank: 'Elite',     badge: '👑', color: '#c44b2b', desc: 'Elite — องค์กร AI ที่แข็งแกร่งระดับสูงสุด' },
-];
-const XP_PER_TIER: Record<1 | 2 | 3, number> = { 1: 100, 2: 150, 3: 200 };
-
-function getCompanyLevel(xp: number) {
-  return COMPANY_LEVELS.find(l => xp >= l.min && xp <= l.max) ?? COMPANY_LEVELS[0];
-}
 
 const AVAILABLE_SKILLS = [
   'business-building-24-step','value-proposition-canvas','risk-assessment','revenue-model','kpi-dashboard',
@@ -172,6 +161,13 @@ const C_LEVEL_SPECS: Record<string, { avatar: string; color: string; name: strin
   CPO: { avatar: '🛠️', color: '#0e7490', name: 'ดารา', mandate: 'บริหารผลิตภัณฑ์ — ดูแล Product Roadmap จัดลำดับฟีเจอร์และแผนการพัฒนา' },
 };
 
+// วิธีชำระเงินตอนซื้อ Skill (payment gateway จริงเปิดใช้เมื่อ WEBHOOK_SECRET พร้อม)
+const PAY_METHODS = [
+  { id: 'promptpay', label: 'PromptPay QR', icon: '📱' },
+  { id: 'card', label: 'บัตรเครดิต/เดบิต', icon: '💳' },
+  { id: 'transfer', label: 'โอนธนาคาร', icon: '🏦' },
+];
+
 function nowTime(): string {
   const d = new Date();
   return d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -208,6 +204,17 @@ export default function AICompany({ data, onUpdate }: Props) {
   const [competencyMsg, setCompetencyMsg] = useState<string | null>(null);
   const [designingCompetency, setDesigningCompetency] = useState(false);
   const [errorLog, setErrorLog] = useState<{ time: string; msg: string; taskTitle: string }[]>([]);
+  const [adminSkillList, setAdminSkillList] = useState<SkillEntry[]>([]);
+
+  // โหลด skill ที่ Admin ระบบเพิ่มเข้า Marketplace (แสดงให้ทุกบริษัท)
+  useEffect(() => {
+    listAdminSkills()
+      .then(list => setAdminSkillList(list.map(s => ({
+        id: s.id, name: s.name, category: s.category, tier: s.tier,
+        price: s.price, desc: s.desc, icon: s.icon, tags: s.tags,
+      }))))
+      .catch(() => { /* ตารางยังไม่พร้อม/offline — แสดงเฉพาะ catalog ในตัว */ });
+  }, []);
 
   // Refs for heartbeat to avoid stale closures
   const executeTaskRef = useRef<((taskId: string) => Promise<void>) | null>(null);
@@ -593,8 +600,8 @@ export default function AICompany({ data, onUpdate }: Props) {
     }, 100);
   }
 
-  // ซื้อ Skill + สะสม XP (Gamification)
-  function purchaseSkill(skill: SkillEntry) {
+  // ซื้อ Skill + สะสม XP (Gamification) — payMethod = วิธีชำระเงินที่ผู้ใช้เลือก
+  function purchaseSkill(skill: SkillEntry, payMethod?: string) {
     const owned = c.purchasedSkills ?? [];
     if (owned.includes(skill.id)) return;
     const gainXP = XP_PER_TIER[skill.tier];
@@ -604,9 +611,11 @@ export default function AICompany({ data, onUpdate }: Props) {
     const levelUp = prevLevel.rank !== newLevel.rank;
     patch({ purchasedSkills: [...owned, skill.id], skillXP: newXP });
     setBuyConfirm(null);
+    const payLabel = PAY_METHODS.find(m => m.id === payMethod)?.label;
+    const paidVia = payLabel ? ` · ชำระผ่าน ${payLabel}` : '';
     setMktMsg(levelUp
-      ? `🎉 Level Up! บริษัทเลื่อนระดับเป็น ${newLevel.badge} ${newLevel.rank} — +${gainXP} XP · ได้รับ "${skill.name}" แล้ว`
-      : `✅ ได้รับ "${skill.name}" แล้ว · +${gainXP} XP · รวม ${newXP.toLocaleString()} XP`
+      ? `🎉 Level Up! บริษัทเลื่อนระดับเป็น ${newLevel.badge} ${newLevel.rank} — +${gainXP} XP · ได้รับ "${skill.name}" แล้ว${paidVia}`
+      : `✅ ได้รับ "${skill.name}" แล้ว · +${gainXP} XP · รวม ${newXP.toLocaleString()} XP${paidVia}`
     );
   }
 
@@ -1589,6 +1598,7 @@ export default function AICompany({ data, onUpdate }: Props) {
       {/* ===== 🛒 Skill Marketplace ===== */}
       {(() => {
         const purchased = c.purchasedSkills ?? [];
+        const allSkills = [...SKILL_CATALOG, ...adminSkillList];
         const xp = c.skillXP ?? 0;
         const level = getCompanyLevel(xp);
         const nextLevel = COMPANY_LEVELS.find(l => l.min > xp);
@@ -1597,10 +1607,10 @@ export default function AICompany({ data, onUpdate }: Props) {
           ? Math.round(((xp - level.min) / (nextLevel.min - level.min)) * 100)
           : 100;
         const totalValue = purchased.reduce((s, id) => {
-          const sk = SKILL_CATALOG.find(sk => sk.id === id);
+          const sk = allSkills.find(sk => sk.id === id);
           return s + (sk?.price ?? 0);
         }, 0);
-        const filtered = SKILL_CATALOG.filter(sk =>
+        const filtered = allSkills.filter(sk =>
           (mktCategory === 'all' || sk.category === mktCategory) &&
           (mktTier === 0 || sk.tier === mktTier)
         );
@@ -1610,7 +1620,7 @@ export default function AICompany({ data, onUpdate }: Props) {
             <div className="ai-panel-hd">
               🛒 Skill Marketplace
               <span className="skm-hd-stats">
-                <span className="skm-bought">{purchased.length}/{SKILL_CATALOG.length} Skills</span>
+                <span className="skm-bought">{purchased.length}/{allSkills.length} Skills</span>
                 <span className="skm-value">มูลค่า ฿{totalValue.toLocaleString()}</span>
               </span>
             </div>
@@ -1633,9 +1643,9 @@ export default function AICompany({ data, onUpdate }: Props) {
             {/* Category Progress Pills */}
             <div className="skm-cat-progress">
               {(Object.entries(CATEGORY_META) as [SkillCategory, typeof CATEGORY_META[SkillCategory]][]).map(([cat, meta]) => {
-                const total = SKILL_CATALOG.filter(s => s.category === cat).length;
-                const done = SKILL_CATALOG.filter(s => s.category === cat && purchased.includes(s.id)).length;
-                const pct = Math.round((done / total) * 100);
+                const total = allSkills.filter(s => s.category === cat).length;
+                const done = allSkills.filter(s => s.category === cat && purchased.includes(s.id)).length;
+                const pct = total > 0 ? Math.round((done / total) * 100) : 0;
                 return (
                   <button key={cat}
                     className={`skm-cat-pill${mktCategory === cat ? ' active' : ''}`}
@@ -1765,11 +1775,13 @@ export default function AICompany({ data, onUpdate }: Props) {
                 const isConfirm = buyConfirm?.id === sk.id;
                 const catMeta = CATEGORY_META[sk.category];
                 const tierMeta = TIER_META[sk.tier];
+                const isAdminSkill = adminSkillList.some(a => a.id === sk.id);
                 return (
                   <div key={sk.id} className={`skm-card${owned ? ' owned' : ''}${isConfirm ? ' confirm' : ''}`}
                     style={{ '--card-color': catMeta.color } as React.CSSProperties}>
                     <div className="skm-card-top">
                       <span className="skm-card-icon">{sk.icon}</span>
+                      {isAdminSkill && <span className="skm-new-badge">🆕 ใหม่</span>}
                       <span className="skm-tier-badge" style={{ background: tierMeta.bg, color: tierMeta.color }}>
                         {tierMeta.label}
                       </span>
@@ -1790,8 +1802,13 @@ export default function AICompany({ data, onUpdate }: Props) {
                       {owned ? (
                         <button className="skm-btn owned" disabled>✓ ใช้งานได้แล้ว</button>
                       ) : isConfirm ? (
-                        <div className="skm-confirm-row">
-                          <button className="skm-btn buy" onClick={() => purchaseSkill(sk)}>ยืนยันซื้อ ฿{sk.price.toLocaleString()}</button>
+                        <div className="skm-pay-box">
+                          <div className="skm-pay-title">เลือกวิธีชำระเงิน ฿{sk.price.toLocaleString()}</div>
+                          {PAY_METHODS.map(m => (
+                            <button key={m.id} className="skm-pay-btn" onClick={() => purchaseSkill(sk, m.id)}>
+                              {m.icon} {m.label}
+                            </button>
+                          ))}
                           <button className="skm-btn cancel" onClick={() => setBuyConfirm(null)}>ยกเลิก</button>
                         </div>
                       ) : (
