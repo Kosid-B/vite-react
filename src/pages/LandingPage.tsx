@@ -182,7 +182,10 @@ export default function LandingPage({ onGetStarted }: Props) {
         <p style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.cyan5, marginBottom: 12 }}>
           บริษัทชั้นนำในไทยกว่า 500 แห่ง กำลังรันมาตรฐานด้วยระบบอัตโนมัติ
         </p>
-        <p style={{ color: C.slate5, fontSize: 14 }}>TRUSTED BY INDUSTRY LEADERS</p>
+        <p style={{ color: C.slate5, fontSize: 14, marginBottom: 10 }}>TRUSTED BY INDUSTRY LEADERS</p>
+        <p style={{ color: C.slate4, fontSize: 15 }}>
+          พัฒนาโดยทีมที่ปรึกษาที่ให้บริการธุรกิจในประเทศไทยมา<strong style={{ color: C.cyan4 }}>มากกว่า 20 ปี</strong>
+        </p>
       </section>
 
       {/* ─── Steps ─── */}
@@ -298,7 +301,10 @@ export default function LandingPage({ onGetStarted }: Props) {
       </section>
 
       {/* ─── Footer ─── */}
-      <footer style={{ borderTop: `1px solid ${C.border}`, padding: '24px', textAlign: 'center', color: C.slate5, fontSize: 13 }}>
+      <footer style={{ borderTop: `1px solid ${C.border}`, padding: '24px', textAlign: 'center', color: C.slate5, fontSize: 13, lineHeight: 1.9 }}>
+        เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย ·
+        โทร <a href="tel:08178177773" style={{ color: C.cyan4, textDecoration: 'none', fontWeight: 600 }}>081-7817-7773</a>
+        <br />
         © 2026 CEO AI Thailand · ceoaithailand.org · B. Training Consultant Co., Ltd.
       </footer>
     </div>
