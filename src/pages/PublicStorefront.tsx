@@ -73,6 +73,9 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
           {sf.website && <a className="pub-contact" href={sf.website.startsWith('http') ? sf.website : 'https://' + sf.website} target="_blank" rel="noreferrer">🌐 เว็บไซต์</a>}
           {!sf.phone && !sf.lineId && !sf.email && !sf.website && <span className="pub-muted">ยังไม่ระบุช่องทางติดต่อ</span>}
         </div>
+        <a className="pub-rfq" href={`/?rfq=${encodeURIComponent(sf.slug)}`}>
+          📨 เป็นธุรกิจในระบบ? ขอใบเสนอราคา (RFQ) จากร้านนี้ →
+        </a>
         {sf.updatedAt && <div className="pub-updated">อัปเดตล่าสุด {sf.updatedAt}</div>}
       </div>
     </PublicShell>

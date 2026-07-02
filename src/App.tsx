@@ -38,6 +38,7 @@ const Factory = lazy(() => import('./pages/Factory'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Sipoc = lazy(() => import('./pages/Sipoc'));
 const MyStorefront = lazy(() => import('./pages/MyStorefront'));
+const Trade = lazy(() => import('./pages/Trade'));
 
 const STORAGE_KEY = 'cjux2';
 
@@ -58,6 +59,7 @@ const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'sipoc', label: 'SIPOC Process' },
   { id: 'market', label: 'Marketplace' },
   { id: 'storefront', label: 'หน้าร้านของฉัน' },
+  { id: 'trade', label: 'ซื้อขาย B2B (RFQ)' },
   { id: 'team', label: 'ทีม / สมาชิก' },
   { id: 'factory', label: 'โรงงานอัจฉริยะ' },
   { id: 'billing', label: 'แพ็กเกจ & ชำระเงิน' },
@@ -264,6 +266,14 @@ export default function App() {
     reader.readAsText(file);
   }
 
+  // Marketplace M2: ลิงก์ 'ขอใบเสนอราคา' จากหน้าร้านสาธารณะ → เปิดหน้า trade หลัง login
+  const rfqParam = new URLSearchParams(window.location.search).get('rfq');
+  if (rfqParam) {
+    sessionStorage.setItem('rfq_seller', rfqParam);
+    window.history.replaceState({}, '', '/');
+    if (activePage !== 'trade') setActivePage('trade');
+  }
+
   // Marketplace M1: หน้าสาธารณะ /b (สารบัญธุรกิจ) และ /b/<slug> (หน้าร้าน)
   // เข้าถึงได้โดยไม่ต้องล็อกอิน — มาก่อน gate ทุกตัว
   const pubPath = window.location.pathname;
@@ -383,6 +393,11 @@ export default function App() {
             : <UpgradeWall page="sipoc" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'storefront' && <MyStorefront data={data} wsId={activeWs} />}
+        {activePage === 'trade' && (
+          canAccess(data, 'trade')
+            ? <Trade data={data} wsId={activeWs} />
+            : <UpgradeWall page="trade" data={data} onNavigate={setActivePage} />
+        )}
         </Suspense>
 
         {/* ปุ่ม ย้อนกลับ / หน้าถัดไป — ลำดับตาม sidebar */}

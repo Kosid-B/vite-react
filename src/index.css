@@ -936,6 +936,49 @@ input:focus, textarea:focus, select:focus {
 .sf-tip { font-size: 11.5px; color: var(--ink4); line-height: 1.7; border-top: 1px dashed rgba(255,255,255,.12); padding-top: 10px; }
 @media (max-width: 900px) { .sf-editor { grid-template-columns: 1fr; } .sf-grid2 { grid-template-columns: 1fr; } }
 
+/* Marketplace M2/M3 — Trade (RFQ + Orders) */
+.pub-rfq { display: inline-block; margin-top: 18px; font-size: 12.5px; font-weight: 600; color: #67e8f9; background: rgba(56,189,248,.08); border: 1px dashed rgba(56,189,248,.4); border-radius: 9px; padding: 9px 16px; text-decoration: none; }
+.trade-sec { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 16px 18px; margin-bottom: 14px; }
+.trade-sec-hd { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+.trade-empty { font-size: 12.5px; color: var(--ink4); padding: 10px 0; }
+.trade-store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.trade-store { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+.trade-store-name { font-size: 14px; font-weight: 700; margin: 6px 0 3px; color: var(--ink); }
+.trade-store-desc { font-size: 11.5px; color: var(--ink3); line-height: 1.6; margin-bottom: 8px; }
+.trade-store-actions { display: flex; gap: 12px; align-items: center; }
+.trade-rfq-btn { font-size: 11.5px; font-weight: 600; font-family: inherit; color: #0f172a; background: #38bdf8; border: none; border-radius: 7px; padding: 6px 12px; cursor: pointer; }
+.trade-rfq-form { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; border-top: 1px dashed rgba(255,255,255,.12); padding-top: 10px; }
+.trade-rfq-form input, .trade-rfq-form textarea, .trade-quote-form input { font-size: 12px; font-family: inherit; color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.13); border-radius: 7px; padding: 7px 10px; outline: none; resize: vertical; }
+.trade-rfq-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.trade-rfq-send { font-size: 12px; font-weight: 700; font-family: inherit; color: #0f172a; background: #4ade80; border: none; border-radius: 7px; padding: 8px 12px; cursor: pointer; }
+.trade-rfq-card { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; flex-wrap: wrap; }
+.trade-rfq-main { flex: 1; min-width: 220px; }
+.trade-rfq-title { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.trade-rfq-to { font-size: 11.5px; font-weight: 400; color: var(--ink4); }
+.trade-rfq-detail { font-size: 12px; color: var(--ink3); margin-top: 3px; line-height: 1.6; }
+.trade-rfq-meta { font-size: 11px; color: var(--ink4); margin-top: 5px; }
+.trade-rfq-side { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; min-width: 180px; }
+.trade-badge { font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 3px 10px; }
+.trade-badge.open { color: #fbbf24; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3); }
+.trade-badge.quoted { color: #67e8f9; background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.3); }
+.trade-badge.accepted { color: #4ade80; background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.3); }
+.trade-badge.declined, .trade-badge.closed { color: rgba(255,255,255,.4); background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); }
+.trade-quote { font-size: 15px; font-weight: 800; color: #4ade80; }
+.trade-quote-note { font-size: 11px; font-weight: 400; color: var(--ink3); }
+.trade-accept { font-size: 12px; font-weight: 700; font-family: inherit; color: #0f172a; background: #4ade80; border: none; border-radius: 7px; padding: 7px 14px; cursor: pointer; }
+.trade-accept:disabled { opacity: .5; }
+.trade-decline { font-size: 11.5px; font-family: inherit; color: rgba(255,120,120,.85); background: none; border: 1px solid rgba(255,120,120,.3); border-radius: 7px; padding: 7px 12px; cursor: pointer; }
+.trade-quote-form { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 260px; }
+.trade-quote-actions { display: flex; gap: 6px; }
+.trade-orders { width: 100%; border-collapse: collapse; }
+.trade-orders th { font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink4); text-align: left; padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.trade-orders td { font-size: 12.5px; color: var(--ink2); padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.06); }
+.trade-ord-date { font-size: 10.5px; color: var(--ink4); }
+.trade-ord-status { font-size: 11.5px; font-family: inherit; color: var(--ink2); background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.13); border-radius: 6px; padding: 4px 8px; }
+.trade-ord-status option { background: #1e293b; }
+.trade-note { font-size: 11.5px; color: var(--ink4); margin-top: 10px; line-height: 1.7; }
+@media (max-width: 700px) { .trade-rfq-row { grid-template-columns: 1fr; } .trade-rfq-side { align-items: flex-start; } }
+
 /* Billing cycle toggle — รายเดือน/รายปี */
 .bill-cycle { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; }
 .bill-cycle-btn { font-size: 13px; font-family: inherit; color: var(--ink3); background: var(--white); border: 1px solid var(--sand); border-radius: 999px; padding: 8px 20px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background .15s, color .15s; }

@@ -9,6 +9,7 @@ const PAGE_TITLE: Partial<Record<PageId, string>> = {
   factory:   'โรงงานอัจฉริยะ',
   analytics: 'SaaS Analytics',
   sipoc:     'SIPOC Process',
+  trade:     'ซื้อขาย B2B (RFQ)',
   admin:     'ผู้ดูแลระบบ',
 };
 

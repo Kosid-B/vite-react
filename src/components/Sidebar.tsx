@@ -162,6 +162,15 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <span className="nav-dot" />
         </button>
 
+        <button className={`nav-item ${activePage === 'trade' ? 'active' : ''}${locked('trade') ? ' nav-locked' : ''}`} onClick={() => onNavigate('trade')}
+          title="ขอใบเสนอราคา (RFQ) จากธุรกิจในระบบ และติดตามออเดอร์ซื้อขาย">
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          ซื้อขาย B2B (RFQ)
+          {locked('trade') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+        </button>
+
         <button className={`nav-item ${activePage === 'team' ? 'active' : ''}${locked('team') ? ' nav-locked' : ''}`} onClick={() => onNavigate('team')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
