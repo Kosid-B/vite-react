@@ -176,6 +176,50 @@ const NAME_POOLS: Record<string, string[]> = {
 };
 const GENERIC_NAMES = ['จันทรา', 'นภา', 'คีรี', 'วารี', 'อรุณ', 'เสาวลักษณ์', 'พฤกษ์', 'ไผท'];
 
+// M-level ที่ C-level แต่ละสายขอเพิ่มได้ — mandate คือบทบาทที่ C-level กำหนด
+// (ใช้เป็นข้อมูลสร้าง AI Agent ตำแหน่งนั้นเมื่อบอร์ดอนุมัติ · แก้ไขได้ก่อนส่ง)
+const M_LEVEL_SUGGESTIONS: Record<string, { role: string; mandate: string }[]> = {
+  CEO: [
+    { role: 'General Manager', mandate: 'บริหารงานทั่วไปตามนโยบาย CEO ประสานงานทุกฝ่าย ติดตามผลการดำเนินงานและรายงานรายสัปดาห์' },
+  ],
+  CMO: [
+    { role: 'Marketing Manager', mandate: 'วางแผนและรันแคมเปญการตลาดรายเดือน ดูแล Content Plan, SEO และ Social Media ให้สอดคล้องกลยุทธ์ CMO พร้อมรายงาน CPL/Conversion ทุกสัปดาห์' },
+    { role: 'Sales Manager', mandate: 'บริหาร Pipeline การขายตั้งแต่ Lead ถึงปิดการขาย ดูแล Conversion Funnel ทำ Sales Forecast รายเดือนเสนอ CMO' },
+    { role: 'Content Manager', mandate: 'ผลิตและดูแลคอนเทนต์ทุกช่องทางตาม Content Plan ควบคุมคุณภาพ แบรนด์ และตารางเผยแพร่' },
+  ],
+  CFO: [
+    { role: 'Finance Manager', mandate: 'จัดทำงบประมาณ กระแสเงินสด และรายงานการเงินรายเดือน วิเคราะห์ต้นทุน/ROI สนับสนุนการตัดสินใจของ CFO' },
+    { role: 'Accounting Manager', mandate: 'ดูแลบัญชีรายรับ-รายจ่าย ใบกำกับภาษี และ Compliance ทางบัญชีให้ถูกต้องครบถ้วน' },
+  ],
+  COO: [
+    { role: 'Operations Manager', mandate: 'ควบคุมกระบวนการปฏิบัติงานประจำวัน ติดตาม Priority Actions และ SLA ประสานทีมให้ส่งมอบตรงเวลา' },
+    { role: 'Project Manager', mandate: 'วางแผนและติดตามโปรเจกต์ ควบคุม Scope/Timeline/Resource รายงานความคืบหน้าต่อ COO' },
+  ],
+  CTO: [
+    { role: 'Engineering Manager', mandate: 'บริหารทีมพัฒนา ดูแลคุณภาพระบบ การเชื่อมต่อ API และแผนงานเทคนิคตามทิศทาง CTO' },
+    { role: 'Data Manager', mandate: 'ดูแลข้อมูล ระบบวิเคราะห์ และ Dashboard ให้ทีมใช้ตัดสินใจได้ พร้อมควบคุม Data Governance' },
+  ],
+  CSO: [
+    { role: 'Strategy Manager', mandate: 'วิเคราะห์ตลาด/คู่แข่ง อัปเดต VRIO และ Business Model สนับสนุนการวางกลยุทธ์ของ CSO' },
+  ],
+  CPO: [
+    { role: 'Product Manager', mandate: 'ดูแล Product Roadmap เก็บ Feedback ผู้ใช้ จัดลำดับฟีเจอร์ และประสานทีมพัฒนาให้ส่งมอบตามแผน' },
+  ],
+};
+const M_LEVEL_GENERIC: { role: string; mandate: string }[] = [
+  { role: 'Manager', mandate: 'บริหารงานในสายงานตามที่ผู้บังคับบัญชากำหนด ติดตามงานทีมและรายงานผลรายสัปดาห์' },
+];
+const M_CUSTOM = '__custom__';
+
+// C-level = role รูปแบบ CxO (CEO, CMO, CFO, COO, CTO, CSO, CPO ฯลฯ)
+function isCLevel(role: string): boolean {
+  return /\bC[A-Z]O\b/i.test(role.trim());
+}
+function mSuggestionsFor(role: string): { role: string; mandate: string }[] {
+  const key = Object.keys(M_LEVEL_SUGGESTIONS).find(k => role.toUpperCase().includes(k));
+  return key ? M_LEVEL_SUGGESTIONS[key] : M_LEVEL_GENERIC;
+}
+
 // วิธีชำระเงินตอนซื้อ Skill (payment gateway จริงเปิดใช้เมื่อ WEBHOOK_SECRET พร้อม)
 const PAY_METHODS = [
   { id: 'promptpay', label: 'PromptPay QR', icon: '📱' },
@@ -222,6 +266,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [adminSkillList, setAdminSkillList] = useState<SkillEntry[]>([]);
   const [nameProposals, setNameProposals] = useState<Array<{ agentId: string; role: string; avatar: string; color: string; current: string; options: string[] }>>([]);
   const [nameMsg, setNameMsg] = useState<string | null>(null);
+  // C-level ขอเพิ่ม M-level (form เปิดบนการ์ดเอเจนต์ทีละใบ)
+  const [mReq, setMReq] = useState<{ agentId: string; role: string; mandate: string; custom: boolean } | null>(null);
 
   // โหลด skill ที่ Admin ระบบเพิ่มเข้า Marketplace (แสดงให้ทุกบริษัท)
   useEffect(() => {
@@ -505,6 +551,26 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     };
     patch({ approvals: [...c.approvals, approval] });
     setCeoSuggestions(prev => prev.filter(s => s.role !== sug.role));
+  }
+
+  // C-level ขอเพิ่ม M-level พร้อมบทบาทหน้าที่ที่ตนกำหนด → CEO เสนอบอร์ด
+  // เมื่อบอร์ดอนุมัติ decideApproval (type 'hire') จะสร้าง AI Agent ตำแหน่งนั้นทันที
+  function requestMLevel(cAgent: Agent, role: string, mandate: string) {
+    if (!role.trim() || !mandate.trim()) return;
+    const approval: import('../types').Approval = {
+      id: 'hire-m-' + Date.now().toString(36),
+      agentId: cAgent.id,
+      title: `📋 ${cAgent.role} ขอเพิ่ม M-level: ${role.trim()} — CEO เสนอบอร์ดอนุมัติ`,
+      detail: `บทบาทหน้าที่ (กำหนดโดย ${cAgent.role} ${cAgent.name}):\n${mandate.trim()}\n\nรายงานต่อ: ${cAgent.role} · อนุมัติแล้วระบบสร้าง AI Agent ตำแหน่งนี้ทันที`,
+      impact: JSON.stringify({ type: 'hire', role: role.trim(), mandate: mandate.trim(), reportsToRole: cAgent.role }),
+      status: 'pending',
+    };
+    patch({ approvals: [...c.approvals, approval] });
+    setMReq(null);
+    setFeed(prev => [
+      { id: ++counter.current, time: nowTime(), text: `${cAgent.role} ${cAgent.name} ขอเพิ่ม ${role.trim()} — CEO เสนอบอร์ดอนุมัติ`, color: cAgent.color },
+      ...prev,
+    ].slice(0, 40));
   }
 
   // CEO กำหนดบทบาทหน้าที่ทุกตำแหน่งให้สอดคล้องกับ Business Process + เป้าหมาย + Skills
@@ -1336,6 +1402,49 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                 <textarea className="ai-agent-mandate" rows={2} defaultValue={a.mandate} key={'m' + a.id + a.mandate}
                   onBlur={e => saveAgent(a.id, 'mandate', e.target.value)}
                   onChange={e => autoH(e.target)} ref={el => autoH(el)} spellCheck={false} />
+
+                {/* C-level ขอเพิ่ม M-level (กำหนดบทบาทเอง → CEO เสนอบอร์ด → อนุมัติแล้วสร้าง agent ทันที) */}
+                {isCLevel(a.role) && (
+                  mReq?.agentId === a.id ? (
+                    <div className="mreq-form">
+                      <div className="mreq-hd">🧑‍💼 {a.role} ขอเพิ่มตำแหน่ง M-level</div>
+                      <select className="mreq-sel"
+                        value={mReq.custom ? M_CUSTOM : mReq.role}
+                        onChange={e => {
+                          if (e.target.value === M_CUSTOM) {
+                            setMReq({ ...mReq, custom: true, role: '', mandate: `บทบาทหน้าที่ที่ ${a.role} กำหนด: ` });
+                          } else {
+                            const s = mSuggestionsFor(a.role).find(x => x.role === e.target.value);
+                            if (s) setMReq({ ...mReq, custom: false, role: s.role, mandate: s.mandate });
+                          }
+                        }}>
+                        {mSuggestionsFor(a.role).map(s => <option key={s.role} value={s.role}>{s.role}</option>)}
+                        <option value={M_CUSTOM}>✏️ กำหนดตำแหน่งเอง…</option>
+                      </select>
+                      {mReq.custom && (
+                        <input className="mreq-role-inp" placeholder="ชื่อตำแหน่ง เช่น Customer Success Manager"
+                          value={mReq.role} onChange={e => setMReq({ ...mReq, role: e.target.value })} />
+                      )}
+                      <textarea className="mreq-mandate" rows={3} value={mReq.mandate}
+                        onChange={e => setMReq({ ...mReq, mandate: e.target.value })}
+                        placeholder="บทบาทหน้าที่ของตำแหน่งนี้ (ใช้เป็นข้อมูลสร้าง AI Agent)" spellCheck={false} />
+                      <div className="mreq-actions">
+                        <button className="mreq-submit" onClick={() => requestMLevel(a, mReq.role, mReq.mandate)}
+                          disabled={!mReq.role.trim() || !mReq.mandate.trim()}>
+                          📨 ส่งขออนุมัติ (CEO เสนอบอร์ด)
+                        </button>
+                        <button className="mreq-cancel" onClick={() => setMReq(null)}>ยกเลิก</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button className="mreq-btn" onClick={() => {
+                      const s = mSuggestionsFor(a.role)[0];
+                      setMReq({ agentId: a.id, role: s.role, mandate: s.mandate, custom: false });
+                    }} title={`${a.role} ขอเพิ่มตำแหน่งระดับ Manager ใต้บังคับบัญชา — ต้องผ่านบอร์ดอนุมัติ`}>
+                      🧑‍💼 ขอเพิ่ม M-level
+                    </button>
+                  )
+                )}
                 {isSupabaseEnabled && (
                   <button
                     className={`agent-run-now-btn${runningAgentId === a.id ? ' running' : ''}`}
