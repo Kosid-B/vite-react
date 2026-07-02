@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { trackAiCall } from '../lib/usage';
 import type { Agent, AppData, BMCData } from '../types';
 import EditableList from '../components/EditableList';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
@@ -175,6 +176,7 @@ export default function BusinessModel({ data, onUpdate }: Props) {
       const desc = DE24_TH[idx] ?? step.name;
       const notes = bm.de24[idx]?.notes ?? '';
       const agent = data.aiCompany?.agents.find(a => a.role === 'CEO') ?? data.aiCompany?.agents[0];
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: agent?.role ?? 'CEO',

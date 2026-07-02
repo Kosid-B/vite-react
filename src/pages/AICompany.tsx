@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { trackAiCall } from '../lib/usage';
 import type { AppData, Agent, AgentStatus, ApprovalStatus, TaskStatus, SkillPlanItem, CustomSkill, RoleCompetency } from '../types';
 import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
@@ -358,6 +359,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     if (!supabase) return;
     setPlanning(true); setPlanMsg(null);
     try {
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('ai-plan', {
         body: { goal: c.goal, industry: c.industry, agents: c.agents.map(a => ({ role: a.role, mandate: a.mandate })) },
       });
@@ -404,6 +406,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       const orgContext = c.agents
         .filter(a => a.id !== agent.id)
         .map(a => ({ role: a.role, mandate: a.mandate }));
+
+      trackAiCall();
 
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
@@ -453,6 +457,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     if (!agent) return;
     setGeneratingJD(agentId);
     try {
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'HR Manager',
@@ -499,6 +504,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setCeoSuggestions([]);
     try {
       const existing = c.agents.map(a => a.role).join(', ') || 'ยังไม่มีทีม';
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'CEO',
@@ -584,6 +590,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setMandateMsg(null);
     setMandateProposals([]);
     try {
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'CEO',
@@ -724,6 +731,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setProposingMission(true);
     setMissionMsg(null);
     try {
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'CEO',
@@ -788,6 +796,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setHrdPlanningSkills(true);
     setSkillPlanMsg(null);
     try {
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: hrdAgent.role, name: hrdAgent.name, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
@@ -846,6 +855,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     const hrdAgent = c.agents.find(a => /hrd|hr manager/i.test(a.role));
     if (!skill || !hrdAgent || !supabase) return;
     try {
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
@@ -885,6 +895,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setDesigningCompetency(true);
     setCompetencyMsg(null);
     try {
+      trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,

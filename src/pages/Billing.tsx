@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
+import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
 
 function addDays(iso: string, n: number): string {
   const d = new Date(iso);
@@ -114,6 +115,18 @@ const PLANS: Plan[] = [
 ];
 
 export default function Billing({ data, onUpdate }: Props) {
+  // PLG: usage meter + referral link
+  const [refCopied, setRefCopied] = useState(false);
+  const aiUsed = getAiUsage().count;
+  const aiQuota = PLAN_AI_CALLS[data.subscription.plan];
+  const aiPct = Math.min(100, Math.round((aiUsed / aiQuota) * 100));
+  const refLink = 'https://ceoaithailand.org/?ref=' + (data.aiCompany.name || 'friend').replace(/\s+/g, '-');
+  const copyRef = () => {
+    navigator.clipboard?.writeText(refLink).then(() => {
+      setRefCopied(true);
+      setTimeout(() => setRefCopied(false), 2000);
+    });
+  };
   const sub = data.subscription;
   const [selected, setSelected] = useState<PlanId>(sub.plan === 'free' && sub.status !== 'trial' ? 'growth' : sub.plan);
   const [copied, setCopied] = useState(false);
@@ -267,6 +280,37 @@ export default function Billing({ data, onUpdate }: Props) {
               แพ็กปัจจุบัน: {PLANS.find(p => p.id === sub.plan)?.name}
             </span>
           )}
+        </div>
+      </div>
+
+      {/* PLG: usage meter (expansion loop) + referral (viral loop) */}
+      <div className="plg-row">
+        <div className="plg-card">
+          <div className="plg-hd">⚡ การใช้งาน AI เดือนนี้</div>
+          <div className="plg-bar">
+            <div className="plg-fill" style={{ width: aiPct + '%', background: aiPct >= 80 ? '#f59e0b' : '#38bdf8' }} />
+          </div>
+          <div className="plg-txt">
+            {aiUsed.toLocaleString()} / {aiQuota.toLocaleString()} AI calls ({aiPct}%)
+          </div>
+          {aiPct >= 80 && sub.plan !== 'scale' && (
+            <div className="plg-nudge">
+              🚀 ใกล้เต็มโควตาแล้ว — อัปเกรดเป็น {sub.plan === 'free' ? 'Growth (1,000 calls/เดือน)' : 'Scale (5,000 calls/เดือน)'}
+              <button className="plg-nudge-btn" onClick={() => choosePlan(sub.plan === 'free' ? 'growth' : 'scale')}>
+                อัปเกรดเลย →
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="plg-card">
+          <div className="plg-hd">🎁 ชวนเพื่อนใช้ {BRAND.product}</div>
+          <div className="plg-ref-desc">
+            เพื่อนสมัครผ่านลิงก์ของคุณและชำระแพ็กแรก — รับส่วนลด 10% ในรอบบิลถัดไปทั้งคู่
+          </div>
+          <div className="plg-ref-row">
+            <input className="plg-ref-link" readOnly value={refLink} onFocus={e => e.target.select()} />
+            <button className="plg-ref-copy" onClick={copyRef}>{refCopied ? '✓ คัดลอกแล้ว' : 'คัดลอกลิงก์'}</button>
+          </div>
         </div>
       </div>
 
