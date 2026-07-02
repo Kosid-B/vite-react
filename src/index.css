@@ -692,6 +692,9 @@ body {
 .bmc-de24-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .bmc-phase-card { background: var(--white); border: 1px solid var(--sand); border-top: 3px solid; border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
 .bmc-phase-hd { padding: 11px 14px 10px; border-bottom: 1px solid var(--cream2); display: flex; align-items: center; gap: 8px; }
+.bmc-phase-owner { margin-left: auto; font-size: 10.5px; font-weight: 600; color: var(--ink2); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.bmc-phase-owner.none { color: var(--ink4); background: none; font-weight: 400; font-style: italic; }
+.bmc-de24-assign-msg { font-size: 12px; color: #4ade80; background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.25); border-radius: 8px; padding: 8px 14px; margin-bottom: 12px; }
 .bmc-phase-num { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
 .bmc-phase-label { font-size: 12.5px; font-weight: 600; }
 .bmc-step { border-bottom: 1px solid var(--cream2); transition: background .1s; }
