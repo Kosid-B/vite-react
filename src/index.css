@@ -4452,3 +4452,6 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 /* ===== 💳 ปุ่มจ่ายผ่าน Xendit ===== */
 .bill-xendit { width:100%; font-family:inherit; font-size:15px; font-weight:800; color:#fff; background:linear-gradient(135deg,#4573ff,#22d3ee); border:none; border-radius:12px; padding:14px 18px; cursor:pointer; box-shadow:0 4px 16px rgba(69,115,255,.35); margin-bottom:10px; }
 .bill-xendit:disabled { opacity:.55; cursor:not-allowed; box-shadow:none; }
+
+/* ===== หมายเหตุ ชำระออนไลน์เร็วๆ นี้ (Xendit รอ KYC) ===== */
+.bill-soon { font-size:13px; line-height:1.6; color:#eab308; background:rgba(234,179,8,.08); border:1px solid rgba(234,179,8,.3); border-radius:10px; padding:11px 14px; margin-bottom:10px; }

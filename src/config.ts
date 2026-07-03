@@ -32,4 +32,7 @@ export const PAYMENT = {
   accountNo: '005-3-92560-0', // ⚠️ โปรดยืนยันเลขบัญชีให้ถูกต้อง
   // PromptPay (สำหรับ QR) — ใช้เบอร์/เลขผู้เสียภาษีที่ลงทะเบียนพร้อมเพย์ไว้
   promptpayId: '0817817773',
+  // ⚙️ ชำระออนไลน์อัตโนมัติผ่าน Xendit — เปลี่ยนเป็น true เมื่อ Xendit อนุมัติบัญชี (ผ่าน KYC),
+  //    deploy ฟังก์ชัน create-invoice + xendit-webhook และตั้ง XENDIT keys ครบแล้ว (ดู COMMAND.md)
+  xenditLive: false,
 };

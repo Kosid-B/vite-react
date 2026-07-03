@@ -636,7 +636,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
               <span className="bill-amount">{baht(chargeAmount)}</span>
             </div>
 
-            {isSupabaseEnabled && (
+            {isSupabaseEnabled && PAYMENT.xenditLive && (
               <>
                 <button className="bill-xendit" onClick={payWithXendit} disabled={payBusy || !wsId}>
                   {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Xendit — บัตร / PromptPay / e-Wallet'}
@@ -646,6 +646,12 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                   ชำระเงินปลอดภัยผ่าน Xendit — เปิดใช้งานแพ็กอัตโนมัติทันทีเมื่อชำระสำเร็จ
                 </div>
               </>
+            )}
+            {isSupabaseEnabled && !PAYMENT.xenditLive && (
+              <div className="bill-soon">
+                ⏳ ระบบชำระออนไลน์อัตโนมัติกำลังเปิดใช้เร็วๆ นี้ — ระหว่างนี้โอนหรือสแกน QR ด้านบน
+                แล้วส่งสลิป แอดมินเปิดใช้งานให้ภายใน 1 ชม. (วันทำการ)
+              </div>
             )}
             {payload ? (
               <>

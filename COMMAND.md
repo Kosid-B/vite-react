@@ -125,6 +125,13 @@ npx supabase secrets set XENDIT_CALLBACK_TOKEN=<token>    --project-ref rsjbqmnv
 # แล้วตั้ง Webhook (Xendit → Settings → Webhooks → Invoices paid):
 #   https://rsjbqmnvocvtveelselj.supabase.co/functions/v1/xendit-webhook
 # copy Callback Verification Token จากหน้านั้นมาใส่ XENDIT_CALLBACK_TOKEN
+#
+# ✅ Checklist เปิดใช้ปุ่มจ่ายออนไลน์ (หลัง Xendit อนุมัติบัญชี/ผ่าน KYC):
+#   1. deploy create-invoice + xendit-webhook (2 คำสั่งด้านบน)
+#   2. set XENDIT_SECRET_KEY + XENDIT_CALLBACK_TOKEN + ตั้ง webhook URL
+#   3. แก้ src/config.ts → PAYMENT.xenditLive = true → commit + merge (Cloudflare deploy อัตโนมัติ)
+#      → ปุ่ม "จ่ายผ่าน Xendit" จะปรากฏบนหน้าแพ็กเกจ
+#   * ระหว่างรอ KYC: xenditLive=false → ลูกค้าโอน/QR + ส่งสลิป แอดมินเปิดใช้งานให้
 
 # deploy ทุกตัวพร้อมกัน
 npx supabase functions deploy --project-ref rsjbqmnvocvtveelselj
