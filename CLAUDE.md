@@ -12,6 +12,18 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 - **Search**: Serper.dev (Google Search API) — ใช้ใน agent-run Edge Function
 - **Billing**: pg_cron + billing-cron Edge Function (daily 02:00 UTC)
 
+## TIS Automate (ผลิตภัณฑ์แยก)
+```
+Supabase Project ID : galtbbkcddugnsfkgyqm  (แยกจากระบบหลักโดยสมบูรณ์ — ทางเลือก B โดย Board)
+Supabase URL        : https://galtbbkcddugnsfkgyqm.supabase.co
+Region              : ap-southeast-1 (สิงคโปร์) · Free tier ฿0/เดือน
+Schema              : migrations/0016_tis_automate.sql + 0017_tis_rls_fixes.sql (applied แล้วทั้งคู่)
+                      13 ตาราง (organizations/standards/clauses/projects/requirements/kanban/
+                      documents/validations/marketing_events/…) + 5 enums + RLS ครบ
+หมายเหตุ            : 0016/0017 อยู่ใน repo นี้เพื่อเก็บประวัติ แต่ apply กับ project TIS เท่านั้น
+                      (ห้าม apply กับ rsjbqmnvocvtveelselj) · frontend/subdomain ยังไม่สร้าง
+```
+
 ## Production Credentials
 ```
 Supabase Project ID : rsjbqmnvocvtveelselj
