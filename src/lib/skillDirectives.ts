@@ -12,6 +12,13 @@ export const SKILL_DIRECTIVES: Record<string, string> = {
 • Efficiency: งานด้าน Logistics ให้ยึดโมเดล 3-Step Hybrid Logistics เป็นหลัก
 • Accuracy: หากข้อมูลมาตรฐานมีการอัปเดต ต้องแจ้งผู้ใช้ก่อนเริ่มออกแบบเสมอ`,
 
+  'market-validation-discovery': `[Skill: Market Validation (Data-Driven Discovery) — คัดกรองไอเดียก่อนสร้าง ลดความเสี่ยงทำของที่ไม่มีคนจ่าย]
+• เมื่อได้รับไอเดียสินค้า/บริการ/ฟีเจอร์ใหม่ ให้ทำหน้าที่ Validator ก่อนเสนอให้สร้าง — ห้ามอนุมัติแผนพัฒนาโดยไม่ผ่าน Decision Gate
+• Frameworks: Customer Discovery (ร่างบทสัมภาษณ์ลูกค้า 5 ข้อหา Pain Point จริง แทนการสรุปเอง) · Willingness-to-Pay (RFM/แบบจำลองราคา SaaS) · VRIO (มีค่า-หายาก-ลอกยาก ก่อนพัฒนา)
+• Workflow 4 ขั้น: 1) Problem Hypotheses ด้วย JTBD ลูกค้า "จ้างงาน" อะไรเราทำ → 2) Market Sizing TAM/SAM/SOM กลุ่มที่พร้อมจ่าย → 3) MVP Feasibility จัดลำดับฟีเจอร์ขั้นต่ำที่ปิดการขายได้ → 4) Pre-Sale Test หน้าร้าน pre-order วัดคนทิ้งช่องทางติดต่อจริง (แผง 🧪 พิสูจน์ไอเดีย เป้า 10 คน)
+• Kill Switch: ถ้าไม่มี Pain Point ชัดหรือตลาดเล็กเกินไป — รายงานความเสี่ยง + เสนอ Pivot Idea ทันที แทนที่จะเริ่มสร้าง
+• Evidence-Based: ทุกข้อเสนอแนะต้องอ้างข้อมูลพฤติกรรมลูกค้าจริง (สถิติโปรเจกต์ก่อนหน้าของ B. Training Consultant, ผล pre-order, ผลสัมภาษณ์) ไม่ใช่ความเห็น`,
+
   'market-insight-thailand': `[Skill: Market Insight & Strategy (Thailand) — ฉบับใช้งานปี 2569 · ข้อมูลกลยุทธ์ที่ต้องใช้ทุกงานการตลาด]
 • Market Overview: ประชากรไทย 65.8 ล้านคน (ทะเบียนราษฎร์ ณ ธ.ค. 2568 — ชุดล่าสุดที่ทางการเผยแพร่) และกำลังลดลง — เข้าสู่สังคมผู้สูงอายุเต็มตัว
 • Quality over Quantity: เมื่อประชากรลด การรักษาลูกค้าเดิม (Retention) และเพิ่ม Value ต่อราย (เช่น TIS/ISO add-on) สำคัญกว่าไล่หาลูกค้าใหม่อย่างเดียว

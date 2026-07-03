@@ -196,6 +196,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     tags: ['CTO', 'CEO', 'Data Manager'],
   },
   {
+    id: 'market-validation-discovery',
+    name: 'Market Validation (Data-Driven Discovery)',
+    category: 'strategy', tier: 3, price: 2490, icon: '🧪',
+    desc: 'คัดกรองไอเดียก่อนลงมือสร้าง — Customer Discovery (บทสัมภาษณ์หา Pain Point จริง), Willingness-to-Pay (RFM/SaaS pricing), VRIO, workflow 4 ขั้น JTBD→TAM/SAM/SOM→MVP→Pre-Sale Test พร้อม Kill Switch เสนอ Pivot เมื่อไอเดียเสี่ยง',
+    tags: ['CEO', 'CTO', 'Product Owner'],
+    official: true,
+    valueNote: 'เทียบจ้างที่ปรึกษา validate ไอเดีย ฿30,000+ · กันเงินจมกับสินค้าที่ไม่มีคนซื้อหลักแสน — ใช้ครั้งเดียวก็คุ้ม',
+  },
+  {
     id: 'market-insight-thailand',
     name: 'Market Insight & Strategy (Thailand)',
     category: 'marketing', tier: 2, price: 1990, icon: '🇹🇭',
