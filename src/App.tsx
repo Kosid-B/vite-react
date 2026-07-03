@@ -370,7 +370,7 @@ export default function App() {
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
         {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} wsId={activeWs} />}
-        {activePage === 'billing' && <Billing data={data} onUpdate={updateData} />}
+        {activePage === 'billing' && <Billing data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
         {activePage === 'market' && (
           canAccess(data, 'market')

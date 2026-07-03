@@ -4448,3 +4448,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .danger-link { font-family:inherit; font-size:12.5px; font-weight:800; color:#ef4444; background:none; border:none; text-decoration:underline; cursor:pointer; padding:0; }
 .danger-link:disabled { opacity:.4; cursor:not-allowed; }
 .danger-note { opacity:.6; }
+
+/* ===== 💳 ปุ่มจ่ายผ่าน Xendit ===== */
+.bill-xendit { width:100%; font-family:inherit; font-size:15px; font-weight:800; color:#fff; background:linear-gradient(135deg,#4573ff,#22d3ee); border:none; border-radius:12px; padding:14px 18px; cursor:pointer; box-shadow:0 4px 16px rgba(69,115,255,.35); margin-bottom:10px; }
+.bill-xendit:disabled { opacity:.55; cursor:not-allowed; box-shadow:none; }

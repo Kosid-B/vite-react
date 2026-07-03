@@ -3,6 +3,7 @@ import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
 
 function addDays(iso: string, n: number): string {
   const d = new Date(iso);
@@ -24,6 +25,7 @@ function daysLeft(iso: string): number {
 interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
+  wsId?: string | null;
 }
 
 interface Plan {
@@ -142,7 +144,7 @@ const PLANS: Plan[] = [
 // แพ็กรายปี — จ่ายเท่า ~10 เดือน (ประหยัด ~17% และลด churn)
 const YEARLY_PRICE: Record<PlanId, number> = { free: 0, starter: 3900, growth: 14900, scale: 59000 };
 
-export default function Billing({ data, onUpdate }: Props) {
+export default function Billing({ data, onUpdate, wsId }: Props) {
   // PLG: usage meter + referral link
   const [refCopied, setRefCopied] = useState(false);
   const aiUsed = getAiUsage().count;
@@ -162,6 +164,25 @@ export default function Billing({ data, onUpdate }: Props) {
   const [copied, setCopied] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState<Invoice | null>(null);
   const [showCost, setShowCost] = useState(false);
+  const [payBusy, setPayBusy] = useState(false);
+  const [payErr, setPayErr] = useState<string | null>(null);
+
+  /** จ่ายผ่าน Xendit (hosted checkout: บัตร/PromptPay/e-wallet) — production เท่านั้น */
+  async function payWithXendit() {
+    if (!supabase || !wsId) return;
+    setPayBusy(true);
+    setPayErr(null);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('create-invoice', {
+        body: { plan: selected, cycle, workspaceId: wsId },
+      });
+      if (error || !res?.invoice_url) throw new Error(res?.error ?? error?.message ?? 'สร้างใบชำระเงินไม่สำเร็จ');
+      window.location.href = res.invoice_url as string;
+    } catch (e) {
+      setPayErr((e as Error).message);
+      setPayBusy(false);
+    }
+  }
 
   const selectedPlan = PLANS.find(p => p.id === selected)!;
   const chargeAmount = priceFor(selected);
@@ -615,16 +636,29 @@ export default function Billing({ data, onUpdate }: Props) {
               <span className="bill-amount">{baht(chargeAmount)}</span>
             </div>
 
+            {isSupabaseEnabled && (
+              <>
+                <button className="bill-xendit" onClick={payWithXendit} disabled={payBusy || !wsId}>
+                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Xendit — บัตร / PromptPay / e-Wallet'}
+                </button>
+                {payErr && <div className="bill-warn">⚠️ {payErr}</div>}
+                <div className="bill-note">
+                  ชำระเงินปลอดภัยผ่าน Xendit — เปิดใช้งานแพ็กอัตโนมัติทันทีเมื่อชำระสำเร็จ
+                </div>
+              </>
+            )}
             {payload ? (
               <>
                 <button className="bill-copy" onClick={copyPayload}>
                   {copied ? '✓ คัดลอกแล้ว' : 'คัดลอกข้อมูล PromptPay QR (payload)'}
                 </button>
-                <button className="bill-confirm" onClick={confirmPaid}>
-                  ฉันชำระเงินแล้ว — เปิดใช้งาน
-                </button>
+                {!isSupabaseEnabled && (
+                  <button className="bill-confirm" onClick={confirmPaid}>
+                    ฉันชำระเงินแล้ว — เปิดใช้งาน (เดโม)
+                  </button>
+                )}
                 <div className="bill-note">
-                  * เมื่อเชื่อม Payment Gateway จริง ระบบจะยืนยันยอดอัตโนมัติ (เดโมนี้กดยืนยันเองได้)
+                  หรือโอน/สแกน QR ด้านบนแล้วส่งสลิป — แอดมินเปิดใช้งานให้ภายใน 1 ชม.
                 </div>
               </>
             ) : (
