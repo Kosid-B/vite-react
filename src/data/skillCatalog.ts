@@ -194,6 +194,8 @@ export const SKILL_CATALOG: SkillEntry[] = [
     category: 'technology', tier: 3, price: 2000, icon: '🧬',
     desc: 'เอเจนต์ Data-Driven: ตีความมาตรฐาน TIS/ISO (9001·14001·22301) เป็น Logic, ออกแบบ Database/Supabase ตาม Law of UX, การตลาดเพิ่ม Conversion และ Lean JIT/Kanban',
     tags: ['CTO', 'CEO', 'Data Manager'],
+    official: true,
+    valueNote: 'เทียบจ้างที่ปรึกษาวางสถาปัตยกรรมระบบ + Compliance TIS/ISO ฿50,000+ ต่อโปรเจกต์ — ได้ทั้ง schema จริงและ logic มาตรฐานในตัวเดียว',
   },
   {
     id: 'market-validation-discovery',
