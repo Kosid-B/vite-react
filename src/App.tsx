@@ -4,6 +4,7 @@ import type { AppData, PageId } from './types';
 import { DEFAULT_DATA } from './data';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
+import { setAgentWorkspace } from './lib/agentClient';
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
@@ -154,6 +155,9 @@ export default function App() {
   const [authReady, setAuthReady] = useState(!isSupabaseEnabled);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWs, setActiveWs] = useState<string | null>(null);
+
+  // R8 — Durable Object ของ AI agent แยกต่อ workspace
+  useEffect(() => { setAgentWorkspace(activeWs); }, [activeWs]);
   const cloudTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -377,7 +381,8 @@ export default function App() {
         {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} />}
         {activePage === 'team' && (
           canAccess(data, 'team')
-            ? <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data} />
+            ? <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data}
+                onDeleted={() => { window.location.href = '/'; }} />
             : <UpgradeWall page="team" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'admin' && (
