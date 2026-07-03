@@ -907,7 +907,9 @@ input:focus, textarea:focus, select:focus {
 .pub-muted { font-size: 12.5px; color: var(--ink4); }
 .pub-updated { font-size: 11px; color: var(--ink4); margin-top: 18px; }
 .pub-dir-title { font-size: 26px; font-weight: 800; margin: 0 0 4px; }
-.pub-dir-sub { font-size: 13px; color: var(--ink3); margin: 0 0 16px; }
+.pub-dir-sub { font-size: 13px; color: var(--ink3); margin: 0 0 10px; }
+.pub-dir-intro { font-size: 13px; line-height: 1.75; color: var(--ink2); margin: 0 0 18px; max-width: 760px; }
+.pub-dir-intro a { color: #38bdf8; font-weight: 600; text-decoration: none; }
 .pub-dir-filters { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
 .pub-dir-search { flex: 1; min-width: 200px; font-size: 13px; font-family: inherit; color: var(--ink); background: var(--white); border: 1px solid var(--sand); border-radius: 10px; padding: 10px 14px; outline: none; }
 .pub-dir-sector { font-size: 12.5px; font-family: inherit; color: var(--ink2); background: var(--white); border: 1px solid var(--sand); border-radius: 10px; padding: 10px 12px; max-width: 320px; }

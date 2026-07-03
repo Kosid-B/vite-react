@@ -3,16 +3,13 @@ import { getStorefront, isFeatured, listStorefronts, type Storefront, type Store
 import { countLeads, submitLead, type LeadKind } from '../lib/leads';
 import { track } from '../lib/analytics';
 import { DBD_SECTORS } from '../data/dbd';
+import { applySeo, siteOrigin } from '../lib/seo';
+import { storefrontSeo, directorySeo, directoryItemList, sectorLabel } from '../lib/seoData';
 
 /* ===== Marketplace M1 — หน้าสาธารณะ (ไม่ต้องล็อกอิน) =====
  * /b        → สารบัญธุรกิจ จัดกลุ่มตามหมวด DBD
- * /b/<slug> → หน้าร้านของบริษัท */
-
-function sectorLabel(dbd: string): string {
-  const m = dbd.match(/^\[([A-Z])\]/);
-  const sec = m ? DBD_SECTORS.find(s => s.code === m[1]) : undefined;
-  return sec ? `หมวด ${sec.code} · ${sec.label}` : (dbd || 'ไม่ระบุหมวด');
-}
+ * /b/<slug> → หน้าร้านของบริษัท
+ * SEO: production inject meta ฝั่ง server (src/server.ts); ที่นี่ applySeo ยืนยันฝั่ง client */
 
 function PublicShell({ children, title }: { children: React.ReactNode; title: string }) {
   useEffect(() => { document.title = `${title} — CEO AI Thailand`; }, [title]);
@@ -44,6 +41,11 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
     getStorefront(s).then(setSf).catch(() => setSf(null));
     countLeads(s).then(setInterested).catch(() => {});
   }, [slug]);
+
+  // SEO: อัปเดต title/meta/canonical/OG + JSON-LD ต่อร้าน (client-side; server ทำ inject แล้วบน production)
+  useEffect(() => {
+    if (sf && sf.published) applySeo(storefrontSeo(sf, siteOrigin()));
+  }, [sf]);
 
   async function sendLead() {
     if (!sf || !leadOpen) return;
@@ -164,6 +166,13 @@ export function PublicDirectoryPage() {
     listStorefronts().then(setList).catch(() => setList([]));
   }, []);
 
+  // SEO: CollectionPage + ItemList จากร้านที่โหลดมา
+  useEffect(() => {
+    const seo = directorySeo(siteOrigin());
+    if (list && list.length) seo.jsonLd.push(directoryItemList(list, siteOrigin()));
+    applySeo(seo);
+  }, [list]);
+
   // chips หมวด DBD — เฉพาะหมวดที่มีร้านจริง
   const sectorsPresent = DBD_SECTORS.filter(s =>
     (list ?? []).some(sf => sf.dbd.startsWith(`[${s.code}]`)));
@@ -193,8 +202,17 @@ export function PublicDirectoryPage() {
 
   return (
     <PublicShell title="ตลาดธุรกิจไทย — สินค้าและบริการ">
-      <h1 className="pub-dir-title">ตลาดสินค้า & บริการ</h1>
+      <h1 className="pub-dir-title">ตลาดสินค้า & บริการธุรกิจไทย</h1>
       <p className="pub-dir-sub">ธุรกิจไทยที่ขับเคลื่อนด้วยทีม AI บน CEO AI Thailand — ค้นหาสินค้า บริการ และคู่ค้าของคุณ</p>
+      <p className="pub-dir-intro">
+        ตลาดสินค้าและบริการของ CEO AI Thailand รวมร้านค้าและธุรกิจไทยหลากหลายหมวดหมู่ตามการจำแนกของ
+        กรมพัฒนาธุรกิจการค้า (DBD) — ตั้งแต่เกษตร อาหาร งานฝีมือ ไปจนถึงบริการที่ปรึกษาและอุตสาหกรรม
+        ทุกร้านบริหารด้วยทีมเอเจนต์ AI ที่ช่วยวางกลยุทธ์ ตั้งราคา และดูแลลูกค้า คุณสามารถ
+        <b>ค้นหาตามชื่อร้าน สินค้า หรือโปรโมชัน</b> กรองเฉพาะ “สินค้า” หรือ “บริการ”
+        และเลือกดูตามหมวดธุรกิจได้ทันที เมื่อเจอร้านที่ใช่ ส่งคำขอใบเสนอราคา (RFQ) หรือสั่งจองล่วงหน้าได้เลย
+        โดยไม่ต้องสมัครสมาชิก อยากมีหน้าร้านของคุณเองบนตลาดนี้?{' '}
+        <a href="/shop">เปิดร้านฟรีได้ในไม่กี่นาที →</a>
+      </p>
 
       {/* ค้นหา + กรองประเภท */}
       <div className="pub-dir-filters">
