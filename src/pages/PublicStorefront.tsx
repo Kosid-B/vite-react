@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getStorefront, isFeatured, listStorefronts, type Storefront, type StorefrontKind } from '../lib/storefront';
+import { countLeads, submitLead, type LeadKind } from '../lib/leads';
 import { DBD_SECTORS } from '../data/dbd';
 
 /* ===== Marketplace M1 — หน้าสาธารณะ (ไม่ต้องล็อกอิน) =====
@@ -31,10 +32,26 @@ function PublicShell({ children, title }: { children: React.ReactNode; title: st
 
 export function PublicStorefrontPage({ slug }: { slug: string }) {
   const [sf, setSf] = useState<Storefront | null | undefined>(undefined);
+  const [interested, setInterested] = useState(0);
+  const [leadOpen, setLeadOpen] = useState<LeadKind | null>(null);
+  const [leadDraft, setLeadDraft] = useState({ name: '', contact: '', note: '' });
+  const [leadMsg, setLeadMsg] = useState<string | null>(null);
+  const [leadSent, setLeadSent] = useState(false);
 
   useEffect(() => {
-    getStorefront(decodeURIComponent(slug)).then(setSf).catch(() => setSf(null));
+    const s = decodeURIComponent(slug);
+    getStorefront(s).then(setSf).catch(() => setSf(null));
+    countLeads(s).then(setInterested).catch(() => {});
   }, [slug]);
+
+  async function sendLead() {
+    if (!sf || !leadOpen) return;
+    setLeadMsg(null);
+    const err = await submitLead({ slug: sf.slug, kind: leadOpen, ...leadDraft });
+    if (err) { setLeadMsg('⚠️ ' + err); return; }
+    setLeadSent(true);
+    setInterested(n => n + 1);
+  }
 
   if (sf === undefined) return <PublicShell title="กำลังโหลด"><div className="pub-loading">กำลังโหลด…</div></PublicShell>;
   if (sf === null || !sf.published) {
@@ -66,6 +83,38 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
             </ul>
           </>
         )}
+
+        {/* 🧪 Pre-order Validation — ลูกค้าจริงยกมือก่อนร้านลงทุนสร้าง */}
+        <div className="pub-lead-box">
+          {interested > 0 && <div className="pub-lead-proof">🔥 มีผู้สนใจ/สั่งจองแล้ว <b>{interested}</b> คน</div>}
+          {leadSent ? (
+            <div className="pub-lead-thanks">✅ รับเรื่องแล้ว! ร้านจะติดต่อกลับตามช่องทางที่ให้ไว้ — ขอบคุณที่สนใจ</div>
+          ) : leadOpen ? (
+            <div className="pub-lead-form">
+              <div className="pub-lead-form-hd">
+                {leadOpen === 'preorder' ? '🛒 สั่งจองล่วงหน้า' : '👀 ฝากความสนใจ'} — ร้านติดต่อกลับ ไม่ต้องจ่ายตอนนี้
+              </div>
+              <input placeholder="ชื่อของคุณ" value={leadDraft.name} maxLength={80}
+                onChange={e => setLeadDraft({ ...leadDraft, name: e.target.value })} />
+              <input placeholder="เบอร์โทร / LINE / อีเมล *" value={leadDraft.contact} maxLength={120}
+                onChange={e => setLeadDraft({ ...leadDraft, contact: e.target.value })} />
+              <input placeholder="สนใจสินค้า/บริการไหน จำนวนเท่าไหร่ (ไม่บังคับ)" value={leadDraft.note} maxLength={200}
+                onChange={e => setLeadDraft({ ...leadDraft, note: e.target.value })} />
+              {leadMsg && <div className="skm-msg">{leadMsg}</div>}
+              <div className="pub-lead-actions">
+                <button className="pub-lead-send" onClick={sendLead} disabled={leadDraft.contact.trim().length < 5}>
+                  ส่งให้ร้านเลย
+                </button>
+                <button className="pub-lead-cancel" onClick={() => setLeadOpen(null)}>ยกเลิก</button>
+              </div>
+            </div>
+          ) : (
+            <div className="pub-lead-cta-row">
+              <button className="pub-lead-cta" onClick={() => setLeadOpen('preorder')}>🛒 สั่งจองล่วงหน้า</button>
+              <button className="pub-lead-cta ghost" onClick={() => setLeadOpen('interest')}>👀 สนใจ — ให้ร้านติดต่อกลับ</button>
+            </div>
+          )}
+        </div>
 
         <div className="pub-sec-hd">ติดต่อธุรกิจนี้</div>
         <div className="pub-contacts">
