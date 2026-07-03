@@ -32,3 +32,13 @@ dist-ssr
 
 # Claude Code agent worktrees (runtime artifacts)
 .claude/worktrees/
+
+# ===== ไฟล์ลับ / ความลับ — ห้าม commit เด็ดขาด (เพิ่มโดย ISMS governance) =====
+Project key.txt
+*key*.txt
+RECOVERY-CODES*
+*.pem
+*.key
+secrets*
+**/service-role*
+reference/
