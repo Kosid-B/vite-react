@@ -81,6 +81,10 @@ Local = production backend เดียวกัน (ไม่มี local mode 
 - [ ] Marketing events → funnel dashboard (ตาราง marketing_events พร้อมแล้ว)
 - [ ] Billing/แพ็กเกจ — รอ Payment Gateway ของระบบหลัก
 
+## เอกสารประกอบการขาย/ตรวจ ISO (ใน repo แม่)
+- `../docs/SOP-ACCESS-CONTROL-SSO.md` — SOP ควบคุมการเข้าถึง + นโยบาย SSO/MFA + แบบฟอร์มขอสิทธิ์
+- `../docs/POLICY-ISO27001-DATA-CONTROL.md` — นโยบายควบคุมข้อมูลตาม ISO/IEC 27001 (เอกสารแนบส่งลูกค้า)
+
 ## Workflow / กติกา
 - ห้ามสร้าง `.env` ที่มี secret ใน repo (publishable key ฝังได้ — เป็น public key)
 - Migration ใหม่ของ TIS: สร้างไฟล์ใน `../supabase/migrations/` ชื่อขึ้นต้น `00XX_tis_*`
