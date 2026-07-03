@@ -53,7 +53,7 @@ export default function App() {
     supabase.from('standards').select('*').eq('is_active', true)
       .order('priority_rank', { ascending: false })  // TIS-first
       .then(({ data }) => setStandards((data as Standard[]) ?? []));
-  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [session]);
 
   async function loadOrgs() {
     const { data } = await supabase.from('organizations').select('*').order('created_at');

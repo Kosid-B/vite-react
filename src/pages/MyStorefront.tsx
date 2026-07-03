@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { AppData, PageId } from '../types';
-import { getMyStorefront, saveStorefront, type Storefront } from '../lib/storefront';
+import { getMyStorefront, saveStorefront, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { draftVpLocal } from '../lib/firstDeal';
 import { trackAiCall } from '../lib/usage';
@@ -30,6 +30,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
   const [msg, setMsg] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [vpBusy, setVpBusy] = useState(false);
+  const [imgBusy, setImgBusy] = useState(false);
 
   useEffect(() => {
     getMyStorefront(wsId).then(existing => {
@@ -41,6 +42,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
         kind: 'both',
         vp: '',
         promo: '',
+        images: [],
         description: c.productDesc ?? data.businessModel.bmc.value[0] ?? '',
         services: data.businessModel.bmc.value.slice(0, 3),
         phone: '', lineId: '', email: '', website: '',
@@ -53,6 +55,17 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
 
   const publicUrl = `${APP_ORIGIN}/b/${encodeURIComponent(sf.slug)}`;
   const patch = (p: Partial<Storefront>) => setSf({ ...sf, ...p });
+
+  /** อัปโหลดรูปสินค้า — prod: Storage · local: dataURL (ย่อรูปให้อัตโนมัติ) */
+  async function addImage(file?: File) {
+    if (!file || !sf || sf.images.length >= MAX_SHOP_IMAGES) return;
+    setImgBusy(true);
+    const { url, error } = await uploadShopImage(wsId, file);
+    setImgBusy(false);
+    if (error || !url) { setMsg('⚠️ อัปโหลดรูปไม่สำเร็จ: ' + (error ?? '')); return; }
+    patch({ images: [...sf.images, url] });
+    setMsg('📷 เพิ่มรูปแล้ว — อย่าลืมกดเผยแพร่เพื่อบันทึก');
+  }
 
   /** AI Agent เขียน Value Proposition — prod: Claude ผ่าน ai-assist · local: template จากข้อมูลจริง */
   async function generateVp() {
@@ -144,6 +157,26 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
             <input value={sf.promo} maxLength={140} onChange={e => patch({ promo: e.target.value })} spellCheck={false}
               placeholder='เช่น "ลด 20% ตลอดเดือนนี้ · ส่งฟรีทั่วไทยเมื่อสั่งครบ ฿500"' />
           </label>
+          <div className="sf-field">
+            <span>📷 รูปสินค้า (สูงสุด {MAX_SHOP_IMAGES} รูป) — รูปแรกคือหน้าปกบนตลาด</span>
+            <div className="sf-img-row">
+              {sf.images.map((url, i) => (
+                <div key={i} className="sf-img-thumb">
+                  <img src={url} alt={`รูปสินค้า ${i + 1}`} />
+                  <button className="sf-img-del" title="ลบรูปนี้"
+                    onClick={() => patch({ images: sf.images.filter((_, j) => j !== i) })}>×</button>
+                </div>
+              ))}
+              {sf.images.length < MAX_SHOP_IMAGES && (
+                <label className="sf-img-add">
+                  {imgBusy ? '⏳' : '＋'}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" hidden
+                    onChange={e => addImage(e.target.files?.[0])} />
+                </label>
+              )}
+            </div>
+            <span className="sf-img-hint">แนบรูปจริงของสินค้า — ร้านที่มีรูปได้รับการติดต่อมากกว่าหลายเท่า</span>
+          </div>
           <div className="sf-field">
             <span>✨ จุดขาย (Value Proposition) — ประโยคแรกที่ลูกค้าเห็น</span>
             <div className="sf-vp-row">

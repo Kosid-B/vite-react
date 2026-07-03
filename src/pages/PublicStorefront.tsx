@@ -73,6 +73,15 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
         <h1 className="pub-name">{sf.name}</h1>
         {sf.vp && <p className="pub-vp">“{sf.vp}”</p>}
         {sf.promo && <div className="pub-promo">📣 {sf.promo}</div>}
+        {sf.images.length > 0 && (
+          <div className="pub-gallery">
+            {sf.images.map((url, i) => (
+              <a key={i} href={url} target="_blank" rel="noreferrer">
+                <img src={url} alt={`${sf.name} รูปที่ ${i + 1}`} loading="lazy" />
+              </a>
+            ))}
+          </div>
+        )}
         {sf.description && <p className="pub-desc">{sf.description}</p>}
 
         {sf.services.length > 0 && (
@@ -172,6 +181,7 @@ export function PublicDirectoryPage() {
   const card = (sf: Storefront, star = false) => (
     <a key={sf.slug} className={`pub-dir-card${star ? ' featured' : ''}`} href={`/b/${encodeURIComponent(sf.slug)}`}>
       {star && <div className="pub-feat-tag">⭐ ร้านแนะนำ</div>}
+      {sf.images.length > 0 && <img className="pub-dir-img" src={sf.images[0]} alt={sf.name} loading="lazy" />}
       <div className="pub-dbd">{KIND_BADGE[sf.kind]} · {sectorLabel(sf.dbd)}</div>
       <div className="pub-dir-name">{sf.name}</div>
       {sf.promo && <div className="pub-dir-promo">📣 {sf.promo}</div>}
