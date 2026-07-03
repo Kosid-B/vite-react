@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
-import type { AppData } from '../types';
+import type { AppData, PageId } from '../types';
 import { getMyStorefront, saveStorefront, type Storefront } from '../lib/storefront';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { draftVpLocal } from '../lib/firstDeal';
 import { trackAiCall } from '../lib/usage';
 import DBDSelect from '../components/DBDSelect';
 import EditableList from '../components/EditableList';
+import ShopBooster from '../components/ShopBooster';
 
 interface Props {
   data: AppData;
   wsId: string | null;
+  onUpdate?: (data: AppData) => void;
+  onNavigate?: (page: PageId) => void;
 }
 
 const APP_ORIGIN = 'https://ceoaithailand.org';
@@ -18,7 +21,7 @@ function defaultSlug(name: string): string {
   return name.trim().replace(/\s+/g, '-').slice(0, 60) || 'my-business';
 }
 
-export default function MyStorefront({ data, wsId }: Props) {
+export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props) {
   const c = data.aiCompany;
   const [sf, setSf] = useState<Storefront | null>(null);
   const [loading, setLoading] = useState(true);
@@ -205,6 +208,11 @@ export default function MyStorefront({ data, wsId }: Props) {
           </div>
         </div>
       </div>
+
+      {/* 🚀 สะพานสู่ บริษัท AI — จ้างทีม AI ทำการตลาดให้ร้านนี้ */}
+      {onUpdate && onNavigate && (
+        <ShopBooster data={data} sf={sf} onUpdate={onUpdate} onNavigate={onNavigate} />
+      )}
     </div>
   );
 }

@@ -402,7 +402,7 @@ export default function App() {
             ? <Sipoc data={data} onUpdate={updateData} />
             : <UpgradeWall page="sipoc" data={data} onNavigate={setActivePage} />
         )}
-        {activePage === 'storefront' && <MyStorefront data={data} wsId={activeWs} />}
+        {activePage === 'storefront' && <MyStorefront data={data} wsId={activeWs} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'trade' && (
           canAccess(data, 'trade')
             ? <Trade data={data} wsId={activeWs} />
