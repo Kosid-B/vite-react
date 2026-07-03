@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { track } from '../lib/analytics';
+import { applySeo, siteOrigin } from '../lib/seo';
 
 /* ===== Landing page ไวรัล — /start (สาธารณะ ไม่ต้องล็อกอิน) =====
  * กลุ่มเป้าหมาย: Gen Z จบใหม่หางานไม่ได้ + กลุ่ม "เสมือนว่างงาน" (มีงานแต่รายได้ไม่พอ)
@@ -31,14 +32,14 @@ export default function StartLanding() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    document.title = 'เริ่มธุรกิจของคุณเอง พร้อมทีม AI — ฟรี | CEO AI Thailand';
-    const meta = document.querySelector('meta[name="description"]') ?? (() => {
-      const m = document.createElement('meta');
-      m.setAttribute('name', 'description');
-      document.head.appendChild(m);
-      return m;
-    })();
-    meta.setAttribute('content', 'ตกงาน จบใหม่ หรือรายได้ไม่พอ? เปิดบริษัทของตัวเองพร้อมทีม AI ทั้งบริษัท — แผนธุรกิจ หน้าร้านออนไลน์ รับงาน B2B เริ่มฟรี');
+    const o = siteOrigin();
+    applySeo({
+      title: 'เริ่มธุรกิจของคุณเอง พร้อมทีม AI — ฟรี | CEO AI Thailand',
+      description: 'ตกงาน จบใหม่ หรือรายได้ไม่พอ? เปิดบริษัทของตัวเองพร้อมทีม AI ทั้งบริษัท — แผนธุรกิจ หน้าร้านออนไลน์ รับงาน B2B เริ่มฟรี',
+      canonicalUrl: `${o}/start`,
+      imageUrl: `${o}/og-image.png`,
+      jsonLd: [],
+    });
   }, []);
 
   const copyLink = () => {

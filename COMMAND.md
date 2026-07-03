@@ -247,3 +247,31 @@ GET  /generate-badge     — ISO badge PNG (public, ไม่ต้อง JWT)
 POST /billing-cron       — ต่ออายุ/downgrade อัตโนมัติ (cron secret)
 POST /promptpay-webhook  — รับ payment webhook (public)
 ```
+
+---
+
+## Marketing & Growth (หาลูกค้า)
+
+**Skills การตลาด (`.claude/skills/`)** — ใช้วางแผน/สร้างเอกสารกลยุทธ์:
+```
+marketplace-seo       — SEO ตลาด (implement ในโค้ดแล้ว — ดู docs/marketing/MARKETPLACE-SEO.md)
+market-research       — TAM/SAM/SOM + segment + คู่แข่ง + หาลูกค้าอยู่ช่องไหน
+facebook-group-plan   — กลุ่ม FB ชุมชน + lead gen
+linkedin-strategy     — personal brand ที่ปรึกษา 20 ปี → inbound B2B
+networking-strategy   — พันธมิตร/referral + seed ร้านเข้าตลาด /b
+```
+
+**เอกสารแผน (`docs/marketing/`)** — ปรับให้ CEO AI Thailand จริง (ราคา/segment/ช่องทางไทย):
+`README.md` (index + 90 วันแรก) · `MARKET-RESEARCH.md` · `MARKETPLACE-SEO.md` ·
+`FACEBOOK-GROUP-PLAN.md` · `LINKEDIN-STRATEGY.md` · `NETWORKING-STRATEGY.md`
+
+### Marketplace SEO — server-side (Cloudflare Worker)
+```
+src/server.ts intercept GET /b/<slug>, /b, /sitemap.xml → อ่าน storefronts (Supabase REST, anon key)
+→ HTMLRewriter inject title/meta/canonical/OG + JSON-LD (LocalBusiness/Breadcrumb/ItemList).
+src/lib/seoData.ts = builders (pure, escape XSS) · src/lib/seo.ts = client applySeo().
+wrangler.jsonc vars: SUPABASE_URL / SUPABASE_ANON_KEY / SITE_ORIGIN (public — commit ได้).
+Deploy: merge → Cloudflare auto-deploy (ไม่ต้อง manual/PowerShell).
+```
+**งานคนหลัง merge:** ยืนยัน `/sitemap.xml` คืนหลาย URL → ส่งเข้า **Google Search Console** →
+Rich Results Test 1 หน้าร้าน → seed liquidity (ชวนธุรกิจ 10–20 รายเปิดร้านจริง).

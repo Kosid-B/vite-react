@@ -55,7 +55,21 @@ supabase/functions/            — 6 Edge Functions
 supabase/migrations/           — 0001–0012 (ทั้งหมด applied แล้ว)
 public/CNAME                   — custom domain (ceoaithailand.org)
 .github/workflows/deploy.yml   — GitHub Pages auto-deploy (legacy — production = Cloudflare Workers)
-wrangler.jsonc                 — Cloudflare Workers config (production)
+wrangler.jsonc                 — Cloudflare Workers config (production) + vars SEO (SUPABASE_URL/ANON_KEY/SITE_ORIGIN — public)
+src/server.ts                  — Worker: /api/agent DO + SEO ฝั่ง server (/b/<slug>, /b, /sitemap.xml)
+src/lib/seoData.ts             — pure SEO builders (title/meta/canonical/JSON-LD/sitemap) ใช้ร่วม worker+client
+src/lib/seo.ts                 — client applySeo() (idempotent) เรียกในหน้า public
+docs/marketing/                — แผนการตลาด/หาลูกค้า (SEO, FB group, LinkedIn, networking, market research)
+```
+
+## Marketplace SEO (server-side)
+```
+Worker (src/server.ts) intercept GET /b/<slug>, /b, /sitemap.xml ก่อน fallback ASSETS →
+อ่าน public.storefronts ผ่าน Supabase REST (anon key = public) → HTMLRewriter inject
+title/meta/canonical/OG + JSON-LD (LocalBusiness/BreadcrumbList/ItemList) ลง index.html
+= Google index ได้โดยไม่รอ JS. client (src/lib/seo.ts applySeo) inject ซ้ำฝั่ง browser ให้ parity.
+seoData.ts = source of truth เดียว (escape กัน XSS). Deploy: merge → Cloudflare auto-deploy (ไม่ต้อง manual).
+งานคนหลัง merge: ส่ง sitemap.xml เข้า Google Search Console + Rich Results Test 1 หน้าร้าน.
 ```
 
 ## Plan / Access Control

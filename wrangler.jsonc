@@ -23,7 +23,13 @@
     }
   ],
   "vars": {
-    "ANTHROPIC_API_KEY": ""
+    "ANTHROPIC_API_KEY": "",
+    // ค่า public (ไม่ใช่ secret) — ใช้อ่านตาราง storefronts เพื่อทำ SEO ฝั่ง server (/b/<slug>, /sitemap.xml)
+    // ใช้ publishable key (sb_publishable_…) = public โดยดีไซน์ + rotate แยกได้ (เลี่ยง anon JWT ที่ scanner ตีว่าเป็น secret)
+    // production Supabase = rsjbqmnvocvtveelselj เท่านั้น
+    "SUPABASE_URL": "https://rsjbqmnvocvtveelselj.supabase.co",
+    "SUPABASE_ANON_KEY": "sb_publishable_UCZESix8lLZ4yDU0hEZMkQ_RL-Lk-te",
+    "SITE_ORIGIN": "https://ceoaithailand.org"
   },
   "observability": {
     "enabled": false,

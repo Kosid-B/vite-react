@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { DBD_SECTORS } from '../data/dbd';
 import { SHOP_PACKAGES, submitShopApplication, validPhone, type ShopPackage } from '../lib/shopApply';
 import { track } from '../lib/analytics';
+import { applySeo, siteOrigin } from '../lib/seo';
 
 /* ===== สมัครร้านตลาดฝากขายสินค้า — /shop (สาธารณะ ไม่ต้องล็อกอิน) =====
  * สมัครง่ายที่สุด: ชื่อร้าน + เบอร์โทร + LINE — ทีมงานติดต่อกลับเปิดร้านให้
@@ -18,14 +19,14 @@ export default function ShopSignup() {
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = 'สมัครร้านตลาดฝากขายสินค้า — เริ่มฟรี | CEO AI Thailand';
-    const meta = document.querySelector('meta[name="description"]') ?? (() => {
-      const m = document.createElement('meta');
-      m.setAttribute('name', 'description');
-      document.head.appendChild(m);
-      return m;
-    })();
-    meta.setAttribute('content', 'เปิดร้านฝากขายสินค้าบนตลาดออนไลน์ CEO AI Thailand — เริ่มฟรี รายวันแค่ ฿19 สมัครด้วยเบอร์โทรกับ LINE ไม่ต้องมีบัญชี');
+    const o = siteOrigin();
+    applySeo({
+      title: 'สมัครร้านตลาดฝากขายสินค้า — เริ่มฟรี | CEO AI Thailand',
+      description: 'เปิดร้านฝากขายสินค้าบนตลาดออนไลน์ CEO AI Thailand — เริ่มฟรี รายวันแค่ ฿19 สมัครด้วยเบอร์โทรกับ LINE ไม่ต้องมีบัญชี',
+      canonicalUrl: `${o}/shop`,
+      imageUrl: `${o}/og-image.png`,
+      jsonLd: [],
+    });
   }, []);
 
   const pick = (id: ShopPackage) => {
