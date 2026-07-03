@@ -14,6 +14,7 @@ export interface Storefront {
   kind: StorefrontKind; // ประเภทร้าน — ใช้กรองสินค้า/บริการบนสารบัญตลาด
   vp: string;           // Value Proposition — จุดขายหนึ่งประโยค (AI Agent ช่วยเขียน)
   promo: string;        // ข้อความโฆษณา/โปรโมชัน — แสดงเด่น 📣 บนตลาด
+  images: string[];     // รูปสินค้า (URL/dataURL) สูงสุด MAX_SHOP_IMAGES รูป
   description: string;
   services: string[];
   phone: string;
@@ -27,9 +28,11 @@ export interface Storefront {
 
 const LS_KEY = 'ceo_ai_storefront';
 
-/** ข้อมูลเก่าอาจยังไม่มี vp/kind/promo */
+export const MAX_SHOP_IMAGES = 6;
+
+/** ข้อมูลเก่าอาจยังไม่มี vp/kind/promo/images */
 function normalize(s: Storefront): Storefront {
-  return { ...s, vp: s.vp ?? '', kind: s.kind ?? 'both', promo: s.promo ?? '' };
+  return { ...s, vp: s.vp ?? '', kind: s.kind ?? 'both', promo: s.promo ?? '', images: s.images ?? [] };
 }
 
 function loadLocal(): Storefront | null {
@@ -41,7 +44,7 @@ function loadLocal(): Storefront | null {
 
 interface Row {
   slug: string; workspace_id?: string; name: string; dbd: string; kind?: StorefrontKind;
-  vp?: string; promo?: string; description: string;
+  vp?: string; promo?: string; images?: string[]; description: string;
   services: string[]; phone: string; line_id: string; email: string; website: string;
   published: boolean; featured_until?: string | null; updated_at?: string;
 }
@@ -49,7 +52,7 @@ interface Row {
 function rowToStorefront(r: Row): Storefront {
   return {
     slug: r.slug, workspaceId: r.workspace_id, name: r.name, dbd: r.dbd,
-    kind: r.kind ?? 'both', vp: r.vp ?? '', promo: r.promo ?? '', description: r.description,
+    kind: r.kind ?? 'both', vp: r.vp ?? '', promo: r.promo ?? '', images: r.images ?? [], description: r.description,
     services: r.services ?? [], phone: r.phone, lineId: r.line_id,
     email: r.email, website: r.website, published: r.published,
     featuredUntil: r.featured_until ?? undefined,
@@ -98,7 +101,7 @@ export async function saveStorefront(wsId: string | null, sf: Storefront): Promi
     if (!wsId) return 'ยังไม่พบ workspace — ลองรีเฟรชหน้า';
     const { error } = await supabase.from('storefronts').upsert({
       slug: sf.slug, workspace_id: wsId, name: sf.name, dbd: sf.dbd, kind: sf.kind,
-      vp: sf.vp, promo: sf.promo,
+      vp: sf.vp, promo: sf.promo, images: sf.images,
       description: sf.description, services: sf.services, phone: sf.phone,
       line_id: sf.lineId, email: sf.email, website: sf.website,
       published: sf.published, updated_at: new Date().toISOString(),
@@ -111,6 +114,54 @@ export async function saveStorefront(wsId: string | null, sf: Storefront): Promi
   }
   localStorage.setItem(LS_KEY, JSON.stringify({ ...sf, updatedAt: new Date().toISOString().slice(0, 10) }));
   return '';
+}
+
+/** ย่อรูปผ่าน canvas (ด้านยาวสุด maxDim px, JPEG) — คืน Blob */
+function resizeImage(file: File, maxDim = 1000, quality = 0.85): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error('แปลงรูปไม่สำเร็จ')), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('ไฟล์ไม่ใช่รูปภาพ')); };
+    img.src = url;
+  });
+}
+
+/** อัปโหลดรูปสินค้า — production: Supabase Storage (shop-images/<wsId>/…) คืน public URL
+ *  local mode: คืน data URL (ย่อเล็กลงอีกขั้น กัน localStorage เต็ม)
+ *  คืน { url } หรือ { error } */
+export async function uploadShopImage(wsId: string | null, file: File): Promise<{ url?: string; error?: string }> {
+  try {
+    if (isSupabaseEnabled && supabase) {
+      if (!wsId) return { error: 'ยังไม่พบ workspace — ลองรีเฟรชหน้า' };
+      const blob = await resizeImage(file, 1000, 0.85);
+      const path = `${wsId}/${Date.now()}.jpg`;
+      const { error } = await supabase.storage.from('shop-images')
+        .upload(path, blob, { contentType: 'image/jpeg' });
+      if (error) return { error: error.message };
+      const { data } = supabase.storage.from('shop-images').getPublicUrl(path);
+      return { url: data.publicUrl };
+    }
+    // local mode: data URL ขนาดเล็ก
+    const blob = await resizeImage(file, 480, 0.7);
+    const url = await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+      r.readAsDataURL(blob);
+    });
+    return { url };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 }
 
 /** admin: ตั้ง/ถอดตำแหน่งร้านแนะนำ — until = null คือถอดออก; คืน error ('' = สำเร็จ) */
