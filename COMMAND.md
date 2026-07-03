@@ -113,6 +113,18 @@ npx supabase functions deploy agent-run      --project-ref rsjbqmnvocvtveelselj
 npx supabase functions deploy generate-badge --project-ref rsjbqmnvocvtveelselj
 npx supabase functions deploy billing-cron   --project-ref rsjbqmnvocvtveelselj
 npx supabase functions deploy promptpay-webhook --project-ref rsjbqmnvocvtveelselj
+npx supabase functions deploy delete-account  --project-ref rsjbqmnvocvtveelselj
+
+# ── Payment Gateway: Xendit (SaaS subscription) ──
+npx supabase functions deploy create-invoice  --project-ref rsjbqmnvocvtveelselj      # verify_jwt=true
+npx supabase functions deploy xendit-webhook  --no-verify-jwt --project-ref rsjbqmnvocvtveelselj
+
+# secrets Xendit (ตั้งครั้งเดียว — จาก dashboard.xendit.co/settings/developers)
+npx supabase secrets set XENDIT_SECRET_KEY=xnd_...        --project-ref rsjbqmnvocvtveelselj
+npx supabase secrets set XENDIT_CALLBACK_TOKEN=<token>    --project-ref rsjbqmnvocvtveelselj
+# แล้วตั้ง Webhook (Xendit → Settings → Webhooks → Invoices paid):
+#   https://rsjbqmnvocvtveelselj.supabase.co/functions/v1/xendit-webhook
+# copy Callback Verification Token จากหน้านั้นมาใส่ XENDIT_CALLBACK_TOKEN
 
 # deploy ทุกตัวพร้อมกัน
 npx supabase functions deploy --project-ref rsjbqmnvocvtveelselj
