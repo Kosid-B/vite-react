@@ -9,6 +9,7 @@ import {
 } from '../lib/trade';
 import { isSupabaseEnabled } from '../lib/supabase';
 import { DBD_SECTORS } from '../data/dbd';
+import MarketAgent from '../components/MarketAgent';
 
 interface Props {
   data: AppData;
@@ -156,6 +157,18 @@ export default function Trade({ data, wsId }: Props) {
       </p>
       {msg && <div className="sipoc-gen-msg">{msg}</div>}
 
+      {/* ── 🤝 Marketplace Agent — จับคู่สินค้า/บริการใน ecosystem ── */}
+      <MarketAgent
+        mySf={mySf}
+        openJobs={visibleJobs}
+        stores={otherStores}
+        onQuote={id => {
+          setClaimFor(id);
+          setClaimDraft({ amount: 0, note: '' });
+          document.getElementById(`open-rfq-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }}
+      />
+
       {/* ── หาคู่ค้า ── */}
       <section className="trade-sec">
         <div className="trade-sec-hd">🔍 หาคู่ค้า — ธุรกิจในระบบ ({otherStores.length})</div>
@@ -232,7 +245,7 @@ export default function Trade({ data, wsId }: Props) {
         {visibleJobs.map(j => {
           const matchMine = !!mySector && (j.sector === '' || j.sector === mySector);
           return (
-            <div key={j.id} className={`trade-rfq-card${matchMine ? ' trade-match' : ''}`}>
+            <div key={j.id} id={`open-rfq-${j.id}`} className={`trade-rfq-card${matchMine ? ' trade-match' : ''}`}>
               <div className="trade-rfq-main">
                 <div className="trade-rfq-title">
                   {j.title}
