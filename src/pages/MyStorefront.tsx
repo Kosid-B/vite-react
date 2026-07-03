@@ -34,7 +34,9 @@ export default function MyStorefront({ data, wsId }: Props) {
         slug: defaultSlug(c.name),
         name: c.name,
         dbd: c.productDbd ?? c.industry ?? '',
+        kind: 'both',
         vp: '',
+        promo: '',
         description: c.productDesc ?? data.businessModel.bmc.value[0] ?? '',
         services: data.businessModel.bmc.value.slice(0, 3),
         phone: '', lineId: '', email: '', website: '',
@@ -124,6 +126,19 @@ export default function MyStorefront({ data, wsId }: Props) {
           <label className="sf-field">
             <span>หมวดธุรกิจ (DBD) — ใช้จัดกลุ่มในสารบัญ</span>
             <DBDSelect className="sf-inp" value={sf.dbd} onChange={v => patch({ dbd: v })} />
+          </label>
+          <label className="sf-field">
+            <span>ประเภทร้าน — ใช้กรอง 🛍 สินค้า / 🛠 บริการ บนตลาด</span>
+            <select className="sf-inp" value={sf.kind} onChange={e => patch({ kind: e.target.value as Storefront['kind'] })}>
+              <option value="both">🛍🛠 ทั้งสินค้าและบริการ</option>
+              <option value="product">🛍 สินค้า</option>
+              <option value="service">🛠 บริการ</option>
+            </select>
+          </label>
+          <label className="sf-field">
+            <span>📣 โฆษณา / โปรโมชัน — แสดงเด่นบนตลาดและหน้าร้าน</span>
+            <input value={sf.promo} maxLength={140} onChange={e => patch({ promo: e.target.value })} spellCheck={false}
+              placeholder='เช่น "ลด 20% ตลอดเดือนนี้ · ส่งฟรีทั่วไทยเมื่อสั่งครบ ฿500"' />
           </label>
           <div className="sf-field">
             <span>✨ จุดขาย (Value Proposition) — ประโยคแรกที่ลูกค้าเห็น</span>

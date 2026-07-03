@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getStorefront, listStorefronts, type Storefront } from '../lib/storefront';
+import { getStorefront, isFeatured, listStorefronts, type Storefront, type StorefrontKind } from '../lib/storefront';
 import { DBD_SECTORS } from '../data/dbd';
 
 /* ===== Marketplace M1 — หน้าสาธารณะ (ไม่ต้องล็อกอิน) =====
@@ -55,6 +55,7 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
         <div className="pub-dbd">{sectorLabel(sf.dbd)}</div>
         <h1 className="pub-name">{sf.name}</h1>
         {sf.vp && <p className="pub-vp">“{sf.vp}”</p>}
+        {sf.promo && <div className="pub-promo">📣 {sf.promo}</div>}
         {sf.description && <p className="pub-desc">{sf.description}</p>}
 
         {sf.services.length > 0 && (
@@ -83,47 +84,98 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
   );
 }
 
+const KIND_CHIPS: { id: '' | StorefrontKind; label: string }[] = [
+  { id: '', label: 'ทั้งหมด' },
+  { id: 'product', label: '🛍 สินค้า' },
+  { id: 'service', label: '🛠 บริการ' },
+];
+
+const KIND_BADGE: Record<StorefrontKind, string> = {
+  product: '🛍 สินค้า', service: '🛠 บริการ', both: '🛍🛠 สินค้า & บริการ',
+};
+
 export function PublicDirectoryPage() {
   const [list, setList] = useState<Storefront[] | null>(null);
   const [q, setQ] = useState('');
   const [sector, setSector] = useState('');
+  const [kind, setKind] = useState<'' | StorefrontKind>('');
 
   useEffect(() => {
     listStorefronts().then(setList).catch(() => setList([]));
   }, []);
 
+  // chips หมวด DBD — เฉพาะหมวดที่มีร้านจริง
+  const sectorsPresent = DBD_SECTORS.filter(s =>
+    (list ?? []).some(sf => sf.dbd.startsWith(`[${s.code}]`)));
+
   const filtered = (list ?? []).filter(sf => {
+    const okKind = !kind || sf.kind === kind || sf.kind === 'both';
     const okSector = !sector || sf.dbd.startsWith(`[${sector}]`);
-    const okQ = !q.trim() || (sf.name + ' ' + sf.description + ' ' + sf.dbd).toLowerCase().includes(q.trim().toLowerCase());
-    return okSector && okQ;
+    const hay = [sf.name, sf.description, sf.dbd, sf.vp, sf.promo, sf.services.join(' ')]
+      .join(' ').toLowerCase();
+    const okQ = !q.trim() || hay.includes(q.trim().toLowerCase());
+    return okKind && okSector && okQ;
   });
 
+  const featured = filtered.filter(isFeatured);
+  const regular = filtered.filter(sf => !isFeatured(sf));
+
+  const card = (sf: Storefront, star = false) => (
+    <a key={sf.slug} className={`pub-dir-card${star ? ' featured' : ''}`} href={`/b/${encodeURIComponent(sf.slug)}`}>
+      {star && <div className="pub-feat-tag">⭐ ร้านแนะนำ</div>}
+      <div className="pub-dbd">{KIND_BADGE[sf.kind]} · {sectorLabel(sf.dbd)}</div>
+      <div className="pub-dir-name">{sf.name}</div>
+      {sf.promo && <div className="pub-dir-promo">📣 {sf.promo}</div>}
+      <div className="pub-dir-desc">{sf.description.slice(0, 120)}{sf.description.length > 120 ? '…' : ''}</div>
+    </a>
+  );
+
   return (
-    <PublicShell title="สารบัญธุรกิจไทย">
-      <h1 className="pub-dir-title">สารบัญธุรกิจ</h1>
-      <p className="pub-dir-sub">ธุรกิจไทยที่ขับเคลื่อนด้วยทีม AI บน CEO AI Thailand — ค้นหาคู่ค้าตามหมวด DBD</p>
+    <PublicShell title="ตลาดธุรกิจไทย — สินค้าและบริการ">
+      <h1 className="pub-dir-title">ตลาดสินค้า & บริการ</h1>
+      <p className="pub-dir-sub">ธุรกิจไทยที่ขับเคลื่อนด้วยทีม AI บน CEO AI Thailand — ค้นหาสินค้า บริการ และคู่ค้าของคุณ</p>
+
+      {/* ค้นหา + กรองประเภท */}
       <div className="pub-dir-filters">
-        <input className="pub-dir-search" placeholder="ค้นหาชื่อธุรกิจ / บริการ…" value={q} onChange={e => setQ(e.target.value)} />
-        <select className="pub-dir-sector" value={sector} onChange={e => setSector(e.target.value)}>
-          <option value="">ทุกหมวด DBD</option>
-          {DBD_SECTORS.map(s => <option key={s.code} value={s.code}>หมวด {s.code} · {s.label}</option>)}
-        </select>
+        <input className="pub-dir-search" placeholder="🔍 ค้นหาสินค้า บริการ ชื่อร้าน โปรโมชัน…" value={q} onChange={e => setQ(e.target.value)} />
+      </div>
+      <div className="pub-chip-row">
+        {KIND_CHIPS.map(k => (
+          <button key={k.id} className={`pub-chip${kind === k.id ? ' active' : ''}`} onClick={() => setKind(k.id)}>
+            {k.label}
+          </button>
+        ))}
+        {sectorsPresent.length > 0 && <span className="pub-chip-sep" />}
+        {sectorsPresent.map(s => (
+          <button key={s.code} className={`pub-chip sec${sector === s.code ? ' active' : ''}`}
+            onClick={() => setSector(sector === s.code ? '' : s.code)} title={s.label}>
+            {s.code} · {s.label.length > 22 ? s.label.slice(0, 22) + '…' : s.label}
+          </button>
+        ))}
       </div>
 
       {list === null && <div className="pub-loading">กำลังโหลด…</div>}
+
+      {/* ⭐ พื้นที่โฆษณา — ร้านแนะนำ */}
+      {featured.length > 0 && (
+        <div className="pub-featured-sec">
+          <div className="pub-featured-hd">⭐ ร้านแนะนำ <span>พื้นที่โฆษณา</span></div>
+          <div className="pub-dir-grid">{featured.map(sf => card(sf, true))}</div>
+        </div>
+      )}
+
       {list !== null && filtered.length === 0 && (
         <div className="pub-notfound">
-          ยังไม่มีธุรกิจในหมวดนี้ — <a className="pub-link" href="/">เป็นธุรกิจแรกที่นี่ ฟรี →</a>
+          ไม่พบธุรกิจที่ตรงเงื่อนไข — <a className="pub-link" href="/">เป็นธุรกิจแรกในหมวดนี้ ฟรี →</a>
         </div>
       )}
       <div className="pub-dir-grid">
-        {filtered.map(sf => (
-          <a key={sf.slug} className="pub-dir-card" href={`/b/${encodeURIComponent(sf.slug)}`}>
-            <div className="pub-dbd">{sectorLabel(sf.dbd)}</div>
-            <div className="pub-dir-name">{sf.name}</div>
-            <div className="pub-dir-desc">{sf.description.slice(0, 120)}{sf.description.length > 120 ? '…' : ''}</div>
-          </a>
-        ))}
+        {regular.map(sf => card(sf))}
+      </div>
+
+      <div className="pub-ad-invite">
+        อยากให้ร้านของคุณอยู่ตำแหน่ง ⭐ ร้านแนะนำ บนสุดของตลาด?{' '}
+        <a href="/shop">ดูแพ็กเกจโฆษณาและร่วมประมูลตำแหน่ง →</a>
       </div>
     </PublicShell>
   );
