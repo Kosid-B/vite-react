@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DBD_SECTORS } from '../data/dbd';
 import { SHOP_PACKAGES, submitShopApplication, validPhone, type ShopPackage } from '../lib/shopApply';
+import { track } from '../lib/analytics';
 
 /* ===== สมัครร้านตลาดฝากขายสินค้า — /shop (สาธารณะ ไม่ต้องล็อกอิน) =====
  * สมัครง่ายที่สุด: ชื่อร้าน + เบอร์โทร + LINE — ทีมงานติดต่อกลับเปิดร้านให้
@@ -28,6 +29,7 @@ export default function ShopSignup() {
   }, []);
 
   const pick = (id: ShopPackage) => {
+    track('shop_pkg_selected', { pkg: id });
     setForm(f => ({ ...f, package: id }));
     document.getElementById('shop-form')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -38,6 +40,7 @@ export default function ShopSignup() {
     const err = await submitShopApplication(form);
     setBusy(false);
     if (err) { setMsg('⚠️ ' + err); return; }
+    track('shop_signup_submitted', { pkg: form.package });
     setSent(true);
   }
 

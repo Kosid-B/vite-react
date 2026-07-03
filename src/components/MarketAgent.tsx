@@ -7,6 +7,7 @@ import {
 } from '../lib/marketAgent';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { trackAiCall } from '../lib/usage';
+import { track } from '../lib/analytics';
 
 /** 🤝 Marketplace Agent — เอเจนต์บริหารตลาด จับคู่สินค้า/บริการใน ecosystem
  *  กดปุ่มเดียว: จับคู่ร้านของฉัน ↔ งานกลางที่ควรเสนอราคา + คู่ค้าที่ควรติดต่อ
@@ -33,6 +34,7 @@ export default function MarketAgent({ mySf, openJobs, stores, onQuote }: Props) 
     setBusy(true);
     const rm = matchRfqs(mySf, openJobs);
     const pm = matchPartners(mySf, stores);
+    track('agent_match_run', { rfq_matches: rm.length, partner_matches: pm.length });
     setRfqMatches(rm);
     setPartners(pm);
     setRan(true);

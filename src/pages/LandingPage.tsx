@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { track } from '../lib/analytics';
 
 interface Props {
   onGetStarted: () => void;
@@ -120,7 +121,7 @@ export default function LandingPage({ onGetStarted }: Props) {
 
         <div style={{ position: 'relative', display: 'inline-block' }}>
           <button
-            onClick={onGetStarted}
+            onClick={() => { track('landing_cta_click', { cta: 'hero_free_trial' }); onGetStarted(); }}
             onMouseEnter={() => setCtaHover(true)}
             onMouseLeave={() => setCtaHover(false)}
             style={{
@@ -145,6 +146,7 @@ export default function LandingPage({ onGetStarted }: Props) {
           </div>
           <a
             href="/shop"
+            onClick={() => track('landing_cta_click', { cta: 'hero_shop_signup' })}
             style={{
               display: 'inline-block',
               marginTop: 20,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getStorefront, isFeatured, listStorefronts, type Storefront, type StorefrontKind } from '../lib/storefront';
 import { countLeads, submitLead, type LeadKind } from '../lib/leads';
+import { track } from '../lib/analytics';
 import { DBD_SECTORS } from '../data/dbd';
 
 /* ===== Marketplace M1 — หน้าสาธารณะ (ไม่ต้องล็อกอิน) =====
@@ -49,6 +50,7 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
     setLeadMsg(null);
     const err = await submitLead({ slug: sf.slug, kind: leadOpen, ...leadDraft });
     if (err) { setLeadMsg('⚠️ ' + err); return; }
+    track('lead_submitted', { kind: leadOpen, shop: sf.slug });
     setLeadSent(true);
     setInterested(n => n + 1);
   }

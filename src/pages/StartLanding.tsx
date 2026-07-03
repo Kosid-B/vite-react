@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { track } from '../lib/analytics';
 
 /* ===== Landing page ไวรัล — /start (สาธารณะ ไม่ต้องล็อกอิน) =====
  * กลุ่มเป้าหมาย: Gen Z จบใหม่หางานไม่ได้ + กลุ่ม "เสมือนว่างงาน" (มีงานแต่รายได้ไม่พอ)
@@ -66,7 +67,8 @@ export default function StartLanding() {
           คุณไม่ได้ตัวคนเดียว — และคุณไม่ต้องรอใครจ้าง เมื่อมี CEO, ฝ่ายการตลาด และนักวิจัยตลาด เป็น AI ทำงานให้คุณ
         </p>
         <div className="start-cta-row">
-          <a className="start-cta-main" href="/">เปิดบริษัทแรกของคุณ — ฟรี ไม่ต้องใช้บัตรเครดิต</a>
+          <a className="start-cta-main" href="/" onClick={() => track('start_cta_click', { cta: 'hero' })}>
+            เปิดบริษัทแรกของคุณ — ฟรี ไม่ต้องใช้บัตรเครดิต</a>
           <a className="start-cta-sub" href="/b">ดูธุรกิจที่เปิดแล้วในระบบ →</a>
         </div>
         <div className="start-src">* ที่มา: สำนักงานสถิติแห่งชาติ / สภาพัฒน์ ไตรมาส 1 ปี 2569</div>
@@ -182,7 +184,8 @@ export default function StartLanding() {
           </button>
         </div>
         <div className="start-final-cta">
-          <a className="start-cta-main" href="/">เริ่มวันนี้ ฟรี — อีก 5 นาทีคุณมีบริษัทแล้ว</a>
+          <a className="start-cta-main" href="/" onClick={() => track('start_cta_click', { cta: 'final' })}>
+            เริ่มวันนี้ ฟรี — อีก 5 นาทีคุณมีบริษัทแล้ว</a>
         </div>
       </section>
 
