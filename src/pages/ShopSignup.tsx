@@ -105,7 +105,11 @@ export default function ShopSignup() {
             <div className="shop-sent-title">รับใบสมัครแล้ว!</div>
             <p>ทีมงานจะติดต่อกลับทาง <b>LINE หรือโทร</b> ภายใน 24 ชั่วโมง
               เพื่อเปิดร้าน "{form.shopName}" (แพ็กเกจ {selected.name}) ให้คุณ</p>
-            <a className="start-cta-sub" href="/b">ระหว่างรอ ดูตลาดก่อนได้เลย →</a>
+            <p className="shop-upsell">💡 ระหว่างรอ: เปิด <b>บริษัท AI ฟรี</b> — ได้ทีม AI ช่วยเขียนโพสต์ขายของ
+              วางแผนโปรโมชัน และวิเคราะห์คู่แข่งให้ร้านคุณอัตโนมัติ</p>
+            <a className="start-cta-main shop-sent-cta" href="/">🚀 เปิดบริษัท AI ของฉัน — ฟรี</a>
+            <br />
+            <a className="start-cta-sub" href="/b">หรือดูตลาดก่อน →</a>
           </div>
         ) : (
           <div className="shop-form">

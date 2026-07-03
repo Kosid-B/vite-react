@@ -4377,3 +4377,19 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .magent-why { font-size:12.5px; opacity:.75; margin-top:3px; }
 .magent-act { font-family:inherit; font-size:12.5px; font-weight:700; color:#0f172a; background:#22d3ee; border:none; border-radius:8px; padding:8px 13px; cursor:pointer; white-space:nowrap; text-decoration:none; }
 .magent-act.ghost { color:inherit; background:transparent; border:1px solid var(--sand, #334155); }
+
+/* ===== 🚀 Shop Booster — สะพานตลาด → บริษัท AI ===== */
+.booster { margin-top:20px; border:1.5px solid #2d6a4f55; background:linear-gradient(135deg, rgba(45,106,79,.08), rgba(34,211,238,.04)); border-radius:16px; padding:18px 20px; }
+.booster-title { font-size:16.5px; font-weight:800; }
+.booster-sub { font-size:13px; opacity:.78; margin-top:4px; line-height:1.6; }
+.booster-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(215px, 1fr)); gap:12px; margin-top:14px; }
+.booster-card { display:flex; flex-direction:column; border:1px solid var(--sand, #334155); border-radius:12px; padding:14px; background:var(--cream2, rgba(255,255,255,.02)); }
+.booster-ico { font-size:26px; margin-bottom:6px; }
+.booster-name { font-size:14px; font-weight:800; margin-bottom:5px; }
+.booster-card p { font-size:12.5px; opacity:.75; line-height:1.55; margin:0 0 12px; flex-grow:1; }
+.booster-btn { font-family:inherit; font-size:12.5px; font-weight:700; color:#fff; background:#2d6a4f; border:none; border-radius:9px; padding:9px 10px; cursor:pointer; }
+.booster-btn.done { background:transparent; color:#22c55e; border:1px solid #22c55e66; cursor:default; }
+.booster-go { margin-top:12px; font-size:13.5px; font-weight:600; }
+.booster-link { font-family:inherit; font-size:13.5px; font-weight:800; color:#0e7490; background:none; border:none; cursor:pointer; text-decoration:underline; padding:0; }
+.shop-upsell { font-size:13.5px !important; }
+.shop-sent-cta { display:inline-block; margin-bottom:10px; font-size:15px !important; }
