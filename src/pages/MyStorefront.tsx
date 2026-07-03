@@ -7,6 +7,7 @@ import { trackAiCall } from '../lib/usage';
 import DBDSelect from '../components/DBDSelect';
 import EditableList from '../components/EditableList';
 import ShopBooster from '../components/ShopBooster';
+import IdeaValidation from '../components/IdeaValidation';
 
 interface Props {
   data: AppData;
@@ -208,6 +209,9 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
           </div>
         </div>
       </div>
+
+      {/* 🧪 พิสูจน์ไอเดียก่อนลงทุนสร้าง — วัดจากลูกค้าที่ทิ้งช่องทางติดต่อจริง */}
+      <IdeaValidation slug={sf.slug} publicUrl={publicUrl} />
 
       {/* 🚀 สะพานสู่ บริษัท AI — จ้างทีม AI ทำการตลาดให้ร้านนี้ */}
       {onUpdate && onNavigate && (
