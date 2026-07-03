@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { isSupabaseEnabled } from '../lib/supabase';
-import { listMembers, inviteMember, setMemberRole, removeMember, type Member, type Workspace } from '../lib/workspaces';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { listMembers, inviteMember, setMemberRole, removeMember, deleteWorkspace, type Member, type Workspace } from '../lib/workspaces';
+import { clearLocalAppData } from '../lib/localReset';
 import type { AppData, Agent } from '../types';
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
   workspaces: Workspace[];
   currentUserId: string | null;
   data: AppData;
+  onDeleted?: () => void; // หลังลบ workspace/ล้างข้อมูลสำเร็จ
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -83,7 +85,7 @@ function OrgLevel({ nodes }: { nodes: TreeNode[] }) {
   );
 }
 
-export default function Team({ activeWs, workspaces, currentUserId, data }: Props) {
+export default function Team({ activeWs, workspaces, currentUserId, data, onDeleted }: Props) {
   const ws = workspaces.find(w => w.id === activeWs) ?? null;
   const isOwner = !!ws && ws.owner_id === currentUserId;
 
@@ -92,6 +94,40 @@ export default function Team({ activeWs, workspaces, currentUserId, data }: Prop
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [delConfirm, setDelConfirm] = useState('');
+
+  // คำยืนยันการลบ: production = ชื่อ workspace · local = "ลบทั้งหมด"
+  const confirmWord = isSupabaseEnabled ? (ws?.name ?? '') : 'ลบทั้งหมด';
+
+  /** 🗑 ลบ workspace ถาวร (prod) / ล้างข้อมูลเริ่มใหม่ (local) — R9: เคลียร์ localStorage เสมอ */
+  async function destroy() {
+    setBusy(true);
+    setMsg(null);
+    if (isSupabaseEnabled && activeWs) {
+      const err = await deleteWorkspace(activeWs);
+      if (err) { setMsg('⚠️ ' + err); setBusy(false); return; }
+    }
+    clearLocalAppData();
+    setBusy(false);
+    setDelConfirm('');
+    onDeleted?.();
+  }
+
+  /** ลบบัญชีผู้ใช้ถาวร (auth.users) — ผ่าน Edge Function delete-account (service role) */
+  async function destroyAccount() {
+    if (!supabase) return;
+    setBusy(true);
+    setMsg(null);
+    const { data: res, error } = await supabase.functions.invoke('delete-account', { body: {} });
+    if (error || res?.error) {
+      setMsg('⚠️ ลบบัญชีไม่สำเร็จ: ' + (error?.message ?? res?.error ?? ''));
+      setBusy(false);
+      return;
+    }
+    clearLocalAppData();
+    await supabase.auth.signOut().catch(() => {});
+    window.location.href = '/';
+  }
 
   const refresh = useCallback(async () => {
     if (!isSupabaseEnabled || !activeWs) return;
@@ -240,6 +276,47 @@ export default function Team({ activeWs, workspaces, currentUserId, data }: Prop
           <div className="team-hint">
             เชิญสมาชิกได้เฉพาะผู้ที่สมัครบัญชีในระบบแล้ว — สมาชิกในเวิร์กสเปซเดียวกันจะเห็นและแก้ไขข้อมูลร่วมกันผ่าน Row Level Security ของ Supabase
           </div>
+        </div>
+      )}
+
+      {/* ── 🗑 Danger Zone — ลบ workspace / ล้างข้อมูล (owner เท่านั้นใน production) ── */}
+      {(!isSupabaseEnabled || isOwner) && (
+        <div className="danger-zone">
+          <div className="danger-hd">🗑 Danger Zone</div>
+          {isSupabaseEnabled ? (
+            <p className="danger-desc">
+              ลบ Workspace <b>"{ws?.name}"</b> ถาวร — ข้อมูลบริษัท หน้าร้าน RFQ ออเดอร์ และสมาชิกทั้งหมดจะถูกลบ
+              <b> กู้คืนไม่ได้</b>
+            </p>
+          ) : (
+            <p className="danger-desc">
+              ล้างข้อมูลทั้งหมดในเครื่องนี้ (local mode) — บริษัท หน้าร้าน RFQ ทุกอย่างหายและเริ่มใหม่ <b>กู้คืนไม่ได้</b>
+            </p>
+          )}
+          <div className="danger-row">
+            <input
+              placeholder={`พิมพ์ "${confirmWord}" เพื่อยืนยัน`}
+              value={delConfirm}
+              onChange={e => setDelConfirm(e.target.value)}
+            />
+            <button
+              className="danger-btn"
+              disabled={busy || delConfirm.trim() !== confirmWord}
+              onClick={destroy}
+            >
+              {busy ? 'กำลังลบ…' : isSupabaseEnabled ? '🗑 ลบ Workspace ถาวร' : '🗑 ล้างข้อมูลเริ่มใหม่'}
+            </button>
+          </div>
+
+          {isSupabaseEnabled && (
+            <div className="danger-account">
+              ต้องการลบ<b>บัญชีผู้ใช้ทั้งหมด</b> (ทุก workspace ที่เป็นเจ้าของ + บัญชีล็อกอิน — กู้คืนไม่ได้)?{' '}
+              <button className="danger-link" disabled={busy || delConfirm.trim() !== confirmWord} onClick={destroyAccount}>
+                ลบบัญชีถาวร
+              </button>
+              <span className="danger-note"> (พิมพ์คำยืนยันด้านบนก่อน)</span>
+            </div>
+          )}
         </div>
       )}
     </div>

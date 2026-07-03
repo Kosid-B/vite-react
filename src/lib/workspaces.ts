@@ -62,6 +62,17 @@ export async function removeMember(workspaceId: string, userId: string): Promise
   return error ? error.message : (data as string);
 }
 
+/** ลบ workspace ถาวร — RLS จำกัดเฉพาะ owner · FK cascade ลบข้อมูลลูกทั้งหมด
+ *  (workspace_state, members, storefront, rfqs, orders, bids) · คืน '' = สำเร็จ */
+export async function deleteWorkspace(workspaceId: string): Promise<string> {
+  if (!supabase) return ''; // local mode ไม่มี workspace จริง — ผู้เรียกล้าง localStorage เอง
+  const { error, count } = await supabase.from('workspaces')
+    .delete({ count: 'exact' }).eq('id', workspaceId);
+  if (error) return error.message;
+  if (!count) return 'ลบไม่สำเร็จ — ต้องเป็นเจ้าของ (owner) เท่านั้น';
+  return '';
+}
+
 export interface AdminWorkspace {
   id: string;
   name: string;

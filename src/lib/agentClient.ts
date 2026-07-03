@@ -12,12 +12,24 @@ let ws: WebSocket | null = null;
 let pendingResolve: ((r: AgentResponse) => void) | null = null;
 let pendingReject:  ((e: Error) => void) | null = null;
 
-function getAgentUrl(agentId = 'default'): string {
+/** R8 — DO แยกต่อ workspace: App ตั้งค่านี้เมื่อ activeWs เปลี่ยน
+ *  ทุก caller ที่ไม่ระบุ agentId จะใช้ workspace ปัจจุบันโดยอัตโนมัติ */
+let currentAgentId = 'default';
+export function setAgentWorkspace(wsId: string | null) {
+  const next = wsId ?? 'local';
+  if (next !== currentAgentId) {
+    currentAgentId = next;
+    ws?.close();
+    ws = null; // บังคับ reconnect ไป DO ของ workspace ใหม่
+  }
+}
+
+function getAgentUrl(agentId = currentAgentId): string {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   return `${proto}://${location.host}/api/agent/CeoAiAgent/${agentId}`;
 }
 
-function connect(agentId = 'default'): Promise<WebSocket> {
+function connect(agentId = currentAgentId): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
     const socket = new WebSocket(getAgentUrl(agentId));
     socket.onopen = () => resolve(socket);
@@ -46,7 +58,7 @@ export async function askAgent(opts: {
   context?: string;
   agentId?: string;
 }): Promise<AgentResponse> {
-  const id = opts.agentId ?? 'default';
+  const id = opts.agentId ?? currentAgentId;
 
   if (!ws || ws.readyState !== WebSocket.OPEN) {
     ws = await connect(id);
@@ -79,7 +91,7 @@ export async function askAgentRest(opts: {
   pageLabel?: string;
   context?: string;
 }): Promise<AgentResponse> {
-  const res = await fetch(`/api/agent/CeoAiAgent/default`, {
+  const res = await fetch(`/api/agent/CeoAiAgent/${currentAgentId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ method: 'ask', args: [opts.text, opts.page, opts.pageLabel, opts.context] }),
