@@ -10,6 +10,7 @@ import {
 import { isSupabaseEnabled } from '../lib/supabase';
 import { DBD_SECTORS } from '../data/dbd';
 import MarketAgent from '../components/MarketAgent';
+import { track } from '../lib/analytics';
 
 interface Props {
   data: AppData;
@@ -118,6 +119,7 @@ export default function Trade({ data, wsId }: Props) {
       budget: openDraft.budget, contact: openDraft.contact.trim(),
     });
     if (err) { setMsg('⚠️ ' + err); return; }
+    track('open_rfq_posted', { budget: openDraft.budget });
     setMsg('✅ ประกาศงานกลางแล้ว — ธุรกิจในระบบจะเห็นและส่งใบเสนอราคาเข้ามา');
     setPostOpen(false);
     setOpenDraft({ title: '', detail: '', budget: 0, contact: '', sector: '' });
@@ -128,6 +130,7 @@ export default function Trade({ data, wsId }: Props) {
     if (!mySf) { setMsg('⚠️ ต้องมีหน้าร้านก่อนรับงาน — เปิดจากเมนู "หน้าร้านของฉัน"'); return; }
     const err = await claimOpenRfq(id, mySf.slug, claimDraft.amount, claimDraft.note.trim());
     if (err) { setMsg('⚠️ ' + err); return; }
+    track('rfq_quote_sent', { source: 'open_board', amount: claimDraft.amount });
     setMsg(`✅ รับงานและส่งใบเสนอราคา ${baht(claimDraft.amount)} แล้ว — รอผู้ซื้อกดรับ`);
     setClaimFor(null);
     setClaimDraft({ amount: 0, note: '' });

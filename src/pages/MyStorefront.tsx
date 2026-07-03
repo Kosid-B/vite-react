@@ -4,6 +4,7 @@ import { getMyStorefront, saveStorefront, uploadShopImage, MAX_SHOP_IMAGES, type
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { draftVpLocal } from '../lib/firstDeal';
 import { trackAiCall } from '../lib/usage';
+import { track } from '../lib/analytics';
 import DBDSelect from '../components/DBDSelect';
 import EditableList from '../components/EditableList';
 import ShopBooster from '../components/ShopBooster';
@@ -109,6 +110,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
     const err = await saveStorefront(wsId, next);
     setSaving(false);
     if (err) { setMsg('⚠️ ' + err); return; }
+    if (published) track('storefront_published', { has_images: sf.images.length > 0 ? 1 : 0, kind: sf.kind });
     setSf(next);
     setMsg(published
       ? `✅ เผยแพร่หน้าร้านแล้ว — ลูกค้าเข้าชมได้ที่ ${publicUrl}${isSupabaseEnabled ? '' : ' (local mode: พรีวิวในเครื่องนี้เท่านั้น)'}`

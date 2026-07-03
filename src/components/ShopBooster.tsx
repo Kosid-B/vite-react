@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, AgentTask, PageId } from '../types';
 import type { Storefront } from '../lib/storefront';
+import { track } from '../lib/analytics';
 
 /** 🚀 Shop Booster — สะพานจากตลาด → บริษัท AI
  *  ร้าน/ธุรกิจสมาชิกที่มาใช้หน้าร้าน/ตลาด กดปุ่มเดียว "จ้างทีม AI ทำงานให้ร้านนี้"
@@ -80,6 +81,7 @@ export default function ShopBooster({ data, sf, onUpdate, onNavigate }: Props) {
       ...data,
       aiCompany: { ...data.aiCompany, tasks: [task, ...data.aiCompany.tasks] },
     });
+    track('booster_hired', { job: job.id });
     setHired(job.id);
   }
 
