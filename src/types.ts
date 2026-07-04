@@ -485,6 +485,8 @@ export interface AppData {
   coupon?: { pct: number; reason: string }; // ส่วนลดค่าแพ็กเกจล่าสุด (เก็บ % สูงสุด)
   featuredVoucherDays?: number;           // สิทธิ์ดันร้านขึ้น "แนะนำ" สะสม (วัน)
   cityUnlocks?: string[];                 // ของปลดล็อกในเกม (cosmetic)
+  streak?: { count: number; lastDay: string }; // ส่วนต่อเนื่องรายวัน (ทำงานจริงในแอป)
+  proMode?: boolean;                      // โหมดโปร — ซ่อนองค์ประกอบเกมบน Dashboard
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */

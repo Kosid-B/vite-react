@@ -336,6 +336,11 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
       <FirstDealWidget data={data} wsId={wsId} onNavigate={onNavigate} />
 
       {/* ===== Gamification: ระดับบริษัท + Setup Quest + Badges ===== */}
+      {data.proMode ? (
+        <button className="gm-restore" onClick={() => onUpdate({ ...data, proMode: false })}>
+          🎮 โหมดเกมถูกซ่อน (โหมดโปร) — แตะเพื่อแสดง Quest / เลเวล / รางวัล
+        </button>
+      ) : (
       <div className="gm-panel">
         <div className="gm-level-row">
           <div className="gm-level-badge" style={{ background: level.color }}>{level.badge} {level.rank}</div>
@@ -350,6 +355,8 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
             🎯 Quest {questsDone}/{QUESTS.length}
             <span className="gm-quest-bonus">+{ACTIVITY_XP.questBonus} XP/ข้อ</span>
           </div>
+          <button className="gm-pro-toggle" title="ซ่อนองค์ประกอบเกม (สำหรับผู้ใช้ที่ต้องการโฟกัสข้อมูล)"
+            onClick={() => onUpdate({ ...data, proMode: true })}>โหมดโปร ✕</button>
         </div>
 
         {questsDone < QUESTS.length && (
@@ -411,6 +418,7 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
           );
         })()}
       </div>
+      )}
 
       {/* ===== ผลิตภัณฑ์/บริการ → CEO ร่าง BMC → บอร์ดอนุมัติ ===== */}
       <div className="gm-panel bmc-prop">

@@ -5,6 +5,8 @@ import { DEFAULT_DATA } from './data';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
 import { setAgentWorkspace } from './lib/agentClient';
+import { bumpStreak } from './lib/streak';
+import { track } from './lib/analytics';
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
@@ -222,7 +224,12 @@ export default function App() {
     toastTimer.current = setTimeout(() => { setToastVisible(false); setToastMsg(''); }, msg ? 3000 : 1600);
   }, []);
 
-  const updateData = useCallback((next: AppData) => {
+  const updateData = useCallback((incoming: AppData) => {
+    // ต่อ streak รายวันเมื่อทำงานจริง (แก้ข้อมูลครั้งแรกของวัน)
+    const next = bumpStreak(incoming);
+    if (next.streak && next.streak.count !== incoming.streak?.count) {
+      track('streak_extended', { count: next.streak.count });
+    }
     setData(next);
     try {
       const serial = JSON.stringify(next);

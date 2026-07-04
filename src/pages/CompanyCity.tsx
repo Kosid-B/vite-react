@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { AppData, PageId } from '../types';
 import { cityStats, type CityBuilding } from '../lib/companyCity';
 import { fmtBaht } from '../lib/finance';
+import { streakCount } from '../lib/streak';
+import { track } from '../lib/analytics';
 import CityTreasury from '../components/CityTreasury';
 import CityRewards from '../components/CityRewards';
 
@@ -11,6 +13,8 @@ import CityRewards from '../components/CityRewards';
 
 export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppData; onNavigate: (p: PageId) => void; onUpdate: (d: AppData) => void }) {
   const s = useMemo(() => cityStats(data), [data]);
+  const streak = streakCount(data);
+  useEffect(() => { track('city_viewed', { built: s.built, net: s.fin.net }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // เรียงให้อาคารที่สร้างแล้ว (สูง) อยู่กลาง ที่ดินว่างอยู่ท้าย เพื่อภาพเมืองสวย
   const skyline = [...s.buildings].sort((a, b) => b.level - a.level);
@@ -25,6 +29,9 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
             {data.aiCompany.industry?.trim() ? `ธุรกิจ: ${data.aiCompany.industry} — ` : ''}
             เมืองจะโตเองเมื่อคุณทำงานจริงในแต่ละด้าน แต่ละอาคารคือ 1 ด้านของบริษัท
           </p>
+          {streak > 0 && (
+            <div className="city-streak">🔥 ทำงานต่อเนื่อง <b>{streak}</b> วัน {streak >= 3 ? '— สุดยอด! รักษาไว้นะ' : ''}</div>
+          )}
         </div>
         <div className="city-tier" style={{ borderColor: `${s.level.color}66`, background: `${s.level.color}1a` }}>
           <span className="city-tier-badge">{s.level.badge}</span>
