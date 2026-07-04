@@ -4884,3 +4884,18 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .cs-clv{ display:flex; flex-direction:column; gap:2px; background:#0b1020; border:1px solid #334155; border-radius:8px; padding:8px 11px; margin-bottom:10px; font-size:12px; color:#cbd5e1; }
 .cs-clv b{ color:#67e8f9; font-variant-numeric:tabular-nums; }
 .cs-clv.soon{ color:#6f7cae; }
+
+/* ===== C-Level รายงานผลต่อ CEO (ทุกวันศุกร์) ===== */
+.ai-panel.clw{ border-color:#8b5cf622; }
+.clw-badge{ background:#8b5cf6; color:#fff; border-radius:999px; padding:2px 10px; font-size:10.5px; font-weight:700; margin-left:8px; }
+.clw-run{ margin-left:auto; background:#8b5cf6; color:#fff; border:0; border-radius:8px; padding:6px 13px; font-weight:600; font-size:12.5px; cursor:pointer; }
+.clw-run:disabled{ opacity:.55; cursor:default; }
+.clw-sub{ color:var(--muted,#94a3b8); font-size:12px; margin:6px 0 10px; line-height:1.5; }
+.clw-msg{ font-size:12.5px; color:#c4b5fd; margin-bottom:8px; }
+.clw-meta{ font-size:11.5px; color:#6f7cae; margin-bottom:8px; }
+.clw-list{ display:flex; flex-direction:column; gap:6px; }
+.clw-item{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:9px; padding:9px 12px; }
+.clw-item summary{ cursor:pointer; font-weight:700; font-size:13px; }
+.clw-item summary span{ color:#6f7cae; font-weight:500; font-size:11.5px; }
+.clw-report{ white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:12px; line-height:1.55; color:#cbd5e1; margin:8px 0 0; max-height:260px; overflow:auto; }
+.clw-empty{ font-size:12.5px; color:#6f7cae; }

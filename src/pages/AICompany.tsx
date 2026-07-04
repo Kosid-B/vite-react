@@ -19,6 +19,7 @@ import { DEFAULT_DATA } from '../data';
 import { cfoReportText, cfoKpis } from '../lib/cfoReport';
 import { segmentationInstruction, shouldRunWeekly, weekTag } from '../lib/segmentation';
 import { clvSummary } from '../lib/clv';
+import { cLevelAgents, shouldRunCLevel, weeklyInstruction } from '../lib/weeklyReports';
 import FinanceInput from '../components/FinanceInput';
 import SkillInvestmentPlan from '../components/SkillInvestmentPlan';
 
@@ -286,6 +287,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [cfoShown, setCfoShown] = useState(false);
   const [csuiteMsg, setCsuiteMsg] = useState<string | null>(null);
   const [cmoRunning, setCmoRunning] = useState(false);
+  const [cLevelRunning, setCLevelRunning] = useState(false);
+  const [cLevelMsg, setCLevelMsg] = useState<string | null>(null);
   const [hrdPlanningSkills, setHrdPlanningSkills] = useState(false);
   const [skillPlanMsg, setSkillPlanMsg] = useState<string | null>(null);
   const [addCustomSkillOpen, setAddCustomSkillOpen] = useState(false);
@@ -1314,6 +1317,41 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c.agents.length]);
 
+  /* ----- C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO (ทุกวันศุกร์) ----- */
+  const runCLevelWeekly = async (auto = false) => {
+    if (!supabase || cLevelRunning) return;
+    const agents = cLevelAgents(c);
+    if (agents.length === 0) { if (!auto) setCLevelMsg('ยังไม่มีตำแหน่ง C-level — ให้ CEO จัดทีมก่อน'); return; }
+    setCLevelRunning(true); if (!auto) setCLevelMsg(`C-Level ${agents.length} ตำแหน่งกำลังวิเคราะห์และรายงานต่อ CEO…`);
+    const items: NonNullable<AppData['cLevelReports']>['items'] = [];
+    for (const ag of agents) {
+      try {
+        trackAiCall();
+        const { data: res, error } = await supabase.functions.invoke('agent-run', {
+          body: {
+            role: ag.role, name: ag.name, mandate: ag.mandate, model: ag.model,
+            title: 'รายงานผลการดำเนินงานประจำสัปดาห์ต่อ CEO', detail: weeklyInstruction(ag, data),
+            goal: c.goal, industry: c.industry, companyName: c.name, orgContext: [], useWebSearch: false,
+          },
+        });
+        if (!error) items.push({ agentId: ag.id, role: ag.role, name: ag.name, color: ag.color, analysis: res?.output ?? '', at: nowTime() });
+      } catch { /* ข้ามตำแหน่งที่ล้มเหลว */ }
+    }
+    onUpdate({ ...data, cLevelReports: { weekTag: weekTag(), items } });
+    setCLevelRunning(false);
+    if (!auto) setCLevelMsg(`✅ C-Level ${items.length} ตำแหน่งรายงานต่อ CEO แล้ว`);
+    setFeed(prev => [
+      { id: ++counter.current, time: nowTime(), text: `C-Level ${items.length} ตำแหน่งรายงานผลประจำสัปดาห์ต่อ CEO`, color: AGENT_PALETTE[0] },
+      ...prev,
+    ].slice(0, 40));
+  };
+
+  // อัตโนมัติ: ทุกวันศุกร์ให้ C-Level ทุกตำแหน่งรายงานต่อ CEO (ครั้งเดียว/สัปดาห์)
+  useEffect(() => {
+    if (isSupabaseEnabled && shouldRunCLevel(data)) runCLevelWeekly(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c.agents.length]);
+
   const agentName = (id: string) => c.agents.find(a => a.id === id)?.role ?? '—';
   const pendingApprovals = c.approvals.filter(a => a.status === 'pending').length;
   const workingCount = c.running ? c.agents.filter(a => a.status === 'working').length : 0;
@@ -1611,6 +1649,34 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
               : <div className="cs-empty">ยังไม่มีผลวิเคราะห์ — กดปุ่มด้านบน หรือรอรอบวันศุกร์</div>}
           </div>
         </div>
+      </section>
+
+      {/* ===== C-Level รายงานผลต่อ CEO (ทุกวันศุกร์) ===== */}
+      <section className="ai-panel clw" style={{ marginTop: 16 }}>
+        <div className="ai-panel-hd">🗓️ C-Level รายงานผลต่อ CEO
+          <span className="clw-badge">อัตโนมัติทุกศุกร์</span>
+          {isSupabaseEnabled && (
+            <button className="clw-run" onClick={() => runCLevelWeekly(false)} disabled={cLevelRunning}>
+              {cLevelRunning ? 'กำลังรายงาน…' : 'ให้ C-Level รายงานตอนนี้'}
+            </button>
+          )}
+        </div>
+        <div className="clw-sub">ทุกวันศุกร์ C-Level ทุกตำแหน่งวิเคราะห์งานในความรับผิดชอบ + เสนอ CEO (ผลงาน · ปัญหา · ตัวชี้วัด · ขั้นตอนถัดไป)</div>
+        {cLevelMsg && <div className="clw-msg">{cLevelMsg}</div>}
+        {!isSupabaseEnabled && <div className="clw-empty">เปิด Supabase เพื่อให้ C-Level agent วิเคราะห์และรายงาน</div>}
+        {data.cLevelReports?.items?.length
+          ? <>
+              <div className="clw-meta">รอบสัปดาห์ {data.cLevelReports.weekTag} · {data.cLevelReports.items.length} ตำแหน่ง</div>
+              <div className="clw-list">
+                {data.cLevelReports.items.map(r => (
+                  <details key={r.agentId} className="clw-item">
+                    <summary style={{ color: r.color }}>▸ {r.role} · {r.name} <span>({r.at})</span></summary>
+                    <pre className="clw-report">{r.analysis || '(ไม่มีเนื้อหา)'}</pre>
+                  </details>
+                ))}
+              </div>
+            </>
+          : isSupabaseEnabled && <div className="clw-empty">ยังไม่มีรายงานรอบสัปดาห์ — กดปุ่มด้านบน หรือรอรอบวันศุกร์</div>}
       </section>
 
       <SkillInvestmentPlan data={data} onUpdate={onUpdate} />
