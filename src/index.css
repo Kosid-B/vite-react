@@ -4457,3 +4457,80 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 
 /* ===== หมายเหตุ ชำระออนไลน์เร็วๆ นี้ (Xendit รอ KYC) ===== */
 .bill-soon { font-size:13px; line-height:1.6; color:#eab308; background:rgba(234,179,8,.08); border:1px solid rgba(234,179,8,.3); border-radius:10px; padding:11px 14px; margin-bottom:10px; }
+
+/* ===== เมืองบริษัท (Company City) — เกมส์ SIM การเติบโต ===== */
+.city-wrap { max-width: 1100px; }
+.city-head { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
+.city-title { font-size:26px; font-weight:800; margin:0 0 4px; }
+.city-sub { font-size:13px; color:var(--ink3); margin:0; max-width:560px; line-height:1.6; }
+.city-tier { display:flex; align-items:center; gap:10px; border:1px solid; border-radius:14px; padding:10px 16px; }
+.city-tier-badge { font-size:30px; }
+.city-tier-name { font-size:16px; font-weight:800; }
+.city-tier-rank { font-size:11px; color:var(--ink3); }
+
+.city-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+.city-stat { background:var(--white); border:1px solid var(--sand); border-radius:12px; padding:12px; text-align:center; }
+.city-stat b { display:block; font-size:22px; font-weight:800; color:var(--ink); }
+.city-stat span { font-size:11px; color:var(--ink3); }
+
+.city-progress { margin-bottom:16px; }
+.city-progress-top { display:flex; justify-content:space-between; font-size:12px; color:var(--ink3); margin-bottom:5px; }
+.city-progress-bar { height:9px; background:var(--cream2); border-radius:99px; overflow:hidden; }
+.city-progress-fill { height:100%; border-radius:99px; transition:width .5s ease; }
+
+/* ---- ฉากเมือง ---- */
+.city-scene { position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--sand);
+  padding:22px 18px 0; margin-bottom:18px; min-height:270px; display:flex; align-items:flex-end;
+  background:linear-gradient(180deg,#0b1220,#0f1c2e 60%,#132339); }
+.city-scene.sky-town   { background:linear-gradient(180deg,#0c1526,#14263f 60%,#1a3350); }
+.city-scene.sky-city   { background:linear-gradient(180deg,#0d1a30,#173250 55%,#1e3f66); }
+.city-scene.sky-metro  { background:linear-gradient(180deg,#111633,#25204d 55%,#3a2f6b); }
+.city-scene.sky-elite  { background:linear-gradient(180deg,#1a1030,#3a1650 50%,#5a1f5e); }
+.city-skyline { position:relative; z-index:2; display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap;
+  width:100%; padding-bottom:14px; }
+.city-ground { position:absolute; left:0; right:0; bottom:0; height:14px; z-index:1;
+  background:linear-gradient(180deg,#0a1220,#060b14); box-shadow:0 -1px 0 rgba(255,255,255,.06); }
+
+/* ---- อาคาร ---- */
+.bldg { display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none;
+  cursor:pointer; font-family:inherit; padding:0; }
+.bldg-roof { font-size:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+.bldg-tower { display:flex; flex-direction:column-reverse; gap:2px; }
+.bldg-floor { display:flex; gap:3px; justify-content:center; padding:5px 8px; border-radius:3px;
+  background:linear-gradient(180deg,#2a3f5f,#1c2c45); box-shadow:inset 0 0 0 1px rgba(255,255,255,.06); }
+.bldg-floor i { width:4px; height:6px; border-radius:1px; background:#38bdf8; box-shadow:0 0 5px #38bdf8aa;
+  animation:cityGlow 3s ease-in-out infinite; }
+.bldg-floor i:nth-child(2){ animation-delay:.6s; background:#fbbf24; box-shadow:0 0 5px #fbbf24aa; }
+.bldg-floor i:nth-child(3){ animation-delay:1.2s; }
+@keyframes cityGlow { 0%,100%{opacity:.45} 50%{opacity:1} }
+.bldg:hover .bldg-tower { transform:translateY(-2px); transition:transform .15s; }
+.bldg-label { font-size:10.5px; color:#cbd5e1; margin-top:3px; white-space:nowrap; }
+.bldg.empty { opacity:.85; }
+.bldg.empty .bldg-lot { display:flex; align-items:center; justify-content:center; width:46px; height:34px;
+  border:2px dashed #ffffff33; border-radius:6px; color:#94a3b8; font-size:18px; background:rgba(255,255,255,.03); }
+.bldg.empty:hover .bldg-lot { border-color:#38bdf8aa; color:#38bdf8; }
+.bldg.empty.locked .bldg-lot { border-style:solid; border-color:#ffffff1a; }
+
+/* ---- การ์ดรายการอาคาร ---- */
+.city-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:10px; }
+.city-card { display:flex; align-items:flex-start; gap:12px; text-align:left; background:var(--white);
+  border:1px solid var(--sand); border-radius:12px; padding:13px 14px; cursor:pointer; font-family:inherit;
+  position:relative; transition:border-color .15s,transform .1s; }
+.city-card:hover { border-color:#38bdf8aa; transform:translateY(-1px); }
+.city-card.built { border-color:#22c55e40; background:linear-gradient(180deg,rgba(34,197,94,.05),var(--white)); }
+.city-card.locked { opacity:.72; }
+.city-card-ico { font-size:26px; line-height:1; }
+.city-card-body { flex:1; min-width:0; }
+.city-card-name { font-size:14px; font-weight:700; color:var(--ink); display:flex; justify-content:space-between; gap:8px; align-items:center; }
+.city-card-lv { font-size:10.5px; font-weight:700; color:#38bdf8; background:rgba(56,189,248,.12); border-radius:99px; padding:2px 8px; white-space:nowrap; }
+.city-card.built .city-card-lv { color:#22c55e; background:rgba(34,197,94,.14); }
+.city-card-role { font-size:12px; color:var(--ink3); margin-top:2px; }
+.city-pips { display:flex; gap:4px; margin:7px 0 4px; }
+.city-pip { width:22px; height:5px; border-radius:99px; background:var(--cream2); }
+.city-pip.on { background:#22c55e; }
+.city-card-hint { font-size:11.5px; color:var(--ink4); }
+.city-card-go { font-size:11px; font-weight:700; color:#38bdf8; white-space:nowrap; align-self:center; }
+.city-foot { font-size:12.5px; color:var(--ink3); line-height:1.7; margin-top:16px;
+  background:var(--white); border:1px solid var(--sand); border-radius:12px; padding:12px 14px; }
+
+@media (max-width:640px){ .city-stats{ grid-template-columns:repeat(2,1fr); } }

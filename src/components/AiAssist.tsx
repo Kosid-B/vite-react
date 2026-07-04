@@ -34,6 +34,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   sipoc: { label: 'SIPOC Process', prompts: ['หา Gap และคอขวดในกระบวนการนี้', 'เสนอวิธีลดความซ้ำซ้อนของขั้นตอน', 'ประเมินว่ากระบวนการนี้พร้อมทำ Automation หรือยัง'], context: d => `กระบวนการ SIPOC: ${(d.sipoc ?? []).map(p => p.name).join(', ') || 'ยังไม่มี'}` },
   storefront: { label: 'หน้าร้านของฉัน', prompts: ['เขียนคำอธิบายธุรกิจให้ดึงดูดลูกค้า', 'เสนอสินค้า/บริการเด่นที่ควรโชว์', 'แนะนำวิธีโปรโมตลิงก์หน้าร้าน'], context: d => `ธุรกิจ: ${d.aiCompany.name} · หมวด: ${d.aiCompany.productDbd ?? d.aiCompany.industry}` },
   trade: { label: 'ซื้อขาย B2B (RFQ)', prompts: ['ร่างข้อความ RFQ ที่ได้ราคาดี', 'ช่วยตั้งราคาใบเสนอราคาให้แข่งขันได้', 'เช็คลิสต์ก่อนรับใบเสนอราคา'], context: d => `ธุรกิจ: ${d.aiCompany.name}` },
+  city: { label: 'เมืองบริษัท', prompts: ['อาคารไหนควรพัฒนาต่อเพื่อโตเร็วสุด', 'สรุปว่าเมืองยังขาดอะไร', 'วางลำดับการเติบโตให้บริษัท'], context: d => `เมืองบริษัท: เอเจนต์ ${d.aiCompany.agents.length}, งานเสร็จ ${d.aiCompany.tasks.filter(t => t.status === 'done').length}, skill ${(d.aiCompany.purchasedSkills ?? []).length}` },
 };
 
 export default function AiAssist({ activePage, data }: Props) {

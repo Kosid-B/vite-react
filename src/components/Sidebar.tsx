@@ -129,6 +129,15 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           </button>
         </div>
 
+        <button className={`nav-item ${activePage === 'city' ? 'active' : ''}`} onClick={() => onNavigate('city')}
+          title="เมืองบริษัทของคุณ — เกมส์ SIM ที่เมืองโตตามความคืบหน้าธุรกิจจริง">
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M19 21V7l-6-4v4L7 3v18M3 21h18M9 9v.01M9 12v.01M9 15v.01M15 12v.01M15 15v.01" />
+          </svg>
+          🏙️ เมืองบริษัท
+          <span className="nav-dot" />
+        </button>
+
         {toolsOpen && (
           <div className="nav-sub">
             <div className="nav-label">เครื่องมือ</div>

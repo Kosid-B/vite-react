@@ -481,7 +481,7 @@ export interface AppData {
   visitedMarket?: boolean; // เข้าหน้าตลาด/หน้าร้านแล้ว — ใช้ติ๊ก Quest "เข้าตลาดธุรกิจ"
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city';
 
 /* ===== Factory / โรงงานอัจฉริยะ ===== */
 export type MachineStatus = 'running' | 'idle' | 'maintenance' | 'breakdown';
