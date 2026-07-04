@@ -30,13 +30,18 @@ export const REWARDS: Reward[] = [
     unlocked: d => financeSummary(d).breakEven,
   },
   {
-    id: 'city-growing', icon: '🌿', title: 'เมืองโตเป็น “ชุมชนกำลังโต”',
+    id: 'profit-10k', icon: '🌿', title: 'กำไรสุทธิสะสม ฿10,000',
     desc: 'สิทธิ์ดันร้านขึ้น ⭐ แนะนำ ในตลาด 3 วัน', kind: 'featured', value: 3,
+    unlocked: d => financeSummary(d).net >= 10000,
+  },
+  {
+    id: 'city-growing', icon: '🏙️', title: 'เมืองโตเป็น “ชุมชนกำลังโต”',
+    desc: 'ปลดของแต่งเมือง: สวนสาธารณะ', kind: 'unlock', value: 0,
     unlocked: d => rank(d) !== 'Starter',
   },
   {
     id: 'profit-100k', icon: '💎', title: 'กำไรสุทธิสะสม ฿100,000',
-    desc: 'รับส่วนลดค่าแพ็กเกจ 20%', kind: 'discount', value: 20,
+    desc: 'รับส่วนลดค่าแพ็กเกจ 15% (สูงสุด)', kind: 'discount', value: 15,
     unlocked: d => financeSummary(d).net >= 100000,
   },
   {

@@ -125,12 +125,12 @@ export function cityStats(d: AppData) {
       hint: fin.breakEven ? '' : 'ทำให้รายได้ > รายจ่าย → เปิดธนาคาร',
     },
     {
-      id: 'exchange', icon: '📈', name: 'ตลาดทุน', role: 'กำไรสุทธิสะสม ≥ ฿100,000', page: 'city',
-      level: levelFromThresholds(fin.net, [100000, 500000, 1000000]), max: 3,
+      id: 'exchange', icon: '📈', name: 'ตลาดทุน', role: 'กำไรสุทธิสะสม ≥ ฿50,000', page: 'city',
+      level: levelFromThresholds(fin.net, [50000, 250000, 1000000]), max: 3,
       hint: fin.net >= 1000000 ? '' :
-        fin.net >= 500000 ? 'อีก ฿' + (1000000 - fin.net).toLocaleString('th-TH') + ' → อัปเกรด' :
-        fin.net >= 100000 ? 'อีก ฿' + (500000 - fin.net).toLocaleString('th-TH') + ' → อัปเกรด' :
-        'กำไรสุทธิ ≥ ฿100,000 → เปิดตลาดทุน',
+        fin.net >= 250000 ? 'อีก ฿' + (1000000 - fin.net).toLocaleString('th-TH') + ' → อัปเกรด' :
+        fin.net >= 50000 ? 'อีก ฿' + (250000 - fin.net).toLocaleString('th-TH') + ' → อัปเกรด' :
+        'กำไรสุทธิ ≥ ฿50,000 → เปิดตลาดทุน',
     },
   ];
 
