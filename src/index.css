@@ -4628,6 +4628,25 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .gm-restore { display:block; width:100%; text-align:center; font-family:inherit; font-size:12.5px; color:var(--ink3); background:var(--white); border:1px dashed var(--sand); border-radius:12px; padding:10px; margin-bottom:16px; cursor:pointer; }
 .gm-restore:hover { color:#38bdf8; border-color:#38bdf855; }
 
+/* ===== Expert Edge — ฝังคูเมืองที่ปรึกษา 20 ปี (ยก VRIO) ===== */
+.xedge { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  background:linear-gradient(100deg,rgba(56,189,248,.10),rgba(34,197,94,.06)); border:1px solid rgba(56,189,248,.3);
+  border-radius:14px; padding:14px 18px; margin-bottom:16px; }
+.xedge.compact { padding:11px 15px; }
+.xedge-main { display:flex; align-items:center; gap:13px; flex:1; min-width:240px; }
+.xedge-ico { font-size:28px; flex-shrink:0; }
+.xedge-title { font-size:14px; font-weight:800; color:var(--ink); line-height:1.4; }
+.xedge.compact .xedge-title { font-size:13px; }
+.xedge-title b { color:#38bdf8; }
+.xedge-sub { font-size:12px; color:var(--ink2); line-height:1.5; margin-top:2px; }
+.xedge-sub b { color:var(--ink); }
+.xedge-caps { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.xedge-cap { font-size:11px; font-weight:600; color:#38bdf8; background:rgba(56,189,248,.12); border:1px solid rgba(56,189,248,.25); border-radius:99px; padding:3px 10px; }
+.xedge-cta { display:flex; flex-direction:column; gap:7px; align-items:flex-end; }
+.xedge-tel { font-size:12.5px; font-weight:700; color:#0f172a; background:#38bdf8; border-radius:8px; padding:8px 14px; text-decoration:none; white-space:nowrap; }
+.xedge-iso { font-family:inherit; font-size:12px; font-weight:600; color:#38bdf8; background:none; border:1px solid rgba(56,189,248,.4); border-radius:8px; padding:7px 13px; cursor:pointer; white-space:nowrap; }
+@media (max-width:640px){ .xedge-cta{ flex-direction:row; align-items:stretch; width:100%; } .xedge-tel,.xedge-iso{ flex:1; text-align:center; } }
+
 /* ===== การค้าระหว่างเมือง (Inter-City Trade) ===== */
 .ict-cards { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:12px; }
 .ict-card { background:var(--white); border:1px solid var(--sand); border-radius:12px; padding:12px; text-align:center; }

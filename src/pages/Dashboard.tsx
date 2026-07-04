@@ -3,6 +3,7 @@ import type { AppData, BMCData, PageId } from '../types';
 import { companyXP, getCompanyLevel, COMPANY_LEVELS, QUESTS, ACHIEVEMENTS, ACTIVITY_XP } from '../lib/gamification';
 import DBDSelect from '../components/DBDSelect';
 import FirstDealWidget from '../components/FirstDealWidget';
+import ExpertEdge from '../components/ExpertEdge';
 
 interface Props {
   data: AppData;
@@ -333,6 +334,8 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
       </div>
 
       {/* ===== First Revenue Engine: ภารกิจดีลแรกใน 30 วัน (แก้ churn) ===== */}
+      <ExpertEdge compact onNavigate={onNavigate} />
+
       <FirstDealWidget data={data} wsId={wsId} onNavigate={onNavigate} />
 
       {/* ===== Gamification: ระดับบริษัท + Setup Quest + Badges ===== */}
