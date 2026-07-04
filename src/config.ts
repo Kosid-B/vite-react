@@ -36,3 +36,15 @@ export const PAYMENT = {
   //    deploy ฟังก์ชัน create-invoice + xendit-webhook และตั้ง XENDIT keys ครบแล้ว (ดู COMMAND.md)
   xenditLive: false,
 };
+
+// การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
+export const INTEGRATIONS = {
+  // Google Sheets: User เชื่อมบัญชี Google ของตัวเอง → ระบบเขียนรายงานลงชีตของเขา
+  // เปลี่ยนเป็น true เมื่อ: (1) สร้าง OAuth Client ใน Google Cloud + ใส่ googleClientId ด้านล่าง
+  //   (2) deploy ฟังก์ชัน sheets-oauth + sheets-sync (3) ตั้ง secret GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET
+  sheetsLive: false,
+  // OAuth 2.0 Client ID (เป็นค่า public ฝังได้) จาก Google Cloud Console → Credentials
+  googleClientId: '',
+  // เส้นทาง callback ที่ต้องลงทะเบียนใน Google Cloud (Authorized redirect URI)
+  googleRedirectPath: '/oauth/google',
+};

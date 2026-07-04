@@ -109,7 +109,10 @@ Admin (support@b-tctraining.com): ใช้ Scale ฟรีเสมอ — App.
 หน้า admin แท็บ "เวิร์กสเปซ": ปุ่ม "📊 โหลดสรุปผลการดำเนินงาน" → wsLoad ทุก ws (RLS is_app_admin เห็นหมด)
 src/lib/adminOps.ts: workspaceOps(d) รวม revenue/expense/net + tasksDone/dealsClosed/agents/cityTier/streak
   (ใช้ financeSummary + cityStats) · opsTotals() KPI รวม · opsCsv()/opsTsv() export (CSV ดาวน์โหลด / TSV วางลง Google Sheets)
-Google Sheets ของ User (เชื่อมบัญชีเอง) = Phase 2b (OAuth + Edge Function) ยังไม่ทำ
+Google Sheets ของ User (เชื่อมบัญชีเอง) = Phase 2b — โค้ดเสร็จแล้ว (sheets-oauth + sheets-sync +
+  src/lib/sheets.ts + INTEGRATIONS flag ใน config.ts) gate ด้วย INTEGRATIONS.sheetsLive
+  รอ Board: สร้าง OAuth Client ใน Google Cloud + ตั้ง GOOGLE_CLIENT_ID/SECRET + deploy 2 ฟังก์ชัน (PowerShell)
+  callback = /oauth/google (App.tsx handleSheetsCallback) · ดู supabase/README.md
 ```
 
 ## Sidebar Pages (nav labels)

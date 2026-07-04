@@ -15,6 +15,7 @@ import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
 import UpgradeWall from './components/UpgradeWall';
 import { canAccess, setAdminFullAccess } from './lib/access';
+import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
 import { isAdminEmail } from './config';
 import { PublicStorefrontPage, PublicDirectoryPage } from './pages/PublicStorefront';
 import StartLanding from './pages/StartLanding';
@@ -234,6 +235,16 @@ export default function App() {
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => { setToastVisible(false); setToastMsg(''); }, msg ? 3000 : 1600);
   }, []);
+
+  // กลับจากหน้ายินยอม Google (Sheets OAuth) — แลก token ฝั่ง server แล้วล้าง URL
+  useEffect(() => {
+    if (!isSheetsCallback()) return;
+    if (isSupabaseEnabled && !session) return; // รอ session พร้อมก่อน
+    handleSheetsCallback().then(r => {
+      window.history.replaceState({}, '', '/');
+      showToast(r.msg);
+    });
+  }, [session, showToast]);
 
   const updateData = useCallback((incoming: AppData) => {
     // ต่อ streak รายวันเมื่อทำงานจริง (แก้ข้อมูลครั้งแรกของวัน)

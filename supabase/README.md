@@ -95,6 +95,50 @@ supabase secrets set CRON_SECRET=your-cron-secret
 ฟังก์ชันจะสแกนทุกเวิร์กสเปซ: ถ้า `autoRenew` และถึงรอบบิล → ออกใบแจ้งหนี้ + ต่อรอบบิล 1 เดือน
 (สถานะ pending รอ `promptpay-webhook` ยืนยันเป็น paid); ถ้าไม่ต่ออายุและเกินกำหนด → ตั้ง `past_due`
 
+### 3b) `sheets-oauth` + `sheets-sync` — Google Sheets ที่ User เชื่อมบัญชีตัวเอง (Phase 2b)
+เขียนรายงาน/สรุปผลงานลง Google Sheets **ของ User** (เขาเชื่อมบัญชี Google ตัวเองผ่าน OAuth)
+token เก็บใน `public.workspace_integrations` (provider `sheets`) — ไม่อยู่ใน AppData ที่ sync ไป client
+
+**A. ตั้งค่าใน Google Cloud Console (ทำครั้งเดียว):**
+1. สร้าง Project → เปิด **Google Sheets API**
+2. **OAuth consent screen**: External · เพิ่ม scope `.../auth/spreadsheets` · เพิ่มอีเมลผู้ทดสอบ (ตอน Testing)
+3. **Credentials → OAuth client ID** (Web application):
+   - Authorized redirect URI: `https://ceoaithailand.org/oauth/google`
+   - (ทดสอบ local เพิ่ม `http://localhost:5173/oauth/google`)
+   - ได้ **Client ID** (public) + **Client secret**
+
+**B. ใส่ค่าในระบบ:**
+- `src/config.ts` → `INTEGRATIONS.googleClientId = '<Client ID>'` และ `sheetsLive: true`
+- Secrets ฝั่ง server:
+  ```bash
+  supabase secrets set GOOGLE_CLIENT_ID=<client-id>.apps.googleusercontent.com
+  supabase secrets set GOOGLE_CLIENT_SECRET=<client-secret>
+  ```
+
+**C. Deploy (PowerShell — MCP deploy ถูกบล็อก):**
+```powershell
+supabase functions deploy sheets-oauth --project-ref rsjbqmnvocvtveelselj
+supabase functions deploy sheets-sync  --project-ref rsjbqmnvocvtveelselj
+```
+
+Flow: User กด "เชื่อม Google" ในหน้า บริษัท AI → ยินยอมที่ Google → กลับมาที่ `/oauth/google?code=…&state=<wsId>`
+→ แอปเรียก `sheets-oauth` แลก token → เชื่อมสำเร็จ → ปุ่ม "📊 ส่งสรุปผลงานลงชีต" เรียก `sheets-sync`
+(สร้างสเปรดชีตครั้งแรก + append แถวข้อมูล, refresh token อัตโนมัติเมื่อหมดอายุ)
+
+> จนกว่า `sheetsLive` = true ปุ่มจะยังเป็น "เร็วๆ นี้" (gate เหมือน `xenditLive`)
+
+### 3c) `daily-ceo-report` — CEO สรุปรายงานประจำวัน + เสนอ Issue ให้บอร์ด (ทุก 9 โมงเช้า)
+```powershell
+supabase functions deploy daily-ceo-report --no-verify-jwt
+```
+ใช้ `CRON_SECRET` + `RESEND_API_KEY` เดียวกับ weekly-report · ตั้งเวลาด้วย migration
+`0021_daily_ceo_report_cron.sql` (pg_cron `0 2 * * *` = 09:00 ไทย — แก้ `<PROJECT_REF>` ก่อนรัน)
+
+ทุกวัน 9 โมง: วนทุก workspace → สร้างรายงาน 7 หัวข้อ (การตลาด · ส่งมอบ · การเงิน/Cashflow ·
+รายการที่ต้องจ่าย · ข้อผิดพลาด/ข้อบกพร่อง · ประเด็นขออนุมัติ · ขั้นตอนถัดไป) แล้ว
+(1) เพิ่ม approval `daily-<วันที่>` ลง workspace_state (บอร์ดเห็นในกล่องอนุมัติ · 1 รายการ/วัน)
+(2) ส่งอีเมลถึงเจ้าของผ่าน Resend
+
 ### 4) ฟังก์ชันอื่นที่ deploy แล้ว (production)
 | ฟังก์ชัน | JWT | หน้าที่ |
 |---|---|---|

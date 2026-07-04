@@ -15,6 +15,7 @@ import { withSkillDirectives } from '../lib/skillDirectives';
 import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamification';
 import DBDSelect from '../components/DBDSelect';
 import { reviewTasks, nextStepTasks, reportByPosition, boardReportText } from '../lib/boardReport';
+import { DEFAULT_DATA } from '../data';
 
 // ---- Org Chart Node (recursive) ----
 interface OcNodeProps {
@@ -165,6 +166,13 @@ const TOOL_SPECS: { id: string; label: string; icon: string; owner: string; desc
     desc: 'แผนผังกระบวนการ Supplier → Input → Process → Output → Customer หา Gap และคอขวด' },
 ];
 
+// เครื่องมือ → ฟิลด์ข้อมูลใน AppData (ใช้ตอน "ลบข้อมูลเครื่องมือ" = รีเซ็ตเป็นค่าเริ่มต้น)
+const TOOL_DATA_KEY: Record<string, keyof AppData> = {
+  journey: 'stages', funnel: 'funnel', roi: 'roi', personas: 'personas',
+  content: 'contentPlan', actions: 'actions', bmc: 'businessModel',
+  roadmap: 'roadmap', marketing: 'marketing', vrio: 'vrio', sipoc: 'sipoc',
+};
+
 // สเปกตำแหน่ง C-level ที่ CEO สร้างอัตโนมัติเมื่อยังไม่มีในผังองค์กร
 const C_LEVEL_SPECS: Record<string, { avatar: string; color: string; name: string; mandate: string }> = {
   CMO: { avatar: '📣', color: '#c44b2b', name: 'มณี', mandate: 'บริหารการตลาดและลูกค้า — ดูแล Journey Map, Conversion Funnel, Personas, Content Plan และกลยุทธ์การตลาด' },
@@ -268,6 +276,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [proposingMission, setProposingMission] = useState(false);
   const [missionMsg, setMissionMsg] = useState<string | null>(null);
   const [boardReportMsg, setBoardReportMsg] = useState<string | null>(null);
+  const [toolsShown, setToolsShown] = useState(true);
+  const [toolDelMsg, setToolDelMsg] = useState<string | null>(null);
   const [hrdPlanningSkills, setHrdPlanningSkills] = useState(false);
   const [skillPlanMsg, setSkillPlanMsg] = useState<string | null>(null);
   const [addCustomSkillOpen, setAddCustomSkillOpen] = useState(false);
@@ -1122,6 +1132,25 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           });
           return;
         }
+        if (meta.type === 'tool_delete') {
+          const key = TOOL_DATA_KEY[String(meta.toolId)];
+          const spec = TOOL_SPECS.find(t => t.id === meta.toolId);
+          if (key && key in DEFAULT_DATA) {
+            const fresh = JSON.parse(JSON.stringify(DEFAULT_DATA[key]));
+            onUpdate({
+              ...data,
+              [key]: fresh,
+              aiCompany: { ...c, approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a) },
+            });
+          } else {
+            patch({ approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a) });
+          }
+          setFeed(prev => [
+            { id: ++counter.current, time: nowTime(), text: `✅ บอร์ดอนุมัติ — ลบ/รีเซ็ตข้อมูล ${spec?.label ?? 'เครื่องมือ'} แล้ว`, color: AGENT_PALETTE[0] },
+            ...prev,
+          ].slice(0, 40));
+          return;
+        }
         if (meta.type === 'board_report') {
           const ids: string[] = Array.isArray(meta.taskIds) ? meta.taskIds : [];
           const idSet = new Set(ids);
@@ -1170,7 +1199,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       id: 'rpt-' + Date.now().toString(36),
       agentId: ceo?.id ?? '',
       title: `📊 CEO รายงานผลการดำเนินงาน — ${rev.length} งานรออนุมัติ`,
-      detail: boardReportText(c),
+      detail: boardReportText(data),
       impact: JSON.stringify({ type: 'board_report', taskIds: rev.map(t => t.id) }),
       status: 'pending',
     };
@@ -1194,6 +1223,33 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     ].slice(0, 40));
   }
 
+  /* ----- ลบข้อมูลเครื่องมือ: ผู้รับผิดชอบเสนอ → CEO → บอร์ดอนุมัติ ----- */
+  function requestToolDelete(toolId: string) {
+    const spec = TOOL_SPECS.find(t => t.id === toolId);
+    if (!spec) return;
+    const owner = c.agents.find(a => a.id === (c.toolOwners ?? {})[toolId]);
+    if (!owner) { setToolDelMsg(`⚠️ "${spec.label}" ยังไม่มีผู้รับผิดชอบ — มอบหมาย C-level ก่อนจึงขอลบข้อมูลได้`); return; }
+    if (c.approvals.some(a => a.status === 'pending' && a.id === 'del-' + toolId)) {
+      setToolDelMsg(`"${spec.label}" มีคำขอลบข้อมูลรอบอร์ดอนุมัติอยู่แล้ว`); return;
+    }
+    const ceo = c.agents.find(a => a.role.toLowerCase().includes('ceo')) ?? c.agents[0];
+    const approval: import('../types').Approval = {
+      id: 'del-' + toolId,
+      agentId: owner.id,
+      title: `🗑️ ขอลบข้อมูลเครื่องมือ: ${spec.icon} ${spec.label}`,
+      detail: `ผู้รับผิดชอบ: ${owner.role} ${owner.name} เสนอลบ/รีเซ็ตข้อมูล "${spec.label}"\n`
+        + `CEO ${ceo?.name ?? ''} เสนอบอร์ดพิจารณา — เมื่ออนุมัติ ข้อมูลเครื่องมือนี้จะถูกรีเซ็ตเป็นค่าเริ่มต้น (กู้คืนไม่ได้)`,
+      impact: JSON.stringify({ type: 'tool_delete', toolId }),
+      status: 'pending',
+    };
+    patch({ approvals: [approval, ...c.approvals] });
+    setToolDelMsg(`✅ ส่งคำขอลบข้อมูล "${spec.label}" ให้บอร์ดแล้ว — อนุมัติที่ "กล่องอนุมัติของบอร์ด"`);
+    setFeed(prev => [
+      { id: ++counter.current, time: nowTime(), text: `${owner.role} ${owner.name} ขอลบข้อมูล ${spec.label} — CEO เสนอบอร์ดอนุมัติ`, color: owner.color },
+      ...prev,
+    ].slice(0, 40));
+  }
+
   const agentName = (id: string) => c.agents.find(a => a.id === id)?.role ?? '—';
   const pendingApprovals = c.approvals.filter(a => a.status === 'pending').length;
   const workingCount = c.running ? c.agents.filter(a => a.status === 'working').length : 0;
@@ -1207,9 +1263,6 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           <span className="meta-chip">{c.agents.length} เอเจนต์</span>
           <span className="meta-chip">{queuedCount} งานในระบบ</span>
           {pendingApprovals > 0 && <span className="meta-chip" style={{ borderColor: 'var(--rust)', color: 'var(--rust)' }}>{pendingApprovals} รออนุมัติ</span>}
-          <span className="law-badge" data-tip={"Jakob's Law: ใช้รูปแบบ Kanban + org chart\nที่ผู้ใช้คุ้นจาก Trello/Asana อยู่แล้ว\nจึงเรียนรู้ได้ทันที"}>Jakob's Law</span>
-          <span className="law-badge" data-tip={"Doherty Threshold: ฟีดงานสดตอบสนอง < 400ms\nระบบรู้สึก 'มีชีวิต' ทำงานตลอดเวลา\nผู้ใช้จึงอยู่กับระบบนานขึ้น"}>Doherty Threshold</span>
-          <span className="law-badge" data-tip={"Miller's Law: สรุปตัวเลขเป็น 4 ก้อน\nไม่ล้น working memory ของบอร์ด"}>Miller's Law</span>
         </div>
       </div>
 
@@ -1394,18 +1447,29 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       {/* ===== เครื่องมือ & C-level ผู้รับผิดชอบ ===== */}
       <section className="ai-panel" style={{ marginTop: 16 }}>
         <div className="ai-panel-hd">
+          <button className="tool-collapse" onClick={() => setToolsShown(v => !v)}
+            aria-expanded={toolsShown} title={toolsShown ? 'ซ่อนเครื่องมือ' : 'ขยายเครื่องมือ'}>
+            {toolsShown ? '▾' : '▸'}
+          </button>
           🧰 เครื่องมือ & ผู้รับผิดชอบ (C-level)
+          <button className="tool-collapse-lbl" onClick={() => setToolsShown(v => !v)}>
+            {toolsShown ? 'ซ่อน' : 'ขยาย'}
+          </button>
           <button className="ai-suggest-btn" onClick={ceoAssignToolOwners}
             title="CEO เลือกเอเจนต์ที่เหมาะสม หรือสร้างตำแหน่ง C-level ใหม่ให้ดูแลเครื่องมือแต่ละตัว">
             ✦ ให้ CEO จัดผู้รับผิดชอบ
           </button>
         </div>
+        {toolsShown && (<>
         <div className="oc-tip">
-          CEO เลือกเอเจนต์ C-level ที่เหมาะกับเครื่องมือแต่ละตัว — ถ้ายังไม่มีตำแหน่งที่ต้องการ CEO จะสร้างให้อัตโนมัติ (ปรับเองได้จาก dropdown)
+          CEO เลือกเอเจนต์ C-level ที่เหมาะกับเครื่องมือแต่ละตัว — ถ้ายังไม่มีตำแหน่งที่ต้องการ CEO จะสร้างให้อัตโนมัติ (ปรับเองได้จาก dropdown) ·
+          การลบข้อมูลเครื่องมือต้องให้ผู้รับผิดชอบเสนอ แล้ว CEO เสนอบอร์ดอนุมัติก่อน
         </div>
+        {toolDelMsg && <div className="tool-del-msg">{toolDelMsg}</div>}
         <div className="tool-owner-grid">
           {TOOL_SPECS.map(t => {
             const owner = c.agents.find(a => a.id === (c.toolOwners ?? {})[t.id]);
+            const delPending = c.approvals.some(a => a.status === 'pending' && a.id === 'del-' + t.id);
             return (
               <div key={t.id} className="tool-owner-row">
                 <div className="tool-owner-info">
@@ -1420,11 +1484,16 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                     <option value="">— เลือกเอเจนต์ —</option>
                     {c.agents.map(a => <option key={a.id} value={a.id}>{a.role} · {a.name}</option>)}
                   </select>
+                  <button className="tool-del-btn" onClick={() => requestToolDelete(t.id)} disabled={delPending}
+                    title="ผู้รับผิดชอบขอลบข้อมูลเครื่องมือนี้ → CEO เสนอบอร์ดอนุมัติ">
+                    {delPending ? 'รอบอร์ดอนุมัติ' : '🗑️ ขอลบข้อมูล'}
+                  </button>
                 </div>
               </div>
             );
           })}
         </div>
+        </>)}
       </section>
 
       <div className="ai-2col">
@@ -1682,7 +1751,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                 ✅ บอร์ดอนุมัติทั้งหมด & ไปขั้นต่อไป
               </button>
               <button className="brd-btn ghost" onClick={async () => {
-                try { await navigator.clipboard.writeText(boardReportText(c)); setBoardReportMsg('📋 คัดลอกรายงานแล้ว'); }
+                try { await navigator.clipboard.writeText(boardReportText(data)); setBoardReportMsg('📋 คัดลอกรายงานแล้ว'); }
                 catch { setBoardReportMsg('คัดลอกไม่สำเร็จ'); }
               }} disabled={rev.length === 0}>📋 คัดลอกรายงาน</button>
             </div>
@@ -1807,7 +1876,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       </section>
 
       {/* ===== Integrations (แยก ระบบดูแลให้ vs เชื่อมบัญชีคุณเอง · เก็บ secret ปลอดภัย per-workspace) ===== */}
-      <Integrations wsId={wsId ?? null} />
+      <Integrations wsId={wsId ?? null} data={data} />
 
       {/* ===== HRD Skill Plan ===== */}
       {(() => {
