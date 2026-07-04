@@ -244,6 +244,13 @@ export default function App() {
 
   useEffect(() => () => { clearTimeout(toastTimer.current); clearTimeout(cloudTimer.current); }, []);
 
+  // ติ๊ก Quest "เข้าตลาดธุรกิจ" เมื่อผู้ใช้เข้าหน้า Marketplace หรือหน้าร้านของตัวเอง (กระตุ้น engagement)
+  useEffect(() => {
+    if ((activePage === 'market' || activePage === 'storefront') && !data.visitedMarket) {
+      updateData({ ...data, visitedMarket: true });
+    }
+  }, [activePage, data, updateData]);
+
   async function signOut() {
     if (supabase) await supabase.auth.signOut();
   }

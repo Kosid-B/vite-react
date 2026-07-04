@@ -88,6 +88,11 @@ export const QUESTS: Quest[] = [
     done: d => d.aiCompany.missionApproved,
   },
   {
+    id: 'market', icon: '🏪', label: 'เข้าตลาดธุรกิจ — ลงร้าน & หาคู่ค้า', page: 'storefront',
+    desc: 'เปิดหน้าร้านของคุณให้ขึ้นตลาดธุรกิจ /b เพื่อให้ลูกค้าและคู่ค้าค้นเจอ พร้อมส่ง/รับ RFQ',
+    done: d => !!d.visitedMarket,
+  },
+  {
     id: 'firstTask', icon: '⚡', label: 'ให้ทีม AI ทำงานเสร็จชิ้นแรก', page: 'aicompany',
     desc: 'เริ่มให้ทีม AI ทำงาน แล้วรอผลงานชิ้นแรกเสร็จ',
     done: d => d.aiCompany.tasks.some(t => t.status === 'done'),
