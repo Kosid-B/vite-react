@@ -127,6 +127,18 @@ Flow: User กด "เชื่อม Google" ในหน้า บริษั
 
 > จนกว่า `sheetsLive` = true ปุ่มจะยังเป็น "เร็วๆ นี้" (gate เหมือน `xenditLive`)
 
+### 3c) `daily-ceo-report` — CEO สรุปรายงานประจำวัน + เสนอ Issue ให้บอร์ด (ทุก 9 โมงเช้า)
+```powershell
+supabase functions deploy daily-ceo-report --no-verify-jwt
+```
+ใช้ `CRON_SECRET` + `RESEND_API_KEY` เดียวกับ weekly-report · ตั้งเวลาด้วย migration
+`0021_daily_ceo_report_cron.sql` (pg_cron `0 2 * * *` = 09:00 ไทย — แก้ `<PROJECT_REF>` ก่อนรัน)
+
+ทุกวัน 9 โมง: วนทุก workspace → สร้างรายงาน 7 หัวข้อ (การตลาด · ส่งมอบ · การเงิน/Cashflow ·
+รายการที่ต้องจ่าย · ข้อผิดพลาด/ข้อบกพร่อง · ประเด็นขออนุมัติ · ขั้นตอนถัดไป) แล้ว
+(1) เพิ่ม approval `daily-<วันที่>` ลง workspace_state (บอร์ดเห็นในกล่องอนุมัติ · 1 รายการ/วัน)
+(2) ส่งอีเมลถึงเจ้าของผ่าน Resend
+
 ### 4) ฟังก์ชันอื่นที่ deploy แล้ว (production)
 | ฟังก์ชัน | JWT | หน้าที่ |
 |---|---|---|
