@@ -14,7 +14,7 @@ import AiAssist from './components/AiAssist';
 import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
 import UpgradeWall from './components/UpgradeWall';
-import { canAccess } from './lib/access';
+import { canAccess, setAdminFullAccess } from './lib/access';
 import { isAdminEmail } from './config';
 import { PublicStorefrontPage, PublicDirectoryPage } from './pages/PublicStorefront';
 import StartLanding from './pages/StartLanding';
@@ -176,6 +176,11 @@ export default function App() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  // แอดมินระบบ (support@b-tctraining.com) = ใช้แพ็กสูงสุด (Scale) ฟรี ไม่ต้องจ่าย
+  useEffect(() => {
+    setAdminFullAccess(isAdminEmail(session?.user.email ?? null));
+  }, [session?.user.email]);
 
   // เมื่อล็อกอิน: หาเวิร์กสเปซเริ่มต้น + โหลดรายชื่อเวิร์กสเปซทั้งหมด
   useEffect(() => {

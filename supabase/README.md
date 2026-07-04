@@ -1,4 +1,4 @@
-# Supabase Backend — CJ Planner
+# Supabase Backend — CEO AI Thailand
 
 ระบบรองรับ Supabase เป็น backend (Auth + ฐานข้อมูล + ซิงก์ข้ามอุปกรณ์) แบบ **เปิด/ปิดได้ด้วย env**:
 
@@ -38,6 +38,30 @@
 
 ## Edge Functions
 
+> **สถานะ production (`rsjbqmnvocvtveelselj`): ทุกฟังก์ชันด้านล่าง ACTIVE แล้ว และ `ANTHROPIC_API_KEY` /
+> `SERPER_API_KEY` ตั้งใน Supabase secrets เรียบร้อย — AI Agent ทำงานได้ทันทีในโหมด production**
+> (โหมด local ไม่มีคีย์ = ปุ่ม AI ซ่อนไว้ ใช้ localStorage อย่างเดียว)
+> deploy ใหม่ต้องใช้ Supabase CLI/PowerShell (MCP deploy ถูกบล็อกในแซนด์บ็อกซ์นี้)
+
+### 0) `ai-assist` — AI Agent ช่วยงานทุกหน้า (หัวใจของฟีเจอร์ AI Agent)
+```bash
+supabase functions deploy ai-assist
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-xxxx
+# (ออปชัน) supabase secrets set ANTHROPIC_MODEL=claude-sonnet-4-6
+```
+รับ `{ page, pageLabel, instruction, context }` → เรียก Claude → คืน `{ summary, suggestions[] }`
+(ภาษาไทย) แสดงเป็นคำแนะนำที่ลงมือทำได้จริงในแต่ละหน้า **ต้องเปิด Supabase + ตั้งคีย์นี้ก่อน**
+ปุ่ม AI จึงจะโผล่ (ในโหมด local จะซ่อน)
+
+### 0b) `agent-run` — รันเอเจนต์ + ค้นข้อมูลจริง (Serper / Google Search)
+```bash
+supabase functions deploy agent-run
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-xxxx
+supabase secrets set SERPER_API_KEY=xxxx      # https://serper.dev
+```
+ให้เอเจนต์ค้นข้อมูลตลาด/คู่แข่งแบบเรียลไทม์ (`POST https://google.serper.dev/search`, `gl=th, hl=th`)
+แล้วสรุปด้วย Claude — ใช้ในงานวิจัย/หาลูกค้าของ AI Company
+
 ### 1) `ai-plan` — CEO เรียก Claude API วางแผนจริง
 ```bash
 supabase functions deploy ai-plan
@@ -70,3 +94,12 @@ supabase secrets set CRON_SECRET=your-cron-secret
 
 ฟังก์ชันจะสแกนทุกเวิร์กสเปซ: ถ้า `autoRenew` และถึงรอบบิล → ออกใบแจ้งหนี้ + ต่อรอบบิล 1 เดือน
 (สถานะ pending รอ `promptpay-webhook` ยืนยันเป็น paid); ถ้าไม่ต่ออายุและเกินกำหนด → ตั้ง `past_due`
+
+### 4) ฟังก์ชันอื่นที่ deploy แล้ว (production)
+| ฟังก์ชัน | JWT | หน้าที่ |
+|---|---|---|
+| `generate-badge` | ❌ | สร้าง ISO badge PNG (public GET) |
+| `weekly-report` | ❌ | รายงานสรุปรายสัปดาห์ |
+| `delete-account` | ✅ | ลบบัญชี/เวิร์กสเปซครบวงจร (R8 DO isolation) |
+| `create-invoice` | ✅ | สร้างใบแจ้งหนี้ Xendit (gate ด้วย `PAYMENT.xenditLive` — รอ KYC) |
+| `xendit-webhook` | ❌ | รับยืนยันชำระเงินจาก Xendit |

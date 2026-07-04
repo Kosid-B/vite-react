@@ -9,6 +9,7 @@ const GTMTab        = lazy(() => import('./AdminTabs/GTMTab'));
 const SEOTab        = lazy(() => import('./AdminTabs/SEOTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
+import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
 import { isAdminEmail, ADMIN_EMAILS } from '../config';
 import { PageHeader, Badge } from '../ds';
 import type { AppData, WinStory, WinCategory, FeedbackEntry, FeedbackSource, FeedbackSentiment, FeedbackTheme } from '../types';
@@ -131,6 +132,11 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [rows, setRows] = useState<AdminWorkspace[]>([]);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<Tab>('dashboard');
+
+  // สรุปผลการดำเนินงานของ User (โหลด AppData ทุก workspace แล้วรวมตัวเลข)
+  const [opsRows, setOpsRows] = useState<OpsRow[]>([]);
+  const [opsLoading, setOpsLoading] = useState(false);
+  const [opsMsg, setOpsMsg] = useState<string | null>(null);
 
   // Simulator state
   const [nGrowth, setNGrowth] = useState(15);
@@ -308,6 +314,41 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
     setLoading(true);
     adminListWorkspaces().then(r => { setRows(r); setLoading(false); });
   }, [admin]);
+
+  // โหลด AppData ของทุก workspace → คำนวณสรุปผลการดำเนินงาน (revenue/tasks/deals/…)
+  async function loadOps() {
+    if (rows.length === 0) { setOpsMsg('ยังไม่มีเวิร์กสเปซให้สรุป'); return; }
+    setOpsLoading(true); setOpsMsg(null);
+    try {
+      const states = await Promise.all(rows.map(r => wsLoad(r.id).catch(() => null)));
+      const out: OpsRow[] = rows.map((r, i) => {
+        const d = states[i];
+        const ops = d ? workspaceOps(d) : null;
+        const base = { name: r.name, owner: r.owner_email, members: Number(r.member_count), created: thaiDate(r.created_at) };
+        return ops
+          ? { ...ops, ...base }
+          : { ...base, plan: 'free', planLabel: '—', subStatus: 'ยังไม่เริ่ม', revenue: 0, expense: 0, net: 0, margin: 0,
+              tasksDone: 0, tasksTotal: 0, dealsClosed: 0, dealsValue: 0, agents: 0, running: false, skills: 0,
+              cityTier: '-', companyLevel: '-', streak: 0 };
+      });
+      setOpsRows(out);
+      setOpsMsg(`สรุปแล้ว ${out.length} เวิร์กสเปซ`);
+    } catch (e) {
+      setOpsMsg('โหลดสรุปไม่สำเร็จ: ' + (e instanceof Error ? e.message : String(e)));
+    } finally { setOpsLoading(false); }
+  }
+
+  function downloadOpsCsv() {
+    const blob = new Blob([opsCsv(opsRows)], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `ceo-ai-ops-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+  async function copyOpsTsv() {
+    try { await navigator.clipboard.writeText(opsTsv(opsRows)); setOpsMsg('📋 คัดลอกแล้ว — วางใน Google Sheets ได้เลย (Ctrl+V)'); }
+    catch { setOpsMsg('คัดลอกไม่สำเร็จ — เบราว์เซอร์ไม่อนุญาต clipboard'); }
+  }
 
   if (!admin) {
     return (
@@ -2073,6 +2114,73 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                 ในฐานะผู้ดูแลระบบ คุณเห็นทุกเวิร์กสเปซในระบบ (ผ่าน Row Level Security ที่ให้สิทธิ์แอดมิน) —
                 ใช้ดูภาพรวมลูกค้าทั้งหมดของ CEO AI Thailand
               </div>
+
+              {/* ===== สรุปผลการดำเนินงานของ User ===== */}
+              <div className="ops-panel">
+                <div className="ops-hd">
+                  <div className="ops-title">📊 สรุปผลการดำเนินงานของ User</div>
+                  <div className="ops-actions">
+                    <button className="ops-btn" onClick={loadOps} disabled={opsLoading}>
+                      {opsLoading ? 'กำลังสรุป…' : '📊 โหลดสรุปผลการดำเนินงาน'}
+                    </button>
+                    {opsRows.length > 0 && (
+                      <>
+                        <button className="ops-btn ghost" onClick={downloadOpsCsv}>⬇️ ดาวน์โหลด CSV</button>
+                        <button className="ops-btn ghost" onClick={copyOpsTsv}>📋 คัดลอกลง Google Sheets</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="ops-sub">โหลดข้อมูลจริงของทุกเวิร์กสเปซ (รายได้/รายจ่าย/งาน/ดีล/เมือง) แล้ว export เป็น CSV หรือวางลง Google Sheets ได้</div>
+                {opsMsg && <div className="ops-msg">{opsMsg}</div>}
+
+                {opsRows.length > 0 && (() => {
+                  const t = opsTotals(opsRows);
+                  return (
+                    <>
+                      <div className="ops-kpis">
+                        <div className="ops-kpi"><div className="ops-kpi-n">{t.workspaces}</div><div className="ops-kpi-l">เวิร์กสเปซ</div></div>
+                        <div className="ops-kpi"><div className="ops-kpi-n">{t.activeCompanies}</div><div className="ops-kpi-l">บริษัทที่ระบบรัน</div></div>
+                        <div className="ops-kpi"><div className="ops-kpi-n">{t.paying}</div><div className="ops-kpi-l">แพ็กมีเงิน</div></div>
+                        <div className="ops-kpi"><div className="ops-kpi-n">{fmtBaht(t.revenue)}</div><div className="ops-kpi-l">รายได้รวม</div></div>
+                        <div className="ops-kpi"><div className="ops-kpi-n">{fmtBaht(t.net)}</div><div className="ops-kpi-l">กำไรสุทธิรวม</div></div>
+                        <div className="ops-kpi"><div className="ops-kpi-n">{t.dealsClosed}</div><div className="ops-kpi-l">ดีลปิด</div></div>
+                        <div className="ops-kpi"><div className="ops-kpi-n">{t.tasksDone}</div><div className="ops-kpi-l">งานเสร็จ</div></div>
+                      </div>
+                      <div className="ops-table-wrap">
+                        <table className="ops-table">
+                          <thead><tr>
+                            <th>บริษัท</th><th>เจ้าของ</th><th>แพ็ก</th><th>สถานะ</th>
+                            <th>รายได้</th><th>รายจ่าย</th><th>กำไร</th>
+                            <th>งานเสร็จ</th><th>ดีลปิด</th><th>มูลค่าดีล</th>
+                            <th>เอเจนต์</th><th>เมือง</th><th>ต่อเนื่อง</th>
+                          </tr></thead>
+                          <tbody>
+                            {opsRows.map((r, i) => (
+                              <tr key={i}>
+                                <td className="ops-name">{r.name}</td>
+                                <td className="ops-owner">{r.owner}</td>
+                                <td><span className="ops-plan">{r.planLabel}</span></td>
+                                <td>{r.subStatus}</td>
+                                <td>{fmtBaht(r.revenue)}</td>
+                                <td>{fmtBaht(r.expense)}</td>
+                                <td className={r.net >= 0 ? 'ops-pos' : 'ops-neg'}>{fmtBaht(r.net)}</td>
+                                <td>{r.tasksDone}/{r.tasksTotal}</td>
+                                <td>{r.dealsClosed}</td>
+                                <td>{fmtBaht(r.dealsValue)}</td>
+                                <td>{r.agents}{r.running ? ' 🟢' : ''}</td>
+                                <td>{r.cityTier}</td>
+                                <td>{r.streak}🔥</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
               <div className="team-list">
                 <div className="admin-row admin-head">
                   <div>บริษัท / เวิร์กสเปซ</div>

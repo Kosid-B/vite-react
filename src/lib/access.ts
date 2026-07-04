@@ -36,8 +36,16 @@ export const PAGE_MIN_PLAN: Partial<Record<PageId, PlanId>> = {
   admin:     'scale',
 };
 
+/* ===== Admin full access =====
+ * ผู้ดูแลระบบ (support@b-tctraining.com) ใช้แพ็กสูงสุด (Scale) ได้ฟรีโดยไม่ต้องจ่าย
+ * ตั้งค่าครั้งเดียวจาก App.tsx เมื่อรู้อีเมลผู้ใช้ปัจจุบัน (isAdminEmail) — มีผลกับทุก canAccess */
+let adminFullAccess = false;
+export function setAdminFullAccess(on: boolean): void { adminFullAccess = on; }
+export function hasAdminFullAccess(): boolean { return adminFullAccess; }
+
 /** Plan rank จริงของ user ณ ขณะนี้ — -1 หมายถึงหมดอายุ/ไม่มี subscription */
 export function effectiveRank(data: AppData): number {
+  if (adminFullAccess) return PLAN_RANK['scale']; // แอดมินระบบ = Scale ฟรีเสมอ
   const { plan, status, trialEndDate, currentPeriodEnd } = data.subscription;
 
   if (status === 'active') {
@@ -55,6 +63,7 @@ export function effectiveRank(data: AppData): number {
 
 /** subscription หมดอายุหรือยัง */
 export function isExpired(data: AppData): boolean {
+  if (adminFullAccess) return false; // แอดมินไม่มีวันหมดอายุ
   const { status, trialEndDate, currentPeriodEnd } = data.subscription;
   if (status === 'trial') return !trialEndDate || new Date(trialEndDate) < new Date();
   if (status === 'active') return !!(currentPeriodEnd && new Date(currentPeriodEnd) < new Date());
@@ -73,6 +82,7 @@ export function canAccess(data: AppData, page: PageId): boolean {
 
 /** label สำหรับแสดงใน sidebar */
 export function planLabel(data: AppData): string {
+  if (adminFullAccess) return 'Scale · แอดมิน';
   const { plan, status, trialEndDate } = data.subscription;
   if (status === 'trial') {
     const days = trialEndDate

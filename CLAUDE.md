@@ -100,6 +100,16 @@ PAGE_MIN_PLAN = {
 }
 Plans: free(0) → starter(1) ฿390/mo → growth(2) ฿1,490/mo → scale(3) ฿5,900/mo
 Trial: 15 วัน auto-start เมื่อ login ครั้งแรก
+Admin (support@b-tctraining.com): ใช้ Scale ฟรีเสมอ — App.tsx เรียก setAdminFullAccess(isAdminEmail(email))
+  → effectiveRank/isExpired/planLabel bypass (access.ts). ระบบ admin = app_admins table + is_app_admin() (0005)
+```
+
+## Admin Operating Summary (สรุปผลการดำเนินงานของ User)
+```
+หน้า admin แท็บ "เวิร์กสเปซ": ปุ่ม "📊 โหลดสรุปผลการดำเนินงาน" → wsLoad ทุก ws (RLS is_app_admin เห็นหมด)
+src/lib/adminOps.ts: workspaceOps(d) รวม revenue/expense/net + tasksDone/dealsClosed/agents/cityTier/streak
+  (ใช้ financeSummary + cityStats) · opsTotals() KPI รวม · opsCsv()/opsTsv() export (CSV ดาวน์โหลด / TSV วางลง Google Sheets)
+Google Sheets ของ User (เชื่อมบัญชีเอง) = Phase 2b (OAuth + Edge Function) ยังไม่ทำ
 ```
 
 ## Sidebar Pages (nav labels)

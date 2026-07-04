@@ -14,6 +14,7 @@ import { trackSkillPurchase } from '../lib/skillStats';
 import { withSkillDirectives } from '../lib/skillDirectives';
 import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamification';
 import DBDSelect from '../components/DBDSelect';
+import { reviewTasks, nextStepTasks, reportByPosition, boardReportText } from '../lib/boardReport';
 
 // ---- Org Chart Node (recursive) ----
 interface OcNodeProps {
@@ -266,6 +267,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [mktMsg, setMktMsg] = useState<string | null>(null);
   const [proposingMission, setProposingMission] = useState(false);
   const [missionMsg, setMissionMsg] = useState<string | null>(null);
+  const [boardReportMsg, setBoardReportMsg] = useState<string | null>(null);
   const [hrdPlanningSkills, setHrdPlanningSkills] = useState(false);
   const [skillPlanMsg, setSkillPlanMsg] = useState<string | null>(null);
   const [addCustomSkillOpen, setAddCustomSkillOpen] = useState(false);
@@ -1120,6 +1122,20 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           });
           return;
         }
+        if (meta.type === 'board_report') {
+          const ids: string[] = Array.isArray(meta.taskIds) ? meta.taskIds : [];
+          const idSet = new Set(ids);
+          patch({
+            approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a),
+            tasks: c.tasks.map(t => idSet.has(t.id) && t.status === 'review'
+              ? { ...t, status: 'done' as const } : t),
+          });
+          setFeed(prev => [
+            { id: ++counter.current, time: nowTime(), text: `✅ บอร์ดอนุมัติผลการดำเนินงาน ${ids.length} งาน — ดำเนินการขั้นตอนถัดไป`, color: AGENT_PALETTE[0] },
+            ...prev,
+          ].slice(0, 40));
+          return;
+        }
         if (meta.type === 'mission') {
           const missionTasks = c.agents.map((a, i) => ({
             id: 'mis-' + Date.now().toString(36) + i,
@@ -1140,6 +1156,42 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       } catch { /* not a hire approval */ }
     }
     patch({ approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a) });
+  }
+
+  /* ----- CEO รายงานบอร์ด: รวมผลงาน AI Agent (review) → เสนอบอร์ดอนุมัติขั้นต่อไป ----- */
+  function ceoReportToBoard() {
+    const rev = reviewTasks(c);
+    if (rev.length === 0) { setBoardReportMsg('ยังไม่มีผลงานรอรายงาน (ไม่มีงานสถานะ "ตรวจสอบ")'); return; }
+    if (c.approvals.some(a => a.status === 'pending' && a.id.startsWith('rpt-'))) {
+      setBoardReportMsg('มีรายงานรอบอร์ดอนุมัติอยู่แล้ว — ดูที่ "เรื่องรออนุมัติจากบอร์ด"'); return;
+    }
+    const ceo = c.agents.find(a => a.role.toLowerCase().includes('ceo')) ?? c.agents[0];
+    const approval: import('../types').Approval = {
+      id: 'rpt-' + Date.now().toString(36),
+      agentId: ceo?.id ?? '',
+      title: `📊 CEO รายงานผลการดำเนินงาน — ${rev.length} งานรออนุมัติ`,
+      detail: boardReportText(c),
+      impact: JSON.stringify({ type: 'board_report', taskIds: rev.map(t => t.id) }),
+      status: 'pending',
+    };
+    patch({ approvals: [approval, ...c.approvals] });
+    setBoardReportMsg(`✅ CEO ส่งรายงานให้บอร์ดแล้ว (${rev.length} งาน) — อนุมัติได้ที่ "เรื่องรออนุมัติจากบอร์ด"`);
+    setFeed(prev => [
+      { id: ++counter.current, time: nowTime(), text: `CEO รายงานผลการดำเนินงาน ${rev.length} งาน ต่อบอร์ด — รออนุมัติ`, color: ceo?.color ?? AGENT_PALETTE[0] },
+      ...prev,
+    ].slice(0, 40));
+  }
+
+  // บอร์ดอนุมัติผลทั้งหมดทันที (Automate): review → done โดยไม่ผ่านรอบขออนุมัติ
+  function boardApproveAllReview() {
+    const rev = reviewTasks(c);
+    if (rev.length === 0) { setBoardReportMsg('ไม่มีงานสถานะ "ตรวจสอบ" ให้อนุมัติ'); return; }
+    patch({ tasks: c.tasks.map(t => t.status === 'review' ? { ...t, status: 'done' as const } : t) });
+    setBoardReportMsg(`✅ บอร์ดอนุมัติผลทั้งหมด ${rev.length} งาน → เสร็จสมบูรณ์`);
+    setFeed(prev => [
+      { id: ++counter.current, time: nowTime(), text: `✅ บอร์ดอนุมัติผลทั้งหมด ${rev.length} งาน — ดำเนินการขั้นตอนถัดไป`, color: AGENT_PALETTE[0] },
+      ...prev,
+    ].slice(0, 40));
   }
 
   const agentName = (id: string) => c.agents.find(a => a.id === id)?.role ?? '—';
@@ -1583,6 +1635,61 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           ))}
         </div>
       </section>
+
+      {/* ===== CEO รายงานบอร์ด — รวมผลงาน AI Agent (review) → ขออนุมัติขั้นต่อไป ===== */}
+      {(() => {
+        const rev = reviewTasks(c);
+        const groups = reportByPosition(c);
+        const next = nextStepTasks(c);
+        const doneCount = c.tasks.filter(t => t.status === 'done').length;
+        if (rev.length === 0 && !boardReportMsg) return null;
+        return (
+          <section className="ai-panel brd" style={{ marginTop: 16 }}>
+            <div className="ai-panel-hd">🧑‍💼 CEO รายงานบอร์ด
+              <span className="brd-count">{rev.length} งานรอพิจารณา</span>
+            </div>
+            <div className="brd-sub">
+              AI Agent ดำเนินงานเสร็จ ระบบอัปเดตสถานะเป็น "ตรวจสอบ" อัตโนมัติ — CEO รวมผลเสนอบอร์ดเพื่ออนุมัติดำเนินการขั้นถัดไป
+            </div>
+
+            {groups.length > 0 && (
+              <div className="brd-groups">
+                {groups.map(g => (
+                  <div key={g.agentId} className="brd-group">
+                    <div className="brd-role" style={{ color: g.color }}>▸ {g.role} · {g.name} <span>({g.tasks.length})</span></div>
+                    <ul className="brd-tasks">
+                      {g.tasks.map(t => (
+                        <li key={t.id}>
+                          <span className="brd-t-title">{t.title}</span>
+                          {t.output && <span className="brd-t-out">— {t.output.replace(/\s+/g, ' ').slice(0, 90)}{t.output.length > 90 ? '…' : ''}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="brd-summary">
+              เสร็จสมบูรณ์ {doneCount} · รอบอร์ด {rev.length} · คิวถัดไป {next.length}
+            </div>
+
+            <div className="brd-actions">
+              <button className="brd-btn" onClick={ceoReportToBoard} disabled={rev.length === 0}>
+                📊 CEO รายงานบอร์ด & ขออนุมัติ
+              </button>
+              <button className="brd-btn approve" onClick={boardApproveAllReview} disabled={rev.length === 0}>
+                ✅ บอร์ดอนุมัติทั้งหมด & ไปขั้นต่อไป
+              </button>
+              <button className="brd-btn ghost" onClick={async () => {
+                try { await navigator.clipboard.writeText(boardReportText(c)); setBoardReportMsg('📋 คัดลอกรายงานแล้ว'); }
+                catch { setBoardReportMsg('คัดลอกไม่สำเร็จ'); }
+              }} disabled={rev.length === 0}>📋 คัดลอกรายงาน</button>
+            </div>
+            {boardReportMsg && <div className="brd-msg">{boardReportMsg}</div>}
+          </section>
+        );
+      })()}
 
       {/* ===== กระดานงาน ===== */}
       <section className="ai-panel" style={{ marginTop: 16 }}>
