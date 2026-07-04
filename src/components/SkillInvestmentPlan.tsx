@@ -4,6 +4,7 @@ import {
   currentStage, STAGE_PLANS, SKILL_PACKS, COMPETITORS, OUR_EDGE, PROMOTIONS,
   AIFLOW_TOTAL,
 } from '../lib/skillInvestmentPlan';
+import { trainingPlanText } from '../lib/trainingPlan';
 
 /* ===== HRD + CEO เสนอบอร์ด: ทักษะที่จำเป็นตามช่วงการเติบโต + Price Analysis + Promotion ===== */
 
@@ -24,9 +25,24 @@ function proposalText(d: AppData): string {
 }
 
 export default function SkillInvestmentPlan({ data, onUpdate }: { data: AppData; onUpdate: (d: AppData) => void }) {
-  const [tab, setTab] = useState<'stage' | 'price' | 'compete'>('stage');
+  const [tab, setTab] = useState<'stage' | 'price' | 'compete' | 'training'>('stage');
   const [msg, setMsg] = useState<string | null>(null);
   const stage = currentStage(data);
+
+  function proposeTraining() {
+    const c = data.aiCompany;
+    const hrd = c.agents.find(a => /hr|hrd|บุคคล/i.test(a.role));
+    const ceo = c.agents.find(a => /ceo/i.test(a.role)) ?? c.agents[0];
+    onUpdate({ ...data, aiCompany: { ...c, approvals: [{
+      id: 'training-' + Date.now().toString(36),
+      agentId: hrd?.id ?? ceo?.id ?? '',
+      title: `📚 HRD เสนอแผนพัฒนาองค์กร (Training) — CEO เสนอบอร์ด`,
+      detail: trainingPlanText(data),
+      impact: JSON.stringify({ type: 'note' }),
+      status: 'pending',
+    }, ...c.approvals] } });
+    setMsg('✅ เสนอผ่านสายงาน HRD → CEO → บอร์ดแล้ว (ดูที่กล่องอนุมัติ)');
+  }
 
   function proposeToBoard() {
     const c = data.aiCompany;
@@ -52,6 +68,7 @@ export default function SkillInvestmentPlan({ data, onUpdate }: { data: AppData;
         <button className={tab === 'stage' ? 'on' : ''} onClick={() => setTab('stage')}>ทักษะตามช่วง</button>
         <button className={tab === 'price' ? 'on' : ''} onClick={() => setTab('price')}>Price Analysis</button>
         <button className={tab === 'compete' ? 'on' : ''} onClick={() => setTab('compete')}>แข่งกับคู่แข่ง</button>
+        <button className={tab === 'training' ? 'on' : ''} onClick={() => setTab('training')}>แผนพัฒนา (Training)</button>
       </div>
 
       {tab === 'stage' && (
@@ -102,9 +119,25 @@ export default function SkillInvestmentPlan({ data, onUpdate }: { data: AppData;
         </div>
       )}
 
+      {tab === 'training' && (
+        <div className="sip-training">
+          <div className="sip-note">HRD เสนอแผนพัฒนาทีมตามช่วงองค์กร (30/60/90 วัน) ผ่านสายงาน → CEO → บอร์ด เพื่ออนุมัติงบพัฒนาองค์กร</div>
+          <pre className="cs-report">{trainingPlanText(data)}</pre>
+        </div>
+      )}
+
       <div className="sip-actions">
-        <button className="sip-btn" onClick={proposeToBoard}>📈 เสนอบอร์ดพิจารณาลงทุน</button>
-        <button className="sip-btn ghost" onClick={async () => { try { await navigator.clipboard.writeText(proposalText(data)); setMsg('📋 คัดลอกสรุปเสนอบอร์ดแล้ว'); } catch { setMsg('คัดลอกไม่สำเร็จ'); } }}>คัดลอกสรุป</button>
+        {tab === 'training' ? (
+          <>
+            <button className="sip-btn" onClick={proposeTraining}>📚 เสนอผ่านสายงาน → CEO → บอร์ด</button>
+            <button className="sip-btn ghost" onClick={async () => { try { await navigator.clipboard.writeText(trainingPlanText(data)); setMsg('📋 คัดลอกแผนพัฒนาแล้ว'); } catch { setMsg('คัดลอกไม่สำเร็จ'); } }}>คัดลอกแผน</button>
+          </>
+        ) : (
+          <>
+            <button className="sip-btn" onClick={proposeToBoard}>📈 เสนอบอร์ดพิจารณาลงทุน</button>
+            <button className="sip-btn ghost" onClick={async () => { try { await navigator.clipboard.writeText(proposalText(data)); setMsg('📋 คัดลอกสรุปเสนอบอร์ดแล้ว'); } catch { setMsg('คัดลอกไม่สำเร็จ'); } }}>คัดลอกสรุป</button>
+          </>
+        )}
       </div>
       {msg && <div className="sip-msg">{msg}</div>}
     </section>
