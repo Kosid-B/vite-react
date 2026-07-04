@@ -19,6 +19,7 @@ import { DEFAULT_DATA } from '../data';
 import { cfoReportText, cfoKpis } from '../lib/cfoReport';
 import { segmentationInstruction, shouldRunWeekly, weekTag } from '../lib/segmentation';
 import FinanceInput from '../components/FinanceInput';
+import SkillInvestmentPlan from '../components/SkillInvestmentPlan';
 
 // ---- Org Chart Node (recursive) ----
 interface OcNodeProps {
@@ -1600,6 +1601,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           </div>
         </div>
       </section>
+
+      <SkillInvestmentPlan data={data} onUpdate={onUpdate} />
 
       <div className="ai-2col">
         {/* ===== ทีมเอเจนต์ ===== */}
