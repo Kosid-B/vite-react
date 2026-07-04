@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { AppData, PageId } from '../types';
-import { getMyStorefront, saveStorefront, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
+import { getMyStorefront, saveStorefront, setFeatured, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { draftVpLocal } from '../lib/firstDeal';
 import { trackAiCall } from '../lib/usage';
@@ -117,6 +117,24 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
       : '✅ บันทึกแบบร่างแล้ว (ยังไม่เผยแพร่)');
   }
 
+  const voucherDays = data.featuredVoucherDays ?? 0;
+  async function redeemFeatured() {
+    const cur = sf;
+    if (!onUpdate || voucherDays <= 0 || !cur) return;
+    setSaving(true);
+    // บันทึกหน้าร้าน (เผยแพร่) ให้แน่ใจว่ามีแถวก่อน แล้วค่อยตั้งเป็นร้านแนะนำ
+    const err1 = await saveStorefront(wsId, { ...cur, published: true });
+    if (err1) { setSaving(false); setMsg('⚠️ ' + err1); return; }
+    const until = new Date(Date.now() + voucherDays * 86400000).toISOString();
+    const err2 = await setFeatured(cur.slug, until);
+    setSaving(false);
+    if (err2) { setMsg('⚠️ ' + err2); return; }
+    setSf(prev => prev ? { ...prev, published: true, featuredUntil: until } : prev);
+    onUpdate({ ...data, featuredVoucherDays: 0 });
+    track('featured_voucher_redeemed', { days: voucherDays });
+    setMsg(`⭐ ดันร้านขึ้น “แนะนำ” บนตลาด ${voucherDays} วันแล้ว!`);
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -126,6 +144,15 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
           <span className="meta-chip">{sf.published ? '🟢 เผยแพร่อยู่' : '⚪ แบบร่าง'}</span>
         </div>
       </div>
+
+      {voucherDays > 0 && onUpdate && (
+        <div className="sf-voucher">
+          🌟 คุณมีสิทธิ์จากเกมเมืองบริษัท: ดันร้านขึ้น <b>⭐ แนะนำ</b> บนตลาด <b>{voucherDays} วัน</b>
+          <button className="sf-voucher-btn" onClick={redeemFeatured} disabled={saving}>
+            {saving ? 'กำลังใช้สิทธิ์…' : 'ใช้สิทธิ์เลย'}
+          </button>
+        </div>
+      )}
 
       <p className="sipoc-intro">
         หน้าร้านสาธารณะให้ลูกค้าค้นเจอธุรกิจของคุณ — สร้างจากข้อมูลที่กรอกไว้แล้ว
