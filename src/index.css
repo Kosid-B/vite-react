@@ -4618,4 +4618,31 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .sf-voucher-btn { font-family:inherit; font-size:12.5px; font-weight:700; color:#0f172a; background:#fbbf24; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; margin-left:auto; }
 .sf-voucher-btn:disabled { opacity:.5; cursor:not-allowed; }
 
-@media (max-width:640px){ .city-stats{ grid-template-columns:repeat(2,1fr); } .treasury-cards{ grid-template-columns:repeat(2,1fr); } }
+/* ---- streak รายวัน ---- */
+.city-streak { display:inline-block; font-size:12.5px; color:#f59e0b; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.3); border-radius:99px; padding:4px 12px; margin-top:8px; }
+.city-streak b { font-size:14px; }
+
+/* ---- โหมดโปร (ซ่อนเกม) ---- */
+.gm-pro-toggle { font-family:inherit; font-size:11px; font-weight:600; color:var(--ink3); background:transparent; border:1px solid var(--sand); border-radius:8px; padding:5px 10px; cursor:pointer; white-space:nowrap; }
+.gm-pro-toggle:hover { color:var(--ink); border-color:var(--ink3); }
+.gm-restore { display:block; width:100%; text-align:center; font-family:inherit; font-size:12.5px; color:var(--ink3); background:var(--white); border:1px dashed var(--sand); border-radius:12px; padding:10px; margin-bottom:16px; cursor:pointer; }
+.gm-restore:hover { color:#38bdf8; border-color:#38bdf855; }
+
+/* ---- Mobile polish (เมือง/คลัง/รางวัล) ---- */
+@media (max-width:640px){
+  .city-stats{ grid-template-columns:repeat(2,1fr); }
+  .treasury-cards{ grid-template-columns:repeat(2,1fr); }
+  .city-head{ flex-direction:column; }
+  .city-tier{ width:100%; }
+  .city-title{ font-size:21px; }
+  .city-list{ grid-template-columns:1fr; }
+  .city-skyline{ flex-wrap:nowrap; overflow-x:auto; padding-bottom:16px; -webkit-overflow-scrolling:touch; }
+  .city-scene{ min-height:220px; }
+  .treasury-form{ flex-direction:column; align-items:stretch; }
+  .treasury-in.amt{ flex-basis:auto; }
+  .treasury-kind{ justify-content:stretch; }
+  .treasury-kind button{ flex:1; }
+  .rw-item{ flex-wrap:wrap; }
+  .rw-claim,.rw-done,.rw-lock{ width:100%; text-align:center; margin-top:4px; }
+  .sf-voucher-btn{ margin-left:0; width:100%; }
+}
