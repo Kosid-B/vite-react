@@ -489,6 +489,8 @@ export interface AppData {
   proMode?: boolean;                      // โหมดโปร — ซ่อนองค์ประกอบเกมบน Dashboard
   // CMO วิเคราะห์ตลาด+กลุ่มลูกค้า (Segmentation) รายสัปดาห์ทุกวันศุกร์ (ดึงข้อมูลตลาดจริง)
   cmoMarket?: { analysis: string; webUsed: boolean; updatedAt: string; weekTag: string };
+  // C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO ทุกวันศุกร์
+  cLevelReports?: { weekTag: string; items: { agentId: string; role: string; name: string; color?: string; analysis: string; at: string }[] };
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */

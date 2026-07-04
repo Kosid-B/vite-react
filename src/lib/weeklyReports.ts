@@ -1,0 +1,38 @@
+import type { AppData, Agent, AICompany } from '../types';
+import { weekTag } from './segmentation';
+
+/* ===== C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO ทุกวันศุกร์ ===== */
+
+const CLEVEL_RE = /c[efmopst]o|chief|ประธาน|ผู้อำนวยการ|หัวหน้า|cxo|cto|cio|cro|chro/i;
+
+/** เอเจนต์ระดับ C-Level (ยกเว้น CEO เอง — CEO เป็นผู้รับรายงาน) */
+export function cLevelAgents(c: AICompany): Agent[] {
+  const isCeo = (a: Agent) => /ceo|ประธานเจ้าหน้าที่บริหาร/i.test(a.role);
+  const cs = (c.agents ?? []).filter(a => CLEVEL_RE.test(a.role) && !isCeo(a));
+  // ถ้าไม่พบ C-level ชัดเจน ใช้เอเจนต์ที่รายงานตรงต่อ CEO (ยกเว้น CEO)
+  if (cs.length > 0) return cs;
+  const ceo = (c.agents ?? []).find(isCeo);
+  return (c.agents ?? []).filter(a => a.id !== ceo?.id && (a.reportsTo === ceo?.id || !a.reportsTo));
+}
+
+/** ถึงเวลารายงานรอบสัปดาห์ไหม (วันศุกร์เป็นต้นไป และยังไม่ได้ทำสัปดาห์นี้) */
+export function shouldRunCLevel(d: AppData, now = new Date()): boolean {
+  const friOrLater = now.getDay() === 5 || now.getDay() === 6 || now.getDay() === 0;
+  return friOrLater && d.cLevelReports?.weekTag !== weekTag(now);
+}
+
+/** คำสั่งให้ C-level แต่ละคนวิเคราะห์งานในความรับผิดชอบ + รายงานต่อ CEO */
+export function weeklyInstruction(agent: Agent, d: AppData): string {
+  const c = d.aiCompany;
+  return [
+    `ทำหน้าที่ ${agent.role} (${agent.name}) — สรุปผลการดำเนินงานในความรับผิดชอบประจำสัปดาห์ เพื่อรายงานต่อ CEO`,
+    `บทบาท/หน้าที่: ${agent.mandate}`,
+    `บริษัท: ${c?.name || '-'} · อุตสาหกรรม: ${c?.industry || '-'} · เป้าหมาย: ${c?.goal || '-'}`,
+    '',
+    'รายงานให้ครอบคลุม (กระชับ อ่านง่าย ภาษาไทย):',
+    '1) ผลงาน/ความคืบหน้าสัปดาห์นี้ในความรับผิดชอบของตำแหน่ง',
+    '2) ปัญหา/ความเสี่ยง/ข้อบกพร่องที่พบ',
+    '3) ตัวเลข/ตัวชี้วัดสำคัญ (ถ้ามี)',
+    '4) 2–3 ข้อเสนอ/ขั้นตอนถัดไป ที่ขอ CEO ตัดสินใจหรืออนุมัติ',
+  ].join('\n');
+}
