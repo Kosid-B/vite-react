@@ -1661,7 +1661,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
             </button>
           )}
         </div>
-        <div className="clw-sub">ทุกวันศุกร์ C-Level ทุกตำแหน่งวิเคราะห์งานในความรับผิดชอบ + เสนอ CEO (ผลงาน · ปัญหา · ตัวชี้วัด · ขั้นตอนถัดไป)</div>
+        <div className="clw-sub">ทุกวันศุกร์ C-Level ทุกตำแหน่งวิเคราะห์งาน + ประเมินความเสี่ยงจาก Mission ที่เกี่ยวกับภารกิจตำแหน่ง แล้วเสนอ CEO (ผลงาน · ตัวชี้วัด · ความเสี่ยง+แนวทางลด · ข้อเสนอ)</div>
         {cLevelMsg && <div className="clw-msg">{cLevelMsg}</div>}
         {!isSupabaseEnabled && <div className="clw-empty">เปิด Supabase เพื่อให้ C-Level agent วิเคราะห์และรายงาน</div>}
         {data.cLevelReports?.items?.length
