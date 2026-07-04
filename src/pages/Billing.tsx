@@ -312,6 +312,12 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
 
   return (
     <div>
+      {data.coupon && (
+        <div className="bill-coupon">
+          🎁 คูปองส่วนลดจากเกมเมืองบริษัท <b>−{data.coupon.pct}%</b> ค่าแพ็กเกจ
+          <span className="bill-coupon-note"> (จาก “{data.coupon.reason}”) — แจ้งแอดมินตอนชำระเพื่อรับส่วนลด</span>
+        </div>
+      )}
       <div className="page-header">
         <div className="page-title">แพ็กเกจ & การสมัครสมาชิก</div>
         <div className="page-meta">

@@ -480,6 +480,11 @@ export interface AppData {
   sipoc?: SipocProcess[];
   visitedMarket?: boolean; // เข้าหน้าตลาด/หน้าร้านแล้ว — ใช้ติ๊ก Quest "เข้าตลาดธุรกิจ"
   finance?: FinanceEntry[]; // รายรับ-รายจ่ายที่กรอกเอง — ขับเศรษฐกิจเมืองบริษัท (SIM)
+  // ===== รางวัลจากเกมเมืองบริษัท (SIM) =====
+  claimedRewards?: string[];              // id รางวัลที่รับแล้ว
+  coupon?: { pct: number; reason: string }; // ส่วนลดค่าแพ็กเกจล่าสุด (เก็บ % สูงสุด)
+  featuredVoucherDays?: number;           // สิทธิ์ดันร้านขึ้น "แนะนำ" สะสม (วัน)
+  cityUnlocks?: string[];                 // ของปลดล็อกในเกม (cosmetic)
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */

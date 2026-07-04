@@ -3,6 +3,7 @@ import type { AppData, PageId } from '../types';
 import { cityStats, type CityBuilding } from '../lib/companyCity';
 import { fmtBaht } from '../lib/finance';
 import CityTreasury from '../components/CityTreasury';
+import CityRewards from '../components/CityRewards';
 
 /* ===== เมืองบริษัท (Company City) — เกมส์ SIM การเติบโต =====
  * เมืองโตตามความคืบหน้าจริง: อาคารสูงขึ้นเมื่อทำงานจริง, ปลดล็อกย่านใหม่ตามเหตุการณ์สำคัญ
@@ -13,6 +14,7 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
 
   // เรียงให้อาคารที่สร้างแล้ว (สูง) อยู่กลาง ที่ดินว่างอยู่ท้าย เพื่อภาพเมืองสวย
   const skyline = [...s.buildings].sort((a, b) => b.level - a.level);
+  const lockedDistricts = s.buildings.filter(b => b.locked && b.level === 0).length;
 
   return (
     <div className="city-wrap">
@@ -43,6 +45,16 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
 
       {/* คลังเมือง — รายรับ/รายจ่าย ขับเศรษฐกิจเมือง */}
       <CityTreasury data={data} onUpdate={onUpdate} />
+
+      {/* รางวัลเมือง — รับรางวัลจริงจากการเล่นเกม */}
+      <CityRewards data={data} onUpdate={onUpdate} />
+
+      {/* จังหวะขาย: ปลดล็อกย่านที่ต้องอัปเกรดแพ็กเกจ */}
+      {lockedDistricts > 0 && (
+        <button className="city-nudge" onClick={() => onNavigate('billing')}>
+          🔓 อัปเกรดแพ็ก Growth เพื่อปลดล็อกอีก {lockedDistricts} ย่านในเมือง (ศูนย์ข้อมูล · ห้องแล็บ · ISO) + เก็บรางวัลเพิ่ม →
+        </button>
+      )}
 
       {/* ความคืบหน้าสู่ระดับเมืองถัดไป */}
       <div className="city-progress">
