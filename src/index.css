@@ -4790,3 +4790,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .brd-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); }
 .brd-btn:disabled{ opacity:.5; cursor:default; }
 .brd-msg{ margin-top:10px; font-size:13px; color:#a5b4fc; }
+
+/* ปุ่มส่งสรุปผลงานลง Google Sheets (ในการ์ดเชื่อมต่อเครื่องมือ) */
+.intg-sync{ display:inline-block; margin-left:10px; padding:5px 12px; border-radius:8px;
+  background:#188038; color:#fff; border:0; font-size:12.5px; font-weight:600; cursor:pointer; }
+.intg-sync:disabled{ opacity:.6; cursor:default; }

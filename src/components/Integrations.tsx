@@ -3,16 +3,21 @@ import {
   SYSTEM_INTEGRATIONS, USER_INTEGRATIONS,
   getIntegrationStatus, saveIntegration, disconnectIntegration, type IntegrationProvider,
 } from '../lib/integrations';
+import { sheetsEnabled, startSheetsConnect, syncToSheet } from '../lib/sheets';
+import { workspaceOps, fmtBaht } from '../lib/adminOps';
+import type { AppData } from '../types';
 import { track } from '../lib/analytics';
 
 /* ===== การเชื่อมต่อเครื่องมือ — แยกชัด "ระบบดูแลให้" vs "เชื่อมบัญชีคุณเอง" ===== */
 
-export default function Integrations({ wsId }: { wsId: string | null }) {
+export default function Integrations({ wsId, data }: { wsId: string | null; data?: AppData }) {
   const [status, setStatus] = useState<Record<IntegrationProvider, boolean>>({ line: false, sheets: false });
   const [open, setOpen] = useState<IntegrationProvider | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const sheetsOn = sheetsEnabled();
 
   useEffect(() => { getIntegrationStatus(wsId).then(setStatus); }, [wsId]);
 
@@ -29,6 +34,25 @@ export default function Integrations({ wsId }: { wsId: string | null }) {
   async function disconnect(p: IntegrationProvider) {
     await disconnectIntegration(wsId, p);
     setStatus(s => ({ ...s, [p]: false }));
+  }
+
+  // ส่งสรุปผลงานของ workspace นี้ลงชีตของ User
+  async function syncOps() {
+    if (!wsId || !data) return;
+    setBusy(true); setSyncMsg('กำลังส่งลง Google Sheets…');
+    const o = workspaceOps(data);
+    const stamp = new Date().toLocaleString('th-TH');
+    const rows: (string | number)[][] = [
+      ['บันทึกเมื่อ', stamp],
+      ['แพ็ก', o.planLabel, 'สถานะ', o.subStatus],
+      ['รายได้', fmtBaht(o.revenue), 'รายจ่าย', fmtBaht(o.expense), 'กำไรสุทธิ', fmtBaht(o.net)],
+      ['งานเสร็จ', o.tasksDone, 'งานทั้งหมด', o.tasksTotal, 'ดีลปิด', o.dealsClosed],
+      ['เอเจนต์', o.agents, 'ระดับเมือง', o.cityTier, 'ต่อเนื่อง(วัน)', o.streak],
+      [],
+    ];
+    const r = await syncToSheet(wsId, 'CEO AI Thailand — สรุปผลงาน', rows);
+    setBusy(false);
+    setSyncMsg(r.ok ? `${r.msg}${r.url ? ' — เปิดชีต: ' + r.url : ''}` : '⚠️ ' + r.msg);
   }
 
   return (
@@ -55,6 +79,9 @@ export default function Integrations({ wsId }: { wsId: string | null }) {
       <div className="intg-list">
         {USER_INTEGRATIONS.map(it => {
           const on = status[it.id];
+          const isSheets = it.id === 'sheets';
+          // sheets: เปิดใช้เมื่อ sheetsLive แล้วเท่านั้น มิฉะนั้นยังเป็น "เร็วๆ นี้"
+          const soon = it.comingSoon && !(isSheets && sheetsOn);
           return (
             <div key={it.id} className={`intg-row user${on ? ' on' : ''}`}>
               <div className="intg-main">
@@ -63,18 +90,29 @@ export default function Integrations({ wsId }: { wsId: string | null }) {
                   <div className="intg-name">{it.name}</div>
                   <div className="intg-desc">{it.desc}</div>
                 </div>
-                {it.comingSoon
+                {soon
                   ? <span className="intg-badge soon">เร็วๆ นี้</span>
                   : on
                     ? <button className="intg-btn off" onClick={() => disconnect(it.id)}>ตัดการเชื่อมต่อ</button>
-                    : <button className="intg-btn" onClick={() => { setOpen(open === it.id ? null : it.id); setForm({}); setMsg(null); }}>เชื่อมบัญชี</button>}
+                    : isSheets
+                      ? <button className="intg-btn" onClick={() => wsId ? startSheetsConnect(wsId) : setMsg('ยังไม่พบ workspace — ลองรีเฟรช')}>เชื่อม Google</button>
+                      : <button className="intg-btn" onClick={() => { setOpen(open === it.id ? null : it.id); setForm({}); setMsg(null); }}>เชื่อมบัญชี</button>}
               </div>
 
-              {on && !it.comingSoon && (
+              {on && !soon && isSheets && (
+                <div className="intg-note ok">
+                  ✅ เชื่อม Google Sheets แล้ว
+                  {data && (
+                    <button className="intg-sync" onClick={syncOps} disabled={busy}>📊 ส่งสรุปผลงานลงชีต</button>
+                  )}
+                  {syncMsg && <div className="intg-msg">{syncMsg}</div>}
+                </div>
+              )}
+              {on && !soon && !isSheets && (
                 <div className="intg-note ok">✅ เชื่อมบัญชีแล้ว — ระบบตอบ/ส่งอัตโนมัติกำลังเปิดใช้เร็วๆ นี้</div>
               )}
 
-              {open === it.id && !on && (
+              {open === it.id && !on && !isSheets && (
                 <div className="intg-form">
                   {it.fields?.map(f => (
                     <label key={f.key} className="intg-field">

@@ -1207,9 +1207,6 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           <span className="meta-chip">{c.agents.length} เอเจนต์</span>
           <span className="meta-chip">{queuedCount} งานในระบบ</span>
           {pendingApprovals > 0 && <span className="meta-chip" style={{ borderColor: 'var(--rust)', color: 'var(--rust)' }}>{pendingApprovals} รออนุมัติ</span>}
-          <span className="law-badge" data-tip={"Jakob's Law: ใช้รูปแบบ Kanban + org chart\nที่ผู้ใช้คุ้นจาก Trello/Asana อยู่แล้ว\nจึงเรียนรู้ได้ทันที"}>Jakob's Law</span>
-          <span className="law-badge" data-tip={"Doherty Threshold: ฟีดงานสดตอบสนอง < 400ms\nระบบรู้สึก 'มีชีวิต' ทำงานตลอดเวลา\nผู้ใช้จึงอยู่กับระบบนานขึ้น"}>Doherty Threshold</span>
-          <span className="law-badge" data-tip={"Miller's Law: สรุปตัวเลขเป็น 4 ก้อน\nไม่ล้น working memory ของบอร์ด"}>Miller's Law</span>
         </div>
       </div>
 
@@ -1807,7 +1804,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       </section>
 
       {/* ===== Integrations (แยก ระบบดูแลให้ vs เชื่อมบัญชีคุณเอง · เก็บ secret ปลอดภัย per-workspace) ===== */}
-      <Integrations wsId={wsId ?? null} />
+      <Integrations wsId={wsId ?? null} data={data} />
 
       {/* ===== HRD Skill Plan ===== */}
       {(() => {
