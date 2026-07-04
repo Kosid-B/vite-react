@@ -1623,7 +1623,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           {/* CMO */}
           <div className="cs-card">
             <div className="cs-role">📣 CMO — ตลาด & กลุ่มลูกค้า <span className="cs-badge">อัตโนมัติทุกศุกร์</span></div>
-            <div className="cs-sub">CMO ดึงข้อมูลตลาดจริงทุกวันศุกร์ → แบ่งกลุ่มลูกค้า (RFM/พฤติกรรม/ความต้องการ) + CLV + กลยุทธ์ต่อกลุ่ม</div>
+            <div className="cs-sub">CMO ดึงข้อมูลตลาดจริงทุกวันศุกร์ → แบ่งกลุ่มลูกค้า (RFM/พฤติกรรม/ความต้องการ) + CLV + Win Story + กลยุทธ์ต่อกลุ่ม</div>
             {(() => {
               const clv = clvSummary(data);
               return clv.hasData ? (
