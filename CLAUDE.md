@@ -73,6 +73,9 @@ components/CityTreasury.tsx (คลังเมือง+ledger) · CityRewards.
 AppData: finance, claimedRewards, coupon{pct}, featuredVoucherDays, cityUnlocks, streak, proMode
 รางวัลใช้จริง: คูปอง→หน้า Billing · featured→ปุ่มใน MyStorefront (setFeatured) · proMode ซ่อนเกมบน Dashboard
 GA4 events: city_viewed, finance_entry_added, reward_claimed, streak_extended, featured_voucher_redeemed
+หน้า 'citytrade' — การค้าระหว่างเมือง: src/lib/interCityTrade.ts (CEO จับคู่/CMO ให้คะแนน rule-based
+จาก marketplace.partners) → tradeReport() บอร์ดดู · closeTrade() = Deal(closed)+finance entry
+(ขาย→รายได้หักฟี 3% / ซื้อ→รายจ่าย) ป้อนคลังเมือง · รับจ่ายจริง gate PAYMENT.xenditLive (รอ KYC)
 ```
 
 ## Marketplace SEO (server-side)
