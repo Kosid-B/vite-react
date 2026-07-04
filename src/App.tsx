@@ -92,6 +92,10 @@ function migrate(parsed: AppData): AppData {
     }
   }
   if (!parsed.aiCompany) parsed.aiCompany = DEFAULT_DATA.aiCompany;
+  // ความปลอดภัย: ลบ API key ที่เคยถูกเก็บใน AppData (ย้ายไปเก็บ per-workspace แบบ RLS แล้ว)
+  if (parsed.aiCompany?.integrations) {
+    parsed.aiCompany.integrations = parsed.aiCompany.integrations.map(i => ({ ...i, apiKey: '' }));
+  }
   if (!parsed.subscription) {
     parsed.subscription = DEFAULT_DATA.subscription;
   } else {

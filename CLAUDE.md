@@ -128,6 +128,7 @@ public.rfqs               — ใบขอเสนอราคา B2B; seller_s
 public.orders             — ออเดอร์ + ค่าธรรมเนียม 3% (0010)
 public.skill_auctions     — ประมูล skill แบบ English Auction (0012)
 public.skill_bids         — บิดประมูล โปร่งใสเห็นกันหมด (0012)
+public.workspace_integrations — credential ของ integration ที่ User เชื่อมเอง (LINE/Sheets) RLS per-workspace, revoke anon; ไม่อยู่ใน workspace_state (กัน secret รั่ว) (0020)
 ```
 
 ## Edge Functions
