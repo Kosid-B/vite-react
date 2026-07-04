@@ -1,6 +1,7 @@
 import type { AppData, PageId } from '../types';
 import { canAccess } from './access';
 import { companyXP, getCompanyLevel } from './gamification';
+import { financeSummary } from './finance';
 
 /* ===== เมืองบริษัท (Company City) — เกมส์ SIM การเติบโต =====
  * เมืองของคุณ "โต" ตามความคืบหน้าธุรกิจจริง: แต่ละอาคาร = 1 ด้านของบริษัท
@@ -52,6 +53,7 @@ export function cityStats(d: AppData) {
   const tools = Object.entries(c.toolOwners ?? {})
     .filter(([, id]) => c.agents.some(a => a.id === id)).length;
 
+  const fin = financeSummary(d);
   const xp = companyXP(d);
   const level = getCompanyLevel(xp);
   const tier = CITY_TIER[level.rank] ?? CITY_TIER.Starter;
@@ -111,12 +113,31 @@ export function cityStats(d: AppData) {
       level: canAccess(d, 'aisearch') ? 1 : 0, max: 1, locked: !canAccess(d, 'aisearch'),
       hint: canAccess(d, 'aisearch') ? '' : 'อัปเกรด Growth → ปลดล็อกอาคาร',
     },
+    // ===== ย่านการเงิน — ขับด้วยรายรับ/รายจ่ายจริง =====
+    {
+      id: 'treasury', icon: '💰', name: 'คลังเมือง', role: 'บันทึกรายได้ธุรกิจก้อนแรก', page: 'city',
+      level: fin.hasRevenue ? 1 : 0, max: 1,
+      hint: fin.hasRevenue ? '' : 'บันทึกรายได้ก้อนแรก → สร้างคลังเมือง',
+    },
+    {
+      id: 'bank', icon: '🏦', name: 'ธนาคารเมือง', role: 'ทำกำไร (รายได้ > รายจ่าย)', page: 'city',
+      level: fin.breakEven ? 1 : 0, max: 1,
+      hint: fin.breakEven ? '' : 'ทำให้รายได้ > รายจ่าย → เปิดธนาคาร',
+    },
+    {
+      id: 'exchange', icon: '📈', name: 'ตลาดทุน', role: 'กำไรสุทธิสะสม ≥ ฿100,000', page: 'city',
+      level: levelFromThresholds(fin.net, [100000, 500000, 1000000]), max: 3,
+      hint: fin.net >= 1000000 ? '' :
+        fin.net >= 500000 ? 'อีก ฿' + (1000000 - fin.net).toLocaleString('th-TH') + ' → อัปเกรด' :
+        fin.net >= 100000 ? 'อีก ฿' + (500000 - fin.net).toLocaleString('th-TH') + ' → อัปเกรด' :
+        'กำไรสุทธิ ≥ ฿100,000 → เปิดตลาดทุน',
+    },
   ];
 
   const built = buildings.filter(b => b.level > 0).length;
   const floors = buildings.reduce((s, b) => s + b.level, 0);
   return {
-    xp, level, tier, pctToNext,
+    xp, level, tier, pctToNext, fin,
     agents, tasksDone, skills, actionsDone, tools,
     buildings, built, total: buildings.length, floors,
   };
