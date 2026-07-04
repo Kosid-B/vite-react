@@ -18,6 +18,7 @@ import { reviewTasks, nextStepTasks, reportByPosition, boardReportText } from '.
 import { DEFAULT_DATA } from '../data';
 import { cfoReportText, cfoKpis } from '../lib/cfoReport';
 import { segmentationInstruction, shouldRunWeekly, weekTag } from '../lib/segmentation';
+import FinanceInput from '../components/FinanceInput';
 
 // ---- Org Chart Node (recursive) ----
 interface OcNodeProps {
@@ -1576,6 +1577,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
               <button className="cs-btn ghost" onClick={async () => { try { await navigator.clipboard.writeText(cfoReportText(data)); setCsuiteMsg('📋 คัดลอกรายงาน CFO แล้ว'); } catch { setCsuiteMsg('คัดลอกไม่สำเร็จ'); } }}>คัดลอก</button>
             </div>
             {cfoShown && <pre className="cs-report">{cfoReportText(data)}</pre>}
+            <div className="cs-fin-hd">🔐 นำเข้าข้อมูลการเงิน (ความลับของคุณ)</div>
+            <FinanceInput data={data} onUpdate={onUpdate} />
           </div>
           {/* CMO */}
           <div className="cs-card">
