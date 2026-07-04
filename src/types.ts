@@ -487,6 +487,8 @@ export interface AppData {
   cityUnlocks?: string[];                 // ของปลดล็อกในเกม (cosmetic)
   streak?: { count: number; lastDay: string }; // ส่วนต่อเนื่องรายวัน (ทำงานจริงในแอป)
   proMode?: boolean;                      // โหมดโปร — ซ่อนองค์ประกอบเกมบน Dashboard
+  // CMO วิเคราะห์ตลาด+กลุ่มลูกค้า (Segmentation) รายสัปดาห์ทุกวันศุกร์ (ดึงข้อมูลตลาดจริง)
+  cmoMarket?: { analysis: string; webUsed: boolean; updatedAt: string; weekTag: string };
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */

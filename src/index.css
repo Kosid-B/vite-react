@@ -4805,3 +4805,77 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .tool-del-btn:hover:not(:disabled){ background:#7f1d1d22; }
 .tool-del-btn:disabled{ opacity:.55; cursor:default; color:#b98; border-color:#5b3a3a; }
 .tool-del-msg{ margin:8px 0 2px; font-size:12.5px; color:#fca5a5; }
+
+/* ===== รายงาน C-Suite ต่อ CEO (CFO/CMO) ===== */
+.ai-panel.csuite{ border-color:#0ea5b722; }
+.cs-msg{ font-size:13px; color:#a5b4fc; margin-bottom:10px; }
+.cs-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:820px){ .cs-grid{ grid-template-columns:1fr; } }
+.cs-card{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:12px; padding:14px 15px; }
+.cs-role{ font-weight:700; font-size:14.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.cs-badge{ font-size:10.5px; font-weight:600; color:#0f172a; background:#22c55e; border-radius:999px; padding:2px 8px; }
+.cs-sub{ color:var(--muted,#94a3b8); font-size:12px; margin:6px 0 10px; line-height:1.5; }
+.cs-kpis{ display:flex; flex-direction:column; gap:5px; margin:10px 0; }
+.cs-kpi{ display:flex; justify-content:space-between; gap:10px; font-size:12.5px; border-bottom:1px solid var(--border,#1f2937); padding-bottom:4px; }
+.cs-kpi-l{ color:var(--muted,#94a3b8); }
+.cs-kpi-v{ font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.cs-actions{ display:flex; gap:7px; flex-wrap:wrap; margin-top:6px; }
+.cs-btn{ background:#0ea5b7; color:#022; border:0; border-radius:8px; padding:7px 12px; font-weight:600; font-size:12.5px; cursor:pointer; }
+.cs-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); }
+.cs-btn:disabled{ opacity:.55; cursor:default; }
+.cs-report{ white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:12px; line-height:1.55;
+  background:#0b1020; border:1px solid var(--border,#1f2937); border-radius:8px; padding:11px 12px; margin-top:10px; max-height:320px; overflow:auto; color:#cbd5e1; }
+.cs-meta{ font-size:11.5px; color:#6f7cae; margin-top:8px; }
+.cs-empty{ font-size:12.5px; color:#6f7cae; margin-top:8px; }
+
+/* ===== นำเข้าข้อมูลการเงิน (ความลับของ User) ===== */
+.cs-fin-hd{ margin-top:14px; font-weight:700; font-size:13px; color:#e5e7eb; }
+.finx{ margin-top:8px; }
+.finx-lock{ font-size:11.5px; color:#fbbf24; background:#3a2d0a55; border:1px solid #7c5e1a55; border-radius:8px; padding:8px 10px; line-height:1.5; }
+.finx-sum{ font-size:12.5px; color:var(--muted,#94a3b8); margin:9px 0; }
+.finx-sum b{ font-variant-numeric:tabular-nums; }
+.finx .pos{ color:#34d399; } .finx .neg{ color:#f87171; }
+.finx-form{ display:flex; gap:6px; flex-wrap:wrap; }
+.finx-in{ background:#0b1020; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); border-radius:7px; padding:7px 9px; font-size:12.5px; }
+.finx-in{ flex:1 1 130px; min-width:0; }
+.finx-in.amt{ flex:0 0 110px; } .finx-in.kind{ flex:0 0 92px; } .finx-in.date{ flex:0 0 140px; }
+.finx-add{ background:#0ea5b7; color:#022; border:0; border-radius:7px; padding:7px 12px; font-weight:700; font-size:12.5px; cursor:pointer; }
+.finx-upload{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:9px; }
+.finx-file-btn{ background:transparent; border:1px dashed var(--border,#475569); color:var(--text,#e5e7eb); border-radius:8px; padding:7px 12px; font-size:12.5px; cursor:pointer; }
+.finx-hint{ font-size:11px; color:#6f7cae; flex:1 1 200px; }
+.finx-msg{ margin-top:9px; font-size:12.5px; color:#a5b4fc; }
+.finx-list{ margin-top:10px; display:flex; flex-direction:column; gap:4px; }
+.finx-row{ display:flex; align-items:center; gap:8px; font-size:12.5px; border-bottom:1px solid var(--border,#1f2937); padding-bottom:4px; }
+.finx-row-l{ flex:1; color:var(--muted,#cbd5e1); }
+.finx-row-a{ font-weight:700; font-variant-numeric:tabular-nums; }
+.finx-del{ background:transparent; border:0; color:#f87171; font-size:16px; cursor:pointer; line-height:1; }
+.finx-more{ font-size:11.5px; color:#6f7cae; }
+
+/* ===== HRD เสนอทักษะตามช่วง + Price Analysis + Promotion (SkillInvestmentPlan) ===== */
+.ai-panel.sip{ border-color:#f59e0b22; }
+.sip-cur{ font-size:12.5px; color:var(--muted,#94a3b8); margin:2px 0 12px; }
+.sip-tabs{ display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+.sip-tabs button{ background:transparent; border:1px solid var(--border,#334155); color:var(--muted,#94a3b8); border-radius:999px; padding:5px 14px; font-size:12.5px; font-weight:600; cursor:pointer; }
+.sip-tabs button.on{ background:#f59e0b; color:#1a1206; border-color:#f59e0b; }
+.sip-stages{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media (max-width:820px){ .sip-stages{ grid-template-columns:1fr; } }
+.sip-stage{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:10px; padding:11px 13px; }
+.sip-stage.now{ border-color:#f59e0b; box-shadow:0 0 0 1px #f59e0b55; }
+.sip-stage-hd{ font-weight:700; font-size:13.5px; } .sip-stage-hd span{ color:#fbbf24; font-weight:600; font-size:11.5px; }
+.sip-stage-focus{ font-size:12px; color:var(--muted,#94a3b8); margin:3px 0 6px; }
+.sip-stage ul{ margin:0; padding-left:16px; } .sip-stage li{ font-size:12px; margin:3px 0; line-height:1.45; }
+.sip-note,.sip-promo-hd,.sip-edge-hd{ font-size:12.5px; color:var(--muted,#94a3b8); margin:4px 0 10px; }
+.sip-promo-hd,.sip-edge-hd{ font-weight:700; color:#e5e7eb; margin-top:14px; }
+.sip-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+.sip-table th{ text-align:left; color:var(--muted,#94a3b8); font-weight:600; padding:7px 9px; border-bottom:1px solid var(--border,#334155); }
+.sip-table td{ padding:8px 9px; border-bottom:1px solid var(--border,#1f2937); vertical-align:top; }
+.sip-pk{ font-weight:600; } .sip-pk-note{ font-weight:400; color:#6f7cae; font-size:11px; margin-top:2px; }
+.sip-pr{ font-weight:700; color:#34d399; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.sip-promos{ display:flex; flex-direction:column; gap:7px; }
+.sip-promo{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:9px; padding:9px 11px; font-size:12.5px; }
+.sip-promo b{ display:block; } .sip-promo span{ color:var(--muted,#94a3b8); }
+.sip-edge{ margin:6px 0 0; padding-left:2px; list-style:none; } .sip-edge li{ font-size:12.5px; margin:4px 0; color:#a7f3d0; }
+.sip-actions{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.sip-btn{ background:#f59e0b; color:#1a1206; border:0; border-radius:8px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer; }
+.sip-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); }
+.sip-msg{ margin-top:9px; font-size:12.5px; color:#fbbf24; }
