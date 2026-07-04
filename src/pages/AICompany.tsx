@@ -16,6 +16,8 @@ import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamificatio
 import DBDSelect from '../components/DBDSelect';
 import { reviewTasks, nextStepTasks, reportByPosition, boardReportText } from '../lib/boardReport';
 import { DEFAULT_DATA } from '../data';
+import { cfoReportText, cfoKpis } from '../lib/cfoReport';
+import { segmentationInstruction, shouldRunWeekly, weekTag } from '../lib/segmentation';
 
 // ---- Org Chart Node (recursive) ----
 interface OcNodeProps {
@@ -278,6 +280,9 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [boardReportMsg, setBoardReportMsg] = useState<string | null>(null);
   const [toolsShown, setToolsShown] = useState(true);
   const [toolDelMsg, setToolDelMsg] = useState<string | null>(null);
+  const [cfoShown, setCfoShown] = useState(false);
+  const [csuiteMsg, setCsuiteMsg] = useState<string | null>(null);
+  const [cmoRunning, setCmoRunning] = useState(false);
   const [hrdPlanningSkills, setHrdPlanningSkills] = useState(false);
   const [skillPlanMsg, setSkillPlanMsg] = useState<string | null>(null);
   const [addCustomSkillOpen, setAddCustomSkillOpen] = useState(false);
@@ -1250,6 +1255,62 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     ].slice(0, 40));
   }
 
+  /* ----- CFO เสนอรายงานการเงิน + บทวิเคราะห์ ต่อ CEO ----- */
+  function cfoSubmitToCeo() {
+    const cfo = c.agents.find(a => /cfo|การเงิน/i.test(a.role));
+    const ceo = c.agents.find(a => /ceo/i.test(a.role)) ?? c.agents[0];
+    patch({ approvals: [{
+      id: 'cfo-' + Date.now().toString(36),
+      agentId: cfo?.id ?? ceo?.id ?? '',
+      title: `💰 CFO เสนอรายงานการเงิน + บทวิเคราะห์ ต่อ CEO`,
+      detail: cfoReportText(data),
+      impact: JSON.stringify({ type: 'note' }),
+      status: 'pending',
+    }, ...c.approvals] });
+    setCsuiteMsg('✅ CFO ส่งรายงานการเงิน + บทวิเคราะห์ให้ CEO/บอร์ดแล้ว (ดูที่กล่องอนุมัติ)');
+    setFeed(prev => [
+      { id: ++counter.current, time: nowTime(), text: `CFO ${cfo?.name ?? ''} เสนอรายงานการเงิน + บทวิเคราะห์ต่อ CEO`, color: cfo?.color ?? AGENT_PALETTE[0] },
+      ...prev,
+    ].slice(0, 40));
+  }
+
+  /* ----- CMO วิเคราะห์ตลาด + กลุ่มลูกค้า (รายสัปดาห์ทุกวันศุกร์) ----- */
+  const runCmoSegmentation = async (auto = false) => {
+    if (!supabase || cmoRunning) return;
+    const cmo = c.agents.find(a => /cmo|market|ตลาด/i.test(a.role));
+    if (!cmo) { if (!auto) setCsuiteMsg('⚠️ ยังไม่มีตำแหน่ง CMO — ให้ CEO จัดผู้รับผิดชอบก่อน'); return; }
+    setCmoRunning(true); if (!auto) setCsuiteMsg('CMO กำลังดึงข้อมูลตลาด + วิเคราะห์กลุ่มลูกค้า…');
+    try {
+      trackAiCall();
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: cmo.role, name: cmo.name, mandate: cmo.mandate, model: cmo.model,
+          title: 'วิเคราะห์ตลาด + แบ่งกลุ่มลูกค้า (รายสัปดาห์)',
+          detail: segmentationInstruction(data),
+          goal: c.goal, industry: c.industry, companyName: c.name, orgContext: [],
+          useWebSearch: canWebSearch, searchQuery: `${c.industry} ตลาด คู่แข่ง กลุ่มลูกค้า ${new Date().getFullYear() + 543}`,
+        },
+      });
+      if (error) throw error;
+      onUpdate({ ...data, cmoMarket: {
+        analysis: res?.output ?? '', webUsed: !!res?.webSearchUsed, updatedAt: nowTime(), weekTag: weekTag(),
+      } });
+      setCsuiteMsg(`✅ CMO วิเคราะห์เสร็จ${res?.webSearchUsed ? ' (ดึงข้อมูลตลาดจริง 🌐)' : ''}`);
+      setFeed(prev => [
+        { id: ++counter.current, time: nowTime(), text: `CMO ${cmo.name} วิเคราะห์ตลาด + กลุ่มลูกค้าประจำสัปดาห์`, color: cmo.color },
+        ...prev,
+      ].slice(0, 40));
+    } catch (e) {
+      if (!auto) setCsuiteMsg('✕ วิเคราะห์ไม่สำเร็จ: ' + (e as Error).message);
+    } finally { setCmoRunning(false); }
+  };
+
+  // อัตโนมัติ: ทุกวันศุกร์ให้ CMO วิเคราะห์ตลาดรอบสัปดาห์ (รันครั้งเดียว/สัปดาห์)
+  useEffect(() => {
+    if (isSupabaseEnabled && shouldRunWeekly(data)) runCmoSegmentation(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [c.agents.length]);
+
   const agentName = (id: string) => c.agents.find(a => a.id === id)?.role ?? '—';
   const pendingApprovals = c.approvals.filter(a => a.status === 'pending').length;
   const workingCount = c.running ? c.agents.filter(a => a.status === 'working').length : 0;
@@ -1494,6 +1555,47 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           })}
         </div>
         </>)}
+      </section>
+
+      {/* ===== รายงาน C-Suite ต่อ CEO (CFO การเงิน + CMO ตลาด/กลุ่มลูกค้า) ===== */}
+      <section className="ai-panel csuite" style={{ marginTop: 16 }}>
+        <div className="ai-panel-hd">🏛️ รายงาน C-Suite ต่อ CEO</div>
+        {csuiteMsg && <div className="cs-msg">{csuiteMsg}</div>}
+        <div className="cs-grid">
+          {/* CFO */}
+          <div className="cs-card">
+            <div className="cs-role">💰 CFO — การเงิน</div>
+            <div className="cs-kpis">
+              {cfoKpis(data).slice(0, 6).map((k, i) => (
+                <div key={i} className="cs-kpi"><span className="cs-kpi-l">{k.label}</span><span className="cs-kpi-v">{k.status} {k.value}</span></div>
+              ))}
+            </div>
+            <div className="cs-actions">
+              <button className="cs-btn" onClick={cfoSubmitToCeo}>เสนอ CEO พร้อมบทวิเคราะห์</button>
+              <button className="cs-btn ghost" onClick={() => setCfoShown(v => !v)}>{cfoShown ? 'ซ่อนรายงาน' : 'ดูรายงานเต็ม'}</button>
+              <button className="cs-btn ghost" onClick={async () => { try { await navigator.clipboard.writeText(cfoReportText(data)); setCsuiteMsg('📋 คัดลอกรายงาน CFO แล้ว'); } catch { setCsuiteMsg('คัดลอกไม่สำเร็จ'); } }}>คัดลอก</button>
+            </div>
+            {cfoShown && <pre className="cs-report">{cfoReportText(data)}</pre>}
+          </div>
+          {/* CMO */}
+          <div className="cs-card">
+            <div className="cs-role">📣 CMO — ตลาด & กลุ่มลูกค้า <span className="cs-badge">อัตโนมัติทุกศุกร์</span></div>
+            <div className="cs-sub">CMO ดึงข้อมูลตลาดจริงทุกวันศุกร์ → แบ่งกลุ่มลูกค้า (RFM/พฤติกรรม/ความต้องการ) + กลยุทธ์ต่อกลุ่ม</div>
+            {isSupabaseEnabled ? (
+              <div className="cs-actions">
+                <button className="cs-btn" onClick={() => runCmoSegmentation(false)} disabled={cmoRunning}>
+                  {cmoRunning ? 'CMO กำลังวิเคราะห์…' : 'ให้ CMO วิเคราะห์ตอนนี้'}
+                </button>
+              </div>
+            ) : <div className="cs-empty">เปิด Supabase เพื่อให้ CMO ดึงข้อมูลตลาดจริง</div>}
+            {data.cmoMarket?.analysis
+              ? <>
+                  <div className="cs-meta">อัปเดต {data.cmoMarket.updatedAt} · {data.cmoMarket.weekTag}{data.cmoMarket.webUsed ? ' · 🌐 ข้อมูลตลาดจริง' : ''}</div>
+                  <pre className="cs-report">{data.cmoMarket.analysis}</pre>
+                </>
+              : <div className="cs-empty">ยังไม่มีผลวิเคราะห์ — กดปุ่มด้านบน หรือรอรอบวันศุกร์</div>}
+          </div>
+        </div>
       </section>
 
       <div className="ai-2col">
