@@ -5,7 +5,9 @@ import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
 import { listAdminSkills } from '../lib/adminSkills';
+import { recommendSkills } from '../lib/skillAdvisor';
 import SkillAuction from '../components/SkillAuction';
+import SkillAdvisor from '../components/SkillAdvisor';
 import type { Auction } from '../lib/auctions';
 import { trackSkillPurchase } from '../lib/skillStats';
 import { withSkillDirectives } from '../lib/skillDirectives';
@@ -1819,6 +1821,12 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           </div>
         )}
       </section>
+
+      {/* ===== 🧠 CEO เลือก Skill พัฒนาธุรกิจ (agentic) ===== */}
+      <SkillAdvisor
+        recs={recommendSkills(data, [...SKILL_CATALOG, ...adminSkillList])}
+        onPick={sk => { setMktCategory(sk.category); setBuyConfirm(sk); }}
+      />
 
       {/* ===== 🛒 Skill Marketplace ===== */}
       {(() => {
