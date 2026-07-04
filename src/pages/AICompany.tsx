@@ -18,6 +18,7 @@ import { reviewTasks, nextStepTasks, reportByPosition, boardReportText } from '.
 import { DEFAULT_DATA } from '../data';
 import { cfoReportText, cfoKpis } from '../lib/cfoReport';
 import { segmentationInstruction, shouldRunWeekly, weekTag } from '../lib/segmentation';
+import { clvSummary } from '../lib/clv';
 import FinanceInput from '../components/FinanceInput';
 import SkillInvestmentPlan from '../components/SkillInvestmentPlan';
 
@@ -1584,7 +1585,17 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           {/* CMO */}
           <div className="cs-card">
             <div className="cs-role">📣 CMO — ตลาด & กลุ่มลูกค้า <span className="cs-badge">อัตโนมัติทุกศุกร์</span></div>
-            <div className="cs-sub">CMO ดึงข้อมูลตลาดจริงทุกวันศุกร์ → แบ่งกลุ่มลูกค้า (RFM/พฤติกรรม/ความต้องการ) + กลยุทธ์ต่อกลุ่ม</div>
+            <div className="cs-sub">CMO ดึงข้อมูลตลาดจริงทุกวันศุกร์ → แบ่งกลุ่มลูกค้า (RFM/พฤติกรรม/ความต้องการ) + CLV + กลยุทธ์ต่อกลุ่ม</div>
+            {(() => {
+              const clv = clvSummary(data);
+              return clv.hasData ? (
+                <div className="cs-clv">
+                  <span>💎 CLV ~<b>฿{clv.clvMargin.toLocaleString('th-TH')}</b>/ลูกค้า</span>
+                  <span>AOV ฿{clv.aov.toLocaleString('th-TH')} × {clv.freqPerYear}/ปี × {clv.lifespanYears} ปี</span>
+                  <span>CAC คุ้มสูงสุด ฿{clv.maxCac.toLocaleString('th-TH')} (LTV:CAC 3:1)</span>
+                </div>
+              ) : <div className="cs-clv soon">💎 CLV: ปิดดีลแรก/กรอกการเงินเพื่อคำนวณ</div>;
+            })()}
             {isSupabaseEnabled ? (
               <div className="cs-actions">
                 <button className="cs-btn" onClick={() => runCmoSegmentation(false)} disabled={cmoRunning}>
