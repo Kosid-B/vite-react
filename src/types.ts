@@ -479,6 +479,17 @@ export interface AppData {
   factory?: FactoryData;
   sipoc?: SipocProcess[];
   visitedMarket?: boolean; // เข้าหน้าตลาด/หน้าร้านแล้ว — ใช้ติ๊ก Quest "เข้าตลาดธุรกิจ"
+  finance?: FinanceEntry[]; // รายรับ-รายจ่ายที่กรอกเอง — ขับเศรษฐกิจเมืองบริษัท (SIM)
+}
+
+/* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */
+export interface FinanceEntry {
+  id: string;
+  label: string;
+  amount: number;                 // บาท (จำนวนบวก)
+  kind: 'revenue' | 'expense';
+  date: string;                   // yyyy-mm-dd
+  recurring?: boolean;            // รายการรายเดือนซ้ำ
 }
 
 export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city';

@@ -1,11 +1,14 @@
 import { useMemo } from 'react';
 import type { AppData, PageId } from '../types';
 import { cityStats, type CityBuilding } from '../lib/companyCity';
+import { fmtBaht } from '../lib/finance';
+import CityTreasury from '../components/CityTreasury';
 
 /* ===== เมืองบริษัท (Company City) — เกมส์ SIM การเติบโต =====
- * เมืองโตตามความคืบหน้าจริง: อาคารสูงขึ้นเมื่อทำงานจริง, ปลดล็อกย่านใหม่ตามเหตุการณ์สำคัญ */
+ * เมืองโตตามความคืบหน้าจริง: อาคารสูงขึ้นเมื่อทำงานจริง, ปลดล็อกย่านใหม่ตามเหตุการณ์สำคัญ
+ * เศรษฐกิจเมืองขับด้วยรายรับ/รายจ่ายจริง (คลังเมือง) */
 
-export default function CompanyCity({ data, onNavigate }: { data: AppData; onNavigate: (p: PageId) => void }) {
+export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppData; onNavigate: (p: PageId) => void; onUpdate: (d: AppData) => void }) {
   const s = useMemo(() => cityStats(data), [data]);
 
   // เรียงให้อาคารที่สร้างแล้ว (สูง) อยู่กลาง ที่ดินว่างอยู่ท้าย เพื่อภาพเมืองสวย
@@ -34,9 +37,12 @@ export default function CompanyCity({ data, onNavigate }: { data: AppData; onNav
       <div className="city-stats">
         <div className="city-stat"><b>{s.agents}</b><span>👥 ประชากร (เอเจนต์)</span></div>
         <div className="city-stat"><b>{s.built}/{s.total}</b><span>🏢 อาคารที่สร้าง</span></div>
-        <div className="city-stat"><b>{s.floors}</b><span>🧱 ชั้นรวมทั้งเมือง</span></div>
+        <div className="city-stat"><b className={s.fin.net >= 0 ? 'city-profit' : 'city-loss'}>{s.fin.net >= 0 ? '' : '−'}{fmtBaht(Math.abs(s.fin.net))}</b><span>💵 กำไรสุทธิ</span></div>
         <div className="city-stat"><b>{s.xp.toLocaleString()}</b><span>✨ ความมั่งคั่ง (XP)</span></div>
       </div>
+
+      {/* คลังเมือง — รายรับ/รายจ่าย ขับเศรษฐกิจเมือง */}
+      <CityTreasury data={data} onUpdate={onUpdate} />
 
       {/* ความคืบหน้าสู่ระดับเมืองถัดไป */}
       <div className="city-progress">

@@ -379,7 +379,7 @@ export default function App() {
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
         {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} wsId={activeWs} />}
-        {activePage === 'city' && <CompanyCity data={data} onNavigate={setActivePage} />}
+        {activePage === 'city' && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
         {activePage === 'market' && (
