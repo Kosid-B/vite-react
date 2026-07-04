@@ -8,6 +8,7 @@ import { listAdminSkills } from '../lib/adminSkills';
 import { recommendSkills } from '../lib/skillAdvisor';
 import SkillAuction from '../components/SkillAuction';
 import SkillAdvisor from '../components/SkillAdvisor';
+import Integrations from '../components/Integrations';
 import type { Auction } from '../lib/auctions';
 import { trackSkillPurchase } from '../lib/skillStats';
 import { withSkillDirectives } from '../lib/skillDirectives';
@@ -1141,14 +1142,6 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     patch({ approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a) });
   }
 
-  /* ----- integrations ----- */
-  function toggleIntegration(id: string) {
-    patch({ integrations: c.integrations.map(it => it.id === id ? { ...it, connected: !it.connected } : it) });
-  }
-  function setApiKey(id: string, key: string) {
-    patch({ integrations: c.integrations.map(it => it.id === id ? { ...it, apiKey: key } : it) });
-  }
-
   const agentName = (id: string) => c.agents.find(a => a.id === id)?.role ?? '—';
   const pendingApprovals = c.approvals.filter(a => a.status === 'pending').length;
   const workingCount = c.running ? c.agents.filter(a => a.status === 'working').length : 0;
@@ -1706,28 +1699,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
         )}
       </section>
 
-      {/* ===== Integrations ===== */}
-      <section className="ai-panel" style={{ marginTop: 16 }}>
-        <div className="ai-panel-hd">🔌 เชื่อมต่อเครื่องมือภายนอก (API)</div>
-        <div className="ai-integrations">
-          {c.integrations.map(it => (
-            <div key={it.id} className={`ai-integration${it.connected ? ' on' : ''}`}>
-              <div className="ai-int-top">
-                <span className="ai-int-icon">{it.icon}</span>
-                <div className="ai-int-name">{it.name}</div>
-                <button className={`ai-int-toggle${it.connected ? ' on' : ''}`} onClick={() => toggleIntegration(it.id)}>
-                  {it.connected ? 'เชื่อมแล้ว' : 'เชื่อมต่อ'}
-                </button>
-              </div>
-              <div className="ai-int-desc">{it.desc}</div>
-              {it.connected && (
-                <input className="ai-int-key" type="password" placeholder="วาง API key ที่นี่"
-                  defaultValue={it.apiKey} onBlur={e => setApiKey(it.id, e.target.value)} spellCheck={false} />
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ===== Integrations (แยก ระบบดูแลให้ vs เชื่อมบัญชีคุณเอง · เก็บ secret ปลอดภัย per-workspace) ===== */}
+      <Integrations wsId={wsId ?? null} />
 
       {/* ===== HRD Skill Plan ===== */}
       {(() => {
