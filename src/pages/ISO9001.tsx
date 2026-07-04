@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { AppData, ISO9001Data, ISOClauseCheck, ISOStatus, Nonconformity, ISODocument, InternalAudit } from '../types';
+import ExpertEdge from '../components/ExpertEdge';
 
 interface Props {
   data: AppData;
@@ -130,6 +131,8 @@ export default function ISO9001({ data, onUpdate }: Props) {
           </span>
         </div>
       </div>
+
+      <ExpertEdge />
 
       {/* Tabs */}
       <div className="iso-tabs">

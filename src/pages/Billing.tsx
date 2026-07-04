@@ -4,6 +4,7 @@ import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import ExpertEdge from '../components/ExpertEdge';
 
 function addDays(iso: string, n: number): string {
   const d = new Date(iso);
@@ -318,6 +319,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
           <span className="bill-coupon-note"> (จาก “{data.coupon.reason}”) — แจ้งแอดมินตอนชำระเพื่อรับส่วนลด</span>
         </div>
       )}
+      <ExpertEdge compact />
       <div className="page-header">
         <div className="page-title">แพ็กเกจ & การสมัครสมาชิก</div>
         <div className="page-meta">
