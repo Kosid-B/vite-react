@@ -4770,3 +4770,23 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ops-plan{ background:#7c3aed22; color:#c4b5fd; border-radius:6px; padding:2px 8px; font-size:11.5px; font-weight:600; }
 .ops-pos{ color:#22c55e; }
 .ops-neg{ color:#ef4444; }
+
+/* ===== CEO รายงานบอร์ด (Board Report) ===== */
+.ai-panel.brd{ border-color:#7c3aed55; }
+.brd-count{ margin-left:auto; background:#7c3aed22; color:#c4b5fd; border-radius:999px; padding:2px 10px; font-size:12px; font-weight:600; }
+.brd-sub{ color:var(--muted,#94a3b8); font-size:12.5px; margin:2px 0 12px; }
+.brd-groups{ display:flex; flex-direction:column; gap:10px; }
+.brd-group{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:10px; padding:10px 12px; }
+.brd-role{ font-weight:700; font-size:13.5px; }
+.brd-role span{ opacity:.7; font-weight:500; }
+.brd-tasks{ margin:6px 0 0; padding-left:16px; }
+.brd-tasks li{ font-size:12.5px; margin:3px 0; line-height:1.45; }
+.brd-t-title{ font-weight:600; }
+.brd-t-out{ color:var(--muted,#94a3b8); }
+.brd-summary{ margin:12px 0 10px; font-size:12.5px; color:#a5b4fc; font-weight:600; }
+.brd-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.brd-btn{ background:#7c3aed; color:#fff; border:0; border-radius:8px; padding:9px 14px; font-weight:600; cursor:pointer; font-size:13px; }
+.brd-btn.approve{ background:#22c55e; }
+.brd-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); }
+.brd-btn:disabled{ opacity:.5; cursor:default; }
+.brd-msg{ margin-top:10px; font-size:13px; color:#a5b4fc; }
