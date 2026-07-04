@@ -497,6 +497,7 @@ export const DEFAULT_DATA: AppData = {
     { id: 'vr-data', resource: 'เรา · เทมเพลต + คลังข้อมูลผลลัพธ์ SME ไทย (data/network effect)', note: 'ยิ่งใช้ยิ่งฉลาดเฉพาะตลาดไทย ลอกยาก · จัดองค์กรเก็บเกี่ยวแล้วผ่านตลาด /b + การค้าระหว่างเมือง + GA4 cohort (มูลค่าโตตาม adoption)', v: true, r: true, i: true, o: true },
     { id: 'vr-eco', resource: 'เรา · Ecosystem + Network (ตลาด /b + RFQ B2B + การค้าระหว่างเมือง)', note: 'network effect เมื่อ liquidity โต = ลอกยาก · ระบบครบแล้ว (matching agent/RFQ/settlement) เก็บเกี่ยวตามจำนวนร้านจริง', v: true, r: true, i: true, o: true },
     { id: 'vr-trust', resource: 'เรา · แบรนด์ 20 ปี + ความเชื่อใจ + PDPA + ซัพพอร์ตภาษาไทย', note: 'ชื่อเสียงสะสม 20 ปี ลอกไม่ได้ · surface ผ่าน Expert Edge → หายากและน่าเชื่อถือกับกลุ่มจ่ายเงิน (SME/อุตสาหกรรม)', v: true, r: true, i: true, o: true },
+    { id: 'vr-agentic', resource: 'เรา · AI-Agentic Ecosystem — CEO เลือก Skill พัฒนาธุรกิจเอง + Marketplace จับคู่/ค้าขายด้วย agent', note: 'ไม่ใช่แค่แชตบอต — agent ตัดสินใจ/ดำเนินการในระบบจริง (เลือก skill ตามกลยุทธ์, จับคู่ตลาด, ปิดดีลระหว่างเมือง) ผูกกับข้อมูล+ความเชี่ยวชาญเฉพาะตลาดไทย = คู่แข่งลอกทั้งระบบตามไม่ทัน', v: true, r: true, i: true, o: true },
     { id: 'vr-base', resource: 'ฐาน · เฟรมเวิร์ก multi-agent + Managed hosting (Zero-DevOps)', note: 'เทคฐานเป็น commodity (CrewAI/AutoGen/MetaGPT, Vercel/Replit) — ไม่ใช่จุดต่าง แต่จำเป็น (table stakes)', v: true, r: false, i: false, o: false },
   ],
   marketplace: {
