@@ -138,6 +138,15 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <span className="nav-dot" />
         </button>
 
+        <button className={`nav-item ${activePage === 'citytrade' ? 'active' : ''}`} onClick={() => onNavigate('citytrade')}
+          title="การค้าระหว่างเมืองธุรกิจ — CEO+CMO จับคู่ดีลอัตโนมัติ บอร์ดกำกับ">
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M7 8h10M7 8l3-3M7 8l3 3m7 5H7m10 0l-3 3m3-3l-3-3" />
+          </svg>
+          🤝 การค้าระหว่างเมือง
+          <span className="nav-dot" />
+        </button>
+
         {toolsOpen && (
           <div className="nav-sub">
             <div className="nav-label">เครื่องมือ</div>
