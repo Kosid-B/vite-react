@@ -50,6 +50,57 @@ body {
   top: 0; left: 0; bottom: 0;
   overflow-y: auto;
   z-index: 100;
+  transition: width .2s ease;
+}
+.sidebar-collapse { display: none; position: absolute; top: 14px; right: 14px; width: 26px; height: 26px; border: none; background: rgba(255,255,255,.08); color: rgba(255,255,255,.6); border-radius: 6px; cursor: pointer; align-items: center; justify-content: center; line-height: 1; transition: background .15s, color .15s; }
+.sidebar-collapse:hover { background: rgba(255,255,255,.18); color: #fff; }
+.sidebar-collapse svg { transition: transform .2s ease; }
+
+/* ===== ยุบแถบ Nav เข้าซ้ายเมื่อไม่ใช้งาน (desktop) — hover เพื่อขยายชั่วคราว ===== */
+@media (min-width: 769px) {
+  .sidebar-collapse { display: flex; }
+
+  .sidebar.collapsed { width: 64px; }
+  .main.nav-collapsed { margin-left: 64px; }
+
+  /* สถานะยุบ: โชว์เฉพาะไอคอน */
+  .sidebar.collapsed .brand-serif,
+  .sidebar.collapsed .brand-sub,
+  .sidebar.collapsed .sidebar-plan-badge,
+  .sidebar.collapsed .ws-switcher,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .nav-dot,
+  .sidebar.collapsed .nav-caret,
+  .sidebar.collapsed .nav-sub,
+  .sidebar.collapsed .sidebar-footer,
+  .sidebar.collapsed .sidebar-account,
+  .sidebar.collapsed .sidebar-company { display: none; }
+  .sidebar.collapsed .sidebar-brand { padding: 14px 8px; min-height: 52px; }
+  .sidebar.collapsed .sidebar-collapse { right: 50%; transform: translateX(50%); }
+  .sidebar.collapsed .sidebar-collapse svg { transform: rotate(180deg); }
+  .sidebar.collapsed .nav-section { padding: 8px 8px; }
+  .sidebar.collapsed .nav-item { font-size: 0; justify-content: center; gap: 0; padding: 11px 0; }
+  .sidebar.collapsed .nav-parent > .nav-item { padding-right: 0; }
+  .sidebar.collapsed .nav-ico { width: 20px; height: 20px; opacity: .85; }
+
+  /* peek: เลื่อนเมาส์เพื่อขยายชั่วคราว (overlay) */
+  .sidebar.collapsed:hover { width: 230px; box-shadow: 6px 0 24px rgba(0,0,0,.35); }
+  .sidebar.collapsed:hover .brand-serif,
+  .sidebar.collapsed:hover .brand-sub,
+  .sidebar.collapsed:hover .sidebar-plan-badge,
+  .sidebar.collapsed:hover .nav-label,
+  .sidebar.collapsed:hover .nav-caret,
+  .sidebar.collapsed:hover .sidebar-footer,
+  .sidebar.collapsed:hover .sidebar-account,
+  .sidebar.collapsed:hover .sidebar-company { display: block; }
+  .sidebar.collapsed:hover .ws-switcher { display: flex; }
+  .sidebar.collapsed:hover .nav-item.active .nav-dot { display: block; }
+  .sidebar.collapsed:hover .sidebar-brand { padding: 28px 24px 20px; }
+  .sidebar.collapsed:hover .sidebar-collapse { right: 14px; transform: none; }
+  .sidebar.collapsed:hover .nav-section { padding: 16px 12px 8px; }
+  .sidebar.collapsed:hover .nav-item { font-size: 13px; justify-content: flex-start; gap: 12px; padding: 11px 12px; }
+  .sidebar.collapsed:hover .nav-parent > .nav-item { padding-right: 40px; }
+  .sidebar.collapsed:hover .nav-ico { width: 16px; height: 16px; opacity: .7; }
 }
 .sidebar-brand {
   padding: 28px 24px 20px;

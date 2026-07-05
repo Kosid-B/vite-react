@@ -20,6 +20,8 @@ interface Props {
   onSwitchWs?: (id: string) => void;
   onCreateWs?: (name: string) => void;
   data?: AppData;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 // เครื่องมือ — sub-menu ของ บริษัท AI
@@ -49,7 +51,7 @@ const TOOL_ITEMS: { id: PageId; label: string; icon: string; desc: string }[] = 
 ];
 const TOOL_PAGE_IDS = TOOL_ITEMS.map(t => t.id);
 
-export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs, data }: Props) {
+export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs, data, collapsed, onToggleCollapse }: Props) {
   const pct = totalActions > 0 ? Math.round((doneCount / totalActions) * 100) : 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const locked = (page: PageId) => !!(data && PAGE_MIN_PLAN[page] && !canAccess(data, page));
@@ -69,11 +71,19 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
   }, [activePage]);
 
   return (
-    <nav className={`sidebar${isOpen ? ' open' : ''}`}>
+    <nav className={`sidebar${isOpen ? ' open' : ''}${collapsed ? ' collapsed' : ''}`}>
       <div className="sidebar-brand">
         <div className="brand-serif">{BRAND.product}</div>
         <div className="brand-sub">{BRAND.tagline}</div>
         <button className="sidebar-close" onClick={onClose} aria-label="ปิดเมนู">×</button>
+        {onToggleCollapse && (
+          <button className="sidebar-collapse" onClick={onToggleCollapse}
+            aria-label={collapsed ? 'ขยายเมนู' : 'ยุบเมนู'} title={collapsed ? 'ขยายเมนู' : 'ยุบเมนู'}>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
 
         {data && (() => {
           const label = planLabel(data);

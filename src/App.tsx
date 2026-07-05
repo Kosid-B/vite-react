@@ -156,7 +156,13 @@ export default function App() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [navCollapsed, setNavCollapsed] = useState(() => localStorage.getItem('ceo_ai_nav_collapsed') === '1');
   const [showBadge, setShowBadge] = useState(false);
+  const toggleNavCollapse = () => setNavCollapsed(v => {
+    const next = !v;
+    try { localStorage.setItem('ceo_ai_nav_collapsed', next ? '1' : '0'); } catch { /* noop */ }
+    return next;
+  });
   const [showAuth, setShowAuth] = useState(false);
   const [seenLanding, setSeenLanding] = useState(() => !!localStorage.getItem('ceo_ai_seen'));
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -386,9 +392,11 @@ export default function App() {
         onSwitchWs={setActiveWs}
         onCreateWs={handleCreateWorkspace}
         data={data}
+        collapsed={navCollapsed}
+        onToggleCollapse={toggleNavCollapse}
       />
 
-      <main className="main">
+      <main className={`main${navCollapsed ? ' nav-collapsed' : ''}`}>
         <Suspense fallback={<div className="page-loading" />}>
         {activePage === 'dashboard' && <Dashboard data={data} onNavigate={setActivePage} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'journey' && (
