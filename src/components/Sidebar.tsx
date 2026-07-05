@@ -3,6 +3,7 @@ import type { AppData, PageId } from '../types';
 import type { Workspace } from '../lib/workspaces';
 import { BRAND, COMPANY, isAdminEmail } from '../config';
 import { canAccess, planLabel, PLAN_COLOR, PAGE_MIN_PLAN } from '../lib/access';
+import MfaSetup from './MfaSetup';
 
 interface Props {
   activePage: PageId;
@@ -293,6 +294,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
         {onSignOut && (
           <div className="sidebar-account">
             <div className="sidebar-account-email" title={userEmail ?? ''}>{userEmail ?? 'บัญชีของฉัน'}</div>
+            <MfaSetup />
             <button className="sidebar-signout" onClick={onSignOut}>ออกจากระบบ</button>
           </div>
         )}
