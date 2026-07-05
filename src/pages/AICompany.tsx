@@ -19,6 +19,7 @@ import { DEFAULT_DATA } from '../data';
 import { cfoReportText, cfoKpis } from '../lib/cfoReport';
 import { segmentationInstruction, shouldRunWeekly, weekTag } from '../lib/segmentation';
 import { clvSummary } from '../lib/clv';
+import { marketInsightInstruction, insightHeadline } from '../lib/marketInsightTH';
 import { cLevelAgents, shouldRunCLevel, weeklyInstruction } from '../lib/weeklyReports';
 import FinanceInput from '../components/FinanceInput';
 import SkillInvestmentPlan from '../components/SkillInvestmentPlan';
@@ -287,6 +288,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [cfoShown, setCfoShown] = useState(false);
   const [csuiteMsg, setCsuiteMsg] = useState<string | null>(null);
   const [cmoRunning, setCmoRunning] = useState(false);
+  const [cmoInsightRunning, setCmoInsightRunning] = useState(false);
   const [cLevelRunning, setCLevelRunning] = useState(false);
   const [cLevelMsg, setCLevelMsg] = useState<string | null>(null);
   const [hrdPlanningSkills, setHrdPlanningSkills] = useState(false);
@@ -1317,6 +1319,37 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c.agents.length]);
 
+  /* ----- CMO หาข้อมูลตลาดไทย (ประชากร/Gen/พื้นที่) → กลยุทธ์เสนอ CEO → บอร์ด ----- */
+  const runCmoInsight = async () => {
+    if (!supabase || cmoInsightRunning) return;
+    const cmo = c.agents.find(a => /cmo|market|ตลาด/i.test(a.role));
+    if (!cmo) { setCsuiteMsg('⚠️ ยังไม่มีตำแหน่ง CMO — ให้ CEO จัดผู้รับผิดชอบก่อน'); return; }
+    setCmoInsightRunning(true); setCsuiteMsg('CMO กำลังหาข้อมูลตลาดไทย + จัดทำกลยุทธ์เสนอ CEO…');
+    try {
+      trackAiCall();
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: cmo.role, name: cmo.name, mandate: cmo.mandate, model: cmo.model,
+          title: 'ข้อมูลตลาดไทยเชิงกลยุทธ์ (เสนอ CEO → บอร์ด)',
+          detail: marketInsightInstruction(data),
+          goal: c.goal, industry: c.industry, companyName: c.name, orgContext: [],
+          useWebSearch: canWebSearch, searchQuery: `${c.industry} ตลาดไทย พฤติกรรมผู้บริโภค เทรนด์ ${new Date().getFullYear() + 543}`,
+        },
+      });
+      if (error) throw error;
+      onUpdate({ ...data, cmoInsight: {
+        analysis: res?.output ?? '', webUsed: !!res?.webSearchUsed, updatedAt: nowTime(), weekTag: weekTag(),
+      } });
+      setCsuiteMsg(`✅ CMO จัดทำข้อมูลตลาดไทยเสร็จ — พร้อมให้ CEO เสนอบอร์ด${res?.webSearchUsed ? ' (ดึงข้อมูลจริง 🌐)' : ''}`);
+      setFeed(prev => [
+        { id: ++counter.current, time: nowTime(), text: `CMO ${cmo.name} หาข้อมูลตลาดไทย → เสนอ CEO พิจารณาเสนอบอร์ด`, color: cmo.color },
+        ...prev,
+      ].slice(0, 40));
+    } catch (e) {
+      setCsuiteMsg('✕ หาข้อมูลไม่สำเร็จ: ' + (e as Error).message);
+    } finally { setCmoInsightRunning(false); }
+  };
+
   /* ----- C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO (ทุกวันศุกร์) ----- */
   const runCLevelWeekly = async (auto = false) => {
     if (!supabase || cLevelRunning) return;
@@ -1647,6 +1680,24 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                   <pre className="cs-report">{data.cmoMarket.analysis}</pre>
                 </>
               : <div className="cs-empty">ยังไม่มีผลวิเคราะห์ — กดปุ่มด้านบน หรือรอรอบวันศุกร์</div>}
+
+            {/* CMO หาข้อมูลตลาดไทย → เสนอ CEO → บอร์ด */}
+            <div className="cs-insight-hd">🇹🇭 ข้อมูลตลาดไทย → เสนอ CEO พิจารณาเสนอบอร์ด</div>
+            <div className="cs-sub">อ้างอิงทะเบียนราษฎร์ ธ.ค. 2568 (ประชากร/Gen/จังหวัดกำลังซื้อ/expat) + ค้นตลาดจริง → กลยุทธ์เชิงพื้นที่รายเจน</div>
+            <div className="cs-clv"><span>📊 {insightHeadline()}</span></div>
+            {isSupabaseEnabled ? (
+              <div className="cs-actions">
+                <button className="cs-btn" onClick={runCmoInsight} disabled={cmoInsightRunning}>
+                  {cmoInsightRunning ? 'CMO กำลังหาข้อมูล…' : 'ให้ CMO หาข้อมูลตลาดไทยตอนนี้'}
+                </button>
+              </div>
+            ) : <div className="cs-empty">เปิด Supabase เพื่อให้ CMO ดึงข้อมูลตลาดจริง</div>}
+            {data.cmoInsight?.analysis
+              ? <>
+                  <div className="cs-meta">อัปเดต {data.cmoInsight.updatedAt} · {data.cmoInsight.weekTag}{data.cmoInsight.webUsed ? ' · 🌐 ข้อมูลตลาดจริง' : ''}</div>
+                  <pre className="cs-report">{data.cmoInsight.analysis}</pre>
+                </>
+              : <div className="cs-empty">ยังไม่มีรายงาน — กดปุ่มด้านบนให้ CMO หาข้อมูลตลาดไทยเสนอ CEO</div>}
           </div>
         </div>
       </section>

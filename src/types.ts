@@ -491,6 +491,8 @@ export interface AppData {
   cmoMarket?: { analysis: string; webUsed: boolean; updatedAt: string; weekTag: string };
   // C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO ทุกวันศุกร์
   cLevelReports?: { weekTag: string; items: { agentId: string; role: string; name: string; color?: string; analysis: string; at: string }[] };
+  // CMO หาข้อมูลตลาดไทย (ประชากร/Gen/พื้นที่) → กลยุทธ์เสนอ CEO พิจารณาเสนอบอร์ด
+  cmoInsight?: { analysis: string; webUsed: boolean; updatedAt: string; weekTag: string };
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */
