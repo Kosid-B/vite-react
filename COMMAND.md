@@ -105,26 +105,31 @@ npx wrangler secret put ANTHROPIC_API_KEY
 
 ## Supabase Edge Functions
 
+> ⚠️ **แก้ไข 2026-07-03**: project ref เดิมของ section นี้ (`rsjbqmnvocvtveelselj`) ผิด — ไม่ใช่ production
+> แก้เป็น `waigsnxhrlwtiotspaim` (ยืนยันแล้ว ดู [docs/isms/environment-map.md](docs/isms/environment-map.md))
+> **ยังไม่ยืนยัน** ว่า Edge Function ทั้ง 6 ตัวด้านล่าง deploy อยู่จริงบน `waigsnxhrlwtiotspaim` — เช็ค
+> dashboard ก่อนรันจริง (`supabase functions list --project-ref waigsnxhrlwtiotspaim`)
+
 ```bash
 # deploy Edge Function ทีละตัว
-npx supabase functions deploy ai-assist      --project-ref rsjbqmnvocvtveelselj
-npx supabase functions deploy ai-plan        --project-ref rsjbqmnvocvtveelselj
-npx supabase functions deploy agent-run      --project-ref rsjbqmnvocvtveelselj
-npx supabase functions deploy generate-badge --project-ref rsjbqmnvocvtveelselj
-npx supabase functions deploy billing-cron   --project-ref rsjbqmnvocvtveelselj
-npx supabase functions deploy promptpay-webhook --project-ref rsjbqmnvocvtveelselj
+npx supabase functions deploy ai-assist      --project-ref waigsnxhrlwtiotspaim
+npx supabase functions deploy ai-plan        --project-ref waigsnxhrlwtiotspaim
+npx supabase functions deploy agent-run      --project-ref waigsnxhrlwtiotspaim
+npx supabase functions deploy generate-badge --project-ref waigsnxhrlwtiotspaim
+npx supabase functions deploy billing-cron   --project-ref waigsnxhrlwtiotspaim
+npx supabase functions deploy promptpay-webhook --project-ref waigsnxhrlwtiotspaim
 
 # deploy ทุกตัวพร้อมกัน
-npx supabase functions deploy --project-ref rsjbqmnvocvtveelselj
+npx supabase functions deploy --project-ref waigsnxhrlwtiotspaim
 
 # ตั้ง secret ใน Edge Functions
-npx supabase secrets set ANTHROPIC_API_KEY=<key> --project-ref rsjbqmnvocvtveelselj
-npx supabase secrets set RESEND_API_KEY=<key>    --project-ref rsjbqmnvocvtveelselj
-npx supabase secrets set SERPER_API_KEY=<key>    --project-ref rsjbqmnvocvtveelselj
-npx supabase secrets set CRON_SECRET=<key>       --project-ref rsjbqmnvocvtveelselj
+npx supabase secrets set ANTHROPIC_API_KEY=<key> --project-ref waigsnxhrlwtiotspaim
+npx supabase secrets set RESEND_API_KEY=<key>    --project-ref waigsnxhrlwtiotspaim
+npx supabase secrets set SERPER_API_KEY=<key>    --project-ref waigsnxhrlwtiotspaim
+npx supabase secrets set CRON_SECRET=<key>       --project-ref waigsnxhrlwtiotspaim
 
 # รัน migration
-npx supabase db push --project-ref rsjbqmnvocvtveelselj
+npx supabase db push --project-ref waigsnxhrlwtiotspaim
 ```
 
 ### Migrations (applied บน production ครบแล้วทั้ง 0001–0012)
@@ -193,8 +198,8 @@ GROUP BY skill_id, pay_method ORDER BY SUM(price) DESC;
 | Production | https://ceoaithailand.org |
 | Viral Landing | https://ceoaithailand.org/start |
 | หน้าร้านสาธารณะ | https://ceoaithailand.org/b/<slug> |
-| Supabase Dashboard | https://supabase.com/dashboard/project/rsjbqmnvocvtveelselj |
-| Supabase Auth Config | https://supabase.com/dashboard/project/rsjbqmnvocvtveelselj/auth/url-configuration |
+| Supabase Dashboard | https://supabase.com/dashboard/project/waigsnxhrlwtiotspaim |
+| Supabase Auth Config | https://supabase.com/dashboard/project/waigsnxhrlwtiotspaim/auth/url-configuration |
 | Cloudflare Workers | https://dash.cloudflare.com → Workers → ceo-ai-thailand |
 | Resend Domains | https://resend.com/domains/7fc8565a-f891-45ae-b6e8-5e50a39fcd63 |
 | GitHub Repo | https://github.com/Kosid-B/vite-react |

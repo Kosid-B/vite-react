@@ -21,14 +21,18 @@ Schema              : migrations/0016_tis_automate.sql + 0017_tis_rls_fixes.sql 
                       13 ตาราง (organizations/standards/clauses/projects/requirements/kanban/
                       documents/validations/marketing_events/…) + 5 enums + RLS ครบ
 หมายเหตุ            : 0016/0017 อยู่ใน repo นี้เพื่อเก็บประวัติ แต่ apply กับ project TIS เท่านั้น
-                      (ห้าม apply กับ rsjbqmnvocvtveelselj) · frontend/subdomain ยังไม่สร้าง
+                      (ห้าม apply กับ waigsnxhrlwtiotspaim หรือ rsjbqmnvocvtveelselj) · frontend/subdomain ยังไม่สร้าง
 ```
 
 ## Production Credentials
+> ⚠️ **แก้ไข 2026-07-05**: ยืนยันโดยเจ้าของว่า production ตัวจริง = `rsjbqmnvocvtveelselj`
+> (project นี้มี Edge Functions ai-assist / ai-plan / agent-run deploy ครบและ ACTIVE — ตรวจผ่าน Supabase API)
+> `waigsnxhrlwtiotspaim` = ค่าเดิมที่ผิด (เข้าถึงไม่ได้จากบัญชีเจ้าของ) เคยทำให้ "หน้าจอแชตค้าง" เพราะแอปยิงไปผิด project — เลิกใช้
 ```
 Supabase Project ID : rsjbqmnvocvtveelselj
 Supabase URL        : https://rsjbqmnvocvtveelselj.supabase.co
 Anon Key            : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzamJxbW52b2N2dHZlZWxzZWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NDUyODEsImV4cCI6MjA5ODQyMTI4MX0.a0AkDAxtDMuit-xv5dk7wsp9l_uEKCwiysVuGlXbT4I
+Publishable Key     : sb_publishable_UCZESix8lLZ4yDU0hEZMkQ_RL-Lk-te
 Custom Domain       : ceoaithailand.org
 Admin Email         : support@b-tctraining.com
 GA4                 : G-CHJ99RY1Q1 (ใส่ใน index.html แล้ว)
@@ -120,19 +124,23 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 ```
 
 ## Secrets / Environment Map (R11)
+> รายละเอียดเต็ม + หลักฐาน + action items: [docs/isms/environment-map.md](docs/isms/environment-map.md)
 ```
 ┌─ CEO AI Thailand (production หลัก) ──────────────────────────────
-│ Supabase project  : rsjbqmnvocvtveelselj
-│ GitHub Actions    : VITE_SUPABASE_URL ✅, VITE_SUPABASE_ANON_KEY ✅ (ใช้โดย deploy.yml legacy)
-│ Cloudflare Worker : ANTHROPIC_API_KEY (vars ใน wrangler/dashboard — ใช้โดย CeoAiAgent DO)
-│ Supabase Fn       : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅
+│ Supabase project  : rsjbqmnvocvtveelselj  (org: vercel_icfg_...)  ✅ ยืนยัน 2026-07-05
+│ GitHub Actions    : VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (⚠️ แก้ให้ชี้ rsjbqmnvocvtveelselj แล้ว rebuild + deploy)
+│ Cloudflare Worker : ANTHROPIC_API_KEY (secret ผ่าน `wrangler secret put` — ใช้โดย CeoAiAgent DO)
+│ Supabase Fn       : ANTHROPIC_API_KEY, CRON_SECRET, SERPER_API_KEY, RESEND_API_KEY (ตั้งบน rsjbqmnvocvtveelselj)
 │ Pending           : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
+├─ waigsnxhrlwtiotspaim — ค่าเดิมที่ผิด · เข้าถึงไม่ได้ ────────────
+│ ⚠️ ไม่ใช่ production — เลิกใช้ · แอปเคยชี้มาที่นี่ทำให้แชตค้าง (ยิงไป project ที่ไม่มี Edge Function)
 ├─ TIS Automate (แยก) ─────────────────────────────────────────────
 │ Supabase project  : galtbbkcddugnsfkgyqm — ไม่มี secret ฝั่ง client (publishable key ฝังได้)
 ├─ Dev/local ──────────────────────────────────────────────────────
-│ ไม่มี .env — local mode ใช้ localStorage · Vercel PR preview build โดยไม่มี VITE_SUPABASE_*
+│ ไม่มี .env — local mode ใช้ localStorage · มี .env — ต่อ rsjbqmnvocvtveelselj ตรง (ระวังแก้ข้อมูล prod จริง)
 └──────────────────────────────────────────────────────────────────
 กติกา: ห้ามใช้ secret ข้ามกล่อง · ห้าม commit .env · anon/publishable key = public โดยดีไซน์
+      ห้ามพิมพ์ project ref ในเอกสารใหม่โดยไม่ cross-check กับ environment-map.md ก่อน
 ```
 
 ## Dev Commands
