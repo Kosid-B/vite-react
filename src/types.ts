@@ -495,6 +495,8 @@ export interface AppData {
   cmoInsight?: { analysis: string; webUsed: boolean; updatedAt: string; weekTag: string };
   // CMO ตั้งทีมขาย (Sales) → แผนดำเนินงานทีมขายจาก pipeline จริง
   cmoSales?: { plan: string; webUsed: boolean; updatedAt: string };
+  // CMO สร้าง Personal Brand ของบริษัท (persona/voice/pillars/ช่องทาง) — ปรับด้วย agent
+  cmoBrand?: { kit: string; webUsed: boolean; updatedAt: string };
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */

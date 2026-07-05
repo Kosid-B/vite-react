@@ -24,6 +24,8 @@ import { SALES_TEAM, salesPipeline, salesTeamInstruction, salesPlanText } from '
 import { cLevelAgents, shouldRunCLevel, weeklyInstruction } from '../lib/weeklyReports';
 import FinanceInput from '../components/FinanceInput';
 import SkillInvestmentPlan from '../components/SkillInvestmentPlan';
+import PersonalBrand from '../components/PersonalBrand';
+import { brandInstruction } from '../lib/personalBrand';
 
 // ---- Org Chart Node (recursive) ----
 interface OcNodeProps {
@@ -291,6 +293,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [cmoRunning, setCmoRunning] = useState(false);
   const [cmoInsightRunning, setCmoInsightRunning] = useState(false);
   const [cmoSalesRunning, setCmoSalesRunning] = useState(false);
+  const [cmoBrandRunning, setCmoBrandRunning] = useState(false);
   const [cLevelRunning, setCLevelRunning] = useState(false);
   const [cLevelMsg, setCLevelMsg] = useState<string | null>(null);
   const [hrdPlanningSkills, setHrdPlanningSkills] = useState(false);
@@ -1405,6 +1408,35 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     } finally { setCmoSalesRunning(false); }
   };
 
+  /* ----- CMO ปรับ Personal Brand ด้วย agent (ค้นเทรนด์จริง) ----- */
+  const runCmoBrand = async () => {
+    if (!supabase || cmoBrandRunning) return;
+    const cmo = c.agents.find(a => /cmo|market|ตลาด/i.test(a.role)) ?? c.agents[0];
+    if (!cmo) { setCsuiteMsg('⚠️ ยังไม่มีตำแหน่ง CMO — ให้ CEO จัดผู้รับผิดชอบก่อน'); return; }
+    setCmoBrandRunning(true); setCsuiteMsg('CMO กำลังสร้าง/ปรับ Personal Brand…');
+    try {
+      trackAiCall();
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: cmo.role, name: cmo.name, mandate: cmo.mandate, model: cmo.model,
+          title: 'สร้าง/ปรับ Personal Brand ของบริษัท',
+          detail: brandInstruction(data),
+          goal: c.goal, industry: c.industry, companyName: c.name, orgContext: [],
+          useWebSearch: canWebSearch, searchQuery: `${c.industry} personal brand คอนเทนต์ เทรนด์ ${new Date().getFullYear() + 543}`,
+        },
+      });
+      if (error) throw error;
+      onUpdate({ ...data, cmoBrand: { kit: res?.output ?? '', webUsed: !!res?.webSearchUsed, updatedAt: nowTime() } });
+      setCsuiteMsg(`✅ CMO ปรับ Personal Brand เสร็จ${res?.webSearchUsed ? ' (อิงเทรนด์จริง 🌐)' : ''}`);
+      setFeed(prev => [
+        { id: ++counter.current, time: nowTime(), text: `CMO ${cmo.name} สร้าง/ปรับ Personal Brand ของบริษัท`, color: cmo.color },
+        ...prev,
+      ].slice(0, 40));
+    } catch (e) {
+      setCsuiteMsg('✕ ปรับแบรนด์ไม่สำเร็จ: ' + (e as Error).message);
+    } finally { setCmoBrandRunning(false); }
+  };
+
   /* ----- C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO (ทุกวันศุกร์) ----- */
   const runCLevelWeekly = async (auto = false) => {
     if (!supabase || cLevelRunning) return;
@@ -1821,6 +1853,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       </section>
 
       <SkillInvestmentPlan data={data} onUpdate={onUpdate} />
+
+      <PersonalBrand data={data} onUpdate={onUpdate} onRefine={runCmoBrand} refining={cmoBrandRunning} supabaseEnabled={isSupabaseEnabled} />
 
       <div className="ai-2col">
         {/* ===== ทีมเอเจนต์ ===== */}
