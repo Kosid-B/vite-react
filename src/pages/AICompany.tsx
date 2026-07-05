@@ -19,6 +19,8 @@ import { DEFAULT_DATA } from '../data';
 import { cfoReportText, cfoKpis } from '../lib/cfoReport';
 import { segmentationInstruction, shouldRunWeekly, weekTag } from '../lib/segmentation';
 import { clvSummary } from '../lib/clv';
+import { marketInsightInstruction, insightHeadline } from '../lib/marketInsightTH';
+import { SALES_TEAM, salesPipeline, salesTeamInstruction, salesPlanText } from '../lib/salesTeam';
 import { cLevelAgents, shouldRunCLevel, weeklyInstruction } from '../lib/weeklyReports';
 import FinanceInput from '../components/FinanceInput';
 import SkillInvestmentPlan from '../components/SkillInvestmentPlan';
@@ -287,6 +289,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [cfoShown, setCfoShown] = useState(false);
   const [csuiteMsg, setCsuiteMsg] = useState<string | null>(null);
   const [cmoRunning, setCmoRunning] = useState(false);
+  const [cmoInsightRunning, setCmoInsightRunning] = useState(false);
+  const [cmoSalesRunning, setCmoSalesRunning] = useState(false);
   const [cLevelRunning, setCLevelRunning] = useState(false);
   const [cLevelMsg, setCLevelMsg] = useState<string | null>(null);
   const [hrdPlanningSkills, setHrdPlanningSkills] = useState(false);
@@ -1317,6 +1321,90 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c.agents.length]);
 
+  /* ----- CMO หาข้อมูลตลาดไทย (ประชากร/Gen/พื้นที่) → กลยุทธ์เสนอ CEO → บอร์ด ----- */
+  const runCmoInsight = async () => {
+    if (!supabase || cmoInsightRunning) return;
+    const cmo = c.agents.find(a => /cmo|market|ตลาด/i.test(a.role));
+    if (!cmo) { setCsuiteMsg('⚠️ ยังไม่มีตำแหน่ง CMO — ให้ CEO จัดผู้รับผิดชอบก่อน'); return; }
+    setCmoInsightRunning(true); setCsuiteMsg('CMO กำลังหาข้อมูลตลาดไทย + จัดทำกลยุทธ์เสนอ CEO…');
+    try {
+      trackAiCall();
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: cmo.role, name: cmo.name, mandate: cmo.mandate, model: cmo.model,
+          title: 'ข้อมูลตลาดไทยเชิงกลยุทธ์ (เสนอ CEO → บอร์ด)',
+          detail: marketInsightInstruction(data),
+          goal: c.goal, industry: c.industry, companyName: c.name, orgContext: [],
+          useWebSearch: canWebSearch, searchQuery: `${c.industry} ตลาดไทย พฤติกรรมผู้บริโภค เทรนด์ ${new Date().getFullYear() + 543}`,
+        },
+      });
+      if (error) throw error;
+      onUpdate({ ...data, cmoInsight: {
+        analysis: res?.output ?? '', webUsed: !!res?.webSearchUsed, updatedAt: nowTime(), weekTag: weekTag(),
+      } });
+      setCsuiteMsg(`✅ CMO จัดทำข้อมูลตลาดไทยเสร็จ — พร้อมให้ CEO เสนอบอร์ด${res?.webSearchUsed ? ' (ดึงข้อมูลจริง 🌐)' : ''}`);
+      setFeed(prev => [
+        { id: ++counter.current, time: nowTime(), text: `CMO ${cmo.name} หาข้อมูลตลาดไทย → เสนอ CEO พิจารณาเสนอบอร์ด`, color: cmo.color },
+        ...prev,
+      ].slice(0, 40));
+    } catch (e) {
+      setCsuiteMsg('✕ หาข้อมูลไม่สำเร็จ: ' + (e as Error).message);
+    } finally { setCmoInsightRunning(false); }
+  };
+
+  /* ----- CMO สร้างทีมขาย: เสนอตำแหน่งขายทั้งชุดผ่าน CMO → CEO → บอร์ด ----- */
+  const buildSalesTeam = () => {
+    const cmo = c.agents.find(a => /cmo|market|ตลาด/i.test(a.role));
+    if (!cmo) { setCsuiteMsg('⚠️ ยังไม่มีตำแหน่ง CMO — ให้ CEO จัดผู้รับผิดชอบก่อน'); return; }
+    const existing = new Set(c.agents.map(a => a.role.toLowerCase()));
+    const toAdd = SALES_TEAM.filter(r => !existing.has(r.role.toLowerCase()));
+    if (toAdd.length === 0) { setCsuiteMsg('ทีมขายครบทุกตำแหน่งแล้ว ✅'); return; }
+    const approvals = toAdd.map((r, i) => ({
+      id: 'hire-sales-' + Date.now().toString(36) + i,
+      agentId: cmo.id,
+      title: `📋 CMO ขอตั้งทีมขาย: ${r.role} — CEO เสนอบอร์ดอนุมัติ`,
+      detail: `บทบาทหน้าที่ (กำหนดโดย CMO ${cmo.name}):\n${r.mandate}\n\nรายงานต่อ: CMO · อนุมัติแล้วระบบสร้าง AI Agent ตำแหน่งนี้ทันที`,
+      impact: JSON.stringify({ type: 'hire', role: r.role, mandate: r.mandate, reportsToRole: cmo.role }),
+      status: 'pending' as const,
+    }));
+    patch({ approvals: [...c.approvals, ...approvals] });
+    setCsuiteMsg(`✅ CMO เสนอตั้งทีมขาย ${toAdd.length} ตำแหน่ง → CEO เสนอบอร์ด (ดูที่กล่องอนุมัติ)`);
+    setFeed(prev => [
+      { id: ++counter.current, time: nowTime(), text: `CMO ${cmo.name} เสนอตั้งทีมขาย ${toAdd.length} ตำแหน่ง — CEO เสนอบอร์ด`, color: cmo.color },
+      ...prev,
+    ].slice(0, 40));
+  };
+
+  /* ----- ให้ทีมขายดำเนินงาน: agent สร้างแผนลงมือจาก pipeline จริง ----- */
+  const runSalesTeam = async () => {
+    if (!supabase || cmoSalesRunning) return;
+    const lead = c.agents.find(a => /sales manager|หัวหน้าขาย/i.test(a.role))
+      ?? c.agents.find(a => /cmo|market|ตลาด/i.test(a.role));
+    if (!lead) { setCsuiteMsg('⚠️ ยังไม่มีหัวหน้าทีมขาย/CMO — ให้ CEO จัดทีมก่อน'); return; }
+    setCmoSalesRunning(true); setCsuiteMsg('ทีมขายกำลังจัดทำแผนดำเนินงานจาก pipeline…');
+    try {
+      trackAiCall();
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: lead.role, name: lead.name, mandate: lead.mandate, model: lead.model,
+          title: 'แผนดำเนินงานทีมขาย (จาก pipeline จริง)',
+          detail: salesTeamInstruction(data),
+          goal: c.goal, industry: c.industry, companyName: c.name, orgContext: [],
+          useWebSearch: false,
+        },
+      });
+      if (error) throw error;
+      onUpdate({ ...data, cmoSales: { plan: res?.output ?? '', webUsed: !!res?.webSearchUsed, updatedAt: nowTime() } });
+      setCsuiteMsg('✅ ทีมขายจัดทำแผนดำเนินงานเสร็จ — เสนอ CMO');
+      setFeed(prev => [
+        { id: ++counter.current, time: nowTime(), text: `ทีมขาย (${lead.role} ${lead.name}) จัดทำแผนดำเนินงานจาก pipeline`, color: lead.color },
+        ...prev,
+      ].slice(0, 40));
+    } catch (e) {
+      setCsuiteMsg('✕ ทีมขายดำเนินงานไม่สำเร็จ: ' + (e as Error).message);
+    } finally { setCmoSalesRunning(false); }
+  };
+
   /* ----- C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO (ทุกวันศุกร์) ----- */
   const runCLevelWeekly = async (auto = false) => {
     if (!supabase || cLevelRunning) return;
@@ -1647,6 +1735,59 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                   <pre className="cs-report">{data.cmoMarket.analysis}</pre>
                 </>
               : <div className="cs-empty">ยังไม่มีผลวิเคราะห์ — กดปุ่มด้านบน หรือรอรอบวันศุกร์</div>}
+
+            {/* CMO หาข้อมูลตลาดไทย → เสนอ CEO → บอร์ด */}
+            <div className="cs-insight-hd">🇹🇭 ข้อมูลตลาดไทย → เสนอ CEO พิจารณาเสนอบอร์ด</div>
+            <div className="cs-sub">อ้างอิงทะเบียนราษฎร์ ธ.ค. 2568 (ประชากร/Gen/จังหวัดกำลังซื้อ/expat) + ค้นตลาดจริง → กลยุทธ์เชิงพื้นที่รายเจน</div>
+            <div className="cs-clv"><span>📊 {insightHeadline()}</span></div>
+            {isSupabaseEnabled ? (
+              <div className="cs-actions">
+                <button className="cs-btn" onClick={runCmoInsight} disabled={cmoInsightRunning}>
+                  {cmoInsightRunning ? 'CMO กำลังหาข้อมูล…' : 'ให้ CMO หาข้อมูลตลาดไทยตอนนี้'}
+                </button>
+              </div>
+            ) : <div className="cs-empty">เปิด Supabase เพื่อให้ CMO ดึงข้อมูลตลาดจริง</div>}
+            {data.cmoInsight?.analysis
+              ? <>
+                  <div className="cs-meta">อัปเดต {data.cmoInsight.updatedAt} · {data.cmoInsight.weekTag}{data.cmoInsight.webUsed ? ' · 🌐 ข้อมูลตลาดจริง' : ''}</div>
+                  <pre className="cs-report">{data.cmoInsight.analysis}</pre>
+                </>
+              : <div className="cs-empty">ยังไม่มีรายงาน — กดปุ่มด้านบนให้ CMO หาข้อมูลตลาดไทยเสนอ CEO</div>}
+
+            {/* CMO สร้างทีมขาย (Sales Team) → เดินงานบน pipeline จริง */}
+            <div className="cs-insight-hd">🧑‍💼 ทีมขาย (Sales Team) — CMO ตั้ง + เดินงาน</div>
+            <div className="cs-sub">CMO ตั้งทีมขาย (Sales Manager · SDR · AE · Sales Ops) เสนอผ่าน CEO → บอร์ด แล้วเดินงานบน Pipeline จริงจากดีลในตลาด</div>
+            {(() => {
+              const p = salesPipeline(data);
+              const hasTeam = SALES_TEAM.some(r => c.agents.some(a => a.role.toLowerCase() === r.role.toLowerCase()));
+              return <>
+                <div className="cs-pipe">
+                  {p.stages.map(s => (
+                    <div key={s.key} className={`cs-pipe-col st-${s.key}`}>
+                      <div className="cs-pipe-top">{s.icon} {s.label}</div>
+                      <div className="cs-pipe-n">{s.count}</div>
+                      <div className="cs-pipe-v">฿{s.value.toLocaleString('th-TH')}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="cs-pipe-sum">Conversion <b>{p.convRate}%</b> · ปิดได้ <b>฿{p.wonValue.toLocaleString('th-TH')}</b> · Forecast ถ่วงน้ำหนัก <b>฿{p.forecast.toLocaleString('th-TH')}</b></div>
+                <div className="cs-actions">
+                  <button className="cs-btn" onClick={buildSalesTeam}>{hasTeam ? 'ทีมขายพร้อมแล้ว · เพิ่มตำแหน่งที่ขาด' : 'CMO สร้างทีมขาย → เสนอบอร์ด'}</button>
+                  {isSupabaseEnabled && (
+                    <button className="cs-btn ghost" onClick={runSalesTeam} disabled={cmoSalesRunning}>
+                      {cmoSalesRunning ? 'ทีมขายกำลังทำแผน…' : 'ให้ทีมขายดำเนินงานตอนนี้'}
+                    </button>
+                  )}
+                  <button className="cs-btn ghost" onClick={async () => { try { await navigator.clipboard.writeText(salesPlanText(data)); setCsuiteMsg('📋 คัดลอกแผนทีมขายแล้ว'); } catch { setCsuiteMsg('คัดลอกไม่สำเร็จ'); } }}>คัดลอกแผน</button>
+                </div>
+              </>;
+            })()}
+            {data.cmoSales?.plan
+              ? <>
+                  <div className="cs-meta">อัปเดต {data.cmoSales.updatedAt}</div>
+                  <pre className="cs-report">{data.cmoSales.plan}</pre>
+                </>
+              : <div className="cs-empty">ยังไม่มีแผนดำเนินงาน — ตั้งทีมขายแล้วกด "ให้ทีมขายดำเนินงาน"</div>}
           </div>
         </div>
       </section>

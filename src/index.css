@@ -4534,6 +4534,28 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   background:var(--white); border:1px solid var(--sand); border-radius:12px; padding:12px 14px; }
 
 .city-profit { color:#22c55e; }
+
+/* ===== แผนผังการพัฒนาสำหรับคู่ค้า (Partner Development Map) ===== */
+.devmap { margin-top:16px; background:var(--white); border:1px solid var(--sand); border-radius:16px; padding:16px 18px; }
+.devmap-hd { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+.devmap-title { font-size:16px; font-weight:800; margin:0 0 4px; }
+.devmap-sub { font-size:12.5px; color:var(--ink3); line-height:1.6; margin:0; max-width:640px; }
+.devmap-toggle { flex-shrink:0; background:var(--ink); color:#fff; border:0; border-radius:10px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer; }
+.devmap-overall { margin:12px 0 6px; font-size:13px; color:var(--ink2); }
+.devmap-safe { color:#0e9f6e; font-weight:700; }
+.devmap-bars { display:flex; gap:10px; align-items:flex-end; overflow-x:auto; padding:8px 2px 4px; }
+.devmap-col { flex:1 1 0; min-width:96px; text-align:center; }
+.devmap-tower-wrap { height:180px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:2px; }
+.devmap-pct { font-size:12px; font-weight:800; color:var(--ink2); font-variant-numeric:tabular-nums; margin-bottom:24px; }
+.devmap-tower { width:52px; min-height:16px; border-radius:8px 8px 0 0;
+  background:linear-gradient(180deg,#6f8bff,#4b63d8); box-shadow:0 4px 14px rgba(75,99,216,.35);
+  display:flex; flex-direction:column-reverse; align-items:center; padding-top:6px; position:relative; transition:height .4s ease; }
+.devmap-roof { position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-size:17px; line-height:1; }
+.devmap-floor { width:70%; height:8px; margin:3px 0; border-radius:2px; background:rgba(255,255,255,.28); }
+.devmap-name { font-size:12.5px; font-weight:700; margin-top:8px; line-height:1.3; }
+.devmap-tier { font-size:12px; color:var(--ink2); font-weight:700; }
+.devmap-blurb { font-size:11.5px; color:var(--ink3); line-height:1.4; margin-top:2px; }
+@media (max-width:640px){ .devmap-bars{ flex-wrap:nowrap; } }
 .city-loss { color:#f87171; }
 
 /* ---- คลังเมือง (Treasury) ---- */
@@ -4830,6 +4852,15 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 
 /* ===== นำเข้าข้อมูลการเงิน (ความลับของ User) ===== */
 .cs-fin-hd{ margin-top:14px; font-weight:700; font-size:13px; color:#e5e7eb; }
+.cs-insight-hd{ margin-top:16px; padding-top:14px; border-top:1px solid var(--card-border,rgba(120,140,220,.16)); font-weight:700; font-size:13px; color:#e5e7eb; }
+.cs-pipe{ display:flex; gap:8px; margin:10px 0 6px; }
+.cs-pipe-col{ flex:1 1 0; min-width:0; background:var(--card,#0b132c); border:1px solid var(--card-border,rgba(120,140,220,.16)); border-radius:10px; padding:8px 6px; text-align:center; }
+.cs-pipe-col.st-closed{ border-color:rgba(34,197,94,.5); }
+.cs-pipe-col.st-cancelled{ opacity:.6; }
+.cs-pipe-top{ font-size:11px; color:var(--text-soft,#9aa6d8); line-height:1.2; }
+.cs-pipe-n{ font-size:20px; font-weight:800; color:#e5e7eb; font-variant-numeric:tabular-nums; }
+.cs-pipe-v{ font-size:11px; color:var(--text-soft,#9aa6d8); font-variant-numeric:tabular-nums; }
+.cs-pipe-sum{ font-size:12.5px; color:var(--text-soft,#9aa6d8); margin-bottom:8px; }
 .finx{ margin-top:8px; }
 .finx-lock{ font-size:11.5px; color:#fbbf24; background:#3a2d0a55; border:1px solid #7c5e1a55; border-radius:8px; padding:8px 10px; line-height:1.5; }
 .finx-sum{ font-size:12.5px; color:var(--muted,#94a3b8); margin:9px 0; }
@@ -4875,6 +4906,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .sip-promo{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:9px; padding:9px 11px; font-size:12.5px; }
 .sip-promo b{ display:block; } .sip-promo span{ color:var(--muted,#94a3b8); }
 .sip-edge{ margin:6px 0 0; padding-left:2px; list-style:none; } .sip-edge li{ font-size:12.5px; margin:4px 0; color:#a7f3d0; }
+.sip-ob-pick{ display:inline-block; font-size:12.5px; color:var(--text,#e5e7eb); margin:2px 0 10px; }
+.sip-ob-pick select{ background:var(--card,#0b132c); color:var(--text,#e5e7eb); border:1px solid var(--border,#334155); border-radius:8px; padding:6px 10px; font-size:12.5px; }
 .sip-actions{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
 .sip-btn{ background:#f59e0b; color:#1a1206; border:0; border-radius:8px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer; }
 .sip-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); }

@@ -142,3 +142,58 @@ export function cityStats(d: AppData) {
     buildings, built, total: buildings.length, floors,
   };
 }
+
+/* ===== แผนผังการพัฒนาสำหรับคู่ค้า (Partner Development Map) =====
+ * แปลง "ระดับอาคาร" เป็นภาพการพัฒนาแต่ละด้านของธุรกิจ (ความสูง/รูปทรง) เพื่อให้คู่ค้าเห็นภาพ
+ * ความก้าวหน้า โดย "ไม่เปิดเผยตัวเลขลับ" (จำนวนเงิน/จำนวนดีล/จำนวนเอเจนต์ที่แท้จริง) —
+ * แสดงเป็นระดับ (tier) + สัดส่วนการพัฒนา % แทน ตัวเลขจริงเก็บเป็นความลับของบริษัท */
+
+export interface DevDimension {
+  id: string;
+  icon: string;
+  name: string;           // ชื่อด้านธุรกิจ
+  pct: number;            // 0..100 = ความสูงของตึก (สัดส่วนการพัฒนา ไม่ใช่ตัวเลขลับ)
+  tier: string;           // ป้ายระดับ (proxy) เช่น เริ่มต้น/กำลังโต/แข็งแรง/ผู้นำ
+  blurb: string;          // คำอธิบายเชิงคุณภาพ (ไม่มีตัวเลขลับ)
+}
+
+/** ป้ายระดับจากสัดส่วน % (proxy — ไม่ผูกกับตัวเลขลับ) */
+function tierFromPct(pct: number): string {
+  if (pct >= 85) return '👑 ผู้นำ';
+  if (pct >= 60) return '🏙️ แข็งแรง';
+  if (pct >= 35) return '🌆 กำลังโต';
+  if (pct > 0) return '🏗️ เริ่มต้น';
+  return '🌱 ตั้งไข่';
+}
+
+/** รวมระดับอาคารในกลุ่ม → สัดส่วนการพัฒนา 0..100 (ปัดเป็นขั้นละ 5 กัน fingerprint ตัวเลขลับ) */
+function groupPct(buildings: CityBuilding[], ids: string[]): number {
+  const grp = buildings.filter(b => ids.includes(b.id));
+  const lv = grp.reduce((s, b) => s + b.level, 0);
+  const mx = grp.reduce((s, b) => s + b.max, 0) || 1;
+  return Math.round((lv / mx) * 20) * 5; // 0,5,10,…,100
+}
+
+/**
+ * แผนผังการพัฒนา 6 ด้าน สำหรับแสดงคู่ค้า — ไม่มีตัวเลขลับ
+ * (การเงินแสดงเป็นระดับความมั่นคงเท่านั้น ไม่โชว์จำนวนเงิน)
+ */
+export function partnerDevelopmentMap(d: AppData): { dimensions: DevDimension[]; overall: number; tierLabel: string } {
+  const s = cityStats(d);
+  const b = s.buildings;
+  const dims: Array<Omit<DevDimension, 'pct' | 'tier'> & { ids: string[]; blurbs: [string, string, string] }> = [
+    { id: 'team',    icon: '👥', name: 'ทีมงาน & ผู้บริหาร',    ids: ['hq', 'mission'],        blurb: '', blurbs: ['กำลังจัดตั้งทีม', 'ทีมพร้อมทำงาน', 'ทีมผู้บริหารครบสาย'] },
+    { id: 'output',  icon: '🏭', name: 'กำลังผลิต & ส่งมอบ',    ids: ['factory', 'plaza', 'ops'], blurb: '', blurbs: ['เริ่มมีผลงาน', 'ส่งมอบสม่ำเสมอ', 'กำลังผลิตสูง ส่งมอบต่อเนื่อง'] },
+    { id: 'skill',   icon: '🎓', name: 'ทักษะ & ความรู้',      ids: ['skill', 'lab'],          blurb: '', blurbs: ['กำลังสะสมทักษะ', 'ทักษะหลากหลาย', 'คลังความรู้แข็งแรง'] },
+    { id: 'market',  icon: '🏪', name: 'การตลาด & ช่องทาง',    ids: ['market', 'data'],        blurb: '', blurbs: ['เริ่มเข้าตลาด', 'มีช่องทางการตลาด', 'ตลาด+ข้อมูลครบ'] },
+    { id: 'quality', icon: '🛡️', name: 'คุณภาพ & มาตรฐาน',    ids: ['iso'],                   blurb: '', blurbs: ['ยังไม่วางระบบคุณภาพ', 'มีระบบคุณภาพ', 'มาตรฐาน ISO พร้อม'] },
+    { id: 'finance', icon: '💎', name: 'ความมั่นคงทางการเงิน', ids: ['treasury', 'bank', 'exchange'], blurb: '', blurbs: ['กำลังสร้างรายได้', 'ทำกำไรแล้ว', 'เติบโตมั่นคง'] },
+  ];
+  const dimensions: DevDimension[] = dims.map(x => {
+    const pct = groupPct(b, x.ids);
+    const bi = pct >= 70 ? 2 : pct >= 35 ? 1 : 0;
+    return { id: x.id, icon: x.icon, name: x.name, pct, tier: tierFromPct(pct), blurb: x.blurbs[bi] };
+  });
+  const overall = Math.round(dimensions.reduce((a, x) => a + x.pct, 0) / dimensions.length / 5) * 5;
+  return { dimensions, overall, tierLabel: s.tier.label };
+}
