@@ -7,6 +7,8 @@ import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave
 import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
 import { track } from './lib/analytics';
+import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTriggers';
+import Celebrate from './components/Celebrate';
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
@@ -150,6 +152,9 @@ function loadData(): AppData {
 
 export default function App() {
   const [data, setData] = useState<AppData>(loadData);
+  const dataRef = useRef(data);
+  useEffect(() => { dataRef.current = data; }, [data]);
+  const [celebration, setCelebration] = useState<EmotionalMoment | null>(null);
   const [activePage, setActivePage] = useState<PageId>('dashboard');
   const [activeStage, setActiveStage] = useState(0);
   const [activeMonth, setActiveMonth] = useState(0);
@@ -258,6 +263,9 @@ export default function App() {
     if (next.streak && next.streak.count !== incoming.streak?.count) {
       track('streak_extended', { count: next.streak.count });
     }
+    // Emotional trigger: ยิงการฉลอง/ให้กำลังใจทันทีเมื่อ 'เพิ่งข้าม' หมุดสำคัญ
+    const moment = detectEmotionalMoment(dataRef.current, next);
+    if (moment) { setCelebration(moment); track('emotional_trigger', { id: moment.id, tone: moment.tone }); }
     setData(next);
     try {
       const serial = JSON.stringify(next);
@@ -368,6 +376,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <Celebrate moment={celebration} onDone={() => setCelebration(null)} />
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
       <button className="hamburger" onClick={() => setSidebarOpen(true)} aria-label="เปิดเมนู">
