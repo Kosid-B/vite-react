@@ -48,6 +48,7 @@ const Sipoc = lazy(() => import('./pages/Sipoc'));
 const MyStorefront = lazy(() => import('./pages/MyStorefront'));
 const Trade = lazy(() => import('./pages/Trade'));
 const CompanyCity = lazy(() => import('./pages/CompanyCity'));
+const CityLevelUp = lazy(() => import('./pages/CityLevelUp'));
 const InterCityTrade = lazy(() => import('./pages/InterCityTrade'));
 
 const STORAGE_KEY = 'cjux2';
@@ -56,6 +57,7 @@ const STORAGE_KEY = 'cjux2';
 const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'city', label: 'เมืองบริษัท' },
+  { id: 'citylevelup', label: 'เมือง · Level Up' },
   { id: 'citytrade', label: 'การค้าระหว่างเมือง' },
   { id: 'aicompany', label: 'บริษัท AI' },
   { id: 'journey', label: 'Journey Map' },
@@ -426,6 +428,7 @@ export default function App() {
         {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'city' && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
+        {activePage === 'citylevelup' && <CityLevelUp data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'citytrade' && <InterCityTrade data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}

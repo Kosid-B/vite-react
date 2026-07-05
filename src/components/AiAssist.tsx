@@ -35,6 +35,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   storefront: { label: 'หน้าร้านของฉัน', prompts: ['เขียนคำอธิบายธุรกิจให้ดึงดูดลูกค้า', 'เสนอสินค้า/บริการเด่นที่ควรโชว์', 'แนะนำวิธีโปรโมตลิงก์หน้าร้าน'], context: d => `ธุรกิจ: ${d.aiCompany.name} · หมวด: ${d.aiCompany.productDbd ?? d.aiCompany.industry}` },
   trade: { label: 'ซื้อขาย B2B (RFQ)', prompts: ['ร่างข้อความ RFQ ที่ได้ราคาดี', 'ช่วยตั้งราคาใบเสนอราคาให้แข่งขันได้', 'เช็คลิสต์ก่อนรับใบเสนอราคา'], context: d => `ธุรกิจ: ${d.aiCompany.name}` },
   city: { label: 'เมืองบริษัท', prompts: ['อาคารไหนควรพัฒนาต่อเพื่อโตเร็วสุด', 'สรุปว่าเมืองยังขาดอะไร', 'วางลำดับการเติบโตให้บริษัท'], context: d => `เมืองบริษัท: เอเจนต์ ${d.aiCompany.agents.length}, งานเสร็จ ${d.aiCompany.tasks.filter(t => t.status === 'done').length}, skill ${(d.aiCompany.purchasedSkills ?? []).length}` },
+  citylevelup: { label: 'เมือง · Level Up', prompts: ['ต้องทำอะไรเพื่อขึ้นระดับเมืองถัดไป', 'สรุป XP ที่ยังขาดสู่ระดับถัดไป', 'อาคารไหนช่วยเพิ่ม XP ได้เร็วสุด'], context: d => `เมือง Level Up: XP ${(d.aiCompany.tasks.filter(t => t.status === 'done').length)} งานเสร็จ, เอเจนต์ ${d.aiCompany.agents.length}, skill ${(d.aiCompany.purchasedSkills ?? []).length}` },
   citytrade: { label: 'การค้าระหว่างเมือง', prompts: ['ดีลไหนควรปิดก่อนเพื่อกำไรสูงสุด', 'ประเมินความเสี่ยงของดีลนี้', 'เสนอกลยุทธ์เจรจาต่อรอง'], context: d => `การค้าระหว่างเมือง: พาร์ตเนอร์ ${(d.marketplace?.partners ?? []).length}, ปิดดีลแล้ว ${(d.marketplace?.deals ?? []).filter(x => x.status === 'closed').length}` },
 };
 
