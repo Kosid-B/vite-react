@@ -101,8 +101,8 @@ grant  execute on function public.remove_member(uuid, uuid) to authenticated;
 | 1 | ยืนยัน GitHub Actions secret `VITE_SUPABASE_URL` ชี้ `rsjbqmnvocvtveelselj` | เจ้าของ repo | 🔴 เปิด |
 | 2 | แก้ `CLAUDE.md` + `COMMAND.md` ให้ตรง | เจ้าของระบบ | 🟢 **แก้แล้ว** (2026-07-05) |
 | 3 | Relink Supabase CLI local | IT Security | 🟢 **แก้แล้ว** (`supabase link --project-ref rsjbqmnvocvtveelselj`) |
-| 4 | แก้สิทธิ์ฟังก์ชันที่พังจาก incident (§2) | IT Security | 🟢 **แก้แล้ว** ผ่าน MCP — verify แล้วครบ 8 ฟังก์ชัน |
-| 5 | (ใหม่) `shop-images` storage bucket เปิด list ไฟล์ได้แบบสาธารณะ — advisor WARN ยังเปิดอยู่ | ผู้พัฒนา | 🔴 เปิด — [remediation](https://supabase.com/docs/guides/database/database-linter?lint=0025_public_bucket_allows_listing) |
+| 4 | แก้สิทธิ์ฟังก์ชันที่พังจาก incident (§2) | IT Security | 🟢 **แก้แล้ว** ผ่าน MCP — verify แล้วครบ 8 ฟังก์ชัน; บันทึกเป็น migration `0022` |
+| 5 | `shop-images` storage bucket เปิด list ไฟล์ได้แบบสาธารณะ (R14) | IT Security | 🟢 **แก้แล้ว** — migration `0023` จำกัด SELECT ให้ owner-only; advisor **0 findings** หลังแก้ |
 | 6 | Migration 0006–0021 ในเครื่อง (branch นี้) รันบน `waigsnxhrlwtiotspaim` (ผิดโปรเจกต์) — ควรลบ/archive project นั้นทิ้ง หรือคง `.env.bak` ไว้เป็นหลักฐานเท่านั้น | เจ้าของระบบ | 🟡 ยังไม่ตัดสินใจ |
 
 ## 6. หลักการป้องกันในอนาคต (control 8.9)
