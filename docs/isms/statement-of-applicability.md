@@ -3,26 +3,55 @@
 
 | | |
 |---|---|
-| เวอร์ชัน | 1.1 (ร่าง — หมวด 8 ประเมินครบ 34/34 แล้ว) |
+| เวอร์ชัน | 1.2 (ร่าง — หมวด 5 + 8 ประเมินครบแล้ว) |
 | วันที่ | 2026-07-05 |
-| หมายเหตุ | SoA ฉบับสมบูรณ์ต้องครอบคลุม Annex A ทั้ง 93 controls — หมวด 8 (Technological) ครบแล้วทั้ง 34 ตัว หมวด 5/6/7 ยังเหลือบางส่วน |
+| หมายเหตุ | SoA ฉบับสมบูรณ์ต้องครอบคลุม Annex A ทั้ง 93 controls — หมวด 5 (37/37) และหมวด 8 (34/34) ครบแล้ว รวม 75/93; หมวด 6 (4/8) และหมวด 7 (ประเมินแบบกลุ่ม) ยังเหลือ |
 
 **คำอธิบายสถานะ:** ✅ นำไปใช้แล้ว · 🟡 นำไปใช้บางส่วน/ต้องปรับปรุง · 🔴 นำไปใช้ (จำเป็น) แต่ยังไม่ดำเนินการ · ⚪ ไม่นำไปใช้ (พร้อมเหตุผล)
 
-## หมวด 5 — Organizational
+## หมวด 5 — Organizational (ครบ 37/37 — ประเมินสมบูรณ์ 2026-07-05)
 
 | Control | ชื่อ | นำไปใช้? | สถานะ | เหตุผล / หลักฐาน | ความเสี่ยง |
 |---|---|---|---|---|---|
-| 5.1 | นโยบายความมั่นคง | ใช่ | 🟡 | ร่าง [information-security-policy.md](information-security-policy.md) รออนุมัติ | — |
+| 5.1 | Policies for information security | ใช่ | 🟡 | ร่าง [information-security-policy.md](information-security-policy.md) รออนุมัติผู้บริหาร | — |
+| 5.2 | Information security roles and responsibilities | ใช่ | 🟡 | นโยบาย § 4 กำหนดบทบาทไว้ (IT Security/ผู้บริหาร/ผู้พัฒนา) แต่ยังไม่สื่อสารทั้งองค์กรอย่างเป็นทางการ | — |
+| 5.3 | Segregation of duties | ใช่ | 🔴 | ทีมเล็ก — คนเดียวมักทำได้ทั้งเขียนโค้ด/deploy/ดูแล DB ไม่มีการแบ่งแยกหน้าที่ | — |
+| 5.4 | Management responsibilities | ใช่ | 🔴 | ยังไม่มีความมุ่งมั่นที่เป็นลายลักษณ์อักษรจากผู้บริหาร (นโยบายยังรออนุมัติ) | — |
+| 5.5 | Contact with authorities | ใช่ | 🔴 | ไม่มีรายชื่อ/ช่องทางติดต่อหน่วยงานกำกับ (เช่น สคส./PDPA) ที่เตรียมไว้ | — |
+| 5.6 | Contact with special interest groups | ใช่ | 🔴 | ไม่มีการติดตามกลุ่ม/ชุมชนความมั่นคงปลอดภัยอย่างเป็นทางการ | — |
 | 5.7 | Threat intelligence | ใช่ | 🔴 | ยังไม่สมัครรับ advisory ของผู้ให้บริการ | — |
-| 5.9 | บัญชีสินทรัพย์สารสนเทศ | ใช่ | 🟡 | inventory เชิงเทคนิคใน `CLAUDE.md`/`config.ts` ยังไม่เป็นทะเบียนทางการ | — |
-| 5.10 | การใช้สินทรัพย์อย่างเหมาะสม | ใช่ | 🟡 | เกี่ยวกับการจัดการคีย์ (ดู 8.24) | R1 |
-| 5.15 | การควบคุมการเข้าถึง | ใช่ | 🟡 | RLS กันข้ามผู้เช่า + admin gate ด้วยอีเมล | R3 |
-| 5.18 | สิทธิ์การเข้าถึง | ใช่ | 🟢 | สิทธิ์ผ่าน RLS/role; migration `0020` ตัดสิทธิ์ anon จาก RPC หลัก (applied prod) | R2 |
-| 5.22 | การเฝ้าติดตามบริการผู้ส่งมอบ | ใช่ | 🔴 | ยังไม่มีการประเมิน/DPA กับ cloud 4 ราย | R4 |
-| 5.23 | ความมั่นคงบริการ cloud | ใช่ | 🔴 | พึ่ง Cloudflare/Supabase/Anthropic โดยไม่มีเกณฑ์ | R4 |
-| 5.30 | ICT readiness for BC | ใช่ | 🔴 | ไม่มี BC/DR plan | R5 |
-| 5.34 | ความเป็นส่วนตัว/PII | ใช่ | 🟡 | RLS ป้องกันข้อมูลข้ามผู้เช่า แต่ไม่มี privacy policy/PDPA records | R4 |
+| 5.8 | Information security in project management | ใช่ | 🔴 | ไม่มี security requirement ผนวกเข้ากระบวนการวางแผนฟีเจอร์ใหม่ (ดู 8.26) | — |
+| 5.9 | Inventory of information and other associated assets | ใช่ | 🟡 | inventory เชิงเทคนิคใน `CLAUDE.md`/`config.ts` ยังไม่เป็นทะเบียนทางการ | — |
+| 5.10 | Acceptable use of assets | ใช่ | 🟡 | เกี่ยวกับการจัดการคีย์ (ดู 8.24) | R1 |
+| 5.11 | Return of assets | ใช่ | 🔴 | ไม่มีกระบวนการคืนทรัพย์สิน/เพิกถอนสิทธิ์เมื่อพ้นสภาพ (ทีมเล็ก แต่ควรมีไว้ก่อนขยายทีม) | — |
+| 5.12 | Classification of information | ใช่ | 🔴 | ไม่มีการจัดชั้นความลับข้อมูล (public/internal/confidential) | — |
+| 5.13 | Labelling of information | ใช่ | 🔴 | ขึ้นกับ 5.12 ที่ยังไม่มี — จึงยังไม่มีการติดป้ายชั้นความลับ | — |
+| 5.14 | Information transfer | ใช่ | 🟡 | ส่งผ่าน HTTPS/WSS ทุกช่องทาง (ทางเทคนิคทำแล้ว) แต่ไม่มีนโยบายการส่งข้อมูลเป็นลายลักษณ์อักษร | — |
+| 5.15 | Access control | ใช่ | 🟡 | RLS กันข้ามผู้เช่า + admin gate ด้วยอีเมล | R3 |
+| 5.16 | Identity management | ใช่ | 🟡 | Supabase Auth จัดการ identity + `workspace_members` แต่ไม่มีนโยบาย lifecycle เป็นทางการ | — |
+| 5.17 | Authentication information | ใช่ | 🟡 | รหัสผ่านจัดการโดย Supabase Auth (hashed) + magic link; **ไม่มี MFA** | R3 |
+| 5.18 | Access rights | ใช่ | ✅ | สิทธิ์ผ่าน RLS/role; migration `0020`–`0022` ตัดสิทธิ์ anon จาก RPC หลักครบ + แก้ incident สิทธิ์หาย (R13), verified บน production | R2, R12, R13 |
+| 5.19 | Information security in supplier relationships | ใช่ | 🔴 | ไม่มีการประเมินความมั่นคงของผู้ส่งมอบ (Cloudflare/Supabase/Anthropic/Resend) อย่างเป็นทางการ | R4 |
+| 5.20 | Addressing security within supplier agreements | ใช่ | 🔴 | ไม่มี DPA/ข้อตกลงความมั่นคงที่ทบทวนแล้วกับผู้ส่งมอบ | R4 |
+| 5.21 | Managing security in the ICT supply chain | ใช่ | 🔴 | ไม่มีการประเมินความเสี่ยง supply chain (เช่น dependency ของบุคคลที่สาม) อย่างเป็นทางการ นอกเหนือ `npm audit` (8.8 เชิงเทคนิค) | — |
+| 5.22 | Monitoring, review and change management of supplier services | ใช่ | 🔴 | ยังไม่มีการประเมิน/ทบทวนบริการ cloud 4 รายเป็นรอบ | R4 |
+| 5.23 | Information security for use of cloud services | ใช่ | 🔴 | พึ่ง Cloudflare/Supabase/Anthropic โดยไม่มีเกณฑ์การประเมินที่เป็นทางการ | R4 |
+| 5.24 | Incident management planning and preparation | ใช่ | 🔴 | ไม่มี incident response playbook — [SECURITY.md](../../SECURITY.md) มีแค่ช่องทางรายงาน ไม่มีขั้นตอนตอบสนอง | R16 |
+| 5.25 | Assessment and decision on security events | ใช่ | 🔴 | ไม่มีเกณฑ์ประเมินความรุนแรง/triage เหตุการณ์ที่เป็นทางการ | R16 |
+| 5.26 | Response to information security incidents | ใช่ | 🟡 | เหตุการณ์จริง (R13) ถูกแก้ได้ผลดีในทางปฏิบัติ แต่ไม่มีขั้นตอนที่เขียนไว้ล่วงหน้า/ทำซ้ำได้ | R16 |
+| 5.27 | Learning from information security incidents | ใช่ | 🟡 | มีการบันทึก postmortem ไม่เป็นทางการใน [environment-map.md](environment-map.md) §0 แต่ไม่มีกระบวนการ lessons-learned อย่างเป็นทางการ | R16 |
+| 5.28 | Collection of evidence | ใช่ | 🔴 | ไม่มีขั้นตอนเก็บหลักฐานเหตุการณ์ที่เป็นทางการ (ทำแบบ ad-hoc ผ่าน query ตรวจสอบ) | R16 |
+| 5.29 | Information security during disruption | ใช่ | 🔴 | ไม่มีแผนรักษาความมั่นคงระหว่างเหตุขัดข้อง/ภัยพิบัติ | — |
+| 5.30 | ICT readiness for business continuity | ใช่ | 🟡 | ยืนยันแล้วว่า production ไม่มี backup (Free plan) — ตัดสินใจอัปเกรด Pro แล้ว (2026-07-05) รอดำเนินการจริง + ยังไม่มีแผน DR ที่เป็นทางการ | R5 |
+| 5.31 | Legal, statutory, regulatory and contractual requirements | ใช่ | 🔴 | ไม่มีทะเบียนข้อกำหนดกฎหมาย/สัญญาที่ต้องปฏิบัติตาม (เช่น PDPA) อย่างเป็นทางการ | — |
+| 5.32 | Intellectual property rights | ใช่ | 🔴 | ไม่มีนโยบายทรัพย์สินทางปัญญา (เช่น การใช้ output จาก Anthropic API, license ของ dependency) | — |
+| 5.33 | Protection of records | ใช่ | 🟡 | Supabase managed service ให้ durability ระดับหนึ่ง แต่ไม่มีนโยบาย retention/protection ของบันทึกที่เป็นทางการ | — |
+| 5.34 | Privacy and protection of PII | ใช่ | 🟡 | RLS ป้องกันข้อมูลข้ามผู้เช่า แต่ไม่มี privacy policy/PDPA records ที่เป็นทางการ | R4 |
+| 5.35 | Independent review of information security | ใช่ | 🔴 | ยังไม่เคยมีการตรวจประเมิน ISMS โดยอิสระ/บุคคลที่สาม | — |
+| 5.36 | Compliance with policies and standards | ใช่ | 🔴 | ไม่มีกระบวนการตรวจสอบว่าปฏิบัติตามนโยบายที่ตั้งไว้จริงเป็นรอบ | — |
+| 5.37 | Documented operating procedures | ใช่ | 🟡 | มีเอกสารทางเทคนิค (`CLAUDE.md`, `COMMAND.md`, `DEPLOY.md`) ทำหน้าที่เป็น procedure โดยพฤตินัย แต่ไม่ได้จัดทำในรูปแบบ ISMS operating procedure อย่างเป็นทางการ | — |
+
+**สรุปหมวด 5:** ✅ 1 · 🟡 14 · 🔴 22 (ครบ 37/37 controls)
 
 ## หมวด 6 — People
 
@@ -81,5 +110,5 @@
 **สรุปหมวด 8:** ✅ 12 · 🟡 7 · 🔴 9 · ⚪ 6 (ครบ 34/34 controls)
 
 ## Controls ที่เหลือ (Annex A)
-หมวด 5 (10/37), หมวด 6 (4/8), หมวด 7 (ประเมินแบบกลุ่ม 1/14) ยังไม่ครบ — ต้องเติมให้ครบ 93 ก่อนยื่นรับรอง
+หมวด 6 (4/8) และหมวด 7 (ประเมินแบบกลุ่ม 1/14) ยังไม่ครบ — ต้องเติมให้ครบ 93 ก่อนยื่นรับรอง
 โดยพิจารณา "นำไปใช้/ไม่นำไปใช้" จากผลประเมินความเสี่ยง ([risk-register.md](risk-register.md)) พร้อมเหตุผลทุกข้อ (ข้อกำหนด 6.1.3 d–e)
