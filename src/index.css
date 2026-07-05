@@ -1522,7 +1522,21 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .auth-loading { color: var(--ink3); font-size: 14px; }
 .auth-card { width: 100%; max-width: 380px; background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 32px 30px; box-shadow: var(--shadow); }
 .auth-brand { font-family: 'Kanit', sans-serif; font-weight: 600; font-size: 26px; color: var(--ink); letter-spacing: -.01em; }
-.auth-sub { font-size: 12.5px; color: var(--ink3); margin-top: 4px; margin-bottom: 22px; line-height: 1.5; }
+.auth-sub { font-size: 12.5px; color: var(--ink3); margin-top: 4px; margin-bottom: 16px; line-height: 1.5; }
+
+/* ===== AuthNudge — ประสบการณ์ก่อนสมัคร (authentic · experience-first) ===== */
+.authnudge { text-align: center; padding: 18px 16px 16px; margin-bottom: 20px; border-radius: 14px;
+  background: linear-gradient(180deg, rgba(6,182,212,.08), rgba(91,139,255,.06)); border: 1px solid rgba(111,224,200,.22);
+  animation: nudge-in .5s cubic-bezier(.2,1,.3,1); }
+.authnudge-symbol { font-size: 30px; line-height: 1; margin-bottom: 10px; letter-spacing: .04em; animation: nudge-sym .6s ease .1s both; }
+.authnudge-headline { font-family: 'Kanit', sans-serif; font-weight: 600; font-size: 18px; color: var(--ink); line-height: 1.35; text-wrap: balance; }
+.authnudge-body { font-size: 12.5px; color: var(--ink2); line-height: 1.55; margin-top: 6px; }
+.authnudge-chip { display: inline-block; margin-top: 12px; padding: 5px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
+  background: rgba(16,185,129,.14); color: #34d399; border: 1px solid rgba(16,185,129,.28); }
+.authnudge-proof { font-size: 11px; color: var(--ink3); margin-top: 10px; line-height: 1.4; }
+@keyframes nudge-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes nudge-sym { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .authnudge, .authnudge-symbol { animation: none; } }
 .auth-tabs { display: flex; gap: 6px; background: var(--cream2); border-radius: var(--r); padding: 4px; margin-bottom: 20px; }
 .auth-tabs button { flex: 1; padding: 9px; border: none; background: none; font-family: inherit; font-size: 13px; color: var(--ink3); border-radius: 6px; cursor: pointer; transition: .15s; }
 .auth-tabs button.active { background: var(--white); color: var(--ink); box-shadow: var(--shadow-sm); font-weight: 600; }
