@@ -18,7 +18,7 @@
 | 5.9 | บัญชีสินทรัพย์สารสนเทศ | ใช่ | 🟡 | inventory เชิงเทคนิคใน `CLAUDE.md`/`config.ts` ยังไม่เป็นทะเบียนทางการ | — |
 | 5.10 | การใช้สินทรัพย์อย่างเหมาะสม | ใช่ | 🟡 | เกี่ยวกับการจัดการคีย์ (ดู 8.24) | R1 |
 | 5.15 | การควบคุมการเข้าถึง | ใช่ | 🟡 | RLS กันข้ามผู้เช่า + admin gate ด้วยอีเมล | R3 |
-| 5.18 | สิทธิ์การเข้าถึง | ใช่ | 🟡 | สิทธิ์ผ่าน RLS/role; migration 0006 ตัดสิทธิ์ anon (รอ apply) | R2 |
+| 5.18 | สิทธิ์การเข้าถึง | ใช่ | 🟢 | สิทธิ์ผ่าน RLS/role; migration `0020` ตัดสิทธิ์ anon จาก RPC หลัก (applied prod) | R2 |
 | 5.22 | การเฝ้าติดตามบริการผู้ส่งมอบ | ใช่ | 🔴 | ยังไม่มีการประเมิน/DPA กับ cloud 4 ราย | R4 |
 | 5.23 | ความมั่นคงบริการ cloud | ใช่ | 🔴 | พึ่ง Cloudflare/Supabase/Anthropic โดยไม่มีเกณฑ์ | R4 |
 | 5.30 | ICT readiness for BC | ใช่ | 🔴 | ไม่มี BC/DR plan | R5 |
@@ -43,8 +43,8 @@
 
 | Control | ชื่อ | นำไปใช้? | สถานะ | เหตุผล / หลักฐาน | ความเสี่ยง |
 |---|---|---|---|---|---|
-| 8.2 | สิทธิ์การเข้าถึงระดับสูง | ใช่ | 🟡 | RPC เป็น SECURITY DEFINER + owner-check; 0006 revoke anon (รอ apply) | R2 |
-| 8.3 | การจำกัดการเข้าถึงข้อมูล | ใช่ | 🟡 | RLS ทุกตาราง (workspaces/members/state) | R2 |
+| 8.2 | สิทธิ์การเข้าถึงระดับสูง | ใช่ | 🟢 | RPC เป็น SECURITY DEFINER + owner-check; `0020` revoke anon (applied prod); `0021` แก้ `admin_skill_adoption()` เพิ่มเติม | R2, R12 |
+| 8.3 | การจำกัดการเข้าถึงข้อมูล | ใช่ | 🟡 | RLS ทุกตาราง (workspaces/members/state); `ws_delete` policy คุม owner-only delete; `lead_count()` ตรวจแล้วว่าตั้งใจเปิด anon (social-proof, คืนแค่ count) | R2, R10 |
 | 8.5 | Secure authentication | ใช่ | 🟡 | Supabase auth; **ยังไม่เปิด MFA แอดมิน** | R3 |
 | 8.8 | การจัดการช่องโหว่ทางเทคนิค | ใช่ | 🟡 | `npm audit` ใน CI (`security-scan.yml`) | R6 |
 | 8.9 | Configuration management | ใช่ | 🟡 | `wrangler.jsonc`/`tsconfig`/CI ใน git | — |
