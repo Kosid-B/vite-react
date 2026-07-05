@@ -26,6 +26,8 @@ import FinanceInput from '../components/FinanceInput';
 import SkillInvestmentPlan from '../components/SkillInvestmentPlan';
 import PersonalBrand from '../components/PersonalBrand';
 import { brandInstruction } from '../lib/personalBrand';
+import MarketValidation from '../components/MarketValidation';
+import { validationInstruction, extractVerdict } from '../lib/marketValidation';
 
 // ---- Org Chart Node (recursive) ----
 interface OcNodeProps {
@@ -294,6 +296,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [cmoInsightRunning, setCmoInsightRunning] = useState(false);
   const [cmoSalesRunning, setCmoSalesRunning] = useState(false);
   const [cmoBrandRunning, setCmoBrandRunning] = useState(false);
+  const [cmoValRunning, setCmoValRunning] = useState(false);
   const [cLevelRunning, setCLevelRunning] = useState(false);
   const [cLevelMsg, setCLevelMsg] = useState<string | null>(null);
   const [hrdPlanningSkills, setHrdPlanningSkills] = useState(false);
@@ -1437,6 +1440,38 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     } finally { setCmoBrandRunning(false); }
   };
 
+  /* ----- CMO พิสูจน์ไอเดียก่อนลงทุนสร้าง (GO/PIVOT/KILL) ----- */
+  const runCmoValidation = async (idea: string) => {
+    if (!supabase || cmoValRunning || !idea.trim()) return;
+    const cmo = c.agents.find(a => /cmo|market|ตลาด/i.test(a.role)) ?? c.agents[0];
+    if (!cmo) { setCsuiteMsg('⚠️ ยังไม่มีตำแหน่ง CMO — ให้ CEO จัดผู้รับผิดชอบก่อน'); return; }
+    setCmoValRunning(true); setCsuiteMsg('CMO กำลังพิสูจน์ไอเดีย (VRIO/JTBD/TAM-SAM-SOM)…');
+    try {
+      trackAiCall();
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: cmo.role, name: cmo.name, mandate: cmo.mandate, model: cmo.model,
+          title: 'พิสูจน์ไอเดียก่อนลงทุนสร้าง (Market Validation)',
+          detail: validationInstruction(data, idea),
+          goal: c.goal, industry: c.industry, companyName: c.name, orgContext: [],
+          useWebSearch: canWebSearch, searchQuery: `${idea} ตลาด คู่แข่ง ความต้องการ ราคา`,
+        },
+      });
+      if (error) throw error;
+      const report = res?.output ?? '';
+      onUpdate({ ...data, cmoValidation: {
+        idea, report, verdict: extractVerdict(report), webUsed: !!res?.webSearchUsed, updatedAt: nowTime(),
+      } });
+      setCsuiteMsg(`✅ CMO พิสูจน์ไอเดียเสร็จ${res?.webSearchUsed ? ' (ข้อมูลตลาดจริง 🌐)' : ''}`);
+      setFeed(prev => [
+        { id: ++counter.current, time: nowTime(), text: `CMO ${cmo.name} พิสูจน์ไอเดีย: "${idea.slice(0, 40)}"`, color: cmo.color },
+        ...prev,
+      ].slice(0, 40));
+    } catch (e) {
+      setCsuiteMsg('✕ พิสูจน์ไอเดียไม่สำเร็จ: ' + (e as Error).message);
+    } finally { setCmoValRunning(false); }
+  };
+
   /* ----- C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO (ทุกวันศุกร์) ----- */
   const runCLevelWeekly = async (auto = false) => {
     if (!supabase || cLevelRunning) return;
@@ -1855,6 +1890,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       <SkillInvestmentPlan data={data} onUpdate={onUpdate} />
 
       <PersonalBrand data={data} onUpdate={onUpdate} onRefine={runCmoBrand} refining={cmoBrandRunning} supabaseEnabled={isSupabaseEnabled} />
+
+      <MarketValidation data={data} onRun={runCmoValidation} running={cmoValRunning} supabaseEnabled={isSupabaseEnabled} />
 
       <div className="ai-2col">
         {/* ===== ทีมเอเจนต์ ===== */}
