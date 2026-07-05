@@ -4906,6 +4906,19 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .sip-promo{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:9px; padding:9px 11px; font-size:12.5px; }
 .sip-promo b{ display:block; } .sip-promo span{ color:var(--muted,#94a3b8); }
 .sip-edge{ margin:6px 0 0; padding-left:2px; list-style:none; } .sip-edge li{ font-size:12.5px; margin:4px 0; color:#a7f3d0; }
+/* ===== Market Validation (CMO) ===== */
+.mval-sub{ font-size:12.5px; color:var(--text-soft,#9aa6d8); margin:4px 0 12px; line-height:1.6; }
+.mval-input{ width:100%; background:var(--card,#0b132c); color:var(--text,#e5e7eb); border:1px solid var(--card-border,rgba(120,140,220,.2)); border-radius:10px; padding:10px 12px; font-size:13px; font-family:inherit; resize:vertical; }
+.mval-input:focus{ outline:2px solid var(--active-border,#5b8bff); outline-offset:1px; }
+.mval-actions{ margin-top:10px; }
+.mval-btn{ background:#38bdf8; color:#04222e; border:0; border-radius:8px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer; }
+.mval-btn:disabled{ opacity:.55; cursor:default; }
+.mval-empty{ font-size:12.5px; color:var(--text-soft,#9aa6d8); }
+.mval-verdict{ display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px; margin-top:14px; padding:12px 14px; border:1.5px solid; border-radius:12px; }
+.mval-verdict-badge{ font-size:15px; font-weight:800; }
+.mval-verdict-hint{ font-size:12.5px; color:var(--text-soft,#9aa6d8); }
+.mval-meta{ font-size:11.5px; color:var(--text-soft,#9aa6d8); margin-top:10px; }
+
 /* ===== Personal Brand ===== */
 .pb-pos{ font-size:14px; font-weight:700; color:var(--text,#e5e7eb); margin:4px 0 2px; }
 .pb-arch{ font-size:12.5px; color:var(--text-soft,#9aa6d8); margin-bottom:12px; }

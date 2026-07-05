@@ -497,6 +497,8 @@ export interface AppData {
   cmoSales?: { plan: string; webUsed: boolean; updatedAt: string };
   // CMO สร้าง Personal Brand ของบริษัท (persona/voice/pillars/ช่องทาง) — ปรับด้วย agent
   cmoBrand?: { kit: string; webUsed: boolean; updatedAt: string };
+  // CMO พิสูจน์ไอเดียก่อนลงทุนสร้าง (VRIO/JTBD/TAM-SAM-SOM/Kill-Pivot) → GO/PIVOT/KILL
+  cmoValidation?: { idea: string; report: string; verdict: 'go' | 'pivot' | 'kill' | ''; webUsed: boolean; updatedAt: string };
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */
