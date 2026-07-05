@@ -4876,6 +4876,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .sip-promo{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:9px; padding:9px 11px; font-size:12.5px; }
 .sip-promo b{ display:block; } .sip-promo span{ color:var(--muted,#94a3b8); }
 .sip-edge{ margin:6px 0 0; padding-left:2px; list-style:none; } .sip-edge li{ font-size:12.5px; margin:4px 0; color:#a7f3d0; }
+.sip-ob-pick{ display:inline-block; font-size:12.5px; color:var(--text,#e5e7eb); margin:2px 0 10px; }
+.sip-ob-pick select{ background:var(--card,#0b132c); color:var(--text,#e5e7eb); border:1px solid var(--border,#334155); border-radius:8px; padding:6px 10px; font-size:12.5px; }
 .sip-actions{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
 .sip-btn{ background:#f59e0b; color:#1a1206; border:0; border-radius:8px; padding:8px 14px; font-weight:700; font-size:12.5px; cursor:pointer; }
 .sip-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); }

@@ -5,6 +5,7 @@ import {
   AIFLOW_TOTAL,
 } from '../lib/skillInvestmentPlan';
 import { trainingPlanText } from '../lib/trainingPlan';
+import { onboardingPlanText } from '../lib/teamOnboarding';
 
 /* ===== HRD + CEO เสนอบอร์ด: ทักษะที่จำเป็นตามช่วงการเติบโต + Price Analysis + Promotion ===== */
 
@@ -25,9 +26,11 @@ function proposalText(d: AppData): string {
 }
 
 export default function SkillInvestmentPlan({ data, onUpdate }: { data: AppData; onUpdate: (d: AppData) => void }) {
-  const [tab, setTab] = useState<'stage' | 'price' | 'compete' | 'training'>('stage');
+  const [tab, setTab] = useState<'stage' | 'price' | 'compete' | 'training' | 'onboard'>('stage');
   const [msg, setMsg] = useState<string | null>(null);
   const stage = currentStage(data);
+  const roles = Array.from(new Set((data.aiCompany?.agents ?? []).map(a => a.role)));
+  const [obRole, setObRole] = useState<string>(roles[0] ?? 'สมาชิกใหม่');
 
   function proposeTraining() {
     const c = data.aiCompany;
@@ -42,6 +45,21 @@ export default function SkillInvestmentPlan({ data, onUpdate }: { data: AppData;
       status: 'pending',
     }, ...c.approvals] } });
     setMsg('✅ เสนอผ่านสายงาน HRD → CEO → บอร์ดแล้ว (ดูที่กล่องอนุมัติ)');
+  }
+
+  function proposeOnboarding() {
+    const c = data.aiCompany;
+    const hrd = c.agents.find(a => /hr|hrd|บุคคล/i.test(a.role));
+    const ceo = c.agents.find(a => /ceo/i.test(a.role)) ?? c.agents[0];
+    onUpdate({ ...data, aiCompany: { ...c, approvals: [{
+      id: 'onboard-' + Date.now().toString(36),
+      agentId: hrd?.id ?? ceo?.id ?? '',
+      title: `🧭 HRD เสนอแผน Onboarding 30/60/90 — ตำแหน่ง ${obRole}`,
+      detail: onboardingPlanText(data, obRole),
+      impact: JSON.stringify({ type: 'note' }),
+      status: 'pending',
+    }, ...c.approvals] } });
+    setMsg('✅ เสนอผ่านสายงาน HRD → CEO แล้ว (ดูที่กล่องอนุมัติ)');
   }
 
   function proposeToBoard() {
@@ -69,6 +87,7 @@ export default function SkillInvestmentPlan({ data, onUpdate }: { data: AppData;
         <button className={tab === 'price' ? 'on' : ''} onClick={() => setTab('price')}>Price Analysis</button>
         <button className={tab === 'compete' ? 'on' : ''} onClick={() => setTab('compete')}>แข่งกับคู่แข่ง</button>
         <button className={tab === 'training' ? 'on' : ''} onClick={() => setTab('training')}>แผนพัฒนา (Training)</button>
+        <button className={tab === 'onboard' ? 'on' : ''} onClick={() => setTab('onboard')}>Onboarding 30/60/90</button>
       </div>
 
       {tab === 'stage' && (
@@ -126,8 +145,25 @@ export default function SkillInvestmentPlan({ data, onUpdate }: { data: AppData;
         </div>
       )}
 
+      {tab === 'onboard' && (
+        <div className="sip-training">
+          <div className="sip-note">HRD สร้างแผนรับสมาชิกใหม่ 30/60/90 วัน (Day 1 → 90 วัน) — เลือกตำแหน่งเพื่อดูแผนเฉพาะ role พร้อมพี่เลี้ยง (Buddy)</div>
+          <label className="sip-ob-pick">ตำแหน่งสมาชิกใหม่:&nbsp;
+            <select value={obRole} onChange={e => setObRole(e.target.value)}>
+              {roles.length ? roles.map(r => <option key={r} value={r}>{r}</option>) : <option value="สมาชิกใหม่">สมาชิกใหม่</option>}
+            </select>
+          </label>
+          <pre className="cs-report">{onboardingPlanText(data, obRole)}</pre>
+        </div>
+      )}
+
       <div className="sip-actions">
-        {tab === 'training' ? (
+        {tab === 'onboard' ? (
+          <>
+            <button className="sip-btn" onClick={proposeOnboarding}>🧭 เสนอผ่านสายงาน HRD → CEO</button>
+            <button className="sip-btn ghost" onClick={async () => { try { await navigator.clipboard.writeText(onboardingPlanText(data, obRole)); setMsg('📋 คัดลอกแผน Onboarding แล้ว'); } catch { setMsg('คัดลอกไม่สำเร็จ'); } }}>คัดลอกแผน</button>
+          </>
+        ) : tab === 'training' ? (
           <>
             <button className="sip-btn" onClick={proposeTraining}>📚 เสนอผ่านสายงาน → CEO → บอร์ด</button>
             <button className="sip-btn ghost" onClick={async () => { try { await navigator.clipboard.writeText(trainingPlanText(data)); setMsg('📋 คัดลอกแผนพัฒนาแล้ว'); } catch { setMsg('คัดลอกไม่สำเร็จ'); } }}>คัดลอกแผน</button>
