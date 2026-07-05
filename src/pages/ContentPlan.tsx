@@ -91,7 +91,8 @@ export default function ContentPlan({ data, activeMonth, onMonthChange, onUpdate
       <div className="cp-grid">
         {month.cols.map((col, ci) => (
           <div key={ci} className="cp-col">
-            <div className="cp-col-hd" style={{ color: col.color }}>
+            <div className="cp-col-hd" style={{ borderLeftColor: col.color }}>
+              <span className="cp-col-dot" style={{ background: col.color }} />
               <input
                 defaultValue={col.hd}
                 key={`hd-${activeMonth}-${ci}`}

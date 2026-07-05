@@ -404,7 +404,8 @@ body {
 .cp-goal { padding: 13px 16px; background: var(--white); border: 1px solid var(--sand); border-radius: var(--r); margin-bottom: 14px; font-size: 13px; color: var(--ink2); font-family: inherit; resize: none; outline: none; width: 100%; line-height: 1.6; border-left: 3px solid var(--rust); }
 .cp-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
 .cp-col { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
-.cp-col-hd { padding: 10px 12px; border-bottom: 1px solid var(--cream2); font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.cp-col-hd { padding: 10px 12px; border-bottom: 1px solid var(--cream2); border-left: 3px solid transparent; font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+.cp-col-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,.08); }
 .cp-col-hd input { border: none; background: none; outline: none; font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; font-family: inherit; color: inherit; width: 100%; cursor: text; }
 .cp-body { padding: 8px; }
 
