@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import type { AppData, PageId } from '../types';
-import { cityStats, type CityBuilding } from '../lib/companyCity';
+import { cityStats, partnerDevelopmentMap, type CityBuilding } from '../lib/companyCity';
+import { useState } from 'react';
 import { fmtBaht } from '../lib/finance';
 import { streakCount } from '../lib/streak';
 import { track } from '../lib/analytics';
@@ -13,6 +14,8 @@ import CityRewards from '../components/CityRewards';
 
 export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppData; onNavigate: (p: PageId) => void; onUpdate: (d: AppData) => void }) {
   const s = useMemo(() => cityStats(data), [data]);
+  const devMap = useMemo(() => partnerDevelopmentMap(data), [data]);
+  const [partnerView, setPartnerView] = useState(false);
   const streak = streakCount(data);
   useEffect(() => { track('city_viewed', { built: s.built, net: s.fin.net }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -78,6 +81,42 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
           {skyline.map(b => <Building key={b.id} b={b} onNavigate={onNavigate} />)}
         </div>
         <div className="city-ground" />
+      </div>
+
+      {/* ===== แผนผังการพัฒนาสำหรับคู่ค้า — ความสูงตึก = ระดับพัฒนาแต่ละด้าน (ไม่เปิดเผยตัวเลขลับ) ===== */}
+      <div className="devmap">
+        <div className="devmap-hd">
+          <div>
+            <h2 className="devmap-title">🤝 แผนผังการพัฒนาสำหรับคู่ค้า</h2>
+            <p className="devmap-sub">ความสูง/รูปทรงของแต่ละตึก = ระดับการพัฒนาของธุรกิจในด้านนั้น ให้คู่ค้าเห็นภาพความก้าวหน้า
+              โดย <b>ไม่เปิดเผยตัวเลขลับ</b> (รายได้/กำไร/จำนวนดีล เก็บเป็นความลับของบริษัท)</p>
+          </div>
+          <button className="devmap-toggle" onClick={() => setPartnerView(v => !v)}>
+            {partnerView ? '👁️ มุมมองภายใน' : '🤝 มุมมองคู่ค้า'}
+          </button>
+        </div>
+        <div className="devmap-overall">
+          ภาพรวมการพัฒนา: <b>{devMap.tierLabel}</b> · ระดับพัฒนาโดยรวม <b>{devMap.overall}%</b>
+          {partnerView && <span className="devmap-safe"> · 🔒 ซ่อนตัวเลขลับสำหรับคู่ค้า</span>}
+        </div>
+        <div className="devmap-bars">
+          {devMap.dimensions.map(dim => (
+            <div key={dim.id} className="devmap-col" title={`${dim.name} — ${dim.tier}`}>
+              <div className="devmap-tower-wrap">
+                <span className="devmap-pct">{dim.pct}%</span>
+                <div className="devmap-tower" style={{ height: `${Math.max(8, dim.pct)}%` }}>
+                  {Array.from({ length: Math.max(1, Math.round(dim.pct / 20)) }).map((_, i) => (
+                    <span key={i} className="devmap-floor" />
+                  ))}
+                  <span className="devmap-roof">{dim.icon}</span>
+                </div>
+              </div>
+              <div className="devmap-name">{dim.name}</div>
+              <div className="devmap-tier">{dim.tier}</div>
+              <div className="devmap-blurb">{dim.blurb}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ===== รายการอาคาร + สิ่งที่ต้องทำเพื่อพัฒนา ===== */}
