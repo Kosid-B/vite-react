@@ -149,6 +149,7 @@ export function sitemapXml(
     { loc: `${origin}/b`, priority: '0.9' },
     { loc: `${origin}/start`, priority: '0.8' },
     { loc: `${origin}/shop`, priority: '0.7' },
+    { loc: `${origin}/legal`, priority: '0.5' },
     ...entries.map(e => ({
       loc: `${origin}/b/${encodeURIComponent(e.slug)}`,
       priority: '0.6',

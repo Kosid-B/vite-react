@@ -360,9 +360,10 @@ export default function App() {
     return <ShopSignup />;
   }
   // เอกสารทางกฎหมาย (สาธารณะ): ข้อมูลบริษัท · ความเป็นส่วนตัว · การคืนเงิน · ข้อกำหนด
-  if (pubPath.startsWith('/legal') || ['/privacy', '/terms', '/refund'].some(p => pubPath === p || pubPath === p + '/')) {
+  if (pubPath.startsWith('/legal') || ['/privacy', '/terms', '/refund', '/cookies'].some(p => pubPath === p || pubPath === p + '/')) {
     const sec: LegalSection =
       pubPath.includes('privacy') ? 'privacy' :
+      pubPath.includes('cookies') ? 'cookies' :
       pubPath.includes('refund') ? 'refund' :
       pubPath.includes('terms') ? 'terms' : 'company';
     return <LegalPage section={sec} />;
@@ -533,6 +534,8 @@ export default function App() {
           </a>
           <span className="app-footer__sep">·</span>
           <a href="/legal#privacy" className="app-footer__link">ความเป็นส่วนตัว</a>
+          <span className="app-footer__sep">·</span>
+          <a href="/legal#cookies" className="app-footer__link">คุกกี้</a>
           <span className="app-footer__sep">·</span>
           <a href="/legal#refund" className="app-footer__link">การคืนเงิน</a>
           <span className="app-footer__sep">·</span>

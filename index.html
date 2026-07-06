@@ -81,6 +81,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
+    <!-- Consent gate: ปิด Analytics จนกว่าผู้ใช้จะ "ยอมรับทั้งหมด" (PDPA/คุกกี้) -->
+    <script>
+      try { if (localStorage.getItem('ceo_ai_cookie_consent') !== 'all') { window['ga-disable-G-CHJ99RY1Q1'] = true; } } catch (e) {}
+    </script>
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CHJ99RY1Q1"></script>
     <script>
