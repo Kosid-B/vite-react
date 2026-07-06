@@ -196,6 +196,9 @@ export default function StartLanding() {
         โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
         <br />
         เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a href="tel:08178177773">081-7817-7773</a>
+        <br />
+        <a href="/legal#company">ข้อมูลบริษัท</a> · <a href="/legal#privacy">นโยบายความเป็นส่วนตัว</a> ·{' '}
+        <a href="/legal#refund">นโยบายการคืนเงิน</a> · <a href="/legal#terms">ข้อกำหนดและเงื่อนไข</a>
       </footer>
     </div>
   );
