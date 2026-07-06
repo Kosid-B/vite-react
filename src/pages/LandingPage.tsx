@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { track } from '../lib/analytics';
+import LegalLinks from '../components/LegalLinks';
 
 interface Props {
   onGetStarted: () => void;
@@ -309,11 +310,7 @@ export default function LandingPage({ onGetStarted }: Props) {
         <br />
         © 2026 CEO AI Thailand · ceoaithailand.org · B. Training Consultant Co., Ltd.
         <br />
-        <a href="/legal#company" style={{ color: C.slate5, textDecoration: 'none' }}>ข้อมูลบริษัท</a> ·{' '}
-        <a href="/legal#privacy" style={{ color: C.slate5, textDecoration: 'none' }}>นโยบายความเป็นส่วนตัว</a> ·{' '}
-        <a href="/legal#cookies" style={{ color: C.slate5, textDecoration: 'none' }}>นโยบายคุกกี้</a> ·{' '}
-        <a href="/legal#refund" style={{ color: C.slate5, textDecoration: 'none' }}>นโยบายการคืนเงิน</a> ·{' '}
-        <a href="/legal#terms" style={{ color: C.slate5, textDecoration: 'none' }}>ข้อกำหนดและเงื่อนไข</a>
+        <LegalLinks linkStyle={{ color: C.slate5, textDecoration: 'none' }} />
       </footer>
     </div>
   );

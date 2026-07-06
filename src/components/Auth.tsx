@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BRAND, COMPANY } from '../config';
 import { track } from '../lib/analytics';
+import LegalLinks from './LegalLinks';
 import { pickNudgeVariant, buildNudge } from '../lib/authNudge';
 import AuthNudge from './AuthNudge';
 
@@ -82,7 +83,8 @@ export default function Auth() {
 
         <div className="auth-company">
           ให้บริการโดย {COMPANY.nameTh}<br/>
-          <a href={COMPANY.website} target="_blank" rel="noreferrer">{COMPANY.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a> · โทร {COMPANY.tel}
+          <a href={COMPANY.website} target="_blank" rel="noreferrer">{COMPANY.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a> · โทร {COMPANY.tel}<br/>
+          <span className="auth-legal-links"><LegalLinks /></span>
         </div>
       </div>
     </div>
