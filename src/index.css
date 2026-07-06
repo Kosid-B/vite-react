@@ -4903,6 +4903,13 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .exp-bar > span{ display:block; min-width:0; }
 .exp-bar-empty{ flex:1; font-size:10.5px; color:#64748b; text-align:center; line-height:8px; }
 .exp-note{ font-size:12px; color:#64748b; margin-top:10px; }
+.ret-insight{ margin:10px 0 12px; font-size:13px; color:#e2e8f0; background:rgba(16,185,129,.10);
+  border:1px solid rgba(16,185,129,.35); border-radius:8px; padding:9px 12px; }
+.ret-table td{ text-align:center; }
+.ret-table td.ops-name{ text-align:left; }
+.ret-cell{ padding:6px 8px; }
+.ret-chip{ display:inline-block; min-width:38px; padding:2px 6px; border-radius:6px; font-weight:700; font-size:11.5px; }
+.ret-na{ color:#475569; }
 
 /* ===== CEO รายงานบอร์ด (Board Report) ===== */
 .ai-panel.brd{ border-color:#7c3aed55; }

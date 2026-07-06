@@ -95,6 +95,9 @@ src/lib/experiments.ts:
   EXPERIMENTS[] (แต่ละอันมี ≥2 variant ซื่อสัตย์ ไม่ scarcity ปลอม) · variantFor() assign แบบ djb2 hash
   recordPulse()/pulseSummary() (😕1/🙂2/😄3 รายวัน) · aggregateExperiments() รวมข้ามผู้ใช้ (ฝั่ง Admin)
   expReportCsv()/expReportTsv() export ผล A/B · Experiment.goto = หน้าปลายทางปุ่ม "อยากทำต่อ"
+  recordActiveDay() (เรียกใน updateData เมื่อ enabled) เก็บ activeDays[] → retentionCohorts():
+    แบ่ง cohort ตาม pulse เฉลี่ย (สูง≥2.5/กลาง/ต่ำ<2) เทียบ retention 7/14 วัน + เส้น W0–W3 รายสัปดาห์
+    (สัปดาห์ยังมาไม่ถึง=null ไม่นับ churn) → ตอบ "pulse สูงกลับมาใช้ต่อจริงไหม"
 src/pages/Pulse.tsx: consent gate + pulse รายวัน + การ์ดทุกการทดลอง + สถิติตัวเอง (streak/เฉลี่ย/7วัน)
 AppData.experiments: {enabled,seenConsent,uid,assignments,pulses[],activations[]} (migrate default ใน App.tsx)
 Admin (แท็บเวิร์กสเปซ): loadOps → aggregateExperiments → เทียบ activationRate + pulseAvg ต่อ variant + ผู้ชนะ

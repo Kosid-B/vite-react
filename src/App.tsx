@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import type { Session } from '@supabase/supabase-js';
 import type { AppData, PageId } from './types';
 import { DEFAULT_DATA } from './data';
-import { defaultExperiments } from './lib/experiments';
+import { defaultExperiments, recordActiveDay } from './lib/experiments';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
 import { setAgentWorkspace } from './lib/agentClient';
@@ -265,9 +265,14 @@ export default function App() {
 
   const updateData = useCallback((incoming: AppData) => {
     // ต่อ streak รายวันเมื่อทำงานจริง (แก้ข้อมูลครั้งแรกของวัน)
-    const next = bumpStreak(incoming);
+    let next = bumpStreak(incoming);
     if (next.streak && next.streak.count !== incoming.streak?.count) {
       track('streak_extended', { count: next.streak.count });
+    }
+    // บันทึกวัน active สำหรับ retention cohort (เฉพาะผู้ยินยอม Pulse — recordActiveDay guard เอง)
+    if (next.experiments?.enabled) {
+      const exp = recordActiveDay(next.experiments);
+      if (exp !== next.experiments) next = { ...next, experiments: exp };
     }
     // Emotional trigger: ยิงการฉลอง/ให้กำลังใจทันทีเมื่อ 'เพิ่งข้าม' หมุดสำคัญ
     const moment = detectEmotionalMoment(dataRef.current, next);

@@ -10,7 +10,7 @@ const SEOTab        = lazy(() => import('./AdminTabs/SEOTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
-import { aggregateExperiments, expReportCsv, expReportTsv, type ExperimentsAggregate } from '../lib/experiments';
+import { aggregateExperiments, retentionCohorts, expReportCsv, expReportTsv, type ExperimentsAggregate, type RetentionReport } from '../lib/experiments';
 import { isAdminEmail, ADMIN_EMAILS } from '../config';
 import { PageHeader, Badge } from '../ds';
 import type { AppData, WinStory, WinCategory, FeedbackEntry, FeedbackSource, FeedbackSentiment, FeedbackTheme } from '../types';
@@ -139,6 +139,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [opsLoading, setOpsLoading] = useState(false);
   const [opsMsg, setOpsMsg] = useState<string | null>(null);
   const [expAgg, setExpAgg] = useState<ExperimentsAggregate | null>(null);
+  const [retention, setRetention] = useState<RetentionReport | null>(null);
 
   // Simulator state
   const [nGrowth, setNGrowth] = useState(15);
@@ -335,6 +336,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       });
       setOpsRows(out);
       setExpAgg(aggregateExperiments(states.map(s => s?.experiments)));
+      setRetention(retentionCohorts(states.map(s => s?.experiments)));
       setOpsMsg(`สรุปแล้ว ${out.length} เวิร์กสเปซ`);
     } catch (e) {
       setOpsMsg('โหลดสรุปไม่สำเร็จ: ' + (e instanceof Error ? e.message : String(e)));
@@ -2251,6 +2253,48 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                 )}
                 {expAgg && expAgg.optIn === 0 && opsRows.length > 0 && (
                   <div className="ops-msg">💓 ยังไม่มีผู้ใช้ยินยอมเข้าร่วม Pulse &amp; A/B — ผลจะแสดงเมื่อมีผู้เปิดใช้</div>
+                )}
+
+                {retention && retention.withData > 0 && (
+                  <div className="exp-agg">
+                    <div className="exp-agg-head">
+                      <div className="exp-agg-title">🔁 Retention Cohort รายสัปดาห์ — pulse สูง = กลับมาใช้ต่อจริงไหม?</div>
+                      <div className="exp-agg-meta">แบ่งกลุ่มตามความรู้สึกเฉลี่ย · มีข้อมูลพอวัด {retention.withData} คน</div>
+                    </div>
+                    <div className="ret-insight">💡 {retention.insight}</div>
+                    <div className="ops-table-wrap">
+                      <table className="ops-table ret-table">
+                        <thead><tr>
+                          <th>กลุ่ม (sentiment)</th><th>คน</th><th>pulse เฉลี่ย</th>
+                          <th>กลับใน 7 วัน</th><th>กลับใน 14 วัน</th><th>สัปดาห์ active เฉลี่ย</th>
+                          {Array.from({ length: retention.weeks }, (_, w) => <th key={w}>W{w}</th>)}
+                        </tr></thead>
+                        <tbody>
+                          {retention.cohorts.map(c => (
+                            <tr key={c.cohort}>
+                              <td className="ops-name">{c.label}</td>
+                              <td>{c.users}</td>
+                              <td>{c.users ? c.avgPulse.toFixed(2) : '—'}</td>
+                              <td className={c.users ? (c.returned7 >= 50 ? 'ops-pos' : 'ops-neg') : ''}>{c.users ? c.returned7 + '%' : '—'}</td>
+                              <td>{c.users ? c.returned14 + '%' : '—'}</td>
+                              <td>{c.users ? c.avgActiveWeeks.toFixed(1) : '—'}</td>
+                              {c.curve.map((v, w) => (
+                                <td key={w} className="ret-cell">
+                                  {v == null ? <span className="ret-na">–</span> : (
+                                    <span className="ret-chip" style={{ background: `color-mix(in srgb, var(--green) ${v}%, transparent)` }}>{v}%</span>
+                                  )}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="exp-note">
+                      W0–W{retention.weeks - 1} = % ที่ยัง active ในสัปดาห์ที่ 0..{retention.weeks - 1} นับจากวันแรกที่เข้าร่วม ·
+                      “–” = สัปดาห์ยังมาไม่ถึง (ไม่นับเป็น churn) · วัดจากผู้ยินยอมเท่านั้น ไม่ระบุตัวตน
+                    </div>
+                  </div>
                 )}
               </div>
 

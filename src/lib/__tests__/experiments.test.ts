@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   EXPERIMENTS, variantFor, recordPulse, todayPulse, pulseSummary,
-  aggregateExperiments, expReportCsv, expReportTsv, defaultExperiments, type ExperimentsState,
+  aggregateExperiments, retentionCohorts, recordActiveDay,
+  expReportCsv, expReportTsv, defaultExperiments, type ExperimentsState,
 } from '../experiments';
 
 const dayStr = (ms: number) => new Date(ms).toISOString().slice(0, 10);
@@ -121,6 +122,66 @@ describe('registry — ทุกการทดลองมี 2 กลุ่ม
         expect(v.label && v.headline && v.cta).toBeTruthy();
       }
     }
+  });
+});
+
+describe('recordActiveDay', () => {
+  it('เพิ่มวันนี้เมื่อ enabled และ dedup', () => {
+    const ms = Date.UTC(2026, 6, 10);
+    let s: ExperimentsState = { enabled: true, seenConsent: true };
+    s = recordActiveDay(s, ms);
+    expect(s.activeDays).toEqual(['2026-07-10']);
+    const again = recordActiveDay(s, ms);
+    expect(again).toBe(s); // ไม่เปลี่ยน object เดิม (idempotent)
+  });
+  it('ไม่บันทึกถ้ายังไม่ยินยอม (opt-in guard)', () => {
+    const s: ExperimentsState = { enabled: false, seenConsent: true };
+    expect(recordActiveDay(s, Date.UTC(2026, 6, 10)).activeDays).toBeUndefined();
+  });
+});
+
+describe('retentionCohorts — pulse สูง vs กลับมาใช้ต่อ', () => {
+  const NOW = Date.UTC(2026, 6, 15); // 2026-07-15
+  const highUser: ExperimentsState = {
+    enabled: true, seenConsent: true,
+    pulses: [{ day: '2026-07-14', score: 3 }],
+    activeDays: ['2026-07-01', '2026-07-08', '2026-07-14'],
+  };
+  const lowUser: ExperimentsState = {
+    enabled: true, seenConsent: true,
+    pulses: [{ day: '2026-06-01', score: 1 }],
+    activeDays: ['2026-06-01'],
+  };
+
+  it('แบ่ง cohort ถูก + retention 7 วันต่างกันตาม sentiment', () => {
+    const rep = retentionCohorts([highUser, lowUser], NOW);
+    expect(rep.optIn).toBe(2);
+    expect(rep.withData).toBe(2);
+    const hi = rep.cohorts.find(c => c.cohort === 'high')!;
+    const lo = rep.cohorts.find(c => c.cohort === 'low')!;
+    expect(hi.users).toBe(1);
+    expect(lo.users).toBe(1);
+    expect(hi.returned7).toBe(100); // active ล่าสุด 07-14 (ก่อน now 1 วัน)
+    expect(lo.returned7).toBe(0);   // active ล่าสุด 06-01 (นานเกิน)
+    expect(hi.curve[0]).toBe(100);  // W0 ต้อง active เสมอ
+    expect(rep.insight).toContain('pulse สูง');
+  });
+
+  it('สัปดาห์ที่ยังมาไม่ถึง = null (ไม่นับ churn)', () => {
+    const fresh: ExperimentsState = {
+      enabled: true, seenConsent: true,
+      pulses: [{ day: '2026-07-15', score: 3 }],
+      activeDays: ['2026-07-15'],
+    };
+    const rep = retentionCohorts([fresh], NOW);
+    const hi = rep.cohorts.find(c => c.cohort === 'high')!;
+    expect(hi.curve[0]).toBe(100); // W0 เริ่มแล้ว
+    expect(hi.curve[1]).toBeNull(); // W1 ยังมาไม่ถึง
+  });
+
+  it('ไม่มีข้อมูลพอ → insight บอกว่ายังเทียบไม่ได้', () => {
+    const rep = retentionCohorts([highUser], NOW); // มีแต่ high
+    expect(rep.insight).toContain('ยังไม่พอ');
   });
 });
 

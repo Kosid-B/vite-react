@@ -21,6 +21,7 @@ export interface ExperimentsState {
   assignments?: Record<string, string>;   // expId -> variantId (ล็อกครั้งแรกที่เห็น)
   pulses?: PulseEntry[];                  // ประวัติ pulse รายวัน
   activations?: string[];                 // expId ที่ผู้ใช้กด "อยากทำต่อ" แล้ว (นับ 1 ครั้ง)
+  activeDays?: string[];                  // yyyy-mm-dd ที่ผู้ใช้ยัง active — ใช้วัด retention cohort (opt-in)
 }
 
 export interface Variant {
@@ -133,6 +134,16 @@ export function todayPulse(state: ExperimentsState): PulseEntry | undefined {
   return (state.pulses ?? []).find(p => p.day === day);
 }
 
+/** บันทึกว่าวันนี้ผู้ใช้ยัง active (opt-in) — dedup, เก็บล่าสุด 180 วัน. คืน state เดิมถ้าไม่เปลี่ยน */
+export function recordActiveDay(state: ExperimentsState, ms = Date.now()): ExperimentsState {
+  if (!state.enabled) return state;
+  const day = dayStr(ms);
+  const days = state.activeDays ?? [];
+  if (days.includes(day)) return state;
+  const next = [...days, day].sort((a, b) => a.localeCompare(b)).slice(-180);
+  return { ...state, activeDays: next };
+}
+
 /** สรุปข้อมูลของผู้ใช้เอง (โปร่งใส — ผู้ใช้ดูของตัวเองได้) */
 export function pulseSummary(state: ExperimentsState) {
   const pulses = state.pulses ?? [];
@@ -236,6 +247,105 @@ export function aggregateExperiments(states: (ExperimentsState | undefined | nul
   });
 
   return { total, optIn, pulseN, pulseAvg: pulseN ? pulseSum / pulseN : 0, reports };
+}
+
+/* ===== Retention cohort รายสัปดาห์ — "คนที่ให้ pulse สูงกลับมาใช้ต่อจริงไหม" =====
+ * แบ่ง cohort ตาม sentiment เฉลี่ยของ pulse (สูง/กลาง/ต่ำ) แล้วเทียบว่ากลุ่มไหน "กลับมาใช้ต่อ" มากกว่า
+ * ใช้ activeDays (opt-in) + วัน pulse (รวมเป็นวัน active). เส้น retention รายสัปดาห์นับจาก "วันแรกที่ active"
+ * สัปดาห์ที่ยังมาไม่ถึง (window ยังไม่เริ่ม) = null (ไม่นับเป็น churn) — วิธีมาตรฐานของ cohort analysis */
+const DAY_MS = 86400000;
+const WEEK_MS = 7 * DAY_MS;
+const dayToMs = (day: string): number => +new Date(day + 'T00:00:00Z');
+
+export type CohortId = 'high' | 'mid' | 'low';
+export interface CohortStat {
+  cohort: CohortId;
+  label: string;
+  users: number;
+  avgPulse: number;        // /3
+  returned7: number;       // % active ใน 7 วันล่าสุด
+  returned14: number;      // % active ใน 14 วันล่าสุด
+  avgActiveWeeks: number;  // จำนวนสัปดาห์ที่ active เฉลี่ย
+  curve: (number | null)[]; // retention % สัปดาห์ 0..3 (null = ยังไม่ถึงสัปดาห์นั้น)
+}
+export interface RetentionReport {
+  optIn: number;
+  withData: number;        // มีทั้ง pulse + วัน active พอวัดได้
+  weeks: number;           // ความยาวเส้น retention (4)
+  cohorts: CohortStat[];
+  insight: string;
+}
+
+const COHORT_LABEL: Record<CohortId, string> = {
+  high: '😄 pulse สูง (≥2.5)', mid: '🙂 pulse กลาง (2.0–2.5)', low: '😕 pulse ต่ำ (<2.0)',
+};
+
+export function retentionCohorts(states: (ExperimentsState | undefined | null)[], nowMs = Date.now()): RetentionReport {
+  const WEEKS = 4;
+  const todayMs = dayToMs(dayStr(nowMs));
+  let optIn = 0, withData = 0;
+
+  type Acc = { users: number; sumPulse: number; ret7: number; ret14: number; sumWeeks: number; wNum: number[]; wDen: number[] };
+  const mk = (): Acc => ({ users: 0, sumPulse: 0, ret7: 0, ret14: 0, sumWeeks: 0, wNum: Array(WEEKS).fill(0), wDen: Array(WEEKS).fill(0) });
+  const buckets: Record<CohortId, Acc> = { high: mk(), mid: mk(), low: mk() };
+
+  for (const st of states) {
+    if (!st || !st.enabled) continue;
+    optIn++;
+    const pulses = st.pulses ?? [];
+    if (pulses.length === 0) continue;                       // ไม่มี sentiment
+    // วัน active = activeDays ∪ วันที่ให้ pulse (การให้ pulse ก็คือ active)
+    const daySet = new Set<string>([...(st.activeDays ?? []), ...pulses.map(p => p.day)]);
+    const active = [...daySet].map(dayToMs).sort((a, b) => a - b);
+    if (active.length === 0) continue;
+    withData++;
+
+    const avg = pulses.reduce((s, p) => s + p.score, 0) / pulses.length;
+    const cohort: CohortId = avg >= 2.5 ? 'high' : avg >= 2.0 ? 'mid' : 'low';
+    const b = buckets[cohort];
+    b.users++; b.sumPulse += avg;
+
+    const first = active[0], last = active[active.length - 1];
+    if (todayMs - last <= 6 * DAY_MS) b.ret7++;
+    if (todayMs - last <= 13 * DAY_MS) b.ret14++;
+    b.sumWeeks += new Set(active.map(ms => Math.floor(ms / WEEK_MS))).size;
+
+    for (let w = 0; w < WEEKS; w++) {
+      const winStart = first + w * WEEK_MS;
+      if (todayMs < winStart) break;                         // สัปดาห์ยังมาไม่ถึง → ไม่นับ
+      b.wDen[w]++;
+      const winEnd = winStart + WEEK_MS;
+      if (active.some(ms => ms >= winStart && ms < winEnd)) b.wNum[w]++;
+    }
+  }
+
+  const cohorts: CohortStat[] = (['high', 'mid', 'low'] as CohortId[]).map(id => {
+    const b = buckets[id];
+    return {
+      cohort: id, label: COHORT_LABEL[id], users: b.users,
+      avgPulse: b.users ? b.sumPulse / b.users : 0,
+      returned7: b.users ? Math.round((b.ret7 / b.users) * 100) : 0,
+      returned14: b.users ? Math.round((b.ret14 / b.users) * 100) : 0,
+      avgActiveWeeks: b.users ? b.sumWeeks / b.users : 0,
+      curve: b.wDen.map((den, w) => den ? Math.round((b.wNum[w] / den) * 100) : null),
+    };
+  });
+
+  // insight: เทียบ retention (7 วัน) ของกลุ่ม pulse สูง vs ต่ำ
+  const hi = cohorts.find(c => c.cohort === 'high')!;
+  const lo = cohorts.find(c => c.cohort === 'low')!;
+  let insight: string;
+  if (hi.users === 0 || lo.users === 0) {
+    insight = 'ข้อมูลยังไม่พอเทียบ — ต้องมีผู้ใช้ทั้งกลุ่ม pulse สูงและต่ำที่มีประวัติการกลับมาใช้';
+  } else if (hi.returned7 > lo.returned7) {
+    insight = `คนที่ให้ pulse สูงกลับมาใช้ต่อ (7 วัน) ${hi.returned7}% เทียบกับกลุ่ม pulse ต่ำ ${lo.returned7}% — pulse สูงสัมพันธ์กับการอยู่ต่อ`;
+  } else if (hi.returned7 < lo.returned7) {
+    insight = `กลุ่ม pulse ต่ำกลับมา ${lo.returned7}% สูงกว่ากลุ่ม pulse สูง ${hi.returned7}% — pulse ไม่ทำนายการอยู่ต่อในข้อมูลนี้ (ตรวจสอบเพิ่ม)`;
+  } else {
+    insight = `ทั้งสองกลุ่มกลับมาใช้ต่อใกล้เคียงกัน (${hi.returned7}%) — pulse ยังไม่แยกความต่างชัด`;
+  }
+
+  return { optIn, withData, weeks: WEEKS, cohorts, insight };
 }
 
 /* ===== Export ผล A/B (CSV ดาวน์โหลด / TSV วางลง Google Sheets) ===== */
