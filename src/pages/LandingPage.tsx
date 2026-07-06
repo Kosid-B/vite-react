@@ -311,6 +311,7 @@ export default function LandingPage({ onGetStarted }: Props) {
         <br />
         <a href="/legal#company" style={{ color: C.slate5, textDecoration: 'none' }}>ข้อมูลบริษัท</a> ·{' '}
         <a href="/legal#privacy" style={{ color: C.slate5, textDecoration: 'none' }}>นโยบายความเป็นส่วนตัว</a> ·{' '}
+        <a href="/legal#cookies" style={{ color: C.slate5, textDecoration: 'none' }}>นโยบายคุกกี้</a> ·{' '}
         <a href="/legal#refund" style={{ color: C.slate5, textDecoration: 'none' }}>นโยบายการคืนเงิน</a> ·{' '}
         <a href="/legal#terms" style={{ color: C.slate5, textDecoration: 'none' }}>ข้อกำหนดและเงื่อนไข</a>
       </footer>
