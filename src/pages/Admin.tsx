@@ -10,7 +10,7 @@ const SEOTab        = lazy(() => import('./AdminTabs/SEOTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
-import { aggregateExperiments, type ExperimentsAggregate } from '../lib/experiments';
+import { aggregateExperiments, expReportCsv, expReportTsv, type ExperimentsAggregate } from '../lib/experiments';
 import { isAdminEmail, ADMIN_EMAILS } from '../config';
 import { PageHeader, Badge } from '../ds';
 import type { AppData, WinStory, WinCategory, FeedbackEntry, FeedbackSource, FeedbackSentiment, FeedbackTheme } from '../types';
@@ -350,6 +350,19 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   }
   async function copyOpsTsv() {
     try { await navigator.clipboard.writeText(opsTsv(opsRows)); setOpsMsg('📋 คัดลอกแล้ว — วางใน Google Sheets ได้เลย (Ctrl+V)'); }
+    catch { setOpsMsg('คัดลอกไม่สำเร็จ — เบราว์เซอร์ไม่อนุญาต clipboard'); }
+  }
+  function downloadExpCsv() {
+    if (!expAgg) return;
+    const blob = new Blob([expReportCsv(expAgg)], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `ceo-ai-abtest-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+  async function copyExpTsv() {
+    if (!expAgg) return;
+    try { await navigator.clipboard.writeText(expReportTsv(expAgg)); setOpsMsg('📋 คัดลอกผล A/B แล้ว — วางใน Google Sheets ได้เลย'); }
     catch { setOpsMsg('คัดลอกไม่สำเร็จ — เบราว์เซอร์ไม่อนุญาต clipboard'); }
   }
 
@@ -2191,6 +2204,10 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                         ยินยอมเข้าร่วม {expAgg.optIn}/{expAgg.total} · pulse รวม {expAgg.pulseN} ครั้ง ·
                         ความรู้สึกเฉลี่ยทั้งระบบ <b>{expAgg.pulseN ? expAgg.pulseAvg.toFixed(2) : '—'}</b>/3
                       </div>
+                    </div>
+                    <div className="ops-actions" style={{ marginTop: 10 }}>
+                      <button className="ops-btn ghost" onClick={downloadExpCsv}>⬇️ ดาวน์โหลดผล A/B (CSV)</button>
+                      <button className="ops-btn ghost" onClick={copyExpTsv}>📋 คัดลอกผล A/B ลง Google Sheets</button>
                     </div>
                     {expAgg.reports.map(rep => (
                       <div key={rep.experiment} className="exp-report">

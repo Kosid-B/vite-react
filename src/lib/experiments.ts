@@ -35,6 +35,7 @@ export interface Experiment {
   id: string;
   question: string;   // สิ่งที่เราอยากรู้ (บอกผู้ใช้ตรง ๆ)
   variants: Variant[];
+  goto?: string;      // PageId ที่ปุ่ม "อยากทำต่อ" พาไป (ค่าเริ่มต้น citylevelup)
 }
 
 /* คลังการทดลอง — ทดสอบว่า "การจัดกรอบกำลังใจแบบไหน" ทำให้อยากใช้งานต่อมากกว่า
@@ -59,6 +60,28 @@ export const EXPERIMENTS: Experiment[] = [
         cta: 'ลงมือทำต่อกับชุมชน',
       },
     ],
+    goto: 'citylevelup',
+  },
+  {
+    id: 'first_step',
+    question: 'ตอนเริ่มต้น คุณอยากให้ระบบชวน “ลงมือทีละก้าวเล็ก” หรือ “เห็นภาพปลายทางทั้งหมด” มากกว่ากัน?',
+    variants: [
+      {
+        id: 'small',
+        label: 'A · ก้าวเล็กก่อน',
+        headline: 'เริ่มจากงานเดียววันนี้',
+        body: 'ทำสิ่งเล็ก ๆ ให้เสร็จ 1 อย่างก่อน แล้วค่อยต่อยอด — ไม่ต้องรีบทำทุกอย่างพร้อมกัน',
+        cta: 'มอบงานแรกให้ทีม AI',
+      },
+      {
+        id: 'vision',
+        label: 'B · เห็นภาพปลายทาง',
+        headline: 'เห็นภาพบริษัท AI เต็มรูปแบบของคุณ',
+        body: 'สำรวจว่าระบบทั้งหมดพาธุรกิจคุณไปได้ไกลแค่ไหน แล้วเลือกจุดที่อยากเริ่มเอง',
+        cta: 'ดูทีมบริษัท AI ทั้งหมด',
+      },
+    ],
+    goto: 'aicompany',
   },
 ];
 
@@ -213,4 +236,44 @@ export function aggregateExperiments(states: (ExperimentsState | undefined | nul
   });
 
   return { total, optIn, pulseN, pulseAvg: pulseN ? pulseSum / pulseN : 0, reports };
+}
+
+/* ===== Export ผล A/B (CSV ดาวน์โหลด / TSV วางลง Google Sheets) ===== */
+const EXP_HEADERS = [
+  'การทดลอง', 'คำถาม', 'กลุ่ม', 'ข้อความ',
+  'ผู้เข้าร่วม', 'อยากทำต่อ', 'activation%', 'pulse_n', 'pulse_เฉลี่ย/3',
+  '😄', '🙂', '😕', 'ผู้ชนะ',
+];
+
+function expRows(agg: ExperimentsAggregate): (string | number)[][] {
+  const out: (string | number)[][] = [];
+  for (const rep of agg.reports) {
+    for (const v of rep.variants) {
+      out.push([
+        rep.experiment, rep.question, v.variantLabel, v.headline,
+        v.exposed, v.activated, v.activationRate, v.pulseN, v.pulseN ? v.pulseAvg.toFixed(2) : '',
+        v.good, v.meh, v.bad, rep.winner === v.variant ? 'ชนะ' : '',
+      ]);
+    }
+  }
+  return out;
+}
+
+/** CSV — escape ค่าที่มี comma/quote/newline + BOM ให้ Excel/Sheets อ่านไทยถูก */
+export function expReportCsv(agg: ExperimentsAggregate): string {
+  const esc = (v: string | number) => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const lines = [EXP_HEADERS.map(esc).join(',')];
+  for (const r of expRows(agg)) lines.push(r.map(esc).join(','));
+  return '﻿' + lines.join('\r\n');
+}
+
+/** TSV — คัดลอกวางใน Google Sheets ลงช่องอัตโนมัติ */
+export function expReportTsv(agg: ExperimentsAggregate): string {
+  const clean = (v: string | number) => String(v ?? '').replace(/[\t\n\r]/g, ' ');
+  const lines = [EXP_HEADERS.join('\t')];
+  for (const r of expRows(agg)) lines.push(r.map(clean).join('\t'));
+  return lines.join('\n');
 }

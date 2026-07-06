@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import type { AppData, PageId } from '../types';
 import {
   EXPERIMENTS, variantFor, recordPulse, todayPulse, pulseSummary,
-  makeUid, defaultExperiments, type PulseScore, type ExperimentsState,
+  makeUid, defaultExperiments, type PulseScore, type ExperimentsState, type Experiment,
 } from '../lib/experiments';
 import { streakCount } from '../lib/streak';
 import { track } from '../lib/analytics';
@@ -25,19 +25,21 @@ export default function Pulse({ data, onNavigate, onUpdate }: { data: AppData; o
   const sum = useMemo(() => pulseSummary(exp), [exp]);
   const today = todayPulse(exp);
 
-  // การทดลองปัจจุบัน + กลุ่มที่ผู้ใช้ถูกจัด (โปร่งใส)
-  const experiment = EXPERIMENTS[0];
-  const variant = useMemo(() => variantFor(exp, experiment), [exp, experiment]);
-
   useEffect(() => { track('pulse_page_viewed', { enabled: exp.enabled ? 1 : 0 }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ล็อกกลุ่ม A/B + ส่ง exposure event ครั้งแรกที่เปิดใช้ (โปร่งใส ผู้ใช้เห็นกลุ่มตัวเอง)
+  // ล็อกกลุ่ม A/B ของทุกการทดลอง + ส่ง exposure event ครั้งแรกที่เปิดใช้
   useEffect(() => {
     if (!exp.enabled) return;
-    if (exp.assignments?.[experiment.id]) return;
-    const assignments = { ...(exp.assignments ?? {}), [experiment.id]: variant.id };
-    set({ ...exp, assignments });
-    track('experiment_exposed', { experiment: experiment.id, variant: variant.id });
+    const assignments = { ...(exp.assignments ?? {}) };
+    let changed = false;
+    for (const e of EXPERIMENTS) {
+      if (assignments[e.id]) continue;
+      const v = variantFor(exp, e);
+      assignments[e.id] = v.id;
+      changed = true;
+      track('experiment_exposed', { experiment: e.id, variant: v.id });
+    }
+    if (changed) set({ ...exp, assignments });
   }, [exp.enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function enable() {
@@ -60,13 +62,13 @@ export default function Pulse({ data, onNavigate, onUpdate }: { data: AppData; o
   }
   function submitPulse(score: PulseScore) {
     set(recordPulse(exp, score));
-    track('pulse_submitted', { score, experiment: experiment.id, variant: exp.assignments?.[experiment.id] ?? variant.id });
+    track('pulse_submitted', { score });
   }
-  function activate() {
-    const activations = Array.from(new Set([...(exp.activations ?? []), experiment.id]));
+  function activate(e: Experiment) {
+    const activations = Array.from(new Set([...(exp.activations ?? []), e.id]));
     set({ ...exp, activations });
-    track('pulse_activation', { experiment: experiment.id, variant: exp.assignments?.[experiment.id] ?? variant.id });
-    onNavigate('citylevelup');
+    track('pulse_activation', { experiment: e.id, variant: exp.assignments?.[e.id] ?? variantFor(exp, e).id });
+    onNavigate((e.goto ?? 'citylevelup') as PageId);
   }
 
   return (
@@ -119,23 +121,30 @@ export default function Pulse({ data, onNavigate, onUpdate }: { data: AppData; o
             {today && <p className="pls-thanks">ขอบคุณ! บันทึกความรู้สึกวันนี้แล้ว — คุณเปลี่ยนได้ตลอดวัน</p>}
           </section>
 
-          {/* ---- A/B experiment (transparent) ---- */}
-          <section className="pls-card pls-exp">
-            <div className="pls-exp-top">
-              <h2 className="pls-card-title">🧪 การทดลองที่คุณกำลังอยู่</h2>
-              <span className="pls-badge">{variant.label}</span>
-            </div>
-            <p className="pls-q">คำถามที่เรากำลังหาคำตอบ: <b>{experiment.question}</b></p>
-            <div className="pls-variant">
-              <div className="pls-variant-head">{variant.headline}</div>
-              <div className="pls-variant-body">{variant.body}</div>
-              <button className="pls-btn pls-primary" onClick={activate}>{variant.cta} →</button>
-            </div>
-            <p className="pls-muted">
-              คุณถูกจัดกลุ่มนี้แบบสุ่มคงที่ (เห็นข้อความเดิมทุกครั้งเพื่อความเป็นธรรมของการทดลอง)
-              — ไม่ใช่การเลือกมาเพื่อกดดันคุณ. เราเทียบว่ากลุ่มไหนทำให้คน “อยากทำต่อ” มากกว่ากัน แล้วนำไปปรับปรุงระบบ.
-            </p>
-          </section>
+          {/* ---- A/B experiments (transparent, ทุกการทดลอง) ---- */}
+          {EXPERIMENTS.map(e => {
+            const v = variantFor(exp, e);
+            const done = (exp.activations ?? []).includes(e.id);
+            return (
+              <section key={e.id} className="pls-card pls-exp">
+                <div className="pls-exp-top">
+                  <h2 className="pls-card-title">🧪 การทดลองที่คุณกำลังอยู่</h2>
+                  <span className="pls-badge">{v.label}</span>
+                </div>
+                <p className="pls-q">คำถามที่เรากำลังหาคำตอบ: <b>{e.question}</b></p>
+                <div className="pls-variant">
+                  <div className="pls-variant-head">{v.headline}</div>
+                  <div className="pls-variant-body">{v.body}</div>
+                  <button className="pls-btn pls-primary" onClick={() => activate(e)}>{v.cta} →</button>
+                  {done && <span className="pls-done">✓ บันทึกแล้วว่าคุณอยากทำต่อ</span>}
+                </div>
+                <p className="pls-muted">
+                  คุณถูกจัดกลุ่มนี้แบบสุ่มคงที่ (เห็นข้อความเดิมทุกครั้งเพื่อความเป็นธรรมของการทดลอง)
+                  — ไม่ใช่การเลือกมาเพื่อกดดันคุณ. เราเทียบว่ากลุ่มไหนทำให้คน “อยากทำต่อ” มากกว่ากัน แล้วนำไปปรับปรุงระบบ.
+                </p>
+              </section>
+            );
+          })}
 
           {/* ---- your own data (transparency) ---- */}
           <section className="pls-card">
@@ -221,6 +230,7 @@ const PLS_CSS = `
 .pls-variant{ background:var(--cream); border:1px solid var(--cream3); border-radius:var(--r-lg); padding:18px 20px; }
 .pls-variant-head{ font-size:18px; font-weight:800; color:var(--ink); margin-bottom:6px; }
 .pls-variant-body{ color:var(--ink3); font-size:14.5px; line-height:1.7; margin-bottom:16px; }
+.pls-done{ display:inline-block; margin-left:12px; color:var(--green); font-size:13px; font-weight:600; }
 
 .pls-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:14px 0; }
 .pls-stat{ background:var(--cream); border:1px solid var(--cream3); border-radius:var(--r); padding:14px 10px; text-align:center; }

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   EXPERIMENTS, variantFor, recordPulse, todayPulse, pulseSummary,
-  aggregateExperiments, defaultExperiments, type ExperimentsState,
+  aggregateExperiments, expReportCsv, expReportTsv, defaultExperiments, type ExperimentsState,
 } from '../experiments';
 
 const dayStr = (ms: number) => new Date(ms).toISOString().slice(0, 10);
@@ -103,5 +103,41 @@ describe('aggregateExperiments — รวมผลข้ามผู้ใช้
     const agg = aggregateExperiments([undefined, { enabled: false, seenConsent: false }]);
     expect(agg.optIn).toBe(0);
     expect(agg.reports[0].winner).toBeUndefined();
+  });
+
+  it('รายงานครบทุกการทดลองในคลัง', () => {
+    const agg = aggregateExperiments([]);
+    expect(agg.reports).toHaveLength(EXPERIMENTS.length);
+  });
+});
+
+describe('registry — ทุกการทดลองมี 2 กลุ่ม + field ครบ', () => {
+  it('อย่างน้อย 2 การทดลอง แต่ละอันมี ≥2 variant + question', () => {
+    expect(EXPERIMENTS.length).toBeGreaterThanOrEqual(2);
+    for (const e of EXPERIMENTS) {
+      expect(e.question).toBeTruthy();
+      expect(e.variants.length).toBeGreaterThanOrEqual(2);
+      for (const v of e.variants) {
+        expect(v.label && v.headline && v.cta).toBeTruthy();
+      }
+    }
+  });
+});
+
+describe('export ผล A/B', () => {
+  const exp = EXPERIMENTS[0];
+  const agg = aggregateExperiments([
+    { enabled: true, seenConsent: true, assignments: { [exp.id]: exp.variants[0].id }, activations: [exp.id], pulses: [{ day: today, score: 3 }] },
+  ]);
+  it('CSV มี BOM + header + 1 แถวต่อ variant ต่อการทดลอง', () => {
+    const csv = expReportCsv(agg);
+    expect(csv.charCodeAt(0)).toBe(0xfeff);
+    const rows = csv.split('\r\n');
+    const totalVariants = EXPERIMENTS.reduce((s, e) => s + e.variants.length, 0);
+    expect(rows.length).toBe(1 + totalVariants); // header + variants
+  });
+  it('TSV คั่นด้วยแท็บ', () => {
+    const tsv = expReportTsv(agg);
+    expect(tsv.split('\n')[0]).toContain('\t');
   });
 });
