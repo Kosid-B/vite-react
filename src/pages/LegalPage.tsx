@@ -20,6 +20,13 @@ const NAV: { id: LegalSection; label: string }[] = [
 
 const webDisplay = COMPANY.website.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
+/** จัดรูปเลขผู้เสียภาษี 13 หลักเป็น x-xxxx-xxxxx-xx-x (มาตรฐานไทย) */
+function fmtTaxId(id: string): string {
+  const d = id.replace(/\D/g, '');
+  if (d.length !== 13) return id;
+  return `${d[0]}-${d.slice(1, 5)}-${d.slice(5, 10)}-${d.slice(10, 12)}-${d[12]}`;
+}
+
 export default function LegalPage({ section = 'company' }: { section?: LegalSection }) {
   useEffect(() => {
     document.title = `ข้อกำหนด · ความเป็นส่วนตัว · การคืนเงิน — ${BRAND.product}`;
@@ -51,7 +58,7 @@ export default function LegalPage({ section = 'company' }: { section?: LegalSect
             <tr><th>โทรศัพท์</th><td><a href={`tel:${COMPANY.tel.replace(/[^0-9+]/g, '')}`}>{COMPANY.tel}</a></td></tr>
             <tr><th>อีเมลติดต่อ / ฝ่ายบริการลูกค้า</th><td><a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a></td></tr>
             <tr><th>เว็บไซต์</th><td><a href={COMPANY.website} target="_blank" rel="noreferrer">{webDisplay}</a> · <a href={`https://${SITE}`} target="_blank" rel="noreferrer">{SITE}</a></td></tr>
-            <tr><th>เลขประจำตัวผู้เสียภาษี</th><td>{COMPANY.taxId ? COMPANY.taxId : 'โปรดติดต่อฝ่ายบริการลูกค้าเพื่อขอข้อมูลใบกำกับภาษี'}</td></tr>
+            <tr><th>เลขประจำตัวผู้เสียภาษี</th><td>{COMPANY.taxId ? fmtTaxId(COMPANY.taxId) : 'โปรดติดต่อฝ่ายบริการลูกค้าเพื่อขอข้อมูลใบกำกับภาษี'}</td></tr>
           </tbody>
         </table>
         <p className="legal-note">
