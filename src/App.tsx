@@ -24,6 +24,7 @@ import { PublicStorefrontPage, PublicDirectoryPage } from './pages/PublicStorefr
 import StartLanding from './pages/StartLanding';
 import ShopSignup from './pages/ShopSignup';
 import LegalPage, { type LegalSection } from './pages/LegalPage';
+import LegalLinks from './components/LegalLinks';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const JourneyMap = lazy(() => import('./pages/JourneyMap'));
@@ -533,13 +534,7 @@ export default function App() {
             www.b-tctraining.com
           </a>
           <span className="app-footer__sep">·</span>
-          <a href="/legal#privacy" className="app-footer__link">ความเป็นส่วนตัว</a>
-          <span className="app-footer__sep">·</span>
-          <a href="/legal#cookies" className="app-footer__link">คุกกี้</a>
-          <span className="app-footer__sep">·</span>
-          <a href="/legal#refund" className="app-footer__link">การคืนเงิน</a>
-          <span className="app-footer__sep">·</span>
-          <a href="/legal#terms" className="app-footer__link">ข้อกำหนด</a>
+          <LegalLinks linkClassName="app-footer__link" sep=" · " />
         </footer>
       </main>
 

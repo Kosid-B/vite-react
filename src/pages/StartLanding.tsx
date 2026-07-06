@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { track } from '../lib/analytics';
 import { applySeo, siteOrigin } from '../lib/seo';
+import LegalLinks from '../components/LegalLinks';
 
 /* ===== Landing page ไวรัล — /start (สาธารณะ ไม่ต้องล็อกอิน) =====
  * กลุ่มเป้าหมาย: Gen Z จบใหม่หางานไม่ได้ + กลุ่ม "เสมือนว่างงาน" (มีงานแต่รายได้ไม่พอ)
@@ -197,9 +198,7 @@ export default function StartLanding() {
         <br />
         เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a href="tel:08178177773">081-7817-7773</a>
         <br />
-        <a href="/legal#company">ข้อมูลบริษัท</a> · <a href="/legal#privacy">นโยบายความเป็นส่วนตัว</a> ·{' '}
-        <a href="/legal#cookies">นโยบายคุกกี้</a> · <a href="/legal#refund">นโยบายการคืนเงิน</a> ·{' '}
-        <a href="/legal#terms">ข้อกำหนดและเงื่อนไข</a>
+        <LegalLinks />
       </footer>
     </div>
   );
