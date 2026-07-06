@@ -50,6 +50,10 @@ src/components/UpgradeWall.tsx — locked page overlay
 src/components/Billing.tsx     — subscription management UI
 src/pages/AICompany.tsx        — บริษัท AI page (factory, agent tasks)
 src/pages/CaseStudies.tsx      — case studies + integration guides
+src/pages/CityLevelUp.tsx      — หน้า 'citylevelup' เมือง 3 มิติ Level Up (ใช้ lib/cityScape.ts)
+src/lib/cityScape.ts           — เอนจินวาดเมืองไอโซเมตริก SVG + auto-detect เวลา/ฤดู (framework-agnostic)
+src/pages/Pulse.tsx            — หน้า 'pulse' Pulse & A/B (opt-in, โปร่งใส) ใช้ lib/experiments.ts
+src/lib/experiments.ts         — registry A/B + assign แบบ deterministic + pulse + aggregate/export
 src/index.css                  — all styles (dark theme, CSS vars)
 supabase/functions/            — 6 Edge Functions
 supabase/migrations/           — 0001–0012 (ทั้งหมด applied แล้ว)
@@ -76,6 +80,26 @@ GA4 events: city_viewed, finance_entry_added, reward_claimed, streak_extended, f
 หน้า 'citytrade' — การค้าระหว่างเมือง: src/lib/interCityTrade.ts (CEO จับคู่/CMO ให้คะแนน rule-based
 จาก marketplace.partners) → tradeReport() บอร์ดดู · closeTrade() = Deal(closed)+finance entry
 (ขาย→รายได้หักฟี 3% / ซื้อ→รายจ่าย) ป้อนคลังเมือง · รับจ่ายจริง gate PAYMENT.xenditLive (รอ KYC)
+หน้า 'citylevelup' — เมืองบริษัทแบบไอโซเมตริก 3 มิติ (Level Up):
+  src/lib/cityScape.ts renderCityscape(svg,time,season) วาด SVG โปรซีเจอรัล (deterministic seed)
+  โหมดอัตโนมัติตามเวลาจริง: detectTime(นาฬิกาเครื่อง เช็คทุก 1 นาที) + detectSeason(เดือน ภูมิอากาศไทย
+  มี.ค.–พ.ค.ร้อน/มิ.ย.–ต.ค.ฝน/ก.พ.ใบไม้ผลิ/พ.ย.–ม.ค.หนาว) · เงาตามทิศแดด + อากาศ (ฝน/หิมะ/กลีบ/เมฆ)
+  กดปุ่มเอง=ปิดออโต้ · แถบ XP+การ์ดระดับ ผูกข้อมูลจริง (cityStats + COMPANY_LEVELS) ไม่ hardcode
+```
+
+## Pulse & A/B — วัด "อะไรทำให้อยากใช้งานต่อ" แบบโปร่งใส (opt-in)
+```
+หน้า 'pulse' (nav ใต้ องค์กร AI) — จริยธรรมมาก่อน (ตรงข้าม dark pattern):
+  ยินยอมก่อน (default ปิด) · ไม่ระบุตัวตน (uid สุ่ม) · ผู้ใช้เห็นกลุ่ม A/B ตัวเอง + ข้อมูลตัวเอง · ปิด/ลบได้
+src/lib/experiments.ts:
+  EXPERIMENTS[] (แต่ละอันมี ≥2 variant ซื่อสัตย์ ไม่ scarcity ปลอม) · variantFor() assign แบบ djb2 hash
+  recordPulse()/pulseSummary() (😕1/🙂2/😄3 รายวัน) · aggregateExperiments() รวมข้ามผู้ใช้ (ฝั่ง Admin)
+  expReportCsv()/expReportTsv() export ผล A/B · Experiment.goto = หน้าปลายทางปุ่ม "อยากทำต่อ"
+src/pages/Pulse.tsx: consent gate + pulse รายวัน + การ์ดทุกการทดลอง + สถิติตัวเอง (streak/เฉลี่ย/7วัน)
+AppData.experiments: {enabled,seenConsent,uid,assignments,pulses[],activations[]} (migrate default ใน App.tsx)
+Admin (แท็บเวิร์กสเปซ): loadOps → aggregateExperiments → เทียบ activationRate + pulseAvg ต่อ variant + ผู้ชนะ
+GA4 events: pulse_consent, experiment_exposed, pulse_submitted, pulse_activation, pulse_data_cleared
+เทสต์: src/lib/__tests__/experiments.test.ts
 ```
 
 ## Marketplace SEO (server-side)
@@ -116,7 +140,8 @@ Google Sheets ของ User (เชื่อมบัญชีเอง) = Phas
 ```
 
 ## Sidebar Pages (nav labels)
-`Dashboard`, `บริษัท AI`, `Marketplace`, `หน้าร้านของฉัน`, `ซื้อขาย B2B (RFQ)`,
+`Dashboard`, `บริษัท AI`, `เมืองบริษัท`, `เมือง · Level Up`, `Pulse & A/B`, `การค้าระหว่างเมือง`,
+`Marketplace`, `หน้าร้านของฉัน`, `ซื้อขาย B2B (RFQ)`,
 `ทีม / สมาชิก`, `โรงงานอัจฉริยะ`, `แพ็กเกจ & ชำระเงิน`, `SaaS Analytics`,
 `ผู้ดูแลระบบ` (admin email เท่านั้น), `ISO 9001:2015 QMS`, `AI Research`, `Case Studies`
 
