@@ -499,6 +499,8 @@ export interface AppData {
   cmoBrand?: { kit: string; webUsed: boolean; updatedAt: string };
   // CMO พิสูจน์ไอเดียก่อนลงทุนสร้าง (VRIO/JTBD/TAM-SAM-SOM/Kill-Pivot) → GO/PIVOT/KILL
   cmoValidation?: { idea: string; report: string; verdict: 'go' | 'pivot' | 'kill' | ''; webUsed: boolean; updatedAt: string };
+  // Pulse & A/B — วัด "อะไรทำให้อยากใช้งานต่อ" แบบโปร่งใส (opt-in, ไม่ระบุตัวตน) — ดู lib/experiments.ts
+  experiments?: import('./lib/experiments').ExperimentsState;
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */
@@ -511,7 +513,7 @@ export interface FinanceEntry {
   recurring?: boolean;            // รายการรายเดือนซ้ำ
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade' | 'citylevelup' | 'pulse';
 
 /* ===== Factory / โรงงานอัจฉริยะ ===== */
 export type MachineStatus = 'running' | 'idle' | 'maintenance' | 'breakdown';

@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { BRAND, COMPANY } from '../config';
+import { track } from '../lib/analytics';
+import { pickNudgeVariant, buildNudge } from '../lib/authNudge';
+import AuthNudge from './AuthNudge';
 
 type Mode = 'signin' | 'signup';
 
@@ -11,6 +14,11 @@ export default function Auth() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ type: 'err' | 'ok'; text: string } | null>(null);
 
+  // Authentic nudge: เลือก "มุมอารมณ์" แบบ deterministic แล้ววัดผลว่ามุมไหนแปลงจริง (GA)
+  const variant = useMemo(() => pickNudgeVariant(Math.floor(Date.now() / 86400000)), []);
+  const nudge = useMemo(() => buildNudge(variant), [variant]);
+  useEffect(() => { track('nudge_shown', { variant }); }, [variant]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!supabase) return;
@@ -18,6 +26,7 @@ export default function Auth() {
     setMsg(null);
     try {
       if (mode === 'signup') {
+        track('nudge_cta', { variant });   // วัดว่ามุมอารมณ์นี้นำสู่การสมัครจริง
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
         setMsg({ type: 'ok', text: 'สมัครสำเร็จ! ตรวจอีเมลเพื่อยืนยัน แล้วเข้าสู่ระบบได้เลย' });
@@ -46,6 +55,8 @@ export default function Auth() {
       <div className="auth-card">
         <div className="auth-brand">{BRAND.product}</div>
         <div className="auth-sub">{BRAND.tagline}</div>
+
+        <AuthNudge nudge={nudge} />
 
         <div className="auth-tabs">
           <button className={mode === 'signin' ? 'active' : ''} onClick={() => { setMode('signin'); setMsg(null); }}>เข้าสู่ระบบ</button>

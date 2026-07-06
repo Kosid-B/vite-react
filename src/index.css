@@ -404,7 +404,8 @@ body {
 .cp-goal { padding: 13px 16px; background: var(--white); border: 1px solid var(--sand); border-radius: var(--r); margin-bottom: 14px; font-size: 13px; color: var(--ink2); font-family: inherit; resize: none; outline: none; width: 100%; line-height: 1.6; border-left: 3px solid var(--rust); }
 .cp-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
 .cp-col { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
-.cp-col-hd { padding: 10px 12px; border-bottom: 1px solid var(--cream2); font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
+.cp-col-hd { padding: 10px 12px; border-bottom: 1px solid var(--cream2); border-left: 3px solid transparent; font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+.cp-col-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 2px rgba(255,255,255,.08); }
 .cp-col-hd input { border: none; background: none; outline: none; font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; font-family: inherit; color: inherit; width: 100%; cursor: text; }
 .cp-body { padding: 8px; }
 
@@ -434,6 +435,26 @@ body {
 .t-impact { background: var(--green-bg); color: var(--green); }
 .t-effort { background: var(--cream2); color: var(--ink3); border: 1px solid var(--sand); }
 .t-stage  { background: var(--blue-bg); color: var(--blue); }
+/* ===== Emotional Trigger — โมเมนต์ฉลองทันที (confetti + การ์ดอารมณ์) ===== */
+.celebrate-overlay { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; background: rgba(2,6,23,.55); backdrop-filter: blur(2px); animation: celeb-fade .25s ease; padding: 20px; }
+.celebrate-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.celebrate-card { position: relative; text-align: center; max-width: 380px; width: 100%; padding: 30px 28px 24px; border-radius: 20px;
+  background: linear-gradient(180deg, var(--cream3), var(--cream2)); border: 1px solid var(--sand);
+  box-shadow: 0 24px 60px rgba(0,0,0,.5); animation: celeb-pop .45s cubic-bezier(.2,1.3,.4,1); }
+.celebrate-overlay.tone-triumph .celebrate-card { border-color: rgba(255,207,92,.5); box-shadow: 0 0 0 1px rgba(255,207,92,.25), 0 24px 60px rgba(0,0,0,.5); }
+.celebrate-overlay.tone-milestone .celebrate-card { border-color: rgba(111,224,200,.45); }
+.celebrate-overlay.tone-encourage .celebrate-card { border-color: rgba(91,139,255,.45); }
+.celebrate-emoji { font-size: 56px; line-height: 1; margin-bottom: 12px; animation: celeb-emoji .6s ease .1s both; }
+.celebrate-title { font-family: 'Kanit', sans-serif; font-weight: 600; font-size: 22px; color: var(--ink); margin-bottom: 8px; text-wrap: balance; }
+.celebrate-msg { font-size: 13.5px; line-height: 1.6; color: var(--ink2); margin-bottom: 20px; }
+.celebrate-btn { background: var(--accent); color: #04222e; border: 0; border-radius: 10px; padding: 11px 26px; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; transition: filter .15s; }
+.celebrate-btn:hover { filter: brightness(1.08); }
+.celebrate-overlay.tone-triumph .celebrate-btn { background: var(--gold, #ffcf5c); }
+@keyframes celeb-fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes celeb-pop { from { opacity: 0; transform: scale(.85) translateY(12px) } to { opacity: 1; transform: none } }
+@keyframes celeb-emoji { 0% { transform: scale(0) rotate(-20deg) } 60% { transform: scale(1.25) rotate(8deg) } 100% { transform: scale(1) rotate(0) } }
+@media (prefers-reduced-motion: reduce) { .celebrate-card, .celebrate-emoji, .celebrate-overlay { animation: none; } }
+
 .celebration { display: none; text-align: center; padding: 40px; background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow); margin-bottom: 16px; }
 .celebration.show { display: block; animation: fadeUp .4s ease; }
 .celebration-emoji { font-size: 40px; margin-bottom: 12px; }
@@ -531,7 +552,7 @@ body {
 .db-mx-empty { opacity: .4; }
 .db-mx-count { font-family: 'Kanit', sans-serif; font-weight: 600; font-size: 18px; font-weight: 700; }
 .db-mx-dash { font-size: 12px; color: var(--ink4); }
-.db-panel-cta { background: linear-gradient(135deg, var(--ink) 0%, #2d2520 100%); border-color: transparent; }
+.db-panel-cta { background: linear-gradient(135deg, var(--cream3) 0%, var(--cream) 100%); border-color: rgba(6,182,212,.22); }
 .db-panel-cta .db-panel-hd { color: rgba(255,255,255,.5); }
 .db-cta-desc { font-size: 13px; color: rgba(255,255,255,.7); line-height: 1.6; margin-bottom: 18px; }
 .db-cta-stats { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -1502,7 +1523,21 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .auth-loading { color: var(--ink3); font-size: 14px; }
 .auth-card { width: 100%; max-width: 380px; background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 32px 30px; box-shadow: var(--shadow); }
 .auth-brand { font-family: 'Kanit', sans-serif; font-weight: 600; font-size: 26px; color: var(--ink); letter-spacing: -.01em; }
-.auth-sub { font-size: 12.5px; color: var(--ink3); margin-top: 4px; margin-bottom: 22px; line-height: 1.5; }
+.auth-sub { font-size: 12.5px; color: var(--ink3); margin-top: 4px; margin-bottom: 16px; line-height: 1.5; }
+
+/* ===== AuthNudge — ประสบการณ์ก่อนสมัคร (authentic · experience-first) ===== */
+.authnudge { text-align: center; padding: 18px 16px 16px; margin-bottom: 20px; border-radius: 14px;
+  background: linear-gradient(180deg, rgba(6,182,212,.08), rgba(91,139,255,.06)); border: 1px solid rgba(111,224,200,.22);
+  animation: nudge-in .5s cubic-bezier(.2,1,.3,1); }
+.authnudge-symbol { font-size: 30px; line-height: 1; margin-bottom: 10px; letter-spacing: .04em; animation: nudge-sym .6s ease .1s both; }
+.authnudge-headline { font-family: 'Kanit', sans-serif; font-weight: 600; font-size: 18px; color: var(--ink); line-height: 1.35; text-wrap: balance; }
+.authnudge-body { font-size: 12.5px; color: var(--ink2); line-height: 1.55; margin-top: 6px; }
+.authnudge-chip { display: inline-block; margin-top: 12px; padding: 5px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
+  background: rgba(16,185,129,.14); color: #34d399; border: 1px solid rgba(16,185,129,.28); }
+.authnudge-proof { font-size: 11px; color: var(--ink3); margin-top: 10px; line-height: 1.4; }
+@keyframes nudge-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes nudge-sym { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .authnudge, .authnudge-symbol { animation: none; } }
 .auth-tabs { display: flex; gap: 6px; background: var(--cream2); border-radius: var(--r); padding: 4px; margin-bottom: 20px; }
 .auth-tabs button { flex: 1; padding: 9px; border: none; background: none; font-family: inherit; font-size: 13px; color: var(--ink3); border-radius: 6px; cursor: pointer; transition: .15s; }
 .auth-tabs button.active { background: var(--white); color: var(--ink); box-shadow: var(--shadow-sm); font-weight: 600; }
@@ -4845,6 +4880,36 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ops-plan{ background:#7c3aed22; color:#c4b5fd; border-radius:6px; padding:2px 8px; font-size:11.5px; font-weight:600; }
 .ops-pos{ color:#22c55e; }
 .ops-neg{ color:#ef4444; }
+
+/* ===== Admin: Pulse & A/B aggregate ===== */
+.exp-agg{ margin-top:18px; border:1px solid var(--border,#1f2937); border-radius:12px; padding:16px 18px; background:var(--bg,#0f172a); }
+.exp-agg-head{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.exp-agg-title{ font-size:15px; font-weight:800; }
+.exp-agg-meta{ font-size:12.5px; color:var(--muted,#94a3b8); }
+.exp-agg-meta b{ color:#e2e8f0; }
+.exp-report{ margin-top:14px; }
+.exp-q{ font-size:13.5px; color:#cbd5e1; margin-bottom:10px; }
+.exp-variants{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+.exp-variant{ border:1px solid var(--border,#1f2937); border-radius:10px; padding:14px; background:#0b1220; }
+.exp-variant.exp-win{ border-color:#22c55e; box-shadow:0 0 0 1px #22c55e55; }
+.exp-variant-top{ display:flex; justify-content:space-between; align-items:center; }
+.exp-variant-label{ font-size:12px; font-weight:700; color:#a5b4fc; letter-spacing:.02em; }
+.exp-win-tag{ font-size:11px; font-weight:700; color:#22c55e; }
+.exp-variant-head{ font-size:14px; font-weight:700; margin:6px 0 12px; color:#f1f5f9; }
+.exp-metric-row{ display:flex; gap:16px; }
+.exp-metric-n{ font-size:22px; font-weight:800; font-variant-numeric:tabular-nums; }
+.exp-metric-l{ font-size:11px; color:var(--muted,#94a3b8); margin-top:2px; }
+.exp-bar{ display:flex; height:8px; border-radius:999px; overflow:hidden; margin-top:12px; background:#1e293b; }
+.exp-bar > span{ display:block; min-width:0; }
+.exp-bar-empty{ flex:1; font-size:10.5px; color:#64748b; text-align:center; line-height:8px; }
+.exp-note{ font-size:12px; color:#64748b; margin-top:10px; }
+.ret-insight{ margin:10px 0 12px; font-size:13px; color:#e2e8f0; background:rgba(16,185,129,.10);
+  border:1px solid rgba(16,185,129,.35); border-radius:8px; padding:9px 12px; }
+.ret-table td{ text-align:center; }
+.ret-table td.ops-name{ text-align:left; }
+.ret-cell{ padding:6px 8px; }
+.ret-chip{ display:inline-block; min-width:38px; padding:2px 6px; border-radius:6px; font-weight:700; font-size:11.5px; }
+.ret-na{ color:#475569; }
 
 /* ===== CEO รายงานบอร์ด (Board Report) ===== */
 .ai-panel.brd{ border-color:#7c3aed55; }

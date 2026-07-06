@@ -169,7 +169,7 @@ export default function ROICalculator({ data, onUpdate }: Props) {
               </div>
               <div className="roi-sc-divider" />
               <div className="roi-sc-row">
-                <div className="roi-sc-val" style={{ color: '#2d6a4f' }}>{sc.roiPct.toFixed(0)}%</div>
+                <div className="roi-sc-val roi-sc-money">{sc.roiPct.toFixed(0)}%</div>
                 <div className="roi-sc-lbl">ROI (เทียบต้นทุน Stage)</div>
               </div>
             </div>

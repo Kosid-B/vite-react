@@ -10,6 +10,7 @@ const SEOTab        = lazy(() => import('./AdminTabs/SEOTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
+import { aggregateExperiments, retentionCohorts, expReportCsv, expReportTsv, type ExperimentsAggregate, type RetentionReport } from '../lib/experiments';
 import { isAdminEmail, ADMIN_EMAILS } from '../config';
 import { PageHeader, Badge } from '../ds';
 import type { AppData, WinStory, WinCategory, FeedbackEntry, FeedbackSource, FeedbackSentiment, FeedbackTheme } from '../types';
@@ -137,6 +138,8 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [opsRows, setOpsRows] = useState<OpsRow[]>([]);
   const [opsLoading, setOpsLoading] = useState(false);
   const [opsMsg, setOpsMsg] = useState<string | null>(null);
+  const [expAgg, setExpAgg] = useState<ExperimentsAggregate | null>(null);
+  const [retention, setRetention] = useState<RetentionReport | null>(null);
 
   // Simulator state
   const [nGrowth, setNGrowth] = useState(15);
@@ -332,6 +335,8 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
               cityTier: '-', companyLevel: '-', streak: 0 };
       });
       setOpsRows(out);
+      setExpAgg(aggregateExperiments(states.map(s => s?.experiments)));
+      setRetention(retentionCohorts(states.map(s => s?.experiments)));
       setOpsMsg(`สรุปแล้ว ${out.length} เวิร์กสเปซ`);
     } catch (e) {
       setOpsMsg('โหลดสรุปไม่สำเร็จ: ' + (e instanceof Error ? e.message : String(e)));
@@ -347,6 +352,19 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   }
   async function copyOpsTsv() {
     try { await navigator.clipboard.writeText(opsTsv(opsRows)); setOpsMsg('📋 คัดลอกแล้ว — วางใน Google Sheets ได้เลย (Ctrl+V)'); }
+    catch { setOpsMsg('คัดลอกไม่สำเร็จ — เบราว์เซอร์ไม่อนุญาต clipboard'); }
+  }
+  function downloadExpCsv() {
+    if (!expAgg) return;
+    const blob = new Blob([expReportCsv(expAgg)], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `ceo-ai-abtest-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+  async function copyExpTsv() {
+    if (!expAgg) return;
+    try { await navigator.clipboard.writeText(expReportTsv(expAgg)); setOpsMsg('📋 คัดลอกผล A/B แล้ว — วางใน Google Sheets ได้เลย'); }
     catch { setOpsMsg('คัดลอกไม่สำเร็จ — เบราว์เซอร์ไม่อนุญาต clipboard'); }
   }
 
@@ -2179,6 +2197,105 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                     </>
                   );
                 })()}
+
+                {expAgg && expAgg.optIn > 0 && (
+                  <div className="exp-agg">
+                    <div className="exp-agg-head">
+                      <div className="exp-agg-title">💓 Pulse &amp; A/B — อะไรทำให้ “อยากใช้งานต่อ”</div>
+                      <div className="exp-agg-meta">
+                        ยินยอมเข้าร่วม {expAgg.optIn}/{expAgg.total} · pulse รวม {expAgg.pulseN} ครั้ง ·
+                        ความรู้สึกเฉลี่ยทั้งระบบ <b>{expAgg.pulseN ? expAgg.pulseAvg.toFixed(2) : '—'}</b>/3
+                      </div>
+                    </div>
+                    <div className="ops-actions" style={{ marginTop: 10 }}>
+                      <button className="ops-btn ghost" onClick={downloadExpCsv}>⬇️ ดาวน์โหลดผล A/B (CSV)</button>
+                      <button className="ops-btn ghost" onClick={copyExpTsv}>📋 คัดลอกผล A/B ลง Google Sheets</button>
+                    </div>
+                    {expAgg.reports.map(rep => (
+                      <div key={rep.experiment} className="exp-report">
+                        <div className="exp-q">❓ {rep.question}</div>
+                        <div className="exp-variants">
+                          {rep.variants.map(v => {
+                            const win = rep.winner === v.variant;
+                            return (
+                              <div key={v.variant} className={`exp-variant${win ? ' exp-win' : ''}`}>
+                                <div className="exp-variant-top">
+                                  <span className="exp-variant-label">{v.variantLabel}</span>
+                                  {win && <span className="exp-win-tag">▲ ชนะ</span>}
+                                </div>
+                                <div className="exp-variant-head">{v.headline}</div>
+                                <div className="exp-metric-row">
+                                  <div className="exp-metric">
+                                    <div className="exp-metric-n">{v.activationRate}%</div>
+                                    <div className="exp-metric-l">อยากทำต่อ ({v.activated}/{v.exposed})</div>
+                                  </div>
+                                  <div className="exp-metric">
+                                    <div className="exp-metric-n">{v.pulseN ? v.pulseAvg.toFixed(2) : '—'}</div>
+                                    <div className="exp-metric-l">pulse เฉลี่ย /3 (n={v.pulseN})</div>
+                                  </div>
+                                </div>
+                                <div className="exp-bar" title={`😄 ${v.good} · 🙂 ${v.meh} · 😕 ${v.bad}`}>
+                                  {v.pulseN > 0 ? (<>
+                                    <span style={{ flex: v.good, background: 'var(--green)' }} />
+                                    <span style={{ flex: v.meh, background: 'var(--amber)' }} />
+                                    <span style={{ flex: v.bad, background: 'var(--red)' }} />
+                                  </>) : <span className="exp-bar-empty">ยังไม่มี pulse</span>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {!rep.winner && <div className="exp-note">ข้อมูลยังไม่พอชี้ผู้ชนะ — ต้องมีผู้เข้าร่วมมากขึ้นทั้งสองกลุ่ม</div>}
+                      </div>
+                    ))}
+                    <div className="exp-note">วัดจากผู้ที่ยินยอมเท่านั้น · ไม่ระบุตัวตน · เทียบเฉพาะ proxy ของความอยากใช้งานต่อ (activation + ความรู้สึก) แบบซื่อสัตย์</div>
+                  </div>
+                )}
+                {expAgg && expAgg.optIn === 0 && opsRows.length > 0 && (
+                  <div className="ops-msg">💓 ยังไม่มีผู้ใช้ยินยอมเข้าร่วม Pulse &amp; A/B — ผลจะแสดงเมื่อมีผู้เปิดใช้</div>
+                )}
+
+                {retention && retention.withData > 0 && (
+                  <div className="exp-agg">
+                    <div className="exp-agg-head">
+                      <div className="exp-agg-title">🔁 Retention Cohort รายสัปดาห์ — pulse สูง = กลับมาใช้ต่อจริงไหม?</div>
+                      <div className="exp-agg-meta">แบ่งกลุ่มตามความรู้สึกเฉลี่ย · มีข้อมูลพอวัด {retention.withData} คน</div>
+                    </div>
+                    <div className="ret-insight">💡 {retention.insight}</div>
+                    <div className="ops-table-wrap">
+                      <table className="ops-table ret-table">
+                        <thead><tr>
+                          <th>กลุ่ม (sentiment)</th><th>คน</th><th>pulse เฉลี่ย</th>
+                          <th>กลับใน 7 วัน</th><th>กลับใน 14 วัน</th><th>สัปดาห์ active เฉลี่ย</th>
+                          {Array.from({ length: retention.weeks }, (_, w) => <th key={w}>W{w}</th>)}
+                        </tr></thead>
+                        <tbody>
+                          {retention.cohorts.map(c => (
+                            <tr key={c.cohort}>
+                              <td className="ops-name">{c.label}</td>
+                              <td>{c.users}</td>
+                              <td>{c.users ? c.avgPulse.toFixed(2) : '—'}</td>
+                              <td className={c.users ? (c.returned7 >= 50 ? 'ops-pos' : 'ops-neg') : ''}>{c.users ? c.returned7 + '%' : '—'}</td>
+                              <td>{c.users ? c.returned14 + '%' : '—'}</td>
+                              <td>{c.users ? c.avgActiveWeeks.toFixed(1) : '—'}</td>
+                              {c.curve.map((v, w) => (
+                                <td key={w} className="ret-cell">
+                                  {v == null ? <span className="ret-na">–</span> : (
+                                    <span className="ret-chip" style={{ background: `color-mix(in srgb, var(--green) ${v}%, transparent)` }}>{v}%</span>
+                                  )}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="exp-note">
+                      W0–W{retention.weeks - 1} = % ที่ยัง active ในสัปดาห์ที่ 0..{retention.weeks - 1} นับจากวันแรกที่เข้าร่วม ·
+                      “–” = สัปดาห์ยังมาไม่ถึง (ไม่นับเป็น churn) · วัดจากผู้ยินยอมเท่านั้น ไม่ระบุตัวตน
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="team-list">

@@ -2,11 +2,14 @@ import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import type { Session } from '@supabase/supabase-js';
 import type { AppData, PageId } from './types';
 import { DEFAULT_DATA } from './data';
+import { defaultExperiments, recordActiveDay } from './lib/experiments';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
 import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
 import { track } from './lib/analytics';
+import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTriggers';
+import Celebrate from './components/Celebrate';
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
@@ -46,6 +49,8 @@ const Sipoc = lazy(() => import('./pages/Sipoc'));
 const MyStorefront = lazy(() => import('./pages/MyStorefront'));
 const Trade = lazy(() => import('./pages/Trade'));
 const CompanyCity = lazy(() => import('./pages/CompanyCity'));
+const CityLevelUp = lazy(() => import('./pages/CityLevelUp'));
+const Pulse = lazy(() => import('./pages/Pulse'));
 const InterCityTrade = lazy(() => import('./pages/InterCityTrade'));
 
 const STORAGE_KEY = 'cjux2';
@@ -54,6 +59,8 @@ const STORAGE_KEY = 'cjux2';
 const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'city', label: 'เมืองบริษัท' },
+  { id: 'citylevelup', label: 'เมือง · Level Up' },
+  { id: 'pulse', label: 'Pulse & A/B' },
   { id: 'citytrade', label: 'การค้าระหว่างเมือง' },
   { id: 'aicompany', label: 'บริษัท AI' },
   { id: 'journey', label: 'Journey Map' },
@@ -137,6 +144,7 @@ function migrate(parsed: AppData): AppData {
       });
     }
   }
+  if (!parsed.experiments) parsed.experiments = defaultExperiments();
   return parsed;
 }
 
@@ -150,6 +158,9 @@ function loadData(): AppData {
 
 export default function App() {
   const [data, setData] = useState<AppData>(loadData);
+  const dataRef = useRef(data);
+  useEffect(() => { dataRef.current = data; }, [data]);
+  const [celebration, setCelebration] = useState<EmotionalMoment | null>(null);
   const [activePage, setActivePage] = useState<PageId>('dashboard');
   const [activeStage, setActiveStage] = useState(0);
   const [activeMonth, setActiveMonth] = useState(0);
@@ -254,10 +265,18 @@ export default function App() {
 
   const updateData = useCallback((incoming: AppData) => {
     // ต่อ streak รายวันเมื่อทำงานจริง (แก้ข้อมูลครั้งแรกของวัน)
-    const next = bumpStreak(incoming);
+    let next = bumpStreak(incoming);
     if (next.streak && next.streak.count !== incoming.streak?.count) {
       track('streak_extended', { count: next.streak.count });
     }
+    // บันทึกวัน active สำหรับ retention cohort (เฉพาะผู้ยินยอม Pulse — recordActiveDay guard เอง)
+    if (next.experiments?.enabled) {
+      const exp = recordActiveDay(next.experiments);
+      if (exp !== next.experiments) next = { ...next, experiments: exp };
+    }
+    // Emotional trigger: ยิงการฉลอง/ให้กำลังใจทันทีเมื่อ 'เพิ่งข้าม' หมุดสำคัญ
+    const moment = detectEmotionalMoment(dataRef.current, next);
+    if (moment) { setCelebration(moment); track('emotional_trigger', { id: moment.id, tone: moment.tone }); }
     setData(next);
     try {
       const serial = JSON.stringify(next);
@@ -368,6 +387,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <Celebrate moment={celebration} onDone={() => setCelebration(null)} />
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
       <button className="hamburger" onClick={() => setSidebarOpen(true)} aria-label="เปิดเมนู">
@@ -417,6 +437,8 @@ export default function App() {
         {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'city' && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
+        {activePage === 'citylevelup' && <CityLevelUp data={data} onNavigate={setActivePage} onUpdate={updateData} />}
+        {activePage === 'pulse' && <Pulse data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'citytrade' && <InterCityTrade data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
