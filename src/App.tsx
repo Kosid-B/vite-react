@@ -23,6 +23,7 @@ import { isAdminEmail } from './config';
 import { PublicStorefrontPage, PublicDirectoryPage } from './pages/PublicStorefront';
 import StartLanding from './pages/StartLanding';
 import ShopSignup from './pages/ShopSignup';
+import LegalPage, { type LegalSection } from './pages/LegalPage';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const JourneyMap = lazy(() => import('./pages/JourneyMap'));
@@ -358,6 +359,14 @@ export default function App() {
   if (pubPath === '/shop' || pubPath === '/shop/') {
     return <ShopSignup />;
   }
+  // เอกสารทางกฎหมาย (สาธารณะ): ข้อมูลบริษัท · ความเป็นส่วนตัว · การคืนเงิน · ข้อกำหนด
+  if (pubPath.startsWith('/legal') || ['/privacy', '/terms', '/refund'].some(p => pubPath === p || pubPath === p + '/')) {
+    const sec: LegalSection =
+      pubPath.includes('privacy') ? 'privacy' :
+      pubPath.includes('refund') ? 'refund' :
+      pubPath.includes('terms') ? 'terms' : 'company';
+    return <LegalPage section={sec} />;
+  }
 
   // Loading Supabase session
   if (isSupabaseEnabled && !authReady) {
@@ -522,6 +531,12 @@ export default function App() {
           <a href="https://www.b-tctraining.com/" target="_blank" rel="noopener noreferrer" className="app-footer__link">
             www.b-tctraining.com
           </a>
+          <span className="app-footer__sep">·</span>
+          <a href="/legal#privacy" className="app-footer__link">ความเป็นส่วนตัว</a>
+          <span className="app-footer__sep">·</span>
+          <a href="/legal#refund" className="app-footer__link">การคืนเงิน</a>
+          <span className="app-footer__sep">·</span>
+          <a href="/legal#terms" className="app-footer__link">ข้อกำหนด</a>
         </footer>
       </main>
 

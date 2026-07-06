@@ -308,6 +308,11 @@ export default function LandingPage({ onGetStarted }: Props) {
         โทร <a href="tel:08178177773" style={{ color: C.cyan4, textDecoration: 'none', fontWeight: 600 }}>081-7817-7773</a>
         <br />
         © 2026 CEO AI Thailand · ceoaithailand.org · B. Training Consultant Co., Ltd.
+        <br />
+        <a href="/legal#company" style={{ color: C.slate5, textDecoration: 'none' }}>ข้อมูลบริษัท</a> ·{' '}
+        <a href="/legal#privacy" style={{ color: C.slate5, textDecoration: 'none' }}>นโยบายความเป็นส่วนตัว</a> ·{' '}
+        <a href="/legal#refund" style={{ color: C.slate5, textDecoration: 'none' }}>นโยบายการคืนเงิน</a> ·{' '}
+        <a href="/legal#terms" style={{ color: C.slate5, textDecoration: 'none' }}>ข้อกำหนดและเงื่อนไข</a>
       </footer>
     </div>
   );
