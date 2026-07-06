@@ -121,3 +121,96 @@ export function pulseSummary(state: ExperimentsState) {
   const bad = pulses.filter(p => p.score === 1).length;
   return { n, avg, last7, good, meh, bad };
 }
+
+/* ===== รวมผลข้ามผู้ใช้ (ฝั่ง Admin) — เทียบ variant ไหนทำให้ "อยากใช้งานต่อ" มากกว่า =====
+ * ใช้เฉพาะ workspace ที่ยินยอม (enabled). วัด 2 อย่างต่อ variant:
+ *   1) activationRate — สัดส่วนคนที่กด "อยากทำต่อ"
+ *   2) pulseAvg — ความรู้สึกเฉลี่ย (/3) ของคนในกลุ่มนั้น
+ * ทั้งคู่คือ proxy ของ "อยากใช้งานต่อ/อยากซื้อ" แบบซื่อสัตย์ (ไม่บิดอารมณ์) */
+export interface ExpVariantStat {
+  experiment: string;
+  variant: string;
+  variantLabel: string;
+  headline: string;
+  exposed: number;         // workspace ที่ถูกจัดกลุ่มนี้
+  activated: number;       // กด "อยากทำต่อ"
+  activationRate: number;  // %
+  pulseN: number;
+  pulseAvg: number;        // /3
+  good: number; meh: number; bad: number;
+}
+export interface ExpReport {
+  experiment: string;
+  question: string;
+  variants: ExpVariantStat[];
+  winner?: string;         // variant id ที่ activationRate สูงกว่า (ถ้าต่างกันชัด)
+}
+export interface ExperimentsAggregate {
+  total: number;           // workspace ทั้งหมดที่พิจารณา
+  optIn: number;           // ยินยอมเข้าร่วม
+  pulseN: number;
+  pulseAvg: number;
+  reports: ExpReport[];
+}
+
+export function aggregateExperiments(states: (ExperimentsState | undefined | null)[]): ExperimentsAggregate {
+  const total = states.length;
+  let optIn = 0, pulseN = 0, pulseSum = 0;
+  // key: experimentId|variantId → accumulator
+  const acc = new Map<string, ExpVariantStat & { _sum: number }>();
+
+  for (const st of states) {
+    if (!st || !st.enabled) continue;
+    optIn++;
+    const ps = st.pulses ?? [];
+    pulseN += ps.length;
+    pulseSum += ps.reduce((s, p) => s + p.score, 0);
+
+    for (const exp of EXPERIMENTS) {
+      const vid = st.assignments?.[exp.id];
+      if (!vid) continue;                         // ยังไม่ถูก expose
+      const v = exp.variants.find(x => x.id === vid);
+      const key = exp.id + '|' + vid;
+      let row = acc.get(key);
+      if (!row) {
+        row = {
+          experiment: exp.id, variant: vid,
+          variantLabel: v?.label ?? vid, headline: v?.headline ?? '',
+          exposed: 0, activated: 0, activationRate: 0,
+          pulseN: 0, pulseAvg: 0, good: 0, meh: 0, bad: 0, _sum: 0,
+        };
+        acc.set(key, row);
+      }
+      row.exposed++;
+      if ((st.activations ?? []).includes(exp.id)) row.activated++;
+      for (const p of ps) {
+        row.pulseN++; row._sum += p.score;
+        if (p.score === 3) row.good++; else if (p.score === 2) row.meh++; else row.bad++;
+      }
+    }
+  }
+
+  const reports: ExpReport[] = EXPERIMENTS.map(exp => {
+    const variants = exp.variants.map(v => {
+      const row = acc.get(exp.id + '|' + v.id);
+      if (!row) {
+        return { experiment: exp.id, variant: v.id, variantLabel: v.label, headline: v.headline,
+          exposed: 0, activated: 0, activationRate: 0, pulseN: 0, pulseAvg: 0, good: 0, meh: 0, bad: 0 } as ExpVariantStat;
+      }
+      return {
+        experiment: row.experiment, variant: row.variant, variantLabel: row.variantLabel, headline: row.headline,
+        exposed: row.exposed, activated: row.activated,
+        activationRate: row.exposed ? Math.round((row.activated / row.exposed) * 100) : 0,
+        pulseN: row.pulseN, pulseAvg: row.pulseN ? row._sum / row.pulseN : 0,
+        good: row.good, meh: row.meh, bad: row.bad,
+      } as ExpVariantStat;
+    });
+    // ผู้ชนะ = activationRate สูงกว่า และมี exposed ทั้งคู่ ≥ 1 (กัน noise ตอนข้อมูลน้อย)
+    let winner: string | undefined;
+    const ranked = [...variants].filter(v => v.exposed > 0).sort((a, b) => b.activationRate - a.activationRate);
+    if (ranked.length >= 2 && ranked[0].activationRate > ranked[1].activationRate) winner = ranked[0].variant;
+    return { experiment: exp.id, question: exp.question, variants, winner };
+  });
+
+  return { total, optIn, pulseN, pulseAvg: pulseN ? pulseSum / pulseN : 0, reports };
+}

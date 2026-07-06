@@ -10,6 +10,7 @@ const SEOTab        = lazy(() => import('./AdminTabs/SEOTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
+import { aggregateExperiments, type ExperimentsAggregate } from '../lib/experiments';
 import { isAdminEmail, ADMIN_EMAILS } from '../config';
 import { PageHeader, Badge } from '../ds';
 import type { AppData, WinStory, WinCategory, FeedbackEntry, FeedbackSource, FeedbackSentiment, FeedbackTheme } from '../types';
@@ -137,6 +138,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [opsRows, setOpsRows] = useState<OpsRow[]>([]);
   const [opsLoading, setOpsLoading] = useState(false);
   const [opsMsg, setOpsMsg] = useState<string | null>(null);
+  const [expAgg, setExpAgg] = useState<ExperimentsAggregate | null>(null);
 
   // Simulator state
   const [nGrowth, setNGrowth] = useState(15);
@@ -332,6 +334,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
               cityTier: '-', companyLevel: '-', streak: 0 };
       });
       setOpsRows(out);
+      setExpAgg(aggregateExperiments(states.map(s => s?.experiments)));
       setOpsMsg(`สรุปแล้ว ${out.length} เวิร์กสเปซ`);
     } catch (e) {
       setOpsMsg('โหลดสรุปไม่สำเร็จ: ' + (e instanceof Error ? e.message : String(e)));
@@ -2179,6 +2182,59 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                     </>
                   );
                 })()}
+
+                {expAgg && expAgg.optIn > 0 && (
+                  <div className="exp-agg">
+                    <div className="exp-agg-head">
+                      <div className="exp-agg-title">💓 Pulse &amp; A/B — อะไรทำให้ “อยากใช้งานต่อ”</div>
+                      <div className="exp-agg-meta">
+                        ยินยอมเข้าร่วม {expAgg.optIn}/{expAgg.total} · pulse รวม {expAgg.pulseN} ครั้ง ·
+                        ความรู้สึกเฉลี่ยทั้งระบบ <b>{expAgg.pulseN ? expAgg.pulseAvg.toFixed(2) : '—'}</b>/3
+                      </div>
+                    </div>
+                    {expAgg.reports.map(rep => (
+                      <div key={rep.experiment} className="exp-report">
+                        <div className="exp-q">❓ {rep.question}</div>
+                        <div className="exp-variants">
+                          {rep.variants.map(v => {
+                            const win = rep.winner === v.variant;
+                            return (
+                              <div key={v.variant} className={`exp-variant${win ? ' exp-win' : ''}`}>
+                                <div className="exp-variant-top">
+                                  <span className="exp-variant-label">{v.variantLabel}</span>
+                                  {win && <span className="exp-win-tag">▲ ชนะ</span>}
+                                </div>
+                                <div className="exp-variant-head">{v.headline}</div>
+                                <div className="exp-metric-row">
+                                  <div className="exp-metric">
+                                    <div className="exp-metric-n">{v.activationRate}%</div>
+                                    <div className="exp-metric-l">อยากทำต่อ ({v.activated}/{v.exposed})</div>
+                                  </div>
+                                  <div className="exp-metric">
+                                    <div className="exp-metric-n">{v.pulseN ? v.pulseAvg.toFixed(2) : '—'}</div>
+                                    <div className="exp-metric-l">pulse เฉลี่ย /3 (n={v.pulseN})</div>
+                                  </div>
+                                </div>
+                                <div className="exp-bar" title={`😄 ${v.good} · 🙂 ${v.meh} · 😕 ${v.bad}`}>
+                                  {v.pulseN > 0 ? (<>
+                                    <span style={{ flex: v.good, background: 'var(--green)' }} />
+                                    <span style={{ flex: v.meh, background: 'var(--amber)' }} />
+                                    <span style={{ flex: v.bad, background: 'var(--red)' }} />
+                                  </>) : <span className="exp-bar-empty">ยังไม่มี pulse</span>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {!rep.winner && <div className="exp-note">ข้อมูลยังไม่พอชี้ผู้ชนะ — ต้องมีผู้เข้าร่วมมากขึ้นทั้งสองกลุ่ม</div>}
+                      </div>
+                    ))}
+                    <div className="exp-note">วัดจากผู้ที่ยินยอมเท่านั้น · ไม่ระบุตัวตน · เทียบเฉพาะ proxy ของความอยากใช้งานต่อ (activation + ความรู้สึก) แบบซื่อสัตย์</div>
+                  </div>
+                )}
+                {expAgg && expAgg.optIn === 0 && opsRows.length > 0 && (
+                  <div className="ops-msg">💓 ยังไม่มีผู้ใช้ยินยอมเข้าร่วม Pulse &amp; A/B — ผลจะแสดงเมื่อมีผู้เปิดใช้</div>
+                )}
               </div>
 
               <div className="team-list">
