@@ -200,9 +200,32 @@ body {
   padding-left: 7px;
   border-left: 1px solid rgba(255,255,255,.09);
 }
-.nav-sub .nav-label { padding: 4px 10px 2px; margin-bottom: 2px; }
+.nav-sub .nav-label { padding: 4px 10px 2px; margin-bottom: 2px; color: var(--rust); }
 .nav-sub .nav-item { padding: 8px 10px; min-height: 38px; font-size: 12.5px; gap: 10px; }
 .nav-sub .nav-ico { width: 14px; height: 14px; }
+/* หัวข้อระยะพัฒนาธุรกิจ (4 ระยะ) คั่นในลิสต์เครื่องมือ */
+.nav-stage {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  color: var(--ink4);
+  text-transform: uppercase;
+  padding: 9px 10px 3px;
+}
+/* เลขขั้นตอน 1–11 แทนไอคอน — บอกลำดับ "ทำอะไรก่อน" */
+.nav-step {
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.13);
+  font-size: 11px; font-weight: 700;
+  color: rgba(255,255,255,.55);
+  font-feature-settings: 'tnum';
+}
+.nav-sub .nav-item:hover .nav-step { color: rgba(255,255,255,.9); }
+.nav-sub .nav-item.active .nav-step { background: var(--rust); border-color: var(--rust); color: #fff; }
 
 .progress-block {
   margin: 0 12px 12px;
@@ -3727,6 +3750,119 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   transition: transform .15s, box-shadow .15s;
 }
 .badge-fab:hover { transform: scale(1.08); box-shadow: 0 6px 22px rgba(6,182,212,.6); }
+
+/* =====================================================
+   JOURNEY GUIDE — ตัวนำทาง gamification (มุมซ้ายล่าง)
+===================================================== */
+.jg-fab {
+  position: fixed; bottom: 22px; left: 22px; z-index: 260;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--rust); color: #fff; border: none; cursor: pointer; font-size: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .15s;
+}
+.jg-fab:hover { transform: scale(1.08); }
+
+.jg-pill {
+  position: fixed; bottom: 22px; left: 22px; z-index: 260;
+  display: flex; align-items: center; gap: 10px;
+  max-width: 300px; padding: 8px 14px 8px 8px;
+  background: #172033; color: #fff;
+  border: 1px solid rgba(255,255,255,.12); border-radius: 30px;
+  cursor: pointer; font-family: inherit; text-align: left;
+  box-shadow: 0 6px 22px rgba(0,0,0,.45);
+  transition: transform .15s, border-color .15s;
+}
+.jg-pill:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.28); }
+.jg-pill-ring {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.jg-pill-ring-in {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #172033; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+}
+.jg-pill-body { display: flex; flex-direction: column; min-width: 0; }
+.jg-pill-top { font-size: 10px; font-weight: 700; letter-spacing: .04em; color: rgba(255,255,255,.6); }
+.jg-pill-label { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jg-pill-go { margin-left: auto; color: var(--rust-light, #ff9d7a); font-size: 16px; font-weight: 700; }
+
+.jg-panel {
+  position: fixed; bottom: 22px; left: 22px; z-index: 260;
+  width: 340px; max-width: calc(100vw - 44px); max-height: 74vh;
+  display: flex; flex-direction: column;
+  background: #131b2b; color: #fff;
+  border: 1px solid rgba(255,255,255,.12); border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.55);
+  overflow: hidden;
+}
+.jg-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.jg-hd-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.jg-hd-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; white-space: nowrap; }
+.jg-hd-name { font-size: 13px; font-weight: 700; }
+.jg-hd-close {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 7px;
+  background: rgba(255,255,255,.08); border: none; color: #fff;
+  font-size: 18px; line-height: 1; cursor: pointer;
+}
+.jg-hd-close:hover { background: rgba(255,255,255,.16); }
+
+.jg-prog { padding: 10px 14px 6px; }
+.jg-prog-track { height: 7px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; }
+.jg-prog-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+.jg-prog-text { font-size: 11px; color: rgba(255,255,255,.7); margin-top: 5px; }
+
+.jg-next {
+  margin: 6px 14px 10px; padding: 11px 13px;
+  display: flex; flex-direction: column; gap: 3px; text-align: left;
+  background: rgba(196,75,43,.16); border: 1px solid rgba(196,75,43,.5);
+  border-radius: 11px; cursor: pointer; font-family: inherit; color: #fff;
+}
+.jg-next:hover { background: rgba(196,75,43,.26); }
+.jg-next-lbl { font-size: 13px; font-weight: 700; }
+.jg-next-hint { font-size: 11px; color: rgba(255,255,255,.65); line-height: 1.4; }
+.jg-next-go { font-size: 11.5px; font-weight: 700; color: #ff9d7a; margin-top: 2px; }
+
+.jg-phases { overflow-y: auto; padding: 0 8px 6px; }
+.jg-phase { margin-bottom: 8px; }
+.jg-phase-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 8px 3px; font-size: 11px; font-weight: 700; color: rgba(255,255,255,.55);
+}
+.jg-phase-count { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.4); }
+.jg-step {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 8px 9px; border-radius: 9px; text-align: left;
+  background: none; border: none; color: rgba(255,255,255,.82);
+  font-family: inherit; font-size: 12.5px; cursor: pointer;
+  transition: background .12s;
+}
+.jg-step:hover { background: rgba(255,255,255,.07); }
+.jg-step.next { background: rgba(196,75,43,.12); }
+.jg-step.done { color: rgba(255,255,255,.45); }
+.jg-step.done .jg-step-lbl { text-decoration: line-through; }
+.jg-step-check { flex-shrink: 0; font-size: 13px; }
+.jg-step-lbl { flex: 1; min-width: 0; }
+.jg-step-go { color: #ff9d7a; font-weight: 700; }
+
+.jg-hide {
+  margin: 4px 14px 14px; padding: 8px; border-radius: 9px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.55); font-family: inherit; font-size: 11.5px; cursor: pointer;
+}
+.jg-hide:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); }
+
+@media print { .jg-fab, .jg-pill, .jg-panel { display: none !important; } }
+@media (max-width: 640px) {
+  .jg-fab, .jg-pill, .jg-panel { bottom: 14px; left: 14px; }
+  .jg-pill { max-width: calc(100vw - 90px); }
+}
 
 /* =====================================================
    BADGE GENERATOR

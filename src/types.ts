@@ -479,6 +479,8 @@ export interface AppData {
   factory?: FactoryData;
   sipoc?: SipocProcess[];
   visitedMarket?: boolean; // เข้าหน้าตลาด/หน้าร้านแล้ว — ใช้ติ๊ก Quest "เข้าตลาดธุรกิจ"
+  visitedPages?: PageId[]; // หน้าที่เคยเปิดแล้ว — ใช้ติ๊กความคืบหน้าใน Journey Guide (ตัวนำทาง gamification)
+  journeyHidden?: boolean;  // ผู้ใช้ซ่อนตัวนำทาง Journey Guide
   finance?: FinanceEntry[]; // รายรับ-รายจ่ายที่กรอกเอง — ขับเศรษฐกิจเมืองบริษัท (SIM)
   // ===== รางวัลจากเกมเมืองบริษัท (SIM) =====
   claimedRewards?: string[];              // id รางวัลที่รับแล้ว
