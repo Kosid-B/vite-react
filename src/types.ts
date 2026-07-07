@@ -331,6 +331,26 @@ export interface WinStory {
   documentedBy: string;
 }
 
+/* ===== Case Study (Admin นำเข้าเอง — เก็บใน AppData ต่อ workspace) ===== */
+export interface CaseStudyExample { label: string; prompt: string; api: string; }
+export interface CaseStudyLesson { icon?: string; title?: string; body: string; }
+export interface CaseStudy {
+  id: string;
+  title: string;
+  lessons: CaseStudyLesson[];
+  tag?: string;
+  company?: string;
+  industry?: string;
+  origin?: string;
+  result?: string;
+  color?: string;
+  keyLesson?: string;
+  applyTo?: string[];
+  examples?: CaseStudyExample[];
+  source?: 'form' | 'json' | 'notebooklm' | string; // ช่องทางที่นำเข้า
+  createdAt?: string;
+}
+
 /* ===== Feedback Analysis ===== */
 export type FeedbackSentiment = 'positive' | 'neutral' | 'negative';
 export type FeedbackSource = 'survey' | 'review' | 'support' | 'social' | 'email';
@@ -475,6 +495,7 @@ export interface AppData {
   marketplace: Marketplace;
   roadmap: RoadmapItem[];
   winStories: WinStory[];
+  caseStudies?: CaseStudy[]; // Case Study ที่แอดมินนำเข้าเอง (แสดงต่อท้ายชุด built-in ในหน้า Case Studies)
   marketing: MarketingStrategy;
   feedback: FeedbackAnalysis;
   gtmAuditChecks?: boolean[];

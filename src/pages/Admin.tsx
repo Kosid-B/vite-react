@@ -7,6 +7,7 @@ const ShopAppsTab = lazy(() => import('./AdminTabs/ShopAppsTab'));
 const CXPersonaTab  = lazy(() => import('./AdminTabs/CXPersonaTab'));
 const GTMTab        = lazy(() => import('./AdminTabs/GTMTab'));
 const SEOTab        = lazy(() => import('./AdminTabs/SEOTab'));
+const CaseStudyTab  = lazy(() => import('./AdminTabs/CaseStudyTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
@@ -126,7 +127,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'feedback' | 'pricing' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -481,6 +482,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'winstories' ? ' active' : ''}`} onClick={() => setTab('winstories')}>
           🏆 Win Stories
+        </button>
+        <button className={`pfa-tab${tab === 'casestudies' ? ' active' : ''}`} onClick={() => setTab('casestudies')}>
+          📚 Case Studies
         </button>
         <button className={`pfa-tab${tab === 'workspaces' ? ' active' : ''}`} onClick={() => setTab('workspaces')}>
           🏢 เวิร์กสเปซ
@@ -2116,6 +2120,13 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       {tab === 'seo' && (
         <Suspense fallback={<div className="page-loading" />}>
           <SEOTab data={data} onUpdate={onUpdate} />
+        </Suspense>
+      )}
+
+      {/* ===== CASE STUDIES IMPORT TAB ===== */}
+      {tab === 'casestudies' && (
+        <Suspense fallback={<div className="page-loading" />}>
+          <CaseStudyTab data={data} onUpdate={onUpdate} />
         </Suspense>
       )}
 

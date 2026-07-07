@@ -5340,3 +5340,40 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .nav-item-tool.active .nav-tool-desc { color: var(--ink3); }
 .beginner-toggle { display: block; width: calc(100% - 24px); margin: 8px 12px 0; padding: 8px 10px; background: rgba(148,163,184,.08); border: 1px dashed var(--ink4); border-radius: var(--r); color: var(--ink3); font-family: inherit; font-size: 12px; cursor: pointer; transition: .15s; text-align: center; }
 .beginner-toggle:hover { background: rgba(148,163,184,.16); color: var(--ink2); }
+
+/* ===== Admin: นำเข้า Case Study ===== */
+.cst-wrap { max-width: 760px; }
+.cst-h3 { font-size: 17px; color: var(--ink); margin: 0 0 4px; }
+.cst-note { font-size: 12.5px; color: var(--ink3); line-height: 1.5; margin: 0 0 14px; }
+.cst-modes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.cst-mode { padding: 8px 14px; background: var(--bg); border: 1px solid var(--sand); border-radius: var(--r); color: var(--ink2); font-family: inherit; font-size: 12.5px; cursor: pointer; transition: .15s; }
+.cst-mode.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cst-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.cst-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--ink2); }
+.cst-form input, .cst-form textarea, .cst-json { padding: 9px 10px; background: var(--bg); border: 1px solid var(--sand); border-radius: var(--r); color: var(--ink); font-family: inherit; font-size: 13px; }
+.cst-json { font-family: ui-monospace, monospace; font-size: 12px; white-space: pre; }
+.cst-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.cst-row > label { flex: 1; min-width: 180px; }
+.cst-lessons-hd, .cst-list-hd { font-size: 13px; font-weight: 600; color: var(--ink2); margin-top: 6px; }
+.cst-lesson-row { display: flex; gap: 6px; align-items: center; }
+.cst-lesson-row .cst-icon { width: 46px; text-align: center; }
+.cst-lesson-row .cst-ltitle { width: 150px; }
+.cst-lesson-row .cst-lbody { flex: 1; min-width: 120px; }
+.cst-del-sm { background: none; border: 1px solid var(--sand); border-radius: var(--r); color: var(--rust); cursor: pointer; padding: 6px 9px; font-size: 12px; }
+.cst-add-lesson { align-self: flex-start; background: none; border: 1px dashed var(--sand); border-radius: var(--r); color: var(--ink3); cursor: pointer; padding: 7px 12px; font-family: inherit; font-size: 12px; }
+.cst-submit { align-self: flex-start; padding: 10px 18px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 13.5px; cursor: pointer; }
+.cst-submit:disabled { opacity: .5; cursor: not-allowed; }
+.cst-file { padding: 10px 18px; background: var(--bg); border: 1px solid var(--sand); border-radius: var(--r); color: var(--ink2); font-size: 13px; cursor: pointer; }
+.cst-msg { padding: 9px 12px; border-radius: var(--r); font-size: 13px; margin-bottom: 12px; }
+.cst-msg.ok { background: rgba(34,197,94,.12); color: #22c55e; }
+.cst-msg.err { background: rgba(239,68,68,.12); color: #f87171; }
+.cst-empty { font-size: 13px; color: var(--ink3); padding: 12px; }
+.cst-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.cst-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--sand); border-left-width: 4px; border-radius: var(--r); }
+.cst-item-main { flex: 1; min-width: 0; }
+.cst-item-title { font-size: 13.5px; color: var(--ink); font-weight: 600; }
+.cst-item-meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink3); margin-top: 3px; }
+.cst-item-tag { color: var(--accent); }
+.cst-item-src { text-transform: uppercase; letter-spacing: .3px; }
+.cst-del { background: none; border: 1px solid var(--sand); border-radius: var(--r); color: var(--rust); cursor: pointer; padding: 6px 12px; font-family: inherit; font-size: 12px; }
+.cst-del:hover { border-color: var(--rust); }
