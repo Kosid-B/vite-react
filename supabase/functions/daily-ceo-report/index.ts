@@ -119,7 +119,7 @@ function reportHtml(r: Report, dateTh: string): string {
   ${sec("1) 📣 งานการตลาด", list(r.marketing))}
   ${sec("2) 📦 ผลการส่งมอบสินค้า/บริการ", `งานส่งมอบเสร็จ ${r.doneCount} · ดีลปิด ${r.closedCount} (${baht(r.closedValue)})`)}
   ${sec("3) 💰 สรุปการเงิน & Cashflow", `รายรับ ${baht(r.revenue)} · รายจ่าย ${baht(r.expense)} · กระแสเงินสดสุทธิ <b>${baht(r.net)}</b> · อัตรากำไร ${r.margin}%<br>${r.breakEven ? "✅ รายรับครอบคลุมรายจ่าย" : "⚠️ รายจ่ายมากกว่ารายรับ"}`)}
-  ${sec("4) 🧾 รายการที่ต้องจ่าย (Payables)", list(r.payables.map((p) => `${p.label} — ${baht(p.amount)}${p.recurring ? " (ประจำ)" : ""}`))}
+  ${sec("4) 🧾 รายการที่ต้องจ่าย (Payables)", list(r.payables.map((p) => `${p.label} — ${baht(p.amount)}${p.recurring ? " (ประจำ)" : ""}`)))}
   ${sec("5) ⚠️ ข้อผิดพลาด / ข้อบกพร่อง", list(r.errors))}
   ${sec("6) 📌 ประเด็นเสนอบอร์ดพิจารณาอนุมัติ", list(r.issues))}
   ${sec("7) → ขั้นตอนถัดไป", list(r.nextSteps))}
