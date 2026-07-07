@@ -22,9 +22,6 @@
       "new_classes": ["CeoAiAgent"]
     }
   ],
-  "vars": {
-    "ANTHROPIC_API_KEY": ""
-  },
   "observability": {
     "enabled": false,
     "head_sampling_rate": 1,
