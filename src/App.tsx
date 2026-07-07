@@ -52,7 +52,6 @@ const Sipoc = lazy(() => import('./pages/Sipoc'));
 const MyStorefront = lazy(() => import('./pages/MyStorefront'));
 const Trade = lazy(() => import('./pages/Trade'));
 const CompanyCity = lazy(() => import('./pages/CompanyCity'));
-const CityLevelUp = lazy(() => import('./pages/CityLevelUp'));
 const Pulse = lazy(() => import('./pages/Pulse'));
 const InterCityTrade = lazy(() => import('./pages/InterCityTrade'));
 
@@ -456,8 +455,7 @@ export default function App() {
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
         {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} wsId={activeWs} />}
-        {activePage === 'city' && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
-        {activePage === 'citylevelup' && <CityLevelUp data={data} onNavigate={setActivePage} onUpdate={updateData} />}
+        {(activePage === 'city' || activePage === 'citylevelup') && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'pulse' && <Pulse data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'citytrade' && <InterCityTrade data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} wsId={activeWs} />}

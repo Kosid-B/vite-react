@@ -142,15 +142,6 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <span className="nav-dot" />
         </button>
 
-        <button className={`nav-item ${activePage === 'citylevelup' ? 'active' : ''}`} onClick={() => onNavigate('citylevelup')}
-          title="เมืองบริษัทแบบ 3 มิติ — แสง/เงาเปลี่ยนตามเวลาจริง สภาพอากาศตามฤดูกาลไทย + ระดับเมืองตาม XP จริง">
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4M9 10h.01M12 10h.01M15 10h.01" />
-          </svg>
-          🌆 เมือง · Level Up
-          <span className="nav-dot" />
-        </button>
-
         <button className={`nav-item ${activePage === 'pulse' ? 'active' : ''}`} onClick={() => onNavigate('pulse')}
           title="Pulse & A/B — วัดว่าอะไรทำให้อยากใช้งานต่อ แบบโปร่งใส (ยินยอมก่อน · ปิดได้ทุกเมื่อ · ดูข้อมูลตัวเองได้)">
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
