@@ -425,7 +425,7 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
       )}
 
       {/* ===== ผลิตภัณฑ์/บริการ → CEO ร่าง BMC → บอร์ดอนุมัติ ===== */}
-      <div className="gm-panel bmc-prop">
+      <div className="gm-panel bmc-prop" id="bmc-idea">
         <div className="bmc-prop-hd">🧩 ผลิตภัณฑ์ / บริการของบริษัท → ให้ CEO ทำ BMC เสนอบอร์ด</div>
         <div className="bmc-prop-sub">
           บอร์ด (คุณ) อธิบายผลิตภัณฑ์/บริการ และจัดหมวดตาม DBD (ใช้จัดกลุ่มใน Marketplace และงานการตลาด)

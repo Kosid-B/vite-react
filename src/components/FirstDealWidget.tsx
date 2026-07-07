@@ -30,8 +30,8 @@ export default function FirstDealWidget({ data, wsId, onNavigate }: Props) {
     );
   }
 
-  const steps: { id: string; done: boolean; icon: string; label: string; hint: string; page: PageId }[] = [
-    { id: 'product', done: st.hasProduct, icon: '💡', label: 'เล่าไอเดีย/สินค้าของคุณ', hint: 'CEO AI จะร่างแผนธุรกิจให้', page: 'dashboard' },
+  const steps: { id: string; done: boolean; icon: string; label: string; hint: string; page: PageId; anchor?: string }[] = [
+    { id: 'product', done: st.hasProduct, icon: '💡', label: 'เล่าไอเดีย/สินค้าของคุณ', hint: 'CEO AI จะร่างแผนธุรกิจให้', page: 'dashboard', anchor: 'bmc-idea' },
     { id: 'vp', done: st.hasVp, icon: '✨', label: 'ให้ AI เขียนจุดขาย (Value Proposition)', hint: 'ประโยคเดียวที่ทำให้ลูกค้าหยุดดู', page: 'storefront' },
     { id: 'publish', done: st.published, icon: '🏪', label: 'เผยแพร่หน้าร้าน', hint: 'ให้ลูกค้า/คู่ค้าค้นเจอคุณ', page: 'storefront' },
     { id: 'rfq', done: st.hasRfqActivity, icon: '📨', label: 'เสนอราคาแรก (RFQ)', hint: 'ดูประกาศงานกลาง — มีงานรอเสนอราคา', page: 'trade' },
@@ -51,7 +51,14 @@ export default function FirstDealWidget({ data, wsId, onNavigate }: Props) {
       <div className="fd-steps">
         {steps.map(s => (
           <button key={s.id} className={`fd-step${s.done ? ' done' : ''}${next?.id === s.id ? ' next' : ''}`}
-            onClick={() => onNavigate(s.page)} title={s.hint}>
+            onClick={() => {
+              onNavigate(s.page);
+              if (s.anchor) setTimeout(() => {
+                const el = document.getElementById(s.anchor!);
+                el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el?.querySelector('textarea')?.focus();
+              }, 90);
+            }} title={s.hint}>
             <span className="fd-check">{s.done ? '✅' : next?.id === s.id ? '👉' : '⬜'}</span>
             <span className="fd-ico">{s.icon}</span>
             <span className="fd-label">{s.label}</span>
