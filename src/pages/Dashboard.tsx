@@ -364,19 +364,8 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
         </div>
 
         {questsDone < QUESTS.length && (
-          <div className="gm-quest-list">
-            {QUESTS.map(q => {
-              const done = q.done(data);
-              return (
-                <button key={q.id} className={`gm-quest${done ? ' done' : ''}`} onClick={() => onNavigate(q.page)}
-                  title={q.desc}>
-                  <span className="gm-quest-check">{done ? '✅' : '⬜'}</span>
-                  <span className="gm-quest-ico">{q.icon}</span>
-                  <span className="gm-quest-label">{q.label}</span>
-                  {!done && <span className="gm-quest-go">ไปทำ →</span>}
-                </button>
-              );
-            })}
+          <div className="gm-quest-hint">
+            🧭 ดูขั้นตอนถัดไปทั้งหมดได้ที่ <strong>ตัวช่วยนำทาง</strong> (ปุ่ม 🧭 มุมซ้ายล่าง) — บอกทีละขั้นว่าต้องทำอะไรต่อ
           </div>
         )}
 

@@ -336,7 +336,7 @@ export default function BusinessModel({ data, onUpdate }: Props) {
                       )}
                     </button>
                     <span className="bmc-step-n">{si + 1}</span>
-                    <span className="bmc-step-name">{step.name}</span>
+                    <span className="bmc-step-name">{DE24_TH[si].split('—')[0].trim()} <span className="bmc-step-en">{step.name}</span></span>
                     {state.notes && !isExp && <span className="bmc-step-note-dot" title="มีหมายเหตุ" />}
                     <span className="bmc-step-tog">{isExp ? '▲' : '▽'}</span>
                   </div>
