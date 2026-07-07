@@ -13,6 +13,7 @@ import type { Auction } from '../lib/auctions';
 import { trackSkillPurchase } from '../lib/skillStats';
 import { withSkillDirectives } from '../lib/skillDirectives';
 import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamification';
+import { hasAdminFullAccess } from '../lib/access';
 import DBDSelect from '../components/DBDSelect';
 import { reviewTasks, nextStepTasks, reportByPosition, boardReportText } from '../lib/boardReport';
 import { DEFAULT_DATA } from '../data';
@@ -2487,12 +2488,22 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                     {valueNote && <div className="skm-value-note">💎 {valueNote}</div>}
                     <div className="skm-card-foot">
                       <div className="skm-price">
-                        <span className="skm-price-thb">฿</span>
-                        <span className="skm-price-num">{sk.price.toLocaleString()}</span>
+                        {hasAdminFullAccess() ? (
+                          <span className="skm-price-num" style={{ color: '#4ade80' }}>ฟรี (แอดมิน)</span>
+                        ) : (
+                          <>
+                            <span className="skm-price-thb">฿</span>
+                            <span className="skm-price-num">{sk.price.toLocaleString()}</span>
+                          </>
+                        )}
                         <span className="skm-price-xp">+{XP_PER_TIER[sk.tier]} XP</span>
                       </div>
                       {owned ? (
                         <button className="skm-btn owned" disabled>✓ ใช้งานได้แล้ว</button>
+                      ) : hasAdminFullAccess() ? (
+                        <button className="skm-btn" onClick={() => { setMktMsg(null); purchaseSkill(sk, 'admin-free'); }}>
+                          🎁 รับฟรี
+                        </button>
                       ) : isConfirm ? (
                         <div className="skm-pay-box">
                           <div className="skm-pay-title">เลือกวิธีชำระเงิน ฿{sk.price.toLocaleString()}</div>

@@ -1,6 +1,7 @@
 -- ============================================================
 -- RECOVER: Core schema สำหรับ project ใหม่ waigsnxhrlwtiotspaim
 -- รวม migrations 0001–0015, 0019, 0020 (ข้าม 0004/0008 cron และ 0016–0018 TIS)
+-- ✅ IDEMPOTENT: รันซ้ำได้ปลอดภัย (ใส่ drop policy if exists ก่อนทุก create policy)
 -- วิธีใช้: Supabase Dashboard (project ใหม่) → SQL Editor → วางทั้งไฟล์ → Run
 -- ก่อนรัน: Database → Extensions เปิด pgcrypto, uuid-ossp
 -- ============================================================
@@ -24,17 +25,21 @@ create table if not exists public.app_state (
 alter table public.app_state enable row level security;
 
 drop policy if exists "own rows - select" on public.app_state;
+drop policy if exists "own rows - select" on public.app_state;
 create policy "own rows - select" on public.app_state
   for select using (auth.uid() = user_id);
 
+drop policy if exists "own rows - insert" on public.app_state;
 drop policy if exists "own rows - insert" on public.app_state;
 create policy "own rows - insert" on public.app_state
   for insert with check (auth.uid() = user_id);
 
 drop policy if exists "own rows - update" on public.app_state;
+drop policy if exists "own rows - update" on public.app_state;
 create policy "own rows - update" on public.app_state
   for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+drop policy if exists "own rows - delete" on public.app_state;
 drop policy if exists "own rows - delete" on public.app_state;
 create policy "own rows - delete" on public.app_state
   for delete using (auth.uid() = user_id);
@@ -94,21 +99,27 @@ alter table public.workspace_state   enable row level security;
 
 -- workspaces: สมาชิกเห็นได้, เจ้าของแก้/ลบได้
 drop policy if exists ws_select on public.workspaces;
+drop policy if exists ws_select on public.workspaces;
 create policy ws_select on public.workspaces for select using (public.is_member(id) or owner_id = auth.uid());
 drop policy if exists ws_update on public.workspaces;
+drop policy if exists ws_update on public.workspaces;
 create policy ws_update on public.workspaces for update using (owner_id = auth.uid());
+drop policy if exists ws_delete on public.workspaces;
 drop policy if exists ws_delete on public.workspaces;
 create policy ws_delete on public.workspaces for delete using (owner_id = auth.uid());
 
 -- members: สมาชิกเห็นรายชื่อในเวิร์กสเปซตัวเอง; เจ้าของเวิร์กสเปซเพิ่ม/ลบสมาชิกได้
 drop policy if exists wm_select on public.workspace_members;
+drop policy if exists wm_select on public.workspace_members;
 create policy wm_select on public.workspace_members for select using (public.is_member(workspace_id));
+drop policy if exists wm_modify on public.workspace_members;
 drop policy if exists wm_modify on public.workspace_members;
 create policy wm_modify on public.workspace_members for all
   using (exists (select 1 from public.workspaces w where w.id = workspace_id and w.owner_id = auth.uid()))
   with check (exists (select 1 from public.workspaces w where w.id = workspace_id and w.owner_id = auth.uid()));
 
 -- state: สมาชิกอ่าน/เขียนได้
+drop policy if exists wst_all on public.workspace_state;
 drop policy if exists wst_all on public.workspace_state;
 create policy wst_all on public.workspace_state for all
   using (public.is_member(workspace_id)) with check (public.is_member(workspace_id));
@@ -235,6 +246,7 @@ insert into public.app_admins (email) values ('support@b-tctraining.com')
 alter table public.app_admins enable row level security;
 -- อ่านรายชื่อแอดมินได้เฉพาะแอดมินเอง (กันคนทั่วไปเห็น)
 drop policy if exists admins_select on public.app_admins;
+drop policy if exists admins_select on public.app_admins;
 create policy admins_select on public.app_admins for select
   using (lower(coalesce(auth.jwt() ->> 'email','')) = email);
 
@@ -249,13 +261,16 @@ $$;
 
 -- ===== ขยาย RLS เดิมให้แอดมินเข้าถึงทุกเวิร์กสเปซ =====
 drop policy if exists ws_select on public.workspaces;
+drop policy if exists ws_select on public.workspaces;
 create policy ws_select on public.workspaces for select
   using (public.is_member(id) or owner_id = auth.uid() or public.is_app_admin());
 
 drop policy if exists wm_select on public.workspace_members;
+drop policy if exists wm_select on public.workspace_members;
 create policy wm_select on public.workspace_members for select
   using (public.is_member(workspace_id) or public.is_app_admin());
 
+drop policy if exists wst_all on public.workspace_state;
 drop policy if exists wst_all on public.workspace_state;
 create policy wst_all on public.workspace_state for all
   using (public.is_member(workspace_id) or public.is_app_admin())
@@ -306,22 +321,26 @@ alter table public.marketplace_skills enable row level security;
 
 -- ผู้ใช้ที่ล็อกอินเห็นเฉพาะ skill ที่ active · แอดมินเห็นทั้งหมด
 drop policy if exists mks_select on public.marketplace_skills;
+drop policy if exists mks_select on public.marketplace_skills;
 create policy mks_select on public.marketplace_skills for select
   to authenticated
   using (active or public.is_app_admin());
 
 -- เพิ่ม/แก้ไข/ลบ ได้เฉพาะแอดมินระบบ
 drop policy if exists mks_insert on public.marketplace_skills;
+drop policy if exists mks_insert on public.marketplace_skills;
 create policy mks_insert on public.marketplace_skills for insert
   to authenticated
   with check (public.is_app_admin());
 
+drop policy if exists mks_update on public.marketplace_skills;
 drop policy if exists mks_update on public.marketplace_skills;
 create policy mks_update on public.marketplace_skills for update
   to authenticated
   using (public.is_app_admin())
   with check (public.is_app_admin());
 
+drop policy if exists mks_delete on public.marketplace_skills;
 drop policy if exists mks_delete on public.marketplace_skills;
 create policy mks_delete on public.marketplace_skills for delete
   to authenticated
@@ -356,11 +375,13 @@ alter table public.skill_purchases enable row level security;
 
 -- ผู้ใช้ล็อกอินบันทึก event ของตัวเองได้เท่านั้น
 drop policy if exists sp_insert on public.skill_purchases;
+drop policy if exists sp_insert on public.skill_purchases;
 create policy sp_insert on public.skill_purchases for insert
   to authenticated
   with check (user_id = auth.uid());
 
 -- อ่านสถิติได้เฉพาะแอดมินระบบ (ข้อมูลการตลาด)
+drop policy if exists sp_select on public.skill_purchases;
 drop policy if exists sp_select on public.skill_purchases;
 create policy sp_select on public.skill_purchases for select
   to authenticated
@@ -416,21 +437,25 @@ alter table public.storefronts enable row level security;
 
 -- สาธารณะ: ทุกคน (รวมไม่ล็อกอิน) เห็นหน้าร้านที่เผยแพร่ · สมาชิกเห็นของตัวเองเสมอ
 drop policy if exists sf_select on public.storefronts;
+drop policy if exists sf_select on public.storefronts;
 create policy sf_select on public.storefronts for select
   using (published or public.is_member(workspace_id));
 
 -- เขียนได้เฉพาะสมาชิกของ workspace นั้น
+drop policy if exists sf_insert on public.storefronts;
 drop policy if exists sf_insert on public.storefronts;
 create policy sf_insert on public.storefronts for insert
   to authenticated
   with check (public.is_member(workspace_id));
 
 drop policy if exists sf_update on public.storefronts;
+drop policy if exists sf_update on public.storefronts;
 create policy sf_update on public.storefronts for update
   to authenticated
   using (public.is_member(workspace_id))
   with check (public.is_member(workspace_id));
 
+drop policy if exists sf_delete on public.storefronts;
 drop policy if exists sf_delete on public.storefronts;
 create policy sf_delete on public.storefronts for delete
   to authenticated
@@ -469,6 +494,7 @@ alter table public.rfqs enable row level security;
 
 -- ผู้ซื้อ: จัดการ RFQ ของตัวเองได้เต็มที่
 drop policy if exists rfq_buyer_all on public.rfqs;
+drop policy if exists rfq_buyer_all on public.rfqs;
 create policy rfq_buyer_all on public.rfqs for all
   to authenticated
   using (public.is_member(buyer_ws))
@@ -476,11 +502,13 @@ create policy rfq_buyer_all on public.rfqs for all
 
 -- ผู้ขาย (สมาชิก workspace เจ้าของหน้าร้าน): เห็น + ตอบใบเสนอราคา
 drop policy if exists rfq_seller_select on public.rfqs;
+drop policy if exists rfq_seller_select on public.rfqs;
 create policy rfq_seller_select on public.rfqs for select
   to authenticated
   using (exists (select 1 from public.storefronts s
                  where s.slug = seller_slug and public.is_member(s.workspace_id)));
 
+drop policy if exists rfq_seller_update on public.rfqs;
 drop policy if exists rfq_seller_update on public.rfqs;
 create policy rfq_seller_update on public.rfqs for update
   to authenticated
@@ -510,15 +538,18 @@ create index if not exists orders_seller_idx on public.orders (seller_ws);
 alter table public.orders enable row level security;
 
 drop policy if exists ord_select on public.orders;
+drop policy if exists ord_select on public.orders;
 create policy ord_select on public.orders for select
   to authenticated
   using (public.is_member(buyer_ws) or public.is_member(seller_ws));
 
 drop policy if exists ord_insert on public.orders;
+drop policy if exists ord_insert on public.orders;
 create policy ord_insert on public.orders for insert
   to authenticated
   with check (public.is_member(buyer_ws));
 
+drop policy if exists ord_update on public.orders;
 drop policy if exists ord_update on public.orders;
 create policy ord_update on public.orders for update
   to authenticated
@@ -542,11 +573,13 @@ create index if not exists rfqs_open_idx on public.rfqs (sector) where seller_sl
 
 -- สมาชิกทุกคนเห็นประกาศงานกลางที่ยังเปิดอยู่
 drop policy if exists rfq_open_select on public.rfqs;
+drop policy if exists rfq_open_select on public.rfqs;
 create policy rfq_open_select on public.rfqs for select
   to authenticated
   using (seller_slug is null);
 
 -- ผู้ขายรับงานกลาง (claim): ตั้ง seller_slug เป็นหน้าร้านของตัวเอง + เสนอราคา
+drop policy if exists rfq_open_claim on public.rfqs;
 drop policy if exists rfq_open_claim on public.rfqs;
 create policy rfq_open_claim on public.rfqs for update
   to authenticated
@@ -598,9 +631,11 @@ alter table public.skill_bids enable row level security;
 
 -- ประมูล: ทุกคนที่ล็อกอินเห็น · เขียนได้เฉพาะแอดมินระบบ
 drop policy if exists auc_select on public.skill_auctions;
+drop policy if exists auc_select on public.skill_auctions;
 create policy auc_select on public.skill_auctions for select
   to authenticated using (true);
 
+drop policy if exists auc_admin_write on public.skill_auctions;
 drop policy if exists auc_admin_write on public.skill_auctions;
 create policy auc_admin_write on public.skill_auctions for all
   to authenticated
@@ -610,9 +645,11 @@ create policy auc_admin_write on public.skill_auctions for all
 -- บิด: เห็นกันหมด (English auction โปร่งใส) · ยื่นได้เฉพาะสมาชิก workspace ตัวเอง
 --      และเฉพาะประมูลที่ยังเปิด+ยังไม่หมดเวลา
 drop policy if exists bid_select on public.skill_bids;
+drop policy if exists bid_select on public.skill_bids;
 create policy bid_select on public.skill_bids for select
   to authenticated using (true);
 
+drop policy if exists bid_insert on public.skill_bids;
 drop policy if exists bid_insert on public.skill_bids;
 create policy bid_insert on public.skill_bids for insert
   to authenticated
@@ -651,21 +688,25 @@ alter table public.shop_applications enable row level security;
 
 -- ฟอร์มสาธารณะ: ใครก็ยื่นใบสมัครได้ (รวม anon — สมัครด้วยเบอร์+LINE ไม่ต้องมีบัญชี)
 drop policy if exists shop_app_insert on public.shop_applications;
+drop policy if exists shop_app_insert on public.shop_applications;
 create policy shop_app_insert on public.shop_applications for insert
   to anon, authenticated
   with check (status = 'new');
 
 -- อ่าน/จัดการได้เฉพาะแอดมินระบบ (ข้อมูลติดต่อส่วนบุคคล)
 drop policy if exists shop_app_admin_select on public.shop_applications;
+drop policy if exists shop_app_admin_select on public.shop_applications;
 create policy shop_app_admin_select on public.shop_applications for select
   to authenticated using (public.is_app_admin());
 
+drop policy if exists shop_app_admin_update on public.shop_applications;
 drop policy if exists shop_app_admin_update on public.shop_applications;
 create policy shop_app_admin_update on public.shop_applications for update
   to authenticated
   using (public.is_app_admin())
   with check (public.is_app_admin());
 
+drop policy if exists shop_app_admin_delete on public.shop_applications;
 drop policy if exists shop_app_admin_delete on public.shop_applications;
 create policy shop_app_admin_delete on public.shop_applications for delete
   to authenticated using (public.is_app_admin());
@@ -690,6 +731,7 @@ create index if not exists storefronts_featured_idx
   on public.storefronts (featured_until desc) where featured_until is not null;
 
 -- admin ระบบจัดการทุกร้านได้ (ตั้ง/ถอดตำแหน่งร้านแนะนำ) — เดิมมีเฉพาะ member ของ workspace
+drop policy if exists sf_admin_all on public.storefronts;
 drop policy if exists sf_admin_all on public.storefronts;
 create policy sf_admin_all on public.storefronts for all
   to authenticated
@@ -721,12 +763,14 @@ alter table public.storefront_leads enable row level security;
 
 -- ลูกค้าสาธารณะ (รวม anon) ทิ้งความสนใจ/สั่งจองได้ — เฉพาะร้านที่เผยแพร่อยู่
 drop policy if exists lead_insert on public.storefront_leads;
+drop policy if exists lead_insert on public.storefront_leads;
 create policy lead_insert on public.storefront_leads for insert
   to anon, authenticated
   with check (exists (select 1 from public.storefronts s
                       where s.slug = storefront_leads.slug and s.published));
 
 -- เจ้าของร้าน (สมาชิก workspace) อ่าน leads ของร้านตัวเอง — ข้อมูลติดต่อลูกค้า
+drop policy if exists lead_owner_select on public.storefront_leads;
 drop policy if exists lead_owner_select on public.storefront_leads;
 create policy lead_owner_select on public.storefront_leads for select
   to authenticated
@@ -735,6 +779,7 @@ create policy lead_owner_select on public.storefront_leads for select
                    and public.is_member(s.workspace_id)));
 
 -- admin ระบบจัดการได้ทั้งหมด
+drop policy if exists lead_admin_all on public.storefront_leads;
 drop policy if exists lead_admin_all on public.storefront_leads;
 create policy lead_admin_all on public.storefront_leads for all
   to authenticated
@@ -773,6 +818,7 @@ on conflict (id) do nothing;
 
 -- อัปโหลด/จัดการได้เฉพาะผู้ใช้ล็อกอิน ในโฟลเดอร์ workspace ตัวเอง (path = <ws_id>/ไฟล์)
 drop policy if exists "shop images upload" on storage.objects;
+drop policy if exists "shop images upload" on storage.objects;
 create policy "shop images upload" on storage.objects for insert
   to authenticated
   with check (
@@ -780,6 +826,7 @@ create policy "shop images upload" on storage.objects for insert
     and public.is_member(((storage.foldername(name))[1])::uuid)
   );
 
+drop policy if exists "shop images delete" on storage.objects;
 drop policy if exists "shop images delete" on storage.objects;
 create policy "shop images delete" on storage.objects for delete
   to authenticated
@@ -789,6 +836,7 @@ create policy "shop images delete" on storage.objects for delete
   );
 
 -- อ่านสาธารณะ (bucket public อยู่แล้ว — policy select สำหรับ REST list)
+drop policy if exists "shop images read" on storage.objects;
 drop policy if exists "shop images read" on storage.objects;
 create policy "shop images read" on storage.objects for select
   to anon, authenticated
@@ -815,12 +863,16 @@ alter table public.workspace_integrations enable row level security;
 revoke all on public.workspace_integrations from anon;
 
 -- เฉพาะสมาชิก workspace เท่านั้น (กันข้าม tenant) · Edge Function ใช้ service_role อ่าน (bypass RLS)
+drop policy if exists wi_select on public.workspace_integrations;
 create policy wi_select on public.workspace_integrations
   for select using (public.is_member(workspace_id));
+drop policy if exists wi_insert on public.workspace_integrations;
 create policy wi_insert on public.workspace_integrations
   for insert with check (public.is_member(workspace_id));
+drop policy if exists wi_update on public.workspace_integrations;
 create policy wi_update on public.workspace_integrations
   for update using (public.is_member(workspace_id)) with check (public.is_member(workspace_id));
+drop policy if exists wi_delete on public.workspace_integrations;
 create policy wi_delete on public.workspace_integrations
   for delete using (public.is_member(workspace_id));
 
