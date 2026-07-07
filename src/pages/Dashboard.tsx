@@ -13,13 +13,14 @@ interface Props {
 }
 
 // CEO ร่าง BMC 9 ช่องจากคำอธิบายผลิตภัณฑ์/บริการ + หมวด DBD ที่บอร์ดให้ไว้
-function ceoDraftBMC(desc: string, productDbd: string, industry: string, goal: string): BMCData {
+function ceoDraftBMC(desc: string, productDbd: string, industry: string, goal: string, vp = ''): BMCData {
   const product = desc.trim().length > 60 ? desc.trim().slice(0, 57) + '…' : desc.trim();
   const ind = productDbd?.trim() || industry?.trim() || 'ธุรกิจของบริษัท';
+  const vpLine = vp.trim() ? (vp.trim().length > 70 ? vp.trim().slice(0, 67) + '…' : vp.trim()) : 'แก้ปัญหาลูกค้าได้จริง วัดผลได้ ใช้งานง่าย';
   return {
     value: [
+      vpLine,             // Value Proposition ที่บอร์ดกำหนด (customer-first) มาก่อน
       product,
-      'แก้ปัญหาลูกค้าได้จริง วัดผลได้ ใช้งานง่าย',
       'คุ้มค่ากว่าทางเลือกเดิมในตลาดไทย',
     ],
     segments: [
@@ -246,7 +247,7 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
     onUpdate({ ...data, aiCompany: { ...aiCompany, ...patch } });
   const proposeBMC = () => {
     setBmcApprovedMsg(false);
-    const bmc = ceoDraftBMC(aiCompany.productDesc ?? '', aiCompany.productDbd ?? '', aiCompany.industry, aiCompany.goal);
+    const bmc = ceoDraftBMC(aiCompany.productDesc ?? '', aiCompany.productDbd ?? '', aiCompany.industry, aiCompany.goal, aiCompany.productVp ?? '');
     saveCompany({
       bmcDraft: {
         bmc,
@@ -430,18 +431,35 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
           บอร์ด (คุณ) อธิบายผลิตภัณฑ์/บริการ และจัดหมวดตาม DBD (ใช้จัดกลุ่มใน Marketplace และงานการตลาด)
           จากนั้น CEO จะร่าง Business Model Canvas เสนอกลับมาให้บอร์ดอนุมัติ
         </div>
-        <textarea className="bmc-prop-desc" rows={2}
-          placeholder="อธิบายผลิตภัณฑ์/บริการของบริษัท เช่น แพลตฟอร์ม SaaS สร้างบริษัท AI อัตโนมัติสำหรับ SME ไทย…"
+        <div className="bmc-step-lbl">💡 ขั้น 1 · ไอเดีย / สินค้าของคุณ</div>
+        <textarea className="bmc-prop-desc bmc-idea-lg" rows={5}
+          placeholder="เล่าไอเดียของคุณแบบเต็มที่ — ทำอะไร ขายใคร แก้ปัญหาอะไร เช่น 'แพลตฟอร์ม SaaS สร้างบริษัท AI อัตโนมัติสำหรับ SME ไทย ที่ช่วยลดต้นทุนที่ปรึกษาและทำงานเอกสารมาตรฐานให้เร็วขึ้น'…"
           defaultValue={aiCompany.productDesc ?? ''} key={'pd' + (aiCompany.productDesc ?? '')}
           onBlur={e => saveCompany({ productDesc: e.target.value })} spellCheck={false} />
+
+        <div className="bmc-step-lbl">
+          🎯 ขั้น 2 · Value Proposition (คุณค่าหลัก) — <b>ทำก่อน BMC</b>
+        </div>
+        <div className="bmc-vp-hint">
+          ตามหลัก MIT: กำหนด "คุณค่า" จากลูกค้าก่อนออกแบบโมเดลธุรกิจ — ลูกค้าได้อะไร? ลด Pain ไหน? เพิ่ม Gain อะไร?
+          {onNavigate && <button className="db-link" onClick={() => onNavigate('personas')}>ดู Pain/Gain ของ Persona →</button>}
+        </div>
+        <textarea className="bmc-prop-desc bmc-vp-inp" rows={3}
+          placeholder="คุณค่าหลัก 1 ประโยค เช่น 'ช่วย SME ไทยได้ทีมทำงานมาตรฐาน ISO/เอกสารครบใน 3 วินาที ลดค่าที่ปรึกษาหลักแสน (ลด Pain ต้นทุน+เวลา / เพิ่ม Gain ความเร็ว+ความมั่นใจ)'"
+          defaultValue={aiCompany.productVp ?? ''} key={'vp' + (aiCompany.productVp ?? '')}
+          onBlur={e => saveCompany({ productVp: e.target.value })} spellCheck={false} />
+
         <div className="bmc-prop-row">
           <span className="bmc-prop-lbl">หมวดผลิตภัณฑ์/บริการ (DBD)</span>
           <DBDSelect className="bmc-prop-dbd" value={aiCompany.productDbd ?? ''}
             onChange={v => saveCompany({ productDbd: v })} />
           <button className="bmc-prop-btn" onClick={proposeBMC}
-            disabled={!(aiCompany.productDesc ?? '').trim()}
-            title={(aiCompany.productDesc ?? '').trim() ? 'CEO ร่าง BMC จากคำอธิบายด้านบน' : 'กรอกคำอธิบายผลิตภัณฑ์/บริการก่อน'}>
-            ✦ ให้ CEO ร่าง BMC เสนอบอร์ด
+            disabled={!(aiCompany.productDesc ?? '').trim() || !(aiCompany.productVp ?? '').trim()}
+            title={
+              !(aiCompany.productDesc ?? '').trim() ? 'กรอกไอเดีย/สินค้า (ขั้น 1) ก่อน'
+              : !(aiCompany.productVp ?? '').trim() ? 'กรอก Value Proposition (ขั้น 2) ก่อนทำ BMC'
+              : 'CEO ร่าง BMC จากไอเดีย + Value Proposition ด้านบน'}>
+            ✦ ขั้น 3 · ให้ CEO ร่าง BMC เสนอบอร์ด
           </button>
         </div>
 

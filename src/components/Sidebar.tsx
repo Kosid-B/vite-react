@@ -24,30 +24,35 @@ interface Props {
   onToggleCollapse?: () => void;
 }
 
-// เครื่องมือ — sub-menu ของ บริษัท AI
-const TOOL_ITEMS: { id: PageId; label: string; icon: string; desc: string }[] = [
-  { id: 'journey', label: 'Journey Map', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7',
-    desc: 'แผนที่เส้นทางลูกค้า 8 ขั้น — touchpoints, pain points และโอกาสในแต่ละ stage' },
-  { id: 'funnel', label: 'Conversion Funnel', icon: 'M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z',
-    desc: 'วิเคราะห์อัตราแปลงลูกค้าแต่ละขั้น หาจุดที่ lead หลุดมากที่สุด' },
-  { id: 'roi', label: 'ROI Calculator', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
-    desc: 'คำนวณผลตอบแทนการลงทุน เทียบต้นทุน–รายได้' },
-  { id: 'personas', label: 'Personas', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
-    desc: 'โปรไฟล์ลูกค้าในอุดมคติ — พฤติกรรม แรงจูงใจ และปัญหา' },
-  { id: 'content', label: 'Content Plan', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-    desc: 'แผนคอนเทนต์รายเดือนต่อช่องทาง พร้อมหัวข้อและ keyword' },
-  { id: 'actions', label: 'Priority Actions', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
-    desc: 'รายการงานสำคัญเรียงตามความเร่งด่วน (P1–P3)' },
-  { id: 'bmc', label: 'Business Model · MIT24', icon: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z',
-    desc: 'กรอบสร้างธุรกิจ 24 ขั้นตอนของ MIT — Beachhead Market ถึง MVBP' },
-  { id: 'roadmap', label: 'Product Roadmap', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2',
-    desc: 'แผนพัฒนาผลิตภัณฑ์รายไตรมาส จัดลำดับฟีเจอร์' },
-  { id: 'marketing', label: 'กลยุทธ์การตลาด', icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z',
-    desc: 'วางแผนช่องทางการตลาด งบประมาณ และ CPL' },
-  { id: 'vrio', label: 'VRIO Analysis', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-    desc: 'วิเคราะห์ความได้เปรียบเชิงแข่งขัน — Value, Rarity, Imitability, Organization' },
-  { id: 'sipoc', label: 'SIPOC Process', icon: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-    desc: 'แผนผังกระบวนการ Supplier → Input → Process → Output → Customer หา Gap และคอขวด' },
+// เครื่องมือ — sub-menu ของ บริษัท AI · เรียงตาม "ลำดับขั้นการพัฒนาธุรกิจ" (ทำ 1 → 11 ตามนี้)
+// 4 ระยะ: เข้าใจลูกค้า → ออกแบบธุรกิจ → วางแผนการตลาด → ลงมือ & วัดผล
+const TOOL_ITEMS: { id: PageId; label: string; icon: string; desc: string; stage: string }[] = [
+  // ระยะ 1 — เข้าใจลูกค้า & ตลาด
+  { id: 'personas', label: 'Personas', stage: 'เข้าใจลูกค้า & ตลาด', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+    desc: 'ขั้น 1 · โปรไฟล์ลูกค้าในอุดมคติ — พฤติกรรม แรงจูงใจ และปัญหา (เริ่มจากรู้ว่าขายใคร)' },
+  { id: 'journey', label: 'Journey Map', stage: 'เข้าใจลูกค้า & ตลาด', icon: 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7',
+    desc: 'ขั้น 2 · แผนที่เส้นทางลูกค้า 8 ขั้น — touchpoints, pain points และโอกาสในแต่ละ stage' },
+  // ระยะ 2 — ออกแบบธุรกิจ
+  { id: 'bmc', label: 'Business Model · MIT24', stage: 'ออกแบบธุรกิจ', icon: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z',
+    desc: 'ขั้น 3 · กรอบสร้างธุรกิจ 24 ขั้นตอนของ MIT — Beachhead Market ถึง MVBP' },
+  { id: 'vrio', label: 'VRIO Analysis', stage: 'ออกแบบธุรกิจ', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    desc: 'ขั้น 4 · วิเคราะห์ความได้เปรียบเชิงแข่งขัน — Value, Rarity, Imitability, Organization' },
+  // ระยะ 3 — วางแผนการตลาด
+  { id: 'marketing', label: 'กลยุทธ์การตลาด', stage: 'วางแผนการตลาด', icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z',
+    desc: 'ขั้น 5 · วางแผนช่องทางการตลาด งบประมาณ และ CPL' },
+  { id: 'content', label: 'Content Plan', stage: 'วางแผนการตลาด', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+    desc: 'ขั้น 6 · แผนคอนเทนต์รายเดือนต่อช่องทาง พร้อมหัวข้อและ keyword' },
+  { id: 'funnel', label: 'Conversion Funnel', stage: 'วางแผนการตลาด', icon: 'M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z',
+    desc: 'ขั้น 7 · วิเคราะห์อัตราแปลงลูกค้าแต่ละขั้น หาจุดที่ lead หลุดมากที่สุด' },
+  // ระยะ 4 — ลงมือ & วัดผล
+  { id: 'sipoc', label: 'SIPOC Process', stage: 'ลงมือ & วัดผล', icon: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+    desc: 'ขั้น 8 · แผนผังกระบวนการ Supplier → Input → Process → Output → Customer หา Gap และคอขวด' },
+  { id: 'actions', label: 'Priority Actions', stage: 'ลงมือ & วัดผล', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
+    desc: 'ขั้น 9 · รายการงานสำคัญเรียงตามความเร่งด่วน (P1–P3)' },
+  { id: 'roi', label: 'ROI Calculator', stage: 'ลงมือ & วัดผล', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+    desc: 'ขั้น 10 · คำนวณผลตอบแทนการลงทุน เทียบต้นทุน–รายได้' },
+  { id: 'roadmap', label: 'Product Roadmap', stage: 'ลงมือ & วัดผล', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2',
+    desc: 'ขั้น 11 · แผนพัฒนาผลิตภัณฑ์รายไตรมาส จัดลำดับฟีเจอร์' },
 ];
 const TOOL_PAGE_IDS = TOOL_ITEMS.map(t => t.id);
 
@@ -57,7 +62,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
   const locked = (page: PageId) => !!(data && PAGE_MIN_PLAN[page] && !canAccess(data, page));
   const [toolsOpen, setToolsOpen] = useState<boolean>(() => {
     const saved = localStorage.getItem('ceo_ai_tools_open');
-    return saved === null ? true : saved === '1';
+    return saved === null ? false : saved === '1';   // default ยุบไว้ — ค่อยกดเปิดตามลำดับขั้น (ลดความรกตอนเริ่มใช้)
   });
   const toggleTools = () => {
     setToolsOpen(o => {
@@ -111,21 +116,10 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
       </div>
 
       <div className="nav-section">
-        <div className="nav-label">ภาพรวม</div>
-        <button className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`} onClick={() => onNavigate('dashboard')}>
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-          </svg>
-          Dashboard
-          <span className="nav-dot" />
-        </button>
-      </div>
-
-      <div className="nav-section">
-        <div className="nav-label">✦ องค์กร AI</div>
+        <div className="nav-label">✦ เริ่มที่นี่ · องค์กร AI</div>
 
         <div className="nav-parent">
-          <button className={`nav-item ${activePage === 'aicompany' ? 'active' : ''}`} onClick={() => onNavigate('aicompany')}>
+          <button className={`nav-item ${activePage === 'aicompany' ? 'active' : ''}${data && !(data.visitedPages ?? []).includes('aicompany') ? ' nav-pulse' : ''}`} onClick={() => onNavigate('aicompany')}>
             <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
               <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3m6-12h0m6 0h0m-6 4h0m6 0h0m-6 4h0m6 0h0" />
             </svg>
@@ -177,17 +171,21 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
 
         {toolsOpen && (
           <div className="nav-sub">
-            <div className="nav-label">เครื่องมือ</div>
-            {TOOL_ITEMS.map(t => (
-              <button key={t.id} className={`nav-item ${activePage === t.id ? 'active' : ''}${locked(t.id) ? ' nav-locked' : ''}`}
-                onClick={() => onNavigate(t.id)} title={t.desc}>
-                <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-                  <path d={t.icon} />
-                </svg>
-                {t.label}
-                {locked(t.id) ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
-              </button>
-            ))}
+            <div className="nav-label">เครื่องมือ · ทำตามลำดับ 1 → {TOOL_ITEMS.length}</div>
+            {TOOL_ITEMS.map((t, i) => {
+              const newStage = i === 0 || TOOL_ITEMS[i - 1].stage !== t.stage;
+              return (
+                <div key={t.id}>
+                  {newStage && <div className="nav-stage">{t.stage}</div>}
+                  <button className={`nav-item ${activePage === t.id ? 'active' : ''}${locked(t.id) ? ' nav-locked' : ''}`}
+                    onClick={() => onNavigate(t.id)} title={t.desc}>
+                    <span className="nav-step">{i + 1}</span>
+                    {t.label}
+                    {locked(t.id) ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -294,6 +292,17 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
             <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
           Case Studies
+        </button>
+      </div>
+
+      <div className="nav-section">
+        <div className="nav-label">ภาพรวม (ดูสรุปเมื่อพร้อม)</div>
+        <button className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`} onClick={() => onNavigate('dashboard')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          Dashboard
+          <span className="nav-dot" />
         </button>
       </div>
 

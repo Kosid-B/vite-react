@@ -16,6 +16,7 @@ import Sidebar from './components/Sidebar';
 import AiAssist from './components/AiAssist';
 import BadgeGenerator from './components/BadgeGenerator';
 import CmdK from './components/CmdK';
+import JourneyGuide from './components/JourneyGuide';
 import UpgradeWall from './components/UpgradeWall';
 import { canAccess, setAdminFullAccess } from './lib/access';
 import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
@@ -302,10 +303,18 @@ export default function App() {
 
   useEffect(() => () => { clearTimeout(toastTimer.current); clearTimeout(cloudTimer.current); }, []);
 
-  // ติ๊ก Quest "เข้าตลาดธุรกิจ" เมื่อผู้ใช้เข้าหน้า Marketplace หรือหน้าร้านของตัวเอง (กระตุ้น engagement)
+  // ติ๊ก Quest "เข้าตลาดธุรกิจ" + บันทึกหน้าที่เคยเปิด (ใช้ใน Journey Guide) เมื่อ navigate
   useEffect(() => {
-    if ((activePage === 'market' || activePage === 'storefront') && !data.visitedMarket) {
-      updateData({ ...data, visitedMarket: true });
+    const vp = data.visitedPages ?? [];
+    const onMarket = activePage === 'market' || activePage === 'storefront';
+    const needMarket = onMarket && !data.visitedMarket;
+    const needPage = !vp.includes(activePage);
+    if (needMarket || needPage) {
+      updateData({
+        ...data,
+        visitedMarket: data.visitedMarket || onMarket,
+        visitedPages: needPage ? [...vp, activePage] : vp,
+      });
     }
   }, [activePage, data, updateData]);
 
@@ -562,6 +571,7 @@ export default function App() {
 
       <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
       <AiAssist activePage={activePage} data={data} />
+      <JourneyGuide data={data} onNavigate={setActivePage} onUpdate={updateData} />
     </div>
   );
 }
