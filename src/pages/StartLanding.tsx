@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { track } from '../lib/analytics';
 import { applySeo, siteOrigin } from '../lib/seo';
 import LegalLinks from '../components/LegalLinks';
+import IsmsBadge from '../components/IsmsBadge';
 
 /* ===== Landing page ไวรัล — /start (สาธารณะ ไม่ต้องล็อกอิน) =====
  * กลุ่มเป้าหมาย: Gen Z จบใหม่หางานไม่ได้ + กลุ่ม "เสมือนว่างงาน" (มีงานแต่รายได้ไม่พอ)
@@ -199,6 +200,7 @@ export default function StartLanding() {
         เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a href="tel:08178177773">081-7817-7773</a>
         <br />
         <LegalLinks />
+        <div style={{ marginTop: 14 }}><IsmsBadge /></div>
       </footer>
     </div>
   );

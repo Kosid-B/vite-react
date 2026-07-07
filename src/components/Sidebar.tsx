@@ -4,6 +4,7 @@ import type { Workspace } from '../lib/workspaces';
 import { BRAND, COMPANY, isAdminEmail } from '../config';
 import { canAccess, planLabel, PLAN_COLOR, PAGE_MIN_PLAN } from '../lib/access';
 import MfaSetup from './MfaSetup';
+import IsmsBadge from './IsmsBadge';
 
 interface Props {
   activePage: PageId;
@@ -381,6 +382,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <div className="sidebar-company-name">{COMPANY.nameTh}</div>
           <a className="sidebar-company-link" href={COMPANY.website} target="_blank" rel="noreferrer">{COMPANY.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>
           <div className="sidebar-company-tel">โทร {COMPANY.tel}</div>
+          <IsmsBadge compact />
         </div>
       </div>
     </nav>
