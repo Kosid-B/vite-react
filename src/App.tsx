@@ -23,10 +23,6 @@ import UpgradeWall from './components/UpgradeWall';
 import { canAccess, setAdminFullAccess } from './lib/access';
 import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
 import { isAdminEmail } from './config';
-import { PublicStorefrontPage, PublicDirectoryPage } from './pages/PublicStorefront';
-import StartLanding from './pages/StartLanding';
-import ShopSignup from './pages/ShopSignup';
-import LegalPage, { type LegalSection } from './pages/LegalPage';
 import LegalLinks from './components/LegalLinks';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -355,30 +351,8 @@ export default function App() {
     if (activePage !== 'trade') setActivePage('trade');
   }
 
-  // Marketplace M1: หน้าสาธารณะ /b (สารบัญธุรกิจ) และ /b/<slug> (หน้าร้าน)
-  // เข้าถึงได้โดยไม่ต้องล็อกอิน — มาก่อน gate ทุกตัว
-  const pubPath = window.location.pathname;
-  if (pubPath === '/b' || pubPath === '/b/' || pubPath.startsWith('/b/')) {
-    const slug = pubPath.split('/')[2] ?? '';
-    return slug ? <PublicStorefrontPage slug={slug} /> : <PublicDirectoryPage />;
-  }
-  // Landing ไวรัล "เริ่มธุรกิจ" — กลุ่ม Gen Z จบใหม่ + เสมือนว่างงาน (สาธารณะ)
-  if (pubPath === '/start' || pubPath === '/start/') {
-    return <StartLanding />;
-  }
-  // สมัครร้านตลาดฝากขายสินค้า — ฟอร์มสาธารณะ เบอร์โทร + LINE
-  if (pubPath === '/shop' || pubPath === '/shop/') {
-    return <ShopSignup />;
-  }
-  // เอกสารทางกฎหมาย (สาธารณะ): ข้อมูลบริษัท · ความเป็นส่วนตัว · การคืนเงิน · ข้อกำหนด
-  if (pubPath.startsWith('/legal') || ['/privacy', '/terms', '/refund', '/cookies'].some(p => pubPath === p || pubPath === p + '/')) {
-    const sec: LegalSection =
-      pubPath.includes('privacy') ? 'privacy' :
-      pubPath.includes('cookies') ? 'cookies' :
-      pubPath.includes('refund') ? 'refund' :
-      pubPath.includes('terms') ? 'terms' : 'company';
-    return <LegalPage section={sec} />;
-  }
+  // หมายเหตุ: เส้นทางสาธารณะ (/b, /start, /shop, /legal…) ย้ายไปจัดการที่ Root.tsx แล้ว
+  // (โหลดเฉพาะหน้านั้นโดยไม่ดึง supabase เข้ามาใน first paint)
 
   // Loading Supabase session
   if (isSupabaseEnabled && !authReady) {

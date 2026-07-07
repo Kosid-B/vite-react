@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
+import Root from './Root.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import CookieConsent from './components/CookieConsent.tsx'
 import './index.css'
@@ -8,7 +8,7 @@ import './index.css'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <App />
+      <Root />
       <CookieConsent />
     </ErrorBoundary>
   </StrictMode>,
