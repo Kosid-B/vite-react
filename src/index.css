@@ -5298,3 +5298,32 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .clw-item summary span{ color:#6f7cae; font-weight:500; font-size:12.5px; }
 .clw-report{ white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:13px; line-height:1.55; color:#cbd5e1; margin:8px 0 0; max-height:260px; overflow:auto; }
 .clw-empty{ font-size:13.5px; color:#6f7cae; }
+
+/* ===== PR-B: AI Agent streaming (ก) + MFA setup (ข) ===== */
+.aia-loading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.aia-cancel { font-family: inherit; font-size: 11.5px; color: var(--rust); background: transparent; border: 1px solid var(--sand); border-radius: 12px; padding: 3px 12px; cursor: pointer; transition: .15s; }
+.aia-cancel:hover { border-color: var(--rust); }
+.aia-stream { white-space: pre-wrap; line-height: 1.6; }
+
+.sidebar-mfa-link { width: 100%; margin-bottom: 6px; padding: 9px; background: rgba(99,179,237,.10); border: 1px solid rgba(99,179,237,.25); color: #90cdf4; border-radius: var(--r); font-family: inherit; font-size: 12.5px; cursor: pointer; transition: .15s; }
+.sidebar-mfa-link:hover { background: rgba(99,179,237,.18); color: #bee3f8; }
+
+.mfa-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; }
+.mfa-modal { width: 380px; max-width: calc(100vw - 32px); max-height: 85vh; overflow-y: auto; background: var(--white); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 20px; }
+.mfa-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.mfa-title { font-weight: 600; font-size: 15px; color: var(--ink); }
+.mfa-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--ink3); line-height: 1; }
+.mfa-loading, .mfa-desc { font-size: 13px; color: var(--ink3); }
+.mfa-status-ok { padding: 12px; background: rgba(34,197,94,.1); border-radius: var(--r); color: #16a34a; font-size: 13.5px; }
+.mfa-body { display: flex; flex-direction: column; gap: 10px; }
+.mfa-enroll-btn, .mfa-verify { padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 13.5px; cursor: pointer; }
+.mfa-cancel { padding: 10px; background: none; border: 1px solid var(--sand); border-radius: var(--r); font-family: inherit; font-size: 13.5px; cursor: pointer; color: var(--ink3); }
+.mfa-qr svg { width: 180px; height: 180px; display: block; margin: 0 auto; }
+.mfa-secret { font-size: 12px; color: var(--ink3); text-align: center; word-break: break-all; }
+.mfa-body label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--ink2); }
+.mfa-body input { padding: 10px; border: 1px solid var(--sand); border-radius: var(--r); font-family: inherit; font-size: 16px; text-align: center; letter-spacing: 4px; }
+.mfa-actions { display: flex; gap: 8px; }
+.mfa-actions button { flex: 1; }
+.mfa-msg { margin-top: 10px; padding: 8px 10px; border-radius: var(--r); font-size: 13px; }
+.mfa-msg.ok { background: rgba(34,197,94,.1); color: #16a34a; }
+.mfa-msg.err { background: rgba(239,68,68,.1); color: #dc2626; }
