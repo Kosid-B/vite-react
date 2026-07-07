@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { track } from '../lib/analytics';
 import LegalLinks from '../components/LegalLinks';
+import IsmsBadge from '../components/IsmsBadge';
 
 interface Props {
   onGetStarted: () => void;
@@ -311,6 +312,7 @@ export default function LandingPage({ onGetStarted }: Props) {
         © 2026 CEO AI Thailand · ceoaithailand.org · B. Training Consultant Co., Ltd.
         <br />
         <LegalLinks linkStyle={{ color: C.slate5, textDecoration: 'none' }} />
+        <div style={{ marginTop: 16 }}><IsmsBadge /></div>
       </footer>
     </div>
   );

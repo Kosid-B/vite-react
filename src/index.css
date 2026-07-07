@@ -5377,3 +5377,10 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .cst-item-src { text-transform: uppercase; letter-spacing: .3px; }
 .cst-del { background: none; border: 1px solid var(--sand); border-radius: var(--r); color: var(--rust); cursor: pointer; padding: 6px 12px; font-family: inherit; font-size: 12px; }
 .cst-del:hover { border-color: var(--rust); }
+
+/* ===== ป้าย ISO/IEC 27001:2022 (ISMS) ในฟุตเตอร์ ===== */
+.isms-badge { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 6px 14px; border: 1px solid rgba(6,182,212,.35); border-radius: 999px; background: rgba(6,182,212,.08); color: #67e8f9; font-size: 12px; font-weight: 500; line-height: 1.4; }
+.isms-badge strong { color: #a5f3fc; font-weight: 700; white-space: nowrap; }
+.isms-badge-sub { color: rgba(103,232,249,.7); font-size: 11px; font-weight: 400; }
+.isms-badge.compact { width: 100%; margin-top: 8px; padding: 7px 8px; font-size: 11px; }
+.isms-badge.compact .isms-badge-sub { flex-basis: 100%; text-align: center; font-size: 10px; }
