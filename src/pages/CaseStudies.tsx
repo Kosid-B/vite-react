@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import type { AppData, CaseStudy } from '../types';
 
-const CASES = [
+const CASES: CaseStudy[] = [
   {
     id: 'tencent',
     tag: 'กลยุทธ์ M&A',
@@ -82,10 +83,11 @@ const CASES = [
   },
 ];
 
-export default function CaseStudies() {
-  const [active, setActive] = useState(CASES[0].id);
+export default function CaseStudies({ data }: { data?: AppData }) {
+  const ALL: CaseStudy[] = [...CASES, ...(data?.caseStudies ?? [])];
+  const [active, setActive] = useState(ALL[0].id);
   const [copied, setCopied] = useState<string | null>(null);
-  const cs = CASES.find(c => c.id === active)!;
+  const cs = ALL.find(c => c.id === active) ?? ALL[0];
 
   function copyPrompt(text: string, key: string) {
     navigator.clipboard.writeText(text).then(() => {
@@ -103,7 +105,7 @@ export default function CaseStudies() {
 
       {/* Tabs */}
       <div className="cs-tabs">
-        {CASES.map(c => (
+        {ALL.map(c => (
           <button
             key={c.id}
             className={`cs-tab ${active === c.id ? 'active' : ''}`}
