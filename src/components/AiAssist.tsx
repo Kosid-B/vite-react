@@ -71,7 +71,7 @@ export default function AiAssist({ activePage, data }: Props) {
     const q = text.trim();
     if (!q) return;
     if (!isSupabaseEnabled || !supabase) {
-      setError('AI Agent ต้องเปิดใช้ Supabase + deploy ฟังก์ชัน ai-assist (ตั้ง ANTHROPIC_API_KEY) ก่อน — ดู supabase/README.md');
+      setError('ตอนนี้อยู่ในโหมดทดลอง (Local) — ผู้ช่วย AI จะพร้อมช่วยเมื่อคุณเข้าสู่ระบบบนเว็บจริง 🙂');
       return;
     }
     const controller = new AbortController();
@@ -92,9 +92,9 @@ export default function AiAssist({ activePage, data }: Props) {
         setStreamText('');
         setResult({ summary: res?.summary ?? '', suggestions: res?.suggestions ?? [] });
       }
-    } catch (e) {
+    } catch {
       if (!controller.signal.aborted) {
-        setError('เรียก AI ไม่สำเร็จ: ' + ((e as Error).message || 'error'));
+        setError('ผู้ช่วย AI ไม่ตอบในตอนนี้ 🙏 กรุณาลองใหม่อีกครั้งในอีกสักครู่');
       }
     } finally {
       setBusy(false);

@@ -143,7 +143,7 @@ export default function LandingPage({ onGetStarted }: Props) {
             จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 15 วัน
           </button>
           <div style={{ marginTop: 12, color: C.slate5, fontSize: 13 }}>
-            เหลือสิทธิ์จ้างงานวันนี้อีก <strong style={{ color: C.amber4 }}>8 บริษัท</strong>
+            ไม่ต้องใช้บัตรเครดิต · เริ่มฟรี 15 วัน · ยกเลิกได้ทุกเมื่อ
           </div>
           <a
             href="/shop"

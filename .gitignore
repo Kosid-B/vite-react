@@ -32,3 +32,4 @@ dist-ssr
 
 # Claude Code agent worktrees (runtime artifacts)
 .claude/worktrees/
+content-prototype-seed.json
