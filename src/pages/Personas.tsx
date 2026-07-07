@@ -6,7 +6,10 @@ interface Props {
   onUpdate: (data: AppData) => void;
 }
 
-const P_SECTIONS: { key: keyof Pick<Persona, 'goal' | 'fear' | 'search' | 'action'>; hd: string; color: string }[] = [
+type PKey = keyof Pick<Persona, 'pains' | 'gains' | 'goal' | 'fear' | 'search' | 'action'>;
+const P_SECTIONS: { key: PKey; hd: string; color: string }[] = [
+  { key: 'pains',  hd: '😣 Pain Points — ปัญหา/ความเจ็บปวด', color: '#b91c1c' },
+  { key: 'gains',  hd: '😍 Gain Points — สิ่งที่อยากได้',      color: '#15803d' },
   { key: 'goal',   hd: 'เป้าหมายหลัก',          color: '#2d6a4f' },
   { key: 'fear',   hd: 'ความกังวล',              color: '#c44b2b' },
   { key: 'search', hd: 'ช่องทางค้นหา',           color: '#1a4f8a' },
@@ -23,6 +26,7 @@ export default function Personas({ data, onUpdate }: Props) {
     const newP: Persona = {
       name: 'Persona ใหม่', role: 'ตำแหน่ง / บทบาท', initials: 'NW',
       bg: pal.bg, tc: pal.tc, quote: 'เพิ่ม quote ของ persona นี้',
+      pains: ['ปัญหาที่ลูกค้าเจอ'], gains: ['ผลลัพธ์ที่ลูกค้าอยากได้'],
       goal: ['เป้าหมาย'], fear: ['ความกังวล'], search: ['ช่องทาง'], action: ['พฤติกรรม'],
     };
     onUpdate({ ...data, personas: [...data.personas, newP] });
@@ -38,25 +42,25 @@ export default function Personas({ data, onUpdate }: Props) {
     onUpdate({ ...data, personas });
   }
 
-  function saveItem(pi: number, key: keyof Pick<Persona, 'goal' | 'fear' | 'search' | 'action'>, idx: number, value: string) {
+  function saveItem(pi: number, key: PKey, idx: number, value: string) {
     const personas = data.personas.map((p, i) => {
       if (i !== pi) return p;
-      const arr = [...p[key]];
+      const arr = [...(p[key] ?? [])];
       arr[idx] = value;
       return { ...p, [key]: arr };
     });
     onUpdate({ ...data, personas });
   }
 
-  function addItem(pi: number, key: keyof Pick<Persona, 'goal' | 'fear' | 'search' | 'action'>) {
-    const personas = data.personas.map((p, i) => i === pi ? { ...p, [key]: [...p[key], 'รายการใหม่'] } : p);
+  function addItem(pi: number, key: PKey) {
+    const personas = data.personas.map((p, i) => i === pi ? { ...p, [key]: [...(p[key] ?? []), 'รายการใหม่'] } : p);
     onUpdate({ ...data, personas });
   }
 
-  function delItem(pi: number, key: keyof Pick<Persona, 'goal' | 'fear' | 'search' | 'action'>, idx: number) {
+  function delItem(pi: number, key: PKey, idx: number) {
     const personas = data.personas.map((p, i) => {
       if (i !== pi) return p;
-      return { ...p, [key]: p[key].filter((_, j) => j !== idx) };
+      return { ...p, [key]: (p[key] ?? []).filter((_, j) => j !== idx) };
     });
     onUpdate({ ...data, personas });
   }
@@ -112,7 +116,7 @@ export default function Personas({ data, onUpdate }: Props) {
               <div key={sec.key} className="p-section">
                 <div className="p-sec-hd" style={{ color: sec.color }}>{sec.hd}</div>
                 <EditableList
-                  items={p[sec.key]}
+                  items={p[sec.key] ?? []}
                   itemKey={`${sec.key}-${pi}`}
                   onSave={(idx, val) => saveItem(pi, sec.key, idx, val)}
                   onAdd={() => addItem(pi, sec.key)}

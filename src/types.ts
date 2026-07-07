@@ -16,6 +16,8 @@ export interface Persona {
   bg: string;
   tc: string;
   quote: string;
+  pains?: string[];  // Pain Points — ปัญหา/ความเจ็บปวดที่ลูกค้าเจอ (Value Proposition Canvas)
+  gains?: string[];  // Gain Points — สิ่งที่ลูกค้าอยากได้/ผลลัพธ์ที่ต้องการ
   goal: string[];
   fear: string[];
   search: string[];
@@ -229,6 +231,7 @@ export interface AICompany {
   competencyMap: RoleCompetency[]; // HRD กำหนด Competency Level ต่อตำแหน่ง
   toolOwners?: Record<string, string>; // toolId → agentId — C-level ที่ CEO มอบหมายให้ดูแลเครื่องมือแต่ละตัว
   productDesc?: string; // บอร์ดอธิบายผลิตภัณฑ์/บริการของบริษัท (ใช้ให้ CEO ร่าง BMC)
+  productVp?: string;   // Value Proposition — คุณค่าหลัก (ทำก่อน BMC ตามหลัก MIT: ลูกค้าได้อะไร ลด pain เพิ่ม gain)
   productDbd?: string;  // หมวดผลิตภัณฑ์/บริการตาม DBD (TSIC) — ใช้จัดกลุ่มใน Marketplace และงานการตลาด
   bmcDraft?: { bmc: BMCData; note: string; proposedAt: string }; // ร่าง BMC จาก CEO รอบอร์ดอนุมัติ
 }
