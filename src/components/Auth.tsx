@@ -8,7 +8,7 @@ import AuthNudge from './AuthNudge';
 
 type Mode = 'signin' | 'signup';
 
-export default function Auth() {
+export default function Auth({ onBack }: { onBack?: () => void } = {}) {
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -54,6 +54,9 @@ export default function Auth() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
+        {onBack && (
+          <button type="button" className="auth-back" onClick={onBack}>← กลับหน้าแรก</button>
+        )}
         <div className="auth-brand">{BRAND.product}</div>
         <div className="auth-sub">{BRAND.tagline}</div>
 

@@ -383,23 +383,20 @@ export default function App() {
     return <div className="auth-wrap"><div className="auth-loading">กำลังโหลด…</div></div>;
   }
 
-  // LandingPage: แสดงเสมอถ้ายังไม่เคยผ่าน (ทั้ง local และ Supabase mode)
-  if (!seenLanding && !(isSupabaseEnabled && session)) {
-    if (showAuth) return <Auth />;
-    return (
-      <LandingPage
-        onGetStarted={() => {
-          localStorage.setItem('ceo_ai_seen', '1');
-          setSeenLanding(true);
-          if (isSupabaseEnabled) setShowAuth(true);
-        }}
-      />
-    );
+  // โหมด Supabase (production): ยังไม่ล็อกอิน → หน้า Landing สาธารณะเป็น "ด่านแรก" เสมอ
+  // ไม่บังคับ login ทันที — กดปุ่ม "เริ่ม/เข้าระบบ" ค่อยไปหน้า Auth (login เป็นด่านที่สอง)
+  if (isSupabaseEnabled && !session) {
+    if (showAuth) return <Auth onBack={() => setShowAuth(false)} />;
+    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
   }
 
-  // Supabase mode + ยังไม่ได้ล็อกอิน (เคยเห็น landing แล้วแต่ยัง auth ไม่เสร็จ)
-  if (isSupabaseEnabled && authReady && !session) {
-    return <Auth />;
+  // โหมด local (ไม่มี backend): โชว์ landing ครั้งแรกครั้งเดียว แล้วเข้าแอปเลย
+  if (!isSupabaseEnabled && !seenLanding) {
+    return (
+      <LandingPage
+        onGetStarted={() => { localStorage.setItem('ceo_ai_seen', '1'); setSeenLanding(true); }}
+      />
+    );
   }
 
   const doneCount = data.actions.filter(a => a.done).length;
