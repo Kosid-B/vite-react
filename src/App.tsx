@@ -12,9 +12,9 @@ import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTrig
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
-import AiAssist from './components/AiAssist';
-import JourneyGuide from './components/JourneyGuide';
 // perf: lazy-load เฉพาะตอนต้องใช้ (ไม่อยู่ใน critical path ของ first paint)
+const AiAssist = lazy(() => import('./components/AiAssist'));
+const JourneyGuide = lazy(() => import('./components/JourneyGuide'));
 const Celebrate = lazy(() => import('./components/Celebrate'));
 const BadgeGenerator = lazy(() => import('./components/BadgeGenerator'));
 const CmdK = lazy(() => import('./components/CmdK'));
@@ -545,9 +545,9 @@ export default function App() {
       <Suspense fallback={null}>
         <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
         <OnboardingTour onNavigate={setActivePage} />
+        <AiAssist activePage={activePage} data={data} />
+        <JourneyGuide data={data} onNavigate={setActivePage} onUpdate={updateData} />
       </Suspense>
-      <AiAssist activePage={activePage} data={data} />
-      <JourneyGuide data={data} onNavigate={setActivePage} onUpdate={updateData} />
     </div>
   );
 }
