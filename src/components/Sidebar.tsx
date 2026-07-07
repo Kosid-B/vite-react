@@ -71,6 +71,19 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
       return !o;
     });
   };
+  // โหมดมือใหม่ — ซ่อนเมนูขั้นสูง (โรงงาน/ISO/RFQ/การค้าระหว่างเมือง/Pulse) ลดของล้นจอ
+  // default: เปิดสำหรับผู้ใช้ที่เพิ่งเริ่ม (เปิดหน้าน้อยกว่า 3 หน้า) · แตะสลับได้เสมอ
+  const [beginner, setBeginner] = useState<boolean>(() => {
+    const saved = localStorage.getItem('ceo_ai_beginner');
+    if (saved !== null) return saved === '1';
+    return (data?.visitedPages?.length ?? 0) < 3;
+  });
+  const toggleBeginner = () => setBeginner(b => {
+    localStorage.setItem('ceo_ai_beginner', b ? '0' : '1');
+    return !b;
+  });
+  const ADVANCED_PAGES: PageId[] = ['pulse', 'citytrade', 'trade', 'factory', 'iso9001'];
+  const hideAdv = (p: PageId) => beginner && ADVANCED_PAGES.includes(p);
   // เปิด sub-menu อัตโนมัติเมื่ออยู่ในหน้าเครื่องมือ
   useEffect(() => {
     if (TOOL_PAGE_IDS.includes(activePage)) setToolsOpen(true);
@@ -143,6 +156,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <span className="nav-dot" />
         </button>
 
+        {!hideAdv('pulse') && (
         <button className={`nav-item ${activePage === 'pulse' ? 'active' : ''}`} onClick={() => onNavigate('pulse')}
           title="Pulse & A/B — วัดว่าอะไรทำให้อยากใช้งานต่อ แบบโปร่งใส (ยินยอมก่อน · ปิดได้ทุกเมื่อ · ดูข้อมูลตัวเองได้)">
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
@@ -151,7 +165,9 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           💓 Pulse & A/B
           <span className="nav-dot" />
         </button>
+        )}
 
+        {!hideAdv('citytrade') && (
         <button className={`nav-item ${activePage === 'citytrade' ? 'active' : ''}`} onClick={() => onNavigate('citytrade')}
           title="การค้าระหว่างเมืองธุรกิจ — CEO+CMO จับคู่ดีลอัตโนมัติ บอร์ดกำกับ">
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
@@ -160,6 +176,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           🤝 การค้าระหว่างเมือง
           <span className="nav-dot" />
         </button>
+        )}
 
         {toolsOpen && (
           <div className="nav-sub">
@@ -169,10 +186,13 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
               return (
                 <div key={t.id}>
                   {newStage && <div className="nav-stage">{t.stage}</div>}
-                  <button className={`nav-item ${activePage === t.id ? 'active' : ''}${locked(t.id) ? ' nav-locked' : ''}`}
-                    onClick={() => onNavigate(t.id)} title={t.desc}>
+                  <button className={`nav-item nav-item-tool ${activePage === t.id ? 'active' : ''}${locked(t.id) ? ' nav-locked' : ''}`}
+                    onClick={() => onNavigate(t.id)}>
                     <span className="nav-step">{i + 1}</span>
-                    {t.label}
+                    <span className="nav-tool-text">
+                      <span className="nav-tool-label">{t.label}</span>
+                      <span className="nav-tool-desc">{t.desc}</span>
+                    </span>
                     {locked(t.id) ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
                   </button>
                 </div>
@@ -198,6 +218,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <span className="nav-dot" />
         </button>
 
+        {!hideAdv('trade') && (
         <button className={`nav-item ${activePage === 'trade' ? 'active' : ''}${locked('trade') ? ' nav-locked' : ''}`} onClick={() => onNavigate('trade')}
           title="ขอใบเสนอราคา (RFQ) จากธุรกิจในระบบ และติดตามออเดอร์ซื้อขาย">
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
@@ -206,6 +227,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           ซื้อขาย B2B (RFQ)
           {locked('trade') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
+        )}
 
         <button className={`nav-item ${activePage === 'team' ? 'active' : ''}${locked('team') ? ' nav-locked' : ''}`} onClick={() => onNavigate('team')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
@@ -215,6 +237,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           {locked('team') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
 
+        {!hideAdv('factory') && (
         <button className={`nav-item ${activePage === 'factory' ? 'active' : ''}`} onClick={() => onNavigate('factory')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21V10.5M15 21V10.5M9 7h.01M15 7h.01M5 21V9.5l7-4 7 4V21" />
@@ -222,6 +245,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           โรงงานอัจฉริยะ
           <span className="nav-dot" />
         </button>
+        )}
 
         <button className={`nav-item ${activePage === 'billing' ? 'active' : ''}`} onClick={() => onNavigate('billing')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
@@ -250,6 +274,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
         )}
       </div>
 
+      {!hideAdv('iso9001') && (
       <div className="nav-section">
         <div className="nav-label">มาตรฐาน ISO</div>
         <button className={`nav-item ${activePage === 'iso9001' ? 'active' : ''}${locked('iso9001') ? ' nav-locked' : ''}`} onClick={() => onNavigate('iso9001')}>
@@ -260,6 +285,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           {locked('iso9001') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
       </div>
+      )}
 
       <div className="nav-section" style={{ marginTop: 4 }}>
         <div className="nav-label">✦ AI Powered</div>
@@ -297,6 +323,12 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <span className="nav-dot" />
         </button>
       </div>
+
+      <button className="beginner-toggle" onClick={toggleBeginner}>
+        {beginner
+          ? '🔰 โหมดมือใหม่ (ซ่อนเมนูขั้นสูง) — แตะเพื่อแสดงครบ'
+          : '⚙️ แสดงครบทุกเมนู — แตะเพื่อกลับโหมดมือใหม่'}
+      </button>
 
       <div style={{ padding: '0 12px', marginTop: 8 }}>
         <div className="progress-block">
