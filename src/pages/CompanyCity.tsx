@@ -1,12 +1,13 @@
 import { useEffect, useMemo } from 'react';
 import type { AppData, PageId } from '../types';
-import { cityStats, partnerDevelopmentMap, type CityBuilding } from '../lib/companyCity';
+import { cityStats, partnerDevelopmentMap } from '../lib/companyCity';
 import { useState } from 'react';
 import { fmtBaht } from '../lib/finance';
 import { streakCount } from '../lib/streak';
 import { track } from '../lib/analytics';
 import CityTreasury from '../components/CityTreasury';
 import CityRewards from '../components/CityRewards';
+import CityscapeHero from '../components/CityscapeHero';
 
 /* ===== เมืองบริษัท (Company City) — เกมส์ SIM การเติบโต =====
  * เมืองโตตามความคืบหน้าจริง: อาคารสูงขึ้นเมื่อทำงานจริง, ปลดล็อกย่านใหม่ตามเหตุการณ์สำคัญ
@@ -19,8 +20,6 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
   const streak = streakCount(data);
   useEffect(() => { track('city_viewed', { built: s.built, net: s.fin.net }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // เรียงให้อาคารที่สร้างแล้ว (สูง) อยู่กลาง ที่ดินว่างอยู่ท้าย เพื่อภาพเมืองสวย
-  const skyline = [...s.buildings].sort((a, b) => b.level - a.level);
   const lockedDistricts = s.buildings.filter(b => b.locked && b.level === 0).length;
 
   return (
@@ -45,6 +44,9 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
         </div>
       </div>
 
+      {/* ===== Hero: ภาพเมือง 3D ไอโซเมตริก (แสง/เงาตามเวลา · อากาศตามฤดู) ผูก XP จริง ===== */}
+      <CityscapeHero data={data} />
+
       {/* แถบสถิติเมือง */}
       <div className="city-stats">
         <div className="city-stat"><b>{s.agents}</b><span>👥 ประชากร (เอเจนต์)</span></div>
@@ -65,23 +67,6 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
           🔓 อัปเกรดแพ็ก Growth เพื่อปลดล็อกอีก {lockedDistricts} ย่านในเมือง (ศูนย์ข้อมูล · ห้องแล็บ · ISO) + เก็บรางวัลเพิ่ม →
         </button>
       )}
-
-      {/* ความคืบหน้าสู่ระดับเมืองถัดไป */}
-      <div className="city-progress">
-        <div className="city-progress-top">
-          <span>ความเจริญสู่ระดับถัดไป</span>
-          <span>{s.level.max === Infinity ? 'สูงสุดแล้ว 👑' : `${s.pctToNext}%`}</span>
-        </div>
-        <div className="city-progress-bar"><div className="city-progress-fill" style={{ width: `${s.pctToNext}%`, background: s.level.color }} /></div>
-      </div>
-
-      {/* ===== ฉากเมือง (skyline) ===== */}
-      <div className={`city-scene sky-${s.tier.sky}`}>
-        <div className="city-skyline">
-          {skyline.map(b => <Building key={b.id} b={b} onNavigate={onNavigate} />)}
-        </div>
-        <div className="city-ground" />
-      </div>
 
       {/* ===== แผนผังการพัฒนาสำหรับคู่ค้า — ความสูงตึก = ระดับพัฒนาแต่ละด้าน (ไม่เปิดเผยตัวเลขลับ) ===== */}
       <div className="devmap">
@@ -148,29 +133,5 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
         💡 ทุกอาคารเชื่อมกับงานจริงในบริษัท — ยิ่งลงมือทำ เมืองยิ่งโต เลื่อนระดับจากหมู่บ้านสตาร์ทอัปสู่มหานคร AI
       </p>
     </div>
-  );
-}
-
-function Building({ b, onNavigate }: { b: CityBuilding; onNavigate: (p: PageId) => void }) {
-  if (b.level === 0) {
-    return (
-      <button className={`bldg empty${b.locked ? ' locked' : ''}`} onClick={() => onNavigate(b.page)} title={`${b.name} — ${b.hint}`}>
-        <span className="bldg-lot">{b.locked ? '🔒' : '＋'}</span>
-        <span className="bldg-label">{b.name}</span>
-      </button>
-    );
-  }
-  // จำนวนชั้น = level (อาคารสูงตามระดับ) — อาคาร binary (max 1) ให้ดูมี "ตัวตน" 3 ชั้น
-  const floors = b.max === 1 ? 3 : b.level + 1;
-  return (
-    <button className="bldg" onClick={() => onNavigate(b.page)} title={`${b.name} — Lv.${b.level}`}>
-      <span className="bldg-roof">{b.icon}</span>
-      <span className="bldg-tower">
-        {Array.from({ length: floors }).map((_, i) => (
-          <span key={i} className="bldg-floor"><i /><i /><i /></span>
-        ))}
-      </span>
-      <span className="bldg-label">{b.name}</span>
-    </button>
   );
 }
