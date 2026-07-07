@@ -9,14 +9,16 @@ import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
 import { track } from './lib/analytics';
 import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTriggers';
-import Celebrate from './components/Celebrate';
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import Sidebar from './components/Sidebar';
 import AiAssist from './components/AiAssist';
-import BadgeGenerator from './components/BadgeGenerator';
-import CmdK from './components/CmdK';
 import JourneyGuide from './components/JourneyGuide';
+// perf: lazy-load เฉพาะตอนต้องใช้ (ไม่อยู่ใน critical path ของ first paint)
+const Celebrate = lazy(() => import('./components/Celebrate'));
+const BadgeGenerator = lazy(() => import('./components/BadgeGenerator'));
+const CmdK = lazy(() => import('./components/CmdK'));
+const OnboardingTour = lazy(() => import('./components/OnboardingTour'));
 import UpgradeWall from './components/UpgradeWall';
 import { canAccess, setAdminFullAccess } from './lib/access';
 import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
@@ -403,7 +405,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Celebrate moment={celebration} onDone={() => setCelebration(null)} />
+      <Suspense fallback={null}><Celebrate moment={celebration} onDone={() => setCelebration(null)} /></Suspense>
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
       <button className="hamburger" onClick={() => setSidebarOpen(true)} aria-label="เปิดเมนู">
@@ -558,13 +560,18 @@ export default function App() {
       </button>
 
       {showBadge && (
-        <BadgeGenerator
-          defaultName={data.personas[0]?.name ?? ''}
-          onClose={() => setShowBadge(false)}
-        />
+        <Suspense fallback={null}>
+          <BadgeGenerator
+            defaultName={data.personas[0]?.name ?? ''}
+            onClose={() => setShowBadge(false)}
+          />
+        </Suspense>
       )}
 
-      <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
+      <Suspense fallback={null}>
+        <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
+        <OnboardingTour onNavigate={setActivePage} />
+      </Suspense>
       <AiAssist activePage={activePage} data={data} />
       <JourneyGuide data={data} onNavigate={setActivePage} onUpdate={updateData} />
     </div>
