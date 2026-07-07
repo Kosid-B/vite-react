@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
+import { SUPABASE_URL } from '../lib/supabase';
 
 interface Props {
   defaultName?: string;
@@ -570,7 +571,7 @@ export default function BadgeGenerator({ defaultName = '', complianceScore = 98,
   }
 
   function buildEdgeUrl(): string {
-    const base = import.meta.env.VITE_SUPABASE_URL;
+    const base = SUPABASE_URL;
     if (!base) return 'https://ceoaithailand.org/';
     const params = new URLSearchParams({
       company:  company.trim() || 'บริษัทของคุณ',
