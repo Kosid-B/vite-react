@@ -5400,3 +5400,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .onb-back { padding: 10px 16px; background: none; border: 1px solid var(--sand); border-radius: var(--r); color: var(--ink2); font-family: inherit; font-size: 13.5px; cursor: pointer; }
 .onb-next { padding: 10px 22px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
 .onb-next:hover { filter: brightness(1.05); }
+
+/* ===== กลุ่มเมนูยุบได้ "ธุรกิจ & การขาย" (ลด surface area) ===== */
+.nav-group-toggle { font-weight: 600; }
+.nav-group-caret { margin-left: auto; transition: transform .18s; opacity: .7; }
+.nav-group-toggle.open .nav-group-caret { transform: rotate(180deg); }
