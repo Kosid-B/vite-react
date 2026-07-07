@@ -64,6 +64,11 @@ export default function JourneyGuide({ data, onNavigate, onUpdate }: Props) {
         <div className="jg-prog-text"><b>{prog.done}</b>/{prog.total} ขั้น · {xp.toLocaleString()} XP</div>
       </div>
 
+      <div className="jg-edu">
+        💡 <b>ต่างจากที่อื่น:</b> เราสร้างธุรกิจตามหลัก <b>MIT 24 Steps</b> — เริ่มจาก
+        <b> "รู้จักลูกค้าก่อน"</b> แล้วค่อยออกแบบสินค้า (ไม่ใช่ทำสินค้าก่อนแล้วหาลูกค้าไม่เจอ)
+      </div>
+
       {next && (
         <button className="jg-next" onClick={() => go(next.page)}>
           <span className="jg-next-lbl">👉 ทำต่อ: {next.label}</span>

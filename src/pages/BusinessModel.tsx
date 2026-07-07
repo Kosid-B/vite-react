@@ -248,6 +248,18 @@ export default function BusinessModel({ data, onUpdate }: Props) {
         </div>
       </div>
 
+      <div className="de-hero">
+        <div className="de-hero-badge">วิธีสร้างธุรกิจแบบ MIT</div>
+        <div className="de-hero-title">เริ่มจาก “ลูกค้า” ก่อน — ไม่ใช่ “สินค้า”</div>
+        <div className="de-hero-body">
+          คนไทยส่วนใหญ่ถูกสอนให้ <b>สร้างสินค้า/บริการก่อน</b> แล้วค่อยหาลูกค้า —
+          จึงเจอปัญหา “ของดีแต่ขายไม่ออก” หาลูกค้าและทำการตลาดไม่เจอ.
+          หลัก <b>Disciplined Entrepreneurship (MIT 24 Steps)</b> กลับด้าน:
+          ทำ <b>ระยะ 1 “ลูกค้าคือใคร” (ขั้น 1–6) ให้จบก่อน</b> แล้วจึงออกแบบคุณค่า/สินค้าในระยะถัดไป
+          — ทำตามลำดับ 4 ระยะด้านล่าง แล้วให้ CEO (AI) ช่วยวิเคราะห์ทีละขั้นได้เลย
+        </div>
+      </div>
+
       <div className="bmc-section-label">Business Model Canvas (Osterwalder)</div>
       <div className="bmc-canvas">
         {BMC_CONFIG.map(b => (
