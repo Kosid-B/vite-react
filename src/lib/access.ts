@@ -54,7 +54,7 @@ export function effectiveRank(data: AppData): number {
   }
   if (status === 'trial') {
     if (!trialEndDate || new Date(trialEndDate) < new Date()) return -1;
-    return PLAN_RANK['free'];
+    return PLAN_RANK['scale']; // ทดลอง = ปลดล็อกทุกฟีเจอร์เต็มรูปแบบ 15 วัน แล้วค่อย downgrade เมื่อหมดอายุ
   }
   if (status === 'pending_payment') return PLAN_RANK['free'];
   if (status === 'none' && !isSupabaseEnabled) return PLAN_RANK['scale']; // local dev — full access

@@ -5331,3 +5331,12 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 /* ===== UX quick-wins: ไทยนำหน้าศัพท์อังกฤษ + รวมตัวนำทาง ===== */
 .bmc-step-en { color: var(--ink4); font-weight: 400; font-size: .82em; }
 .gm-quest-hint { margin-top: 10px; padding: 10px 12px; background: rgba(99,179,237,.08); border: 1px solid rgba(99,179,237,.18); border-radius: var(--r); font-size: 12.5px; color: var(--ink2); line-height: 1.5; }
+
+/* ===== โหมดมือใหม่ + คำอธิบายเครื่องมือแบบเห็นเลย (แตะได้บนมือถือ ไม่ต้อง hover) ===== */
+.nav-item-tool { align-items: flex-start; }
+.nav-tool-text { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; text-align: left; }
+.nav-tool-label { font-size: 13px; line-height: 1.3; }
+.nav-tool-desc { font-size: 11.5px; line-height: 1.35; color: var(--ink4); white-space: normal; }
+.nav-item-tool.active .nav-tool-desc { color: var(--ink3); }
+.beginner-toggle { display: block; width: calc(100% - 24px); margin: 8px 12px 0; padding: 8px 10px; background: rgba(148,163,184,.08); border: 1px dashed var(--ink4); border-radius: var(--r); color: var(--ink3); font-family: inherit; font-size: 12px; cursor: pointer; transition: .15s; text-align: center; }
+.beginner-toggle:hover { background: rgba(148,163,184,.16); color: var(--ink2); }
