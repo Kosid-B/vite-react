@@ -57,6 +57,8 @@ const TOOL_ITEMS: { id: PageId; label: string; icon: string; desc: string; stage
     desc: 'ขั้น 11 · แผนพัฒนาผลิตภัณฑ์รายไตรมาส จัดลำดับฟีเจอร์' },
 ];
 const TOOL_PAGE_IDS = TOOL_ITEMS.map(t => t.id);
+// หน้าในกลุ่ม "ธุรกิจ & การขาย" (ยุบได้)
+const BIZ_PAGE_IDS: PageId[] = ['market', 'storefront', 'trade', 'team', 'factory', 'analytics'];
 
 export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs, data, collapsed, onToggleCollapse }: Props) {
   const pct = totalActions > 0 ? Math.round((doneCount / totalActions) * 100) : 0;
@@ -85,9 +87,19 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
   });
   const ADVANCED_PAGES: PageId[] = ['pulse', 'citytrade', 'trade', 'factory', 'iso9001'];
   const hideAdv = (p: PageId) => beginner && ADVANCED_PAGES.includes(p);
-  // เปิด sub-menu อัตโนมัติเมื่ออยู่ในหน้าเครื่องมือ
+  // กลุ่ม "ธุรกิจ & การขาย" — ยุบได้ ลดจำนวนเมนูที่เห็นพร้อมกัน (ลด surface area)
+  const [bizOpen, setBizOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem('ceo_ai_biz_open');
+    return saved === null ? false : saved === '1';
+  });
+  const toggleBiz = () => setBizOpen(o => {
+    localStorage.setItem('ceo_ai_biz_open', o ? '0' : '1');
+    return !o;
+  });
+  // เปิด sub-menu อัตโนมัติเมื่ออยู่ในหน้าเครื่องมือ / หน้าในกลุ่มธุรกิจ
   useEffect(() => {
     if (TOOL_PAGE_IDS.includes(activePage)) setToolsOpen(true);
+    if (BIZ_PAGE_IDS.includes(activePage)) setBizOpen(true);
   }, [activePage]);
 
   return (
@@ -202,66 +214,80 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           </div>
         )}
 
-        <button className={`nav-item ${activePage === 'market' ? 'active' : ''}${locked('market') ? ' nav-locked' : ''}`} onClick={() => onNavigate('market')}>
+        {/* กลุ่ม "ธุรกิจ & การขาย" — ยุบได้ ลดจำนวนเมนูที่เห็นพร้อมกัน */}
+        <button className={`nav-item nav-group-toggle${bizOpen ? ' open' : ''}`} onClick={toggleBiz}
+          aria-label={bizOpen ? 'ยุบกลุ่มธุรกิจ & การขาย' : 'ขยายกลุ่มธุรกิจ & การขาย'}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            <path d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
-          Marketplace
-          {locked('market') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+          ธุรกิจ &amp; การขาย
+          <svg className="nav-group-caret" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.2"><path d="M19 9l-7 7-7-7" /></svg>
         </button>
+        {bizOpen && (
+          <div className="nav-sub">
+            <button className={`nav-item ${activePage === 'market' ? 'active' : ''}${locked('market') ? ' nav-locked' : ''}`} onClick={() => onNavigate('market')}>
+              <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+                <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Marketplace
+              {locked('market') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+            </button>
 
-        <button className={`nav-item ${activePage === 'storefront' ? 'active' : ''}`} onClick={() => onNavigate('storefront')}
-          title="หน้าร้านสาธารณะของธุรกิจคุณ — ลูกค้าเข้าชมและติดต่อได้โดยไม่ต้องล็อกอิน">
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M3 9l1-5h16l1 5M3 9a3 3 0 006 0 3 3 0 006 0 3 3 0 006 0M5 9v11a1 1 0 001 1h12a1 1 0 001-1V9M9 21v-6h6v6" />
-          </svg>
-          หน้าร้านของฉัน
-          <span className="nav-dot" />
-        </button>
+            <button className={`nav-item ${activePage === 'storefront' ? 'active' : ''}`} onClick={() => onNavigate('storefront')}
+              title="หน้าร้านสาธารณะของธุรกิจคุณ — ลูกค้าเข้าชมและติดต่อได้โดยไม่ต้องล็อกอิน">
+              <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+                <path d="M3 9l1-5h16l1 5M3 9a3 3 0 006 0 3 3 0 006 0 3 3 0 006 0M5 9v11a1 1 0 001 1h12a1 1 0 001-1V9M9 21v-6h6v6" />
+              </svg>
+              หน้าร้านของฉัน
+              <span className="nav-dot" />
+            </button>
 
-        {!hideAdv('trade') && (
-        <button className={`nav-item ${activePage === 'trade' ? 'active' : ''}${locked('trade') ? ' nav-locked' : ''}`} onClick={() => onNavigate('trade')}
-          title="ขอใบเสนอราคา (RFQ) จากธุรกิจในระบบ และติดตามออเดอร์ซื้อขาย">
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4" />
-          </svg>
-          ซื้อขาย B2B (RFQ)
-          {locked('trade') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
-        </button>
+            {!hideAdv('trade') && (
+            <button className={`nav-item ${activePage === 'trade' ? 'active' : ''}${locked('trade') ? ' nav-locked' : ''}`} onClick={() => onNavigate('trade')}
+              title="ขอใบเสนอราคา (RFQ) จากธุรกิจในระบบ และติดตามออเดอร์ซื้อขาย">
+              <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+                <path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              ซื้อขาย B2B (RFQ)
+              {locked('trade') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+            </button>
+            )}
+
+            <button className={`nav-item ${activePage === 'team' ? 'active' : ''}${locked('team') ? ' nav-locked' : ''}`} onClick={() => onNavigate('team')}>
+              <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+                <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              ทีม / สมาชิก
+              {locked('team') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+            </button>
+
+            {!hideAdv('factory') && (
+            <button className={`nav-item ${activePage === 'factory' ? 'active' : ''}`} onClick={() => onNavigate('factory')}>
+              <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+                <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21V10.5M15 21V10.5M9 7h.01M15 7h.01M5 21V9.5l7-4 7 4V21" />
+              </svg>
+              โรงงานอัจฉริยะ
+              <span className="nav-dot" />
+            </button>
+            )}
+
+            <button className={`nav-item ${activePage === 'analytics' ? 'active' : ''}${locked('analytics') ? ' nav-locked' : ''}`} onClick={() => onNavigate('analytics')}>
+              <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+                <path d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              SaaS Analytics
+              {locked('analytics') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+            </button>
+          </div>
         )}
 
-        <button className={`nav-item ${activePage === 'team' ? 'active' : ''}${locked('team') ? ' nav-locked' : ''}`} onClick={() => onNavigate('team')}>
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          ทีม / สมาชิก
-          {locked('team') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
-        </button>
-
-        {!hideAdv('factory') && (
-        <button className={`nav-item ${activePage === 'factory' ? 'active' : ''}`} onClick={() => onNavigate('factory')}>
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16M3 21h18M9 21V10.5M15 21V10.5M9 7h.01M15 7h.01M5 21V9.5l7-4 7 4V21" />
-          </svg>
-          โรงงานอัจฉริยะ
-          <span className="nav-dot" />
-        </button>
-        )}
-
+        {/* แพ็กเกจ & ชำระเงิน — แสดงเสมอ (สำคัญต่อรายได้ ไม่ซ่อนในกลุ่ม) */}
         <button className={`nav-item ${activePage === 'billing' ? 'active' : ''}`} onClick={() => onNavigate('billing')}>
           <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
             <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
           </svg>
           แพ็กเกจ & ชำระเงิน
           <span className="nav-dot" />
-        </button>
-
-        <button className={`nav-item ${activePage === 'analytics' ? 'active' : ''}${locked('analytics') ? ' nav-locked' : ''}`} onClick={() => onNavigate('analytics')}>
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          SaaS Analytics
-          {locked('analytics') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
 
         {isAdminEmail(userEmail) && (
