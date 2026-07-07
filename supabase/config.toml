@@ -1,0 +1,30 @@
+# Supabase CLI config — CEO AI Thailand
+# project_id = production ref (Pro plan) · ยืนยัน 2026-07-05
+project_id = "waigsnxhrlwtiotspaim"
+
+# ---- Edge Functions: ตั้ง verify_jwt ให้ตรงกับที่ต้องการ ----
+# ‼️ สำคัญ: ถ้าไม่ระบุ CLI จะ default verify_jwt=true — ทำให้ฟังก์ชัน public (badge/webhook/cron) พังได้
+
+[functions.ai-assist]
+verify_jwt = true
+
+[functions.ai-plan]
+verify_jwt = true
+
+[functions.agent-run]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true
+
+[functions.generate-badge]
+verify_jwt = false
+
+[functions.billing-cron]
+verify_jwt = false
+
+[functions.promptpay-webhook]
+verify_jwt = false
+
+[functions.weekly-report]
+verify_jwt = false
