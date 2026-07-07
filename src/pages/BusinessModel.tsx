@@ -3,6 +3,7 @@ import { trackAiCall } from '../lib/usage';
 import type { Agent, AppData, BMCData } from '../types';
 import EditableList from '../components/EditableList';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { invokeFn } from '../lib/invokeWithTimeout';
 import { withSkillDirectives } from '../lib/skillDirectives';
 
 interface Props {
@@ -177,7 +178,7 @@ export default function BusinessModel({ data, onUpdate }: Props) {
       const notes = bm.de24[idx]?.notes ?? '';
       const agent = data.aiCompany?.agents.find(a => a.role === 'CEO') ?? data.aiCompany?.agents[0];
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+      const { data: res, error } = await invokeFn('agent-run', {
         body: {
           role: agent?.role ?? 'CEO',
           mandate: withSkillDirectives(agent?.mandate ?? 'วิเคราะห์ขั้นตอนการสร้างธุรกิจ MIT 24 Steps', data.aiCompany?.purchasedSkills),
