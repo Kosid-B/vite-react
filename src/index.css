@@ -5405,3 +5405,10 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .nav-group-toggle { font-weight: 600; }
 .nav-group-caret { margin-left: auto; transition: transform .18s; opacity: .7; }
 .nav-group-toggle.open .nav-group-caret { transform: rotate(180deg); }
+
+/* ===== Dashboard: บทเรียนธุรกิจ แบบยุบได้ (progressive disclosure) ===== */
+.db-insight-details > .db-insight { margin-top: 10px; }
+.db-insight-summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--ink2); letter-spacing: .3px; padding: 10px 12px; background: rgba(148,163,184,.06); border: 1px solid var(--sand); border-radius: var(--r); list-style: none; user-select: none; }
+.db-insight-summary::-webkit-details-marker { display: none; }
+.db-insight-summary::after { content: ' ▾'; opacity: .6; }
+.db-insight-details[open] .db-insight-summary::after { content: ' ▴'; }

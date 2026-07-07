@@ -760,9 +760,10 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
         </div>
       </div>
 
-      {/* Featured Insight */}
-      <div className="db-insight" style={{ marginTop: 14 }}>
-        <div className="db-insight-eyebrow">✦ บทเรียนธุรกิจวันนี้</div>
+      {/* Featured Insight — ยุบได้ (progressive disclosure) ลดความรกบนหน้าแรกสำหรับมือใหม่ */}
+      <details className="db-insight-details" style={{ marginTop: 14 }}>
+        <summary className="db-insight-summary">✦ บทเรียนธุรกิจวันนี้ · Case Study (แตะเพื่อดู)</summary>
+        <div className="db-insight">
         <div className="db-insight-grid">
           <div className="db-insight-card db-insight-tencent">
             <div className="db-insight-tag">Case Study · Tencent</div>
@@ -781,7 +782,8 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
             <button className="db-link" onClick={() => onNavigate('cases')}>ดูตัวอย่าง Mission Prompts →</button>
           </div>
         </div>
-      </div>
+        </div>
+      </details>
     </div>
   );
 }
