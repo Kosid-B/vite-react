@@ -1,5 +1,12 @@
 import type { AppData, PageId } from '../types';
-import { canAccess } from './access';
+import { DEFAULT_DATA as SEED } from '../data';
+
+/* seed = ข้อมูลตัวอย่างที่ระบบใส่ให้ตอนเริ่ม (demo) — user ใหม่ยังไม่ได้ลงมือ
+ * จึงติ๊ก "ทำแล้ว" เฉพาะเมื่อค่า "ต่างจาก seed" (แปลว่าลงมือจริง) ไม่ใช่แค่มีค่า default */
+const seedCo = SEED.aiCompany;
+const rosterOf = (d: AppData) => d.aiCompany.agents.map(a => a.id).join(',');
+const SEED_ROSTER = rosterOf(SEED);
+const SEED_DONE_TASKS = seedCo.tasks.filter(t => t.status === 'done').length;
 
 /* ===== Journey Guide — ตัวนำทาง gamification =====
  * นำ User ทีละขั้นจาก "ตั้งค่าใช้งาน" → "พัฒนาธุรกิจ 4 ระยะ" → "เข้าตลาด & หารายได้"
@@ -32,13 +39,13 @@ export const JOURNEY: JourneyPhase[] = [
     steps: [
       { id: 'industry', label: 'เลือกประเภทธุรกิจ', page: 'aicompany',
         hint: 'บอกระบบว่าคุณทำธุรกิจอะไร เพื่อให้ AI แนะนำได้ตรงบริบท',
-        done: d => !!d.aiCompany.industry?.trim() },
+        done: d => !!d.aiCompany.industry?.trim() && d.aiCompany.industry !== seedCo.industry },
       { id: 'goal', label: 'ตั้งเป้าหมายบริษัท', page: 'aicompany',
         hint: 'กำหนดเป้าหมายที่วัดผลได้ ให้ทีม AI ใช้เป็นทิศทาง',
-        done: d => !!d.aiCompany.goal?.trim() },
+        done: d => !!d.aiCompany.goal?.trim() && d.aiCompany.goal !== seedCo.goal },
       { id: 'team', label: 'สร้างทีม AI (อย่างน้อย 3 ตำแหน่ง)', page: 'aicompany',
         hint: 'มี CEO + ผู้บริหารในผังองค์กรอย่างน้อย 3 ตำแหน่ง',
-        done: d => d.aiCompany.agents.length >= 3 },
+        done: d => d.aiCompany.agents.length >= 3 && rosterOf(d) !== SEED_ROSTER },
       { id: 'mission', label: 'อนุมัติ Mission Statement', page: 'aicompany',
         hint: 'ให้ CEO ร่าง Mission แล้วบอร์ด (คุณ) อนุมัติ',
         done: d => d.aiCompany.missionApproved },
@@ -102,7 +109,7 @@ export const JOURNEY: JourneyPhase[] = [
     steps: [
       { id: 'firstTask', label: 'ให้ทีม AI ทำงานเสร็จชิ้นแรก', page: 'aicompany',
         hint: 'เริ่มให้ทีม AI ทำงาน แล้วรอผลงานชิ้นแรกเสร็จ',
-        done: d => d.aiCompany.tasks.some(t => t.status === 'done') },
+        done: d => d.aiCompany.tasks.filter(t => t.status === 'done').length > SEED_DONE_TASKS },
       { id: 'storefront', label: 'เปิดหน้าร้าน & เข้าตลาดธุรกิจ', page: 'storefront',
         hint: 'ให้ร้านคุณขึ้นตลาด /b เพื่อให้ลูกค้าและคู่ค้าค้นเจอ',
         done: d => !!d.visitedMarket },
@@ -111,7 +118,7 @@ export const JOURNEY: JourneyPhase[] = [
         done: d => (d.aiCompany.purchasedSkills ?? []).length >= 1 },
       { id: 'upgrade', label: 'ปลดล็อก Growth (AI Research, Analytics)', page: 'billing',
         hint: 'อัปเกรดแพ็กเกจเพื่อใช้ AI Research, Market และ Analytics เต็มรูปแบบ',
-        done: d => canAccess(d, 'aisearch') },
+        done: d => d.subscription.plan === 'growth' || d.subscription.plan === 'scale' },
     ],
   },
 ];

@@ -3845,8 +3845,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 }
 .jg-step:hover { background: rgba(255,255,255,.07); }
 .jg-step.next { background: rgba(196,75,43,.12); }
-.jg-step.done { color: rgba(255,255,255,.45); }
-.jg-step.done .jg-step-lbl { text-decoration: line-through; }
+.jg-step.done { color: rgba(255,255,255,.5); }
 .jg-step-check { flex-shrink: 0; font-size: 13px; }
 .jg-step-lbl { flex: 1; min-width: 0; }
 .jg-step-go { color: #ff9d7a; font-weight: 700; }
