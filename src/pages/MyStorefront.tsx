@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { AppData, PageId } from '../types';
 import { getMyStorefront, saveStorefront, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { invokeFn } from '../lib/invokeWithTimeout';
 import { draftVpLocal } from '../lib/firstDeal';
 import { trackAiCall } from '../lib/usage';
 import { track } from '../lib/analytics';
@@ -76,7 +77,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
     try {
       if (isSupabaseEnabled && supabase) {
         trackAiCall();
-        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
+        const { data: res, error } = await invokeFn('ai-assist', {
           body: {
             page: 'storefront',
             pageLabel: 'หน้าร้านของฉัน',

@@ -6,6 +6,7 @@ import {
   type RfqMatch, type PartnerMatch,
 } from '../lib/marketAgent';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { invokeFn } from '../lib/invokeWithTimeout';
 import { trackAiCall } from '../lib/usage';
 import { track } from '../lib/analytics';
 
@@ -44,7 +45,7 @@ export default function MarketAgent({ mySf, openJobs, stores, onQuote }: Props) 
     if (isSupabaseEnabled && supabase && (rm.length > 0 || pm.length > 0)) {
       try {
         trackAiCall();
-        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
+        const { data: res, error } = await invokeFn('ai-assist', {
           body: {
             page: 'trade',
             pageLabel: 'Marketplace Agent',

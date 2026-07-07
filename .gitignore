@@ -42,3 +42,14 @@ RECOVERY-CODES*
 secrets*
 **/service-role*
 reference/
+
+# deploy secrets & env backups
+.deploy.env
+.env.bak-*
+
+# supabase local linkage (มี DB password — ห้าม commit)
+supabase/.temp/
+
+# data backups & office temp files (PII/junk - never commit)
+backup-*.json
+~$*

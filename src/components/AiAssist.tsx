@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { trackAiCall } from '../lib/usage';
 import type { AppData, PageId } from '../types';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { invokeFn } from '../lib/invokeWithTimeout';
+import { streamAssist } from '../lib/streamAssist';
 
 interface Props {
   activePage: PageId;
@@ -40,10 +42,26 @@ export default function AiAssist({ activePage, data }: Props) {
   const [open, setOpen] = useState(false);
   const [instruction, setInstruction] = useState('');
   const [busy, setBusy] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [streamText, setStreamText] = useState('');
   const [result, setResult] = useState<{ summary: string; suggestions: string[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const info = PAGE_INFO[activePage];
+
+  // (ก) ตัวจับเวลาระหว่าง AI ทำงาน — ให้ผู้ใช้เห็นว่ากำลังทำงานอยู่ ไม่ได้ค้าง
+  useEffect(() => {
+    if (!busy) return;
+    setElapsed(0);
+    const t0 = Date.now();
+    const id = window.setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 250);
+    return () => window.clearInterval(id);
+  }, [busy]);
+
+  function cancel() {
+    abortRef.current?.abort();
+  }
 
   async function ask(text: string) {
     const q = text.trim();
@@ -52,18 +70,31 @@ export default function AiAssist({ activePage, data }: Props) {
       setError('AI Agent ต้องเปิดใช้ Supabase + deploy ฟังก์ชัน ai-assist (ตั้ง ANTHROPIC_API_KEY) ก่อน — ดู supabase/README.md');
       return;
     }
-    setBusy(true); setError(null); setResult(null);
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setBusy(true); setError(null); setResult(null); setStreamText('');
+    const params = { page: activePage, pageLabel: info.label, instruction: q, context: info.context(data) };
     try {
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-        body: { page: activePage, pageLabel: info.label, instruction: q, context: info.context(data) },
-      });
-      if (error) throw error;
-      setResult({ summary: res?.summary ?? '', suggestions: res?.suggestions ?? [] });
+      try {
+        // (ข) ลอง streaming ก่อน — ข้อความทยอยขึ้นทีละส่วน
+        const full = await streamAssist(params, (_chunk, f) => setStreamText(f), controller.signal);
+        if (!full.trim()) throw new Error('empty_stream');
+      } catch (streamErr) {
+        if (controller.signal.aborted) throw streamErr;
+        // fallback: ฟังก์ชันยังไม่รองรับ stream หรือมีปัญหา → เรียกแบบเดิม (มี timeout กันค้าง)
+        const { data: res, error: fnErr } = await invokeFn('ai-assist', { body: params });
+        if (fnErr) throw fnErr;
+        setStreamText('');
+        setResult({ summary: res?.summary ?? '', suggestions: res?.suggestions ?? [] });
+      }
     } catch (e) {
-      setError('เรียก AI ไม่สำเร็จ: ' + ((e as Error).message || 'error'));
+      if (!controller.signal.aborted) {
+        setError('เรียก AI ไม่สำเร็จ: ' + ((e as Error).message || 'error'));
+      }
     } finally {
       setBusy(false);
+      abortRef.current = null;
     }
   }
 
@@ -91,9 +122,19 @@ export default function AiAssist({ activePage, data }: Props) {
               ))}
             </div>
 
-            {busy && <div className="aia-loading">AI Agent กำลังคิด…</div>}
+            {busy && (
+              <div className="aia-loading">
+                <span>AI Agent กำลังคิด… {elapsed} วิ</span>
+                <button type="button" className="aia-cancel" onClick={cancel}>ยกเลิก</button>
+              </div>
+            )}
+            {streamText && (
+              <div className="aia-result">
+                <div className="aia-summary aia-stream">{streamText}{busy ? ' ▍' : ''}</div>
+              </div>
+            )}
             {error && <div className="aia-error">{error}</div>}
-            {result && (
+            {!streamText && result && (
               <div className="aia-result">
                 {result.summary && <div className="aia-summary">{result.summary}</div>}
                 <ul className="aia-suggestions">
@@ -101,7 +142,7 @@ export default function AiAssist({ activePage, data }: Props) {
                 </ul>
               </div>
             )}
-            {!busy && !result && !error && (
+            {!busy && !result && !error && !streamText && (
               <div className="aia-hint">พิมพ์สิ่งที่อยากให้ AI Agent ช่วยในขั้นตอนนี้ หรือเลือกคำสั่งลัดด้านบน</div>
             )}
           </div>

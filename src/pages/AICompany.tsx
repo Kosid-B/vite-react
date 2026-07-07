@@ -3,6 +3,7 @@ import { trackAiCall } from '../lib/usage';
 import type { AppData, Agent, AgentStatus, ApprovalStatus, TaskStatus, SkillPlanItem, CustomSkill, RoleCompetency } from '../types';
 import { autoH } from '../utils';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { invokeFn } from '../lib/invokeWithTimeout';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
 import { listAdminSkills } from '../lib/adminSkills';
 import SkillAuction from '../components/SkillAuction';
@@ -362,7 +363,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setPlanning(true); setPlanMsg(null);
     try {
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('ai-plan', {
+      const { data: res, error } = await invokeFn('ai-plan', {
         body: { goal: c.goal, industry: c.industry, agents: c.agents.map(a => ({ role: a.role, mandate: a.mandate })) },
       });
       if (error) throw error;
@@ -411,7 +412,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
 
       trackAiCall();
 
-      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+      const { data: res, error } = await invokeFn('agent-run', {
         body: {
           role: agent.role,
           name: agent.name,
@@ -460,7 +461,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setGeneratingJD(agentId);
     try {
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+      const { data: res, error } = await invokeFn('agent-run', {
         body: {
           role: 'HR Manager',
           mandate: withSkillDirectives('เขียน Job Description ที่ครบถ้วน ชัดเจน ดึงดูดผู้สมัครคุณภาพ', c.purchasedSkills),
@@ -507,7 +508,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     try {
       const existing = c.agents.map(a => a.role).join(', ') || 'ยังไม่มีทีม';
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+      const { data: res, error } = await invokeFn('agent-run', {
         body: {
           role: 'CEO',
           mandate: withSkillDirectives('วิเคราะห์โครงสร้างองค์กรและแนะนำตำแหน่งที่ควรจ้างตามเป้าหมายธุรกิจ', c.purchasedSkills),
@@ -593,7 +594,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setMandateProposals([]);
     try {
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+      const { data: res, error } = await invokeFn('agent-run', {
         body: {
           role: 'CEO',
           mandate: withSkillDirectives('กำหนดบทบาทหน้าที่ของทุกตำแหน่งในองค์กรให้สอดคล้องกับกระบวนการธุรกิจและเป้าหมายบริษัท', c.purchasedSkills),
@@ -747,7 +748,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setMissionMsg(null);
     try {
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+      const { data: res, error } = await invokeFn('agent-run', {
         body: {
           role: 'CEO',
           mandate: withSkillDirectives('ร่าง Mission Statement ที่ชัดเจน ทะเยอทะยาน และเป็นแรงบันดาลใจ สอดคล้องกับเป้าหมายและทักษะขององค์กร', c.purchasedSkills),
@@ -812,7 +813,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setSkillPlanMsg(null);
     try {
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+      const { data: res, error } = await invokeFn('agent-run', {
         body: {
           role: hrdAgent.role, name: hrdAgent.name, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
           title: 'กำหนด Skill Plan ตาม Mission ของบริษัท',
@@ -871,7 +872,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     if (!skill || !hrdAgent || !supabase) return;
     try {
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+      const { data: res, error } = await invokeFn('agent-run', {
         body: {
           role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
           title: `ออกแบบกระบวนการมาตรฐานสำหรับ Skill: ${skill.name}`,
@@ -911,7 +912,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     setCompetencyMsg(null);
     try {
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+      const { data: res, error } = await invokeFn('agent-run', {
         body: {
           role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
           title: 'ออกแบบ Competency Assessment Framework',
