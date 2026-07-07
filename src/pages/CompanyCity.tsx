@@ -1,5 +1,9 @@
 import { useEffect, useMemo } from 'react';
+import type { CSSProperties } from 'react';
 import type { AppData, PageId } from '../types';
+
+// สีตึกแต่ละด้าน (isometric) — ให้เข้าชุดกับ hero Level Up
+const ISO_COLORS = ['#5b8bff', '#35e0a1', '#a06bff', '#ff8b5c', '#ffcf5c', '#4ade80'];
 import { cityStats, partnerDevelopmentMap } from '../lib/companyCity';
 import { useState } from 'react';
 import { fmtBaht } from '../lib/finance';
@@ -84,23 +88,27 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
           ภาพรวมการพัฒนา: <b>{devMap.tierLabel}</b> · ระดับพัฒนาโดยรวม <b>{devMap.overall}%</b>
           {partnerView && <span className="devmap-safe"> · 🔒 ซ่อนตัวเลขลับสำหรับคู่ค้า</span>}
         </div>
-        <div className="devmap-bars">
-          {devMap.dimensions.map(dim => (
-            <div key={dim.id} className="devmap-col" title={`${dim.name} — ${dim.tier}`}>
-              <div className="devmap-tower-wrap">
-                <span className="devmap-pct">{dim.pct}%</span>
-                <div className="devmap-tower" style={{ height: `${Math.max(8, dim.pct)}%` }}>
-                  {Array.from({ length: Math.max(1, Math.round(dim.pct / 20)) }).map((_, i) => (
-                    <span key={i} className="devmap-floor" />
-                  ))}
-                  <span className="devmap-roof">{dim.icon}</span>
+        <div className="iso-map">
+          {devMap.dimensions.map((dim, i) => {
+            const h = 16 + Math.round((Math.max(5, dim.pct) / 100) * 82); // ความสูงตึก (px) = ระดับพัฒนา
+            const color = ISO_COLORS[i % ISO_COLORS.length];
+            return (
+              <div key={dim.id} className="iso-col" title={`${dim.name} — ${dim.tier}`}>
+                <div className="iso-stage">
+                  <div className="iso-bldg" style={{ '--h': `${h}px`, '--c': color } as CSSProperties}>
+                    <span className="iso-w iso-w2" />
+                    <span className="iso-w iso-w1" />
+                    <span className="iso-top" />
+                  </div>
                 </div>
+                <div className="iso-ic">{dim.icon}</div>
+                <div className="iso-pct">{dim.pct}%</div>
+                <div className="iso-name">{dim.name}</div>
+                <div className="iso-tier">{dim.tier}</div>
+                <div className="iso-blurb">{dim.blurb}</div>
               </div>
-              <div className="devmap-name">{dim.name}</div>
-              <div className="devmap-tier">{dim.tier}</div>
-              <div className="devmap-blurb">{dim.blurb}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
