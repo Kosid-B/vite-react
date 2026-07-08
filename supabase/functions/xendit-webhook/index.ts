@@ -8,6 +8,7 @@
 // Webhook URL (ตั้งใน Xendit): https://<project>.supabase.co/functions/v1/xendit-webhook
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { applyPaidInvoice } from "../_shared/subscription.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -73,27 +74,24 @@ Deno.serve(async (req) => {
   if (selErr) return new Response("db_error", { status: 500 });
 
   const state = (row?.data ?? {}) as Record<string, any>;
-  const sub = state.subscription ?? {};
-  const invoices: any[] = sub.invoices ?? [];
-  invoices.unshift({
-    id: "inv-" + Date.now().toString(36),
-    date: new Date().toISOString(),
-    plan, amount, status: "paid",
+
+  // idempotency: Xendit ยิง callback ซ้ำได้ (retry เมื่อไม่ได้ 200 ทันเวลา) → กันด้วย invoice id ของ Xendit
+  const xenditId = String(evt?.id ?? externalId);
+  const { state: nextState, alreadyProcessed } = applyPaidInvoice(state, {
+    plan, cycle, amount, xenditId,
+    invoiceId: "inv-" + Date.now().toString(36),
+    now: new Date(),
   });
 
-  const periodEnd = (() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() + (cycle === "yearly" ? 12 : 1));
-    return d.toISOString();
-  })();
-
-  state.subscription = {
-    ...sub, plan, status: "active", billingCycle: cycle,
-    trialEndDate: null, invoices, currentPeriodEnd: periodEnd,
-  };
+  // เคยประมวลผล invoice นี้แล้ว → ack 200 เฉย ๆ (ไม่ upsert / ไม่ส่งอีเมลซ้ำ / ไม่ต่อ period ซ้ำ)
+  if (alreadyProcessed) {
+    return new Response(JSON.stringify({ ok: true, dedup: true, workspace_id: workspaceId }), {
+      status: 200, headers: { "content-type": "application/json" },
+    });
+  }
 
   const { error: upErr } = await admin.from("workspace_state")
-    .upsert({ workspace_id: workspaceId, data: state, updated_at: new Date().toISOString() }, { onConflict: "workspace_id" });
+    .upsert({ workspace_id: workspaceId, data: nextState, updated_at: new Date().toISOString() }, { onConflict: "workspace_id" });
   if (upErr) return new Response("db_error", { status: 500 });
 
   // อีเมลยืนยัน
