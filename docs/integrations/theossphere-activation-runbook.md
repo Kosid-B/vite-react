@@ -112,15 +112,18 @@ export async function buildHandoffUrl(plan, { memberRefId, memberEmail, secret, 
 | # | เงื่อนไข | สถานะ | สรุป |
 |---|---|---|---|
 | 1 | **Data ownership** | ✅ ตัดสินแล้ว | ข้อมูลเป็นของ **User ที่ให้ข้อมูล** (consent-based) · **ทั้ง 2 platform ต้องมี RoPA (Record of Processing Activities) + Privacy Notice บน platform ตัวเอง** (PDPA ม.30 เทียบเท่า) |
-| 2 | Consent copy | 🟡 ร่างแล้ว รออนุมัติ | ดูร่าง "Consent copy" ด้านล่าง (ไทย+อังกฤษ) — รอ User ยืนยัน/แก้ |
+| 2 | **Consent copy** | ✅ ตัดสินแล้ว | อนุมัติข้อความ (ไทย+อังกฤษ) ด้านล่าง — theossphere นำไปแสดงก่อน redirect (`consent.given=true` + เก็บ timestamp) |
+
+> **ครบทั้ง 4 เงื่อนไข** — เหลือขั้น go-live เชิงเทคนิค (secret + deploy + flag) เท่านั้น (ดูขั้น ①–⑤ ด้านบน)
 | 3 | **Revenue model** | ✅ ตัดสินแล้ว | **Free referral** — ไม่มีค่าแนะนำ/ไม่แบ่งรายได้ · เป็นพันธมิตรเสริมคุณค่า (theossphere วางแผน → CEO AI execute) แต่ละฝ่ายได้ผู้ใช้ที่ตรงกลุ่ม |
 | 4 | **Branding/UX** | ✅ ตัดสินแล้ว | **co-brand** + CTA **"ให้ทีม AI ลงมือทำ"** (ดู spec ล่าง) |
 
 > **สถานะ CEO AI (ทำแล้วใน PR นี้):** (ก) เพิ่ม RoPA entry P7 (handoff processing) → [../isms/ropa.md](../isms/ropa.md) · (ข) อัปเดต Privacy Notice `LegalPage.tsx §2` ระบุการรับข้อมูลจาก theossphere + ฐาน consent + สิทธิ์เพิกถอน
 > **theossphere ต้องทำ:** RoPA entry (ส่งออกข้อมูลไป CEO AI) + Privacy Notice ระบุปลายทาง + เก็บหลักฐาน consent (timestamp)
 
-## Consent copy — ร่าง (ข้อความก่อนกดปุ่ม "ให้ทีม AI ลงมือทำ" ฝั่ง theossphere)
+## Consent copy — ✅ อนุมัติแล้ว (ข้อความก่อนกดปุ่ม "ให้ทีม AI ลงมือทำ" ฝั่ง theossphere)
 > ต้องแสดง**ก่อน** redirect + ผู้ใช้กดยินยอมเอง (`consent.given=true`) — เก็บ timestamp เป็นหลักฐาน
+> **การใช้งาน:** checkbox/toggle ค่าเริ่มต้น**ไม่ติ๊ก** · ปุ่มส่งเปิดใช้เมื่อผู้ใช้ติ๊กยินยอม · บันทึก `consent.at` (ISO timestamp) ลง token + เก็บ log ฝั่ง theossphere เป็นหลักฐาน (PDPA)
 
 **ไทย:**
 > ✅ ฉันยินยอมให้ **theossphere** ส่ง *แผนธุรกิจของฉัน* (ชื่อธุรกิจ หมวดหมู่ คุณค่า และเป้าหมาย) ไปยัง **CEO AI Thailand** เพื่อนำไปเตรียมพร้อมให้ทีม AI ทำงานต่อ ฉันเข้าใจว่าข้อมูลนี้เป็นของฉัน และฉันสามารถถอนความยินยอม/ลบข้อมูลได้ทุกเมื่อ ([นโยบายความเป็นส่วนตัว CEO AI](https://ceoaithailand.org/legal))
