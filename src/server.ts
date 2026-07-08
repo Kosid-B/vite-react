@@ -84,6 +84,13 @@ export default {
       return Response.json({ ok: true, ts: Date.now() });
     }
 
+    // รับ error จากฝั่ง client (ErrorBoundary + global handlers) → log ให้ Cloudflare observability เก็บ
+    // = เห็นปัญหา production ก่อนผู้ใช้แจ้ง (ดูใน dashboard/ wrangler tail)
+    if (url.pathname === '/api/client-error' && request.method === 'POST') {
+      try { console.error('[client-error]', (await request.text()).slice(0, 4000)); } catch { /* noop */ }
+      return new Response(null, { status: 204 });
+    }
+
     // ===== SEO ฝั่ง server (marketplace) — เฉพาะ GET =====
     if (request.method === 'GET') {
       // sitemap.xml แบบ dynamic จากตาราง storefronts (override public/sitemap.xml)

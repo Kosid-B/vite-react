@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { reportError } from '../lib/errorReport';
 
 /* ===== Error Boundary — กันหน้าจอดำค้างทั้งแอป =====
  * เดิมถ้าหน้าใดหน้าหนึ่ง (lazy chunk) throw หรือโหลด chunk ไม่ได้ (เช่นหลัง deploy ใหม่
@@ -36,6 +37,8 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, St
     }
     // log ไว้ช่วย debug (ไม่ทำให้แอปล่ม)
     console.error('[ErrorBoundary]', error, info?.componentStack);
+    // รายงานไป GA4 + Cloudflare observability (เห็นปัญหา production ก่อนผู้ใช้แจ้ง)
+    reportError(error, 'react.ErrorBoundary');
   }
 
   private handleReload = () => {
