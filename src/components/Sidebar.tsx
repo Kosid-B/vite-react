@@ -147,9 +147,12 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
 
         <div className="nav-parent">
           <button className={`nav-item ${activePage === 'aicompany' ? 'active' : ''}${data && !(data.visitedPages ?? []).includes('aicompany') ? ' nav-pulse' : ''}`} onClick={() => onNavigate('aicompany')}>
-            <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-              <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3m6-12h0m6 0h0m-6 4h0m6 0h0m-6 4h0m6 0h0" />
-            </svg>
+            <span className="nav-ico-wrap">
+              <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+                <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3m6-12h0m6 0h0m-6 4h0m6 0h0m-6 4h0m6 0h0" />
+              </svg>
+              <span className="nav-ai-live" aria-hidden="true" title="ทีม AI พร้อมทำงาน" />
+            </span>
             บริษัท AI
             <span className="nav-dot" />
           </button>

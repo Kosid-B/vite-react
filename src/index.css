@@ -184,6 +184,22 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { .nav-item.nav-pulse { animation: none; } }
 
+/* ไฟ live กระพริบบนไอคอน บริษัท AI — สื่อว่าทีม AI พร้อมทำงานตลอดเวลา */
+.nav-ico-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
+.nav-ai-live {
+  position: absolute; top: -1px; right: -1px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 1.5px var(--cream2), 0 0 6px 1.5px var(--green);
+  animation: aiLiveBlink 1.25s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes aiLiveBlink {
+  0%, 100% { opacity: 1;  box-shadow: 0 0 0 1.5px var(--cream2), 0 0 6px 1.5px var(--green); }
+  50%      { opacity: .3; box-shadow: 0 0 0 1.5px var(--cream2), 0 0 0 0 rgba(16,185,129,0); }
+}
+@media (prefers-reduced-motion: reduce) { .nav-ai-live { animation: none; } }
+
 /* nav parent + collapsible sub-menu (เครื่องมือ ใต้ บริษัท AI) */
 .nav-parent { position: relative; }
 .nav-parent > .nav-item { padding-right: 40px; }
