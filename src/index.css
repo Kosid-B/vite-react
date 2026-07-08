@@ -5406,6 +5406,15 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .onb-back { padding: 10px 16px; background: none; border: 1px solid var(--sand); border-radius: var(--r); color: var(--ink2); font-family: inherit; font-size: 13.5px; cursor: pointer; }
 .onb-next { padding: 10px 22px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
 .onb-next:hover { filter: brightness(1.05); }
+.onb-next:disabled { opacity: .5; cursor: not-allowed; filter: none; }
+.onb-prog { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.onb-prog-track { flex: 1; height: 6px; background: var(--sand); border-radius: 999px; overflow: hidden; }
+.onb-prog-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width .3s ease; }
+.onb-prog-text { font-size: 11.5px; font-weight: 600; color: var(--ink3); white-space: nowrap; }
+.onb-field { margin-bottom: 18px; text-align: left; }
+.onb-select, .onb-textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; background: var(--white); border: 1px solid var(--sand); border-radius: var(--r); color: var(--ink); font-family: inherit; font-size: 13.5px; }
+.onb-select:focus, .onb-textarea:focus { outline: none; border-color: var(--accent); }
+.onb-textarea { resize: vertical; line-height: 1.5; }
 
 /* ===== กลุ่มเมนูยุบได้ "ธุรกิจ & การขาย" (ลด surface area) ===== */
 .nav-group-toggle { font-weight: 600; }

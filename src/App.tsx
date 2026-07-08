@@ -561,7 +561,7 @@ export default function App() {
 
       <Suspense fallback={null}>
         <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
-        <OnboardingTour onNavigate={setActivePage} />
+        <OnboardingTour data={data} onNavigate={setActivePage} onUpdate={updateData} />
         <AiAssist activePage={activePage} data={data} />
         <JourneyGuide data={data} onNavigate={setActivePage} onUpdate={updateData} />
       </Suspense>
