@@ -30,15 +30,38 @@ const LS_KEY = 'ceo_ai_storefront';
 
 export const MAX_SHOP_IMAGES = 6;
 
-/** ข้อมูลเก่าอาจยังไม่มี vp/kind/promo/images */
-function normalize(s: Storefront): Storefront {
-  return { ...s, vp: s.vp ?? '', kind: s.kind ?? 'both', promo: s.promo ?? '', images: s.images ?? [] };
+const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+const strArr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+
+/** เติม field ให้ครบชนิดทุกช่อง (data เก่า / DB null / localStorage อาจไม่ครบ) —
+ *  string→'' , array→[] , kind→'both' — กันทุก consumer (หน้าร้าน/ตลาด/matching) ล่มจาก field หาย */
+export function coerceStorefront(s: Partial<Storefront> | null | undefined): Storefront {
+  const v = s ?? {};
+  return {
+    slug: str(v.slug),
+    workspaceId: v.workspaceId,
+    name: str(v.name),
+    dbd: str(v.dbd),
+    kind: (v.kind === 'product' || v.kind === 'service' || v.kind === 'both') ? v.kind : 'both',
+    vp: str(v.vp),
+    promo: str(v.promo),
+    images: strArr(v.images),
+    description: str(v.description),
+    services: strArr(v.services),
+    phone: str(v.phone),
+    lineId: str(v.lineId),
+    email: str(v.email),
+    website: str(v.website),
+    published: !!v.published,
+    featuredUntil: v.featuredUntil,
+    updatedAt: v.updatedAt,
+  };
 }
 
 function loadLocal(): Storefront | null {
   try {
-    const s = JSON.parse(localStorage.getItem(LS_KEY) ?? 'null') as Storefront | null;
-    return s ? normalize(s) : null;
+    const s = JSON.parse(localStorage.getItem(LS_KEY) ?? 'null') as Partial<Storefront> | null;
+    return s ? coerceStorefront(s) : null;
   } catch { return null; }
 }
 
@@ -50,14 +73,15 @@ interface Row {
 }
 
 function rowToStorefront(r: Row): Storefront {
-  return {
+  // ผ่าน coerceStorefront เพื่อเติม field ที่ DB คืน null/หาย (name/dbd/description/phone/…) ให้ครบชนิด
+  return coerceStorefront({
     slug: r.slug, workspaceId: r.workspace_id, name: r.name, dbd: r.dbd,
-    kind: r.kind ?? 'both', vp: r.vp ?? '', promo: r.promo ?? '', images: r.images ?? [], description: r.description,
-    services: r.services ?? [], phone: r.phone, lineId: r.line_id,
+    kind: r.kind, vp: r.vp, promo: r.promo, images: r.images, description: r.description,
+    services: r.services, phone: r.phone, lineId: r.line_id,
     email: r.email, website: r.website, published: r.published,
     featuredUntil: r.featured_until ?? undefined,
     updatedAt: r.updated_at?.slice(0, 10),
-  };
+  });
 }
 
 /** ร้านนี้อยู่ในตำแหน่ง "ร้านแนะนำ" (โฆษณา) อยู่หรือไม่ */
