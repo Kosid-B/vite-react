@@ -35,6 +35,9 @@ export const PAYMENT = {
   // ⚙️ ชำระออนไลน์อัตโนมัติผ่าน Xendit — เปลี่ยนเป็น true เมื่อ Xendit อนุมัติบัญชี (ผ่าน KYC),
   //    deploy ฟังก์ชัน create-invoice + xendit-webhook และตั้ง XENDIT keys ครบแล้ว (ดู COMMAND.md)
   xenditLive: false,
+  // 🔁 ตัดเงินอัตโนมัติทุกงวด (auto-renew · Xendit Recurring API) — เปิดเมื่อ xenditLive แล้ว +
+  //    deploy create-recurring-plan + recurring-webhook และตั้ง webhook URL ใน Xendit dashboard
+  recurringLive: false,
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)

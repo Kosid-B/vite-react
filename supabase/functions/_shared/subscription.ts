@@ -20,6 +20,7 @@ export interface SubState {
     trialEndDate?: unknown;
     invoices?: InvoiceRec[];
     currentPeriodEnd?: string;
+    recurringPlanId?: string;   // Xendit recurring plan id (auto-renew)
     [k: string]: unknown;
   };
   [k: string]: unknown;

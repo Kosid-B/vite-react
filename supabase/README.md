@@ -146,4 +146,6 @@ supabase functions deploy daily-ceo-report --no-verify-jwt
 | `weekly-report` | ❌ | รายงานสรุปรายสัปดาห์ |
 | `delete-account` | ✅ | ลบบัญชี/เวิร์กสเปซครบวงจร (R8 DO isolation) |
 | `create-invoice` | ✅ | สร้างใบแจ้งหนี้ Xendit (gate ด้วย `PAYMENT.xenditLive` — รอ KYC) |
-| `xendit-webhook` | ❌ | รับยืนยันชำระเงินจาก Xendit |
+| `xendit-webhook` | ❌ | รับยืนยันชำระเงินจาก Xendit (idempotent — กัน callback ซ้ำ) |
+| `create-recurring-plan` | ✅ | สร้างแผนตัดเงินอัตโนมัติ Xendit Recurring (gate `PAYMENT.recurringLive`) |
+| `recurring-webhook` | ❌ | รับ event งวด recurring (cycle succeeded/failed, plan activated/inactivated) |

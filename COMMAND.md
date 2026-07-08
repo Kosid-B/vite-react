@@ -116,15 +116,21 @@ npx supabase functions deploy promptpay-webhook --project-ref rsjbqmnvocvtveelse
 npx supabase functions deploy delete-account  --project-ref rsjbqmnvocvtveelselj
 
 # ── Payment Gateway: Xendit (SaaS subscription) ──
-npx supabase functions deploy create-invoice  --project-ref rsjbqmnvocvtveelselj      # verify_jwt=true
-npx supabase functions deploy xendit-webhook  --no-verify-jwt --project-ref rsjbqmnvocvtveelselj
+npx supabase functions deploy create-invoice  --project-ref waigsnxhrlwtiotspaim      # verify_jwt=true
+npx supabase functions deploy xendit-webhook  --no-verify-jwt --project-ref waigsnxhrlwtiotspaim
 
 # secrets Xendit (ตั้งครั้งเดียว — จาก dashboard.xendit.co/settings/developers)
-npx supabase secrets set XENDIT_SECRET_KEY=xnd_...        --project-ref rsjbqmnvocvtveelselj
-npx supabase secrets set XENDIT_CALLBACK_TOKEN=<token>    --project-ref rsjbqmnvocvtveelselj
+npx supabase secrets set XENDIT_SECRET_KEY=xnd_...        --project-ref waigsnxhrlwtiotspaim
+npx supabase secrets set XENDIT_CALLBACK_TOKEN=<token>    --project-ref waigsnxhrlwtiotspaim
 # แล้วตั้ง Webhook (Xendit → Settings → Webhooks → Invoices paid):
-#   https://rsjbqmnvocvtveelselj.supabase.co/functions/v1/xendit-webhook
+#   https://waigsnxhrlwtiotspaim.supabase.co/functions/v1/xendit-webhook
 # copy Callback Verification Token จากหน้านั้นมาใส่ XENDIT_CALLBACK_TOKEN
+#
+# ── Auto-renew: Xendit Recurring API (ตัดเงินอัตโนมัติทุกงวด) ──
+npx supabase functions deploy create-recurring-plan --project-ref waigsnxhrlwtiotspaim   # verify_jwt=true
+npx supabase functions deploy recurring-webhook --no-verify-jwt --project-ref waigsnxhrlwtiotspaim
+# ตั้ง Webhook เพิ่ม (Xendit → Webhooks → Recurring: cycle.succeeded/failed, plan.activated/inactivated):
+#   https://waigsnxhrlwtiotspaim.supabase.co/functions/v1/recurring-webhook   (ใช้ XENDIT_CALLBACK_TOKEN เดิม)
 #
 # ✅ Checklist เปิดใช้ปุ่มจ่ายออนไลน์ (หลัง Xendit อนุมัติบัญชี/ผ่าน KYC):
 #   1. deploy create-invoice + xendit-webhook (2 คำสั่งด้านบน)
@@ -132,6 +138,8 @@ npx supabase secrets set XENDIT_CALLBACK_TOKEN=<token>    --project-ref rsjbqmnv
 #   3. แก้ src/config.ts → PAYMENT.xenditLive = true → commit + merge (Cloudflare deploy อัตโนมัติ)
 #      → ปุ่ม "จ่ายผ่าน Xendit" จะปรากฏบนหน้าแพ็กเกจ
 #   * ระหว่างรอ KYC: xenditLive=false → ลูกค้าโอน/QR + ส่งสลิป แอดมินเปิดใช้งานให้
+#   * Auto-renew: หลัง xenditLive แล้ว → deploy create-recurring-plan + recurring-webhook
+#     + ตั้ง PAYMENT.recurringLive = true → ปุ่ม "สมัครตัดเงินอัตโนมัติ" ปรากฏ
 
 # deploy ทุกตัวพร้อมกัน
 npx supabase functions deploy --project-ref rsjbqmnvocvtveelselj
