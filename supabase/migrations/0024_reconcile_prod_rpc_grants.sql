@@ -16,6 +16,32 @@
 --    (auth_can_exec=true บนฟังก์ชันจำเป็น, anon_can_exec=false บน sensitive RPC)
 -- ---------------------------------------------------------------------------
 
+-- 0) นิยามฟังก์ชันที่ prod มีอยู่จริงแต่ไม่มี migration ไหนสร้าง (พบ 2026-07-07 ตอน apply ลง dev)
+--    เพิ่มไว้เพื่อให้ repo reproduce prod ได้ + ให้บรรทัด grant/revoke ด้านล่างไม่ error ตอน rebuild
+--    update_updated_at: สร้างเฉพาะถ้ายังไม่มี (กันทับ def จริงบน prod) · delete_workspace: def ตรงกับ prod
+do $$
+begin
+  if not exists (select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+                 where n.nspname = 'public' and p.proname = 'update_updated_at') then
+    create function public.update_updated_at()
+    returns trigger language plpgsql as $fn$
+    begin new.updated_at = now(); return new; end;
+    $fn$;
+  end if;
+end $$;
+
+create or replace function public.delete_workspace(p_workspace uuid)
+returns text language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'unauthorized' using errcode = '42501'; end if;
+  if not exists (select 1 from public.workspaces w where w.id = p_workspace and w.owner_id = auth.uid()) then
+    return 'forbidden';
+  end if;
+  delete from public.workspaces where id = p_workspace;  -- FK cascade: members, state
+  return 'ok';
+end;
+$$;
+
 -- 1) ฟังก์ชันที่ authenticated ต้องเรียกได้
 grant execute on function public.create_workspace(text)            to authenticated;
 grant execute on function public.ensure_default_workspace()        to authenticated;
