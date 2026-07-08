@@ -2,7 +2,7 @@
 // verify_jwt = false: ยืนยันด้วย x-callback-token แทน (ตั้งใน Xendit dashboard)
 // → เปิดใช้งานแพ็ก (subscription.active) ใน workspace ที่อ้างถึง + ส่งอีเมล Resend
 //
-// Deploy:  supabase functions deploy xendit-webhook --no-verify-jwt --project-ref rsjbqmnvocvtveelselj
+// Deploy:  supabase functions deploy xendit-webhook --no-verify-jwt --project-ref waigsnxhrlwtiotspaim
 // Secrets: supabase secrets set XENDIT_CALLBACK_TOKEN=...   (Callback Verification Token จาก Xendit)
 //          supabase secrets set RESEND_API_KEY=re_...
 // Webhook URL (ตั้งใน Xendit): https://<project>.supabase.co/functions/v1/xendit-webhook

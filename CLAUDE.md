@@ -21,18 +21,21 @@ Schema              : migrations/0016_tis_automate.sql + 0017_tis_rls_fixes.sql 
                       13 ตาราง (organizations/standards/clauses/projects/requirements/kanban/
                       documents/validations/marketing_events/…) + 5 enums + RLS ครบ
 หมายเหตุ            : 0016/0017 อยู่ใน repo นี้เพื่อเก็บประวัติ แต่ apply กับ project TIS เท่านั้น
-                      (ห้าม apply กับ rsjbqmnvocvtveelselj) · frontend/subdomain ยังไม่สร้าง
+                      (ห้าม apply กับ production หลัก waigsnxhrlwtiotspaim) · frontend/subdomain ยังไม่สร้าง
 ```
 
 ## Production Credentials
 ```
-Supabase Project ID : rsjbqmnvocvtveelselj
-Supabase URL        : https://rsjbqmnvocvtveelselj.supabase.co
-Anon Key            : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzamJxbW52b2N2dHZlZWxzZWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NDUyODEsImV4cCI6MjA5ODQyMTI4MX0.a0AkDAxtDMuit-xv5dk7wsp9l_uEKCwiysVuGlXbT4I
+Supabase Project ID : waigsnxhrlwtiotspaim  (org bgvyelbcbxhzzfrzuqnh, Pro — production จริง ยืนยัน 2026-07-07)
+Supabase URL        : https://waigsnxhrlwtiotspaim.supabase.co
+Public Key          : sb_publishable_Tf6Q7Mq6I2OLtfXot-EWJA_FESohA9E  (publishable = public โดยดีไซน์ ตรงกับ wrangler.jsonc)
 Custom Domain       : ceoaithailand.org
 Admin Email         : support@b-tctraining.com
 GA4                 : G-CHJ99RY1Q1 (ใส่ใน index.html แล้ว)
 ```
+> ⚠️ Production identity แก้ 2 รอบ (config drift R11/R19). ตัวจริง = `waigsnxhrlwtiotspaim` — ยืนยันด้วย JS bundle
+> เว็บจริง + deploy scripts + wrangler.jsonc. project เดิม `rsjbqmnvocvtveelselj` (Vercel org, Free) **ไม่ใช่ prod**
+> (เก็บเป็น backup รอตัดสินใจลบ). แหล่งความจริง: [docs/isms/environment-map.md](docs/isms/environment-map.md) v3.0
 
 ## Local Dev vs Production
 - **Local mode** (ไม่มี `.env`): ข้อมูลเก็บใน `localStorage`, ไม่ต้อง login, plan = Scale (full access)
@@ -194,7 +197,7 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 ## Secrets / Environment Map (R11)
 ```
 ┌─ CEO AI Thailand (production หลัก) ──────────────────────────────
-│ Supabase project  : rsjbqmnvocvtveelselj
+│ Supabase project  : waigsnxhrlwtiotspaim (Pro · prod จริง — เดิม rsjbqmnvocvtveelselj = backup ไม่ใช่ prod)
 │ GitHub Actions    : VITE_SUPABASE_URL ✅, VITE_SUPABASE_ANON_KEY ✅ (ใช้โดย deploy.yml legacy)
 │ Cloudflare Worker : ANTHROPIC_API_KEY (vars ใน wrangler/dashboard — ใช้โดย CeoAiAgent DO)
 │ Supabase Fn       : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅

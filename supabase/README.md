@@ -38,7 +38,7 @@
 
 ## Edge Functions
 
-> **สถานะ production (`rsjbqmnvocvtveelselj`): ทุกฟังก์ชันด้านล่าง ACTIVE แล้ว และ `ANTHROPIC_API_KEY` /
+> **สถานะ production (`waigsnxhrlwtiotspaim`): ทุกฟังก์ชันด้านล่าง ACTIVE แล้ว และ `ANTHROPIC_API_KEY` /
 > `SERPER_API_KEY` ตั้งใน Supabase secrets เรียบร้อย — AI Agent ทำงานได้ทันทีในโหมด production**
 > (โหมด local ไม่มีคีย์ = ปุ่ม AI ซ่อนไว้ ใช้ localStorage อย่างเดียว)
 > deploy ใหม่ต้องใช้ Supabase CLI/PowerShell (MCP deploy ถูกบล็อกในแซนด์บ็อกซ์นี้)
@@ -117,8 +117,8 @@ token เก็บใน `public.workspace_integrations` (provider `sheets`) —
 
 **C. Deploy (PowerShell — MCP deploy ถูกบล็อก):**
 ```powershell
-supabase functions deploy sheets-oauth --project-ref rsjbqmnvocvtveelselj
-supabase functions deploy sheets-sync  --project-ref rsjbqmnvocvtveelselj
+supabase functions deploy sheets-oauth --project-ref waigsnxhrlwtiotspaim
+supabase functions deploy sheets-sync  --project-ref waigsnxhrlwtiotspaim
 ```
 
 Flow: User กด "เชื่อม Google" ในหน้า บริษัท AI → ยินยอมที่ Google → กลับมาที่ `/oauth/google?code=…&state=<wsId>`

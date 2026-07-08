@@ -1,7 +1,7 @@
 // create-invoice — สร้างใบชำระเงิน Xendit (hosted checkout) สำหรับแพ็ก SaaS
 // verify_jwt = true: เฉพาะผู้ใช้ที่ล็อกอิน · คำนวณราคาฝั่ง server (กันปลอมราคาจาก client)
 //
-// Deploy:  supabase functions deploy create-invoice --project-ref rsjbqmnvocvtveelselj
+// Deploy:  supabase functions deploy create-invoice --project-ref waigsnxhrlwtiotspaim
 // Secrets: supabase secrets set XENDIT_SECRET_KEY=xnd_...
 //
 // Body: { plan: 'starter'|'growth'|'scale', cycle: 'monthly'|'yearly', workspaceId: string }

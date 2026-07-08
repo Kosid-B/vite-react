@@ -2,7 +2,7 @@
 // แล้วเก็บใน public.workspace_integrations (provider 'sheets') ด้วย service role
 // verify_jwt = true: เฉพาะผู้ใช้ที่ล็อกอิน + ต้องเป็นสมาชิก workspace นั้น
 //
-// Deploy:  supabase functions deploy sheets-oauth --project-ref rsjbqmnvocvtveelselj
+// Deploy:  supabase functions deploy sheets-oauth --project-ref waigsnxhrlwtiotspaim
 // Secrets: supabase secrets set GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
 //          supabase secrets set GOOGLE_CLIENT_SECRET=xxxx
 //
