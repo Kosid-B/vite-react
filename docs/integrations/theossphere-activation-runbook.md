@@ -112,12 +112,21 @@ export async function buildHandoffUrl(plan, { memberRefId, memberEmail, secret, 
 | # | เงื่อนไข | สถานะ | สรุป |
 |---|---|---|---|
 | 1 | **Data ownership** | ✅ ตัดสินแล้ว | ข้อมูลเป็นของ **User ที่ให้ข้อมูล** (consent-based) · **ทั้ง 2 platform ต้องมี RoPA (Record of Processing Activities) + Privacy Notice บน platform ตัวเอง** (PDPA ม.30 เทียบเท่า) |
-| 2 | Consent copy | ⬜ รอ | ผมร่างให้ได้ (ไทย+อังกฤษ) |
-| 3 | Revenue model | ⬜ รอ | referral fee / rev-share / ฟรี — รอ User เลือก |
+| 2 | Consent copy | 🟡 ร่างแล้ว รออนุมัติ | ดูร่าง "Consent copy" ด้านล่าง (ไทย+อังกฤษ) — รอ User ยืนยัน/แก้ |
+| 3 | **Revenue model** | ✅ ตัดสินแล้ว | **Free referral** — ไม่มีค่าแนะนำ/ไม่แบ่งรายได้ · เป็นพันธมิตรเสริมคุณค่า (theossphere วางแผน → CEO AI execute) แต่ละฝ่ายได้ผู้ใช้ที่ตรงกลุ่ม |
 | 4 | **Branding/UX** | ✅ ตัดสินแล้ว | **co-brand** + CTA **"ให้ทีม AI ลงมือทำ"** (ดู spec ล่าง) |
 
-> **CEO AI ต้องทำก่อน go-live (PDPA):** (ก) เพิ่ม RoPA entry สำหรับ handoff processing (รับแผนธุรกิจจาก theossphere ด้วย consent → pre-fill) · (ข) อัปเดต Privacy Notice หน้า `/privacy` ให้ระบุการรับข้อมูลจาก theossphere + ฐานการประมวลผล (consent) + สิทธิ์เพิกถอน
+> **สถานะ CEO AI (ทำแล้วใน PR นี้):** (ก) เพิ่ม RoPA entry P7 (handoff processing) → [../isms/ropa.md](../isms/ropa.md) · (ข) อัปเดต Privacy Notice `LegalPage.tsx §2` ระบุการรับข้อมูลจาก theossphere + ฐาน consent + สิทธิ์เพิกถอน
 > **theossphere ต้องทำ:** RoPA entry (ส่งออกข้อมูลไป CEO AI) + Privacy Notice ระบุปลายทาง + เก็บหลักฐาน consent (timestamp)
+
+## Consent copy — ร่าง (ข้อความก่อนกดปุ่ม "ให้ทีม AI ลงมือทำ" ฝั่ง theossphere)
+> ต้องแสดง**ก่อน** redirect + ผู้ใช้กดยินยอมเอง (`consent.given=true`) — เก็บ timestamp เป็นหลักฐาน
+
+**ไทย:**
+> ✅ ฉันยินยอมให้ **theossphere** ส่ง *แผนธุรกิจของฉัน* (ชื่อธุรกิจ หมวดหมู่ คุณค่า และเป้าหมาย) ไปยัง **CEO AI Thailand** เพื่อนำไปเตรียมพร้อมให้ทีม AI ทำงานต่อ ฉันเข้าใจว่าข้อมูลนี้เป็นของฉัน และฉันสามารถถอนความยินยอม/ลบข้อมูลได้ทุกเมื่อ ([นโยบายความเป็นส่วนตัว CEO AI](https://ceoaithailand.org/legal))
+
+**English:**
+> ✅ I consent to **theossphere** sending *my business plan* (business name, sector, value proposition, and goals) to **CEO AI Thailand** to prepare it for the AI team to act on. I understand this data is mine and I may withdraw consent or delete it at any time. ([CEO AI Privacy Policy](https://ceoaithailand.org/legal))
 
 ## Co-brand spec (ตัดสินใจแล้ว: co-brand · CTA "ให้ทีม AI ลงมือทำ")
 **ฝั่ง CEO AI (ทำแล้ว):** หน้า `/handoff` แสดง lockup `theossphere ✦ CEO AI Thailand` ทุกสถานะ → ต่อเนื่องไม่สะดุด
