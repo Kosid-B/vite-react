@@ -20,25 +20,32 @@ export interface TradeOpportunity {
 // หมวดที่มักเป็น "บริการที่เราจ้าง" → ทิศ buy
 const BUY_HINTS = ['บริการ', 'ที่ปรึกษา', 'การตลาด', 'บัญชี', 'กฎหมาย', 'ขนส่ง', 'โลจิสติกส์', 'ไอที', 'ดีไซน์', 'ออกแบบ', 'โฆษณา'];
 function directionFor(category: string): 'sell' | 'buy' {
-  return BUY_HINTS.some(h => category.includes(h)) ? 'buy' : 'sell';
+  const c = category ?? '';
+  return BUY_HINTS.some(h => c.includes(h)) ? 'buy' : 'sell';
 }
+const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
 
-/** CEO+CMO สร้างโอกาสค้าขายระหว่างเมือง (rule-based, ไม่เปลือง AI call) */
+/** CEO+CMO สร้างโอกาสค้าขายระหว่างเมือง (rule-based, ไม่เปลือง AI call)
+ *  ทนต่อข้อมูลพาร์ตเนอร์ที่ field ขาด/ผิดชนิด (data จาก localStorage/Supabase อาจไม่ครบ) — ไม่ให้หน้าเพจล่ม */
 export function tradeOpportunities(d: AppData): TradeOpportunity[] {
   const partners = d.marketplace?.partners ?? [];
   const closedPartnerIds = new Set((d.marketplace?.deals ?? [])
     .filter(x => x.status === 'closed').map(x => x.partnerId));
-  const avg = d.roi?.avgDealValue || 0;
-  const myProduct = d.aiCompany.productDesc?.trim() || d.aiCompany.industry?.trim() || 'สินค้า/บริการของเรา';
+  const avg = num(d.roi?.avgDealValue);
+  const myProduct = d.aiCompany?.productDesc?.trim() || d.aiCompany?.industry?.trim() || 'สินค้า/บริการของเรา';
 
   return partners
-    .filter(p => !closedPartnerIds.has(p.id))
+    .filter(p => p && !closedPartnerIds.has(p.id))
     .map(p => {
-      const direction = directionFor(p.category);
-      const estValue = Math.max(p.priceFrom || 0, Math.round((avg || p.priceFrom || 3000) * (0.6 + p.rating / 10)));
-      const score = Math.min(99, Math.round(55 + p.rating * 8 + (p.verified ? 8 : 0)));
-      const item = direction === 'sell' ? myProduct : `${p.category} จาก ${p.name}`;
-      return { id: `op_${p.id}`, partnerId: p.id, partner: p.name, location: p.location, category: p.category, direction, item, estValue, score };
+      const category = p.category ?? '';
+      const rating = num(p.rating);
+      const priceFrom = num(p.priceFrom);
+      const name = p.name ?? 'พาร์ตเนอร์';
+      const direction = directionFor(category);
+      const estValue = Math.max(priceFrom, Math.round((avg || priceFrom || 3000) * (0.6 + rating / 10)));
+      const score = Math.min(99, Math.round(55 + rating * 8 + (p.verified ? 8 : 0)));
+      const item = direction === 'sell' ? myProduct : `${category || 'บริการ'} จาก ${name}`;
+      return { id: `op_${p.id ?? name}`, partnerId: p.id, partner: name, location: p.location ?? '', category, direction, item, estValue, score };
     })
     .sort((a, b) => b.score - a.score);
 }
