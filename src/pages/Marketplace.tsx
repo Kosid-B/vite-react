@@ -15,10 +15,16 @@ const DEAL_STATUS: Record<DealStatus, { label: string; cls: string }> = {
 };
 
 export default function Marketplace({ data, onUpdate }: Props) {
-  const m = data.marketplace;
+  // ทน marketplace/partners/deals ที่หายหรือผิดชนิด (data ไม่ครบ) — ไม่ให้ทั้งหน้าล่ม
+  const src = data.marketplace ?? {} as Partial<AppData['marketplace']>;
+  const m = {
+    feePct: typeof src.feePct === 'number' && Number.isFinite(src.feePct) ? src.feePct : 3,
+    partners: Array.isArray(src.partners) ? src.partners : [],
+    deals: Array.isArray(src.deals) ? src.deals : [],
+  };
   const [cat, setCat] = useState('ทั้งหมด');
 
-  const categories = ['ทั้งหมด', ...Array.from(new Set(m.partners.map(p => p.category)))];
+  const categories = ['ทั้งหมด', ...Array.from(new Set(m.partners.map(p => p.category).filter(Boolean)))];
   const shown = cat === 'ทั้งหมด' ? m.partners : m.partners.filter(p => p.category === cat);
 
   function patch(next: Partial<typeof m>) {
@@ -110,7 +116,7 @@ export default function Marketplace({ data, onUpdate }: Props) {
           <div key={p.id} className="mk-card">
             <button className="mk-card-del" onClick={() => delPartner(p.id)} title="ลบคู่ค้า">×</button>
             <div className="mk-card-top">
-              <div className="mk-av">{p.name.trim().charAt(0) || '?'}</div>
+              <div className="mk-av">{(p.name ?? '').trim().charAt(0) || '?'}</div>
               <div className="mk-card-id">
                 <input className="mk-name" defaultValue={p.name} key={'n' + p.id + p.name}
                   onBlur={e => savePartner(p.id, 'name', e.target.value)} spellCheck={false} />
@@ -122,8 +128,8 @@ export default function Marketplace({ data, onUpdate }: Props) {
             <textarea className="mk-desc" rows={2} defaultValue={p.desc} key={'d' + p.id + p.desc}
               onBlur={e => savePartner(p.id, 'desc', e.target.value)} spellCheck={false} />
             <div className="mk-meta">
-              <span className="mk-rating">★ {p.rating.toFixed(1)}</span>
-              <span className="mk-loc">📍 {p.location}</span>
+              <span className="mk-rating">★ {(Number.isFinite(p.rating) ? p.rating : 0).toFixed(1)}</span>
+              <span className="mk-loc">📍 {p.location ?? '—'}</span>
             </div>
             <div className="mk-card-foot">
               <div className="mk-price">เริ่มต้น <b>{baht(p.priceFrom)}</b></div>
@@ -161,7 +167,7 @@ export default function Marketplace({ data, onUpdate }: Props) {
             </div>
             <div className="mk-deal-fee">{baht(fee(d.amount))}</div>
             <div className="mk-deal-status">
-              <select className={`mk-status-sel ${DEAL_STATUS[d.status].cls}`} value={d.status}
+              <select className={`mk-status-sel ${DEAL_STATUS[d.status]?.cls ?? ''}`} value={d.status in DEAL_STATUS ? d.status : 'matched'}
                 onChange={e => setDeal(d.id, 'status', e.target.value)}>
                 {(Object.keys(DEAL_STATUS) as DealStatus[]).map(s => (
                   <option key={s} value={s}>{DEAL_STATUS[s].label}</option>

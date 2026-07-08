@@ -58,5 +58,7 @@ export function promptPayQrUrl(target: string, amount?: number): string {
 }
 
 export function baht(n: number): string {
-  return '฿' + n.toLocaleString('th-TH');
+  // ทน input undefined/null/NaN (data จาก localStorage/Supabase อาจไม่ครบ) — กันหน้าเพจล่ม
+  const v = typeof n === 'number' && Number.isFinite(n) ? n : 0;
+  return '฿' + v.toLocaleString('th-TH');
 }

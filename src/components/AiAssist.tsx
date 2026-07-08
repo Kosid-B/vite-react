@@ -22,7 +22,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   aisearch: { label: 'AI Research', prompts: ['สรุปประเด็นวิจัยที่ควรหา'], context: () => 'หน้าค้นคว้า' },
   bmc: { label: 'Business Model', prompts: ['ตรวจ Business Model Canvas', 'เสนอช่องทางรายได้เพิ่ม'], context: d => `BMC value: ${d.businessModel.bmc.value.slice(0, 3).join(', ')}` },
   aicompany: { label: 'บริษัท AI', prompts: ['เสนอเอเจนต์ที่ควรจ้างเพิ่ม', 'แตกงานจากเป้าหมาย'], context: d => `เป้าหมาย: ${d.aiCompany.goal}; เอเจนต์: ${d.aiCompany.agents.map(a => a.role).join(', ')}` },
-  market: { label: 'Marketplace', prompts: ['เสนอประเภทคู่ค้าที่ควรเพิ่ม', 'กลยุทธ์ matching'], context: d => `${d.marketplace.partners.length} คู่ค้า` },
+  market: { label: 'Marketplace', prompts: ['เสนอประเภทคู่ค้าที่ควรเพิ่ม', 'กลยุทธ์ matching'], context: d => `${(d.marketplace?.partners ?? []).length} คู่ค้า` },
   billing: { label: 'แพ็กเกจ & ราคา', prompts: ['เสนอกลยุทธ์ราคา', 'วิธีลด churn'], context: d => `แพ็กปัจจุบัน ${d.subscription.plan}` },
   vrio: { label: 'VRIO', prompts: ['วิเคราะห์จุดแข็งที่ยั่งยืน', 'เสนอทรัพยากรที่ควรสร้าง'], context: d => `${d.vrio.length} ทรัพยากร` },
   roadmap: { label: 'Product Roadmap', prompts: ['วิเคราะห์ Roadmap ที่มีอยู่', 'เสนอ feature ที่ควรเพิ่มใน Q ถัดไป'], context: d => `${d.roadmap?.length ?? 0} features, ${d.roadmap?.filter(r => r.status === 'done').length ?? 0} เสร็จแล้ว` },
