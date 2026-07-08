@@ -120,6 +120,7 @@ export async function buildHandoffUrl(plan, { memberRefId, memberEmail, secret, 
 
 > **สถานะ CEO AI (ทำแล้วใน PR นี้):** (ก) เพิ่ม RoPA entry P7 (handoff processing) → [../isms/ropa.md](../isms/ropa.md) · (ข) อัปเดต Privacy Notice `LegalPage.tsx §2` ระบุการรับข้อมูลจาก theossphere + ฐาน consent + สิทธิ์เพิกถอน
 > **theossphere ต้องทำ:** RoPA entry (ส่งออกข้อมูลไป CEO AI) + Privacy Notice ระบุปลายทาง + เก็บหลักฐาน consent (timestamp)
+> **ข้อตกลง 2 ฝ่าย:** [theossphere-dpa.md](theossphere-dpa.md) — DPA/Data Sharing Agreement (controller-to-controller) · รอลงนามก่อน go-live
 
 ## Consent copy — ✅ อนุมัติแล้ว (ข้อความก่อนกดปุ่ม "ให้ทีม AI ลงมือทำ" ฝั่ง theossphere)
 > ต้องแสดง**ก่อน** redirect + ผู้ใช้กดยินยอมเอง (`consent.given=true`) — เก็บ timestamp เป็นหลักฐาน

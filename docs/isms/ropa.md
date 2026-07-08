@@ -51,4 +51,5 @@
 - [legal-compliance-register.md](legal-compliance-register.md) — ข้อกำหนด PDPA (5.31)
 - [supplier-register.md](supplier-register.md) — สถานะ DPA กับผู้ประมวลผลย่อย (R4 · 5.19/5.20)
 - [../integrations/theossphere-activation-runbook.md](../integrations/theossphere-activation-runbook.md) — ข้อตกลง 2 product + spec handoff
+- [../integrations/theossphere-dpa.md](../integrations/theossphere-dpa.md) — DPA/Data Sharing Agreement (controller-to-controller) สำหรับ P7
 - Privacy Notice สาธารณะ: `src/pages/LegalPage.tsx` (section 2 · route `/legal?privacy`)
