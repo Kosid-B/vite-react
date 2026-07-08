@@ -22,7 +22,8 @@ const OnboardingTour = lazy(() => import('./components/OnboardingTour'));
 import UpgradeWall from './components/UpgradeWall';
 import { canAccess, setAdminFullAccess } from './lib/access';
 import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
-import { isAdminEmail } from './config';
+import { isAdminEmail, INTEGRATIONS } from './config';
+import { readPendingHandoff, applyPendingHandoff } from './lib/handoffClient';
 import LegalLinks from './components/LegalLinks';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -299,6 +300,22 @@ export default function App() {
   }
 
   useEffect(() => () => { clearTimeout(toastTimer.current); clearTimeout(cloudTimer.current); }, []);
+
+  // Context Handoff (theossphere): pre-fill แผน 24 ขั้นครั้งแรกหลังผู้ใช้พร้อม
+  // gate ด้วย theossphereLive (=false → dead code) · one-shot · หน่วงให้ workspace โหลดเสร็จก่อน
+  const handoffAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!INTEGRATIONS.theossphereLive || handoffAppliedRef.current) return;
+    if (isSupabaseEnabled && !session) return;          // รอ login ก่อน (supabase mode)
+    if (!readPendingHandoff()) return;                  // ไม่มีแผนค้าง
+    handoffAppliedRef.current = true;
+    const t = setTimeout(() => {
+      const next = applyPendingHandoff(dataRef.current); // อ่าน stash → planToAppData → ล้าง stash
+      if (next) { updateData(next); showToast('นำแผนจาก theossphere มาเริ่มให้ทีม AI แล้ว 🎯'); }
+    }, isSupabaseEnabled ? 1200 : 0);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authReady, activeWs, session?.user.id, updateData]);
 
   // ติ๊ก Quest "เข้าตลาดธุรกิจ" + บันทึกหน้าที่เคยเปิด (ใช้ใน Journey Guide) เมื่อ navigate
   useEffect(() => {
