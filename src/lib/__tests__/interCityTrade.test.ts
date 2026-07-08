@@ -32,6 +32,29 @@ describe('tradeOpportunities', () => {
     expect(byId.a).toBe('buy');
     expect(byId.b).toBe('sell');
   });
+
+  it('ทนพาร์ตเนอร์ข้อมูลไม่ครบ (category/rating/name ขาด) โดยไม่ throw — กันหน้าเพจล่ม', () => {
+    // จำลอง data จริงจาก localStorage/Supabase ที่ field หาย (TS type ไม่การันตี runtime)
+    const bad = [
+      { id: 'x1', priceFrom: 1000, verified: false } as unknown as MarketPartner,          // ไม่มี category/rating/name
+      { id: 'x2', category: 'อาหาร', rating: NaN, priceFrom: undefined } as unknown as MarketPartner,
+      null as unknown as MarketPartner,                                                      // partner ว่าง
+    ];
+    const d = withMarket(bad);
+    expect(() => tradeOpportunities(d)).not.toThrow();
+    const ops = tradeOpportunities(d);
+    expect(ops.length).toBe(2);                     // null ถูกกรองออก
+    expect(ops.every(o => Number.isFinite(o.estValue) && Number.isFinite(o.score))).toBe(true);
+    expect(ops.every(o => o.direction === 'sell' || o.direction === 'buy')).toBe(true);
+  });
+
+  it('tradeReport กับพาร์ตเนอร์เสีย → ตัวเลขไม่เป็น NaN', () => {
+    const d = withMarket([{ id: 'x1', verified: true } as unknown as MarketPartner]);
+    const r = tradeReport(d);
+    expect(Number.isFinite(r.gmv)).toBe(true);
+    expect(Number.isFinite(r.fee)).toBe(true);
+    expect(Number.isFinite(r.net)).toBe(true);
+  });
 });
 
 describe('tradeReport — fee/net invariant', () => {
