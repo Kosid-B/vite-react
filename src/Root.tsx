@@ -11,6 +11,7 @@ const App = lazy(() => import('./App'));
 const StartLanding = lazy(() => import('./pages/StartLanding'));
 const ShopSignup = lazy(() => import('./pages/ShopSignup'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
+const HandoffLanding = lazy(() => import('./pages/HandoffLanding'));
 const PublicStorefrontPage = lazy(() =>
   import('./pages/PublicStorefront').then(m => ({ default: m.PublicStorefrontPage })));
 const PublicDirectoryPage = lazy(() =>
@@ -26,6 +27,7 @@ function pick() {
   }
   if (p === '/start' || p === '/start/') return <StartLanding />;
   if (p === '/shop' || p === '/shop/') return <ShopSignup />;
+  if (p === '/handoff' || p === '/handoff/') return <HandoffLanding />;
   if (p.startsWith('/legal') || ['/privacy', '/terms', '/refund', '/cookies'].some(x => p === x || p === x + '/')) {
     const sec: LegalSection =
       p.includes('privacy') ? 'privacy' :

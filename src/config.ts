@@ -50,4 +50,8 @@ export const INTEGRATIONS = {
   googleClientId: '',
   // เส้นทาง callback ที่ต้องลงทะเบียนใน Google Cloud (Authorized redirect URI)
   googleRedirectPath: '/oauth/google',
+  // theossphere → CEO AI Context Handoff (แผน 24 ขั้น → pre-fill บริษัท AI)
+  // เปลี่ยนเป็น true เมื่อ: deploy handoff-import + ตั้ง secret THEOSSPHERE_HANDOFF_SECRET (แชร์กับ theossphere)
+  //   (ดู docs/integrations/theossphere-handoff.md) · route /handoff รับ token แล้ว pre-fill
+  theossphereLive: false,
 };
