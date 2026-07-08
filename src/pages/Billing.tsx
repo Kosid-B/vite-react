@@ -185,6 +185,23 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     }
   }
 
+  /** สมัครตัดเงินอัตโนมัติทุกงวด (auto-renew · Xendit Recurring) — production เท่านั้น */
+  async function subscribeRecurring() {
+    if (!supabase || !wsId) return;
+    setPayBusy(true);
+    setPayErr(null);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('create-recurring-plan', {
+        body: { plan: selected, cycle, workspaceId: wsId },
+      });
+      if (error || !res?.action_url) throw new Error(res?.error ?? error?.message ?? 'สมัครตัดเงินอัตโนมัติไม่สำเร็จ');
+      window.location.href = res.action_url as string;
+    } catch (e) {
+      setPayErr((e as Error).message);
+      setPayBusy(false);
+    }
+  }
+
   const selectedPlan = PLANS.find(p => p.id === selected)!;
   const chargeAmount = priceFor(selected);
   const needPayment = chargeAmount > 0;
@@ -649,9 +666,15 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                 <button className="bill-xendit" onClick={payWithXendit} disabled={payBusy || !wsId}>
                   {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Xendit — บัตร / PromptPay / e-Wallet'}
                 </button>
+                {needPayment && PAYMENT.recurringLive && (
+                  <button className="bill-recurring" onClick={subscribeRecurring} disabled={payBusy || !wsId}>
+                    🔁 สมัครตัดเงินอัตโนมัติ ({cycle === 'yearly' ? 'รายปี' : 'รายเดือน'}) — ไม่ต้องจ่ายเองทุกงวด
+                  </button>
+                )}
                 {payErr && <div className="bill-warn">⚠️ {payErr}</div>}
                 <div className="bill-note">
                   ชำระเงินปลอดภัยผ่าน Xendit — เปิดใช้งานแพ็กอัตโนมัติทันทีเมื่อชำระสำเร็จ
+                  {PAYMENT.recurringLive && ' · ตัดเงินอัตโนมัติยกเลิกได้ทุกเมื่อ'}
                 </div>
               </>
             )}
