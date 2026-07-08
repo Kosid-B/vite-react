@@ -49,10 +49,18 @@ export default function HandoffLanding() {
     border: 0, borderRadius: 10, padding: '12px 24px', fontSize: 15, fontWeight: 700,
     cursor: 'pointer', textDecoration: 'none',
   };
+  // co-brand lockup — ต่อเนื่องจาก theossphere ไม่ให้รู้สึกสะดุดตอนข้าม product
+  const coBrand = (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 20, fontSize: 13, fontWeight: 700, letterSpacing: '.02em' }}>
+      <span style={{ color: '#c7d2fe' }}>theossphere</span>
+      <span style={{ opacity: 0.55, color: '#9aa6d8' }}>✦</span>
+      <span style={{ color: '#5b8bff' }}>CEO AI Thailand</span>
+    </div>
+  );
 
   if (status === 'off') {
     return <div style={wrap}><div style={card}>
-      <div style={{ fontSize: 44 }}>🔌</div>
+      {coBrand}<div style={{ fontSize: 44 }}>🔌</div>
       <h1 style={{ fontSize: 20, fontWeight: 800 }}>ระบบเชื่อมแผนยังไม่เปิดใช้งาน</h1>
       <p style={{ color: '#9aa6d8', lineHeight: 1.7 }}>ขออภัย ฟีเจอร์เชื่อมแผนจาก theossphere กำลังเตรียมเปิด</p>
       <a href="/start" style={btn}>เริ่มต้นใช้งาน CEO AI Thailand →</a>
@@ -60,21 +68,21 @@ export default function HandoffLanding() {
   }
   if (status === 'checking') {
     return <div style={wrap}><div style={card}>
-      <div style={{ fontSize: 44 }}>🔗</div>
+      {coBrand}<div style={{ fontSize: 44 }}>🔗</div>
       <h1 style={{ fontSize: 20, fontWeight: 800 }}>กำลังเชื่อมแผนธุรกิจของคุณ…</h1>
       <p style={{ color: '#9aa6d8' }}>ตรวจสอบและเตรียมส่งให้ทีม AI</p>
     </div></div>;
   }
   if (status === 'error') {
     return <div style={wrap}><div style={card}>
-      <div style={{ fontSize: 44 }}>⚠️</div>
+      {coBrand}<div style={{ fontSize: 44 }}>⚠️</div>
       <h1 style={{ fontSize: 20, fontWeight: 800 }}>ลิงก์เชื่อมแผนไม่ถูกต้องหรือหมดอายุ</h1>
       <p style={{ color: '#9aa6d8', lineHeight: 1.7 }}>ลองกลับไปกด "ส่งแผนไป execute" ที่ theossphere อีกครั้ง หรือเริ่มใหม่ที่นี่</p>
       <a href="/start" style={btn}>เริ่มต้นใช้งาน →</a>
     </div></div>;
   }
   return <div style={wrap}><div style={card}>
-    <div style={{ fontSize: 44 }}>✅</div>
+    {coBrand}<div style={{ fontSize: 44 }}>✅</div>
     <h1 style={{ fontSize: 20, fontWeight: 800 }}>รับแผนของคุณแล้ว{biz ? ` — ${biz}` : ''}</h1>
     <p style={{ color: '#9aa6d8', lineHeight: 1.7 }}>
       สมัคร/เข้าใช้งาน แล้วทีมพนักงาน AI จะเริ่มลงมือทำจากแผน 24 ขั้นของคุณทันที (ไม่ต้องกรอกใหม่)

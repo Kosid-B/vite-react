@@ -108,6 +108,26 @@ export async function buildHandoffUrl(plan, { memberRefId, memberEmail, secret, 
 
 ---
 
+## เงื่อนไข 2 product — บันทึกการตัดสินใจ
+| # | เงื่อนไข | สถานะ | สรุป |
+|---|---|---|---|
+| 1 | **Data ownership** | ✅ ตัดสินแล้ว | ข้อมูลเป็นของ **User ที่ให้ข้อมูล** (consent-based) · **ทั้ง 2 platform ต้องมี RoPA (Record of Processing Activities) + Privacy Notice บน platform ตัวเอง** (PDPA ม.30 เทียบเท่า) |
+| 2 | Consent copy | ⬜ รอ | ผมร่างให้ได้ (ไทย+อังกฤษ) |
+| 3 | Revenue model | ⬜ รอ | referral fee / rev-share / ฟรี — รอ User เลือก |
+| 4 | **Branding/UX** | ✅ ตัดสินแล้ว | **co-brand** + CTA **"ให้ทีม AI ลงมือทำ"** (ดู spec ล่าง) |
+
+> **CEO AI ต้องทำก่อน go-live (PDPA):** (ก) เพิ่ม RoPA entry สำหรับ handoff processing (รับแผนธุรกิจจาก theossphere ด้วย consent → pre-fill) · (ข) อัปเดต Privacy Notice หน้า `/privacy` ให้ระบุการรับข้อมูลจาก theossphere + ฐานการประมวลผล (consent) + สิทธิ์เพิกถอน
+> **theossphere ต้องทำ:** RoPA entry (ส่งออกข้อมูลไป CEO AI) + Privacy Notice ระบุปลายทาง + เก็บหลักฐาน consent (timestamp)
+
+## Co-brand spec (ตัดสินใจแล้ว: co-brand · CTA "ให้ทีม AI ลงมือทำ")
+**ฝั่ง CEO AI (ทำแล้ว):** หน้า `/handoff` แสดง lockup `theossphere ✦ CEO AI Thailand` ทุกสถานะ → ต่อเนื่องไม่สะดุด
+
+**ฝั่ง theossphere (ปุ่ม/แบนเนอร์ — ใช้ข้อความนี้):**
+- ปุ่มหลัก (หลัง MVBP): **"ให้ทีม AI ลงมือทำ →"** (รอง: "ส่งแผนไปให้ทีม AI ทำต่อ")
+- co-brand lockup ข้างปุ่ม: `theossphere ✦ CEO AI Thailand` (หรือโลโก้คู่)
+- ประโยคประกอบ: *"แผน 24 ขั้นของคุณพร้อมแล้ว — ให้พนักงาน AI ลงมือทำจริง (ไม่ต้องกรอกใหม่)"*
+- โทน: complementary (เรียน/วางแผนที่ theossphere → execute ที่ CEO AI) ไม่ใช่แข่งกัน
+
 ## หมายเหตุความปลอดภัย (ก่อนเปิด production)
 - **exp ≤ 10 นาที** + **consent.given=true** = บังคับ (verifier reject ถ้าขาด) — ตรงตาม PDPA (user กดส่งเอง)
 - **nonce dedup (กัน replay ซ้ำ)**: ปัจจุบัน verifier ยังไม่ dedup (exp 10 นาทีจำกัด window) → ก่อน scale แนะนำเพิ่มตาราง `handoff_nonces` + เช็คใน `handoff-import` (ดู [theossphere-handoff.md](theossphere-handoff.md) CAPA)
