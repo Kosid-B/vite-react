@@ -3,7 +3,10 @@ import { createRoot } from 'react-dom/client'
 import Root from './Root.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import CookieConsent from './components/CookieConsent.tsx'
+import { installGlobalErrorReporting } from './lib/errorReport'
 import './index.css'
+
+installGlobalErrorReporting(); // จับ error นอก React → รายงานไป GA4 + observability
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
