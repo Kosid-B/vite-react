@@ -3,7 +3,7 @@
 // สร้างสเปรดชีต (ครั้งแรก) แล้ว append แถวข้อมูล
 // verify_jwt = true + ตรวจสมาชิก workspace
 //
-// Deploy:  supabase functions deploy sheets-sync --project-ref rsjbqmnvocvtveelselj
+// Deploy:  supabase functions deploy sheets-sync --project-ref waigsnxhrlwtiotspaim
 // Secrets: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (ใช้ร่วมกับ sheets-oauth)
 //
 // Body:   { workspaceId: string, title?: string, rows: (string|number)[][] }
