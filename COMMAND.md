@@ -132,6 +132,10 @@ npx supabase functions deploy recurring-webhook --no-verify-jwt --project-ref wa
 # ตั้ง Webhook เพิ่ม (Xendit → Webhooks → Recurring: cycle.succeeded/failed, plan.activated/inactivated):
 #   https://waigsnxhrlwtiotspaim.supabase.co/functions/v1/recurring-webhook   (ใช้ XENDIT_CALLBACK_TOKEN เดิม)
 #
+# ── Refund (คืนเงิน — Admin) ──
+npx supabase functions deploy refund-invoice --project-ref waigsnxhrlwtiotspaim         # verify_jwt=true (ตรวจ admin)
+# หน้า ผู้ดูแลระบบ → การ์ด "💸 คืนเงิน (Refund)": ก่อน KYC = record-only (คืนเองแล้วบันทึก) · หลัง = ยิง Xendit จริง
+#
 # ✅ Checklist เปิดใช้ปุ่มจ่ายออนไลน์ (หลัง Xendit อนุมัติบัญชี/ผ่าน KYC):
 #   1. deploy create-invoice + xendit-webhook (2 คำสั่งด้านบน)
 #   2. set XENDIT_SECRET_KEY + XENDIT_CALLBACK_TOKEN + ตั้ง webhook URL

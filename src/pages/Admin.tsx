@@ -12,7 +12,9 @@ import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
 import { aggregateExperiments, retentionCohorts, expReportCsv, expReportTsv, type ExperimentsAggregate, type RetentionReport } from '../lib/experiments';
-import { isAdminEmail, ADMIN_EMAILS } from '../config';
+import { isAdminEmail, ADMIN_EMAILS, PAYMENT } from '../config';
+import { applyRefund } from '../../supabase/functions/_shared/refund.ts';
+import type { SubState } from '../../supabase/functions/_shared/subscription.ts';
 import { PageHeader, Badge } from '../ds';
 import type { AppData, WinStory, WinCategory, FeedbackEntry, FeedbackSource, FeedbackSentiment, FeedbackTheme } from '../types';
 
@@ -225,6 +227,38 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       setActMsg({ ok: false, text: '❌ เกิดข้อผิดพลาด: ' + (err?.message ?? String(e)) });
     }
     setActBusy(false);
+  }
+
+  // Refund (คืนเงิน) state — record-only (ยิง Xendit จริงผ่าน edge function refund-invoice หลัง KYC)
+  const [refWsId, setRefWsId] = useState('');
+  const [refRef, setRefRef] = useState('');
+  const [refAmount, setRefAmount] = useState(0);
+  const [refReason, setRefReason] = useState('');
+  const [refBusy, setRefBusy] = useState(false);
+  const [refMsg, setRefMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function handleRefund() {
+    if (!refWsId || !refRef) { setRefMsg({ ok: false, text: 'กรุณาระบุเวิร์กสเปซ + รหัส invoice' }); return; }
+    setRefBusy(true); setRefMsg(null);
+    try {
+      const state = (await wsLoad(refWsId)) ?? {};
+      const { state: next, refunded, fullyRefunded, error } = applyRefund(state as SubState, {
+        ref: refRef, amount: refAmount, reason: refReason,
+        refundId: 'rf-admin-' + Date.now().toString(36), now: new Date(),
+      });
+      if (!refunded) {
+        throw new Error(
+          error === 'invoice_not_found' ? 'ไม่พบ invoice นี้ในเวิร์กสเปซ'
+            : error === 'amount_exceeds_refundable' ? 'จำนวนเกินยอดที่คืนได้'
+              : 'จำนวนเงินไม่ถูกต้อง');
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await wsSave(refWsId, next as any);
+      setRefMsg({ ok: true, text: `✅ บันทึกคืนเงิน ฿${refAmount.toLocaleString()} ${fullyRefunded ? '(เต็มจำนวน — เพิกถอนสิทธิ์แล้ว)' : '(บางส่วน)'}` });
+    } catch (e: unknown) {
+      setRefMsg({ ok: false, text: '❌ ' + ((e as { message?: string })?.message ?? String(e)) });
+    }
+    setRefBusy(false);
   }
 
   const winStories = data.winStories ?? [];
@@ -2431,6 +2465,48 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {isSupabaseEnabled && (
+        <div className="adm-activate">
+          <div className="adm-act-hd">💸 คืนเงิน (Refund)</div>
+          <div className="adm-act-desc">
+            บันทึกการคืนเงิน invoice ที่จ่ายแล้ว (เต็ม/บางส่วน) — คืนเต็มจำนวนจะเพิกถอนสิทธิ์แพ็กอัตโนมัติ
+            {PAYMENT.xenditLive
+              ? ' · ระบบเชื่อม Xendit แล้ว — คืนเงินจริงอัตโนมัติผ่าน edge function'
+              : ' · ระหว่างรอ Xendit KYC: คืนเงินให้ลูกค้าด้วยตนเอง (โอนกลับ) แล้วบันทึกที่นี่'}
+          </div>
+          <div className="adm-act-form">
+            <div className="adm-act-field">
+              <label className="adm-act-label">เวิร์กสเปซ (Workspace ID)</label>
+              <input className="adm-act-input" placeholder="workspace uuid" value={refWsId}
+                onChange={e => setRefWsId(e.target.value.trim())} />
+            </div>
+            <div className="adm-act-field">
+              <label className="adm-act-label">รหัส invoice (xenditId หรือ invoice id)</label>
+              <input className="adm-act-input" placeholder="เช่น xnd_inv_... หรือ inv-..." value={refRef}
+                onChange={e => setRefRef(e.target.value.trim())} />
+            </div>
+            <div className="adm-act-field">
+              <label className="adm-act-label">ยอดที่คืน (บาท)</label>
+              <input className="adm-act-input" type="number" min={0} value={refAmount}
+                onChange={e => setRefAmount(Math.max(0, Number(e.target.value)))} />
+            </div>
+            <div className="adm-act-field">
+              <label className="adm-act-label">เหตุผล (ไม่บังคับ)</label>
+              <input className="adm-act-input" placeholder="เช่น ลูกค้าขอยกเลิกภายใน 7 วัน" value={refReason}
+                onChange={e => setRefReason(e.target.value)} />
+            </div>
+
+            <button className="adm-act-submit" onClick={handleRefund} disabled={refBusy || !refWsId || !refRef || refAmount <= 0}>
+              {refBusy ? 'กำลังบันทึก…' : '💸 บันทึกการคืนเงิน'}
+            </button>
+            {refMsg && <div className={`adm-act-msg${refMsg.ok ? ' ok' : ' err'}`}>{refMsg.text}</div>}
+            <div className="adm-act-warn">
+              ⚠️ คืนเต็มจำนวน = เพิกถอนสิทธิ์แพ็ก (subscription → canceled) ทันที — ตรวจสอบก่อนยืนยัน
+            </div>
+          </div>
         </div>
       )}
     </div>
