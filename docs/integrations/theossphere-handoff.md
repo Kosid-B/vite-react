@@ -106,14 +106,19 @@ https://ceoaithailand.org/start
 - [ ] **Rate-limit** ต่อ source · log ลง observability
 - [ ] Gate ด้วย flag `INTEGRATIONS.theossphereLive` (ปิดจนกว่าตกลง + ตั้ง secret ครบ)
 
-### สิ่งที่จะสร้าง (เมื่อ implement — แบบเดียวกับ Xendit modules)
-| ชิ้น | ที่ | ทดสอบ |
+### สถานะการสร้าง (แบบเดียวกับ Xendit modules)
+| ชิ้น | ที่ | สถานะ |
 |---|---|---|
-| `planToAppData()` mapper (pure) | `supabase/functions/_shared/handoff.ts` | ✅ vitest (unit) |
-| `verifyHandoffToken()` (signature/exp/consent) | `_shared/handoff.ts` | ✅ vitest |
-| edge `handoff-import` (verify → build workspace_state) | `supabase/functions/handoff-import/` | ตรรกะอยู่ใน pure module |
-| client route `/handoff` | `src/Root.tsx` + หน้ารับ | smoke |
-| flag `INTEGRATIONS.theossphereLive` | `src/config.ts` | — |
+| `planToAppData()` mapper (pure) | `supabase/functions/_shared/handoff.ts` | ✅ สร้างแล้ว + tested |
+| `signHandoff()` / `verifyHandoffToken()` (HMAC/exp/consent) | `_shared/handoff.ts` | ✅ สร้างแล้ว + tested |
+| edge `handoff-import` (verify token → คืนแผน) | `supabase/functions/handoff-import/` | ✅ สร้างแล้ว |
+| client route `/handoff` (verify → stash → พาไปสมัคร) | `src/Root.tsx` + `src/pages/HandoffLanding.tsx` | ✅ สร้างแล้ว |
+| stash helper (localStorage) | `src/lib/handoffClient.ts` | ✅ สร้างแล้ว |
+| flag `INTEGRATIONS.theossphereLive` | `src/config.ts` | ✅ สร้างแล้ว |
+| **apply-on-first-load** (อ่าน stash → `planToAppData` → updateData) ใน App.tsx | `src/App.tsx` | ⏳ **wiring สุดท้าย** — ทำตอน live test ได้ (ตรรกะ pure พร้อมแล้ว) |
+| **nonce dedup** (กัน replay) — ตาราง `handoff_nonces` | migration | ⏳ follow-up (exp 10 นาทีจำกัด window แล้ว) |
+
+**เปิดใช้:** deploy `handoff-import` (`--no-verify-jwt`) + ตั้ง secret `THEOSSPHERE_HANDOFF_SECRET` (แชร์กับ theossphere) + `INTEGRATIONS.theossphereLive = true`
 
 ---
 
