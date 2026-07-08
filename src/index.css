@@ -5421,3 +5421,13 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 @media (max-width: 768px) {
   .app-footer { margin-left: 0 !important; margin-right: 0 !important; padding-left: 16px; padding-right: 16px; }
 }
+
+/* ===== Phone (≤480px): บีบกริดที่ยัง 2 คอลัมน์ + กัน input กว้างเกินจอ =====
+ * ตรวจหน้า ผู้ดูแลระบบ/โรงงาน/บริษัท AI ที่ 390px: ฟอร์ม skill ยัง 2 คอลัมน์ (แคบ ~160px)
+ * และ input ความกว้างคงที่ในโรงงาน (180/220px) พึ่ง flex-wrap — บังคับ 1 คอลัมน์/เต็มแถว = ไม่มีทางล้นจอ */
+@media (max-width: 480px) {
+  .adm-skill-form { grid-template-columns: 1fr; }          /* ฟอร์มยาว — คอลัมน์เดียวพิมพ์ง่ายบนมือถือ */
+  .factory-profile-inp { max-width: 100%; }                /* input กว้างคงที่ห้ามดันเกิน row */
+  .factory-profile-field { min-width: 0; flex: 1 1 100%; } /* แต่ละฟิลด์ขึ้นบรรทัดเต็มความกว้าง */
+  .adm-stat-table { table-layout: fixed; }                 /* ตารางไม่ขยายตามเนื้อหายาว (มี ellipsis อยู่แล้ว) */
+}
