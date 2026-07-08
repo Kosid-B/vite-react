@@ -160,37 +160,6 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           </button>
         </div>
 
-        <button className={`nav-item ${activePage === 'city' ? 'active' : ''}`} onClick={() => onNavigate('city')}
-          title="เมืองบริษัทของคุณ — เกมส์ SIM ที่เมืองโตตามความคืบหน้าธุรกิจจริง">
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M19 21V7l-6-4v4L7 3v18M3 21h18M9 9v.01M9 12v.01M9 15v.01M15 12v.01M15 15v.01" />
-          </svg>
-          🏙️ เมืองบริษัท
-          <span className="nav-dot" />
-        </button>
-
-        {!hideAdv('pulse') && (
-        <button className={`nav-item ${activePage === 'pulse' ? 'active' : ''}`} onClick={() => onNavigate('pulse')}
-          title="Pulse & A/B — วัดว่าอะไรทำให้อยากใช้งานต่อ แบบโปร่งใส (ยินยอมก่อน · ปิดได้ทุกเมื่อ · ดูข้อมูลตัวเองได้)">
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M3 12h4l2 5 4-14 2 9h6" />
-          </svg>
-          💓 Pulse & A/B
-          <span className="nav-dot" />
-        </button>
-        )}
-
-        {!hideAdv('citytrade') && (
-        <button className={`nav-item ${activePage === 'citytrade' ? 'active' : ''}`} onClick={() => onNavigate('citytrade')}
-          title="การค้าระหว่างเมืองธุรกิจ — CEO+CMO จับคู่ดีลอัตโนมัติ บอร์ดกำกับ">
-          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
-            <path d="M7 8h10M7 8l3-3M7 8l3 3m7 5H7m10 0l-3 3m3-3l-3-3" />
-          </svg>
-          🤝 การค้าระหว่างเมือง
-          <span className="nav-dot" />
-        </button>
-        )}
-
         {toolsOpen && (
           <div className="nav-sub">
             <div className="nav-label">เครื่องมือ · ทำตามลำดับ 1 → {TOOL_ITEMS.length}</div>
@@ -279,6 +248,40 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
               {locked('analytics') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
             </button>
           </div>
+        )}
+
+        {/* เติบโต & มีส่วนร่วม — เกม/เมือง/ฟีดแบ็ก (ต่อจาก build → sell เป็น grow) */}
+        <div className="nav-label">🌱 เติบโต &amp; มีส่วนร่วม</div>
+
+        <button className={`nav-item ${activePage === 'city' ? 'active' : ''}`} onClick={() => onNavigate('city')}
+          title="เมืองบริษัทของคุณ — เกมส์ SIM ที่เมืองโตตามความคืบหน้าธุรกิจจริง">
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M19 21V7l-6-4v4L7 3v18M3 21h18M9 9v.01M9 12v.01M9 15v.01M15 12v.01M15 15v.01" />
+          </svg>
+          🏙️ เมืองบริษัท
+          <span className="nav-dot" />
+        </button>
+
+        {!hideAdv('pulse') && (
+        <button className={`nav-item ${activePage === 'pulse' ? 'active' : ''}`} onClick={() => onNavigate('pulse')}
+          title="Pulse & A/B — วัดว่าอะไรทำให้อยากใช้งานต่อ แบบโปร่งใส (ยินยอมก่อน · ปิดได้ทุกเมื่อ · ดูข้อมูลตัวเองได้)">
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M3 12h4l2 5 4-14 2 9h6" />
+          </svg>
+          💓 Pulse & A/B
+          <span className="nav-dot" />
+        </button>
+        )}
+
+        {!hideAdv('citytrade') && (
+        <button className={`nav-item ${activePage === 'citytrade' ? 'active' : ''}`} onClick={() => onNavigate('citytrade')}
+          title="การค้าระหว่างเมืองธุรกิจ — CEO+CMO จับคู่ดีลอัตโนมัติ บอร์ดกำกับ">
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M7 8h10M7 8l3-3M7 8l3 3m7 5H7m10 0l-3 3m3-3l-3-3" />
+          </svg>
+          🤝 การค้าระหว่างเมือง
+          <span className="nav-dot" />
+        </button>
         )}
 
         {/* แพ็กเกจ & ชำระเงิน — แสดงเสมอ (สำคัญต่อรายได้ ไม่ซ่อนในกลุ่ม) */}
