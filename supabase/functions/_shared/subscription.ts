@@ -10,6 +10,8 @@ export interface InvoiceRec {
   plan: string;
   amount: number;
   status: string;
+  refunded?: number;  // ยอดที่คืนเงินไปแล้วสะสม (บาท) — 0/undefined = ยังไม่คืน
+  note?: string;
 }
 
 export interface SubState {

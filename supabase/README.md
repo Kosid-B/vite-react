@@ -149,3 +149,4 @@ supabase functions deploy daily-ceo-report --no-verify-jwt
 | `xendit-webhook` | ❌ | รับยืนยันชำระเงินจาก Xendit (idempotent — กัน callback ซ้ำ) |
 | `create-recurring-plan` | ✅ | สร้างแผนตัดเงินอัตโนมัติ Xendit Recurring (gate `PAYMENT.recurringLive`) |
 | `recurring-webhook` | ❌ | รับ event งวด recurring (cycle succeeded/failed, plan activated/inactivated) |
+| `refund-invoice` | ✅ | Admin คืนเงิน invoice (เต็ม/บางส่วน) — ยิง Xendit /refunds + ปรับ subscription |
