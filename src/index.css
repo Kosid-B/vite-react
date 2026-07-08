@@ -334,6 +334,7 @@ body {
 .main {
   margin-left: 230px;
   flex: 1;
+  min-width: 0; /* กัน flexbox overflow — ให้ main หดได้ต่ำกว่า min-content ของลูก (สำคัญบนมือถือ) */
   padding: 36px 40px;
 }
 
@@ -860,7 +861,10 @@ input:focus, textarea:focus, select:focus {
   .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 200; }
   .sidebar.open { transform: translateX(0); }
   .main { margin-left: 0; padding: 64px 16px 20px; }
-  .app-footer { margin: 32px -16px -20px; padding: 14px 16px; }
+  .app-footer { margin: 32px 0 -20px; padding: 14px 16px; }
+  /* ตารางเมทริกซ์ Journey Health — เลื่อนแนวนอนในกล่องตัวเอง ไม่ดันหน้าเว็บ */
+  .db-matrix { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .db-mx-head, .db-mx-row { min-width: 460px; }
   .journey-grid { grid-template-columns: 1fr; }
   .persona-grid { grid-template-columns: 1fr; }
   .cp-grid { grid-template-columns: 1fr 1fr; }
@@ -5412,3 +5416,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .db-insight-summary::-webkit-details-marker { display: none; }
 .db-insight-summary::after { content: ' ▾'; opacity: .6; }
 .db-insight-details[open] .db-insight-summary::after { content: ' ▴'; }
+
+/* ===== Mobile: กัน footer margin ลบ (base .app-footer อยู่หลัง media query จึง override) ===== */
+@media (max-width: 768px) {
+  .app-footer { margin-left: 0 !important; margin-right: 0 !important; padding-left: 16px; padding-right: 16px; }
+}
