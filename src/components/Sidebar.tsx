@@ -5,6 +5,7 @@ import { BRAND, COMPANY, isAdminEmail } from '../config';
 import { canAccess, planLabel, PLAN_COLOR, PAGE_MIN_PLAN } from '../lib/access';
 import MfaSetup from './MfaSetup';
 import IsmsBadge from './IsmsBadge';
+import AmbientMusic from './AmbientMusic';
 
 interface Props {
   activePage: PageId;
@@ -401,6 +402,8 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           style={{ display: 'none' }}
           onChange={e => { const f = e.target.files?.[0]; if (f) { onImportFile(f); e.target.value = ''; } }}
         />
+
+        <AmbientMusic />
 
         {onSignOut && (
           <div className="sidebar-account">
