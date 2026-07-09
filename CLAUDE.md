@@ -66,6 +66,7 @@ wrangler.jsonc                 — Cloudflare Workers config (production) + vars
 src/server.ts                  — Worker: /api/agent DO + SEO ฝั่ง server (/b/<slug>, /b, /sitemap.xml)
 src/lib/seoData.ts             — pure SEO builders (title/meta/canonical/JSON-LD/sitemap) ใช้ร่วม worker+client
 src/lib/seo.ts                 — client applySeo() (idempotent) เรียกในหน้า public
+src/lib/ambientAudio.ts        — เพลงบรรเลงโปรซีเจอรัล (Web Audio API ไม่มีไฟล์/ลิขสิทธิ์) ปรับโทนตามเวลาจริง (reuse detectTime) · opt-in ปิดเป็นค่าเริ่มต้น · ปุ่ม components/AmbientMusic.tsx ใน sidebar footer
 docs/marketing/                — แผนการตลาด/หาลูกค้า (SEO, FB group, LinkedIn, networking, market research)
 ```
 
