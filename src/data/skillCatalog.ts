@@ -216,6 +216,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'เทียบรายงานวิจัยตลาด ฿15,000+ · ลดงบ Ads ที่ยิงผิดกลุ่ม ~฿1,000+/เดือน — คืนทุนใน 2 เดือน',
   },
   {
+    id: 'negotiation-leverage-timing',
+    name: 'Negotiation Leverage & Market Timing',
+    category: 'strategy', tier: 3, price: 2490, icon: '♟️',
+    desc: 'เพลย์บุ๊กเจรจาเชิงกลยุทธ์จากเคส Pixar × Steve Jobs — สร้างอำนาจต่อรอง (BATNA) จากนอกโต๊ะเจรจา, จับจังหวะตลาด (Market Timing) เปิดตัว/ระดมทุน/ขึ้นราคาให้ตรงพีคผลงาน, พลิกวิกฤต & feedback เป็นการอัปเกรด แล้วรื้อสัญญาที่เสียเปรียบมาเจรจาใหม่ให้เป็นธรรม — พร้อม checklist ก่อนเข้าโต๊ะและสคริปต์เปิดเจรจา',
+    tags: ['CEO', 'Founder', 'CFO'],
+    official: true,
+    valueNote: 'เทียบจ้างที่ปรึกษาดีล/เจรจาธุรกิจ ฿30,000+ ต่อดีล · กรอบเดียวใช้ปิดดีลใหญ่ ระดมทุน หรือเจรจาสัญญาคู่ค้าได้ตลอดชีพ',
+  },
+  {
     id: 'salesforce-developer',
     name: 'Salesforce Developer',
     category: 'technology', tier: 2, price: 1500, icon: '☁️',
