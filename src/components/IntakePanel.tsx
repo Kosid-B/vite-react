@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import type { AppData } from '../types';
 import { routeIntake, type RoutedTask } from '../lib/intakeRouter';
 import { bmcSuggestions, applyBmcSuggestion, type BMCSuggestion } from '../lib/bmcSync';
+import { de24Suggestions, applyDe24Note, type De24Suggestion } from '../lib/de24Sync';
 
 /* รับข้อมูลจากผู้ใช้ (โหลดไฟล์ / พิมพ์) → CEO มอบงานให้ตำแหน่งที่เกี่ยวข้อง → เข้าคิวงานของเอเจนต์ */
 
@@ -15,6 +16,8 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
   const [routed, setRouted] = useState<RoutedTask[]>([]);
   const [bmcSugg, setBmcSugg] = useState<BMCSuggestion[]>([]);
   const [bmcAdded, setBmcAdded] = useState<Record<string, boolean>>({});
+  const [de24Sugg, setDe24Sugg] = useState<De24Suggestion[]>([]);
+  const [de24Added, setDe24Added] = useState<Record<number, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
   const agents = c?.agents ?? [];
@@ -55,8 +58,10 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
     }));
     onUpdate({ ...data, aiCompany: { ...c, tasks: [...newTasks, ...(c.tasks ?? [])] } });
     setRouted(tasks);
-    setBmcSugg(bmcSuggestions(text, fileName ? `ไฟล์ ${fileName}` : 'ข้อมูลผู้ใช้'));
-    setBmcAdded({});
+    const srcTag = fileName ? `ไฟล์ ${fileName}` : 'ข้อมูลผู้ใช้';
+    setBmcSugg(bmcSuggestions(text, srcTag));
+    setDe24Sugg(de24Suggestions(text, srcTag));
+    setBmcAdded({}); setDe24Added({});
     setText(''); setFileName('');
     if (fileRef.current) fileRef.current.value = '';
     setMsg(`✅ CEO มอบหมาย ${tasks.length} งานให้ตำแหน่งที่เกี่ยวข้องแล้ว`);
@@ -67,6 +72,13 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
     if (!bm?.bmc) return;
     onUpdate({ ...data, businessModel: { ...bm, bmc: applyBmcSuggestion(bm.bmc, s) } });
     setBmcAdded(m => ({ ...m, [s.key]: true }));
+  }
+
+  function applyDe24(s: De24Suggestion) {
+    const bm = data.businessModel;
+    if (!Array.isArray(bm?.de24)) return;
+    onUpdate({ ...data, businessModel: { ...bm, de24: applyDe24Note(bm.de24, s.index, s.snippet) } });
+    setDe24Added(m => ({ ...m, [s.index]: true }));
   }
 
   return (
@@ -110,6 +122,20 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
               <span className="intake-bmc-block">{s.blockTitle} <span className="intake-bmc-sub">· {s.blockSub}</span></span>
               <button className="intake-bmc-add" disabled={!!bmcAdded[s.key]} onClick={() => applyBmc(s)}>
                 {bmcAdded[s.key] ? '✓ เพิ่มแล้ว' : '➕ เพิ่มเข้า BMC'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {de24Sugg.length > 0 && Array.isArray(data.businessModel?.de24) && (
+        <div className="intake-bmc intake-de24">
+          <div className="intake-bmc-hd">🧭 เกี่ยวกับ MIT 24 Steps — เพิ่มโน้ตทบทวนขั้นที่ควรปรับ?</div>
+          {de24Sugg.map(s => (
+            <div key={s.index} className="intake-bmc-row">
+              <span className="intake-bmc-block">ขั้น {s.index + 1}: {s.name} <span className="intake-bmc-sub">· {s.phaseLabel}</span></span>
+              <button className="intake-bmc-add" disabled={!!de24Added[s.index]} onClick={() => applyDe24(s)}>
+                {de24Added[s.index] ? '✓ เพิ่มแล้ว' : '➕ เพิ่มโน้ต'}
               </button>
             </div>
           ))}
