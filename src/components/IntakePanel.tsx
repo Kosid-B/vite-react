@@ -3,6 +3,8 @@ import type { AppData } from '../types';
 import { routeIntake, type RoutedTask } from '../lib/intakeRouter';
 import { bmcSuggestions, applyBmcSuggestion, type BMCSuggestion } from '../lib/bmcSync';
 import { de24Suggestions, applyDe24Note, type De24Suggestion } from '../lib/de24Sync';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { trackAiCall } from '../lib/usage';
 
 /* รับข้อมูลจากผู้ใช้ (โหลดไฟล์ / พิมพ์) → CEO มอบงานให้ตำแหน่งที่เกี่ยวข้อง → เข้าคิวงานของเอเจนต์ */
 
@@ -18,6 +20,8 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
   const [bmcAdded, setBmcAdded] = useState<Record<string, boolean>>({});
   const [de24Sugg, setDe24Sugg] = useState<De24Suggestion[]>([]);
   const [de24Added, setDe24Added] = useState<Record<number, boolean>>({});
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSummary, setAiSummary] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const agents = c?.agents ?? [];
@@ -81,6 +85,38 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
     setDe24Added(m => ({ ...m, [s.index]: true }));
   }
 
+  // วิเคราะห์เชิงลึกด้วย AI (production เท่านั้น) — CEO อ่านสถานการณ์ + เสนอว่ามอบใคร + กระทบ BMC อย่างไร
+  async function analyzeAI() {
+    if (!isSupabaseEnabled || !supabase || !text.trim()) return;
+    setAiLoading(true);
+    setAiSummary('');
+    try {
+      trackAiCall();
+      const roster = agents.map(a => `${a.role}${a.name ? ` (${a.name})` : ''}: ${a.mandate ?? '-'}`).join('\n');
+      const bmc = data.businessModel?.bmc;
+      const bmcSnap = bmc
+        ? `ลูกค้า: ${(bmc.segments ?? []).join(', ') || '-'} · คุณค่า: ${(bmc.value ?? []).join(', ') || '-'} · รายได้: ${(bmc.revenue ?? []).join(', ') || '-'} · ต้นทุน: ${(bmc.costs ?? []).join(', ') || '-'}`
+        : '(ยังไม่มี BMC)';
+      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
+        body: {
+          page: 'aicompany',
+          pageLabel: 'CEO วิเคราะห์ข้อมูลที่รับเข้า',
+          instruction:
+            'คุณคือ CEO วิเคราะห์ข้อมูลธุรกิจที่ผู้ใช้ส่งเข้ามาแบบเชิงลึก ตอบเป็นภาษาไทยแบบ bullet สั้นกระชับใน summary: ' +
+            '(1) สรุปสถานการณ์/ปัญหาหลัก (2) ควรมอบงานให้ตำแหน่งใดบ้าง และทำอะไรเป็นลำดับแรก (3) กระทบ Business Model (BMC) หรือแผน 24 ขั้นอย่างไร ควรปรับจุดใด',
+          context: `ทีมงาน AI ที่มี:\n${roster || '(ยังไม่มีทีม)'}\n\nBMC ปัจจุบัน: ${bmcSnap}\n\nข้อมูลที่ผู้ใช้ส่ง:\n${text.slice(0, 1500)}`,
+        },
+      });
+      if (error) throw error;
+      const out = (res?.summary ?? '').trim();
+      setAiSummary(out || '⚠️ AI ไม่ได้ส่งผลวิเคราะห์กลับมา — ลองใหม่อีกครั้ง');
+    } catch {
+      setAiSummary('⚠️ วิเคราะห์ด้วย AI ไม่สำเร็จ — ใช้การมอบหมายอัตโนมัติ (ปุ่มด้านบน) ได้ตามปกติ');
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   return (
     <div className="intake-card">
       <div className="intake-head">
@@ -99,12 +135,25 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
         <input ref={fileRef} type="file" accept=".txt,.csv,.tsv,.md,.json,.log,text/*" style={{ display: 'none' }}
           onChange={e => { const f = e.target.files?.[0]; if (f) onFile(f); }} />
         {fileName && <span className="intake-fname" title={fileName}>{fileName}</span>}
+        {isSupabaseEnabled && (
+          <button className="intake-ai" onClick={analyzeAI} disabled={!text.trim() || aiLoading}
+            title="ให้ CEO (AI) อ่านข้อมูลเชิงลึก เสนอว่าควรมอบใคร และกระทบ BMC/24 ขั้นอย่างไร">
+            {aiLoading ? '⏳ กำลังวิเคราะห์…' : '🧠 วิเคราะห์เชิงลึก (AI)'}
+          </button>
+        )}
         <button className="intake-send" onClick={submit} disabled={!text.trim() || !hasTeam}>
           ให้ CEO มอบหมายงาน →
         </button>
       </div>
 
       {msg && <div className="intake-msg">{msg}</div>}
+
+      {aiSummary && (
+        <div className="intake-ai-out">
+          <div className="intake-ai-hd">🧠 CEO วิเคราะห์เชิงลึก</div>
+          <div className="intake-ai-body">{aiSummary}</div>
+        </div>
+      )}
 
       {routed.length > 0 && (
         <ul className="intake-result">

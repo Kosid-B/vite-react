@@ -1334,7 +1334,13 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .intake-bmc-add:disabled { opacity: .6; cursor: default; filter: none; background: var(--green); }
 .intake-de24 { background: rgba(45,106,79,.07); border-color: rgba(82,183,136,.28); }
 .intake-de24 .intake-bmc-add { background: #2d6a4f; }
-@media (max-width: 480px) { .intake-send { margin-left: 0; width: 100%; } .intake-bmc-row { flex-wrap: wrap; } }
+.intake-ai { font-size: 13px; font-weight: 700; font-family: inherit; color: #7c3aed; background: rgba(124,58,237,.08); border: 1px solid rgba(124,58,237,.35); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.intake-ai:hover:not(:disabled) { background: rgba(124,58,237,.15); }
+.intake-ai:disabled { opacity: .5; cursor: not-allowed; }
+.intake-ai-out { margin-top: 12px; padding: 12px 14px; background: rgba(124,58,237,.06); border: 1px solid rgba(124,58,237,.22); border-radius: 10px; }
+.intake-ai-hd { font-size: 13px; font-weight: 700; color: var(--ink1); margin-bottom: 8px; }
+.intake-ai-body { font-size: 13px; color: var(--ink1); line-height: 1.65; white-space: pre-wrap; }
+@media (max-width: 480px) { .intake-send { margin-left: 0; width: 100%; } .intake-ai { width: 100%; } .intake-bmc-row { flex-wrap: wrap; } }
 .ai-panel-hd { padding: 13px 18px; border-bottom: 1px solid var(--cream2); font-size: 14px; font-weight: 600; color: var(--ink); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ai-mini-add { font-family: inherit; font-size: 13px; color: var(--rust); background: none; border: 1px solid var(--sand); border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: .15s; }
 .ai-mini-add:hover { background: var(--rust-bg); border-color: var(--rust); }
