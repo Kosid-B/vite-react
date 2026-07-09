@@ -4,6 +4,7 @@ import { companyXP, getCompanyLevel, COMPANY_LEVELS, QUESTS, ACHIEVEMENTS, ACTIV
 import DBDSelect from '../components/DBDSelect';
 import FirstDealWidget from '../components/FirstDealWidget';
 import ExpertEdge from '../components/ExpertEdge';
+import WeeklyDigest from '../components/WeeklyDigest';
 
 interface Props {
   data: AppData;
@@ -333,6 +334,9 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
           </button>
         </div>
       </div>
+
+      {/* ===== สรุปสัปดาห์นี้ (retention) ===== */}
+      <WeeklyDigest data={data} onNavigate={onNavigate} />
 
       {/* ===== First Revenue Engine: ภารกิจดีลแรกใน 30 วัน (แก้ churn) ===== */}
       <ExpertEdge compact onNavigate={onNavigate} />
