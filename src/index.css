@@ -1332,6 +1332,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .intake-bmc-add { font-size: 12.5px; font-family: inherit; font-weight: 700; color: #fff; background: #3b82f6; border: none; border-radius: 7px; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
 .intake-bmc-add:hover { filter: brightness(1.06); }
 .intake-bmc-add:disabled { opacity: .6; cursor: default; filter: none; background: var(--green); }
+.intake-de24 { background: rgba(45,106,79,.07); border-color: rgba(82,183,136,.28); }
+.intake-de24 .intake-bmc-add { background: #2d6a4f; }
 @media (max-width: 480px) { .intake-send { margin-left: 0; width: 100%; } .intake-bmc-row { flex-wrap: wrap; } }
 .ai-panel-hd { padding: 13px 18px; border-bottom: 1px solid var(--cream2); font-size: 14px; font-weight: 600; color: var(--ink); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ai-mini-add { font-family: inherit; font-size: 13px; color: var(--rust); background: none; border: 1px solid var(--sand); border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: .15s; }
