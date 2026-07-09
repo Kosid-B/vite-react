@@ -214,7 +214,7 @@ const CLV_CSS = `
 .clv-auto-status{ font-size:12.5px; color:var(--text-soft); min-height:1.2em; }
 
 .clv-city-panel{ position:relative; margin-top:26px; }
-.clv-city-badge{ position:absolute; left:50%; top:8px; transform:translateX(-50%); z-index:5;
+.clv-city-badge{ position:absolute; left:50%; bottom:14px; transform:translateX(-50%); z-index:5;
   background:color-mix(in srgb, var(--panel) 82%, transparent); border:1px solid var(--gold); color:var(--gold);
   padding:8px 20px; border-radius:999px; font-weight:700; font-size:15px;
   box-shadow:0 8px 30px var(--glow); backdrop-filter:blur(6px); white-space:nowrap;
