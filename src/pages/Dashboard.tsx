@@ -79,6 +79,8 @@ const BMC_BLOCK_LABELS: { key: keyof BMCData; label: string }[] = [
   { key: 'revenue', label: '💰 กระแสรายได้' },
 ];
 
+const esc = (s: unknown) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+
 function exportReport(data: AppData) {
   const { actions, funnel, aiCompany, roadmap, vrio } = data;
   const doneActions = actions.filter(a => a.done).length;
@@ -87,7 +89,7 @@ function exportReport(data: AppData) {
   const overallConv = ((lastLeads / Math.max(firstLeads, 1)) * 100).toFixed(2);
 
   const agentRows = aiCompany.agents.map(a =>
-    `<tr><td>${a.avatar} ${a.name}</td><td>${a.role}</td><td>${a.mandate}</td><td>${a.status}</td></tr>`
+    `<tr><td>${esc(a.avatar)} ${esc(a.name)}</td><td>${esc(a.role)}</td><td>${esc(a.mandate)}</td><td>${esc(a.status)}</td></tr>`
   ).join('');
 
   const taskTotal = aiCompany.tasks.length;
@@ -95,17 +97,36 @@ function exportReport(data: AppData) {
   const taskBlocked = aiCompany.tasks.filter(t => t.status === 'blocked').length;
   const taskRows = aiCompany.tasks.slice(0, 10).map(t => {
     const ag = aiCompany.agents.find(a => a.id === t.agentId);
-    return `<tr><td>${t.title}</td><td>${ag?.name ?? '—'}</td><td>${t.status}</td><td>${t.output ? t.output.slice(0, 120) + '…' : '—'}</td></tr>`;
+    return `<tr><td>${esc(t.title)}</td><td>${esc(ag?.name ?? '—')}</td><td>${esc(t.status)}</td><td>${t.output ? esc(t.output.slice(0, 120)) + '…' : '—'}</td></tr>`;
   }).join('');
 
   const roadmapDone = roadmap.filter(r => r.status === 'done').length;
   const roadmapRows = roadmap.map(r =>
-    `<tr><td>${r.title}</td><td>${r.quarter} ${r.year}</td><td>${r.status}</td><td>${r.priority}</td></tr>`
+    `<tr><td>${esc(r.title)}</td><td>${esc(r.quarter)} ${esc(r.year)}</td><td>${esc(r.status)}</td><td>${esc(r.priority)}</td></tr>`
   ).join('');
 
   const vrioRows = vrio.map(item =>
-    `<tr><td>${item.resource}</td><td>${item.v ? '✓' : '✗'}</td><td>${item.r ? '✓' : '✗'}</td><td>${item.i ? '✓' : '✗'}</td><td>${item.o ? '✓' : '✗'}</td></tr>`
+    `<tr><td>${esc(item.resource)}</td><td>${item.v ? '✓' : '✗'}</td><td>${item.r ? '✓' : '✗'}</td><td>${item.i ? '✓' : '✗'}</td><td>${item.o ? '✓' : '✗'}</td></tr>`
   ).join('');
+
+  // Business Model Canvas (9 ช่อง) — เพื่อรวมโมเดลธุรกิจในรายงานผู้บริหาร
+  const bmc = data.businessModel?.bmc;
+  const BMC_ROWS: { key: keyof BMCData; title: string; sub: string }[] = [
+    { key: 'segments', title: 'Customer Segments', sub: 'กลุ่มลูกค้า' },
+    { key: 'value', title: 'Value Propositions', sub: 'คุณค่าที่นำเสนอ' },
+    { key: 'channels', title: 'Channels', sub: 'ช่องทาง' },
+    { key: 'relationships', title: 'Customer Relationships', sub: 'ความสัมพันธ์ลูกค้า' },
+    { key: 'revenue', title: 'Revenue Streams', sub: 'กระแสรายได้' },
+    { key: 'resources', title: 'Key Resources', sub: 'ทรัพยากรหลัก' },
+    { key: 'activities', title: 'Key Activities', sub: 'กิจกรรมหลัก' },
+    { key: 'partners', title: 'Key Partners', sub: 'พันธมิตรหลัก' },
+    { key: 'costs', title: 'Cost Structure', sub: 'โครงสร้างต้นทุน' },
+  ];
+  const bmcRows = bmc ? BMC_ROWS.map(b => {
+    const items = (Array.isArray(bmc[b.key]) ? bmc[b.key] : []).filter(Boolean);
+    const body = items.length ? items.map(x => esc(x)).join(' · ') : '<span style="color:#bbb">—</span>';
+    return `<tr><td style="white-space:nowrap"><b>${b.title}</b><br><span style="color:#888;font-size:11px">${b.sub}</span></td><td>${body}</td></tr>`;
+  }).join('') : '';
 
   const now = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -122,7 +143,7 @@ function exportReport(data: AppData) {
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>รายงานธุรกิจ — ${aiCompany.name}</title>
+<title>รายงานธุรกิจ — ${esc(aiCompany.name)}</title>
 <style>
   * { box-sizing: border-box; }
   body { font-family: 'Segoe UI', Tahoma, sans-serif; color: #1c1814; background: #faf8f5; margin: 0; padding: 0; }
@@ -157,8 +178,8 @@ function exportReport(data: AppData) {
 <!-- Executive Summary Cover -->
 <div class="cover">
   <div class="cover-tag">CEO AI Thailand · Business Report</div>
-  <div class="cover-title">${aiCompany.name}</div>
-  <div class="cover-sub">${aiCompany.industry || 'Business'} · ${now}</div>
+  <div class="cover-title">${esc(aiCompany.name)}</div>
+  <div class="cover-sub">${esc(aiCompany.industry || 'Business')} · ${now}</div>
   <div class="cover-grid">
     <div class="cover-kpi">
       <div class="cover-kpi-label">Overall Conversion</div>
@@ -199,16 +220,22 @@ function exportReport(data: AppData) {
   <div class="kpi"><div class="kpi-label">Leads (เริ่ม→จบ)</div><div class="kpi-val">${firstLeads}→${lastLeads}</div></div>
 </div>
 
+${bmcRows ? `<h2>Business Model Canvas</h2>
+<table>
+  <tr><th>ช่อง (Block)</th><th>รายการ</th></tr>
+  ${bmcRows}
+</table>` : ''}
+
 <h2>AI Company — Agents (${aiCompany.agents.length} คน)</h2>
-<div style="color:#555;font-size:13px;margin-bottom:8px;">${aiCompany.mission || ''}</div>
+<div style="color:#555;font-size:13px;margin-bottom:8px;">${esc(aiCompany.mission || '')}</div>
 <table>
   <tr><th>ชื่อ</th><th>บทบาท</th><th>พันธกิจ</th><th>สถานะ</th></tr>
   ${agentRows}
 </table>
 
-<h2>AI Tasks (ล่าสุด 10 รายการ)</h2>
+<h2>งานที่มอบหมาย — AI Tasks (ล่าสุด 10 รายการ)</h2>
 <table>
-  <tr><th>งาน</th><th>ผู้ดำเนินการ</th><th>สถานะ</th><th>ผลลัพธ์</th></tr>
+  <tr><th>งาน</th><th>ผู้รับผิดชอบ</th><th>สถานะ</th><th>ผลลัพธ์</th></tr>
   ${taskRows || '<tr><td colspan="4" style="color:#aaa">ยังไม่มีงาน</td></tr>'}
 </table>
 
@@ -329,8 +356,9 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
           <span className="meta-chip">{stages.length} Stages</span>
           <span className="meta-chip">{data.personas.length} Personas</span>
           <span className="meta-chip">{contentPlan.length} เดือน Content</span>
-          <button className="db-export-btn" onClick={() => exportReport(data)}>
-            ⬇ Export รายงาน
+          <button className="db-export-btn" onClick={() => exportReport(data)}
+            title="ดาวน์โหลดรายงานผู้บริหาร (รวม BMC + งานที่มอบหมาย) — เปิดไฟล์แล้วสั่งพิมพ์ → บันทึกเป็น PDF ได้">
+            🖨️ รายงานผู้บริหาร (PDF)
           </button>
         </div>
       </div>
