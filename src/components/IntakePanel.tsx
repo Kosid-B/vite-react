@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import type { AppData } from '../types';
 import { routeIntake, type RoutedTask } from '../lib/intakeRouter';
+import { bmcSuggestions, applyBmcSuggestion, type BMCSuggestion } from '../lib/bmcSync';
 
 /* รับข้อมูลจากผู้ใช้ (โหลดไฟล์ / พิมพ์) → CEO มอบงานให้ตำแหน่งที่เกี่ยวข้อง → เข้าคิวงานของเอเจนต์ */
 
@@ -12,6 +13,8 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
   const [fileName, setFileName] = useState('');
   const [msg, setMsg] = useState('');
   const [routed, setRouted] = useState<RoutedTask[]>([]);
+  const [bmcSugg, setBmcSugg] = useState<BMCSuggestion[]>([]);
+  const [bmcAdded, setBmcAdded] = useState<Record<string, boolean>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
   const agents = c?.agents ?? [];
@@ -52,9 +55,18 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
     }));
     onUpdate({ ...data, aiCompany: { ...c, tasks: [...newTasks, ...(c.tasks ?? [])] } });
     setRouted(tasks);
+    setBmcSugg(bmcSuggestions(text, fileName ? `ไฟล์ ${fileName}` : 'ข้อมูลผู้ใช้'));
+    setBmcAdded({});
     setText(''); setFileName('');
     if (fileRef.current) fileRef.current.value = '';
     setMsg(`✅ CEO มอบหมาย ${tasks.length} งานให้ตำแหน่งที่เกี่ยวข้องแล้ว`);
+  }
+
+  function applyBmc(s: BMCSuggestion) {
+    const bm = data.businessModel;
+    if (!bm?.bmc) return;
+    onUpdate({ ...data, businessModel: { ...bm, bmc: applyBmcSuggestion(bm.bmc, s) } });
+    setBmcAdded(m => ({ ...m, [s.key]: true }));
   }
 
   return (
@@ -88,6 +100,20 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
             <li key={i}>👤 <b>{t.agentRole}</b> ← {t.areaLabels.join(' · ')}</li>
           ))}
         </ul>
+      )}
+
+      {bmcSugg.length > 0 && data.businessModel?.bmc && (
+        <div className="intake-bmc">
+          <div className="intake-bmc-hd">📋 CEO เห็นว่าข้อมูลนี้กระทบ Business Model — ปรับ BMC ให้สอดคล้อง?</div>
+          {bmcSugg.map(s => (
+            <div key={s.key} className="intake-bmc-row">
+              <span className="intake-bmc-block">{s.blockTitle} <span className="intake-bmc-sub">· {s.blockSub}</span></span>
+              <button className="intake-bmc-add" disabled={!!bmcAdded[s.key]} onClick={() => applyBmc(s)}>
+                {bmcAdded[s.key] ? '✓ เพิ่มแล้ว' : '➕ เพิ่มเข้า BMC'}
+              </button>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
