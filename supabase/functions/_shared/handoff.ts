@@ -83,6 +83,23 @@ export async function verifyHandoffToken(token: string, secret: string, nowMs: n
   return { ok: true, payload };
 }
 
+/* ---------- nonce dedup (กัน replay ภายใน window ที่ exp ยังไม่หมด) ---------- */
+export interface NonceStore {
+  /** จอง nonce แบบ atomic → true = ใช้ครั้งแรก (จองสำเร็จ), false = เคยใช้แล้ว (replay)
+   *  impl จริง = RPC consume_handoff_nonce (INSERT ... ON CONFLICT DO NOTHING) กัน race */
+  tryConsume(nonce: string, expMs: number): Promise<boolean>;
+}
+
+export interface ClaimResult { ok: boolean; error?: string }
+
+/** เรียกหลัง verifyHandoffToken ผ่าน — reject ถ้า nonce ถูกใช้ไปแล้ว (replay) */
+export async function claimNonce(payload: HandoffPayload, store: NonceStore): Promise<ClaimResult> {
+  const nonce = payload?.nonce;
+  if (typeof nonce !== 'string' || !nonce.trim()) return { ok: false, error: 'missing_nonce' };
+  const first = await store.tryConsume(nonce, payload.exp);
+  return first ? { ok: true } : { ok: false, error: 'replay' };
+}
+
 /* ---------- mapper: 24-step plan → AppData.aiCompany ---------- */
 const clip = (s: string | undefined, n: number): string => (s ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
 

@@ -11,8 +11,9 @@ openssl rand -hex 32      # ผลลัพธ์ = THEOSSPHERE_HANDOFF_SECRET
 ```
 > ⚠️ ห้าม commit · ตั้งผ่าน secret store เท่านั้น (Supabase secrets + env ของ theossphere)
 
-## ② ฝั่ง CEO AI Thailand — deploy + secret
+## ② ฝั่ง CEO AI Thailand — apply migration + deploy + secret
 ```bash
+supabase db push --project-ref waigsnxhrlwtiotspaim            # apply 0028_handoff_nonces (nonce dedup กัน replay)
 supabase functions deploy handoff-import --no-verify-jwt --project-ref waigsnxhrlwtiotspaim
 supabase secrets set THEOSSPHERE_HANDOFF_SECRET=<secret จากข้อ ①> --project-ref waigsnxhrlwtiotspaim
 ```
@@ -143,5 +144,5 @@ export async function buildHandoffUrl(plan, { memberRefId, memberEmail, secret, 
 
 ## หมายเหตุความปลอดภัย (ก่อนเปิด production)
 - **exp ≤ 10 นาที** + **consent.given=true** = บังคับ (verifier reject ถ้าขาด) — ตรงตาม PDPA (user กดส่งเอง)
-- **nonce dedup (กัน replay ซ้ำ)**: ปัจจุบัน verifier ยังไม่ dedup (exp 10 นาทีจำกัด window) → ก่อน scale แนะนำเพิ่มตาราง `handoff_nonces` + เช็คใน `handoff-import` (ดู [theossphere-handoff.md](theossphere-handoff.md) CAPA)
+- **nonce dedup (กัน replay ซ้ำ)**: ✅ โค้ดพร้อมแล้ว — go-live เพิ่ม 1 ขั้น: **apply migration `0028_handoff_nonces.sql`** (ตาราง + RPC `consume_handoff_nonce`) ก่อน deploy `handoff-import` · verifier จะ reject token ที่ nonce ซ้ำ (409 replay) · fail-closed ถ้า store ล่ม
 - ส่ง **แผนธุรกิจ** (ไม่ sensitive) เป็นหลัก · email เฉพาะมี consent · ใช้ `refId` opaque ไม่ใช่ raw member id

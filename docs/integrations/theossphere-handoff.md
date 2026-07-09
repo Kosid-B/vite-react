@@ -116,7 +116,7 @@ https://ceoaithailand.org/start
 | stash helper (localStorage) | `src/lib/handoffClient.ts` | ✅ สร้างแล้ว |
 | flag `INTEGRATIONS.theossphereLive` | `src/config.ts` | ✅ สร้างแล้ว |
 | **apply-on-first-load** (อ่าน stash → `planToAppData` → updateData) ใน App.tsx | `src/App.tsx` | ⏳ **wiring สุดท้าย** — ทำตอน live test ได้ (ตรรกะ pure พร้อมแล้ว) |
-| **nonce dedup** (กัน replay) — ตาราง `handoff_nonces` | migration | ⏳ follow-up (exp 10 นาทีจำกัด window แล้ว) |
+| **nonce dedup** (กัน replay) — ตาราง `handoff_nonces` + RPC `consume_handoff_nonce` + เดินสายใน `handoff-import` | `migrations/0028` · `_shared/handoff.ts` (`claimNonce`) · `handoff-import/index.ts` | ✅ โค้ดพร้อม (ทดสอบ `claimNonce`) — go-live แค่ apply migration 0028 + deploy fn |
 
 **เปิดใช้:** deploy `handoff-import` (`--no-verify-jwt`) + ตั้ง secret `THEOSSPHERE_HANDOFF_SECRET` (แชร์กับ theossphere) + `INTEGRATIONS.theossphereLive = true`
 
