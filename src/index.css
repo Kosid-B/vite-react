@@ -1305,6 +1305,25 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 
 .ai-2col { display: grid; grid-template-columns: 1.05fr .95fr; gap: 16px; }
 .ai-panel { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
+
+/* Intake — รับข้อมูลจากผู้ใช้ → CEO มอบหมายงาน */
+.intake-card { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 16px 18px; margin-top: 16px; }
+.intake-head { display: flex; flex-direction: column; gap: 3px; margin-bottom: 12px; }
+.intake-title { font-size: 15px; font-weight: 800; color: var(--ink); }
+.intake-sub { font-size: 12.5px; color: var(--ink3); line-height: 1.5; }
+.intake-ta { width: 100%; box-sizing: border-box; padding: 10px 12px; background: var(--cream2); border: 1px solid var(--sand); border-radius: var(--r); color: var(--ink); font-family: inherit; font-size: 13.5px; line-height: 1.6; resize: vertical; }
+.intake-ta:focus { outline: none; border-color: var(--accent); }
+.intake-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.intake-file { font-size: 13px; font-family: inherit; color: var(--ink2); background: var(--cream2); border: 1px solid var(--sand); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.intake-file:hover { border-color: var(--accent); color: var(--accent); }
+.intake-fname { font-size: 12px; color: var(--ink3); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.intake-send { margin-left: auto; font-size: 13.5px; font-weight: 700; font-family: inherit; color: #fff; background: var(--accent); border: none; border-radius: 8px; padding: 9px 18px; cursor: pointer; }
+.intake-send:hover { filter: brightness(1.06); }
+.intake-send:disabled { opacity: .5; cursor: not-allowed; filter: none; }
+.intake-msg { margin-top: 10px; font-size: 13px; color: var(--ink2); }
+.intake-result { list-style: none; margin: 10px 0 0; padding: 10px 12px; background: var(--cream2); border-radius: 8px; display: flex; flex-direction: column; gap: 5px; }
+.intake-result li { font-size: 13px; color: var(--ink1); }
+@media (max-width: 480px) { .intake-send { margin-left: 0; width: 100%; } }
 .ai-panel-hd { padding: 13px 18px; border-bottom: 1px solid var(--cream2); font-size: 14px; font-weight: 600; color: var(--ink); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ai-mini-add { font-family: inherit; font-size: 13px; color: var(--rust); background: none; border: 1px solid var(--sand); border-radius: 6px; padding: 4px 10px; cursor: pointer; transition: .15s; }
 .ai-mini-add:hover { background: var(--rust-bg); border-color: var(--rust); }
