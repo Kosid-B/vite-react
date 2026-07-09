@@ -28,6 +28,7 @@ import { brandInstruction } from '../lib/personalBrand';
 import MarketValidation from '../components/MarketValidation';
 import { validationInstruction, extractVerdict } from '../lib/marketValidation';
 import CSuiteReports from '../components/CSuiteReports';
+import IntakePanel from '../components/IntakePanel';
 import OcNode from './aicompany/OcNode';
 import {
   STATUS_LABEL, TASK_COLS, AGENT_PALETTE, AVATARS, MODELS, AVAILABLE_SKILLS,
@@ -1380,6 +1381,9 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
         <div className="ai-stat"><div className="ai-stat-num">{c.tasks.filter(t => t.status === 'done').length}</div><div className="ai-stat-lbl">งานเสร็จแล้ว</div></div>
         <div className="ai-stat"><div className="ai-stat-num" style={{ color: pendingApprovals ? 'var(--rust)' : undefined }}>{pendingApprovals}</div><div className="ai-stat-lbl">รอบอร์ดอนุมัติ</div></div>
       </div>
+
+      {/* ===== รับข้อมูลจากผู้ใช้ → CEO มอบหมายงาน ===== */}
+      <IntakePanel data={data} onUpdate={onUpdate} />
 
       {/* ===== ผังองค์กร ===== */}
       <section className="ai-panel" style={{ marginTop: 16 }}>
