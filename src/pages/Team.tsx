@@ -240,7 +240,7 @@ export default function Team({ activeWs, workspaces, currentUserId, data, onDele
               return (
                 <div key={m.user_id} className="team-row">
                   <div className="team-member">
-                    <div className="team-av">{m.email.charAt(0).toUpperCase()}</div>
+                    <div className="team-av">{(m.email ?? '?').charAt(0).toUpperCase()}</div>
                     <div className="team-email">
                       {m.email}{isSelf && <span className="team-you"> (คุณ)</span>}
                     </div>

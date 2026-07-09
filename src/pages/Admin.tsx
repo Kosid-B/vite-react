@@ -1907,7 +1907,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
           : 0;
         const totalRepay   = monthlyPmt * proposalLoanTerm;
         const totalInterest = totalRepay - proposalLoanAmt;
-        const dscr         = mrr > 0 ? (mrr / monthlyPmt).toFixed(2) : '—';
+        const dscr         = (mrr > 0 && monthlyPmt > 0) ? (mrr / monthlyPmt).toFixed(2) : '—';
 
         return (
           <div className="prop-wrap">
