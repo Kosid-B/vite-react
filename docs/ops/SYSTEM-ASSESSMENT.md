@@ -3,9 +3,10 @@
 > ประเมินจากข้อมูลจริงในโค้ดเบส · แหล่งข้อมูล: commit `8762105` (branch `main`) · 10 ก.ค. 2569
 > Visual scorecard (board-ready): เรนเดอร์จากเอกสารนี้ผ่าน Claude Artifact
 
-## คะแนนรวม: **8.5 / 10** — ขึ้น production บนโดเมนจริงแล้ว · เหลือ 2 ด่านสุดท้าย
+## คะแนนรวม: **8.5 / 10** — ยืนที่ 8.5 (ไม่พองขึ้น) = การประเมินที่ซื่อสัตย์
 
-> รอบที่ 2 (10 ก.ค. 2569, หลัง go-live) — ขยับจาก 8.3 → 8.5 จากงาน: ผูก custom domain (root + www) กับ Worker พร้อม cert · อีเมล Resend SPF/DKIM/DMARC verified · ลบ record GitHub Pages เก่า
+> **รอบที่ 3 (10 ก.ค. 2569, หลัง NC-01 verify):** คะแนนคง 8.5 — เพราะ "หลักฐานที่ดีขึ้น" (verify สดผ่าน MCP แทนการอ้าง) ถูกหักลบด้วย "defect แฝงที่เพิ่งเจอ" (NC-02 migration ไม่ self-consistent, dev/prod drift, prod ยัง verify ไม่ได้) · คุณภาพโค้ด 8.5 → 8.3
+> _รอบที่ 2 (go-live): 8.3 → 8.5 จากผูก domain + email verified · รอบที่ 1: 8.3_
 
 ## Metrics (ดึงจริงจาก repo)
 
@@ -33,13 +34,13 @@
 |---|:---:|---|---|
 | 🏗️ สถาปัตยกรรม & Stack | 9.0 | แข็งแรง | runtime deps แค่ 3 ตัว · Cloudflare Worker SSR SEO เอง · lib framework-agnostic |
 | 🧩 ความสมบูรณ์ฟีเจอร์ | 9.0 | แข็งแรง | 34 หน้า · marketplace + auction + RFQ + AI agents + gamification + ISO |
-| ✅ คุณภาพโค้ด | 8.5 | แข็งแรง | TS strict · 275 เทสต์ · 0 lint error — จุดอ่อน: unit-level ยังไม่มี E2E |
-| ⚡ ประสิทธิภาพ | 8.5 | แข็งแรง | build 2.86s · code-split ทุกหน้า · chunk ใหญ่สุด ~55KB gzip |
-| 🔒 ความปลอดภัย | 8.5 | แข็งแรง | RLS 14 migrations · REVOKE 7 ไฟล์ · MFA · nonce dedup · ไม่มี secret รั่ว |
-| 🚀 ความพร้อม Production | 8.5 | แข็งแรง | โดเมน root + www ผูกกับ Worker (custom_domain) + edge cert · Resend SPF/DKIM/DMARC verified · auto-deploy เขียว — เหลือ Supabase Auth redirect (5 นาที) |
-| 💼 ความพร้อมเชิงธุรกิจ | 7.5 | ใช้ได้ · รอ KYC | เว็บ live บนโดเมนจริง · เอกสาร Xendit KYC ส่งแล้ว (รีวิว) · marketplace ต้องการ traffic/liquidity |
+| ✅ คุณภาพโค้ด & integrity | 8.3 | ดี · มี defect ที่ track | TS strict · 275 เทสต์ · 0 lint error — **NC-02: ชุด migration ไม่ self-consistent** (0027 อ้าง 2 ฟังก์ชันที่ไม่มี migration สร้าง → repo-only rebuild fail) · ยังไม่มี E2E |
+| ⚡ ประสิทธิภาพ | 8.5 | แข็งแรง | build ~3s · code-split ทุกหน้า · chunk ใหญ่สุด ~55KB gzip |
+| 🔒 ความปลอดภัย | 8.5 | แข็งแรง | RLS · REVOKE · MFA · nonce dedup · ไม่มี secret รั่ว · **dev verified สด + จับ anon-exec leak ได้จริงแล้วปิด** — แต่ grant ของ prod ยัง verify ไม่ได้ |
+| 🚀 ความพร้อม Production | 8.5 | แข็งแรง | โดเมน root + www + edge cert · Resend verified · auto-deploy เขียว — เหลือ Supabase Auth redirect + **prod DB verify (สิทธิ์ prod)** |
+| 💼 ความพร้อมเชิงธุรกิจ | 7.5 | ใช้ได้ · รอ KYC | เว็บ live บนโดเมนจริง · Xendit KYC ส่งแล้ว (รีวิว) · marketplace ต้องการ traffic/liquidity |
 
-_คะแนนรวม = ค่าเฉลี่ย 7 มิติ = 59.5 / 7 ≈ 8.5 (รอบก่อน 8.3)_
+_คะแนนรวม ≈ 8.5 (รอบก่อน 8.5) — ยืนคงที่: หลักฐานดีขึ้นหักลบ defect ที่เพิ่งเจอ · ดู `docs/isms/NC-01-migration-verification.md`_
 
 ## จุดแข็ง
 
@@ -56,17 +57,17 @@ _คะแนนรวม = ค่าเฉลี่ย 7 มิติ = 59.5 / 
 
 ## สิ่งที่ควรปรับ (เรียงตามผลกระทบ)
 
-1. **Supabase Auth redirect** — เหลือตั้ง Site URL + Redirect URLs (`https://ceoaithailand.org/**`) เพื่อปิด go-live domain (5 นาที)
-2. **Payment รอ KYC** — Xendit ส่งเอกสารแล้ว (รีวิว) · ผ่านแล้วตั้ง `PAYMENT.xenditLive=true` + `WEBHOOK_SECRET`
-3. **ยังไม่มี E2E test** — 275 เทสต์เป็น unit/lib-level; ควรเพิ่ม smoke E2E 3–5 flow หลัก (login → dashboard → billing)
-4. **AICompany chunk ใหญ่สุด** (55KB gzip) — หน้าเดียวรวมหลายฟีเจอร์; split ย่อยได้ถ้าต้องการ TTI เร็วขึ้น
-5. **lint 1 warning** (react-refresh ใน `LegalLinks.tsx`) — ไม่กระทบ runtime แต่เก็บกวาดได้
+1. **NC-02 · migration ไม่ self-consistent** — `0027` อ้าง `delete_workspace()`/`update_updated_at()` ที่ไม่มี migration ไหนสร้าง → DB ที่ build จาก repo ล้วนๆ fail ที่ 0027 · แก้: เพิ่ม migration สร้าง 2 ฟังก์ชัน หรือใส่ guard
+2. **Prod ยัง verify ไม่ได้** — MCP ไม่มีสิทธิ์ prod · ต้องตรวจ migration + grant ของ `waigsnxhrlwtiotspaim` ด้วยสิทธิ์ prod (has_function_privilege เทียบ 0001–0028)
+3. **Supabase Auth redirect** + **Xendit KYC** — 2 ด่านปิด go-live (ดู `docs/ops/GO-LIVE-CHECKLIST.md`)
+4. **ยังไม่มี E2E test** — smoke 3–5 flow หลัก (login → dashboard → billing)
+5. **AICompany chunk** (55KB gzip) · **lint 1 warning** (react-refresh) — เก็บกวาดได้
 
 ## สรุปเชิงบริหาร
 
-ระบบ **ขึ้น production บนโดเมนจริงแล้ว** — `ceoaithailand.org` (root + www) ผูกกับ Cloudflare Worker พร้อม cert · อีเมล Resend verified ครบ (SPF/DKIM/DMARC) · โค้ดสะอาด dependency น้อย ความปลอดภัยดี เทสต์แน่น (คะแนน 8.3 → 8.5 จากงาน go-live)
+รอบนี้ (NC-01) เปลี่ยนจาก **"อ้างว่าทำแล้ว" เป็น "ตรวจสดมีหลักฐาน"** — verify migration/grant บน dev, จับ security leak (anon-exec) ได้จริงแล้วปิด, และ**เปิดเผย defect แฝง** (migration ไม่ self-consistent, dev/prod drift, prod ยังไม่ตรวจ)
 
-เหลือ **2 ด่านสุดท้าย**: (1) ตั้ง Supabase Auth redirect (5 นาที) (2) รอ **Xendit KYC** อนุมัติ — ผ่านเมื่อไหร่ เปิด `PAYMENT.xenditLive=true` รับชำระเงินได้ทันที
+คะแนน **ยืนที่ 8.5 ทั้งที่ทำงานเยอะ** = การประเมินที่ซื่อสัตย์ (หลักฐานดีขึ้น หักลบ defect ที่เพิ่งเจอ) ไม่ปั่นตัวเลขให้ดูดีเกินจริง · ก้าวถัดไป: ปิด NC-02 (repo) + verify production ด้วยสิทธิ์ prod
 
 ## วิธีทำซ้ำ (reproduce metrics)
 
