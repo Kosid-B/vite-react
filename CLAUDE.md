@@ -17,11 +17,12 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 Supabase Project ID : galtbbkcddugnsfkgyqm  (แยกจากระบบหลักโดยสมบูรณ์ — ทางเลือก B โดย Board)
 Supabase URL        : https://galtbbkcddugnsfkgyqm.supabase.co
 Region              : ap-southeast-1 (สิงคโปร์) · Free tier ฿0/เดือน
-Schema              : migrations/0016_tis_automate.sql + 0017_tis_rls_fixes.sql (applied แล้วทั้งคู่)
+Schema              : migrations/0016_tis_automate + 0017_tis_rls_fixes + 0018_tis_write_policies_and_seed
                       13 ตาราง (organizations/standards/clauses/projects/requirements/kanban/
                       documents/validations/marketing_events/…) + 5 enums + RLS ครบ
-หมายเหตุ            : 0016/0017 อยู่ใน repo นี้เพื่อเก็บประวัติ แต่ apply กับ project TIS เท่านั้น
-                      (ห้าม apply กับ production หลัก waigsnxhrlwtiotspaim) · frontend/subdomain ยังไม่สร้าง
+                      ⚠️ project galtbbkcddugnsfkgyqm = INACTIVE (ยืนยันผ่าน MCP 10 ก.ค. 2569) — สถานะ apply ต้องตรวจเมื่อ resume
+หมายเหตุ            : 0016–0018 อยู่ใน repo นี้เพื่อเก็บประวัติ แต่ apply กับ project TIS เท่านั้น
+                      (ห้าม apply กับ production หลัก waigsnxhrlwtiotspaim หรือ dev oudykxmtrnjeskglaluh) · frontend/subdomain ยังไม่สร้าง
 ```
 
 ## Production Credentials
@@ -59,7 +60,7 @@ src/pages/Pulse.tsx            — หน้า 'pulse' Pulse & A/B (opt-in, โ
 src/lib/experiments.ts         — registry A/B + assign แบบ deterministic + pulse + aggregate/export
 src/index.css                  — all styles (dark theme, CSS vars)
 supabase/functions/            — 6 Edge Functions
-supabase/migrations/           — 0001–0012 (ทั้งหมด applied แล้ว)
+supabase/migrations/           — 0001–0028 (สถานะ apply จริงยืนยันสดที่ docs/isms/NC-01-migration-verification.md — dev ตรวจแล้ว, prod ตรวจแยกด้วยสิทธิ์ prod)
 public/CNAME                   — custom domain (ceoaithailand.org)
 .github/workflows/deploy.yml   — GitHub Pages auto-deploy (legacy — production = Cloudflare Workers)
 wrangler.jsonc                 — Cloudflare Workers config (production) + vars SEO (SUPABASE_URL/ANON_KEY/SITE_ORIGIN — public)
