@@ -48,9 +48,25 @@ revoke execute on function public.is_member(uuid)                   from anon, p
 --    เช็ก auth.uid() + owner_id = auth.uid() ไม่ใช่เจ้าของ return 'forbidden')
 --    หมายเหตุ: ปัจจุบันแอป**ไม่ได้เรียก RPC นี้** (deleteWorkspace() ใน src/lib/workspaces.ts
 --    ใช้ direct DELETE + RLS policy ws_delete owner-only) — เปิดไว้เผื่ออนาคต, ล็อก anon
-grant  execute on function public.delete_workspace(uuid) to authenticated;
-revoke execute on function public.delete_workspace(uuid) from anon, public;
+--
+--    ⚠️ NC-02 guard: delete_workspace(uuid) และ update_updated_at() ถูกสร้าง out-of-band บน
+--    production (waigsnxhrlwtiotspaim) แต่ **ไม่มี migration ไหนใน repo สร้าง** (config drift, NC-03)
+--    → ห่อด้วย to_regprocedure() existence-check เพื่อให้ DB ที่ build จาก repo migrations ล้วนๆ
+--    (dev/CI/local) ไม่ fail ที่ 0027 · บน prod ฟังก์ชันมีอยู่ → grant/revoke ทำงานเหมือนเดิม
+--    ดู docs/isms/NC-01-migration-verification.md §5
+do $$
+begin
+  if to_regprocedure('public.delete_workspace(uuid)') is not null then
+    grant  execute on function public.delete_workspace(uuid) to authenticated;
+    revoke execute on function public.delete_workspace(uuid) from anon, public;
+  end if;
+end $$;
 
 -- 5) update_updated_at(): เป็น trigger function — ไม่ควรเรียกตรงจาก client
 --    trigger ยังทำงานได้ปกติแม้ revoke EXECUTE (รันในบริบท trigger ด้วยสิทธิ์ table owner)
-revoke execute on function public.update_updated_at() from anon, authenticated, public;
+do $$
+begin
+  if to_regprocedure('public.update_updated_at()') is not null then
+    revoke execute on function public.update_updated_at() from anon, authenticated, public;
+  end if;
+end $$;
