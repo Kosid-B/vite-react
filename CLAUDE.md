@@ -53,7 +53,9 @@ src/components/Sidebar.tsx     — navigation + plan badge + lock icons
 src/components/UpgradeWall.tsx — locked page overlay
 src/components/Billing.tsx     — subscription management UI
 src/pages/AICompany.tsx        — บริษัท AI page (factory, agent tasks)
-src/pages/CaseStudies.tsx      — case studies + integration guides
+src/pages/CaseStudies.tsx      — case studies (built-in CASES + data.caseStudies ที่แอดมินนำเข้า)
+src/pages/AdminTabs/CaseStudyTab.tsx — Content Studio: นำเข้า Case (ฟอร์ม/JSON/AI สรุป) + ปุ่ม "💰 เสนอเป็น Skill" แปลงเคส→สินค้า Marketplace พร้อมประเมินราคาอัตโนมัติ
+src/lib/skillValuation.ts      — suggestSkillFromCase() ประเมินหมวด/tier/ราคา/valueNote จากเคส (pure, tested)
 src/pages/CityLevelUp.tsx      — หน้า 'citylevelup' เมือง 3 มิติ Level Up (ใช้ lib/cityScape.ts)
 src/lib/cityScape.ts           — เอนจินวาดเมืองไอโซเมตริก SVG + auto-detect เวลา/ฤดู (framework-agnostic)
 src/pages/Pulse.tsx            — หน้า 'pulse' Pulse & A/B (opt-in, โปร่งใส) ใช้ lib/experiments.ts
