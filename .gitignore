@@ -30,6 +30,23 @@ dist-ssr
 .env
 .env.local
 
+# ===== ไฟล์ลับ / ความลับ — ห้าม commit เด็ดขาด (ISMS control 8.24 / R7) =====
+.env.*
+!.env.example
+.deploy.env
+*key*.txt
+RECOVERY-CODES*
+*.pem
+*.key
+secrets*
+**/service-role*
+reference/
+# supabase local linkage (มี DB password)
+supabase/.temp/
+# data backups & office temp files (PII / junk — never commit)
+backup-*.json
+~$*
+
 # Claude Code agent worktrees (runtime artifacts)
 .claude/worktrees/
 content-prototype-seed.json
