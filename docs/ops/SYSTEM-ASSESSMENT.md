@@ -3,7 +3,9 @@
 > ประเมินจากข้อมูลจริงในโค้ดเบส · แหล่งข้อมูล: commit `8762105` (branch `main`) · 10 ก.ค. 2569
 > Visual scorecard (board-ready): เรนเดอร์จากเอกสารนี้ผ่าน Claude Artifact
 
-## คะแนนรวม: **8.3 / 10** — พร้อม production เป็นส่วนใหญ่ เหลือ go-live checklist
+## คะแนนรวม: **8.5 / 10** — ขึ้น production บนโดเมนจริงแล้ว · เหลือ 2 ด่านสุดท้าย
+
+> รอบที่ 2 (10 ก.ค. 2569, หลัง go-live) — ขยับจาก 8.3 → 8.5 จากงาน: ผูก custom domain (root + www) กับ Worker พร้อม cert · อีเมล Resend SPF/DKIM/DMARC verified · ลบ record GitHub Pages เก่า
 
 ## Metrics (ดึงจริงจาก repo)
 
@@ -34,10 +36,10 @@
 | ✅ คุณภาพโค้ด | 8.5 | แข็งแรง | TS strict · 275 เทสต์ · 0 lint error — จุดอ่อน: unit-level ยังไม่มี E2E |
 | ⚡ ประสิทธิภาพ | 8.5 | แข็งแรง | build 2.86s · code-split ทุกหน้า · chunk ใหญ่สุด ~55KB gzip |
 | 🔒 ความปลอดภัย | 8.5 | แข็งแรง | RLS 14 migrations · REVOKE 7 ไฟล์ · MFA · nonce dedup · ไม่มี secret รั่ว |
-| 🚀 ความพร้อม Production | 7.5 | ใช้ได้ · มีงานค้าง | auto-deploy เขียว · แต่ค้าง: ผูก custom domain กับ Worker, Resend DKIM/SPF/DMARC, Auth redirect → ดู runbook `docs/ops/GO-LIVE-CHECKLIST.md` |
-| 💼 ความพร้อมเชิงธุรกิจ | 7.0 | ต้องเร่ง | payment gate รอ Xendit KYC · marketplace ต้องการ traffic/liquidity |
+| 🚀 ความพร้อม Production | 8.5 | แข็งแรง | โดเมน root + www ผูกกับ Worker (custom_domain) + edge cert · Resend SPF/DKIM/DMARC verified · auto-deploy เขียว — เหลือ Supabase Auth redirect (5 นาที) |
+| 💼 ความพร้อมเชิงธุรกิจ | 7.5 | ใช้ได้ · รอ KYC | เว็บ live บนโดเมนจริง · เอกสาร Xendit KYC ส่งแล้ว (รีวิว) · marketplace ต้องการ traffic/liquidity |
 
-_คะแนนรวม = ค่าเฉลี่ย 7 มิติ = 58 / 7 ≈ 8.3_
+_คะแนนรวม = ค่าเฉลี่ย 7 มิติ = 59.5 / 7 ≈ 8.5 (รอบก่อน 8.3)_
 
 ## จุดแข็ง
 
@@ -46,19 +48,25 @@ _คะแนนรวม = ค่าเฉลี่ย 7 มิติ = 58 / 7 
 - **Security-by-design** — RLS ทุกตาราง, SECURITY DEFINER + REVOKE (กัน grant รั่วสู่ PUBLIC), แยก TIS project ออกจาก prod
 - **Deploy flow สะอาด** — merge → Cloudflare auto-deploy ไม่ต้อง manual (ยกเว้น edge functions)
 
+## ✅ ปิดไปแล้วรอบนี้ (go-live)
+
+- **โดเมน live** — `ceoaithailand.org` (root + www) ผูกกับ Worker ผ่าน `custom_domain` ในโค้ด + edge cert ออกแล้ว (แทน A records → GitHub Pages เดิม)
+- **อีเมล verified** — Resend SPF/DKIM/DMARC เขียวครบ (แก้ record ซ้ำ DKIM/DMARC ระหว่างทาง · region จริง = `ap-northeast-1`)
+- **ล้างของเก่า** — ลบ A records + www CNAME ของ GitHub Pages ออกแล้ว (deploy ผ่านสะอาด)
+
 ## สิ่งที่ควรปรับ (เรียงตามผลกระทบ)
 
-1. **ยังไม่มี E2E test** — 275 เทสต์เป็น unit/lib-level; ควรเพิ่ม smoke E2E 3–5 flow หลัก (login → dashboard → billing) เพื่อจับ regression ระดับ UI
-2. **Payment ยังไม่ live** — gate ด้วย `PAYMENT.xenditLive=false` รอ KYC + ยังไม่ตั้ง `WEBHOOK_SECRET`
-3. **Go-live checklist ค้าง** — ผูก custom domain `ceoaithailand.org` (+ www) กับ Worker `ceo-ai-thailand` (production เป็น Cloudflare Workers แล้ว — A records → GitHub Pages เป็น legacy), verify domain ใน Resend (DKIM/SPF/DMARC), Supabase Auth redirect URL → **runbook พร้อมค่า copy-paste: `docs/ops/GO-LIVE-CHECKLIST.md`**
+1. **Supabase Auth redirect** — เหลือตั้ง Site URL + Redirect URLs (`https://ceoaithailand.org/**`) เพื่อปิด go-live domain (5 นาที)
+2. **Payment รอ KYC** — Xendit ส่งเอกสารแล้ว (รีวิว) · ผ่านแล้วตั้ง `PAYMENT.xenditLive=true` + `WEBHOOK_SECRET`
+3. **ยังไม่มี E2E test** — 275 เทสต์เป็น unit/lib-level; ควรเพิ่ม smoke E2E 3–5 flow หลัก (login → dashboard → billing)
 4. **AICompany chunk ใหญ่สุด** (55KB gzip) — หน้าเดียวรวมหลายฟีเจอร์; split ย่อยได้ถ้าต้องการ TTI เร็วขึ้น
 5. **lint 1 warning** (react-refresh ใน `LegalLinks.tsx`) — ไม่กระทบ runtime แต่เก็บกวาดได้
 
 ## สรุปเชิงบริหาร
 
-ระบบอยู่ในสถานะ **production-grade** — สถาปัตยกรรมสะอาด, dependency น้อย, ความปลอดภัยออกแบบมาดี, เทสต์ครอบคลุมตรรกะสำคัญ
+ระบบ **ขึ้น production บนโดเมนจริงแล้ว** — `ceoaithailand.org` (root + www) ผูกกับ Cloudflare Worker พร้อม cert · อีเมล Resend verified ครบ (SPF/DKIM/DMARC) · โค้ดสะอาด dependency น้อย ความปลอดภัยดี เทสต์แน่น (คะแนน 8.3 → 8.5 จากงาน go-live)
 
-ตัวบล็อกการเปิดรับเงินจริง **ไม่ใช่ปัญหาเชิงเทคนิคของโค้ด** แต่เป็นงาน ops ภายนอก 2 อย่าง: **Xendit KYC** และ **การยืนยัน DNS/อีเมล** — เมื่อทั้งสองผ่าน ระบบพร้อมรับชำระเงินทันที
+เหลือ **2 ด่านสุดท้าย**: (1) ตั้ง Supabase Auth redirect (5 นาที) (2) รอ **Xendit KYC** อนุมัติ — ผ่านเมื่อไหร่ เปิด `PAYMENT.xenditLive=true` รับชำระเงินได้ทันที
 
 ## วิธีทำซ้ำ (reproduce metrics)
 
