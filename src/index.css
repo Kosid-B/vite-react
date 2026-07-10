@@ -5470,6 +5470,18 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .cst-del { background: none; border: 1px solid var(--sand); border-radius: var(--r); color: var(--rust); cursor: pointer; padding: 6px 12px; font-family: inherit; font-size: 12px; }
 .cst-del:hover { border-color: var(--rust); }
 
+/* ===== Content Studio — Case → Skill ขาย ===== */
+.cst-item-wrap { display: flex; flex-direction: column; gap: 0; }
+.cst-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.cst-skill-btn { background: none; border: 1px solid var(--accent); border-radius: var(--r); color: var(--accent); cursor: pointer; padding: 6px 12px; font-family: inherit; font-size: 12px; white-space: nowrap; }
+.cst-skill-btn:hover { background: rgba(45,106,79,.08); }
+.cst-skill-editor { display: flex; flex-direction: column; gap: 10px; padding: 14px; margin-top: -1px; background: var(--bg); border: 1px solid var(--accent); border-radius: 0 0 var(--r) var(--r); }
+.cst-skill-editor label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--ink2); }
+.cst-skill-editor input, .cst-skill-editor textarea, .cst-skill-editor select { padding: 8px 10px; border: 1px solid var(--sand); border-radius: var(--r); background: var(--surface); color: var(--ink); font-family: inherit; font-size: 13px; }
+.cst-skill-hd { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.cst-skill-value { padding: 8px 12px; background: rgba(45,106,79,.08); border-left: 3px solid var(--accent); border-radius: var(--r); font-size: 12.5px; color: var(--ink2); }
+.cst-skill-why { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; font-size: 11.8px; color: var(--ink3); }
+
 /* ===== ป้าย ISO/IEC 27001:2022 (ISMS) ในฟุตเตอร์ ===== */
 .isms-badge { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 6px 14px; border: 1px solid rgba(6,182,212,.35); border-radius: 999px; background: rgba(6,182,212,.08); color: #67e8f9; font-size: 12px; font-weight: 500; line-height: 1.4; }
 .isms-badge strong { color: #a5f3fc; font-weight: 700; white-space: nowrap; }

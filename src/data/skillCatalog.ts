@@ -225,6 +225,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'เทียบจ้างที่ปรึกษาดีล/เจรจาธุรกิจ ฿30,000+ ต่อดีล · กรอบเดียวใช้ปิดดีลใหญ่ ระดมทุน หรือเจรจาสัญญาคู่ค้าได้ตลอดชีพ',
   },
   {
+    id: 'customer-centric-disruption',
+    name: 'Customer-Centric Disruption & Category Design',
+    category: 'strategy', tier: 3, price: 2490, icon: '🏎️',
+    desc: 'เพลย์บุ๊กพลิกตลาดจากเคส Honda NSX ตบหน้า Ferrari — จับ "Pain Point ที่วงการสั่งให้ลูกค้าทน" (แล้วเรียกมันว่าคาแรคเตอร์) มาสร้างเป็นหมวดหมู่ใหม่ (Everyday X) โดยไม่ลดคุณภาพหลัก, ทำ "ได้ทั้งคู่" เป็นกำแพงกันลอก, และดึงผู้เชี่ยวชาญตัวจริงมายกระดับให้เป็นตำนาน — พร้อม Pain-Point Audit, Category Design Canvas และ checklist ก่อนออกสินค้าท้าเจ้าตลาด',
+    tags: ['CEO', 'Product Owner', 'CPO'],
+    official: true,
+    valueNote: 'เทียบจ้างที่ปรึกษากลยุทธ์ผลิตภัณฑ์/positioning ฿30,000+ · กรอบเดียวใช้หาช่องตีตลาดที่เจ้าตลาดมองข้ามได้ทุกครั้งที่ออกสินค้าใหม่',
+  },
+  {
     id: 'salesforce-developer',
     name: 'Salesforce Developer',
     category: 'technology', tier: 2, price: 1500, icon: '☁️',

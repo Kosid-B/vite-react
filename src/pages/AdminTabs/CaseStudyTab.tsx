@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import type { AppData, CaseStudy, CaseStudyLesson } from '../../types';
 import { isSupabaseEnabled, supabase } from '../../lib/supabase';
+import { suggestSkillFromCase, TIER_PRICE, type SkillProposal } from '../../lib/skillValuation';
+import { createAdminSkill } from '../../lib/adminSkills';
+import { CATEGORY_META, TIER_META, type SkillCategory, type SkillTier } from '../../data/skillCatalog';
+import { track } from '../../lib/analytics';
 
 interface Props {
   data: AppData;
@@ -74,6 +78,50 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
   const [aiTitle, setAiTitle] = useState('');
   const [aiText, setAiText] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
+
+  // ── แปลง Case → Skill ขาย (Content Studio) ──
+  const [skillFor, setSkillFor] = useState<string | null>(null);
+  const [proposal, setProposal] = useState<SkillProposal | null>(null);
+  const [skillBusy, setSkillBusy] = useState(false);
+
+  function openSkill(c: CaseStudy) {
+    setMsg(null);
+    setSkillFor(c.id);
+    setProposal(suggestSkillFromCase(c));
+  }
+  function closeSkill() {
+    setSkillFor(null);
+    setProposal(null);
+  }
+  function patchProposal(patch: Partial<SkillProposal>) {
+    setProposal((p) => (p ? { ...p, ...patch } : p));
+  }
+  async function createSkill() {
+    if (!proposal) return;
+    if (!proposal.name.trim() || !proposal.desc.trim()) {
+      setMsg({ type: 'err', text: 'กรอกชื่อ + คำอธิบาย Skill ก่อน' });
+      return;
+    }
+    setSkillBusy(true);
+    try {
+      await createAdminSkill({
+        name: proposal.name.trim(),
+        desc: proposal.desc.trim(),
+        category: proposal.category,
+        tier: proposal.tier,
+        price: proposal.price,
+        icon: proposal.icon,
+        tags: proposal.tags,
+      });
+      track('content_studio_skill_created', { tier: proposal.tier, price: proposal.price, category: proposal.category });
+      closeSkill();
+      setMsg({ type: 'ok', text: `✅ สร้าง Skill "${proposal.name.trim()}" (${proposal.price.toLocaleString('en-US')} ฿) ลง Marketplace แล้ว — จัดการต่อได้ที่แท็บ Skill Market` });
+    } catch (err) {
+      setMsg({ type: 'err', text: 'สร้าง Skill ไม่สำเร็จ: ' + ((err as Error).message || 'error') });
+    } finally {
+      setSkillBusy(false);
+    }
+  }
 
   function save(cases: CaseStudy[]) {
     onUpdate({ ...data, caseStudies: cases });
@@ -197,9 +245,10 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
 
   return (
     <div className="cst-wrap">
-      <h3 className="cst-h3">📚 นำเข้า Case Study</h3>
+      <h3 className="cst-h3">📚 Content Studio — Case Study → Skill ขาย</h3>
       <p className="cst-note">
-        เพิ่มกรณีศึกษาของคุณเอง — จะแสดงต่อท้ายชุด built-in ในหน้า <strong>Case Studies</strong> (เก็บใน workspace นี้)
+        นำเข้ากรณีศึกษาของคุณเอง (ฟอร์ม / JSON / ให้ AI สรุปจากทรานสคริปต์) → แสดงต่อท้ายชุด built-in ในหน้า <strong>Case Studies</strong>
+        แล้วกด <strong>💰 เสนอเป็น Skill</strong> เพื่อแปลงเป็นสินค้าใน Marketplace พร้อมประเมินราคาให้อัตโนมัติ (เก็บใน workspace นี้)
       </p>
 
       <div className="cst-modes">
@@ -283,17 +332,72 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
       ) : (
         <div className="cst-list">
           {list.map((c) => (
-            <div className="cst-item" key={c.id} style={{ borderLeftColor: c.color ?? '#64748b' }}>
-              <div className="cst-item-main">
-                <div className="cst-item-title">{c.title}</div>
-                <div className="cst-item-meta">
-                  {c.company && <span>{c.company}</span>}
-                  {c.tag && <span className="cst-item-tag">{c.tag}</span>}
-                  <span className="cst-item-src">· {c.source ?? 'form'}</span>
-                  <span>· {c.lessons.length} บทเรียน</span>
+            <div className="cst-item-wrap" key={c.id}>
+              <div className="cst-item" style={{ borderLeftColor: c.color ?? '#64748b' }}>
+                <div className="cst-item-main">
+                  <div className="cst-item-title">{c.title}</div>
+                  <div className="cst-item-meta">
+                    {c.company && <span>{c.company}</span>}
+                    {c.tag && <span className="cst-item-tag">{c.tag}</span>}
+                    <span className="cst-item-src">· {c.source ?? 'form'}</span>
+                    <span>· {c.lessons.length} บทเรียน</span>
+                  </div>
+                </div>
+                <div className="cst-item-actions">
+                  <button className="cst-skill-btn" onClick={() => (skillFor === c.id ? closeSkill() : openSkill(c))}>
+                    {skillFor === c.id ? 'ปิด' : '💰 เสนอเป็น Skill'}
+                  </button>
+                  <button className="cst-del" onClick={() => removeCase(c.id)}>ลบ</button>
                 </div>
               </div>
-              <button className="cst-del" onClick={() => removeCase(c.id)}>ลบ</button>
+
+              {skillFor === c.id && proposal && (
+                <div className="cst-skill-editor">
+                  <div className="cst-skill-hd">💰 ข้อเสนอ Skill + ประเมินมูลค่า</div>
+                  <label>ชื่อ Skill
+                    <input value={proposal.name} onChange={(e) => patchProposal({ name: e.target.value })} />
+                  </label>
+                  <label>คำอธิบาย (1 ประโยค)
+                    <textarea rows={2} value={proposal.desc} onChange={(e) => patchProposal({ desc: e.target.value })} />
+                  </label>
+                  <div className="cst-row">
+                    <label>หมวด
+                      <select value={proposal.category} onChange={(e) => {
+                        const category = e.target.value as SkillCategory;
+                        patchProposal({ category, icon: CATEGORY_META[category].icon });
+                      }}>
+                        {(Object.keys(CATEGORY_META) as SkillCategory[]).map((k) => (
+                          <option key={k} value={k}>{CATEGORY_META[k].icon} {CATEGORY_META[k].label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>ระดับ (Tier)
+                      <select value={proposal.tier} onChange={(e) => {
+                        const tier = Number(e.target.value) as SkillTier;
+                        patchProposal({ tier, price: TIER_PRICE[tier] });
+                      }}>
+                        {([1, 2, 3] as SkillTier[]).map((t) => (
+                          <option key={t} value={t}>Tier {t} · {TIER_META[t].label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>ราคา (฿)
+                      <input type="number" min={0} step={10} value={proposal.price}
+                        onChange={(e) => patchProposal({ price: Math.max(0, Number(e.target.value) || 0) })} />
+                    </label>
+                  </div>
+                  <div className="cst-skill-value">{proposal.valueNote}</div>
+                  <ul className="cst-skill-why">
+                    {proposal.rationale.map((r, i) => <li key={i}>{r}</li>)}
+                  </ul>
+                  <div className="cst-row">
+                    <button className="cst-submit" onClick={createSkill} disabled={skillBusy}>
+                      {skillBusy ? '⏳ กำลังสร้าง…' : '+ สร้าง Skill ขาย'}
+                    </button>
+                    <button type="button" className="cst-del" onClick={closeSkill}>ยกเลิก</button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
