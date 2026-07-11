@@ -234,6 +234,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'เทียบจ้างที่ปรึกษากลยุทธ์ผลิตภัณฑ์/positioning ฿30,000+ · กรอบเดียวใช้หาช่องตีตลาดที่เจ้าตลาดมองข้ามได้ทุกครั้งที่ออกสินค้าใหม่',
   },
   {
+    id: 'coopetition-brand-positioning',
+    name: 'Co-opetition & Comparative Brand Positioning',
+    category: 'marketing', tier: 3, price: 2490, icon: '🏁',
+    desc: 'เพลย์บุ๊กใช้ "คู่แข่ง" เป็นแรงยกแบรนด์ จากเคส BMW ปะทะ Mercedes-Benz (กัดกัน 100+ ปี): สร้างจุดยืนที่คมชัดโดยวางตรงข้ามคู่แข่ง (Benz=หรูหรา/ผู้นำ · BMW=The Ultimate Driving Machine), ทำ guerrilla/comparative marketing ที่จิกกัดแบบมีคลาส (punch up ไม่ใส่ร้าย จบด้วยการให้เกียรติ), และเปลี่ยนคู่แข่งเป็นแรงกดดันให้พัฒนา + ขยายตลาดทั้งหมวด — พร้อม Positioning Map + Campaign Checklist',
+    tags: ['CMO', 'CEO', 'Brand Manager'],
+    official: true,
+    valueNote: 'เทียบเวิร์กช็อป brand positioning + ที่ปรึกษาการตลาด ฿40,000+ · เปลี่ยนคู่แข่งจาก "ภัย" เป็น "แรงยก" ที่ทำให้ทั้งหมวดโต — จุดยืนที่คมชัดคือสินทรัพย์ที่ลอกยากที่สุด',
+  },
+  {
     id: 'ethical-sales-persuasion',
     name: 'Ethical Sales Persuasion & Fraud Red-Flags',
     category: 'sales', tier: 3, price: 2490, icon: '🐺',
