@@ -5,6 +5,8 @@ import {
   AGENDA, boardState, pendingProposals, skillLevels, gateProgress,
   TRACK_META, type BoardDecision, type AgendaItem, type SkillTrack,
 } from '../lib/boardRoom';
+import { bigPendingRequests, approveResourceRequest, rejectResourceRequest, requestCost, RESOURCE_BOARD_XP } from '../lib/resourceBridge';
+import { RESOURCE_CATEGORIES } from '../lib/resources';
 
 interface Props {
   data: AppData;
@@ -30,6 +32,19 @@ export default function BoardRoom({ data, onUpdate, onNavigate }: Props) {
   }
   function reopen(itemId: string) {
     onUpdate({ ...data, boardRoom: { decisions: decisions.filter((d) => d.itemId !== itemId) } });
+  }
+
+  // คำขอทรัพยากรก้อนใหญ่ที่ถูกส่งมาให้บอร์ดตัดสิน
+  const resState = data.resources ?? { items: [], requests: [] };
+  const resProposals = bigPendingRequests(resState);
+  const today = () => new Date().toISOString().slice(0, 10);
+  function approveResource(reqId: string) {
+    // อนุมัติผ่านบอร์ด → ปรับทรัพยากร + ไหลเข้า finance + ได้ XP ทักษะบริหาร
+    onUpdate(approveResourceRequest(data, reqId, { viaBoard: true, today: today() }));
+    track('board_resource_decision', { status: 'approved', xp: RESOURCE_BOARD_XP });
+  }
+  function rejectResource(reqId: string) {
+    onUpdate(rejectResourceRequest(data, reqId));
   }
 
   return (
@@ -102,6 +117,37 @@ export default function BoardRoom({ data, onUpdate, onNavigate }: Props) {
             );
           })}
         </div>
+      )}
+
+      {/* คำขอทรัพยากรก้อนใหญ่ (ส่งมาจากหน้าทรัพยากร) */}
+      {resProposals.length > 0 && (
+        <>
+          <div className="br-sec-hd">📦 คำขอทรัพยากรก้อนใหญ่ให้บอร์ดอนุมัติ ({resProposals.length})</div>
+          <div className="br-props">
+            {resProposals.map((q) => {
+              const r = resState.items.find((x) => x.id === q.resourceId);
+              const cm = r ? RESOURCE_CATEGORIES[r.category] : null;
+              const cost = requestCost(resState, q);
+              return (
+                <div className="br-prop" key={q.id} style={{ borderLeftColor: TRACK_META.business.color }}>
+                  <div className="br-prop-head">
+                    <span className="br-prop-badge" style={{ background: TRACK_META.business.color }}>🏛️ บริหารธุรกิจ</span>
+                    <span className="br-prop-gate">คำขอทรัพยากร</span>
+                    <span className="br-prop-xp">+{RESOURCE_BOARD_XP} XP</span>
+                  </div>
+                  <div className="br-prop-title">{cm?.icon} {q.type === 'add' ? 'ขอเพิ่ม' : 'ขอทรัพยากรใหม่'} {q.amount} · {r?.name ?? q.resourceName}</div>
+                  <div className="br-prop-why"><strong>ผลกระทบงบ:</strong> +฿{cost.toLocaleString('en-US')}/เดือน (จะบันทึกเป็นรายจ่ายอัตโนมัติเมื่ออนุมัติ)</div>
+                  <div className="br-prop-lesson"><strong>เหตุผล:</strong> {q.reason}</div>
+                  <div className="br-prop-actions">
+                    <button className="br-approve" onClick={() => approveResource(q.id)}>✓ อนุมัติ (+{RESOURCE_BOARD_XP} XP)</button>
+                    <button className="br-reject" onClick={() => rejectResource(q.id)}>ปฏิเสธ</button>
+                    <button className="br-goto" onClick={() => onNavigate('resources')}>ดูทรัพยากร →</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* อนุมัติแล้ว */}

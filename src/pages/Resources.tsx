@@ -2,19 +2,22 @@ import { useMemo, useState } from 'react';
 import type { AppData } from '../types';
 import { track } from '../lib/analytics';
 import {
-  RESOURCE_CATEGORIES, RESOURCE_TEMPLATES, resourceSummary, applyApproval, rejectRequest,
+  RESOURCE_CATEGORIES, RESOURCE_TEMPLATES, resourceSummary,
   suggestReallocation, newResourceId, newRequestId,
   type Resource, type ResourceRequest, type ResourceCategory, type ResourcesState,
 } from '../lib/resources';
+import { isBigRequest, approveResourceRequest, rejectResourceRequest } from '../lib/resourceBridge';
+import type { PageId } from '../types';
 
 interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
+  onNavigate: (page: PageId) => void;
 }
 
 const CATS = Object.keys(RESOURCE_CATEGORIES) as ResourceCategory[];
 
-export default function Resources({ data, onUpdate }: Props) {
+export default function Resources({ data, onUpdate, onNavigate }: Props) {
   const state: ResourcesState = useMemo(() => data.resources ?? { items: [], requests: [] }, [data.resources]);
   const agents = data.aiCompany?.agents ?? [];
   const summary = useMemo(() => resourceSummary(state), [state]);
@@ -86,14 +89,16 @@ export default function Resources({ data, onUpdate }: Props) {
     setMsg(`📨 ${agentName(r.ownerAgentId)} ยื่นคำขอ${reqType === 'add' ? 'เพิ่ม' : 'ลด'} "${r.name}" — รอ CEO อนุมัติ`);
   }
 
+  const today = () => new Date().toISOString().slice(0, 10);
   function approve(id: string) {
-    save(applyApproval(state, id));
+    // CEO อนุมัติเอง (คำขอเล็ก) → ปรับจำนวน + ไหลเข้าเป็นรายจ่ายใน finance อัตโนมัติ
+    onUpdate(approveResourceRequest(data, id, { viaBoard: false, today: today() }));
     track('resource_decision', { status: 'approved' });
-    setMsg('✅ CEO อนุมัติ — ปรับจำนวนทรัพยากรแล้ว');
+    setMsg('✅ CEO อนุมัติ — ปรับจำนวน + บันทึกเป็นรายจ่ายในการเงินแล้ว');
   }
   function reject(id: string) {
-    save(rejectRequest(state, id));
-    setMsg('อธิบาย: ปฏิเสธคำขอแล้ว');
+    onUpdate(rejectResourceRequest(data, id));
+    setMsg('ปฏิเสธคำขอแล้ว');
   }
 
   // AI/heuristic จัดสรร → สร้างคำขอรออนุมัติอัตโนมัติ
@@ -220,7 +225,14 @@ export default function Resources({ data, onUpdate }: Props) {
                 </div>
                 <div className="rc-req-reason">{q.reason}</div>
                 <div className="rc-req-actions">
-                  <button className="rc-approve" onClick={() => approve(q.id)}>✓ อนุมัติ</button>
+                  {isBigRequest(state, q) ? (
+                    <>
+                      <span className="rc-big-badge">🏛️ ก้อนใหญ่ — ต้องผ่านห้องบอร์ด</span>
+                      <button className="rc-approve" onClick={() => onNavigate('boardroom')}>ไปห้องบอร์ด →</button>
+                    </>
+                  ) : (
+                    <button className="rc-approve" onClick={() => approve(q.id)}>✓ CEO อนุมัติ</button>
+                  )}
                   <button className="rc-del" onClick={() => reject(q.id)}>ปฏิเสธ</button>
                 </div>
               </div>
