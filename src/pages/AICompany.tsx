@@ -201,8 +201,11 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
         impact: String(a.impact ?? ''),
         status: 'pending' as ApprovalStatus,
       }));
-      patch({ tasks: [...newTasks, ...c.tasks], approvals: [...newApprovals, ...c.approvals] });
-      setPlanMsg(`✓ CEO วางแผนเพิ่ม ${newTasks.length} งาน${newApprovals.length ? ` · ${newApprovals.length} เรื่องรออนุมัติ` : ''}`);
+      // เปิด running เพื่อให้ heartbeat "ลงมือทำ" งานที่เพิ่งมอบหมายจริง (agent-run) → ผลทยอยขึ้นบอร์ด
+      // (heartbeat ข้ามงานที่ต้องอนุมัติก่อน จึงปลอดภัย) — แก้ปัญหา "มอบงานแล้วไม่เห็นผลลัพธ์"
+      const willRun = newTasks.some((t: { status: TaskStatus }) => t.status === 'queued');
+      patch({ tasks: [...newTasks, ...c.tasks], approvals: [...newApprovals, ...c.approvals], running: c.running || willRun });
+      setPlanMsg(`✓ CEO วางแผนเพิ่ม ${newTasks.length} งาน${newApprovals.length ? ` · ${newApprovals.length} เรื่องรออนุมัติ` : ''}${willRun ? ' · ▶ ทีมเริ่มลงมือแล้ว ผลจะทยอยขึ้นในบอร์ด' : ''}`);
     } catch (e) {
       setPlanMsg('✕ วางแผนไม่สำเร็จ: ' + ((e as Error).message || 'error') + ' — ตรวจว่า deploy ai-plan + ตั้ง ANTHROPIC_API_KEY แล้ว');
     } finally {
