@@ -148,10 +148,12 @@ export default function BusinessModel({ data, onUpdate }: Props) {
     });
     onUpdate({
       ...data,
-      aiCompany: { ...c, agents, tasks },
+      // เปิด running เพื่อให้ทีม AI "ลงมือทำ" งานที่มอบหมายจริงเมื่อเปิดหน้า บริษัท AI (heartbeat → agent-run)
+      // แก้ปัญหา "CEO มอบงาน C-Level แล้วไม่เห็นผลลัพธ์" — ผลจะทยอยขึ้นในบอร์ด
+      aiCompany: { ...c, agents, tasks, running: true },
       businessModel: { ...bm, de24Owners: owners },
     });
-    setAssignMsg(`✅ CEO มอบหมายแล้ว: ${lines.join(' · ')} — สั่งงาน 4 งานเข้า Kanban ในหน้า บริษัท AI`);
+    setAssignMsg(`✅ CEO มอบหมายแล้ว: ${lines.join(' · ')} — สั่งงาน 4 งานเข้า Kanban · ▶ เปิดหน้า "บริษัท AI" ทีมจะลงมือทำและแสดงผลลัพธ์`);
   }
 
   function updateBMC(key: BMCKey, items: string[]) {

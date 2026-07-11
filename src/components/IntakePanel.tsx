@@ -60,7 +60,8 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
       detail: t.detail,
       status: 'queued' as const,
     }));
-    onUpdate({ ...data, aiCompany: { ...c, tasks: [...newTasks, ...(c.tasks ?? [])] } });
+    // เปิด running เพื่อให้ทีม AI ลงมือทำงานที่มอบหมายจริง (heartbeat → agent-run) → ผลขึ้นในบอร์ด
+    onUpdate({ ...data, aiCompany: { ...c, tasks: [...newTasks, ...(c.tasks ?? [])], running: true } });
     setRouted(tasks);
     const srcTag = fileName ? `ไฟล์ ${fileName}` : 'ข้อมูลผู้ใช้';
     setBmcSugg(bmcSuggestions(text, srcTag));
@@ -68,7 +69,7 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
     setBmcAdded({}); setDe24Added({});
     setText(''); setFileName('');
     if (fileRef.current) fileRef.current.value = '';
-    setMsg(`✅ CEO มอบหมาย ${tasks.length} งานให้ตำแหน่งที่เกี่ยวข้องแล้ว`);
+    setMsg(`✅ CEO มอบหมาย ${tasks.length} งานให้ตำแหน่งที่เกี่ยวข้องแล้ว · ▶ ทีมกำลังลงมือทำ ผลจะขึ้นในบอร์ด`);
   }
 
   function applyBmc(s: BMCSuggestion) {
