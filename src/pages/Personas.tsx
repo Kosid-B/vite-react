@@ -1,5 +1,11 @@
+import { useState } from 'react';
 import type { AppData, Persona } from '../types';
 import EditableList from '../components/EditableList';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { track } from '../lib/analytics';
+import {
+  THAI_SEGMENTS, personaFromSegment, blankPersona, personaFromResearch,
+} from '../lib/personaTemplates';
 
 interface Props {
   data: AppData;
@@ -17,19 +23,64 @@ const P_SECTIONS: { key: PKey; hd: string; color: string }[] = [
 ];
 
 export default function Personas({ data, onUpdate }: Props) {
+  const [showNew, setShowNew] = useState(false);
+  const [segId, setSegId] = useState(THAI_SEGMENTS[0].id);
+  const [aiText, setAiText] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  function append(p: Persona) {
+    onUpdate({ ...data, personas: [...data.personas, p] });
+  }
   function addPersona() {
-    const palettes = [
-      { bg: '#eff4fb', tc: '#1a4f8a' }, { bg: '#fdf3f0', tc: '#c44b2b' },
-      { bg: '#edf7f2', tc: '#2d6a4f' }, { bg: '#fdf6ec', tc: '#a05c1a' },
-    ];
-    const pal = palettes[data.personas.length % palettes.length];
-    const newP: Persona = {
-      name: 'Persona ใหม่', role: 'ตำแหน่ง / บทบาท', initials: 'NW',
-      bg: pal.bg, tc: pal.tc, quote: 'เพิ่ม quote ของ persona นี้',
-      pains: ['ปัญหาที่ลูกค้าเจอ'], gains: ['ผลลัพธ์ที่ลูกค้าอยากได้'],
-      goal: ['เป้าหมาย'], fear: ['ความกังวล'], search: ['ช่องทาง'], action: ['พฤติกรรม'],
-    };
-    onUpdate({ ...data, personas: [...data.personas, newP] });
+    append(blankPersona(data.personas.length));
+  }
+  function addFromSegment(id: string) {
+    const seg = THAI_SEGMENTS.find((s) => s.id === id);
+    if (!seg) return;
+    append(personaFromSegment(seg, data.personas.length));
+    track('persona_added', { source: 'segment', segment: seg.id });
+    setMsg(`✅ เพิ่ม Persona "${seg.segment}" (จาก Market Research) — แก้เพิ่มได้ในการ์ด`);
+    setShowNew(false);
+  }
+  // Hybrid: ฐานจาก segment (gains/search จาก research) + AI สกัด pains/quote จากข้อความวิจัย
+  async function addFromResearch() {
+    const seg = THAI_SEGMENTS.find((s) => s.id === segId) ?? THAI_SEGMENTS[0];
+    const base = personaFromSegment(seg, data.personas.length);
+    if (!isSupabaseEnabled || !supabase) {
+      append(base);
+      setMsg('✅ เพิ่มจาก segment แล้ว (โหมด Local ไม่มี AI — ปรับ pains/quote เองได้)');
+      setShowNew(false);
+      return;
+    }
+    if (!aiText.trim()) { setMsg('วางข้อความ Market Research ก่อน หรือกด "ใช้ template segment"'); return; }
+    setAiBusy(true);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
+        body: {
+          page: 'personas', pageLabel: 'Persona',
+          instruction:
+            'จากข้อมูล Market Research ต่อไปนี้ สร้างโปรไฟล์ลูกค้า (persona) — ' +
+            'summary = quote 1 ประโยคที่ลูกค้ากลุ่มนี้น่าจะพูด (สะท้อนความเจ็บปวดจริง), ' +
+            'suggestions = Pain Points 3-5 ข้อ (สั้น กระชับ เจาะจง)',
+          context: aiText.trim(),
+        },
+      });
+      if (error) throw error;
+      const merged = personaFromResearch(base, {
+        quote: res?.summary ? String(res.summary) : undefined,
+        pains: (res?.suggestions ?? []).map((s: string) => String(s)),
+      });
+      append(merged);
+      track('persona_added', { source: 'research_ai', segment: seg.id });
+      setAiText('');
+      setMsg('✅ AI สร้าง Persona จาก Market Research แล้ว (pains/quote จากข้อความจริง · ช่องทางค้นหาจาก segment)');
+      setShowNew(false);
+    } catch (err) {
+      setMsg('AI สร้างไม่สำเร็จ: ' + ((err as Error).message || 'error') + ' — ลองใหม่ หรือใช้ template segment');
+    } finally {
+      setAiBusy(false);
+    }
   }
 
   function delPersona(pi: number) {
@@ -74,6 +125,50 @@ export default function Personas({ data, onUpdate }: Props) {
           <span className="law-badge" data-tip={"Serial Position Effect: quote อยู่ด้านบน\nสุดของ card เพราะจำได้ดีที่สุด"}>Serial Position</span>
           <span className="law-badge" data-tip={"Miller's Law: แต่ละ section ≤ 4 items\nไม่ล้น working memory ของผู้อ่าน"}>Miller's Law</span>
         </div>
+      </div>
+
+      <div className="persona-launcher">
+        <div className="pl-row">
+          <button className="pl-cta" onClick={() => setShowNew((v) => !v)}>
+            {showNew ? '× ปิด' : '✨ สร้าง Persona จาก Market Research'}
+          </button>
+          <span className="pl-hint">แนะนำ: อย่าเดา — เริ่มจาก segment จริง แล้วให้ AI เติมจากงานวิจัย (ช่องทางค้นหา → SEO/Ads)</span>
+        </div>
+        {msg && <div className="pl-msg">{msg}</div>}
+        {showNew && (
+          <div className="pl-panel">
+            <div className="pl-seg-hd">1) เลือกกลุ่มเป้าหมาย (จาก Market Research)</div>
+            <div className="pl-segs">
+              {THAI_SEGMENTS.map((s) => (
+                <button
+                  key={s.id}
+                  className={`pl-seg${segId === s.id ? ' active' : ''}`}
+                  onClick={() => setSegId(s.id)}
+                  title={s.role}
+                >{s.segment}</button>
+              ))}
+            </div>
+            <div className="pl-actions">
+              <button className="pl-add-seg" onClick={() => addFromSegment(segId)}>
+                + ใช้ template segment นี้เลย
+              </button>
+            </div>
+            <div className="pl-seg-hd">2) (ทางเลือก) วางข้อความ Market Research ให้ AI เติม pains + quote จริง
+              {!isSupabaseEnabled && <em> — โหมด Local: จะใช้ template segment แทน</em>}
+            </div>
+            <textarea
+              className="pl-ai-text"
+              rows={5}
+              value={aiText}
+              onChange={(e) => setAiText(e.target.value)}
+              placeholder="วางผลสำรวจ/บทสัมภาษณ์/ข้อมูลกลุ่มเป้าหมาย… (AI จะสกัดเป็น Pain Points + quote)"
+              spellCheck={false}
+            />
+            <button className="pl-add-ai" onClick={addFromResearch} disabled={aiBusy}>
+              {aiBusy ? '⏳ AI กำลังสร้าง…' : '✨ สร้าง Persona (segment + AI จากงานวิจัย)'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="persona-grid">
