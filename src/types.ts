@@ -527,6 +527,8 @@ export interface AppData {
   cmoValidation?: { idea: string; report: string; verdict: 'go' | 'pivot' | 'kill' | ''; webUsed: boolean; updatedAt: string };
   // Pulse & A/B — วัด "อะไรทำให้อยากใช้งานต่อ" แบบโปร่งใส (opt-in, ไม่ระบุตัวตน) — ดู lib/experiments.ts
   experiments?: import('./lib/experiments').ExperimentsState;
+  // ห้องบอร์ด — CEO เสนอวาระ → บอร์ด/User อนุมัติ + สะสมทักษะบริหาร/การตลาด — ดู lib/boardRoom.ts
+  boardRoom?: import('./lib/boardRoom').BoardRoomState;
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */
@@ -539,7 +541,7 @@ export interface FinanceEntry {
   recurring?: boolean;            // รายการรายเดือนซ้ำ
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade' | 'citylevelup' | 'pulse';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade' | 'citylevelup' | 'pulse' | 'boardroom';
 
 /* ===== Factory / โรงงานอัจฉริยะ ===== */
 export type MachineStatus = 'running' | 'idle' | 'maintenance' | 'breakdown';
