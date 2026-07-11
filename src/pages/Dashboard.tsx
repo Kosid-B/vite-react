@@ -5,6 +5,7 @@ import DBDSelect from '../components/DBDSelect';
 import FirstDealWidget from '../components/FirstDealWidget';
 import ExpertEdge from '../components/ExpertEdge';
 import WeeklyDigest from '../components/WeeklyDigest';
+import SystemOverview from '../components/SystemOverview';
 
 interface Props {
   data: AppData;
@@ -362,6 +363,9 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
           </button>
         </div>
       </div>
+
+      {/* ===== ภาพรวมทุกระบบในภาพเดียว ===== */}
+      <SystemOverview data={data} onNavigate={onNavigate} />
 
       {/* ===== สรุปสัปดาห์นี้ (retention) ===== */}
       <WeeklyDigest data={data} onNavigate={onNavigate} />

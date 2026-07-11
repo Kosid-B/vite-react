@@ -1545,6 +1545,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ai-task-output { margin: 4px 0 7px; border: 1px solid var(--sand); border-radius: 6px; overflow: hidden; }
 .ai-task-output-meta { font-size: 12.5px; font-weight: 600; color: var(--ink3); background: var(--cream2); padding: 3px 8px; }
 .ai-task-output-body { font-size: 12.5px; color: var(--ink); line-height: 1.6; padding: 7px 9px; white-space: pre-wrap; max-height: 180px; overflow-y: auto; }
+.ai-task-harvest { margin: 6px 9px 2px; padding: 5px 10px; background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: var(--r); font-family: inherit; font-size: 11.5px; cursor: pointer; }
+.ai-task-harvest:hover { background: rgba(45,106,79,.08); }
 /* ===== Org Chart ===== */
 .oc-tip { font-size: 12.5px; color: var(--ink3); margin-bottom: 14px; line-height: 1.5; }
 .oc-tree { display: flex; gap: 24px; overflow-x: auto; padding: 8px 4px 12px; align-items: flex-start; }
