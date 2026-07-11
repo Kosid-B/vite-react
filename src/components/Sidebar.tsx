@@ -172,6 +172,14 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <span className="nav-dot" />
         </button>
 
+        <button className={`nav-item ${activePage === 'resources' ? 'active' : ''}`} onClick={() => onNavigate('resources')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          📦 ทรัพยากร
+          <span className="nav-dot" />
+        </button>
+
         {toolsOpen && (
           <div className="nav-sub">
             <div className="nav-label">เครื่องมือ · ทำตามลำดับ 1 → {TOOL_ITEMS.length}</div>

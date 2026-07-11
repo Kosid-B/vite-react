@@ -150,7 +150,7 @@ Google Sheets ของ User (เชื่อมบัญชีเอง) = Phas
 ```
 
 ## Sidebar Pages (nav labels)
-`Dashboard`, `บริษัท AI`, `ห้องบอร์ด`, `เมืองบริษัท`, `เมือง · Level Up`, `Pulse & A/B`, `การค้าระหว่างเมือง`,
+`Dashboard`, `บริษัท AI`, `ห้องบอร์ด`, `ทรัพยากร`, `เมืองบริษัท`, `เมือง · Level Up`, `Pulse & A/B`, `การค้าระหว่างเมือง`,
 `Marketplace`, `หน้าร้านของฉัน`, `ซื้อขาย B2B (RFQ)`,
 `ทีม / สมาชิก`, `โรงงานอัจฉริยะ`, `แพ็กเกจ & ชำระเงิน`, `SaaS Analytics`,
 `ผู้ดูแลระบบ` (admin email เท่านั้น), `ISO 9001:2015 QMS`, `AI Research`, `Case Studies`

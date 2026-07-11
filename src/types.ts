@@ -529,6 +529,8 @@ export interface AppData {
   experiments?: import('./lib/experiments').ExperimentsState;
   // ห้องบอร์ด — CEO เสนอวาระ → บอร์ด/User อนุมัติ + สะสมทักษะบริหาร/การตลาด — ดู lib/boardRoom.ts
   boardRoom?: import('./lib/boardRoom').BoardRoomState;
+  // บริหารทรัพยากรธุรกิจ — รายการ+จำนวน · C-Level ดูแล/ขอเพิ่ม-ลด · CEO อนุมัติ — ดู lib/resources.ts
+  resources?: import('./lib/resources').ResourcesState;
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */
@@ -541,7 +543,7 @@ export interface FinanceEntry {
   recurring?: boolean;            // รายการรายเดือนซ้ำ
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade' | 'citylevelup' | 'pulse' | 'boardroom';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade' | 'citylevelup' | 'pulse' | 'boardroom' | 'resources';
 
 /* ===== Factory / โรงงานอัจฉริยะ ===== */
 export type MachineStatus = 'running' | 'idle' | 'maintenance' | 'breakdown';
