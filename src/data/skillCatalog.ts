@@ -234,6 +234,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'เทียบจ้างที่ปรึกษากลยุทธ์ผลิตภัณฑ์/positioning ฿30,000+ · กรอบเดียวใช้หาช่องตีตลาดที่เจ้าตลาดมองข้ามได้ทุกครั้งที่ออกสินค้าใหม่',
   },
   {
+    id: 'ethical-sales-persuasion',
+    name: 'Ethical Sales Persuasion & Fraud Red-Flags',
+    category: 'sales', tier: 3, price: 2490, icon: '🐺',
+    desc: 'เพลย์บุ๊กสร้างทีมขาย "ดุแต่สะอาด" จากเคส Jordan Belfort / The Wolf of Wall Street — ทักษะโน้มน้าว (Straight Line) คืออาวุธที่ทรงพลังที่สุด แต่ถ้าไร้จริยธรรมมันย้อนกลับมาทำลายคุณเอง: เส้นแบ่ง "โน้มน้าว vs ปั่นหัว" (Persuasion Ethics Test 5 ข้อ), โครงสร้างคอมมิชชั่นที่ไม่จูงใจให้โกง, และ Red-Flag ของ Pump & Dump/Boiler Room ที่ต้องจับให้ได้ทั้งฝั่งเจ้าของธุรกิจและนักลงทุน — พร้อม checklist ก่อนตั้งทีมเซลล์',
+    tags: ['CEO', 'Sales Manager', 'CMO'],
+    official: true,
+    valueNote: 'เทียบคอร์สขาย + ที่ปรึกษา compliance การขาย ฿30,000+ · กันความเสียหายจาก refund/ร้องเรียน/คดี (Stratton ชดใช้เหยื่อ ฿3,800 ล้าน) — จริยธรรมคือกลยุทธ์ LTV ที่ถูกที่สุด',
+  },
+  {
     id: 'salesforce-developer',
     name: 'Salesforce Developer',
     category: 'technology', tier: 2, price: 1500, icon: '☁️',
