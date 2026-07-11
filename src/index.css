@@ -500,6 +500,34 @@ body {
 .br-goto-sm { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 12px; font-family: inherit; }
 @media (max-width: 700px) { .br-skills { grid-template-columns: 1fr; } }
 
+/* ===== ภาพรวมระบบ (System Overview — Dashboard) ===== */
+.so-wrap { margin: 4px 0 22px; }
+.so-title { font-size: 14px; font-weight: 700; color: var(--ink2); margin-bottom: 10px; }
+.so-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.so-card {
+  background: var(--white);
+  border: 1px solid var(--sand);
+  border-top: 3px solid var(--sand);
+  border-radius: var(--r-lg);
+  padding: 13px 15px;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.so-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.so-head { font-size: 12.5px; font-weight: 600; color: var(--ink2); display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.so-big { font-size: 24px; font-weight: 800; color: var(--ink); line-height: 1.15; }
+.so-big.so-pos { color: var(--green); }
+.so-big.so-neg { color: var(--red); }
+.so-unit { font-size: 12.5px; font-weight: 500; color: var(--ink3); }
+.so-sub { font-size: 11.5px; color: var(--ink3); }
+.so-live { font-size: 10.5px; font-weight: 700; color: var(--green); background: var(--green-bg); padding: 2px 7px; border-radius: 999px; }
+.so-warn { font-size: 10.5px; font-weight: 700; color: var(--amber); background: var(--amber-bg); padding: 2px 7px; border-radius: 999px; }
+
 /* ===== บริหารทรัพยากร (Resources) ===== */
 .rc-intro { font-size: 13.5px; color: var(--ink2); line-height: 1.65; margin: 4px 0 14px; max-width: 780px; }
 .rc-msg { padding: 9px 12px; background: rgba(45,106,79,.1); border-left: 3px solid var(--accent); border-radius: var(--r); font-size: 12.8px; color: var(--ink2); margin-bottom: 14px; }
