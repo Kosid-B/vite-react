@@ -12,6 +12,7 @@ import Integrations from '../components/Integrations';
 import type { Auction } from '../lib/auctions';
 import { trackSkillPurchase } from '../lib/skillStats';
 import { withSkillDirectives } from '../lib/skillDirectives';
+import { applyHarvestToData } from '../lib/taskHarvest';
 import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamification';
 import { hasAdminFullAccess } from '../lib/access';
 import DBDSelect from '../components/DBDSelect';
@@ -267,6 +268,18 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     } finally {
       setRunningTaskIds(prev => { const s = new Set(prev); s.delete(taskId); return s; });
     }
+  }
+
+  // เก็บผลงาน C-Level → เติมข้อมูลทรัพยากร (คำขอ pending) + การเงิน อัตโนมัติ
+  function harvestTask(output: string | undefined, agentId: string) {
+    const { data: next, added } = applyHarvestToData(data, output ?? '', agentId, new Date().toISOString().slice(0, 10));
+    counter.current += 1;
+    if (!added.finance && !added.resources) {
+      setFeed(prev => [{ id: counter.current, time: nowTime(), text: '📥 ไม่พบตัวเลขการเงิน/ทรัพยากรที่ชัดเจนในผลงานนี้', color: '#c44b2b' }, ...prev].slice(0, 40));
+      return;
+    }
+    onUpdate(next);
+    setFeed(prev => [{ id: counter.current, time: nowTime(), text: `📥 เก็บผลงานเป็นข้อมูล: +${added.resources} คำขอทรัพยากร (รออนุมัติ), +${added.finance} รายการการเงิน`, color: '#2d6a4f' }, ...prev].slice(0, 40));
   }
 
   // Keep ref in sync so heartbeat always calls latest version
@@ -1925,6 +1938,10 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                       <div className="ai-task-output">
                         {t.executedAt && <div className="ai-task-output-meta">{ag?.role} · {t.executedAt}</div>}
                         <div className="ai-task-output-body">{t.output}</div>
+                        <button className="ai-task-harvest" onClick={() => harvestTask(t.output, t.agentId)}
+                          title="ดึงตัวเลขการเงิน/ทรัพยากรจากผลงานนี้ → สร้างคำขอทรัพยากร (รออนุมัติ) + รายการการเงิน">
+                          📥 เก็บเป็นข้อมูล (ทรัพยากร/การเงิน)
+                        </button>
                       </div>
                     )}
                     <div className="ai-task-foot">
