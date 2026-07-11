@@ -164,6 +164,14 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           </button>
         </div>
 
+        <button className={`nav-item ${activePage === 'boardroom' ? 'active' : ''}`} onClick={() => onNavigate('boardroom')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M3 21h18M4 21V10l8-6 8 6v11M9 21v-6h6v6" />
+          </svg>
+          🏛️ ห้องบอร์ด
+          <span className="nav-dot" />
+        </button>
+
         {toolsOpen && (
           <div className="nav-sub">
             <div className="nav-label">เครื่องมือ · ทำตามลำดับ 1 → {TOOL_ITEMS.length}</div>

@@ -53,12 +53,14 @@ const Trade = lazy(() => import('./pages/Trade'));
 const CompanyCity = lazy(() => import('./pages/CompanyCity'));
 const Pulse = lazy(() => import('./pages/Pulse'));
 const InterCityTrade = lazy(() => import('./pages/InterCityTrade'));
+const BoardRoom = lazy(() => import('./pages/BoardRoom'));
 
 const STORAGE_KEY = 'cjux2';
 
 // ลำดับหน้า (ตาม sidebar) สำหรับปุ่ม ย้อนกลับ / หน้าถัดไป ท้ายทุกหน้า
 const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
+  { id: 'boardroom', label: 'ห้องบอร์ด' },
   { id: 'city', label: 'เมืองบริษัท' },
   { id: 'citylevelup', label: 'เมือง · Level Up' },
   { id: 'pulse', label: 'Pulse & A/B' },
@@ -146,6 +148,7 @@ function migrate(parsed: AppData): AppData {
     }
   }
   if (!parsed.experiments) parsed.experiments = defaultExperiments();
+  if (!parsed.boardRoom) parsed.boardRoom = { decisions: [] };
   return parsed;
 }
 
@@ -447,6 +450,7 @@ export default function App() {
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} wsId={activeWs} />}
         {(activePage === 'city' || activePage === 'citylevelup') && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'pulse' && <Pulse data={data} onNavigate={setActivePage} onUpdate={updateData} />}
+        {activePage === 'boardroom' && <BoardRoom data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'citytrade' && <InterCityTrade data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
@@ -526,6 +530,8 @@ export default function App() {
           <span>72/76 หมู่ที่ 1 ตำบลเนินพระ อำเภอเมืองระยอง จังหวัดระยอง 21000</span>
           <span className="app-footer__sep">·</span>
           <span>Tel. <a href="tel:0817817773" className="app-footer__link">0817817773</a></span>
+          <span className="app-footer__sep">·</span>
+          <span>Email <a href="mailto:support@b-tctraining.com" className="app-footer__link">support@b-tctraining.com</a></span>
           <span className="app-footer__sep">·</span>
           <a href="https://www.b-tctraining.com/" target="_blank" rel="noopener noreferrer" className="app-footer__link">
             www.b-tctraining.com
