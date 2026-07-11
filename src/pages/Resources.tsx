@@ -167,7 +167,7 @@ export default function Resources({ data, onUpdate, onNavigate }: Props) {
   return (
     <div>
       <div className="page-header">
-        <div className="page-title">📦 บริหารทรัพยากร</div>
+        <div className="page-title">บริหารทรัพยากร</div>
         <div className="page-meta">
           <span className="meta-chip">{summary.count} รายการ</span>
           <span className="meta-chip">฿{summary.totalMonthlyCost.toLocaleString('en-US')}/เดือน</span>
