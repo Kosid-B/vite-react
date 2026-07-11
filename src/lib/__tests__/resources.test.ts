@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   RESOURCE_CATEGORIES, RESOURCE_TEMPLATES, resourceSummary, applyApproval,
-  rejectRequest, suggestReallocation, defaultResources,
+  rejectRequest, suggestReallocation, defaultResources, parseAiAllocations,
   type ResourcesState, type Resource, type ResourceRequest,
 } from '../resources';
 
@@ -85,5 +85,32 @@ describe('suggestReallocation — จัดสรรอัตโนมัติ'
   });
   it('defaultResources ว่าง', () => {
     expect(defaultResources()).toEqual({ items: [], requests: [] });
+  });
+});
+
+describe('parseAiAllocations — แปลงผล agent-run เป็นคำขอ', () => {
+  const items: Resource[] = [
+    res({ id: 'srv', name: 'เซิร์ฟเวอร์', category: 'infra' }),
+    res({ id: 'lead', name: 'ฐานลูกค้า', category: 'data' }),
+  ];
+  it('parse JSON (มี code fence) → add จับคู่ resourceId, new ตั้ง resourceName', () => {
+    const raw = '```json\n[{"resource":"เซิร์ฟเวอร์","action":"add","amount":2,"reason":"โหลดสูง"},' +
+      '{"resource":"GPU","action":"new","amount":1,"category":"infra","reason":"เทรน AI"}]\n```';
+    const out = parseAiAllocations(raw, items);
+    expect(out.length).toBe(2);
+    expect(out[0]).toMatchObject({ type: 'add', resourceId: 'srv', amount: 2 });
+    expect(out[1]).toMatchObject({ type: 'new', resourceName: 'GPU', category: 'infra', amount: 1 });
+  });
+  it('add/reduce ที่จับคู่ทรัพยากรไม่ได้ → ข้าม', () => {
+    const out = parseAiAllocations('[{"resource":"ไม่มีของนี้","action":"reduce","amount":3,"reason":"x"}]', items);
+    expect(out.length).toBe(0);
+  });
+  it('amount ≤ 0 หรือ action ไม่รู้จัก → ข้าม', () => {
+    const out = parseAiAllocations('[{"resource":"เซิร์ฟเวอร์","action":"add","amount":0},{"resource":"ฐานลูกค้า","action":"buy","amount":5}]', items);
+    expect(out.length).toBe(0);
+  });
+  it('ไม่ใช่ JSON → คืน [] (ให้ fallback heuristic)', () => {
+    expect(parseAiAllocations('ขอโทษครับ วิเคราะห์ไม่ได้', items)).toEqual([]);
+    expect(parseAiAllocations('', items)).toEqual([]);
   });
 });
