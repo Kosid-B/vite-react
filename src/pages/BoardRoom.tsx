@@ -50,7 +50,7 @@ export default function BoardRoom({ data, onUpdate, onNavigate }: Props) {
   return (
     <div>
       <div className="page-header">
-        <div className="page-title">🏛️ ห้องบอร์ด</div>
+        <div className="page-title">ห้องบอร์ด</div>
         <div className="page-meta">
           <span className="meta-chip">Gate {gates.approved}/{gates.total}</span>
           <span className="law-badge" data-tip={"CEO (AI) เสนอวาระ → บอร์ด/User อนุมัติ\nอนุมัติแล้วได้สะสมทักษะบริหาร + การตลาด"}>Learning-by-Governing</span>

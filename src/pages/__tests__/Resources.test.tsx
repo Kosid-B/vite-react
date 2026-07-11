@@ -24,7 +24,7 @@ const base: ResourcesState = {
 describe('Resources — บริหารทรัพยากร + คำขอ + อนุมัติ', () => {
   it('แสดงหน้าทรัพยากร + รายการ + ปุ่มขอเพิ่ม/ขอลด', () => {
     setup(base);
-    expect(screen.getByText('📦 บริหารทรัพยากร')).toBeInTheDocument();
+    expect(screen.getByText('บริหารทรัพยากร')).toBeInTheDocument();
     expect(screen.getByText('เงินทุนหมุนเวียน')).toBeInTheDocument();
     expect(screen.getByText('＋ ขอเพิ่ม')).toBeInTheDocument();
   });

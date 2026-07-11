@@ -20,7 +20,7 @@ function setup(over: Partial<AppData> = {}) {
 describe('BoardRoom — CEO เสนอ → บอร์ดอนุมัติ + สะสมทักษะ', () => {
   it('แสดงห้องบอร์ด + ทักษะ 2 สาย + วาระที่ CEO เสนอ', () => {
     setup();
-    expect(screen.getByText('🏛️ ห้องบอร์ด')).toBeInTheDocument();
+    expect(screen.getByText('ห้องบอร์ด')).toBeInTheDocument();
     expect(screen.getByText('บริหารธุรกิจ')).toBeInTheDocument();
     expect(screen.getByText('การตลาด')).toBeInTheDocument();
     // gate WHO เสนอได้เพราะ persona มี pains+search
