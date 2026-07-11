@@ -500,6 +500,61 @@ body {
 .br-goto-sm { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 12px; font-family: inherit; }
 @media (max-width: 700px) { .br-skills { grid-template-columns: 1fr; } }
 
+/* ===== บริหารทรัพยากร (Resources) ===== */
+.rc-intro { font-size: 13.5px; color: var(--ink2); line-height: 1.65; margin: 4px 0 14px; max-width: 780px; }
+.rc-msg { padding: 9px 12px; background: rgba(45,106,79,.1); border-left: 3px solid var(--accent); border-radius: var(--r); font-size: 12.8px; color: var(--ink2); margin-bottom: 14px; }
+.rc-chip-warn { background: #fdf3f0 !important; color: var(--rust) !important; }
+.rc-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.rc-btn-primary { padding: 8px 15px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 13px; cursor: pointer; }
+.rc-btn { padding: 8px 15px; background: none; border: 1px solid var(--sand); color: var(--ink2); border-radius: var(--r); font-family: inherit; font-size: 13px; cursor: pointer; }
+.rc-empty { font-size: 13px; color: var(--ink3); padding: 14px; background: var(--white); border: 1px dashed var(--sand); border-radius: var(--r); }
+.rc-list { display: flex; flex-direction: column; gap: 10px; }
+.rc-item { background: var(--white); border: 1px solid var(--sand); border-left: 4px solid; border-radius: var(--r-lg); padding: 12px 14px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.rc-item-main { flex: 1; min-width: 240px; }
+.rc-item-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rc-cat { color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.rc-item-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+.rc-item-fields { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.rc-item-fields label { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; color: var(--ink3); }
+.rc-item-fields input, .rc-item-fields select { padding: 6px 8px; border: 1px solid var(--sand); border-radius: var(--r); background: var(--cream); color: var(--ink); font-family: inherit; font-size: 12.5px; }
+.rc-item-fields input[type=number] { width: 74px; }
+.rc-unit { font-size: 12px; color: var(--ink3); padding-bottom: 6px; }
+.rc-cost { font-size: 12.5px; font-weight: 600; color: var(--rust); padding-bottom: 6px; }
+.rc-cost-none { color: var(--ink4); font-weight: 400; }
+.rc-item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.rc-req-add, .rc-req-red, .rc-del, .rc-approve { padding: 6px 11px; border-radius: var(--r); font-family: inherit; font-size: 12px; cursor: pointer; border: 1px solid var(--sand); background: none; }
+.rc-req-add { color: var(--accent); border-color: var(--accent); }
+.rc-req-red { color: var(--rust); border-color: var(--sand); }
+.rc-approve { background: var(--accent); color: #fff; border: none; }
+.rc-del { color: var(--ink3); }
+.rc-reqform { flex-basis: 100%; margin-top: 4px; padding: 10px; background: var(--cream); border-radius: var(--r); }
+.rc-reqform-hd { font-size: 12px; color: var(--ink2); margin-bottom: 8px; font-weight: 600; }
+.rc-reqform-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.rc-reqform-row label { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--ink3); }
+.rc-reqform-row input { padding: 6px 8px; border: 1px solid var(--sand); border-radius: var(--r); background: var(--white); color: var(--ink); font-family: inherit; font-size: 12.5px; }
+.rc-sec-hd { font-size: 14px; font-weight: 700; color: var(--ink); margin: 22px 0 12px; }
+.rc-addform { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.rc-addform input, .rc-addform select { padding: 8px 10px; border: 1px solid var(--sand); border-radius: var(--r); background: var(--white); color: var(--ink); font-family: inherit; font-size: 13px; }
+.rc-addform input[type=number] { width: 100px; }
+.rc-add-name { flex: 1; min-width: 160px; }
+.rc-reqs { display: flex; flex-direction: column; gap: 8px; }
+.rc-req { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 12px 14px; }
+.rc-req-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rc-req-type { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.rc-req-type.rc-add { background: rgba(45,106,79,.12); color: var(--accent); }
+.rc-req-type.rc-reduce { background: #fdf3f0; color: var(--rust); }
+.rc-req-type.rc-new { background: #eff4fb; color: #1a4f8a; }
+.rc-req-name { font-weight: 700; color: var(--ink); font-size: 13.5px; }
+.rc-req-by { font-size: 12px; color: var(--ink3); }
+.rc-req-impact { margin-left: auto; font-size: 12px; color: var(--rust); font-weight: 600; }
+.rc-req-reason { font-size: 12.5px; color: var(--ink2); margin: 6px 0 10px; }
+.rc-req-actions { display: flex; gap: 8px; }
+.rc-hist { display: flex; flex-direction: column; gap: 4px; }
+.rc-hist-row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--ink2); padding: 5px 10px; background: var(--cream); border-radius: var(--r); }
+.rc-h-ok { color: var(--accent); font-weight: 700; }
+.rc-h-no { color: var(--rust); font-weight: 700; }
+.rc-hist-date { margin-left: auto; color: var(--ink4); font-size: 11.5px; }
+
 .persona-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
 .p-card { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow .2s; position: relative; }
 .p-card-del { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border: none; background: none; color: var(--ink4); cursor: pointer; font-size: 17px; border-radius: 4px; opacity: 0; transition: opacity .15s, background .15s, color .15s; display: flex; align-items: center; justify-content: center; line-height: 1; z-index: 1; }

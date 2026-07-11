@@ -54,6 +54,7 @@ const CompanyCity = lazy(() => import('./pages/CompanyCity'));
 const Pulse = lazy(() => import('./pages/Pulse'));
 const InterCityTrade = lazy(() => import('./pages/InterCityTrade'));
 const BoardRoom = lazy(() => import('./pages/BoardRoom'));
+const Resources = lazy(() => import('./pages/Resources'));
 
 const STORAGE_KEY = 'cjux2';
 
@@ -61,6 +62,7 @@ const STORAGE_KEY = 'cjux2';
 const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'boardroom', label: 'ห้องบอร์ด' },
+  { id: 'resources', label: 'ทรัพยากร' },
   { id: 'city', label: 'เมืองบริษัท' },
   { id: 'citylevelup', label: 'เมือง · Level Up' },
   { id: 'pulse', label: 'Pulse & A/B' },
@@ -149,6 +151,7 @@ function migrate(parsed: AppData): AppData {
   }
   if (!parsed.experiments) parsed.experiments = defaultExperiments();
   if (!parsed.boardRoom) parsed.boardRoom = { decisions: [] };
+  if (!parsed.resources) parsed.resources = { items: [], requests: [] };
   return parsed;
 }
 
@@ -451,6 +454,7 @@ export default function App() {
         {(activePage === 'city' || activePage === 'citylevelup') && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'pulse' && <Pulse data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'boardroom' && <BoardRoom data={data} onNavigate={setActivePage} onUpdate={updateData} />}
+        {activePage === 'resources' && <Resources data={data} onUpdate={updateData} />}
         {activePage === 'citytrade' && <InterCityTrade data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
