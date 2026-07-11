@@ -12,7 +12,7 @@ function setup(resources: ResourcesState) {
     aiCompany: { agents: [{ id: 'cfo', role: 'CFO', name: 'ฟินโบ', avatar: '💰', color: '#a05c1a', mandate: '', model: 'm', status: 'idle', reportsTo: null }] },
   } as unknown as AppData;
   const onUpdate = vi.fn();
-  render(<Resources data={data} onUpdate={onUpdate} />);
+  render(<Resources data={data} onUpdate={onUpdate} onNavigate={() => {}} />);
   return { onUpdate };
 }
 
@@ -47,7 +47,7 @@ describe('Resources — บริหารทรัพยากร + คำข�
       requests: [{ id: 'q1', type: 'add', resourceId: 'r1', amount: 20000, reason: 'ขยาย', status: 'pending', at: '2026-07-11', agentId: 'cfo' }],
     };
     const { onUpdate } = setup(withReq);
-    fireEvent.click(screen.getByText('✓ อนุมัติ'));
+    fireEvent.click(screen.getByText('✓ CEO อนุมัติ'));
     const next = onUpdate.mock.calls[0][0] as AppData;
     expect(next.resources!.items[0].quantity).toBe(70000);      // 50000 + 20000
     expect(next.resources!.requests[0].status).toBe('approved');

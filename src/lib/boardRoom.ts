@@ -28,6 +28,9 @@ export interface BoardDecision {
   status: 'approved' | 'rejected';
   at: string;
   note?: string;
+  // สำหรับวาระ dynamic ที่ไม่อยู่ใน AGENDA (เช่น คำขอทรัพยากรก้อนใหญ่) — เก็บ xp/track ไว้กับ decision
+  xp?: number;
+  track?: SkillTrack;
 }
 
 export interface BoardRoomState {
@@ -154,10 +157,17 @@ export function pendingProposals(data: AppData, decisions: BoardDecision[]): Age
 }
 
 export function skillLevels(decisions: BoardDecision[]): Record<SkillTrack, SkillLevel> {
-  const approved = new Set(decisions.filter((d) => d.status === 'approved').map((d) => d.itemId));
+  const approvedList = decisions.filter((d) => d.status === 'approved');
+  const approved = new Set(approvedList.map((d) => d.itemId));
+  const inAgenda = new Set(AGENDA.map((i) => i.id));
   const out = {} as Record<SkillTrack, SkillLevel>;
   for (const track of ['business', 'marketing'] as SkillTrack[]) {
-    const xp = AGENDA.filter((i) => i.track === track && approved.has(i.id)).reduce((s, i) => s + i.xp, 0);
+    const agendaXp = AGENDA.filter((i) => i.track === track && approved.has(i.id)).reduce((s, i) => s + i.xp, 0);
+    // วาระ dynamic (นอก AGENDA เช่น คำขอทรัพยากร) ที่พก track+xp มากับ decision เอง
+    const dynamicXp = approvedList
+      .filter((d) => !inAgenda.has(d.itemId) && d.track === track)
+      .reduce((s, d) => s + (d.xp ?? 0), 0);
+    const xp = agendaXp + dynamicXp;
     let level = 1;
     for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) if (xp >= LEVEL_THRESHOLDS[i]) level = i + 1;
     const idx = level - 1;

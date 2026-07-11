@@ -454,7 +454,7 @@ export default function App() {
         {(activePage === 'city' || activePage === 'citylevelup') && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'pulse' && <Pulse data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'boardroom' && <BoardRoom data={data} onNavigate={setActivePage} onUpdate={updateData} />}
-        {activePage === 'resources' && <Resources data={data} onUpdate={updateData} />}
+        {activePage === 'resources' && <Resources data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'citytrade' && <InterCityTrade data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
