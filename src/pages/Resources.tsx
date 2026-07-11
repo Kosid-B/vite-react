@@ -3,10 +3,12 @@ import type { AppData } from '../types';
 import { track } from '../lib/analytics';
 import {
   RESOURCE_CATEGORIES, RESOURCE_TEMPLATES, resourceSummary,
-  suggestReallocation, newResourceId, newRequestId,
-  type Resource, type ResourceRequest, type ResourceCategory, type ResourcesState,
+  suggestReallocation, parseAiAllocations, newResourceId, newRequestId,
+  type Resource, type ResourceRequest, type ResourceCategory, type ResourcesState, type AiAllocation,
 } from '../lib/resources';
 import { isBigRequest, approveResourceRequest, rejectResourceRequest } from '../lib/resourceBridge';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { trackAiCall } from '../lib/usage';
 import type { PageId } from '../types';
 
 interface Props {
@@ -29,6 +31,7 @@ export default function Resources({ data, onUpdate, onNavigate }: Props) {
   const [reqAmount, setReqAmount] = useState(1);
   const [reqReason, setReqReason] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
 
   // ฟอร์มเพิ่มทรัพยากรใหม่
   const [nName, setNName] = useState('');
@@ -101,22 +104,64 @@ export default function Resources({ data, onUpdate, onNavigate }: Props) {
     setMsg('ปฏิเสธคำขอแล้ว');
   }
 
-  // AI/heuristic จัดสรร → สร้างคำขอรออนุมัติอัตโนมัติ
-  function aiAllocate() {
-    const sugg = suggestReallocation(state);
-    if (!sugg.length) { setMsg('ทรัพยากรจัดสรรเหมาะสมแล้ว — ไม่มีข้อเสนอเพิ่ม'); return; }
-    const reqs: ResourceRequest[] = sugg.map((s) => {
-      const r = state.items.find((x) => x.id === s.resourceId);
+  // แปลงข้อเสนอ (จาก AI หรือ heuristic) → คำขอ pending
+  function pushAllocations(allocs: AiAllocation[], tag: string): number {
+    const reqs: ResourceRequest[] = allocs.map((s) => {
+      const r = s.resourceId ? state.items.find((x) => x.id === s.resourceId) : undefined;
+      const unitCost = s.type === 'new' ? undefined : r?.unitCost;
       return {
-        id: newRequestId(), type: s.type, resourceId: s.resourceId, amount: s.amount,
-        agentId: r?.ownerAgentId, reason: '🤖 AI จัดสรร: ' + s.reason,
-        impact: r?.unitCost ? `งบ ${s.type === 'add' ? '+' : '-'}฿${(r.unitCost * s.amount).toLocaleString('en-US')}/เดือน` : undefined,
+        id: newRequestId(), type: s.type, resourceId: s.resourceId, resourceName: s.resourceName,
+        category: s.category, amount: s.amount, agentId: r?.ownerAgentId, reason: tag + s.reason,
+        impact: unitCost ? `งบ ${s.type === 'add' ? '+' : '-'}฿${(unitCost * s.amount).toLocaleString('en-US')}/เดือน` : undefined,
         status: 'pending', at: new Date().toISOString().slice(0, 10),
       };
     });
     save({ ...state, requests: [...reqs, ...state.requests] });
-    track('resource_ai_allocate', { count: reqs.length });
-    setMsg(`🤖 AI เสนอ ${reqs.length} คำขอจัดสรร — รอ CEO อนุมัติในส่วนด้านล่าง`);
+    return reqs.length;
+  }
+
+  // ให้ AI (agent-run) วิเคราะห์ทรัพยากรจริง → เสนอคำขอ · fallback heuristic เมื่อไม่มี AI/พัง
+  async function aiAllocate() {
+    setMsg(null);
+    if (isSupabaseEnabled && supabase && state.items.length) {
+      setAiBusy(true);
+      try {
+        const agent = agents.find((a) => /COO|CFO|ปฏิบัติการ|การเงิน/i.test(a.role))
+          ?? agents.find((a) => a.role.toUpperCase() !== 'CEO') ?? agents[0];
+        trackAiCall();
+        const listText = state.items.map((r) =>
+          `- ${r.name} (${RESOURCE_CATEGORIES[r.category].label}): ${r.quantity} ${r.unit}${r.unitCost ? ` @ ฿${r.unitCost}/หน่วย` : ''}`).join('\n');
+        const { data: res, error } = await supabase.functions.invoke('agent-run', {
+          body: {
+            role: agent?.role ?? 'COO', name: agent?.name ?? 'ผู้บริหารทรัพยากร',
+            mandate: 'บริหารจัดสรรทรัพยากรธุรกิจให้มีประสิทธิภาพสูงสุด คุมต้นทุน และเติมของที่ขาด',
+            title: 'วิเคราะห์และจัดสรรทรัพยากร',
+            detail: `ทรัพยากรปัจจุบัน:\n${listText}\n\nวิเคราะห์ว่าควร เพิ่ม/ลด/เพิ่มทรัพยากรใหม่ อะไรเพื่อประสิทธิภาพสูงสุด ` +
+              `แล้วตอบเป็น JSON array เท่านั้น: [{"resource":"ชื่อ","action":"add|reduce|new","amount":ตัวเลข,"category":"people|capital|tools|data|marketing|material|infra","reason":"เหตุผลสั้น"}] ห้ามมีข้อความอื่นนอก JSON`,
+            goal: data.aiCompany?.goal ?? '', industry: data.aiCompany?.industry ?? '',
+          },
+        });
+        if (error) throw error;
+        const allocs = parseAiAllocations(String(res?.output ?? ''), state.items);
+        if (allocs.length) {
+          const n = pushAllocations(allocs, '🤖 AI วิเคราะห์: ');
+          track('resource_ai_allocate', { count: n, source: 'agent-run' });
+          setMsg(`🤖 AI (${agent?.role ?? 'COO'}) วิเคราะห์แล้วเสนอ ${n} คำขอ — รอ CEO/บอร์ดอนุมัติด้านล่าง`);
+          return;
+        }
+        setMsg('🤖 AI วิเคราะห์แล้วไม่พบข้อเสนอชัดเจน — ลองการจัดสรรพื้นฐานแทน');
+      } catch (e) {
+        setMsg('AI วิเคราะห์ไม่สำเร็จ: ' + ((e as Error).message || 'error') + ' — ใช้การจัดสรรพื้นฐานแทน');
+      } finally {
+        setAiBusy(false);
+      }
+    }
+    // fallback: heuristic (โหมด local หรือ AI ไม่ให้ผล)
+    const sugg = suggestReallocation(state);
+    if (!sugg.length) { setMsg('ทรัพยากรจัดสรรเหมาะสมแล้ว — ไม่มีข้อเสนอเพิ่ม'); return; }
+    const n = pushAllocations(sugg.map((s) => ({ type: s.type, resourceId: s.resourceId, amount: s.amount, reason: s.reason })), '🤖 AI จัดสรร (พื้นฐาน): ');
+    track('resource_ai_allocate', { count: n, source: 'heuristic' });
+    setMsg(`เสนอ ${n} คำขอจัดสรร (พื้นฐาน) — รอ CEO อนุมัติด้านล่าง`);
   }
 
   return (
@@ -138,7 +183,9 @@ export default function Resources({ data, onUpdate, onNavigate }: Props) {
 
       <div className="rc-toolbar">
         {state.items.length === 0 && <button className="rc-btn-primary" onClick={seed}>+ เพิ่มทรัพยากรตั้งต้น 7 รายการ</button>}
-        <button className="rc-btn" onClick={aiAllocate}>🤖 ให้ AI จัดสรร (เสนอคำขอ)</button>
+        <button className="rc-btn" onClick={aiAllocate} disabled={aiBusy}>
+          {aiBusy ? '⏳ AI กำลังวิเคราะห์…' : '🤖 ให้ AI จัดสรร (เสนอคำขอ)'}
+        </button>
       </div>
 
       {/* รายการทรัพยากร */}

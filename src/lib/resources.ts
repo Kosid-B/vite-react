@@ -128,6 +128,56 @@ export function rejectRequest(state: ResourcesState, requestId: string): Resourc
   };
 }
 
+/** ผลลัพธ์ที่ AI (agent-run) เสนอ หลัง parse เป็นคำขอปรับทรัพยากร */
+export interface AiAllocation {
+  resourceId?: string;    // add/reduce — จับคู่กับทรัพยากรที่มีอยู่
+  resourceName?: string;  // new
+  category?: ResourceCategory;
+  type: 'add' | 'reduce' | 'new';
+  amount: number;
+  reason: string;
+}
+
+/** แปลงผลจาก agent-run (คาดหวัง JSON array) → รายการคำขอที่ปลอดภัย (pure, ทดสอบได้)
+ *  ทนทานต่อ code fence / ข้อความเกิน · คืน [] ถ้า parse ไม่ได้ (ให้ caller fallback heuristic) */
+export function parseAiAllocations(raw: string, items: Resource[]): AiAllocation[] {
+  if (!raw) return [];
+  const start = raw.indexOf('[');
+  const end = raw.lastIndexOf(']');
+  if (start < 0 || end <= start) return [];
+  let arr: unknown;
+  try { arr = JSON.parse(raw.slice(start, end + 1)); } catch { return []; }
+  if (!Array.isArray(arr)) return [];
+
+  const findItem = (name: string) => {
+    const n = name.trim().toLowerCase();
+    return items.find((r) => r.name.toLowerCase() === n) ?? items.find((r) => r.name.toLowerCase().includes(n) || n.includes(r.name.toLowerCase()));
+  };
+  const out: AiAllocation[] = [];
+  for (const raw0 of arr) {
+    if (!raw0 || typeof raw0 !== 'object') continue;
+    const o = raw0 as Record<string, unknown>;
+    const action = String(o.action ?? o.type ?? '').toLowerCase();
+    const type: 'add' | 'reduce' | 'new' | null = action === 'add' ? 'add' : action === 'reduce' ? 'reduce' : action === 'new' ? 'new' : null;
+    if (!type) continue;
+    const amount = Math.floor(Number(o.amount ?? o.qty ?? 0));
+    if (!(amount > 0)) continue;
+    const resName = String(o.resource ?? o.name ?? o.resourceName ?? '').trim();
+    const reason = String(o.reason ?? o.detail ?? 'AI เสนอปรับ').trim();
+    if (type === 'new') {
+      if (!resName) continue;
+      const catRaw = String(o.category ?? '').toLowerCase() as ResourceCategory;
+      const category = (RESOURCE_CATEGORIES as Record<string, unknown>)[catRaw] ? catRaw : 'tools';
+      out.push({ type, resourceName: resName, category, amount, reason });
+    } else {
+      const item = findItem(resName);
+      if (!item) continue; // add/reduce ต้องมีทรัพยากรจริง
+      out.push({ type, resourceId: item.id, amount, reason });
+    }
+  }
+  return out;
+}
+
 /** ข้อเสนอจัดสรรทรัพยากร (heuristic ใช้เมื่อไม่มี AI) — ตอบ "จัดให้มีประสิทธิภาพ"
  *  - ทรัพยากรจำนวน 0 (data/material/people) → เสนอเพิ่ม
  *  - ต้นทุนสูงสุดในหมวด → เสนอทบทวน (reduce)  */

@@ -56,6 +56,10 @@ src/pages/AICompany.tsx        — บริษัท AI page (factory, agent ta
 src/pages/CaseStudies.tsx      — case studies (built-in CASES + data.caseStudies ที่แอดมินนำเข้า)
 src/pages/AdminTabs/CaseStudyTab.tsx — Content Studio: นำเข้า Case (ฟอร์ม/JSON/AI สรุป) + ปุ่ม "💰 เสนอเป็น Skill" แปลงเคส→สินค้า Marketplace พร้อมประเมินราคาอัตโนมัติ
 src/lib/skillValuation.ts      — suggestSkillFromCase() ประเมินหมวด/tier/ราคา/valueNote จากเคส (pure, tested)
+src/pages/BoardRoom.tsx        — หน้า 'boardroom' ห้องบอร์ด: CEO เสนอวาระ → User อนุมัติ + สะสมทักษะบริหาร/การตลาด (lib/boardRoom.ts: AGENDA 5 DE gates + feature, skillLevels)
+src/pages/Resources.tsx        — หน้า 'resources' บริหารทรัพยากร: รายการ+จำนวน · C-Level ดูแล/ขอเพิ่ม-ลด · CEO/บอร์ดอนุมัติ · AI จัดสรร (agent-run จริง + fallback heuristic)
+src/lib/resources.ts           — Resource/Request types + templates + applyApproval + parseAiAllocations (pure, tested)
+src/lib/resourceBridge.ts      — คำขอก้อนใหญ่→ห้องบอร์ด(+XP) + ทรัพยากรอนุมัติ→รายจ่าย finance อัตโนมัติ (pure, tested)
 src/pages/CityLevelUp.tsx      — หน้า 'citylevelup' เมือง 3 มิติ Level Up (ใช้ lib/cityScape.ts)
 src/lib/cityScape.ts           — เอนจินวาดเมืองไอโซเมตริก SVG + auto-detect เวลา/ฤดู (framework-agnostic)
 src/pages/Pulse.tsx            — หน้า 'pulse' Pulse & A/B (opt-in, โปร่งใส) ใช้ lib/experiments.ts
