@@ -1041,6 +1041,20 @@ body {
 .bmc-phase-owner { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--ink2); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
 .bmc-phase-owner.none { color: var(--ink4); background: none; font-weight: 400; font-style: italic; }
 .bmc-de24-assign-msg { font-size: 13px; color: #4ade80; background: rgba(74,222,128,.08); border: 1px solid rgba(74,222,128,.25); border-radius: 8px; padding: 8px 14px; margin-bottom: 12px; }
+
+/* สรุปผล 24-Step → export + CEO ตั้งต้น BMC */
+.de24rep { border: 1px solid var(--accent); background: var(--rust-bg); border-radius: var(--r-lg); padding: 12px 16px; margin-bottom: 14px; }
+.de24rep-hd { margin-bottom: 10px; }
+.de24rep-title { font-size: 14px; font-weight: 800; color: var(--ink); }
+.de24rep-sub { display: block; font-size: 12px; color: var(--ink3); margin-top: 2px; }
+.de24rep-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.de24rep-btn { font-size: 12.5px; font-family: inherit; font-weight: 700; padding: 8px 13px; background: var(--white); border: 1px solid var(--accent); color: var(--accent); border-radius: var(--r); cursor: pointer; }
+.de24rep-btn:hover { background: var(--rust-bg); }
+.de24rep-btn.primary { background: var(--accent); color: #fff; }
+.de24rep-lock { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--amber); background: var(--amber-bg); border-radius: var(--r); padding: 7px 12px; }
+.de24rep-lock b { color: var(--ink); }
+.de24rep-upgrade { font-size: 12.5px; font-family: inherit; font-weight: 700; padding: 5px 12px; background: var(--amber); color: #1a1206; border: none; border-radius: var(--r); cursor: pointer; }
+.de24rep-msg { margin-top: 10px; font-size: 12.5px; font-weight: 600; color: var(--green); }
 .bmc-phase-num { font-size: 12.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
 .bmc-phase-label { font-size: 13.5px; font-weight: 600; }
 .bmc-step { border-bottom: 1px solid var(--cream2); transition: background .1s; }
