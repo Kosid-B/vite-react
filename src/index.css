@@ -2145,6 +2145,11 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .roadmap-ai-out { border: 1px solid var(--sand); border-radius: var(--r); overflow: hidden; }
 .roadmap-ai-out-hd { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ink3); padding: 3px 8px; background: var(--cream); }
 .roadmap-ai-out-body { font-size: 12.5px; color: var(--ink2); white-space: pre-wrap; line-height: 1.6; padding: 8px; max-height: 160px; overflow-y: auto; }
+.roadmap-ai-actions { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-top: 1px solid var(--sand); background: var(--rust-bg); }
+.roadmap-ai-actions-hd { font-size: 11px; font-weight: 700; color: var(--rust); text-transform: uppercase; letter-spacing: .04em; }
+.roadmap-act-btn { font-size: 12.5px; font-family: inherit; font-weight: 600; padding: 7px 10px; background: var(--white); border: 1px solid var(--accent); border-radius: var(--r); color: var(--accent); cursor: pointer; text-align: left; transition: background .15s; }
+.roadmap-act-btn:hover { background: var(--rust-bg); }
+.roadmap-act-msg { font-size: 11.5px; color: var(--amber); padding: 6px 8px; background: var(--amber-bg); }
 .roadmap-add-btn { font-size: 13px; font-family: inherit; padding: 7px 10px; background: none; border: 1px dashed var(--sand); border-radius: var(--r); cursor: pointer; color: var(--ink3); margin-top: auto; }
 .roadmap-add-btn:hover { border-color: var(--ink3); color: var(--ink); }
 
