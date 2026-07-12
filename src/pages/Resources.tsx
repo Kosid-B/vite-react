@@ -104,6 +104,26 @@ export default function Resources({ data, onUpdate, onNavigate }: Props) {
     setMsg('ปฏิเสธคำขอแล้ว');
   }
 
+  /** 📨 จ้างภายนอกแทนการเพิ่มทรัพยากรเอง → ร่างประกาศงานกลาง (RFQ) แล้วพาไปหน้าซื้อขาย B2B
+   *  สร้าง demand แบบ organic จากงานที่เกิดในแอปอยู่แล้ว (ไม่ต้องสอนผู้ใช้เปิด RFQ ใหม่) */
+  function outsourceViaRfq(r: Resource) {
+    const cm = RESOURCE_CATEGORIES[r.category];
+    const sector = (data.aiCompany?.productDbd ?? '').match(/^\[([A-Z])\]/)?.[1] ?? '';
+    const prefill = {
+      title: `จัดหา/จ้างภายนอก: ${r.name}`,
+      detail: [
+        `ต้องการ: ${r.name} (${cm.label})`,
+        `ปริมาณโดยประมาณ: ${r.quantity > 0 ? r.quantity + ' ' + r.unit : '(ระบุ)'}`,
+        'กำหนดส่ง: (ระบุวันที่ต้องการ)',
+        'เกณฑ์ตัดสิน: ราคา + ประสบการณ์/ผลงาน',
+      ].join('\n'),
+      sector,
+    };
+    sessionStorage.setItem('rfq_open_prefill', JSON.stringify(prefill));
+    track('rfq_from_outsource', { category: r.category });
+    onNavigate('trade');
+  }
+
   // แปลงข้อเสนอ (จาก AI หรือ heuristic) → คำขอ pending
   function pushAllocations(allocs: AiAllocation[], tag: string): number {
     const reqs: ResourceRequest[] = allocs.map((s) => {
@@ -221,6 +241,8 @@ export default function Resources({ data, onUpdate, onNavigate }: Props) {
                 <div className="rc-item-actions">
                   <button className="rc-req-add" onClick={() => openReq(r, 'add')}>＋ ขอเพิ่ม</button>
                   <button className="rc-req-red" onClick={() => openReq(r, 'reduce')}>－ ขอลด</button>
+                  <button className="rc-req-out" onClick={() => outsourceViaRfq(r)}
+                    title="แทนการซื้อ/จ้างประจำ — โพสต์หาผู้รับงานภายนอกผ่านตลาด B2B (RFQ)">📨 จ้างภายนอก</button>
                   <button className="rc-del" onClick={() => del(r.id)}>ลบ</button>
                 </div>
 

@@ -7,10 +7,13 @@ import {
   listOrders, updateOrderStatus, PLATFORM_FEE_RATE, LOCAL_WS,
   type Rfq, type Order, type OrderStatus,
 } from '../lib/trade';
-import { isSupabaseEnabled } from '../lib/supabase';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { DBD_SECTORS } from '../data/dbd';
 import MarketAgent from '../components/MarketAgent';
 import { track } from '../lib/analytics';
+import { trackAiCall } from '../lib/usage';
+import { draftRfqLocal, draftQuoteLocal, openRfqShareText } from '../lib/rfqDraft';
+import { marketplaceHealth } from '../lib/marketplaceHealth';
 
 interface Props {
   data: AppData;
@@ -58,6 +61,9 @@ export default function Trade({ data, wsId }: Props) {
   // ฟอร์มตอบใบเสนอราคา (เปิดต่อ RFQ)
   const [quoteFor, setQuoteFor] = useState<string | null>(null);
   const [quoteDraft, setQuoteDraft] = useState({ amount: 0, note: '' });
+  // สถานะ AI ช่วยร่าง (คีย์ = ฟอร์มที่กำลังคิด) + ปุ่มแชร์
+  const [aiBusy, setAiBusy] = useState<string | null>(null);
+  const [shared, setShared] = useState<string | null>(null);
 
   async function reload() {
     const [st, my] = await Promise.all([listStorefronts(), getMyStorefront(wsId)]);
@@ -77,7 +83,83 @@ export default function Trade({ data, wsId }: Props) {
   useEffect(() => {
     reload().catch(() => setMsg('⚠️ โหลดข้อมูลไม่สำเร็จ'));
     sessionStorage.removeItem('rfq_seller');
+    // รับ prefill ประกาศงานกลางจากหน้าอื่น (เช่น ทรัพยากร → จ้างข้างนอก)
+    const raw = sessionStorage.getItem('rfq_open_prefill');
+    if (raw) {
+      sessionStorage.removeItem('rfq_open_prefill');
+      try {
+        const p = JSON.parse(raw) as { title?: string; detail?: string; sector?: string };
+        setOpenDraft(d => ({ ...d, title: p.title ?? '', detail: p.detail ?? '', sector: p.sector ?? '' }));
+        setPostOpen(true);
+        setMsg('📨 ร่างประกาศงานกลางจากงานที่ต้องจ้างภายนอกแล้ว — ปรับรายละเอียดแล้วกดประกาศ');
+      } catch { /* ข้าม prefill ที่พัง */ }
+    }
   }, [wsId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** AI ช่วยเขียนข้อความ (prod: ai-assist · ไม่สำเร็จ/local: ใช้ fallback ที่ส่งมา) */
+  async function aiText(instruction: string, context: string, fallback: string): Promise<string> {
+    if (isSupabaseEnabled && supabase) {
+      try {
+        trackAiCall();
+        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
+          body: { page: 'trade', pageLabel: 'ซื้อขาย B2B', instruction, context },
+        });
+        if (error) throw error;
+        const t = (res?.summary ?? '').trim();
+        if (t) return t;
+      } catch { /* ตกไป fallback */ }
+    }
+    return fallback;
+  }
+
+  /** ✨ ให้ AI ร่างรายละเอียด RFQ จาก "ประโยคเดียว" (ประกาศกลาง / ส่งตรง) */
+  async function aiDraftRfq(kind: 'open' | 'direct') {
+    const isOpen = kind === 'open';
+    const hint = (isOpen ? openDraft.title : rfqDraft.title).trim();
+    if (!hint) { setMsg('⚠️ พิมพ์สั้นๆ ก่อนว่าต้องการอะไร แล้วให้ AI ช่วยขยายรายละเอียด'); return; }
+    setAiBusy(kind);
+    const sectorLabel = isOpen ? sectorLabelOf(openDraft.sector) : '';
+    const local = draftRfqLocal(hint, isOpen ? sectorLabel : undefined);
+    const detail = await aiText(
+      'เขียนรายละเอียด RFQ (ความต้องการจัดซื้อ/จ้าง) ภาษาไทย กระชับเป็นข้อ: ขอบเขต ปริมาณ/สเปก กำหนดส่ง เกณฑ์ตัดสิน — ตอบเฉพาะเนื้อรายละเอียดใน summary',
+      `ต้องการ: ${hint}${isOpen ? ' · หมวดผู้ขาย: ' + sectorLabel : ''}`,
+      local.detail,
+    );
+    if (isOpen) setOpenDraft(d => ({ ...d, title: local.title, detail }));
+    else setRfqDraft(d => ({ ...d, title: local.title, detail }));
+    setAiBusy(null);
+    setMsg('✨ AI ช่วยร่างรายละเอียดให้แล้ว — ปรับได้ก่อนส่ง');
+  }
+
+  /** ✨ ให้ AI ร่างใบเสนอราคา (ฝั่งผู้ขาย) — เติมเงื่อนไข + ราคาเริ่มต้นจากงบ */
+  async function aiDraftQuote(kind: 'claim' | 'answer', rfq: Rfq) {
+    setAiBusy(kind + rfq.id);
+    const local = draftQuoteLocal({ title: rfq.title, budget: rfq.budget });
+    const note = await aiText(
+      'เขียนเงื่อนไขใบเสนอราคา B2B ภาษาไทย เป็นข้อสั้นๆ: ขอบเขตงาน ระยะเวลา สิ่งที่รวม เงื่อนไขชำระ — ตอบเฉพาะเนื้อใน summary',
+      `งาน: ${rfq.title} · รายละเอียด: ${rfq.detail} · งบผู้ซื้อ: ${rfq.budget}`,
+      local.note,
+    );
+    if (kind === 'claim') setClaimDraft(d => ({ amount: d.amount || local.amount, note }));
+    else setQuoteDraft(d => ({ amount: d.amount || local.amount, note }));
+    setAiBusy(null);
+    setMsg('✨ AI ร่างใบเสนอราคาให้แล้ว — ตรวจตัวเลข/เงื่อนไขก่อนส่ง');
+  }
+
+  /** 📤 แชร์ประกาศงานกลางออกนอกแอป (ดึง demand ภายนอกเข้าระบบ) */
+  async function shareOpenRfq(r: Rfq) {
+    const text = openRfqShareText(
+      { title: r.title, budget: r.budget, sectorLabel: sectorLabelOf(r.sector) },
+      'https://ceoaithailand.org/b',
+    );
+    try {
+      if (navigator.share) await navigator.share({ title: r.title, text });
+      else await navigator.clipboard?.writeText(text);
+      setShared(r.id);
+      setTimeout(() => setShared(null), 2000);
+      track('open_rfq_shared', { budget: r.budget });
+    } catch { /* ผู้ใช้ยกเลิก share — ไม่ต้องแจ้ง error */ }
+  }
 
   async function submitRfq(sellerSlug: string) {
     if (!rfqDraft.title.trim()) { setMsg('⚠️ ระบุหัวข้อสิ่งที่ต้องการก่อน'); return; }
@@ -138,6 +220,7 @@ export default function Trade({ data, wsId }: Props) {
   }
 
   const otherStores = stores.filter(s => s.slug !== mySf?.slug);
+  const health = marketplaceHealth([...outgoing, ...incoming], orders);
   const mySector = (mySf?.dbd ?? '').match(/^\[([A-Z])\]/)?.[1] ?? '';
   const visibleJobs = openJobs.filter(j => j.buyerWs !== myWs);
   const sectorLabelOf = (code: string) => {
@@ -159,6 +242,22 @@ export default function Trade({ data, wsId }: Props) {
         ระบบสร้างออเดอร์และติดตามสถานะจนปิดดีล (การชำระเงินผ่านระบบจะเปิดเมื่อเชื่อม payment gateway)
       </p>
       {msg && <div className="sipoc-gen-msg">{msg}</div>}
+
+      {/* ── 📊 สุขภาพลูปดีลของฉัน — ตัดสินใจด้วยตัวเลข ไม่ใช่ความรู้สึก ── */}
+      {health.rfqTotal > 0 && (
+        <div className={`mh-panel mh-${health.stage}`}>
+          <div className="mh-hd">📊 สุขภาพดีลของฉัน — <b>{health.label}</b></div>
+          <div className="mh-funnel">
+            <div className="mh-cell"><span className="mh-n">{health.rfqTotal}</span><span className="mh-l">RFQ</span></div>
+            <span className="mh-arrow">→</span>
+            <div className="mh-cell"><span className="mh-n">{health.quoted}</span><span className="mh-l">ใบเสนอราคา<br />({Math.round(health.quoteRate * 100)}%)</span></div>
+            <span className="mh-arrow">→</span>
+            <div className="mh-cell"><span className="mh-n">{health.accepted}</span><span className="mh-l">รับ→ออเดอร์<br />({Math.round(health.acceptRate * 100)}%)</span></div>
+            <span className="mh-arrow">→</span>
+            <div className="mh-cell mh-goal"><span className="mh-n">{health.dealsCompleted}</span><span className="mh-l">ปิดดีล<br />({Math.round(health.closeRate * 100)}%)</span></div>
+          </div>
+        </div>
+      )}
 
       {/* ── 🤝 Marketplace Agent — จับคู่สินค้า/บริการใน ecosystem ── */}
       <MarketAgent
@@ -192,9 +291,15 @@ export default function Trade({ data, wsId }: Props) {
               </div>
               {rfqFor === s.slug && (
                 <div className="trade-rfq-form">
-                  <input placeholder="ต้องการซื้ออะไร เช่น ชิ้นส่วน A-101 จำนวน 500 ชิ้น" value={rfqDraft.title}
-                    onChange={e => setRfqDraft({ ...rfqDraft, title: e.target.value })} />
-                  <textarea rows={2} placeholder="รายละเอียด สเปก กำหนดส่ง…" value={rfqDraft.detail}
+                  <div className="trade-ai-row">
+                    <input placeholder="ต้องการซื้ออะไร เช่น ชิ้นส่วน A-101 จำนวน 500 ชิ้น" value={rfqDraft.title}
+                      onChange={e => setRfqDraft({ ...rfqDraft, title: e.target.value })} />
+                    <button className="trade-ai-btn" onClick={() => aiDraftRfq('direct')} disabled={aiBusy === 'direct'}
+                      title="พิมพ์สั้นๆ แล้วให้ AI ขยายรายละเอียด">
+                      {aiBusy === 'direct' ? '⏳' : '✨ AI ช่วยร่าง'}
+                    </button>
+                  </div>
+                  <textarea rows={3} placeholder="รายละเอียด สเปก กำหนดส่ง… (หรือกด ✨ ให้ AI ร่างให้)" value={rfqDraft.detail}
                     onChange={e => setRfqDraft({ ...rfqDraft, detail: e.target.value })} />
                   <div className="trade-rfq-row">
                     <input type="number" min={0} placeholder="งบประมาณ (฿)" value={rfqDraft.budget || ''}
@@ -224,9 +329,15 @@ export default function Trade({ data, wsId }: Props) {
 
         {postOpen && (
           <div className="trade-rfq-form trade-open-form">
-            <input placeholder="ต้องการซื้อ/จ้างอะไร เช่น ออกแบบโลโก้ + CI ครบชุด" value={openDraft.title}
-              onChange={e => setOpenDraft({ ...openDraft, title: e.target.value })} />
-            <textarea rows={2} placeholder="รายละเอียด สเปก กำหนดส่ง…" value={openDraft.detail}
+            <div className="trade-ai-row">
+              <input placeholder="ต้องการซื้อ/จ้างอะไร เช่น ออกแบบโลโก้ + CI ครบชุด" value={openDraft.title}
+                onChange={e => setOpenDraft({ ...openDraft, title: e.target.value })} />
+              <button className="trade-ai-btn" onClick={() => aiDraftRfq('open')} disabled={aiBusy === 'open'}
+                title="พิมพ์สั้นๆ ว่าต้องการอะไร แล้วให้ AI ขยายรายละเอียดให้">
+                {aiBusy === 'open' ? '⏳' : '✨ AI ช่วยร่าง'}
+              </button>
+            </div>
+            <textarea rows={3} placeholder="รายละเอียด สเปก กำหนดส่ง… (หรือกด ✨ ให้ AI ร่างให้)" value={openDraft.detail}
               onChange={e => setOpenDraft({ ...openDraft, detail: e.target.value })} />
             <div className="trade-rfq-row">
               <select value={openDraft.sector} onChange={e => setOpenDraft({ ...openDraft, sector: e.target.value })}>
@@ -264,9 +375,12 @@ export default function Trade({ data, wsId }: Props) {
                   <div className="trade-quote-form">
                     <input type="number" min={0} placeholder="เสนอราคา (฿)" value={claimDraft.amount || ''}
                       onChange={e => setClaimDraft({ ...claimDraft, amount: Math.max(0, +e.target.value) })} />
-                    <input placeholder="เงื่อนไข/กำหนดส่ง (ถ้ามี)" value={claimDraft.note}
+                    <textarea rows={3} placeholder="เงื่อนไข/กำหนดส่ง (หรือกด ✨ ให้ AI ร่างใบเสนอราคา)" value={claimDraft.note}
                       onChange={e => setClaimDraft({ ...claimDraft, note: e.target.value })} />
                     <div className="trade-quote-actions">
+                      <button className="trade-ai-btn" onClick={() => aiDraftQuote('claim', j)} disabled={aiBusy === 'claim' + j.id}>
+                        {aiBusy === 'claim' + j.id ? '⏳' : '✨ AI ร่างใบเสนอราคา'}
+                      </button>
                       <button className="trade-accept" onClick={() => claimJob(j.id)} disabled={claimDraft.amount <= 0}>
                         ส่งใบเสนอราคา
                       </button>
@@ -299,6 +413,12 @@ export default function Trade({ data, wsId }: Props) {
             </div>
             <div className="trade-rfq-side">
               <span className={`trade-badge ${RFQ_BADGE[r.status].cls}`}>{RFQ_BADGE[r.status].label}</span>
+              {r.sellerSlug === null && r.status === 'open' && (
+                <button className="trade-share-btn" onClick={() => shareOpenRfq(r)}
+                  title="แชร์ประกาศนี้ไป Facebook/LINE เพื่อดึงผู้รับงานจากภายนอก">
+                  {shared === r.id ? '✓ คัดลอกแล้ว' : '📤 แชร์หาผู้รับงาน'}
+                </button>
+              )}
               {r.status === 'quoted' && (
                 <>
                   <div className="trade-quote">{baht(r.quoteAmount)}{r.quoteNote && <span className="trade-quote-note"> — {r.quoteNote}</span>}</div>
@@ -328,9 +448,12 @@ export default function Trade({ data, wsId }: Props) {
                 <div className="trade-quote-form">
                   <input type="number" min={0} placeholder="เสนอราคา (฿)" value={quoteDraft.amount || ''}
                     onChange={e => setQuoteDraft({ ...quoteDraft, amount: Math.max(0, +e.target.value) })} />
-                  <input placeholder="เงื่อนไข/กำหนดส่ง (ถ้ามี)" value={quoteDraft.note}
+                  <textarea rows={3} placeholder="เงื่อนไข/กำหนดส่ง (หรือกด ✨ ให้ AI ร่างใบเสนอราคา)" value={quoteDraft.note}
                     onChange={e => setQuoteDraft({ ...quoteDraft, note: e.target.value })} />
                   <div className="trade-quote-actions">
+                    <button className="trade-ai-btn" onClick={() => aiDraftQuote('answer', r)} disabled={aiBusy === 'answer' + r.id}>
+                      {aiBusy === 'answer' + r.id ? '⏳' : '✨ AI ร่างใบเสนอราคา'}
+                    </button>
                     <button className="trade-accept" onClick={() => submitQuote(r.id, false)} disabled={quoteDraft.amount <= 0}>ส่งใบเสนอราคา</button>
                     <button className="trade-decline" onClick={() => submitQuote(r.id, true)}>ปฏิเสธ</button>
                   </div>

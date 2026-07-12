@@ -5828,3 +5828,41 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   .factory-profile-field { min-width: 0; flex: 1 1 100%; } /* แต่ละฟิลด์ขึ้นบรรทัดเต็มความกว้าง */
   .adm-stat-table { table-layout: fixed; }                 /* ตารางไม่ขยายตามเนื้อหายาว (มี ellipsis อยู่แล้ว) */
 }
+
+/* ===== Seller Aha (<5 นาที) + after-publish CTA (MyStorefront) ===== */
+.saha-card { background:var(--cream3); border:1.5px solid #06b6d455; border-radius:14px; padding:16px 18px; margin-bottom:16px; }
+.saha-head { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+.saha-title { font-weight:800; color:var(--ink); font-size:15px; }
+.saha-meta { font-size:12.5px; font-weight:700; color:var(--accent); }
+.saha-track { height:8px; border-radius:999px; background:rgba(148,163,184,.2); margin:10px 0 12px; overflow:hidden; }
+.saha-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,#06b6d4,#38bdf8); transition:width .3s; }
+.saha-steps { display:flex; flex-wrap:wrap; gap:8px; }
+.saha-step { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--ink2); background:var(--cream2); border:1px solid var(--sand); border-radius:999px; padding:6px 12px; }
+.saha-step.done { opacity:.6; }
+.saha-step.next { border-color:var(--accent); background:#06b6d414; color:var(--ink); }
+.saha-ico { font-size:14px; }
+.saha-published { background:#10b98118; border:1.5px solid #10b98166; border-radius:12px; padding:14px 16px; margin-bottom:16px; color:var(--ink); font-size:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.saha-pub-btn { margin-left:auto; font-family:inherit; font-size:13.5px; font-weight:700; color:#0f172a; background:#4ade80; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; }
+
+/* ===== Marketplace health funnel (Trade) ===== */
+.mh-panel { border-radius:12px; padding:14px 16px; margin-bottom:16px; border:1.5px solid var(--sand); background:var(--cream3); }
+.mh-panel.mh-flowing { border-color:#10b98166; background:#10b98112; }
+.mh-panel.mh-near { border-color:#f59e0b66; background:#f59e0b10; }
+.mh-hd { font-size:14px; color:var(--ink); margin-bottom:10px; }
+.mh-funnel { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.mh-cell { display:flex; flex-direction:column; align-items:center; min-width:64px; background:var(--cream2); border:1px solid var(--sand); border-radius:9px; padding:8px 10px; }
+.mh-cell.mh-goal { border-color:var(--accent); }
+.mh-n { font-size:20px; font-weight:800; color:var(--ink); line-height:1; }
+.mh-l { font-size:11px; color:var(--ink2); text-align:center; margin-top:4px; }
+.mh-arrow { color:var(--ink2); font-weight:700; }
+
+/* ===== AI-assist + share buttons (Trade) ===== */
+.trade-ai-row { display:flex; gap:6px; align-items:stretch; }
+.trade-ai-row input { flex:1; }
+.trade-ai-btn { font-size:12.5px; font-weight:700; font-family:inherit; color:var(--accent); background:#06b6d414; border:1px solid #06b6d455; border-radius:7px; padding:6px 11px; cursor:pointer; white-space:nowrap; }
+.trade-ai-btn:disabled { opacity:.6; cursor:default; }
+.trade-share-btn { font-size:12.5px; font-weight:600; font-family:inherit; color:var(--ink); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.16); border-radius:7px; padding:6px 12px; cursor:pointer; }
+.trade-quote-form textarea { font-size:13px; font-family:inherit; color:var(--ink); background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.13); border-radius:7px; padding:7px 10px; outline:none; resize:vertical; }
+
+/* ===== Outsource→RFQ button (Resources) ===== */
+.rc-req-out { font-size:12.5px; font-weight:600; font-family:inherit; color:var(--accent); background:#06b6d414; border:1px solid #06b6d455; border-radius:7px; padding:6px 12px; cursor:pointer; }
