@@ -24,6 +24,17 @@ export interface Storefront {
   published: boolean;
   featuredUntil?: string; // ตำแหน่ง "ร้านแนะนำ" ปักหมุดบน /b (admin ตั้ง — คู่กับประมูลใน /shop)
   updatedAt?: string;
+  rating?: number;        // ค่าเฉลี่ยรีวิวจริง 1..5 (คำนวณโดย trigger) — โชว์ ⭐ + AggregateRating SEO
+  reviewCount?: number;   // จำนวนรีวิวจริง
+}
+
+export interface StorefrontReview {
+  id: string;
+  slug: string;
+  rating: number;         // 1..5
+  text: string;
+  reviewerName: string;
+  at?: string;
 }
 
 const LS_KEY = 'ceo_ai_storefront';
@@ -70,6 +81,7 @@ interface Row {
   vp?: string; promo?: string; images?: string[]; description: string;
   services: string[]; phone: string; line_id: string; email: string; website: string;
   published: boolean; featured_until?: string | null; updated_at?: string;
+  rating?: number | null; review_count?: number | null;
 }
 
 function rowToStorefront(r: Row): Storefront {
@@ -81,7 +93,39 @@ function rowToStorefront(r: Row): Storefront {
     email: r.email, website: r.website, published: r.published,
     featuredUntil: r.featured_until ?? undefined,
     updatedAt: r.updated_at?.slice(0, 10),
+    rating: r.rating ?? undefined,
+    reviewCount: r.review_count ?? undefined,
   });
+}
+
+/** สาธารณะ: รีวิวของร้าน (ล่าสุดก่อน) */
+export async function listReviews(slug: string): Promise<StorefrontReview[]> {
+  if (!isSupabaseEnabled || !supabase) return [];
+  const { data } = await supabase
+    .from('storefront_reviews')
+    .select('id,slug,rating,review_text,reviewer_name,created_at')
+    .eq('slug', slug)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  return (data ?? []).map((r: Record<string, unknown>) => ({
+    id: String(r.id), slug: String(r.slug), rating: Number(r.rating),
+    text: String(r.review_text ?? ''), reviewerName: String(r.reviewer_name ?? ''),
+    at: r.created_at ? String(r.created_at).slice(0, 10) : undefined,
+  }));
+}
+
+/** ส่งรีวิว (ต้องล็อกอิน · RLS กันรีวิวร้านตัวเอง) — trigger จะ recompute rating ให้เอง */
+export async function submitReview(
+  input: { slug: string; rating: number; text?: string; reviewerName?: string; orderId?: string },
+): Promise<{ ok: boolean; error?: string }> {
+  if (!isSupabaseEnabled || !supabase) return { ok: false, error: 'ต้องเข้าสู่ระบบเพื่อรีวิว' };
+  const rating = Math.round(input.rating);
+  if (!(rating >= 1 && rating <= 5)) return { ok: false, error: 'ให้คะแนน 1–5 ดาว' };
+  const { error } = await supabase.from('storefront_reviews').insert({
+    slug: input.slug, rating, review_text: input.text ?? '',
+    reviewer_name: input.reviewerName ?? '', order_id: input.orderId ?? null,
+  });
+  return error ? { ok: false, error: error.message } : { ok: true };
 }
 
 /** ร้านนี้อยู่ในตำแหน่ง "ร้านแนะนำ" (โฆษณา) อยู่หรือไม่ */
