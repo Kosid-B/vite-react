@@ -1294,6 +1294,29 @@ input:focus, textarea:focus, select:focus {
 .pub-desc { font-size: 15px; color: var(--ink2); line-height: 1.8; margin: 0 0 8px; }
 .pub-sec-hd { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink4); margin: 20px 0 8px; }
 .pub-services { margin: 0; padding-left: 20px; }
+/* ⭐ rating badge + reviews */
+.pub-rating { display: inline-flex; align-items: center; gap: 8px; margin: 4px 0 6px; }
+.pub-rating-stars { color: #fbbf24; font-size: 16px; letter-spacing: 1px; }
+.pub-rating-num { font-weight: 800; color: var(--ink); font-size: 15px; }
+.pub-rating-count { font-size: 12.5px; color: var(--ink3); }
+.pub-reviews { margin-top: 16px; }
+.pub-rv-empty { font-size: 13px; color: var(--ink3); padding: 8px 0; }
+.pub-rv-item { border-top: 1px solid var(--sand); padding: 10px 0; }
+.pub-rv-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pub-rv-stars { color: #fbbf24; font-size: 13px; letter-spacing: .5px; }
+.pub-rv-name { font-size: 13px; font-weight: 700; color: var(--ink2); }
+.pub-rv-date { font-size: 11.5px; color: var(--ink4); margin-left: auto; }
+.pub-rv-text { font-size: 13px; color: var(--ink2); line-height: 1.55; margin-top: 3px; }
+.pub-rv-cta { margin-top: 12px; font-size: 13px; font-family: inherit; font-weight: 700; padding: 8px 16px; background: none; border: 1px solid var(--accent); color: var(--accent); border-radius: var(--r); cursor: pointer; }
+.pub-rv-cta:hover { background: var(--rust-bg); }
+.pub-rv-form { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; padding: 12px; background: var(--cream); border: 1px solid var(--sand); border-radius: var(--r); }
+.pub-rv-stars-pick { display: flex; gap: 4px; }
+.pub-rv-star { background: none; border: none; font-size: 26px; color: var(--sand); cursor: pointer; line-height: 1; padding: 0; }
+.pub-rv-star.on { color: #fbbf24; }
+.pub-rv-form input, .pub-rv-form textarea { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r); color: var(--ink); font-family: inherit; font-size: 13.5px; padding: 8px 10px; resize: vertical; }
+.pub-rv-actions { display: flex; gap: 8px; }
+.pub-rv-send { font-size: 13.5px; font-family: inherit; font-weight: 700; padding: 8px 18px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); cursor: pointer; }
+.pub-rv-cancel { font-size: 13.5px; font-family: inherit; padding: 8px 14px; background: none; border: 1px solid var(--sand); color: var(--ink3); border-radius: var(--r); cursor: pointer; }
 .pub-services li { font-size: 14.5px; color: var(--ink2); line-height: 1.9; }
 .pub-contacts { display: flex; gap: 10px; flex-wrap: wrap; }
 .pub-contact { font-size: 14px; font-weight: 600; color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; padding: 9px 16px; text-decoration: none; transition: background .15s; }
