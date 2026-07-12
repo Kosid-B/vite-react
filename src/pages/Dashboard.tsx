@@ -7,6 +7,7 @@ import ExpertEdge from '../components/ExpertEdge';
 import WeeklyDigest from '../components/WeeklyDigest';
 import SystemOverview from '../components/SystemOverview';
 import AhaMoment from '../components/AhaMoment';
+import EcosystemFlow from '../components/EcosystemFlow';
 
 interface Props {
   data: AppData;
@@ -367,6 +368,9 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
 
       {/* ===== Aha Moment ใน 5 นาที (activation ผู้ใช้ใหม่) ===== */}
       <AhaMoment data={data} onUpdate={onUpdate} onNavigate={onNavigate} />
+
+      {/* ===== วงจรธุรกิจครบวงจร — ทำ loop ให้ไหลต่อกันเร็วขึ้น ===== */}
+      <EcosystemFlow data={data} onNavigate={onNavigate} />
 
       {/* ===== ภาพรวมทุกระบบในภาพเดียว ===== */}
       <SystemOverview data={data} onNavigate={onNavigate} />
