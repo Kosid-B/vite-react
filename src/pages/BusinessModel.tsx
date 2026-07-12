@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { trackAiCall } from '../lib/usage';
-import type { Agent, AppData, BMCData } from '../types';
+import type { Agent, AppData, BMCData, PageId } from '../types';
 import EditableList from '../components/EditableList';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { withSkillDirectives } from '../lib/skillDirectives';
+import { de24Summary, de24Markdown, de24ToBmcSeed } from '../lib/de24Report';
+import { effectiveRank, PLAN_RANK } from '../lib/access';
 
 interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
+  onNavigate?: (p: PageId) => void;
 }
 
 type BMCKey = keyof BMCData;
@@ -98,6 +101,7 @@ export default function BusinessModel({ data, onUpdate }: Props) {
   const [analyzingStep, setAnalyzingStep] = useState<number | null>(null);
   const [stepOutputs, setStepOutputs] = useState<Record<number, string>>({});
   const [assignMsg, setAssignMsg] = useState<string | null>(null);
+  const [bmcMsg, setBmcMsg] = useState<string | null>(null);
   const bm = data.businessModel;
 
   // CEO เลือก/สร้าง C-level เจ้าของแต่ละ Phase แล้วสั่งงานให้เติมข้อมูล
@@ -237,6 +241,45 @@ export default function BusinessModel({ data, onUpdate }: Props) {
   const doneCount = bm.de24.filter(s => s.done).length;
   const pct = Math.round((doneCount / 24) * 100);
 
+  // ── สรุปผล 24-Step → export + CEO ตั้งต้น BMC (gate สมาชิกรายเดือน) ──
+  const isPaid = effectiveRank(data) >= PLAN_RANK.starter;   // free = อ่านได้ แต่ export ต้องเป็นสมาชิก
+  const today = new Date().toISOString().slice(0, 10);
+
+  function downloadMarkdown() {
+    const md = de24Markdown(data, { company: data.aiCompany?.name, date: today });
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `MIT24-Summary-${today}.md`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportPdf() {
+    const md = de24Markdown(data, { company: data.aiCompany?.name, date: today });
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>MIT24 Summary</title>
+      <style>body{font-family:'Sarabun','Kanit',sans-serif;max-width:820px;margin:24px auto;padding:0 20px;color:#1a1a1a;line-height:1.65}
+      pre{white-space:pre-wrap;font-family:inherit;font-size:14px}</style></head>
+      <body><pre>${esc(md)}</pre><script>window.onload=function(){window.print()}</scr`+`ipt></body></html>`);
+    w.document.close();
+  }
+
+  function ceoSeedBmc() {
+    const seed = de24ToBmcSeed(data);
+    if (!Object.keys(seed).length) { setBmcMsg('ยังไม่มีขั้นที่ทำเสร็จ + มีบันทึก — ทำ 24-Step แล้วจดโน้ตก่อน'); return; }
+    const nextBmc = { ...bm.bmc };
+    let filled = 0;
+    (Object.keys(seed) as Array<keyof BMCData>).forEach(k => {
+      const add = (seed[k] ?? []).filter(v => !nextBmc[k].includes(v));
+      if (add.length) { nextBmc[k] = [...add, ...nextBmc[k]]; filled += add.length; }
+    });
+    onUpdate({ ...data, businessModel: { ...bm, bmc: nextBmc } });
+    setBmcMsg(`✓ CEO เติม ${filled} รายการจากผล 24-Step ลง BMC แล้ว (ดูช่องด้านล่าง)`);
+  }
+
   return (
     <div>
       <div className="page-header">
@@ -306,6 +349,31 @@ export default function BusinessModel({ data, onUpdate }: Props) {
       </div>
 
       {assignMsg && <div className="bmc-de24-assign-msg">{assignMsg}</div>}
+
+      {/* ===== สรุปผล 24-Step → export + CEO ตั้งต้น BMC ===== */}
+      <div className="de24rep">
+        <div className="de24rep-hd">
+          <span className="de24rep-title">📄 สรุปผล 24-Step ({de24Summary(data).pct}%)</span>
+          <span className="de24rep-sub">เอาผลไปพัฒนาต่อ (Markdown/PDF) + ให้ CEO ใช้ออกแบบ BMC</span>
+        </div>
+        <div className="de24rep-actions">
+          <button className="de24rep-btn primary" onClick={ceoSeedBmc}>
+            🤖 CEO ตั้งต้น BMC จากผล 24-Step
+          </button>
+          {isPaid ? (
+            <>
+              <button className="de24rep-btn" onClick={downloadMarkdown}>⬇️ Markdown (.md)</button>
+              <button className="de24rep-btn" onClick={exportPdf}>🖨️ PDF</button>
+            </>
+          ) : (
+            <div className="de24rep-lock">
+              🔒 Export Markdown/PDF สำหรับ<b>สมาชิกรายเดือน</b>ขึ้นไป
+              {onNavigate && <button className="de24rep-upgrade" onClick={() => onNavigate('billing')}>สมัครสมาชิก →</button>}
+            </div>
+          )}
+        </div>
+        {bmcMsg && <div className="de24rep-msg">{bmcMsg}</div>}
+      </div>
 
       <div className="bmc-de24-grid">
         {PHASES.map((phase, pi) => {
