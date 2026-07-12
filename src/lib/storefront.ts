@@ -114,16 +114,36 @@ export async function listReviews(slug: string): Promise<StorefrontReview[]> {
   }));
 }
 
-/** ส่งรีวิว (ต้องล็อกอิน · RLS กันรีวิวร้านตัวเอง) — trigger จะ recompute rating ให้เอง */
+export interface ReviewableOrder { id: string; title: string; }
+
+/** ออเดอร์ที่ผู้ใช้ปัจจุบัน "ปิดแล้ว" กับร้านนี้ → มีสิทธิ์รีวิว (ลูกค้าจริงเท่านั้น)
+ *  คืน [] ถ้าไม่ล็อกอิน/ไม่มีออเดอร์ปิด — ใช้ gate ฟอร์มรีวิวฝั่ง client (RLS gate จริงอยู่ที่ DB) */
+export async function reviewableOrders(slug: string): Promise<ReviewableOrder[]> {
+  if (!isSupabaseEnabled || !supabase) return [];
+  const { data: sf } = await supabase.from('storefronts').select('workspace_id').eq('slug', slug).maybeSingle();
+  const sellerWs = (sf as { workspace_id?: string } | null)?.workspace_id;
+  if (!sellerWs) return [];
+  const { data } = await supabase
+    .from('orders')
+    .select('id,title,status')
+    .eq('seller_ws', sellerWs)
+    .in('status', ['delivered', 'completed']);
+  return (data ?? []).map((o: Record<string, unknown>) => ({
+    id: String(o.id), title: String(o.title || 'ออเดอร์'),
+  }));
+}
+
+/** ส่งรีวิว — ต้องแนบ orderId ของออเดอร์ที่ปิดจริง (RLS ที่ DB บังคับให้เป็นลูกค้าจริง) */
 export async function submitReview(
-  input: { slug: string; rating: number; text?: string; reviewerName?: string; orderId?: string },
+  input: { slug: string; rating: number; text?: string; reviewerName?: string; orderId: string },
 ): Promise<{ ok: boolean; error?: string }> {
   if (!isSupabaseEnabled || !supabase) return { ok: false, error: 'ต้องเข้าสู่ระบบเพื่อรีวิว' };
   const rating = Math.round(input.rating);
   if (!(rating >= 1 && rating <= 5)) return { ok: false, error: 'ให้คะแนน 1–5 ดาว' };
+  if (!input.orderId) return { ok: false, error: 'รีวิวได้เฉพาะลูกค้าที่มีออเดอร์ปิดแล้วกับร้านนี้' };
   const { error } = await supabase.from('storefront_reviews').insert({
     slug: input.slug, rating, review_text: input.text ?? '',
-    reviewer_name: input.reviewerName ?? '', order_id: input.orderId ?? null,
+    reviewer_name: input.reviewerName ?? '', order_id: input.orderId,
   });
   return error ? { ok: false, error: error.message } : { ok: true };
 }

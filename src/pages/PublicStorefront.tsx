@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getStorefront, isFeatured, listStorefronts, listReviews, submitReview, type Storefront, type StorefrontKind, type StorefrontReview } from '../lib/storefront';
+import { getStorefront, isFeatured, listStorefronts, listReviews, submitReview, reviewableOrders, type Storefront, type StorefrontKind, type StorefrontReview, type ReviewableOrder } from '../lib/storefront';
 import { isSupabaseEnabled } from '../lib/supabase';
 import { countLeads, submitLead, type LeadKind } from '../lib/leads';
 import { track } from '../lib/analytics';
@@ -38,7 +38,8 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
   const [leadMsg, setLeadMsg] = useState<string | null>(null);
   const [leadSent, setLeadSent] = useState(false);
   const [reviews, setReviews] = useState<StorefrontReview[]>([]);
-  const [rvForm, setRvForm] = useState<{ rating: number; text: string; name: string } | null>(null);
+  const [rvOrders, setRvOrders] = useState<ReviewableOrder[]>([]);
+  const [rvForm, setRvForm] = useState<{ rating: number; text: string; name: string; orderId: string } | null>(null);
   const [rvMsg, setRvMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,12 +47,13 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
     getStorefront(s).then(setSf).catch(() => setSf(null));
     countLeads(s).then(setInterested).catch(() => {});
     listReviews(s).then(setReviews).catch(() => {});
+    reviewableOrders(s).then(setRvOrders).catch(() => setRvOrders([]));
   }, [slug]);
 
   async function sendReview() {
     if (!sf || !rvForm) return;
     setRvMsg(null);
-    const res = await submitReview({ slug: sf.slug, rating: rvForm.rating, text: rvForm.text, reviewerName: rvForm.name });
+    const res = await submitReview({ slug: sf.slug, rating: rvForm.rating, text: rvForm.text, reviewerName: rvForm.name, orderId: rvForm.orderId });
     if (!res.ok) { setRvMsg('⚠️ ' + (res.error || 'ส่งรีวิวไม่สำเร็จ')); return; }
     track('review_submitted', { shop: sf.slug, rating: rvForm.rating });
     setRvForm(null);
@@ -135,8 +137,14 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
               {r.text && <div className="pub-rv-text">{r.text}</div>}
             </div>
           ))}
-          {isSupabaseEnabled && (rvForm ? (
+          {isSupabaseEnabled && rvOrders.length > 0 && (rvForm ? (
             <div className="pub-rv-form">
+              <div className="pub-rv-verified">✅ ลูกค้าที่ปิดดีลกับร้านนี้แล้ว</div>
+              {rvOrders.length > 1 && (
+                <select value={rvForm.orderId} onChange={e => setRvForm({ ...rvForm, orderId: e.target.value })}>
+                  {rvOrders.map(o => <option key={o.id} value={o.id}>{o.title}</option>)}
+                </select>
+              )}
               <div className="pub-rv-stars-pick">
                 {[1, 2, 3, 4, 5].map(n => (
                   <button key={n} className={`pub-rv-star ${n <= rvForm.rating ? 'on' : ''}`}
@@ -154,8 +162,11 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
               </div>
             </div>
           ) : (
-            <button className="pub-rv-cta" onClick={() => setRvForm({ rating: 5, text: '', name: '' })}>✍️ เขียนรีวิว</button>
+            <button className="pub-rv-cta" onClick={() => setRvForm({ rating: 5, text: '', name: '', orderId: rvOrders[0].id })}>✍️ เขียนรีวิว (ลูกค้าที่ยืนยันแล้ว)</button>
           ))}
+          {isSupabaseEnabled && rvOrders.length === 0 && (
+            <div className="pub-rv-gate">🔒 รีวิวได้เฉพาะลูกค้าที่ปิดดีล/ออเดอร์กับร้านนี้แล้ว — เพื่อให้ทุกรีวิวมาจากลูกค้าตัวจริง</div>
+          )}
         </div>
 
         {/* 🧪 Pre-order Validation — ลูกค้าจริงยกมือก่อนร้านลงทุนสร้าง */}
