@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AppData, PageId } from '../types';
 import { getMyStorefront, saveStorefront, setFeatured, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { draftVpLocal } from '../lib/firstDeal';
+import { sellerAhaProgress } from '../lib/ahaMoment';
 import { trackAiCall } from '../lib/usage';
 import { track } from '../lib/analytics';
 import DBDSelect from '../components/DBDSelect';
@@ -32,6 +33,8 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
   const [copied, setCopied] = useState(false);
   const [vpBusy, setVpBusy] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
+  const [justPublished, setJustPublished] = useState(false);
+  const startRef = useRef<number>(Date.now());  // จับเวลา onboarding (วัด <5 นาที จริง)
 
   useEffect(() => {
     getMyStorefront(wsId).then(existing => {
@@ -88,9 +91,11 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
         const vp = (res?.summary ?? '').trim().replace(/^["']|["']$/g, '');
         if (!vp) throw new Error('AI ไม่ตอบกลับ');
         patch({ vp: vp.slice(0, 200) });
+        track('seller_onboard_step', { step: 'vp', mode: 'ai' });
         setMsg('✨ AI Agent เขียนจุดขายให้แล้ว — ปรับแก้ได้ตามใจ แล้วกดเผยแพร่');
       } else {
         patch({ vp: draftVpLocal(sf.name, sf.dbd, sf.description, sf.services) });
+        track('seller_onboard_step', { step: 'vp', mode: 'local' });
         setMsg('✨ ร่างจุดขายจากข้อมูลของคุณแล้ว (local mode) — ปรับแก้ได้ตามใจ');
       }
     } catch (e) {
@@ -110,7 +115,12 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
     const err = await saveStorefront(wsId, next);
     setSaving(false);
     if (err) { setMsg('⚠️ ' + err); return; }
-    if (published) track('storefront_published', { has_images: sf.images.length > 0 ? 1 : 0, kind: sf.kind });
+    if (published) {
+      const secs = Math.round((Date.now() - startRef.current) / 1000);
+      track('storefront_published', { has_images: sf.images.length > 0 ? 1 : 0, kind: sf.kind });
+      track('seller_onboard_step', { step: 'publish', secs_elapsed: secs });
+      setJustPublished(true);
+    }
     setSf(next);
     setMsg(published
       ? `✅ เผยแพร่หน้าร้านแล้ว — ลูกค้าเข้าชมได้ที่ ${publicUrl}${isSupabaseEnabled ? '' : ' (local mode: พรีวิวในเครื่องนี้เท่านั้น)'}`
@@ -158,6 +168,38 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
         หน้าร้านสาธารณะให้ลูกค้าค้นเจอธุรกิจของคุณ — สร้างจากข้อมูลที่กรอกไว้แล้ว
         แสดงในสารบัญธุรกิจตามหมวด DBD พร้อมช่องทางติดต่อตรงถึงคุณ (ระบบไม่เก็บค่าคอมมิชชัน)
       </p>
+
+      {/* 🚀 Seller Aha (<5 นาที) — 3 ก้าวสู่ร้านพร้อมรับ RFQ (ซ่อนเมื่อเผยแพร่แล้ว) */}
+      {!sf.published && (() => {
+        const aha = sellerAhaProgress({ dbd: sf.dbd, vp: sf.vp, published: sf.published });
+        return (
+          <div className="saha-card">
+            <div className="saha-head">
+              <span className="saha-title">🚀 เปิดร้านพร้อมรับงาน B2B ใน ~5 นาที</span>
+              <span className="saha-meta">{aha.doneCount}/{aha.total} ก้าว · เหลือ ~{aha.minsLeft} นาที</span>
+            </div>
+            <div className="saha-track"><div className="saha-fill" style={{ width: aha.pct + '%' }} /></div>
+            <div className="saha-steps">
+              {aha.steps.map(s => (
+                <div key={s.id} className={`saha-step${s.complete ? ' done' : ''}${aha.nextStep?.id === s.id ? ' next' : ''}`} title={s.hint}>
+                  <span className="saha-ico">{s.complete ? '✅' : aha.nextStep?.id === s.id ? '👉' : s.icon}</span>
+                  <span className="saha-label">{s.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 🎉 หลังเผยแพร่ — พาไปดูงานรอเสนอราคาทันที (ปิด objection "ร้านร้าง") */}
+      {justPublished && sf.published && onNavigate && (
+        <div className="saha-published">
+          🎉 <b>ร้านออนไลน์แล้ว!</b> ก้าวต่อไปสู่ดีลแรก — ไปดู <b>งานรอเสนอราคา</b> ในตลาด B2B
+          <button className="saha-pub-btn" onClick={() => { track('seller_onboard_step', { step: 'to_rfq' }); onNavigate('trade'); }}>
+            📨 ดูงานรอเสนอราคา →
+          </button>
+        </div>
+      )}
 
       <div className="sf-editor">
         <div className="sf-form">

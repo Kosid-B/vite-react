@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ahaProgress, AHA_STEPS } from '../ahaMoment';
+import { ahaProgress, AHA_STEPS, SELLER_AHA_STEPS, sellerAhaProgress } from '../ahaMoment';
 import type { AppData } from '../../types';
 
 const mk = (over: Partial<AppData['aiCompany']>): AppData =>
@@ -43,5 +43,34 @@ describe('ahaProgress — 3 ก้าวสู่ Aha', () => {
   it('AHA_STEPS มี 3 ก้าว และรวมเวลา = 5 นาที', () => {
     expect(AHA_STEPS).toHaveLength(3);
     expect(AHA_STEPS.reduce((n, s) => n + s.mins, 0)).toBe(5);
+  });
+});
+
+describe('sellerAhaProgress — เปิดร้าน B2B <5 นาที', () => {
+  it('ว่างเปล่า → 0/3, เวลาเต็ม 5 นาที, next=sector', () => {
+    const a = sellerAhaProgress({ dbd: '', vp: '', published: false });
+    expect(a.doneCount).toBe(0);
+    expect(a.total).toBe(3);
+    expect(a.minsLeft).toBe(5);
+    expect(a.nextStep?.id).toBe('sector');
+  });
+  it('มีหมวด+VP ครบ แต่ยังไม่เผยแพร่ → 2/3, next=publish', () => {
+    const a = sellerAhaProgress({ dbd: '[M] บริการ', vp: 'ช่วย SME ผ่าน audit ISO เร็วขึ้น', published: false });
+    expect(a.doneCount).toBe(2);
+    expect(a.nextStep?.id).toBe('publish');
+    expect(a.minsLeft).toBe(2);
+  });
+  it('VP สั้นเกินไป (<10 ตัว) ยังไม่นับว่าเสร็จ', () => {
+    expect(sellerAhaProgress({ dbd: 'x', vp: 'สั้น', published: false }).steps.find(s => s.id === 'vp')?.complete).toBe(false);
+  });
+  it('เผยแพร่ครบ → activated 3/3', () => {
+    const a = sellerAhaProgress({ dbd: 'x', vp: 'จุดขายยาวพอสมควรครับ', published: true });
+    expect(a.activated).toBe(true);
+    expect(a.pct).toBe(100);
+    expect(a.nextStep).toBeNull();
+  });
+  it('SELLER_AHA_STEPS มี 3 ก้าว รวมเวลา = 5 นาที', () => {
+    expect(SELLER_AHA_STEPS).toHaveLength(3);
+    expect(SELLER_AHA_STEPS.reduce((n, s) => n + s.mins, 0)).toBe(5);
   });
 });
