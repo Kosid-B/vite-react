@@ -1,8 +1,12 @@
 import { useState } from 'react';
-import type { AppData, MarketingChannel, MarketingCampaign, MarketingGoal, MarketingChannelType, MarketingCampaignStatus } from '../types';
+import type { AppData, PageId, MarketingChannel, MarketingCampaign, MarketingGoal, MarketingChannelType, MarketingCampaignStatus } from '../types';
 import { PageHeader, Badge } from '../ds';
+import { marketingFromDe24 } from '../lib/marketingStrategy';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { withSkillDirectives } from '../lib/skillDirectives';
+import { trackAiCall } from '../lib/usage';
 
-interface Props { data: AppData; onUpdate: (d: AppData) => void; }
+interface Props { data: AppData; onUpdate: (d: AppData) => void; onNavigate?: (p: PageId) => void; }
 
 function baht(n: number) { return '฿' + Math.round(n).toLocaleString('th-TH'); }
 function pct(n: number) { return n.toFixed(1) + '%'; }
@@ -45,13 +49,17 @@ const BLANK_CP: Omit<MarketingCampaign, 'id'> = {
 
 const BLANK_G: Omit<MarketingGoal, 'id'> = { metric: '', current: 0, target: 0, unit: '' };
 
-export default function Marketing({ data, onUpdate }: Props) {
+export default function Marketing({ data, onUpdate, onNavigate }: Props) {
   const mkt = data.marketing;
   const channels = mkt.channels ?? [];
   const campaigns = mkt.campaigns ?? [];
   const goals = mkt.goals ?? [];
 
+  const strat = marketingFromDe24(data);
   const [tab, setTab] = useState<'channels' | 'campaigns' | 'goals'>('channels');
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiPlan, setAiPlan] = useState<string | null>(null);
+  const [adopted, setAdopted] = useState<string | null>(null);
   const [editCh, setEditCh]   = useState<(Partial<MarketingChannel> & { id?: string }) | null>(null);
   const [editCp, setEditCp]   = useState<(Partial<MarketingCampaign> & { id?: string }) | null>(null);
   const [editG, setEditG]     = useState<(Partial<MarketingGoal> & { id?: string }) | null>(null);
@@ -118,6 +126,54 @@ export default function Marketing({ data, onUpdate }: Props) {
     upd({ ...mkt, goals: goals.filter(g => g.id !== id) });
   }
 
+  // ---- รับข้อเสนอจาก MIT 24-Step เข้าเป็นรายการจริง ----
+  function adoptChannel(s: { type: MarketingChannelType; name: string; rationale: string }) {
+    if (channels.some(c => c.type === s.type && c.name === s.name)) { setAdopted(`มี "${s.name}" อยู่แล้ว`); return; }
+    saveCh({ ...BLANK_CH, name: s.name, type: s.type, notes: `จาก MIT 24-Step: ${s.rationale}` });
+    setAdopted(`✓ เพิ่มช่องทาง "${s.name}"`); setTab('channels');
+  }
+  function adoptCampaign(c: { name: string; goal: string; basedOn: string }) {
+    saveCp({ ...BLANK_CP, name: c.name, goal: c.goal, result: `อ้างอิง ${c.basedOn}` });
+    setAdopted(`✓ เพิ่มแคมเปญ "${c.name}"`); setTab('campaigns');
+  }
+  function adoptGoal(g: { metric: string; unit: string; hint: string }) {
+    if (goals.some(x => x.metric === g.metric)) { setAdopted(`มีเป้า "${g.metric}" อยู่แล้ว`); return; }
+    saveG({ ...BLANK_G, metric: g.metric, unit: g.unit });
+    setAdopted(`✓ เพิ่มเป้าหมาย "${g.metric}"`); setTab('goals');
+  }
+
+  // ---- AI agent (CMO) วางแผนการตลาดจากผล MIT 24-Step ----
+  async function runCmoAgent() {
+    if (!isSupabaseEnabled || !supabase) {
+      setAiPlan('โหมด local: ใช้ข้อเสนอจาก MIT 24-Step ด้านบนได้เลย (AI agent ทำงานเมื่อเชื่อม Supabase/เข้าสู่ระบบ)');
+      return;
+    }
+    const cmo = data.aiCompany?.agents.find(a => /cmo|market|ตลาด/i.test(a.role)) ?? data.aiCompany?.agents[0];
+    setAiBusy(true); setAiPlan(null);
+    try {
+      trackAiCall();
+      const doneSteps = strat.linkedSteps.filter(s => s.done).map(s => `${s.name}: ${s.note || '(ทำแล้ว)'}`).join(' · ');
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: cmo?.role ?? 'CMO',
+          mandate: withSkillDirectives(cmo?.mandate ?? 'วางแผนและดำเนินการการตลาด', data.aiCompany?.purchasedSkills),
+          model: cmo?.model ?? 'claude-sonnet-4-6',
+          title: 'วางแผนการตลาดจากผล MIT 24-Step',
+          detail: `ผล MIT 24-Step ที่ทำแล้ว: ${doneSteps || '(ยังไม่ได้ทำขั้นการตลาด)'} · ช่องทางปัจจุบัน: ${channels.map(c => c.name).join(', ') || 'ยังไม่มี'}`,
+          goal: 'เสนอแผนการตลาดที่ลงมือได้จริง: ช่องทางที่ควรใช้ + แคมเปญ (พาดหัว/ข้อเสนอ) + เป้าหมายเชิงตัวเลข ให้สอดคล้องกับ Persona/คุณค่า/ราคาจาก 24-Step',
+          industry: data.aiCompany?.industry ?? '',
+          companyName: data.aiCompany?.name ?? '',
+        },
+      });
+      if (error) throw error;
+      setAiPlan(res?.output ?? '(ไม่มีผลลัพธ์)');
+    } catch (e) {
+      setAiPlan('✕ ' + (e as Error).message);
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
   const bestChannel = [...activeChannels].sort((a, b) => (b.leadsPerMonth * b.convRate) - (a.leadsPerMonth * a.convRate))[0];
 
   return (
@@ -130,6 +186,66 @@ export default function Marketing({ data, onUpdate }: Props) {
           <Badge tone="neutral">{campaigns.filter(c => c.status === 'active').length} แคมเปญกำลังดำเนิน</Badge>
         </>}
       />
+
+      {/* ===== กลยุทธ์จากผล MIT 24-Step ===== */}
+      <div className="m24">
+        <div className="m24-hd">
+          <span className="m24-title">🎯 กลยุทธ์จากผล MIT 24-Step</span>
+          <span className="m24-ready">ความพร้อมข้อมูลการตลาด {strat.readiness}%</span>
+          {isSupabaseEnabled && (
+            <button className="m24-ai-btn" onClick={runCmoAgent} disabled={aiBusy}>
+              {aiBusy ? '⏳ CMO agent กำลังวางแผน…' : '🤖 ให้ CMO agent วางแผน & ลงมือ'}
+            </button>
+          )}
+        </div>
+        <div className="m24-track"><div className="m24-fill" style={{ width: `${strat.readiness}%` }} /></div>
+
+        {strat.gaps.length > 0 && (
+          <div className="m24-gaps">
+            ยังไม่ได้ทำ {strat.gaps.length} ขั้นที่ป้อนการตลาด:
+            {strat.gaps.slice(0, 4).map(g => <span key={g.index} className="m24-gap-chip">{g.name}</span>)}
+            {onNavigate && <button className="m24-gap-go" onClick={() => onNavigate('bmc')}>ไปเติมใน Business Model · MIT24 →</button>}
+          </div>
+        )}
+
+        <div className="m24-cols">
+          <div className="m24-col">
+            <div className="m24-col-hd">ช่องทางที่ควรใช้</div>
+            {strat.channels.length ? strat.channels.map(c => (
+              <div key={c.type + c.name} className="m24-item">
+                <div className="m24-item-body"><b>{c.name}</b><span>{c.rationale}</span></div>
+                <button className="m24-adopt" onClick={() => adoptChannel(c)}>+ เพิ่ม</button>
+              </div>
+            )) : <div className="m24-empty">ทำ Persona/กระบวนการหาลูกค้าใน 24-Step ก่อน</div>}
+          </div>
+          <div className="m24-col">
+            <div className="m24-col-hd">แคมเปญที่แนะนำ</div>
+            {strat.campaigns.length ? strat.campaigns.map(c => (
+              <div key={c.name} className="m24-item">
+                <div className="m24-item-body"><b>{c.name}</b><span>{c.goal}</span></div>
+                <button className="m24-adopt" onClick={() => adoptCampaign(c)}>+ เพิ่ม</button>
+              </div>
+            )) : <div className="m24-empty">ทำคุณค่า/วงจรการใช้/ราคาใน 24-Step ก่อน</div>}
+          </div>
+          <div className="m24-col">
+            <div className="m24-col-hd">เป้าหมาย</div>
+            {strat.goals.map(g => (
+              <div key={g.metric} className="m24-item">
+                <div className="m24-item-body"><b>{g.metric}</b><span>{g.hint}</span></div>
+                <button className="m24-adopt" onClick={() => adoptGoal(g)}>+ เพิ่ม</button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {adopted && <div className="m24-msg">{adopted}</div>}
+        {aiPlan && (
+          <div className="m24-aiplan">
+            <div className="m24-aiplan-hd">🤖 แผนจาก CMO agent</div>
+            <div className="m24-aiplan-body">{aiPlan}</div>
+          </div>
+        )}
+      </div>
 
       {/* KPI Overview */}
       <div className="mkt-kpi-grid">

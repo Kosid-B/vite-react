@@ -464,7 +464,7 @@ export default function App() {
             : <UpgradeWall page="market" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'roadmap' && <Roadmap data={data} onUpdate={updateData} onNavigate={setActivePage} />}
-        {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} />}
+        {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'team' && (
           canAccess(data, 'team')
             ? <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data}
