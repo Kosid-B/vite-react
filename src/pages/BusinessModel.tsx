@@ -96,7 +96,7 @@ const DE24_TH: string[] = [
   'เขียนแผนพัฒนาผลิตภัณฑ์ — จาก MVBP สู่ Full Product + ตลาดข้างเคียง',
 ];
 
-export default function BusinessModel({ data, onUpdate }: Props) {
+export default function BusinessModel({ data, onUpdate, onNavigate }: Props) {
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const [analyzingStep, setAnalyzingStep] = useState<number | null>(null);
   const [stepOutputs, setStepOutputs] = useState<Record<number, string>>({});
