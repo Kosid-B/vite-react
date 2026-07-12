@@ -463,7 +463,7 @@ export default function App() {
             ? <Marketplace data={data} onUpdate={updateData} />
             : <UpgradeWall page="market" data={data} onNavigate={setActivePage} />
         )}
-        {activePage === 'roadmap' && <Roadmap data={data} onUpdate={updateData} />}
+        {activePage === 'roadmap' && <Roadmap data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} />}
         {activePage === 'team' && (
           canAccess(data, 'team')
