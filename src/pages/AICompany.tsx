@@ -2079,7 +2079,16 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       {/* ===== 🧠 CEO เลือก Skill พัฒนาธุรกิจ (agentic) ===== */}
       <SkillAdvisor
         recs={recommendSkills(data, [...SKILL_CATALOG, ...adminSkillList])}
-        onPick={sk => { setMktCategory(sk.category); setBuyConfirm(sk); }}
+        onPick={sk => {
+          setMktCategory(sk.category);
+          setMktTier(0);   // ล้างตัวกรอง tier กันการ์ดที่เลือกถูกซ่อน
+          setBuyConfirm(sk);
+          setMktMsg(`👇 CEO เลือก “${sk.name}” ให้แล้ว — เลือกวิธีชำระเงินที่การ์ดด้านล่างเพื่อรับ Skill`);
+          // เลื่อนไปที่การ์ด Skill ในตลาด (reaction อยู่คนละส่วนกับปุ่ม — ไม่งั้นดูเหมือนกดแล้วเงียบ)
+          setTimeout(() => {
+            document.getElementById(`skm-card-${sk.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 80);
+        }}
       />
 
       {/* ===== 🛒 Skill Marketplace ===== */}
@@ -2272,7 +2281,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                 const official = !!(sk as SkillEntry).official;
                 const valueNote = (sk as SkillEntry).valueNote;
                 return (
-                  <div key={sk.id} className={`skm-card${owned ? ' owned' : ''}${isConfirm ? ' confirm' : ''}${official ? ' official' : ''}`}
+                  <div key={sk.id} id={`skm-card-${sk.id}`} className={`skm-card${owned ? ' owned' : ''}${isConfirm ? ' confirm' : ''}${official ? ' official' : ''}`}
                     style={{ '--card-color': catMeta.color } as React.CSSProperties}>
                     <div className="skm-card-top">
                       <span className="skm-card-icon">{sk.icon}</span>
