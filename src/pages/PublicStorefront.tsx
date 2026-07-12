@@ -6,6 +6,7 @@ import { track } from '../lib/analytics';
 import { DBD_SECTORS } from '../data/dbd';
 import { applySeo, siteOrigin } from '../lib/seo';
 import { storefrontSeo, directorySeo, directoryItemList, sectorLabel } from '../lib/seoData';
+import { STARTER_LISTINGS } from '../lib/starterStorefronts';
 
 /* ===== Marketplace M1 — หน้าสาธารณะ (ไม่ต้องล็อกอิน) =====
  * /b        → สารบัญธุรกิจ จัดกลุ่มตามหมวด DBD
@@ -294,6 +295,24 @@ export function PublicDirectoryPage() {
       </div>
 
       {list === null && <div className="pub-loading">กำลังโหลด…</div>}
+
+      {/* 🏢 บริการจากผู้พัฒนาแพลตฟอร์ม (B. Training) — seed จริง กัน /b ว่าง (โปร่งใส ไม่ใช่ร้านปลอม) */}
+      {!q && !sector && (
+        <div className="pub-starter-sec">
+          <div className="pub-starter-hd">🏢 บริการจากผู้พัฒนาแพลตฟอร์ม <span>B. Training Consultant · ที่ปรึกษา 20+ ปี</span></div>
+          <div className="pub-dir-grid">
+            {STARTER_LISTINGS.map(l => (
+              <a key={l.id} className="pub-dir-card pub-starter-card"
+                href={l.href} target={l.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
+                <div className="pub-dbd">{l.category}</div>
+                <div className="pub-dir-name">{l.name}</div>
+                <div className="pub-dir-promo">“{l.vp}”</div>
+                <div className="pub-dir-desc">{l.services.join(' · ')}</div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ⭐ พื้นที่โฆษณา — ร้านแนะนำ */}
       {featured.length > 0 && (
