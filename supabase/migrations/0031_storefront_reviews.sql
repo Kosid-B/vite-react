@@ -61,3 +61,7 @@ drop trigger if exists trg_recompute_storefront_rating on public.storefront_revi
 create trigger trg_recompute_storefront_rating
   after insert or update or delete on public.storefront_reviews
   for each row execute function public.recompute_storefront_rating();
+
+-- ฟังก์ชัน trigger ไม่ต้องเรียกผ่าน RPC — revoke execute กัน anon/auth เรียกตรง (security advisor 0028/0029)
+-- trigger ยังทำงานปกติ (รันในฐานะ table owner ไม่ผ่าน grant)
+revoke execute on function public.recompute_storefront_rating() from public, anon, authenticated;
