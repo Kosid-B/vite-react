@@ -489,6 +489,7 @@ export interface AppData {
   funnel: FunnelStage[];
   funnelSource?: 'seed' | 'real';   // seed = ตัวอย่าง · real = ผู้ใช้กรอก/เชื่อม GA4 จริง
   funnelSyncedAt?: string;           // วันที่อัปเดตข้อมูล funnel จริงล่าสุด
+  ahaDismissed?: boolean;            // ผู้ใช้ปิดการ์ด "Aha ใน 5 นาที" แล้ว
   roi: ROIInput;
   businessModel: BusinessModelData;
   aiCompany: AICompany;
