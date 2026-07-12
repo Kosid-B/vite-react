@@ -1,5 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { AppData } from '../types';
+import { parseFunnelNumbers, applyFunnelNumbers, isSeedFunnel } from '../lib/funnelSync';
 
 interface Props {
   data: AppData;
@@ -19,14 +20,28 @@ const STAGE_COLORS = [
 
 export default function ConversionFunnel({ data, onUpdate }: Props) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [showGuide, setShowGuide] = useState(false);
+  const [pasteText, setPasteText] = useState('');
+  const [pasteMsg, setPasteMsg] = useState<string | null>(null);
 
   const stages = data.stages;
   const funnel = data.funnel;
+  const isSeed = isSeedFunnel(data.funnelSource);
+  const today = new Date().toISOString().slice(0, 10);
 
   function saveLeads(i: number, val: string) {
     const n = Math.max(0, parseInt(val.replace(/,/g, ''), 10) || 0);
     const next = funnel.map((f, j) => j === i ? { ...f, leads: n } : f);
-    onUpdate({ ...data, funnel: next });
+    onUpdate({ ...data, funnel: next, funnelSource: 'real', funnelSyncedAt: today });
+  }
+
+  // วางตัวเลขจาก GA4 Funnel Exploration ทีเดียวทั้งหมด
+  function applyPaste() {
+    const nums = parseFunnelNumbers(pasteText);
+    if (!nums.length) { setPasteMsg('ไม่พบตัวเลขในข้อความที่วาง — ก็อปคอลัมน์ "ผู้ใช้ทั้งหมด" จาก GA4 มาวาง'); return; }
+    onUpdate({ ...data, funnel: applyFunnelNumbers(funnel, nums), funnelSource: 'real', funnelSyncedAt: today });
+    setPasteText('');
+    setPasteMsg(`✓ อัปเดต ${Math.min(nums.length, funnel.length)} step จากข้อมูลจริงแล้ว`);
   }
 
   function saveNote(i: number, val: string) {
@@ -74,6 +89,49 @@ export default function ConversionFunnel({ data, onUpdate }: Props) {
           <span className="law-badge" data-tip={"Goal-Gradient: เห็น funnel ทั้งหมด\nทำให้รู้ว่าต้องปรับ stage ไหน\nเพื่อถึงเป้าได้เร็วขึ้น"}>Goal-Gradient</span>
           <span className="law-badge" data-tip={"Von Restorff: stage ที่ conversion\nต่ำที่สุดจะถูก highlight โดดเด่น\nเพื่อดึงความสนใจให้แก้ก่อน"}>Von Restorff</span>
         </div>
+      </div>
+
+      {/* แหล่งข้อมูล — seed vs จริง + นำทางเชื่อม GA4 */}
+      <div className={`fn-src ${isSeed ? 'seed' : 'real'}`}>
+        <div className="fn-src-row">
+          <span className="fn-src-badge">{isSeed ? '🟡 ข้อมูลตัวอย่าง (seed)' : '🟢 ข้อมูลจริง'}</span>
+          <span className="fn-src-text">
+            {isSeed
+              ? 'ตัวเลข drop-off ยังเป็นตัวอย่าง ไม่ใช่ของธุรกิจคุณ — เชื่อมข้อมูลจริงจาก GA4 เพื่อให้ insight แม่นยำ'
+              : `อัปเดตล่าสุด ${data.funnelSyncedAt ?? today} · ตัวเลขมาจากคุณ/GA4`}
+          </span>
+          <button className="fn-src-btn" onClick={() => setShowGuide(v => !v)}>
+            {showGuide ? 'ปิด' : '🔗 เชื่อม GA4 / กรอกข้อมูลจริง'}
+          </button>
+        </div>
+
+        {showGuide && (
+          <div className="fn-guide">
+            <div className="fn-guide-hd">ดึง drop-off จริงจาก GA4 — 4 ขั้น</div>
+            <ol className="fn-guide-steps">
+              <li>เปิด <b>Google Analytics</b> (property <code>G-CHJ99RY1Q1</code>) → เมนู <b>Explore</b> → <b>Funnel exploration</b></li>
+              <li>ตั้ง Steps ให้ตรง 8 stage ของเรา (เช่น page_view → click → view_services → contact_form → discovery_call → proposal → signed → retained)</li>
+              <li>ก็อปคอลัมน์ <b>"ผู้ใช้ทั้งหมด" (Total users)</b> ของแต่ละ step</li>
+              <li>วางในช่องด้านล่าง → กด <b>ใช้ข้อมูลนี้</b> (หรือแก้เลขในแต่ละ step ด้านล่างทีละช่อง)</li>
+            </ol>
+            <textarea
+              className="fn-guide-paste"
+              placeholder={"วางตัวเลขต่อ step (บรรทัดละตัว หรือคั่นด้วย , )\nเช่น\n10000\n2500\n750\n225 ..."}
+              value={pasteText}
+              onChange={e => { setPasteText(e.target.value); setPasteMsg(null); }}
+              rows={4}
+              spellCheck={false}
+            />
+            <div className="fn-guide-actions">
+              <button className="fn-guide-apply" onClick={applyPaste}>✓ ใช้ข้อมูลนี้ ({parseFunnelNumbers(pasteText).length} ตัวเลข)</button>
+              <a className="fn-guide-link" href="https://analytics.google.com/analytics/web/" target="_blank" rel="noopener noreferrer">เปิด GA4 ↗</a>
+            </div>
+            {pasteMsg && <div className="fn-guide-msg">{pasteMsg}</div>}
+            <div className="fn-guide-note">
+              💡 auto-sync อัตโนมัติจาก GA4 (ไม่ต้องก็อปเอง) = Phase 2 — ต้องตั้ง Google service account + GA4 Data API (เสนอบอร์ดเหมือน Google Sheets)
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Summary cards */}

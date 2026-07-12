@@ -487,6 +487,8 @@ export interface AppData {
   contentPlan: ContentMonth[];
   actions: Action[];
   funnel: FunnelStage[];
+  funnelSource?: 'seed' | 'real';   // seed = ตัวอย่าง · real = ผู้ใช้กรอก/เชื่อม GA4 จริง
+  funnelSyncedAt?: string;           // วันที่อัปเดตข้อมูล funnel จริงล่าสุด
   roi: ROIInput;
   businessModel: BusinessModelData;
   aiCompany: AICompany;
