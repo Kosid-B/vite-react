@@ -87,6 +87,20 @@ describe('storefrontSeo', () => {
     const noPhone = storefrontSeo({ ...SF, phone: undefined }, ORIGIN);
     expect((noPhone.jsonLd[0] as { telephone?: string }).telephone).toBeUndefined();
   });
+  it('ไม่มีรีวิว → ไม่มี aggregateRating (ไม่ปั้นดาวปลอม)', () => {
+    expect((seo.jsonLd[0] as { aggregateRating?: unknown }).aggregateRating).toBeUndefined();
+  });
+  it('มีรีวิวจริง → emit AggregateRating ลง schema', () => {
+    const rated = storefrontSeo({ ...SF, rating: 4.6, reviewCount: 12 }, ORIGIN);
+    const agg = (rated.jsonLd[0] as { aggregateRating?: { ratingValue: number; reviewCount: number; '@type': string } }).aggregateRating;
+    expect(agg?.['@type']).toBe('AggregateRating');
+    expect(agg?.ratingValue).toBe(4.6);
+    expect(agg?.reviewCount).toBe(12);
+  });
+  it('reviewCount = 0 → ไม่ emit (กันดาวลอย)', () => {
+    const zero = storefrontSeo({ ...SF, rating: 5, reviewCount: 0 }, ORIGIN);
+    expect((zero.jsonLd[0] as { aggregateRating?: unknown }).aggregateRating).toBeUndefined();
+  });
 });
 
 describe('directorySeo + directoryItemList', () => {
