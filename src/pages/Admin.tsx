@@ -8,6 +8,7 @@ const CXPersonaTab  = lazy(() => import('./AdminTabs/CXPersonaTab'));
 const GTMTab        = lazy(() => import('./AdminTabs/GTMTab'));
 const SEOTab        = lazy(() => import('./AdminTabs/SEOTab'));
 const CaseStudyTab  = lazy(() => import('./AdminTabs/CaseStudyTab'));
+const PaymentsTab   = lazy(() => import('./AdminTabs/PaymentsTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
@@ -129,7 +130,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'payments' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -534,6 +535,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'shopapps' ? ' active' : ''}`} onClick={() => setTab('shopapps')}>
           🏪 ร้านฝากขาย
+        </button>
+        <button className={`pfa-tab${tab === 'payments' ? ' active' : ''}`} onClick={() => setTab('payments')}>
+          💳 ยืนยันการชำระเงิน
         </button>
         <button className={`pfa-tab${tab === 'pricing' ? ' active' : ''}`} onClick={() => setTab('pricing')}>
           💸 Pricing Strategy
@@ -1668,6 +1672,13 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       {tab === 'auction' && (
         <Suspense fallback={<div className="page-loading" />}>
           <AuctionTab />
+        </Suspense>
+      )}
+
+      {/* ===== PAYMENT CONFIRMATION QUEUE ===== */}
+      {tab === 'payments' && (
+        <Suspense fallback={<div className="page-loading" />}>
+          <PaymentsTab />
         </Suspense>
       )}
 
