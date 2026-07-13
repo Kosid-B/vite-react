@@ -252,6 +252,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'สำหรับคนเริ่มธุรกิจหลังตกงาน/ล้มเหลว — เทียบคอร์ส mindset + product innovation หลักหมื่น · เปลี่ยน "จุดต่ำสุด" เป็นจุดเริ่ม และเปลี่ยนของธรรมดารอบตัวเป็นโอกาส',
   },
   {
+    id: 'turnaround-debt-negotiation',
+    name: 'เจรจาพลิกวิกฤตหนี้ & Turnaround (Trump 1990)',
+    category: 'strategy', tier: 3, price: 2490, icon: '♟️',
+    desc: 'เพลย์บุ๊กเจรจาจาก "จุดที่ดูอ่อนแอที่สุด" จากเคสวิกฤตหนี้ของทรัมป์ปี 1990 — เมื่อเป็นหนี้ท่วมตัว พลิกด้วยหลัก Mutual Downside (ทำให้การล้มของคุณคือความเสียหายของเจ้าหนี้ → เขามีเหตุผลประคองคุณไว้), ใช้สินทรัพย์ไม่จับต้อง (แบรนด์/ความสามารถบริหาร) เป็นหลักประกัน, และคุมกรอบการเจรจาปรับโครงสร้างหนี้ (workout) โดยไม่ฉายความสิ้นหวัง — พร้อมคำเตือน: leverage ต้อง "จริง" ไม่ใช่ bluff และ over-leverage คือรากของวิกฤต',
+    tags: ['CEO', 'Founder', 'CFO'],
+    official: true,
+    valueNote: 'เทียบค่าที่ปรึกษาปรับโครงสร้างหนี้/Turnaround หลักแสน · ทักษะเอาตัวรอดในภาวะวิกฤตการเงินที่เจ้าของธุรกิจต้องมี — ต่างจากเคส Pixar (เจรจาจากจุดแข็ง) อันนี้คือเจรจาจากจุดอ่อน',
+  },
+  {
     id: 'ethical-sales-persuasion',
     name: 'Ethical Sales Persuasion & Fraud Red-Flags',
     category: 'sales', tier: 3, price: 2490, icon: '🐺',
