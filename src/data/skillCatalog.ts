@@ -261,6 +261,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'เทียบค่าที่ปรึกษาปรับโครงสร้างหนี้/Turnaround หลักแสน · ทักษะเอาตัวรอดในภาวะวิกฤตการเงินที่เจ้าของธุรกิจต้องมี — ต่างจากเคส Pixar (เจรจาจากจุดแข็ง) อันนี้คือเจรจาจากจุดอ่อน',
   },
   {
+    id: 'cashflow-liquidity-management',
+    name: 'บริหารกระแสเงินสด & สภาพคล่อง (เคส "เนื้อแท้")',
+    category: 'analytics', tier: 3, price: 2490, icon: '💧',
+    desc: 'เพลย์บุ๊กกัน "กำไรทิพย์" จากเคสร้าน "เนื้อแท้" (รายได้สูงแต่จ่ายเงินเดือนไม่ได้) — แยก "กำไรทางบัญชี vs เงินสดจริง", บริหารเงินทุนหมุนเวียน/วงจรเงินสด (Cash Conversion Cycle), พยากรณ์สภาพคล่องล่วงหน้า 13 สัปดาห์ (13-Week Cash Flow), และประเมินผลกระทบเงินสดก่อนขยายสาขา/ลงทุน — พร้อมสูตรคำนวณ CCC, food cost % และ checklist ก่อนโต',
+    tags: ['CEO', 'Founder', 'เจ้าของร้าน'],
+    official: true,
+    valueNote: 'ทักษะที่ป้องกันธุรกิจรายได้ดีจากการ "ตายเพราะเงินสดหมด" — เทียบค่าที่ปรึกษาการเงิน SME หลักหมื่น · Cash is King: กำไรบอกว่ารวย เงินสดบอกว่ารอด',
+  },
+  {
     id: 'ethical-sales-persuasion',
     name: 'Ethical Sales Persuasion & Fraud Red-Flags',
     category: 'sales', tier: 3, price: 2490, icon: '🐺',
