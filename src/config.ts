@@ -38,6 +38,11 @@ export const PAYMENT = {
   // 🔁 ตัดเงินอัตโนมัติทุกงวด (auto-renew · Xendit Recurring API) — เปิดเมื่อ xenditLive แล้ว +
   //    deploy create-recurring-plan + recurring-webhook และตั้ง webhook URL ใน Xendit dashboard
   recurringLive: false,
+  // ⚙️ ชำระออนไลน์ผ่าน Omise / Opn Payments (ทางเลือกแทน Xendit) — เปลี่ยนเป็น true เมื่อ Omise อนุมัติบัญชี (KYC),
+  //    deploy ฟังก์ชัน omise-create-charge + omise-webhook และตั้ง secret OMISE_SECRET_KEY + OMISE_PUBLIC_KEY (ดู COMMAND.md)
+  omiseLive: false,
+  // Omise Public Key (pkey_… เป็น publishable key = public ฝังได้) — ใส่เมื่อ omiseLive
+  omisePublicKey: '',
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)

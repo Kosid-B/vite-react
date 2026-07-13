@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { submitPaymentSlip, listMyPayments } from '../lib/payments';
 import ExpertEdge from '../components/ExpertEdge';
 
 function addDays(iso: string, n: number): string {
@@ -167,6 +168,47 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   const [showCost, setShowCost] = useState(false);
   const [payBusy, setPayBusy] = useState(false);
   const [payErr, setPayErr] = useState<string | null>(null);
+  const [slipBusy, setSlipBusy] = useState(false);
+  const [slipMsg, setSlipMsg] = useState<string | null>(null);
+
+  // เปิดใช้งานแพ็กอัตโนมัติเมื่อแอดมินอนุมัติสลิป (client เจ้าของ workspace ทำเอง — ไม่มีการเขียนข้าม workspace)
+  useEffect(() => {
+    if (!isSupabaseEnabled || !wsId) return;
+    let cancelled = false;
+    listMyPayments(wsId).then(subs => {
+      if (cancelled) return;
+      const applied = data.appliedPaymentIds ?? [];
+      const approved = subs.find(s => s.status === 'approved' && !applied.includes(s.id));
+      if (!approved) return;
+      const now = new Date().toISOString();
+      const invoice: Invoice = { id: 'inv-' + approved.id.slice(0, 8), date: now, plan: approved.plan as PlanId, amount: approved.amount, status: 'paid' };
+      onUpdate({
+        ...data,
+        appliedPaymentIds: [...applied, approved.id],
+        subscription: {
+          ...data.subscription,
+          plan: approved.plan as PlanId,
+          status: 'active',
+          billingCycle: approved.cycle as 'monthly' | 'yearly',
+          currentPeriodEnd: addMonths(now, approved.cycle === 'yearly' ? 12 : 1),
+          trialEndDate: null,
+          invoices: [invoice, ...data.subscription.invoices],
+        },
+      });
+      setSlipMsg('✅ แอดมินยืนยันการชำระเงินแล้ว — เปิดใช้งานแพ็ก ' + approved.plan.toUpperCase());
+    }).catch(() => { /* เงียบ — ไม่ทำ UX พัง */ });
+    return () => { cancelled = true; };
+  }, [wsId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** อัปสลิปในแอป → คิวแอดมินยืนยัน (แทนส่ง LINE/อีเมล) */
+  async function uploadSlip(file?: File) {
+    if (!file || !wsId) return;
+    setSlipBusy(true);
+    setSlipMsg(null);
+    const { error } = await submitPaymentSlip({ wsId, plan: selected, cycle, amount: chargeAmount, file });
+    setSlipBusy(false);
+    setSlipMsg(error ? '⚠️ ' + error : '✅ ส่งสลิปแล้ว — แอดมินจะตรวจและเปิดใช้งานให้ (เห็นผลเมื่อรีเฟรชหน้าหลังอนุมัติ)');
+  }
 
   /** จ่ายผ่าน Xendit (hosted checkout: บัตร/PromptPay/e-wallet) — production เท่านั้น */
   async function payWithXendit() {
@@ -196,6 +238,25 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
       });
       if (error || !res?.action_url) throw new Error(res?.error ?? error?.message ?? 'สมัครตัดเงินอัตโนมัติไม่สำเร็จ');
       window.location.href = res.action_url as string;
+    } catch (e) {
+      setPayErr((e as Error).message);
+      setPayBusy(false);
+    }
+  }
+
+  /** จ่ายผ่าน Omise / Opn Payments (PromptPay QR ผ่าน gateway) — production เท่านั้น */
+  async function payWithOmise() {
+    if (!supabase || !wsId) return;
+    setPayBusy(true);
+    setPayErr(null);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('omise-create-charge', {
+        body: { plan: selected, cycle, workspaceId: wsId },
+      });
+      if (error || res?.error) throw new Error(res?.error ?? error?.message ?? 'สร้างการชำระเงินไม่สำเร็จ');
+      if (res.authorize_uri) { window.location.href = res.authorize_uri as string; return; }
+      if (res.paid) { confirmPaid(); return; }
+      throw new Error('ไม่ได้รับลิงก์ยืนยันการชำระเงิน');
     } catch (e) {
       setPayErr((e as Error).message);
       setPayBusy(false);
@@ -635,9 +696,17 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             <div className="bill-slip-box">
               <div className="bill-slip-hd">📎 ส่งสลิปหลังโอนเงิน</div>
               <div className="bill-slip-desc">
-                หลังโอนเงินแล้ว กรุณาส่งสลิปพร้อม Workspace ID มาที่ช่องทางด้านล่าง
-                แอดมินจะเปิดใช้งานให้ภายใน 1 ชั่วโมง (วันทำการ)
+                หลังโอนเงินแล้ว อัปสลิปในระบบได้เลย (แนะนำ) — แอดมินตรวจแล้วเปิดใช้งานให้ภายใน 1 ชั่วโมง (วันทำการ)
               </div>
+              {isSupabaseEnabled && (
+                <label className={`bill-slip-upload${slipBusy ? ' busy' : ''}`}>
+                  {slipBusy ? '⏳ กำลังส่งสลิป…' : '📤 อัปสลิปในระบบ (รูป/PDF)'}
+                  <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" hidden disabled={slipBusy || !wsId}
+                    onChange={e => uploadSlip(e.target.files?.[0])} />
+                </label>
+              )}
+              {slipMsg && <div className="bill-slip-msg">{slipMsg}</div>}
+              <div className="bill-slip-or">หรือส่งผ่านช่องทางอื่น:</div>
               <div className="bill-slip-btns">
                 <a
                   className="bill-slip-btn bill-slip-line"
@@ -678,7 +747,16 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                 </div>
               </>
             )}
-            {isSupabaseEnabled && !PAYMENT.xenditLive && (
+            {isSupabaseEnabled && !PAYMENT.xenditLive && PAYMENT.omiseLive && (
+              <>
+                <button className="bill-xendit" onClick={payWithOmise} disabled={payBusy || !wsId}>
+                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Omise — PromptPay / บัตร'}
+                </button>
+                {payErr && <div className="bill-warn">⚠️ {payErr}</div>}
+                <div className="bill-note">ชำระเงินปลอดภัยผ่าน Omise / Opn Payments — เปิดใช้งานแพ็กอัตโนมัติเมื่อชำระสำเร็จ</div>
+              </>
+            )}
+            {isSupabaseEnabled && !PAYMENT.xenditLive && !PAYMENT.omiseLive && (
               <div className="bill-soon">
                 ⏳ ระบบชำระออนไลน์อัตโนมัติกำลังเปิดใช้เร็วๆ นี้ — ระหว่างนี้โอนหรือสแกน QR ด้านบน
                 แล้วส่งสลิป แอดมินเปิดใช้งานให้ภายใน 1 ชม. (วันทำการ)

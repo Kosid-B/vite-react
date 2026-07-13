@@ -516,6 +516,7 @@ export interface AppData {
   cityUnlocks?: string[];                 // ของปลดล็อกในเกม (cosmetic)
   streak?: { count: number; lastDay: string }; // ส่วนต่อเนื่องรายวัน (ทำงานจริงในแอป)
   proMode?: boolean;                      // โหมดโปร — ซ่อนองค์ประกอบเกมบน Dashboard
+  appliedPaymentIds?: string[];           // id ของ payment_submissions ที่อนุมัติแล้ว + เปิดใช้งานแพ็กแล้ว (กันเปิดซ้ำ)
   // CMO วิเคราะห์ตลาด+กลุ่มลูกค้า (Segmentation) รายสัปดาห์ทุกวันศุกร์ (ดึงข้อมูลตลาดจริง)
   cmoMarket?: { analysis: string; webUsed: boolean; updatedAt: string; weekTag: string };
   // C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO ทุกวันศุกร์
