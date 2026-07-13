@@ -478,7 +478,7 @@ export default function App() {
         )}
         {activePage === 'iso9001' && (
           canAccess(data, 'iso9001')
-            ? <ISO9001 data={data} onUpdate={updateData} />
+            ? <ISO9001 data={data} onUpdate={updateData} onNavigate={setActivePage} />
             : <UpgradeWall page="iso9001" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'cases' && <CaseStudies data={data} />}

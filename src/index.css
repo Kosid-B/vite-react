@@ -5936,3 +5936,13 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .iso-adv-go { flex-shrink:0; font-family:inherit; font-size:13px; font-weight:700; color:#0f172a; background:var(--accent); border:none; border-radius:8px; padding:8px 14px; cursor:pointer; }
 .iso-adv-more { font-size:12px; color:var(--ink2); margin-top:8px; text-align:center; }
 .iso-adv-exp { margin-top:12px; padding:9px 12px; background:rgba(6,182,212,.08); border-radius:8px; font-size:12px; color:var(--ink2); line-height:1.6; }
+
+/* ===== ISO multi-standard picker + hire button ===== */
+.iso-std-picker { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 14px; }
+.iso-std-btn { display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-size:13.5px; font-weight:700; color:var(--ink2); background:var(--cream3); border:1.5px solid var(--sand); border-radius:10px; padding:9px 15px; cursor:pointer; transition:border-color .15s,color .15s; }
+.iso-std-btn:hover { border-color:var(--accent); }
+.iso-std-btn.active { border-color:var(--accent); background:#06b6d414; color:var(--ink); }
+.iso-std-ico { font-size:16px; }
+.iso-adv-hire { width:100%; margin-top:12px; font-family:inherit; font-size:14px; font-weight:800; color:#0f172a; background:linear-gradient(90deg,#22d3ee,#38bdf8); border:none; border-radius:10px; padding:12px 16px; cursor:pointer; }
+.iso-adv-hire:hover { filter:brightness(1.05); }
+.iso-adv-note { font-size:12.5px; color:var(--ink2); background:rgba(6,182,212,.08); border-radius:8px; padding:9px 12px; }

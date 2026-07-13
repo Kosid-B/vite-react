@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import type { AppData, ISO9001Data, ISOClauseCheck, ISOStatus, Nonconformity, ISODocument, InternalAudit } from '../types';
+import type { AppData, PageId, ISO9001Data, ISOClauseCheck, ISOStatus, Nonconformity, ISODocument, InternalAudit } from '../types';
 import ExpertEdge from '../components/ExpertEdge';
 import { assessReadiness } from '../lib/isoGapAssessment';
+import { STANDARDS, STANDARD_ORDER, guideOf, seedClauses, type StandardId } from '../lib/isoStandards';
+import { track } from '../lib/analytics';
 
 interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
+  onNavigate?: (page: PageId) => void;
 }
 
 const STATUS_COLOR: Record<ISOStatus, string> = {
@@ -26,21 +29,12 @@ const STATUS_LABEL: Record<ISOStatus, string> = {
   red: 'ยังไม่สอดคล้อง',
   na: 'ไม่เกี่ยวข้อง',
 };
-const CLAUSE_GROUPS = [
-  { section: '4', title: 'บริบทขององค์กร', ids: ['4.1','4.2','4.3','4.4'] },
-  { section: '5', title: 'ภาวะผู้นำ', ids: ['5.1','5.2','5.3'] },
-  { section: '6', title: 'การวางแผน', ids: ['6.1','6.2','6.3'] },
-  { section: '7', title: 'ส่วนสนับสนุน', ids: ['7.1','7.2','7.3','7.4','7.5'] },
-  { section: '8', title: 'การดำเนินการ', ids: ['8.1','8.2','8.3','8.4','8.5','8.6','8.7'] },
-  { section: '9', title: 'การประเมินสมรรถนะ', ids: ['9.1','9.2','9.3'] },
-  { section: '10', title: 'การปรับปรุง', ids: ['10.1','10.2','10.3'] },
-];
 const SEV_COLOR: Record<string,string> = { major:'#dc2626', minor:'#d97706', observation:'#2563eb' };
 const SEV_LABEL: Record<string,string> = { major:'Major NC', minor:'Minor NC', observation:'ข้อสังเกต' };
 
 function uid() { return 'iso-' + Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
 
-export default function ISO9001({ data, onUpdate }: Props) {
+export default function ISO9001({ data, onUpdate, onNavigate }: Props) {
   const iso = data.iso9001!;
   const [tab, setTab] = useState<'overview'|'clauses'|'nc'|'docs'|'audit'>('overview');
   const [editClause, setEditClause] = useState<string | null>(null);
@@ -56,17 +50,32 @@ export default function ISO9001({ data, onUpdate }: Props) {
     onUpdate({ ...data, iso9001: { ...iso, ...next } });
   }
 
-  // Clause compliance stats
-  const green = iso.clauses.filter(c => c.status === 'green').length;
-  const amber = iso.clauses.filter(c => c.status === 'amber').length;
-  const red = iso.clauses.filter(c => c.status === 'red').length;
-  const applicable = iso.clauses.filter(c => c.status !== 'na').length;
+  // Multi-standard: มาตรฐานที่กำลังดู + clause checklist ของมาตรฐานนั้น
+  const std: StandardId = iso.activeStandard ?? 'iso9001';
+  const stdDef = STANDARDS[std];
+  const activeClauses: ISOClauseCheck[] = std === 'iso9001' ? iso.clauses : (iso.byStandard?.[std] ?? seedClauses(std));
+  function setActiveClauses(next: ISOClauseCheck[]) {
+    if (std === 'iso9001') patch({ clauses: next });
+    else patch({ byStandard: { ...iso.byStandard, [std]: next } });
+  }
+  function switchStandard(id: StandardId) {
+    setEditClause(null); setClauseDraft({});
+    // seed ครั้งแรกที่เข้ามาตรฐานใหม่ ให้มีแถวไว้แก้
+    if (id !== 'iso9001' && !iso.byStandard?.[id]) patch({ activeStandard: id, byStandard: { ...iso.byStandard, [id]: seedClauses(id) } });
+    else patch({ activeStandard: id });
+  }
+
+  // Clause compliance stats (ของมาตรฐานที่เลือก)
+  const green = activeClauses.filter(c => c.status === 'green').length;
+  const amber = activeClauses.filter(c => c.status === 'amber').length;
+  const red = activeClauses.filter(c => c.status === 'red').length;
+  const applicable = activeClauses.filter(c => c.status !== 'na').length;
   const readinessScore = applicable > 0 ? Math.round((green / applicable) * 100) : 0;
-  const gap = assessReadiness(iso.clauses);
+  const gap = assessReadiness(activeClauses, guideOf(std));
 
   /** ไปแก้ clause ที่ระบุ (จากรายการ "สิ่งที่ต้องทำก่อน audit") */
   function goToClause(id: string) {
-    const cl = iso.clauses.find(c => c.id === id);
+    const cl = activeClauses.find(c => c.id === id);
     setClauseDraft(cl ? { ...cl } : {});
     setEditClause(id);
     setTab('clauses');
@@ -75,9 +84,28 @@ export default function ISO9001({ data, onUpdate }: Props) {
 
   function saveClause() {
     if (!editClause) return;
-    patch({ clauses: iso.clauses.map(c => c.id === editClause ? { ...c, ...clauseDraft } : c) });
+    setActiveClauses(activeClauses.map(c => c.id === editClause ? { ...c, ...clauseDraft } : c));
     setEditClause(null);
     setClauseDraft({});
+  }
+
+  /** 🤝 ปิดลูป vertical→รายได้: เห็นช่องว่าง → ร่างคำขอจ้างที่ปรึกษา B. Training เข้าตลาด B2B */
+  function hireConsultant() {
+    const lines = gap.prioritizedActions.slice(0, 12).map(a => `- ข้อ ${a.id} ${a.title}: ${a.action}`);
+    const prefill = {
+      title: `ต้องการที่ปรึกษา ${stdDef.code} ช่วยจัดทำระบบ (ยังขาด ${gap.prioritizedActions.length} ข้อ)`,
+      detail: [
+        `มาตรฐาน: ${stdDef.code} — ${stdDef.focus}`,
+        `ความพร้อมปัจจุบัน: ${readinessScore}%`,
+        '',
+        'ขอบเขตที่ต้องการให้ช่วย:',
+        ...lines,
+      ].join('\n'),
+      sector: '',
+    };
+    try { sessionStorage.setItem('rfq_open_prefill', JSON.stringify(prefill)); } catch { /* ignore */ }
+    track('iso_hire_consultant', { standard: std, readiness: readinessScore });
+    onNavigate?.('trade');
   }
 
   function saveNC() {
@@ -132,15 +160,24 @@ export default function ISO9001({ data, onUpdate }: Props) {
   return (
     <div>
       <div className="page-header">
-        <div className="page-title">ISO 9001:2015 QMS</div>
+        <div className="page-title">{stdDef.code} · {stdDef.focus}</div>
         <div className="page-meta">
           <span className="meta-chip">{iso.tier === 'certified' ? '✓ ได้รับรองแล้ว' : 'กำลังเตรียมการรับรอง'}</span>
           {iso.certBody && <span className="meta-chip">{iso.certBody}</span>}
-          {iso.certExpiry && <span className="meta-chip">หมดอายุ {iso.certExpiry}</span>}
           <span className="meta-chip iso-readiness-chip" style={{ background: readinessScore>=70?'rgba(16,185,129,.15)':readinessScore>=40?'rgba(245,158,11,.15)':'rgba(239,68,68,.15)', color: readinessScore>=70?'#10b981':readinessScore>=40?'#fbbf24':'#f87171' }}>
             Readiness {readinessScore}%
           </span>
         </div>
+      </div>
+
+      {/* เลือกมาตรฐาน (B. Training เชี่ยวชาญทั้ง 4) */}
+      <div className="iso-std-picker">
+        {STANDARD_ORDER.map(id => (
+          <button key={id} className={`iso-std-btn${std===id?' active':''}`} onClick={() => switchStandard(id)} title={STANDARDS[id].focus}>
+            <span className="iso-std-ico">{STANDARDS[id].icon}</span>
+            <span className="iso-std-label">{STANDARDS[id].label}</span>
+          </button>
+        ))}
       </div>
 
       <ExpertEdge />
@@ -204,16 +241,21 @@ export default function ISO9001({ data, onUpdate }: Props) {
             {gap.prioritizedActions.length > 6 && (
               <div className="iso-adv-more">…และอีก {gap.prioritizedActions.length - 6} ข้อ — ดูทั้งหมดในแท็บ Clause Checklist</div>
             )}
+            {onNavigate && gap.prioritizedActions.length > 0 && (
+              <button className="iso-adv-hire" onClick={hireConsultant}>
+                🤝 ให้ที่ปรึกษา B. Training ช่วยปิดช่องว่าง {gap.prioritizedActions.length} ข้อ — ขอใบเสนอราคา
+              </button>
+            )}
             <div className="iso-adv-exp">
-              🏅 โดยทีมที่ปรึกษา B. Training — วิธีประเมินเดียวกันนี้ใช้ได้กับ <b>ISO 14001</b> (สิ่งแวดล้อม) ·
+              🏅 โดยทีมที่ปรึกษา B. Training — เชี่ยวชาญ <b>ISO 9001</b> (คุณภาพ) · <b>ISO 14001</b> (สิ่งแวดล้อม) ·
               <b> ISO 45001</b> (อาชีวอนามัยและความปลอดภัย) · <b>ISO 22301</b> (ความต่อเนื่องทางธุรกิจ) —
-              โครง Annex SL เดียวกัน ประสบการณ์ 10+ ปี
+              สลับมาตรฐานด้านบนเพื่อประเมินแต่ละตัว
             </div>
           </div>
 
           {/* Basic settings */}
           <div className="iso-panel">
-            <div className="iso-panel-hd">ข้อมูลพื้นฐาน QMS</div>
+            <div className="iso-panel-hd">ข้อมูลพื้นฐาน — {stdDef.label}</div>
             <div className="iso-form-grid">
               <div className="iso-field">
                 <label>สถานะการรับรอง</label>
@@ -234,14 +276,23 @@ export default function ISO9001({ data, onUpdate }: Props) {
                 <label>Internal Audit ครั้งถัดไป</label>
                 <input type="date" value={iso.nextAuditDate} onChange={e => patch({ nextAuditDate: e.target.value })} />
               </div>
-              <div className="iso-field iso-field-full">
-                <label>ขอบเขตระบบ QMS (Scope)</label>
-                <textarea value={iso.scope} onChange={e => patch({ scope: e.target.value })} rows={2} placeholder="อธิบายขอบเขตของระบบ QMS ตามข้อ 4.3" />
-              </div>
-              <div className="iso-field iso-field-full">
-                <label>นโยบายคุณภาพ (Quality Policy - ข้อ 5.2)</label>
-                <textarea value={iso.qualityPolicy} onChange={e => patch({ qualityPolicy: e.target.value })} rows={3} placeholder="ระบุนโยบายคุณภาพขององค์กร..." />
-              </div>
+              {std === 'iso9001' && (
+                <>
+                  <div className="iso-field iso-field-full">
+                    <label>ขอบเขตระบบ QMS (Scope)</label>
+                    <textarea value={iso.scope} onChange={e => patch({ scope: e.target.value })} rows={2} placeholder="อธิบายขอบเขตของระบบ QMS ตามข้อ 4.3" />
+                  </div>
+                  <div className="iso-field iso-field-full">
+                    <label>นโยบายคุณภาพ (Quality Policy - ข้อ 5.2)</label>
+                    <textarea value={iso.qualityPolicy} onChange={e => patch({ qualityPolicy: e.target.value })} rows={3} placeholder="ระบุนโยบายคุณภาพขององค์กร..." />
+                  </div>
+                </>
+              )}
+              {std !== 'iso9001' && (
+                <div className="iso-field iso-field-full">
+                  <div className="iso-adv-note">📌 {stdDef.policyLabel} · ขอบเขต · วัตถุประสงค์ ของมาตรฐานนี้ — บันทึกในแท็บ Clause Checklist (ข้อ 4.3 / 5.2 / 6.2)</div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -249,8 +300,8 @@ export default function ISO9001({ data, onUpdate }: Props) {
           <div className="iso-panel" style={{ marginTop: 14 }}>
             <div className="iso-panel-hd">สถานะแต่ละหมวด</div>
             <div className="iso-heatmap">
-              {CLAUSE_GROUPS.map(grp => {
-                const clauses = iso.clauses.filter(c => grp.ids.includes(c.id));
+              {stdDef.groups.map(grp => {
+                const clauses = activeClauses.filter(c => c.id.split('.')[0] === grp.section);
                 const grpGreen = clauses.filter(c=>c.status==='green').length;
                 const grpApplicable = clauses.filter(c=>c.status!=='na').length;
                 const pct = grpApplicable > 0 ? Math.round((grpGreen/grpApplicable)*100) : 100;
@@ -275,10 +326,10 @@ export default function ISO9001({ data, onUpdate }: Props) {
       {/* ===== Clauses ===== */}
       {tab === 'clauses' && (
         <div>
-          {CLAUSE_GROUPS.map(grp => (
+          {stdDef.groups.map(grp => (
             <div key={grp.section} className="iso-panel" style={{ marginBottom: 14 }}>
               <div className="iso-panel-hd">ข้อ {grp.section} — {grp.title}</div>
-              {iso.clauses.filter(c => grp.ids.includes(c.id)).map(clause => (
+              {activeClauses.filter(c => c.id.split('.')[0] === grp.section).map(clause => (
                 <div key={clause.id} id={`iso-clause-${clause.id}`} className="iso-clause-row">
                   <div className="iso-clause-id">{clause.id}</div>
                   <div className="iso-clause-body">
@@ -490,17 +541,19 @@ export default function ISO9001({ data, onUpdate }: Props) {
             ))}
           </div>
 
-          <div className="iso-panel" style={{ marginTop: 14 }}>
-            <div className="iso-panel-hd">วัตถุประสงค์คุณภาพ (Quality Objectives — ข้อ 6.2)</div>
-            {(iso.qualityObjectives ?? []).map((obj, i) => (
-              <div key={i} className="iso-obj-row">
-                <span className="iso-obj-num">{i+1}</span>
-                <input className="iso-obj-input" value={obj} onChange={e => patch({ qualityObjectives: iso.qualityObjectives.map((o,j)=>j===i?e.target.value:o) })} />
-                <button className="iso-nc-del" onClick={() => patch({ qualityObjectives: iso.qualityObjectives.filter((_,j)=>j!==i) })}>×</button>
-              </div>
-            ))}
-            <button className="iso-add-btn" style={{ marginTop: 8 }} onClick={() => patch({ qualityObjectives: [...(iso.qualityObjectives ?? []), ''] })}>+ เพิ่มวัตถุประสงค์</button>
-          </div>
+          {std === 'iso9001' && (
+            <div className="iso-panel" style={{ marginTop: 14 }}>
+              <div className="iso-panel-hd">วัตถุประสงค์คุณภาพ (Quality Objectives — ข้อ 6.2)</div>
+              {(iso.qualityObjectives ?? []).map((obj, i) => (
+                <div key={i} className="iso-obj-row">
+                  <span className="iso-obj-num">{i+1}</span>
+                  <input className="iso-obj-input" value={obj} onChange={e => patch({ qualityObjectives: iso.qualityObjectives.map((o,j)=>j===i?e.target.value:o) })} />
+                  <button className="iso-nc-del" onClick={() => patch({ qualityObjectives: iso.qualityObjectives.filter((_,j)=>j!==i) })}>×</button>
+                </div>
+              ))}
+              <button className="iso-add-btn" style={{ marginTop: 8 }} onClick={() => patch({ qualityObjectives: [...(iso.qualityObjectives ?? []), ''] })}>+ เพิ่มวัตถุประสงค์</button>
+            </div>
+          )}
         </div>
       )}
     </div>
