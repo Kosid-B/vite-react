@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { AppData, Persona } from '../types';
 import EditableList from '../components/EditableList';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
@@ -28,6 +28,7 @@ export default function Personas({ data, onUpdate }: Props) {
   const [aiText, setAiText] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const aiRef = useRef<HTMLTextAreaElement>(null);
 
   function append(p: Persona) {
     onUpdate({ ...data, personas: [...data.personas, p] });
@@ -53,7 +54,12 @@ export default function Personas({ data, onUpdate }: Props) {
       setShowNew(false);
       return;
     }
-    if (!aiText.trim()) { setMsg('วางข้อความ Market Research ก่อน หรือกด "ใช้ template segment"'); return; }
+    if (!aiText.trim()) {
+      setMsg('⚠️ วางข้อความ Market Research ในช่องด้านบนก่อน หรือกด "+ ใช้ template segment นี้เลย"');
+      aiRef.current?.focus();
+      aiRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
     setAiBusy(true);
     try {
       const { data: res, error } = await supabase.functions.invoke('ai-assist', {
@@ -157,6 +163,7 @@ export default function Personas({ data, onUpdate }: Props) {
               {!isSupabaseEnabled && <em> — โหมด Local: จะใช้ template segment แทน</em>}
             </div>
             <textarea
+              ref={aiRef}
               className="pl-ai-text"
               rows={5}
               value={aiText}
@@ -167,6 +174,8 @@ export default function Personas({ data, onUpdate }: Props) {
             <button className="pl-add-ai" onClick={addFromResearch} disabled={aiBusy}>
               {aiBusy ? '⏳ AI กำลังสร้าง…' : '✨ สร้าง Persona (segment + AI จากงานวิจัย)'}
             </button>
+            {/* feedback ซ้ำตรงปุ่ม — บนมือถือ ข้อความบนสุดอยู่นอกจอ กดแล้วเลยดูเหมือนไม่มีอะไรเกิด */}
+            {msg && <div className="pl-msg pl-msg-inline">{msg}</div>}
           </div>
         )}
       </div>
