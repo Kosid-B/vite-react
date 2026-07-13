@@ -128,8 +128,6 @@ export default function Personas({ data, onUpdate }: Props) {
         <div className="page-title">Personas</div>
         <div className="page-meta">
           <span className="meta-chip">3 Stakeholders</span>
-          <span className="law-badge" data-tip={"Serial Position Effect: quote อยู่ด้านบน\nสุดของ card เพราะจำได้ดีที่สุด"}>Serial Position</span>
-          <span className="law-badge" data-tip={"Miller's Law: แต่ละ section ≤ 4 items\nไม่ล้น working memory ของผู้อ่าน"}>Miller's Law</span>
         </div>
       </div>
 
