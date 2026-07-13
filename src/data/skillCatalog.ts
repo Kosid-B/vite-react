@@ -243,6 +243,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'เทียบเวิร์กช็อป brand positioning + ที่ปรึกษาการตลาด ฿40,000+ · เปลี่ยนคู่แข่งจาก "ภัย" เป็น "แรงยก" ที่ทำให้ทั้งหมวดโต — จุดยืนที่คมชัดคือสินทรัพย์ที่ลอกยากที่สุด',
   },
   {
+    id: 'reinvention-observational-innovation',
+    name: 'เริ่มใหม่ & นวัตกรรมจากการสังเกต (Momofuku Ando)',
+    category: 'strategy', tier: 3, price: 2490, icon: '🍜',
+    desc: 'เพลย์บุ๊กพลิกชีวิตหลังล้มเหลว + เปลี่ยน "การสังเกตชีวิตประจำวัน" เป็นนวัตกรรมที่ขายได้ จากเคสโมโมฟุกุ อันโด (ล้มละลายวัย 48 → สร้าง Nissin/บะหมี่กึ่งสำเร็จรูปที่เลี้ยงคนทั้งโลก): กรอบ "เริ่มใหม่ไม่มีคำว่าสาย" (ยึด mission ไม่ใช่ ego), Observation-to-Product (สังเกตพฤติกรรม→แก้ปัญหาจริง เช่น flash-frying จากการทอดเทมปุระ), และการต่อยอดสินค้าให้เข้ากับตลาดใหม่ (Cup Noodles) — พร้อม Observation Log + Reinvention Canvas',
+    tags: ['Founder', 'คนเริ่มใหม่', 'นักพัฒนาสินค้า'],
+    official: true,
+    valueNote: 'สำหรับคนเริ่มธุรกิจหลังตกงาน/ล้มเหลว — เทียบคอร์ส mindset + product innovation หลักหมื่น · เปลี่ยน "จุดต่ำสุด" เป็นจุดเริ่ม และเปลี่ยนของธรรมดารอบตัวเป็นโอกาส',
+  },
+  {
     id: 'ethical-sales-persuasion',
     name: 'Ethical Sales Persuasion & Fraud Red-Flags',
     category: 'sales', tier: 3, price: 2490, icon: '🐺',
