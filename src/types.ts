@@ -479,6 +479,9 @@ export interface ISO9001Data {
   nextAuditDate: string;
   qualityPolicy: string;
   qualityObjectives: string[];
+  // Multi-standard: มาตรฐานที่กำลังดู + สถานะ clause แยกต่อมาตรฐาน (iso9001 ใช้ clauses ด้านบน)
+  activeStandard?: 'iso9001' | 'iso14001' | 'iso45001' | 'iso22301';
+  byStandard?: Partial<Record<'iso14001' | 'iso45001' | 'iso22301', ISOClauseCheck[]>>;
 }
 
 export interface AppData {

@@ -65,8 +65,9 @@ export interface ReadinessResult {
 
 const STATUS_RANK: Record<ISOStatus, number> = { red: 0, amber: 1, green: 2, na: 3 };
 
-/** ประเมินความพร้อม + ลิสต์สิ่งที่ต้องทำก่อน audit จากสถานะ clause จริง */
-export function assessReadiness(clauses: ISOClauseCheck[]): ReadinessResult {
+/** ประเมินความพร้อม + ลิสต์สิ่งที่ต้องทำก่อน audit จากสถานะ clause จริง
+ *  guide = แผนที่ข้อกำหนดของมาตรฐาน (ค่าเริ่มต้น = ISO 9001) — ส่ง guide ของมาตรฐานอื่นเพื่อประเมิน 14001/45001/22301 */
+export function assessReadiness(clauses: ISOClauseCheck[], guide: Record<string, ClauseGuide> = ISO_CLAUSE_GUIDE): ReadinessResult {
   const green = clauses.filter(c => c.status === 'green').length;
   const amber = clauses.filter(c => c.status === 'amber').length;
   const red = clauses.filter(c => c.status === 'red').length;
@@ -83,7 +84,7 @@ export function assessReadiness(clauses: ISOClauseCheck[]): ReadinessResult {
   const gaps = clauses
     .filter(c => c.status === 'red' || c.status === 'amber')
     .map<GapAction>(c => {
-      const g = ISO_CLAUSE_GUIDE[c.id];
+      const g = guide[c.id];
       return {
         id: c.id, title: c.title, status: c.status,
         action: g?.action ?? 'ทบทวนความสอดคล้องของข้อกำหนดนี้',
@@ -99,8 +100,8 @@ export function assessReadiness(clauses: ISOClauseCheck[]): ReadinessResult {
     );
 
   const mandatoryDocsMissing = clauses
-    .filter(c => ISO_CLAUSE_GUIDE[c.id]?.mandatoryDoc && c.status !== 'green' && c.status !== 'na')
-    .map(c => ISO_CLAUSE_GUIDE[c.id].keyDoc);
+    .filter(c => guide[c.id]?.mandatoryDoc && c.status !== 'green' && c.status !== 'na')
+    .map(c => guide[c.id].keyDoc);
 
   return { readiness, applicable, green, amber, red, na, level, levelLabel, prioritizedActions: gaps, mandatoryDocsMissing };
 }
