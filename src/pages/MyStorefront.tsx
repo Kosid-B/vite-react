@@ -8,6 +8,7 @@ import { trackAiCall } from '../lib/usage';
 import { track } from '../lib/analytics';
 import DBDSelect from '../components/DBDSelect';
 import EditableList from '../components/EditableList';
+import HelpBox from '../components/HelpBox';
 import ShopBooster from '../components/ShopBooster';
 import IdeaValidation from '../components/IdeaValidation';
 
@@ -168,6 +169,29 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
         หน้าร้านสาธารณะให้ลูกค้าค้นเจอธุรกิจของคุณ — สร้างจากข้อมูลที่กรอกไว้แล้ว
         แสดงในสารบัญธุรกิจตามหมวด DBD พร้อมช่องทางติดต่อตรงถึงคุณ (ระบบไม่เก็บค่าคอมมิชชัน)
       </p>
+
+      <HelpBox
+        id="storefront-seller"
+        title="วิธีเปิดหน้าร้านรับงาน B2B (~5 นาที)"
+        groups={[
+          {
+            heading: '🚀 3 ก้าวให้ร้านออนไลน์',
+            steps: [
+              'ตรวจข้อมูลที่ระบบร่างให้จากที่กรอกไว้แล้ว (ชื่อ/หมวด/บริการ) — แค่ปรับ ไม่ต้องเริ่มจากศูนย์',
+              'กด "✨ ให้ AI Agent เขียน" ที่ช่องจุดขาย → ได้ประโยคขายทันที (แก้ได้)',
+              'กด "🚀 เผยแพร่หน้าร้าน" → กด "📨 ดูงานรอเสนอราคา" ไปรับงานต่อในตลาด B2B',
+            ],
+          },
+          {
+            heading: '💡 เอาลิงก์ร้านไปหาลูกค้า',
+            steps: [
+              'คัดลอกลิงก์หน้าร้าน (กล่องด้านขวา) ไปใส่ LINE OA / Facebook Page / นามบัตร',
+              'ลูกค้าเห็นสินค้า/บริการ + ติดต่อคุณตรง โดยไม่ต้องสมัครสมาชิก',
+            ],
+          },
+        ]}
+        note="💡 ร้านที่เผยแพร่จะขึ้นสารบัญตลาด /b และถูก Google index (SEO) — ยิ่งกรอกครบ ลูกค้ายิ่งค้นเจอ"
+      />
 
       {/* 🚀 Seller Aha (<5 นาที) — 3 ก้าวสู่ร้านพร้อมรับ RFQ (ซ่อนเมื่อเผยแพร่แล้ว) */}
       {!sf.published && (() => {
