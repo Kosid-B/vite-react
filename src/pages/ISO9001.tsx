@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, ISO9001Data, ISOClauseCheck, ISOStatus, Nonconformity, ISODocument, InternalAudit } from '../types';
 import ExpertEdge from '../components/ExpertEdge';
+import { assessReadiness } from '../lib/isoGapAssessment';
 
 interface Props {
   data: AppData;
@@ -61,6 +62,16 @@ export default function ISO9001({ data, onUpdate }: Props) {
   const red = iso.clauses.filter(c => c.status === 'red').length;
   const applicable = iso.clauses.filter(c => c.status !== 'na').length;
   const readinessScore = applicable > 0 ? Math.round((green / applicable) * 100) : 0;
+  const gap = assessReadiness(iso.clauses);
+
+  /** ไปแก้ clause ที่ระบุ (จากรายการ "สิ่งที่ต้องทำก่อน audit") */
+  function goToClause(id: string) {
+    const cl = iso.clauses.find(c => c.id === id);
+    setClauseDraft(cl ? { ...cl } : {});
+    setEditClause(id);
+    setTab('clauses');
+    setTimeout(() => document.getElementById(`iso-clause-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+  }
 
   function saveClause() {
     if (!editClause) return;
@@ -157,6 +168,49 @@ export default function ISO9001({ data, onUpdate }: Props) {
             <div className="iso-kpi-card"><div className="iso-kpi-label">Open NC</div><div className="iso-kpi-val" style={{color: iso.nonconformities.filter(n=>n.status==='open').length>0?'#dc2626':'#16a34a'}}>{iso.nonconformities.filter(n=>n.status==='open').length}</div><div className="iso-kpi-sub">รายการ</div></div>
           </div>
 
+          {/* 🎯 ที่ปรึกษา active — สิ่งที่ต้องทำก่อน audit (codify B. Training 20 ปี) */}
+          <div className="iso-panel iso-advisor" style={{ marginTop: 14 }}>
+            <div className="iso-adv-hd">
+              <span>🎯 สิ่งที่ต้องทำก่อน Audit</span>
+              <span className={`iso-adv-level lv-${gap.level}`}>{gap.levelLabel}</span>
+            </div>
+            <div className="iso-adv-sub">ประเมินโดยเทียบข้อกำหนด ISO 9001:2015 ทีละข้อ — เหมือนที่ปรึกษาตรวจให้ (แต่ได้ทันที)</div>
+
+            {gap.mandatoryDocsMissing.length > 0 && (
+              <div className="iso-adv-mand">
+                ⚠️ <b>เอกสารบังคับที่ยังขาด</b> (auditor เช็คแน่นอน): {gap.mandatoryDocsMissing.join(' · ')}
+              </div>
+            )}
+
+            {gap.prioritizedActions.length === 0 ? (
+              <div className="iso-adv-done">🎉 ทุกข้อสอดคล้องแล้ว — พร้อมนัดหน่วยรับรอง (CB) ทำ Stage 2 audit</div>
+            ) : (
+              <ol className="iso-adv-list">
+                {gap.prioritizedActions.slice(0, 6).map(a => (
+                  <li key={a.id} className={`iso-adv-item st-${a.status}`}>
+                    <div className="iso-adv-main">
+                      <div className="iso-adv-title">
+                        <span className="iso-adv-clause">ข้อ {a.id}</span> {a.title}
+                        {a.mandatoryDoc && <span className="iso-adv-badge">เอกสารบังคับ</span>}
+                      </div>
+                      <div className="iso-adv-action">→ {a.action}</div>
+                      <div className="iso-adv-doc">📄 เตรียม: {a.keyDoc}</div>
+                    </div>
+                    <button className="iso-adv-go" onClick={() => goToClause(a.id)}>ไปทำ →</button>
+                  </li>
+                ))}
+              </ol>
+            )}
+            {gap.prioritizedActions.length > 6 && (
+              <div className="iso-adv-more">…และอีก {gap.prioritizedActions.length - 6} ข้อ — ดูทั้งหมดในแท็บ Clause Checklist</div>
+            )}
+            <div className="iso-adv-exp">
+              🏅 โดยทีมที่ปรึกษา B. Training — วิธีประเมินเดียวกันนี้ใช้ได้กับ <b>ISO 14001</b> (สิ่งแวดล้อม) ·
+              <b> ISO 45001</b> (อาชีวอนามัยและความปลอดภัย) · <b>ISO 22301</b> (ความต่อเนื่องทางธุรกิจ) —
+              โครง Annex SL เดียวกัน ประสบการณ์ 10+ ปี
+            </div>
+          </div>
+
           {/* Basic settings */}
           <div className="iso-panel">
             <div className="iso-panel-hd">ข้อมูลพื้นฐาน QMS</div>
@@ -225,7 +279,7 @@ export default function ISO9001({ data, onUpdate }: Props) {
             <div key={grp.section} className="iso-panel" style={{ marginBottom: 14 }}>
               <div className="iso-panel-hd">ข้อ {grp.section} — {grp.title}</div>
               {iso.clauses.filter(c => grp.ids.includes(c.id)).map(clause => (
-                <div key={clause.id} className="iso-clause-row">
+                <div key={clause.id} id={`iso-clause-${clause.id}`} className="iso-clause-row">
                   <div className="iso-clause-id">{clause.id}</div>
                   <div className="iso-clause-body">
                     <div className="iso-clause-title">{clause.title}</div>

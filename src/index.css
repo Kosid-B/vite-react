@@ -5912,3 +5912,27 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .pfa-sec-hd { font-size:16px; font-weight:800; color:var(--ink); }
 .pfa-sec-sub { font-size:13px; color:var(--ink2); margin:4px 0 8px; }
 .pfa-empty { font-size:13.5px; color:var(--ink2); padding:16px; text-align:center; }
+
+/* ===== ISO 9001 Active Advisor (สิ่งที่ต้องทำก่อน audit) ===== */
+.iso-advisor { border:1.5px solid #06b6d455; }
+.iso-adv-hd { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:16px; font-weight:800; color:var(--ink); }
+.iso-adv-level { font-size:12.5px; font-weight:700; padding:3px 10px; border-radius:999px; }
+.iso-adv-level.lv-ready { background:#16a34a22; color:#22c55e; }
+.iso-adv-level.lv-almost { background:#d9770622; color:#fbbf24; }
+.iso-adv-level.lv-progress { background:#06b6d422; color:var(--accent); }
+.iso-adv-level.lv-early { background:#dc262622; color:#f87171; }
+.iso-adv-sub { font-size:12.5px; color:var(--ink2); margin:4px 0 10px; }
+.iso-adv-mand { background:#dc262614; border-left:3px solid #dc2626; border-radius:8px; padding:9px 12px; font-size:12.5px; color:var(--ink); margin-bottom:10px; }
+.iso-adv-done { background:#16a34a14; border-left:3px solid #16a34a; border-radius:8px; padding:12px 14px; font-size:14px; color:var(--ink); }
+.iso-adv-list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.iso-adv-item { display:flex; justify-content:space-between; align-items:center; gap:12px; background:var(--cream2); border:1px solid var(--sand); border-left-width:3px; border-radius:10px; padding:10px 14px; }
+.iso-adv-item.st-red { border-left-color:#dc2626; }
+.iso-adv-item.st-amber { border-left-color:#d97706; }
+.iso-adv-title { font-weight:700; color:var(--ink); font-size:13.5px; }
+.iso-adv-clause { color:var(--accent); font-weight:800; }
+.iso-adv-badge { margin-left:8px; font-size:10.5px; font-weight:700; color:#f87171; background:#dc262618; padding:2px 7px; border-radius:999px; }
+.iso-adv-action { font-size:12.5px; color:var(--ink2); margin-top:3px; }
+.iso-adv-doc { font-size:12px; color:var(--ink2); margin-top:2px; opacity:.85; }
+.iso-adv-go { flex-shrink:0; font-family:inherit; font-size:13px; font-weight:700; color:#0f172a; background:var(--accent); border:none; border-radius:8px; padding:8px 14px; cursor:pointer; }
+.iso-adv-more { font-size:12px; color:var(--ink2); margin-top:8px; text-align:center; }
+.iso-adv-exp { margin-top:12px; padding:9px 12px; background:rgba(6,182,212,.08); border-radius:8px; font-size:12px; color:var(--ink2); line-height:1.6; }
