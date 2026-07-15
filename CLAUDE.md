@@ -239,10 +239,12 @@ Vercel: PR preview อัตโนมัติ
 ```
 
 ## Email / DNS (ceoaithailand.org)
-ไม่ใช้ mailbox @ceoaithailand.org — **รับอีเมลที่ support@b-tctraining.com เท่านั้น**
-ส่งอีเมลผ่าน Resend จาก `noreply@ceoaithailand.org`
+- **ส่งออก (sending)**: ผ่าน **Resend** จาก `noreply@ceoaithailand.org` — DNS อยู่บน subdomain `send` + DKIM (ไม่แตะราก `@`)
+- **รับเข้า (receiving)**: ใช้ **Cloudflare Email Routing** forward `→ support@b-tctraining.com`
+  (⚠️ **ไม่ใช้ Resend Inbound / ไม่ใช้ AWS SES inbound** — ราก `@` รับเมลได้ระบบเดียว, ให้ Cloudflare Routing เป็นเจ้าของ MX ราก)
+- Resend **region = `ap-northeast-1` (โตเกียว)** สำหรับโดเมนนี้ · feedback host = `*.amazonses.com` (ยืนยันจาก Resend dashboard 2569)
 
-DNS records ที่ต้องตั้งใน Cloudflare:
+DNS records ที่ต้องตั้งใน Cloudflare (ทุกตัว **DNS only / grey cloud**):
 ```
 # GitHub Pages — A records (legacy — production ย้ายไป Cloudflare Workers แล้ว
 # ถ้า route worker ผ่าน custom domain ใน Cloudflare ไม่ต้องใช้ A records ชุดนี้)
@@ -252,27 +254,32 @@ DNS records ที่ต้องตั้งใน Cloudflare:
 @       A       185.199.111.153
 www     CNAME   kosid-b.github.io
 
-# SPF (ส่งผ่าน Resend เท่านั้น)
-@       TXT     "v=spf1 include:_spf.resend.com ~all"
-
-# DKIM — Resend (TXT record จาก Resend Dashboard > Domains)
-resend._domainkey   TXT     <value from Resend — starts with p=MIGf...>
-
-# Resend bounce tracking
-send    MX  10  feedback-smtp.us-east-1.amazonses.com
+# === ส่งออก: Resend (subdomain send + DKIM — ไม่ชนกับราก) ===
+# DKIM — Resend (ค่าจริงจาก Resend Dashboard > Domains)
+resend._domainkey   TXT   "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCxA6v+Vi/vGFPov6GzOE2nA7IQLnqXAw3tORZ8J8GFrSOURgkQVs/OFl+GpohQ1kL2sINPvFQJyrrPoj9oWrFq5UCD08KED5vxvtMCGDB/vSwFy7/O8LUZ0Z4fyQ7fshEO52JI3Xrmaz3MXJJjlibKPhp4VnGIxzhMbA8IGuBNYQIDAQAB"
+# Return-path / bounce (region ap-northeast-1, host .amazonses.com)
+send    MX  10  feedback-smtp.ap-northeast-1.amazonses.com
 send    TXT     "v=spf1 include:amazonses.com ~all"
+
+# === รับเข้า: Cloudflare Email Routing (Cloudflare ใส่ MX ราก 3 ตัวให้เองเมื่อ Enable) ===
+# @   MX  route1.mx.cloudflare.net / route2 / route3   ← อย่าตั้งเอง ให้ Email Routing จัดการ
+# ❌ ห้ามใส่:  @  MX  inbound-smtp.ap-northeast-1.amazonaws.com  (Resend Inbound — จะชนกับ Routing)
 
 # DMARC
 _dmarc  TXT     "v=DMARC1; p=quarantine; rua=mailto:support@b-tctraining.com; pct=100"
 ```
+> หมายเหตุ SPF ราก: Resend ยุคนี้ยึด SPF ที่ subdomain `send` (ด้านบน) — SPF ราก `@ include:_spf.resend.com`
+> ไม่จำเป็นแล้ว (legacy) ถ้ามีอยู่ปล่อยไว้ได้ แต่อย่ามี TXT SPF ซ้ำชื่อเดียวกันหลายอัน (กัน SPF conflict)
 
 **หมายเหตุ Cloudflare**: `www` CNAME ต้องเป็น DNS only (grey cloud) ไม่ใช่ orange cloud
-เพราะ GitHub Pages ต้องตรวจสอบ IP ตรงๆ
+เพราะ GitHub Pages ต้องตรวจสอบ IP ตรงๆ · ใน Resend dashboard แถว **"MX (Receiving)"** จะค้าง Pending
+ตลอด — **ถือว่าปกติ** (เราตั้งใจไม่ใช้ Resend Inbound) การส่งออกไม่พึ่ง record นั้น
 
 ## Pending Items
 - [ ] ตั้ง A records + www CNAME (grey cloud) ใน Cloudflare
-- [ ] Verify domain ใน Resend dashboard → ได้ค่า DKIM TXT → ใส่ใน Cloudflare
-- [ ] ตั้ง SPF + DMARC records ใน Cloudflare
+- [x] Verify domain ใน Resend dashboard → ใส่ DKIM + SPF (send) ใน Cloudflare (region ap-northeast-1) แล้ว
+- [x] รับเมล: เปิด Cloudflare Email Routing → catch-all → support@b-tctraining.com (ไม่ใช้ Resend Inbound)
+- [ ] ตั้ง DMARC record ใน Cloudflare (ถ้ายังไม่ได้ตั้ง)
 - [ ] GitHub repo Settings → Pages → Custom domain → `ceoaithailand.org`
 - [ ] ตั้ง Supabase Auth redirect URL: `https://ceoaithailand.org`
 - [ ] Payment Gateway (Omise / GB Prime Pay) + ตั้ง `WEBHOOK_SECRET`
