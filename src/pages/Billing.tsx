@@ -210,53 +210,17 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     setSlipMsg(error ? '⚠️ ' + error : '✅ ส่งสลิปแล้ว — แอดมินจะตรวจและเปิดใช้งานให้ (เห็นผลเมื่อรีเฟรชหน้าหลังอนุมัติ)');
   }
 
-  /** จ่ายผ่าน Xendit (hosted checkout: บัตร/PromptPay/e-wallet) — production เท่านั้น */
-  async function payWithXendit() {
+  /** จ่ายผ่าน Stripe (Checkout subscription — ตัดเงินอัตโนมัติทุกงวด) — production เท่านั้น */
+  async function payWithStripe() {
     if (!supabase || !wsId) return;
     setPayBusy(true);
     setPayErr(null);
     try {
-      const { data: res, error } = await supabase.functions.invoke('create-invoice', {
+      const { data: res, error } = await supabase.functions.invoke('stripe-create-checkout', {
         body: { plan: selected, cycle, workspaceId: wsId },
       });
-      if (error || !res?.invoice_url) throw new Error(res?.error ?? error?.message ?? 'สร้างใบชำระเงินไม่สำเร็จ');
-      window.location.href = res.invoice_url as string;
-    } catch (e) {
-      setPayErr((e as Error).message);
-      setPayBusy(false);
-    }
-  }
-
-  /** สมัครตัดเงินอัตโนมัติทุกงวด (auto-renew · Xendit Recurring) — production เท่านั้น */
-  async function subscribeRecurring() {
-    if (!supabase || !wsId) return;
-    setPayBusy(true);
-    setPayErr(null);
-    try {
-      const { data: res, error } = await supabase.functions.invoke('create-recurring-plan', {
-        body: { plan: selected, cycle, workspaceId: wsId },
-      });
-      if (error || !res?.action_url) throw new Error(res?.error ?? error?.message ?? 'สมัครตัดเงินอัตโนมัติไม่สำเร็จ');
-      window.location.href = res.action_url as string;
-    } catch (e) {
-      setPayErr((e as Error).message);
-      setPayBusy(false);
-    }
-  }
-
-  /** จ่ายผ่าน Omise / Opn Payments (PromptPay QR ผ่าน gateway) — production เท่านั้น */
-  async function payWithOmise() {
-    if (!supabase || !wsId) return;
-    setPayBusy(true);
-    setPayErr(null);
-    try {
-      const { data: res, error } = await supabase.functions.invoke('omise-create-charge', {
-        body: { plan: selected, cycle, workspaceId: wsId },
-      });
-      if (error || res?.error) throw new Error(res?.error ?? error?.message ?? 'สร้างการชำระเงินไม่สำเร็จ');
-      if (res.authorize_uri) { window.location.href = res.authorize_uri as string; return; }
-      if (res.paid) { confirmPaid(); return; }
-      throw new Error('ไม่ได้รับลิงก์ยืนยันการชำระเงิน');
+      if (error || !res?.checkout_url) throw new Error(res?.error ?? error?.message ?? 'สร้างหน้าชำระเงินไม่สำเร็จ');
+      window.location.href = res.checkout_url as string;
     } catch (e) {
       setPayErr((e as Error).message);
       setPayBusy(false);
@@ -730,33 +694,20 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
               <span className="bill-amount">{baht(chargeAmount)}</span>
             </div>
 
-            {isSupabaseEnabled && PAYMENT.xenditLive && (
+            {isSupabaseEnabled && PAYMENT.stripeLive && (
               <>
-                <button className="bill-xendit" onClick={payWithXendit} disabled={payBusy || !wsId}>
-                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Xendit — บัตร / PromptPay / e-Wallet'}
+                <button className="bill-xendit" onClick={payWithStripe} disabled={payBusy || !wsId}>
+                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Stripe — บัตรเครดิต/เดบิต · ตัดเงินอัตโนมัติทุกงวด'}
                 </button>
-                {needPayment && PAYMENT.recurringLive && (
-                  <button className="bill-recurring" onClick={subscribeRecurring} disabled={payBusy || !wsId}>
-                    🔁 สมัครตัดเงินอัตโนมัติ ({cycle === 'yearly' ? 'รายปี' : 'รายเดือน'}) — ไม่ต้องจ่ายเองทุกงวด
-                  </button>
-                )}
                 {payErr && <div className="bill-warn">⚠️ {payErr}</div>}
                 <div className="bill-note">
-                  ชำระเงินปลอดภัยผ่าน Xendit — เปิดใช้งานแพ็กอัตโนมัติทันทีเมื่อชำระสำเร็จ
-                  {PAYMENT.recurringLive && ' · ตัดเงินอัตโนมัติยกเลิกได้ทุกเมื่อ'}
+                  ชำระเงินปลอดภัยผ่าน Stripe — เปิดใช้งานแพ็กอัตโนมัติทันทีเมื่อชำระสำเร็จ ·
+                  ตัดเงินอัตโนมัติทุก{cycle === 'yearly' ? 'ปี' : 'เดือน'} ยกเลิกได้ทุกเมื่อ
                 </div>
               </>
             )}
-            {isSupabaseEnabled && !PAYMENT.xenditLive && PAYMENT.omiseLive && (
-              <>
-                <button className="bill-xendit" onClick={payWithOmise} disabled={payBusy || !wsId}>
-                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Omise — PromptPay / บัตร'}
-                </button>
-                {payErr && <div className="bill-warn">⚠️ {payErr}</div>}
-                <div className="bill-note">ชำระเงินปลอดภัยผ่าน Omise / Opn Payments — เปิดใช้งานแพ็กอัตโนมัติเมื่อชำระสำเร็จ</div>
-              </>
-            )}
-            {isSupabaseEnabled && !PAYMENT.xenditLive && !PAYMENT.omiseLive && (
+            {/* Xendit/Omise = retired (ใช้ Stripe แทน) — เก็บโค้ด adapter ไว้เผื่ออนาคต แต่ไม่แสดงปุ่ม */}
+            {isSupabaseEnabled && !PAYMENT.stripeLive && (
               <div className="bill-soon">
                 ⏳ ระบบชำระออนไลน์อัตโนมัติกำลังเปิดใช้เร็วๆ นี้ — ระหว่างนี้โอนหรือสแกน QR ด้านบน
                 แล้วส่งสลิป แอดมินเปิดใช้งานให้ภายใน 1 ชม. (วันทำการ)
