@@ -91,7 +91,12 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-CHJ99RY1Q1');
+      // Cross-domain measurement: b-tctraining.com (เว็บบริษัท) ↔ ceoaithailand.org (แอป)
+      // ผูก session เดียวกันตอนคนคลิก bridge จากบทความ → /start (attribute organic source ถูกต้อง ไม่กลายเป็น referral ใหม่)
+      // ⚠️ ต้องตั้งใน GA4 UI ด้วย: Admin → Data Streams → Configure tag settings → Configure your domains → add ทั้ง 2 โดเมน
+      gtag('config', 'G-CHJ99RY1Q1', {
+        linker: { domains: ['b-tctraining.com', 'ceoaithailand.org'] }
+      });
     </script>
 
     <!-- LINE Tag (LINE Ads) — gated by consent (PDPA): โหลด lib ได้ แต่ยิง pv เฉพาะเมื่อผู้ใช้ "ยอมรับทั้งหมด" -->
