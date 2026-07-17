@@ -9,6 +9,7 @@ facebook-group-plan, networking-strategy, linkedin-strategy).
 | ไฟล์ | ตอบคำถาม | Owner ที่แนะนำ |
 |---|---|---|
 | ⭐ [MARKETING-PLAN-12MONTH.md](./MARKETING-PLAN-12MONTH.md) | **แผนแม่บท 12 เดือน** — ร้อยทุกกลยุทธ์เป็น timeline รายไตรมาส (market-research + marketplace-seo) | ผู้บริหาร (แผนหลัก) |
+| 🔥 [WHY-NO-USERS-DIAGNOSIS.md](./WHY-NO-USERS-DIAGNOSIS.md) | **ทำไมยังไม่มี user + แผนแก้ 30 วัน** (วินิจฉัย funnel + สำรวจตลาด) | ผู้บริหาร (เร่งด่วน) |
 | [MARKET-RESEARCH.md](./MARKET-RESEARCH.md) | ลูกค้าคือใคร อยู่ไหน จ่ายไหวเท่าไหร่ ตลาดใหญ่แค่ไหน | ผู้บริหาร |
 | [TIKTOK-CTA-TEMPLATES.md](./TIKTOK-CTA-TEMPLATES.md) | CTA + caption + bio link สำหรับคลิป TikTok (อุดรอยรั่ว view→action) | Content |
 | [CONTENT-SCRIPT-ISO-CLIP.md](./CONTENT-SCRIPT-ISO-CLIP.md) | สคริปต์คลิป ISO 2 เวอร์ชัน (อุด 6 วิแรก) + คลัง hook + แผน A/B | Content |
