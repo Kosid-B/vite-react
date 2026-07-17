@@ -3,6 +3,7 @@ import { track } from '../lib/analytics';
 import { applySeo, siteOrigin } from '../lib/seo';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
+import FaqAccordion, { type FaqItem } from '../components/FaqAccordion';
 
 /* ===== Landing page ไวรัล — /start (สาธารณะ ไม่ต้องล็อกอิน) =====
  * กลุ่มเป้าหมาย: Gen Z จบใหม่หางานไม่ได้ + กลุ่ม "เสมือนว่างงาน" (มีงานแต่รายได้ไม่พอ)
@@ -30,8 +31,18 @@ const PLANS = [
   { name: 'Growth', price: '฿1,490', per: '/เดือน', desc: 'ทีม AI เต็มรูปแบบ + วิจัยตลาด + Analytics', note: 'เมื่อธุรกิจเดินแล้ว' },
 ];
 
+const FAQS: FaqItem[] = [
+  { q: 'เริ่มใช้ฟรีจริงไหม ต้องใส่บัตรเครดิตไหม?', a: 'ฟรีจริง ไม่ต้องใช้บัตรเครดิต — สมัครแล้วเริ่มสร้างธุรกิจ เปิดหน้าร้าน และขึ้นสารบัญธุรกิจได้ทันที จ่ายเมื่อคุณเริ่มมีรายได้เท่านั้น' },
+  { q: 'ไม่มีความรู้ธุรกิจ ไม่เคยเปิดร้าน ใช้ได้ไหม?', a: 'ได้ ระบบออกแบบมาเพื่อมือใหม่โดยเฉพาะ — CEO AI จะถามสิ่งที่คุณถนัด แล้วร่างแผนธุรกิจ (BMC) วางขั้นตอนการทำงาน และแนะนำทีละก้าวให้คุณอนุมัติ ไม่ต้องเริ่มจากศูนย์คนเดียว' },
+  { q: 'AI ช่วยอะไรได้บ้างจริง ๆ?', a: 'มีทีมเอเจนต์ช่วยจริง: CEO วางแผนและมอบงาน, ฝ่ายการตลาดคิดคอนเทนต์/กลุ่มลูกค้า, นักวิจัยตลาดหาข้อมูลคู่แข่งและราคาตลาด, นักวิเคราะห์ดูตัวเลขและจุดรั่ว — ทำงานให้ตลอด 24 ชั่วโมง' },
+  { q: 'มีรายได้จากตรงไหน แล้ว RFQ คืออะไร?', a: 'RFQ คือใบขอเสนอราคาจากธุรกิจอื่น — เมื่อคุณเปิดหน้าร้านในระบบ ธุรกิจที่ต้องการสินค้า/บริการจะส่งคำขอมาถึงคุณ คุณเสนอราคา ปิดดีล กลายเป็นออเดอร์และรายได้จริง' },
+  { q: 'ต้องจ่ายเมื่อไหร่ ค่าใช้จ่ายเท่าไหร่?', a: 'เริ่มฟรี ฿0. อัปเกรด Starter ฿390/เดือนเมื่อพร้อมรับงานผ่าน RFQ (เท่าค่ากาแฟ 3 แก้ว) และระบบคิดค่าดำเนินการเพียง 3% เมื่อคุณปิดดีลได้จริงเท่านั้น — เราโตเมื่อคุณมีรายได้' },
+  { q: 'ข้อมูลธุรกิจของฉันปลอดภัยไหม?', a: 'ปลอดภัย ข้อมูลแต่ละธุรกิจแยกจากกันสมบูรณ์ คนอื่นเห็นเฉพาะหน้าร้านที่คุณเลือกเผยแพร่ ดูแลโดย B. Training Consultant ผู้ให้บริการที่ปรึกษามากกว่า 20 ปี' },
+];
+
 export default function StartLanding() {
   const [copied, setCopied] = useState(false);
+  const [showSticky, setShowSticky] = useState(false);
 
   useEffect(() => {
     const o = siteOrigin();
@@ -40,8 +51,39 @@ export default function StartLanding() {
       description: 'ตกงาน จบใหม่ หรือรายได้ไม่พอ? เปิดบริษัทของตัวเองพร้อมทีม AI ทั้งบริษัท — แผนธุรกิจ หน้าร้านออนไลน์ รับงาน B2B เริ่มฟรี',
       canonicalUrl: `${o}/start`,
       imageUrl: `${o}/og-image.png`,
-      jsonLd: [],
+      jsonLd: [{
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: FAQS.map((f) => ({
+          '@type': 'Question',
+          name: f.q,
+          acceptedAnswer: { '@type': 'Answer', text: f.a },
+        })),
+      }],
     });
+  }, []);
+
+  // Sticky CTA — โผล่หลังเลื่อนพ้น hero (ลด bounce, CTA อยู่ในสายตาเสมอ)
+  useEffect(() => {
+    const onScroll = () => setShowSticky(window.scrollY > 640);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Scroll-reveal — sections ค่อย ๆ ปรากฏตอนเลื่อนถึง (เพิ่มความน่าสนใจ ชวนอ่านต่อ)
+  // ใส่ class ผ่าน JS เท่านั้น → ถ้า JS ปิด/พัง เนื้อหายังแสดงครบ
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll<HTMLElement>('.start-sec'));
+    if (!('IntersectionObserver' in window) || !els.length) return;
+    els.forEach((el) => el.classList.add('reveal'));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('reveal-in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.1 });
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
   }, []);
 
   const copyLink = () => {
@@ -165,6 +207,12 @@ export default function StartLanding() {
         </div>
       </section>
 
+      {/* FAQ — เพิ่ม engagement + ตอบข้อสงสัยที่ทำให้ลังเล + FAQ schema ช่วย SEO/GEO */}
+      <section className="start-sec start-faq-sec">
+        <h2 className="start-h2">คำถามที่พบบ่อย</h2>
+        <FaqAccordion items={FAQS} />
+      </section>
+
       {/* Viral share */}
       <section className="start-sec start-share-sec">
         <h2 className="start-h2">รู้จักใครที่กำลังหาทางไปอยู่ไหม?</h2>
@@ -202,6 +250,14 @@ export default function StartLanding() {
         <LegalLinks />
         <div style={{ marginTop: 14 }}><IsmsBadge /></div>
       </footer>
+
+      {/* Sticky CTA — โผล่ตอนเลื่อน (มือถือเห็นชัด) */}
+      <div className={`start-sticky${showSticky ? ' show' : ''}`} aria-hidden={!showSticky}>
+        <span className="start-sticky-txt">เริ่มฟรี ไม่ต้องใช้บัตร</span>
+        <a className="start-sticky-btn" href="/" onClick={() => track('start_cta_click', { cta: 'sticky' })}>
+          เปิดบริษัทของคุณ →
+        </a>
+      </div>
     </div>
   );
 }
