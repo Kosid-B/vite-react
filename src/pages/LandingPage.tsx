@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { track } from '../lib/analytics';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
+import { currentChallenger } from '../lib/challengerRotation';
 
 interface Props {
   onGetStarted: () => void;
@@ -102,6 +103,14 @@ export default function LandingPage({ onGetStarted }: Props) {
   const [ctaHover, setCtaHover] = useState(false);
   const [navHover, setNavHover] = useState(false);
 
+  // Challenger headline — สลับ content 2 ครั้ง/วัน ที่เวลาไทย 11:00 และ 20:00 (เช็คทุกนาที)
+  const [challenger, setChallenger] = useState(() => currentChallenger(Date.now()));
+  useEffect(() => {
+    const tick = () => setChallenger(currentChallenger(Date.now()));
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: C.bg, color: C.white, fontFamily: "'Kanit', sans-serif", overflowX: 'hidden' }}>
 
@@ -122,6 +131,13 @@ export default function LandingPage({ onGetStarted }: Props) {
           </button>
         </div>
       </nav>
+
+      {/* ─── Challenger banner (สลับ 11:00 / 20:00 เวลาไทย · จุดยืน co-opetition) ─── */}
+      <div style={{ borderBottom: `1px solid ${C.border}`, background: 'linear-gradient(90deg, rgba(245,158,11,0.10), rgba(6,182,212,0.10))', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textAlign: 'center' }}>
+        <span style={{ flex: 'none', background: C.amber5, color: '#020617', fontWeight: 800, fontSize: 11, padding: '3px 9px', borderRadius: 999 }}>SME</span>
+        <span key={challenger} style={{ color: C.white, fontSize: 14, fontWeight: 600, lineHeight: 1.5, animation: 'lpFadeIn .5s ease' }}>{challenger}</span>
+      </div>
+      <style>{`@keyframes lpFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }`}</style>
 
       {/* ─── Hero ─── */}
       <section style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(90vh - 60px)', padding: '80px 24px', textAlign: 'center' }}>
