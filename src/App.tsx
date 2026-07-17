@@ -22,6 +22,7 @@ const OnboardingTour = lazy(() => import('./components/OnboardingTour'));
 import UpgradeWall from './components/UpgradeWall';
 import { canAccess, setAdminFullAccess } from './lib/access';
 import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
+import { isLineCallback, handleLineCallback } from './lib/lineLogin';
 import { isAdminEmail, INTEGRATIONS } from './config';
 import { readPendingHandoff, applyPendingHandoff } from './lib/handoffClient';
 import LegalLinks from './components/LegalLinks';
@@ -269,6 +270,12 @@ export default function App() {
       showToast(r.msg);
     });
   }, [session, showToast]);
+
+  // กลับจากหน้ายินยอม LINE Login — แลก code → เปิด session (ยังไม่ล็อกอิน จึงไม่รอ session)
+  useEffect(() => {
+    if (!isLineCallback()) return;
+    handleLineCallback().then(r => { showToast(r.msg); });
+  }, [showToast]);
 
   const updateData = useCallback((incoming: AppData) => {
     // ต่อ streak รายวันเมื่อทำงานจริง (แก้ข้อมูลครั้งแรกของวัน)
