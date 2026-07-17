@@ -111,6 +111,12 @@ export default function StartLanding() {
           ปีนี้คนจบ ป.ตรี ว่างงานกว่า <b>116,000 คน</b> และอีก <b>4.4 ล้านคน</b> มีงานแต่รายได้ไม่พอ*<br />
           คุณไม่ได้ตัวคนเดียว — และคุณไม่ต้องรอใครจ้าง เมื่อมี CEO, ฝ่ายการตลาด และนักวิจัยตลาด เป็น AI ทำงานให้คุณ
         </p>
+        {/* Payoff chips — ส่งต่อความคาดหวังทันทีใน 3–6 วิ (สแกนเห็นผลลัพธ์ก่อนอ่านยาว) */}
+        <div className="start-vchips">
+          <span className="start-vchip">⚡ เปิดร้านใน 5 นาที</span>
+          <span className="start-vchip">🆓 ฟรี 15 วัน ไม่ต้องใช้บัตร</span>
+          <span className="start-vchip">🤖 มีทีม AI ช่วยทุกขั้น</span>
+        </div>
         <div className="start-cta-row">
           <a className="start-cta-main" href="/" onClick={() => track('start_cta_click', { cta: 'hero' })}>
             เปิดบริษัทแรกของคุณ — ฟรี ไม่ต้องใช้บัตรเครดิต</a>
