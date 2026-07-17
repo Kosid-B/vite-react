@@ -11,6 +11,7 @@ facebook-group-plan, networking-strategy, linkedin-strategy).
 | ⭐ [MARKETING-PLAN-12MONTH.md](./MARKETING-PLAN-12MONTH.md) | **แผนแม่บท 12 เดือน** — ร้อยทุกกลยุทธ์เป็น timeline รายไตรมาส (market-research + marketplace-seo) | ผู้บริหาร (แผนหลัก) |
 | [MARKET-RESEARCH.md](./MARKET-RESEARCH.md) | ลูกค้าคือใคร อยู่ไหน จ่ายไหวเท่าไหร่ ตลาดใหญ่แค่ไหน | ผู้บริหาร |
 | [TIKTOK-CTA-TEMPLATES.md](./TIKTOK-CTA-TEMPLATES.md) | CTA + caption + bio link สำหรับคลิป TikTok (อุดรอยรั่ว view→action) | Content |
+| [CONTENT-SCRIPT-ISO-CLIP.md](./CONTENT-SCRIPT-ISO-CLIP.md) | สคริปต์คลิป ISO 2 เวอร์ชัน (อุด 6 วิแรก) + คลัง hook + แผน A/B | Content |
 | [blog/](./blog/) | บทความ SEO สาย ISO (พร้อมเผยแพร่) จากหัวข้อที่ GA4 พิสูจน์ว่าคนค้นจริง | Content |
 | [MARKETPLACE-SEO.md](./MARKETPLACE-SEO.md) | ลูกค้าหาเราเจอบน Google ได้ยังไง (ผูกกับโค้ดจริง) | Dev + Content |
 | [FACEBOOK-GROUP-PLAN.md](./FACEBOOK-GROUP-PLAN.md) | สร้างชุมชน + lead gen ฟรีบน Facebook | Community |
