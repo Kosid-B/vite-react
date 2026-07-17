@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { track } from '../lib/analytics';
 import { applySeo, siteOrigin } from '../lib/seo';
 import LegalLinks from '../components/LegalLinks';
@@ -44,11 +44,24 @@ export default function StartLanding() {
   const [copied, setCopied] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
 
+  // เวอร์ชัน hero: ISO/โรงงาน (มาจากสะพานเว็บบริษัท ?ref=btctraining หรือ utm_campaign มี 'iso')
+  // → ส่งต่อความคาดหวังตรงกลุ่มที่คลิกมาจากบทความ ISO
+  const isIso = useMemo(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get('ref') === 'btctraining' || (p.get('utm_campaign') || '').toLowerCase().includes('iso');
+  }, []);
+
+  useEffect(() => { track('start_variant', { variant: isIso ? 'iso' : 'default' }); }, [isIso]);
+
   useEffect(() => {
     const o = siteOrigin();
     applySeo({
-      title: 'เริ่มธุรกิจของคุณเอง พร้อมทีม AI — ฟรี | CEO AI Thailand',
-      description: 'ตกงาน จบใหม่ หรือรายได้ไม่พอ? เปิดบริษัทของตัวเองพร้อมทีม AI ทั้งบริษัท — แผนธุรกิจ หน้าร้านออนไลน์ รับงาน B2B เริ่มฟรี',
+      title: isIso
+        ? 'ประเมินความพร้อม ISO ฟรีด้วย AI — CEO AI Thailand'
+        : 'เริ่มธุรกิจของคุณเอง พร้อมทีม AI — ฟรี | CEO AI Thailand',
+      description: isIso
+        ? 'โรงงาน/SME ทำ ISO 9001/14001/45001/22301 — ให้ AI ประเมินความพร้อม บอกสิ่งที่ต้องทำก่อน audit ฟรี ออกแบบโดยที่ปรึกษา ISO จริง 20 ปี'
+        : 'ตกงาน จบใหม่ หรือรายได้ไม่พอ? เปิดบริษัทของตัวเองพร้อมทีม AI ทั้งบริษัท — แผนธุรกิจ หน้าร้านออนไลน์ รับงาน B2B เริ่มฟรี',
       canonicalUrl: `${o}/start`,
       imageUrl: `${o}/og-image.png`,
       jsonLd: [{
@@ -61,7 +74,7 @@ export default function StartLanding() {
         })),
       }],
     });
-  }, []);
+  }, [isIso]);
 
   // Sticky CTA — โผล่หลังเลื่อนพ้น hero (ลด bounce, CTA อยู่ในสายตาเสมอ)
   useEffect(() => {
@@ -102,27 +115,49 @@ export default function StartLanding() {
 
       {/* Hero */}
       <section className="start-hero">
-        <div className="start-badge">✦ &nbsp;สำหรับคนจบใหม่ · คนหางาน · คนที่งานประจำไม่พอกิน&nbsp; ✦</div>
-        <h1 className="start-h1">
-          ไม่มีใครจ้าง ไม่ได้แปลว่าไปต่อไม่ได้<br />
-          <span className="start-h1-hl">เปิดบริษัทของคุณเอง — พร้อมทีม AI ทั้งบริษัท</span>
-        </h1>
-        <p className="start-sub">
-          ปีนี้คนจบ ป.ตรี ว่างงานกว่า <b>116,000 คน</b> และอีก <b>4.4 ล้านคน</b> มีงานแต่รายได้ไม่พอ*<br />
-          คุณไม่ได้ตัวคนเดียว — และคุณไม่ต้องรอใครจ้าง เมื่อมี CEO, ฝ่ายการตลาด และนักวิจัยตลาด เป็น AI ทำงานให้คุณ
-        </p>
-        {/* Payoff chips — ส่งต่อความคาดหวังทันทีใน 3–6 วิ (สแกนเห็นผลลัพธ์ก่อนอ่านยาว) */}
-        <div className="start-vchips">
-          <span className="start-vchip">⚡ เปิดร้านใน 5 นาที</span>
-          <span className="start-vchip">🆓 ฟรี 15 วัน ไม่ต้องใช้บัตร</span>
-          <span className="start-vchip">🤖 มีทีม AI ช่วยทุกขั้น</span>
-        </div>
+        {isIso ? (
+          <>
+            <div className="start-badge">✦ &nbsp;สำหรับโรงงาน/SME ที่ต้องทำ ISO · เขต EEC&nbsp; ✦</div>
+            <h1 className="start-h1">
+              ทำ ISO เสียเวลาเป็นอาทิตย์?<br />
+              <span className="start-h1-hl">ให้ทีม AI ประเมิน + บอกสิ่งที่ต้องทำก่อน audit</span>
+            </h1>
+            <p className="start-sub">
+              รองรับ <b>ISO 9001 / 14001 / 45001 / 22301</b> — รู้ทันทีว่ายังขาดเอกสารบังคับตัวไหน ก่อนวันตรวจจริง
+              ไม่ต้องรอนัดที่ปรึกษา<br />
+              ออกแบบโดยที่ปรึกษา ISO/ธุรกิจจริง <b>มากกว่า 20 ปี</b> — B. Training Consultant
+            </p>
+            <div className="start-vchips">
+              <span className="start-vchip">⚡ ประเมินเสร็จใน 5 นาที</span>
+              <span className="start-vchip">🆓 เริ่มฟรี ไม่ต้องใช้บัตร</span>
+              <span className="start-vchip">🏭 ตรงกลุ่มโรงงาน EEC</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="start-badge">✦ &nbsp;สำหรับคนจบใหม่ · คนหางาน · คนที่งานประจำไม่พอกิน&nbsp; ✦</div>
+            <h1 className="start-h1">
+              ไม่มีใครจ้าง ไม่ได้แปลว่าไปต่อไม่ได้<br />
+              <span className="start-h1-hl">เปิดบริษัทของคุณเอง — พร้อมทีม AI ทั้งบริษัท</span>
+            </h1>
+            <p className="start-sub">
+              ปีนี้คนจบ ป.ตรี ว่างงานกว่า <b>116,000 คน</b> และอีก <b>4.4 ล้านคน</b> มีงานแต่รายได้ไม่พอ*<br />
+              คุณไม่ได้ตัวคนเดียว — และคุณไม่ต้องรอใครจ้าง เมื่อมี CEO, ฝ่ายการตลาด และนักวิจัยตลาด เป็น AI ทำงานให้คุณ
+            </p>
+            {/* Payoff chips — ส่งต่อความคาดหวังทันทีใน 3–6 วิ (สแกนเห็นผลลัพธ์ก่อนอ่านยาว) */}
+            <div className="start-vchips">
+              <span className="start-vchip">⚡ เปิดร้านใน 5 นาที</span>
+              <span className="start-vchip">🆓 ฟรี 15 วัน ไม่ต้องใช้บัตร</span>
+              <span className="start-vchip">🤖 มีทีม AI ช่วยทุกขั้น</span>
+            </div>
+          </>
+        )}
         <div className="start-cta-row">
           <a className="start-cta-main" href="/" onClick={() => track('start_cta_click', { cta: 'hero' })}>
-            เปิดบริษัทแรกของคุณ — ฟรี ไม่ต้องใช้บัตรเครดิต</a>
+            {isIso ? 'ประเมิน ISO ฟรี — ไม่ต้องใช้บัตรเครดิต' : 'เปิดบริษัทแรกของคุณ — ฟรี ไม่ต้องใช้บัตรเครดิต'}</a>
           <a className="start-cta-sub" href="/b">ดูธุรกิจที่เปิดแล้วในระบบ →</a>
         </div>
-        <div className="start-src">* ที่มา: สำนักงานสถิติแห่งชาติ / สภาพัฒน์ ไตรมาส 1 ปี 2569</div>
+        {!isIso && <div className="start-src">* ที่มา: สำนักงานสถิติแห่งชาติ / สภาพัฒน์ ไตรมาส 1 ปี 2569</div>}
       </section>
 
       {/* Personas */}
