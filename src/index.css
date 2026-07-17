@@ -1943,6 +1943,11 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 @keyframes nudge-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes nudge-sym { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1) rotate(0); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .authnudge, .authnudge-symbol { animation: none; } }
+.auth-line { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; background: #06C755; color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: filter .15s; }
+.auth-line:hover { filter: brightness(1.06); }
+.auth-line-ico { display: inline-grid; place-items: center; min-width: 30px; height: 22px; padding: 0 6px; background: #fff; color: #06C755; border-radius: 5px; font-size: 12px; font-weight: 800; letter-spacing: .5px; }
+.auth-or { display: flex; align-items: center; text-align: center; gap: 10px; margin: 14px 0; color: var(--ink3); font-size: 12.5px; }
+.auth-or::before, .auth-or::after { content: ''; flex: 1; height: 1px; background: var(--sand); }
 .auth-method { display: flex; gap: 6px; background: var(--cream2); border-radius: var(--r); padding: 4px; margin-bottom: 12px; }
 .auth-method button { flex: 1; padding: 9px; border: none; background: none; font-family: inherit; font-size: 14px; color: var(--ink3); border-radius: 6px; cursor: pointer; transition: .15s; }
 .auth-method button.active { background: var(--accent); color: #fff; font-weight: 600; }

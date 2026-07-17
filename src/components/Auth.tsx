@@ -5,6 +5,7 @@ import { track } from '../lib/analytics';
 import LegalLinks from './LegalLinks';
 import { pickNudgeVariant, buildNudge } from '../lib/authNudge';
 import AuthNudge from './AuthNudge';
+import { lineLoginEnabled, startLineLogin } from '../lib/lineLogin';
 
 type Mode = 'signin' | 'signup';
 type Method = 'email' | 'phone';
@@ -113,6 +114,16 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
         <div className="auth-sub">{BRAND.tagline}</div>
 
         <AuthNudge nudge={nudge} />
+
+        {/* เข้าสู่ระบบด้วย LINE (ปุ่มเด่น — คนไทยสะดวกสุด) แสดงเมื่อเปิดใช้งาน */}
+        {lineLoginEnabled() && (
+          <>
+            <button type="button" className="auth-line" onClick={() => { track('line_login_click', {}); startLineLogin(); }}>
+              <span className="auth-line-ico">LINE</span> เข้าสู่ระบบด้วย LINE
+            </button>
+            <div className="auth-or"><span>หรือ</span></div>
+          </>
+        )}
 
         {/* สลับวิธีเข้าสู่ระบบ: อีเมล / เบอร์โทร */}
         <div className="auth-method">

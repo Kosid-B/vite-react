@@ -59,4 +59,13 @@ export const INTEGRATIONS = {
   // เปลี่ยนเป็น true เมื่อ: deploy handoff-import + ตั้ง secret THEOSSPHERE_HANDOFF_SECRET (แชร์กับ theossphere)
   //   (ดู docs/integrations/theossphere-handoff.md) · route /handoff รับ token แล้ว pre-fill
   theossphereLive: false,
+  // LINE Login: เข้าสู่ระบบด้วยบัญชี LINE (คนไทยมีทุกคน + ฟรี ไม่มีค่า SMS)
+  // เปลี่ยนเป็น true เมื่อ: (1) สร้าง LINE Login channel ใน LINE Developers + ใส่ lineChannelId ด้านล่าง
+  //   (2) deploy ฟังก์ชัน line-login (3) ตั้ง secret LINE_CHANNEL_ID/LINE_CHANNEL_SECRET
+  //   (ดู docs/integrations/line-login.md) · Callback URL ที่ต้องลงทะเบียนใน LINE = <origin>/oauth/line
+  lineLoginLive: false,
+  // LINE Login Channel ID (เป็นค่า public ฝังได้)
+  lineChannelId: '',
+  // เส้นทาง callback ที่ต้องลงทะเบียนใน LINE Developers (Callback URL)
+  lineRedirectPath: '/oauth/line',
 };
