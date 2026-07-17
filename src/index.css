@@ -4882,6 +4882,31 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .start-foot { text-align:center; font-size:13px; color:#64748b; padding:22px; border-top:1px solid #1e293b; margin-top:auto; }
 .start-foot a { color:#67e8f9; }
 
+/* ── /start: FAQ accordion ── */
+.start-faq-sec { max-width:760px; }
+.faq-list { display:flex; flex-direction:column; gap:12px; margin-top:8px; text-align:left; }
+.faq-item { background:#0b1220; border:1px solid #1e293b; border-radius:12px; overflow:hidden; transition:border-color .2s; }
+.faq-item.open { border-color:#06b6d4; }
+.faq-q { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 18px; background:none; border:none; color:#fff; font-family:inherit; font-size:15.5px; font-weight:600; text-align:left; cursor:pointer; line-height:1.5; }
+.faq-ico { flex:none; width:26px; height:26px; display:grid; place-items:center; border-radius:50%; background:rgba(6,182,212,.15); color:#67e8f9; font-size:18px; font-weight:700; }
+.faq-a { max-height:0; overflow:hidden; transition:max-height .3s ease; }
+.faq-item.open .faq-a { max-height:340px; }
+.faq-a p { margin:0; padding:0 18px 18px; color:#94a3b8; font-size:14px; line-height:1.7; }
+
+/* ── /start: sticky CTA bar ── */
+.start-sticky { position:fixed; left:0; right:0; bottom:0; z-index:50; display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; padding:12px 18px calc(12px + env(safe-area-inset-bottom)); background:rgba(2,6,23,.94); backdrop-filter:blur(8px); border-top:1px solid #1e293b; transform:translateY(110%); transition:transform .28s ease; }
+.start-sticky.show { transform:translateY(0); }
+.start-sticky-txt { color:#cbd5e1; font-size:14px; font-weight:600; }
+.start-sticky-btn { flex:none; background:#f59e0b; color:#020617; font-weight:700; font-size:15px; text-decoration:none; padding:11px 22px; border-radius:10px; box-shadow:0 0 20px rgba(245,158,11,.4); }
+.start-sticky-btn:hover { background:#fbbf24; }
+
+/* ── /start: scroll-reveal (ใส่ class ผ่าน JS เท่านั้น — ไม่มี JS = แสดงปกติ) ── */
+.start-sec.reveal { opacity:0; transform:translateY(22px); transition:opacity .5s ease, transform .5s ease; }
+.start-sec.reveal.reveal-in { opacity:1; transform:none; }
+@media (prefers-reduced-motion: reduce) {
+  .start-sec.reveal { opacity:1; transform:none; transition:none; }
+}
+
 /* ── First Revenue Engine: ภารกิจดีลแรกใน 30 วัน (แก้ churn) ── */
 .fd-panel { background:var(--cream3); border:1.5px solid #f59e0b66; border-radius:14px; padding:18px 20px; margin-bottom:18px; }
 .fd-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
