@@ -43,6 +43,12 @@ export const PAYMENT = {
   omiseLive: false,
   // Omise Public Key (pkey_… เป็น publishable key = public ฝังได้) — ใส่เมื่อ omiseLive
   omisePublicKey: '',
+  // 💳 ชำระออนไลน์ผ่าน Stripe (subscription mode — ตัดเงินอัตโนมัติทุกงวดในตัว, ไม่ต้องพึ่ง cron) —
+  //    เปลี่ยนเป็น true เมื่อ Stripe อนุมัติบัญชี (KYC), deploy ฟังก์ชัน stripe-create-checkout + stripe-webhook
+  //    และตั้ง secret STRIPE_SECRET_KEY (sk_…) + STRIPE_WEBHOOK_SECRET (whsec_…) (ดู COMMAND.md)
+  stripeLive: false,
+  // Stripe Publishable Key (pk_… = public ฝังได้) — ใส่เมื่อ stripeLive (ยังไม่ใช้ในโค้ดตอนนี้ เผื่อ Payment Element อนาคต)
+  stripePublicKey: '',
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
