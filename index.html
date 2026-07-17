@@ -93,6 +93,21 @@
       gtag('js', new Date());
       gtag('config', 'G-CHJ99RY1Q1');
     </script>
+
+    <!-- LINE Tag (LINE Ads) — gated by consent (PDPA): โหลด lib ได้ แต่ยิง pv เฉพาะเมื่อผู้ใช้ "ยอมรับทั้งหมด" -->
+    <!-- ตัด <noscript> pixel ออกเพราะยิงโดยไม่ผ่าน consent (แอปเป็น SPA ต้องมี JS อยู่แล้ว) -->
+    <script>
+      (function(g,d,o){
+        g._ltq=g._ltq||[];g._lt=g._lt||function(){g._ltq.push(arguments)};
+        var h=location.protocol==='https:'?'https://d.line-scdn.net':'http://d.line-cdn.net';
+        var s=d.createElement('script');s.async=1;
+        s.src=o||h+'/n/line_tag/public/release/v1/lt.js';
+        var t=d.getElementsByTagName('script')[0];t.parentNode.insertBefore(s,t);
+      })(window, document);
+      _lt('init', { customerType: 'account', tagId: 'afc2c605-4307-45cc-b400-35bba3844d21' });
+      window.__lineTagPv = function(){ try { _lt('send', 'pv', ['afc2c605-4307-45cc-b400-35bba3844d21']); } catch (e) {} };
+      try { if (localStorage.getItem('ceo_ai_cookie_consent') === 'all') window.__lineTagPv(); } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
