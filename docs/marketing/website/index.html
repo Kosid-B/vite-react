@@ -52,7 +52,9 @@
   .btn-amber:hover{transform:translateY(-2px); box-shadow:0 10px 30px rgba(245,158,11,.42)}
   .btn-ghost{background:rgba(34,211,238,.07); color:var(--cyan); border:1px solid rgba(34,211,238,.35)}
   .btn-ghost:hover{background:rgba(34,211,238,.13)}
-  .btn-lg{padding:16px 30px; font-size:17px; border-radius:14px}
+  .btn-lg{padding:17px 32px; font-size:17px; border-radius:14px; min-height:52px} /* Fitts: เป้าใหญ่ แตะง่าย */
+  .btn:active{transform:translateY(0) scale(.98)} /* Doherty: feedback ทันทีตอนกด */
+  .btn:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--cyan); outline-offset:3px; border-radius:12px}
 
   /* hero */
   header{padding:64px 0 34px}
@@ -198,6 +200,22 @@
   .foot-links{display:flex; gap:26px; flex-wrap:wrap; font-size:14.5px}
   .foot-links a{color:var(--ink-mut)} .foot-links a:hover{color:var(--cyan)}
   .foot-legal{margin-top:22px; font-size:12.5px; color:var(--ink-dim)}
+
+  /* Fitts's Law — sticky CTA เอื้อมถึงตลอด (โผล่หลังพ้น hero) */
+  .sticky-cta{position:fixed; left:0; right:0; bottom:0; z-index:50; transform:translateY(120%); transition:transform .3s ease;
+    background:rgba(10,15,28,.92); backdrop-filter:blur(12px); border-top:1px solid var(--line);
+    padding:11px 16px calc(11px + env(safe-area-inset-bottom)); display:flex; align-items:center; gap:12px}
+  .sticky-cta.show{transform:none}
+  .sticky-cta .t{font-size:13.5px; color:var(--ink-mut); flex:1; line-height:1.35}
+  .sticky-cta .t b{color:var(--ink)}
+  .sticky-cta .btn{flex:none; white-space:nowrap}
+  @media(min-width:721px){ .sticky-cta{display:none} } /* มือถือเป็นหลัก (desktop มี CTA ใน nav อยู่แล้ว) */
+  @media(max-width:720px){ body{padding-bottom:74px} } /* กัน sticky bar บังฟุตเตอร์ */
+
+  /* Peak-End — reassurance ลดความกังวลก่อนตัดสินใจ */
+  .reassure{margin-top:18px; display:flex; gap:8px 18px; flex-wrap:wrap; justify-content:center; font-size:13.5px; color:var(--ink-mut)}
+  .reassure span{display:inline-flex; align-items:center; gap:6px}
+  .reassure span::before{content:"✓"; color:var(--good); font-weight:800}
 
   @media(prefers-reduced-motion:reduce){
     *{animation:none!important; transition:none!important}
@@ -406,6 +424,7 @@
           <span class="tag">แนะนำ</span>
           <div class="pn">Growth</div>
           <div class="pp tnum">฿1,490<small>/เดือน</small></div>
+          <div style="font-size:12.5px;color:var(--amber);font-weight:700;margin-top:-2px">ครบสุดสำหรับธุรกิจที่โตจริง</div>
           <ul><li>ทุกอย่างใน Starter</li><li>ISO 9001 QMS + AI Research</li><li>การตลาด + Analytics เต็ม</li></ul>
           <a class="btn btn-amber" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=pricing&utm_campaign=growth" target="_blank" rel="noopener">เลือก Growth</a>
         </div>
@@ -441,6 +460,7 @@
         <h2>พร้อมจ้างทีม AI ตัวแรกหรือยัง?</h2>
         <p>เริ่มฟรี 15 วัน ไม่ต้องใช้บัตรเครดิต — ตั้งบริษัท AI ของคุณได้ใน 5 นาที</p>
         <a class="btn btn-amber btn-lg" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=cta&utm_campaign=final" target="_blank" rel="noopener">เริ่มฟรีตอนนี้ →</a>
+        <div class="reassure"><span>ไม่ต้องใช้บัตรเครดิต</span><span>ยกเลิกได้ทุกเมื่อ</span><span>ตั้งเสร็จใน 5 นาที</span></div>
       </div>
     </div>
   </section>
@@ -462,6 +482,11 @@
       <div class="foot-legal">© 2569 CEO AI Thailand · บริษัท AI อัตโนมัติสำหรับ SME ไทย</div>
     </div>
   </footer>
+
+  <div class="sticky-cta" id="stickyCta">
+    <span class="t"><b>เริ่มฟรี 15 วัน</b> · ไม่ต้องใช้บัตร</span>
+    <a class="btn btn-amber" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=sticky&utm_campaign=mobile_bar" target="_blank" rel="noopener">เริ่มฟรี →</a>
+  </div>
 </div>
 
 <script>
@@ -469,6 +494,12 @@
   (function(){
     var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
     document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+  })();
+  // Fitts's Law — sticky mobile CTA โผล่หลังเลื่อนพ้น hero (ไม่กวนตอนเปิด)
+  (function(){
+    var bar=document.getElementById('stickyCta'); if(!bar) return;
+    var onScroll=function(){ (window.scrollY>560) ? bar.classList.add('show') : bar.classList.remove('show'); };
+    window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
   })();
   // live task feed on AI agent cards
   (function(){
