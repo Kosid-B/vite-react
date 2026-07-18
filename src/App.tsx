@@ -11,6 +11,7 @@ import { track } from './lib/analytics';
 import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTriggers';
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
+import SaveWorkPrompt from './components/SaveWorkPrompt';
 import Sidebar from './components/Sidebar';
 // perf: lazy-load เฉพาะตอนต้องใช้ (ไม่อยู่ใน critical path ของ first paint)
 const AiAssist = lazy(() => import('./components/AiAssist'));
@@ -187,6 +188,9 @@ export default function App() {
   // Guest mode (ลองก่อนสมัคร) — เข้าแอปด้วย localStorage โดยไม่ต้อง login (ลด friction #1)
   const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1');
   const startGuest = () => { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } setGuestMode(true); };
+  // Aha-moment email capture (soft signup) — เก็บ lead ตอน guest เจอโมเมนต์ดีๆ
+  const [leadCaptured, setLeadCaptured] = useState(() => localStorage.getItem('ceo_ai_lead') === '1');
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // ===== Supabase session + workspaces =====
@@ -215,6 +219,13 @@ export default function App() {
   useEffect(() => {
     setGuestFullAccess(isSupabaseEnabled && !session && guestMode);
   }, [session, guestMode]);
+
+  // Aha moment: guest เจอโมเมนต์ดีๆ (celebration) → เด้งขออีเมลบันทึกงาน (soft signup ครั้งเดียว)
+  useEffect(() => {
+    if (celebration && isSupabaseEnabled && !session && guestMode && !leadCaptured) {
+      setShowSavePrompt(true);
+    }
+  }, [celebration, session, guestMode, leadCaptured]);
 
   // เมื่อล็อกอิน: หาเวิร์กสเปซเริ่มต้น + โหลดรายชื่อเวิร์กสเปซทั้งหมด
   useEffect(() => {
@@ -420,6 +431,9 @@ export default function App() {
   return (
     <div className="app">
       <Suspense fallback={null}><Celebrate moment={celebration} onDone={() => setCelebration(null)} /></Suspense>
+      {showSavePrompt && (
+        <SaveWorkPrompt onClose={() => setShowSavePrompt(false)} onCaptured={() => setLeadCaptured(true)} />
+      )}
       {isSupabaseEnabled && !session && guestMode && (
         <div className="guest-bar">
           <span>🧪 กำลังทดลองใช้ · ข้อมูลเก็บในเครื่องนี้ชั่วคราว</span>
