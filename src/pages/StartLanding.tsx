@@ -148,7 +148,7 @@ export default function StartLanding() {
             <div className="start-vchips">
               <span className="start-vchip">⚡ เปิดร้านใน 5 นาที</span>
               <span className="start-vchip">🆓 ฟรี 15 วัน ไม่ต้องใช้บัตร</span>
-              <span className="start-vchip">🤖 มีทีม AI ช่วยทุกขั้น</span>
+              <span className="start-vchip">🇹🇭 สั่งงานเป็นภาษาไทยธรรมชาติ</span>
             </div>
           </>
         )}
@@ -158,6 +158,21 @@ export default function StartLanding() {
           <a className="start-cta-sub" href="/b">ดูธุรกิจที่เปิดแล้วในระบบ →</a>
         </div>
         {!isIso && <div className="start-src">* ที่มา: สำนักงานสถิติแห่งชาติ / สภาพัฒน์ ไตรมาส 1 ปี 2569</div>}
+      </section>
+
+      {/* Market timing — AI หลอมรวมชีวิตคนไทยแล้ว (ปลุก "จังหวะนี้แหละ") + ย้ำจุดแข็งภาษาไทย */}
+      <section className="start-sec start-timing-sec">
+        <div className="start-timing-card">
+          <span className="start-timing-big">87%</span>
+          <div className="start-timing-body">
+            <b>คนไทยคุยกับ AI เป็นภาษาไทย</b> เพื่อจัดการชีวิตประจำวัน — และ AI กลายเป็นเครื่องมือของคน<b>ทุกวัย</b>แล้ว
+            <div className="start-timing-sub">
+              CEO AI Thailand สั่งงานเป็น<b>ภาษาไทยธรรมชาติ</b> ออกแบบเพื่อคนไทย เริ่มใช้ได้เลยไม่ต้องเก่งเทคโนโลยี —
+              จังหวะนี้แหละที่ธุรกิจเล็กจะมีทีม AI ได้เท่าบริษัทใหญ่
+            </div>
+          </div>
+        </div>
+        <div className="start-src">ที่มา: The Gemini Report — Southeast Asia 2026</div>
       </section>
 
       {/* Personas */}

@@ -6069,3 +6069,11 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .bt-dot { width:28px; height:28px; border-radius:7px; border:1px solid #334155; background:#0f172a; color:#94a3b8; font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; }
 .bt-dot.active { background:#f59e0b; color:#020617; border-color:#f59e0b; }
 .bt-scoring-val { font-size:12px; color:var(--ink,#e2e8f0); margin-left:4px; }
+
+/* Market-timing strip บน /start (Gemini Report — คนไทยใช้ AI) */
+.start-timing-sec { text-align:center; }
+.start-timing-card { display:flex; align-items:center; gap:18px; max-width:760px; margin:0 auto; padding:20px 24px; background:linear-gradient(135deg,#0b1220,#0f2233); border:1px solid #164e63; border-radius:16px; text-align:left; }
+.start-timing-big { flex:none; font-size:44px; font-weight:800; color:#22d3ee; line-height:1; }
+.start-timing-body { font-size:16px; color:#e2e8f0; line-height:1.5; }
+.start-timing-sub { margin-top:8px; font-size:14px; color:#94a3b8; }
+@media (max-width:560px){ .start-timing-card { flex-direction:column; align-items:flex-start; gap:8px; } .start-timing-big { font-size:38px; } }
