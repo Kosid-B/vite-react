@@ -227,6 +227,22 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     }
   }
 
+  /** จ่ายผ่าน Stripe Payment Link (static) — ทางลัดไม่ต้อง deploy edge function
+   *  แนบ client_reference_id=workspaceId + prefilled_email เพื่อให้ webhook map กลับได้ (ถ้าตั้ง) */
+  async function payWithStripeLink() {
+    const base = PAYMENT.stripePaymentLink;
+    if (!base) return;
+    setPayBusy(true);
+    let email = '';
+    try { const { data } = await supabase!.auth.getUser(); email = data?.user?.email ?? ''; } catch { /* noop */ }
+    const url = new URL(base);
+    if (wsId) url.searchParams.set('client_reference_id', wsId);
+    if (email) url.searchParams.set('prefilled_email', email);
+    url.searchParams.set('utm_source', 'app');
+    url.searchParams.set('utm_campaign', `billing_${selected}_${cycle}`);
+    window.location.href = url.toString();
+  }
+
   const selectedPlan = PLANS.find(p => p.id === selected)!;
   const chargeAmount = priceFor(selected);
   const needPayment = chargeAmount > 0;
@@ -706,8 +722,20 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                 </div>
               </>
             )}
+            {/* ทางลัด: Stripe Payment Link (static) — ใช้ได้ทันทีโดยไม่ต้อง deploy edge function */}
+            {isSupabaseEnabled && !PAYMENT.stripeLive && PAYMENT.stripePaymentLink && (
+              <>
+                <button className="bill-xendit" onClick={payWithStripeLink} disabled={payBusy || !wsId}>
+                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 ชำระเงินผ่าน Stripe (บัตรเครดิต/เดบิต)'}
+                </button>
+                <div className="bill-note">
+                  ชำระเงินปลอดภัยผ่าน Stripe · หลังชำระสำเร็จ ส่งหลักฐาน/แจ้งแอดมินเพื่อเปิดใช้งานแพ็ก
+                  (การอัปเกรดอัตโนมัติเปิดได้เมื่อตั้ง Stripe webhook)
+                </div>
+              </>
+            )}
             {/* Xendit/Omise = retired (ใช้ Stripe แทน) — เก็บโค้ด adapter ไว้เผื่ออนาคต แต่ไม่แสดงปุ่ม */}
-            {isSupabaseEnabled && !PAYMENT.stripeLive && (
+            {isSupabaseEnabled && !PAYMENT.stripeLive && !PAYMENT.stripePaymentLink && (
               <div className="bill-soon">
                 ⏳ ระบบชำระออนไลน์อัตโนมัติกำลังเปิดใช้เร็วๆ นี้ — ระหว่างนี้โอนหรือสแกน QR ด้านบน
                 แล้วส่งสลิป แอดมินเปิดใช้งานให้ภายใน 1 ชม. (วันทำการ)

@@ -49,6 +49,10 @@ export const PAYMENT = {
   stripeLive: false,
   // Stripe Publishable Key (pk_… = public ฝังได้โดยดีไซน์ Stripe) — ใช้เมื่อ stripeLive (เผื่อ Payment Element อนาคต)
   stripePublicKey: 'pk_live_51TGcB6EMwgw9S6CEZ7NQ1CA5Lly8WH6mK6QtsPGPOdErQ2J7qf3D6F3hJpqsvbMaXPv9ExYz2K58s11hkGgQGGcc00XRklUVkU',
+  // 🔗 Stripe Payment Link (static) — ทางลัดรับชำระเงินโดยไม่ต้อง deploy edge function
+  //    ใช้ได้ทันที · แนบ client_reference_id=workspaceId เพื่อให้ webhook map กลับได้ (ถ้าตั้ง)
+  //    ⚠️ 1 ลิงก์ = 1 ราคา/สินค้า · การอัปเกรดแพ็กอัตโนมัติต้องตั้ง webhook (ดู docs/integrations/stripe-payments.md)
+  stripePaymentLink: 'https://buy.stripe.com/9B6cN59V0cndax6fcI5AQ00',
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
