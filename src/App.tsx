@@ -20,7 +20,7 @@ const BadgeGenerator = lazy(() => import('./components/BadgeGenerator'));
 const CmdK = lazy(() => import('./components/CmdK'));
 const OnboardingTour = lazy(() => import('./components/OnboardingTour'));
 import UpgradeWall from './components/UpgradeWall';
-import { canAccess, setAdminFullAccess } from './lib/access';
+import { canAccess, setAdminFullAccess, setGuestFullAccess } from './lib/access';
 import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
 import { isLineCallback, handleLineCallback } from './lib/lineLogin';
 import { isAdminEmail, INTEGRATIONS } from './config';
@@ -184,6 +184,9 @@ export default function App() {
   });
   const [showAuth, setShowAuth] = useState(false);
   const [seenLanding, setSeenLanding] = useState(() => !!localStorage.getItem('ceo_ai_seen'));
+  // Guest mode (ลองก่อนสมัคร) — เข้าแอปด้วย localStorage โดยไม่ต้อง login (ลด friction #1)
+  const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1');
+  const startGuest = () => { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } setGuestMode(true); };
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // ===== Supabase session + workspaces =====
@@ -207,6 +210,11 @@ export default function App() {
   useEffect(() => {
     setAdminFullAccess(isAdminEmail(session?.user.email ?? null));
   }, [session?.user.email]);
+
+  // ผู้ทดลอง (guest, ยังไม่ล็อกอิน) = ปลดล็อกฟีเจอร์เต็มให้สัมผัสคุณค่าก่อนสมัคร
+  useEffect(() => {
+    setGuestFullAccess(isSupabaseEnabled && !session && guestMode);
+  }, [session, guestMode]);
 
   // เมื่อล็อกอิน: หาเวิร์กสเปซเริ่มต้น + โหลดรายชื่อเวิร์กสเปซทั้งหมด
   useEffect(() => {
@@ -393,7 +401,9 @@ export default function App() {
   // ไม่บังคับ login ทันที — กดปุ่ม "เริ่ม/เข้าระบบ" ค่อยไปหน้า Auth (login เป็นด่านที่สอง)
   if (isSupabaseEnabled && !session) {
     if (showAuth) return <Auth onBack={() => setShowAuth(false)} />;
-    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+    // ยังไม่กด "ลองก่อน" → หน้า Landing (มีปุ่มสมัคร + ปุ่มลองใช้เลยไม่ต้องสมัคร)
+    if (!guestMode) return <LandingPage onGetStarted={() => setShowAuth(true)} onTryGuest={startGuest} />;
+    // guest → ตกลงไปเรนเดอร์แอปด้านล่าง (ทดลองใช้ด้วย localStorage) พร้อมแบนเนอร์ชวนสมัคร
   }
 
   // โหมด local (ไม่มี backend): โชว์ landing ครั้งแรกครั้งเดียว แล้วเข้าแอปเลย
@@ -410,6 +420,14 @@ export default function App() {
   return (
     <div className="app">
       <Suspense fallback={null}><Celebrate moment={celebration} onDone={() => setCelebration(null)} /></Suspense>
+      {isSupabaseEnabled && !session && guestMode && (
+        <div className="guest-bar">
+          <span>🧪 กำลังทดลองใช้ · ข้อมูลเก็บในเครื่องนี้ชั่วคราว</span>
+          <button onClick={() => { track('guest_signup_click', {}); setShowAuth(true); }}>
+            สมัครฟรีเพื่อบันทึกงาน →
+          </button>
+        </div>
+      )}
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
       <button className="hamburger" onClick={() => setSidebarOpen(true)} aria-label="เปิดเมนู">
