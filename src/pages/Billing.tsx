@@ -228,9 +228,10 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   }
 
   /** จ่ายผ่าน Stripe Payment Link (static) — ทางลัดไม่ต้อง deploy edge function
-   *  แนบ client_reference_id=workspaceId + prefilled_email เพื่อให้ webhook map กลับได้ (ถ้าตั้ง) */
-  async function payWithStripeLink() {
-    const base = PAYMENT.stripePaymentLink;
+   *  แนบ client_reference_id=workspaceId + prefilled_email เพื่อให้ webhook map กลับได้ (ถ้าตั้ง)
+   *  method: 'card' (subscription) | 'promptpay' (one-time) — เลือกลิงก์ตามวิธีจ่าย */
+  async function payWithStripeLink(method: 'card' | 'promptpay') {
+    const base = method === 'promptpay' ? PAYMENT.stripePaymentLinkPromptPay : PAYMENT.stripePaymentLinkCard;
     if (!base) return;
     setPayBusy(true);
     let email = '';
@@ -239,7 +240,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     if (wsId) url.searchParams.set('client_reference_id', wsId);
     if (email) url.searchParams.set('prefilled_email', email);
     url.searchParams.set('utm_source', 'app');
-    url.searchParams.set('utm_campaign', `billing_${selected}_${cycle}`);
+    url.searchParams.set('utm_campaign', `billing_${selected}_${cycle}_${method}`);
     window.location.href = url.toString();
   }
 
@@ -722,20 +723,27 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                 </div>
               </>
             )}
-            {/* ทางลัด: Stripe Payment Link (static) — ใช้ได้ทันทีโดยไม่ต้อง deploy edge function */}
-            {isSupabaseEnabled && !PAYMENT.stripeLive && PAYMENT.stripePaymentLink && (
+            {/* ทางลัด: Stripe Payment Link (static) — บัตร (subscription) + PromptPay (one-time) */}
+            {isSupabaseEnabled && !PAYMENT.stripeLive && (PAYMENT.stripePaymentLinkCard || PAYMENT.stripePaymentLinkPromptPay) && (
               <>
-                <button className="bill-xendit" onClick={payWithStripeLink} disabled={payBusy || !wsId}>
-                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 ชำระเงินผ่าน Stripe (บัตรเครดิต/เดบิต)'}
-                </button>
+                {PAYMENT.stripePaymentLinkCard && (
+                  <button className="bill-xendit" onClick={() => payWithStripeLink('card')} disabled={payBusy || !wsId}>
+                    {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายด้วยบัตรเครดิต/เดบิต — ตัดเงินอัตโนมัติทุกงวด'}
+                  </button>
+                )}
+                {PAYMENT.stripePaymentLinkPromptPay && (
+                  <button className="bill-promptpay" onClick={() => payWithStripeLink('promptpay')} disabled={payBusy || !wsId}>
+                    {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '📱 จ่ายด้วย PromptPay QR — ครั้งเดียว'}
+                  </button>
+                )}
                 <div className="bill-note">
-                  ชำระเงินปลอดภัยผ่าน Stripe · หลังชำระสำเร็จ ส่งหลักฐาน/แจ้งแอดมินเพื่อเปิดใช้งานแพ็ก
-                  (การอัปเกรดอัตโนมัติเปิดได้เมื่อตั้ง Stripe webhook)
+                  ชำระเงินปลอดภัยผ่าน Stripe · บัตร = ตัดอัตโนมัติทุกงวด · PromptPay = จ่ายครั้งเดียว
+                  <br />หลังชำระสำเร็จ ระบบเปิดใช้งานแพ็กให้ (อัตโนมัติเมื่อตั้ง Stripe webhook · ระหว่างนี้แจ้งแอดมิน)
                 </div>
               </>
             )}
             {/* Xendit/Omise = retired (ใช้ Stripe แทน) — เก็บโค้ด adapter ไว้เผื่ออนาคต แต่ไม่แสดงปุ่ม */}
-            {isSupabaseEnabled && !PAYMENT.stripeLive && !PAYMENT.stripePaymentLink && (
+            {isSupabaseEnabled && !PAYMENT.stripeLive && !PAYMENT.stripePaymentLinkCard && !PAYMENT.stripePaymentLinkPromptPay && (
               <div className="bill-soon">
                 ⏳ ระบบชำระออนไลน์อัตโนมัติกำลังเปิดใช้เร็วๆ นี้ — ระหว่างนี้โอนหรือสแกน QR ด้านบน
                 แล้วส่งสลิป แอดมินเปิดใช้งานให้ภายใน 1 ชม. (วันทำการ)
