@@ -6,6 +6,8 @@ import { currentChallenger } from '../lib/challengerRotation';
 
 interface Props {
   onGetStarted: () => void;
+  /** ลองใช้แอปทันทีโดยไม่ต้องสมัคร (guest mode) — ลด friction #1 */
+  onTryGuest?: () => void;
 }
 
 const C = {
@@ -99,7 +101,7 @@ const plans = [
   },
 ];
 
-export default function LandingPage({ onGetStarted }: Props) {
+export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
   const [ctaHover, setCtaHover] = useState(false);
   const [navHover, setNavHover] = useState(false);
 
@@ -183,6 +185,19 @@ export default function LandingPage({ onGetStarted }: Props) {
           <div style={{ marginTop: 12, color: C.slate5, fontSize: 13 }}>
             ไม่ต้องใช้บัตรเครดิต · เริ่มฟรี 15 วัน · ยกเลิกได้ทุกเมื่อ
           </div>
+          {onTryGuest && (
+            <div style={{ marginTop: 14 }}>
+              <button
+                onClick={() => { track('landing_cta_click', { cta: 'hero_try_guest' }); onTryGuest(); }}
+                style={{
+                  background: 'none', border: 'none', color: C.cyan4, fontFamily: 'inherit',
+                  fontWeight: 600, fontSize: 15, cursor: 'pointer', textDecoration: 'underline',
+                }}
+              >
+                หรือ ลองใช้เลยตอนนี้ — ไม่ต้องสมัคร ไม่ต้องกรอกอะไร →
+              </button>
+            </div>
+          )}
           <a
             href="/shop"
             onClick={() => track('landing_cta_click', { cta: 'hero_shop_signup' })}

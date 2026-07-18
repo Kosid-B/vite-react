@@ -5984,3 +5984,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .iso-adv-hire { width:100%; margin-top:12px; font-family:inherit; font-size:14px; font-weight:800; color:#0f172a; background:linear-gradient(90deg,#22d3ee,#38bdf8); border:none; border-radius:10px; padding:12px 16px; cursor:pointer; }
 .iso-adv-hire:hover { filter:brightness(1.05); }
 .iso-adv-note { font-size:12.5px; color:var(--ink2); background:rgba(6,182,212,.08); border-radius:8px; padding:9px 12px; }
+
+/* Guest mode bar — ทดลองใช้ก่อนสมัคร (ชวนสมัครเพื่อบันทึก) */
+.guest-bar { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; padding:9px 16px; background:linear-gradient(90deg,#0e7490,#0369a1); color:#f0f9ff; font-size:13.5px; box-shadow:0 2px 10px rgba(0,0,0,.25); }
+.guest-bar button { flex:none; background:#f59e0b; color:#020617; border:none; border-radius:8px; padding:7px 16px; font-family:inherit; font-weight:800; font-size:13.5px; cursor:pointer; }
+.guest-bar button:hover { filter:brightness(1.05); }
