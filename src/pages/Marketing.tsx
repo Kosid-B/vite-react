@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, PageId, MarketingChannel, MarketingCampaign, MarketingGoal, MarketingChannelType, MarketingCampaignStatus } from '../types';
 import { PageHeader, Badge } from '../ds';
+import BuyingTriggers from '../components/BuyingTriggers';
 import { marketingFromDe24 } from '../lib/marketingStrategy';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { withSkillDirectives } from '../lib/skillDirectives';
@@ -186,6 +187,8 @@ export default function Marketing({ data, onUpdate, onNavigate }: Props) {
           <Badge tone="neutral">{campaigns.filter(c => c.status === 'active').length} แคมเปญกำลังดำเนิน</Badge>
         </>}
       />
+
+      <BuyingTriggers data={data} onUpdate={onUpdate} />
 
       {/* ===== กลยุทธ์จากผล MIT 24-Step ===== */}
       <div className="m24">

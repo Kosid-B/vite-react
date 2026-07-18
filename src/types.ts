@@ -558,6 +558,8 @@ export interface AppData {
   boardRoom?: import('./lib/boardRoom').BoardRoomState;
   // บริหารทรัพยากรธุรกิจ — รายการ+จำนวน · C-Level ดูแล/ขอเพิ่ม-ลด · CEO อนุมัติ — ดู lib/resources.ts
   resources?: import('./lib/resources').ResourcesState;
+  // 3 แรงขับที่ทำให้ลูกค้ายอมจ่าย (ขจัดความทุกข์/สะดวก/อารมณ์) — ดู lib/buyingTriggers.ts
+  buyingTriggers?: import('./lib/buyingTriggers').BuyingTriggersState;
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */

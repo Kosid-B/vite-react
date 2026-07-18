@@ -6043,3 +6043,29 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .bill-promptpay { width:100%; margin-top:8px; padding:13px; border:none; border-radius:10px; background:#0f766e; color:#f0fdfa; font-family:inherit; font-weight:800; font-size:15px; cursor:pointer; }
 .bill-promptpay:hover { filter:brightness(1.08); }
 .bill-promptpay:disabled { opacity:.6; cursor:default; }
+
+/* 3 แรงขับที่ทำให้ลูกค้ายอมจ่าย (Buying Triggers) */
+.bt-wrap { margin:0 0 22px; padding:18px; background:var(--panel,#0f172a); border:1px solid #1e293b; border-radius:14px; }
+.bt-head h3 { margin:0 0 4px; font-size:17px; color:var(--ink,#f8fafc); }
+.bt-head p { margin:0 0 14px; font-size:13px; color:var(--ink2,#94a3b8); line-height:1.5; }
+.bt-score { display:flex; align-items:center; gap:16px; margin-bottom:16px; padding:12px; background:#0b1220; border-radius:12px; }
+.bt-score-ring { flex:none; width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.bt-score-ring span { width:48px; height:48px; border-radius:50%; background:#0b1220; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; color:var(--ink,#f8fafc); }
+.bt-score-lbl { font-size:12.5px; color:var(--ink2,#94a3b8); }
+.bt-diagnosis { font-size:14px; color:var(--ink,#e2e8f0); margin-top:2px; line-height:1.45; }
+.bt-cards { display:grid; grid-template-columns:1fr; gap:11px; }
+@media (min-width:720px){ .bt-cards { grid-template-columns:repeat(3,1fr); } }
+.bt-card { background:#0b1220; border:1px solid #1e293b; border-radius:12px; padding:13px; }
+.bt-card-weak { border-color:#f59e0b88; box-shadow:0 0 0 1px #f59e0b44; }
+.bt-card-hd { display:flex; gap:9px; align-items:flex-start; margin-bottom:9px; }
+.bt-icon { font-size:22px; line-height:1; }
+.bt-title { font-weight:800; font-size:14.5px; color:var(--ink,#f8fafc); }
+.bt-flag { color:#f59e0b; font-weight:700; font-size:12px; }
+.bt-sub { font-size:12px; color:var(--ink2,#94a3b8); margin-top:1px; }
+.bt-prompt { display:block; font-size:12.5px; color:var(--ink2,#cbd5e1); margin:4px 0 6px; line-height:1.4; }
+.bt-card textarea { width:100%; box-sizing:border-box; padding:9px 10px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#f8fafc; font-family:inherit; font-size:13px; resize:vertical; }
+.bt-scoring { display:flex; align-items:center; gap:5px; margin-top:9px; flex-wrap:wrap; }
+.bt-scoring-lbl { font-size:12px; color:var(--ink2,#94a3b8); margin-right:2px; }
+.bt-dot { width:28px; height:28px; border-radius:7px; border:1px solid #334155; background:#0f172a; color:#94a3b8; font-family:inherit; font-weight:700; font-size:13px; cursor:pointer; }
+.bt-dot.active { background:#f59e0b; color:#020617; border-color:#f59e0b; }
+.bt-scoring-val { font-size:12px; color:var(--ink,#e2e8f0); margin-left:4px; }
