@@ -50,9 +50,13 @@ export const PAYMENT = {
   // Stripe Publishable Key (pk_… = public ฝังได้โดยดีไซน์ Stripe) — ใช้เมื่อ stripeLive (เผื่อ Payment Element อนาคต)
   stripePublicKey: 'pk_live_51TGcB6EMwgw9S6CEZ7NQ1CA5Lly8WH6mK6QtsPGPOdErQ2J7qf3D6F3hJpqsvbMaXPv9ExYz2K58s11hkGgQGGcc00XRklUVkU',
   // 🔗 Stripe Payment Link (static) — ทางลัดรับชำระเงินโดยไม่ต้อง deploy edge function
-  //    ใช้ได้ทันที · แนบ client_reference_id=workspaceId เพื่อให้ webhook map กลับได้ (ถ้าตั้ง)
+  //    แนบ client_reference_id=workspaceId เพื่อให้ webhook map กลับได้ (ถ้าตั้ง)
   //    ⚠️ 1 ลิงก์ = 1 ราคา/สินค้า · การอัปเกรดแพ็กอัตโนมัติต้องตั้ง webhook (ดู docs/integrations/stripe-payments.md)
-  stripePaymentLink: 'https://buy.stripe.com/9B6cN59V0cndax6fcI5AQ00',
+  //  บัตร (subscription) — ตัดเงินอัตโนมัติทุกงวด (Stripe รองรับเฉพาะบัตรกับ subscription)
+  stripePaymentLinkCard: 'https://buy.stripe.com/9B6cN59V0cndax6fcI5AQ00',
+  //  PromptPay (one-time) — จ่าย QR ครั้งเดียว (สร้าง Payment Link แบบ one-time + เปิด PromptPay ใน Stripe แล้ววาง URL ที่นี่)
+  //  ⚠️ PromptPay ใช้กับ subscription ไม่ได้ ต้องเป็น one-time เท่านั้น
+  stripePaymentLinkPromptPay: '',
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
