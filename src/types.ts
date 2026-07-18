@@ -81,10 +81,30 @@ export interface BMCData {
   revenue: string[];
 }
 
+/** ช่องใน Business Model Canvas (9 บล็อก) */
+export type BmcBlockKey =
+  | 'partners' | 'activities' | 'value' | 'relationships'
+  | 'segments' | 'resources' | 'channels' | 'costs' | 'revenue';
+
+/** ผลลัพธ์จริงที่ป้อนตามกระบวนการ BMC — ปิดลูป วางแผน → ลงมือ → วัดผล
+ *  รองรับทั้ง KPI (เป้า→ผลจริง→สถานะ) และข้อความ + ลิงก์หลักฐาน */
+export interface BmcOutcome {
+  id: string;
+  block: BmcBlockKey;      // ผูกกับช่อง BMC ไหน
+  metric: string;          // ตัวชี้วัด เช่น "ลูกค้าใหม่", "รายได้/เดือน"
+  target: number;          // เป้าหมาย
+  actual: number;          // ผลจริง (ป้อนเอง)
+  unit?: string;           // หน่วย เช่น ราย/บาท/ชิ้น
+  note?: string;           // บันทึกข้อความ
+  evidenceUrl?: string;    // ลิงก์หลักฐาน (แนบ)
+  updatedAt: string;       // ISO
+}
+
 export interface BusinessModelData {
   bmc: BMCData;
   de24: Array<{ done: boolean; notes: string }>;
   de24Owners?: (string | null)[]; // agentId ของ C-level เจ้าของแต่ละ Phase (CEO มอบหมาย)
+  outcomes?: BmcOutcome[];        // ผลลัพธ์จริงตามกระบวนการ BMC (Outcome Tracker)
 }
 
 /* ===== SIPOC — Process Management =====
