@@ -2,13 +2,15 @@
 // verify_jwt = false: ยืนยันด้วย Stripe-Signature (STRIPE_WEBHOOK_SECRET) แทน
 //
 // จัดการ event:
-//   invoice.paid                 → เปิด/ต่ออายุแพ็ก (ยิงทั้งจ่ายครั้งแรก + ตัดเงินอัตโนมัติทุกงวด) — idempotent ด้วย invoice.id
+//   checkout.session.completed   → จ่ายผ่าน Payment Link (static: บัตร/PromptPay) — map workspace ด้วย client_reference_id
+//                                  + เดาแพ็ก/รอบจากยอดเงิน — idempotent ด้วย session.id
+//   invoice.paid                 → เปิด/ต่ออายุแพ็ก (dynamic checkout + ตัดเงินอัตโนมัติทุกงวด) — idempotent ด้วย invoice.id
 //   customer.subscription.deleted→ ดาวน์เกรดกลับ free (ลูกค้ายกเลิก/ตัดเงินไม่ผ่านจนหมดอายุ)
 //
 // Deploy:  supabase functions deploy stripe-webhook --no-verify-jwt --project-ref waigsnxhrlwtiotspaim
 // Secrets: supabase secrets set STRIPE_SECRET_KEY=sk_... STRIPE_WEBHOOK_SECRET=whsec_... RESEND_API_KEY=re_...
 // Webhook URL (ตั้งใน Stripe → Developers → Webhooks): https://<project>.supabase.co/functions/v1/stripe-webhook
-//   เลือก event: invoice.paid, customer.subscription.deleted
+//   เลือก event: checkout.session.completed, invoice.paid, customer.subscription.deleted
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
@@ -23,6 +25,12 @@ const FROM_EMAIL = "CEO AI Thailand <noreply@ceoaithailand.org>";
 
 const PLAN_LABEL: Record<string, string> = {
   starter: "Starter ฿390/เดือน", growth: "Growth ฿1,490/เดือน", scale: "Scale ฿5,900/เดือน",
+};
+
+// เดาแพ็ก/รอบจากยอดเงิน (บาท) — ใช้กับ Payment Link แบบ static ที่ไม่มี metadata plan/cycle
+const PRICE_TO_PLAN: Record<number, { plan: string; cycle: string }> = {
+  390: { plan: "starter", cycle: "monthly" }, 1490: { plan: "growth", cycle: "monthly" }, 5900: { plan: "scale", cycle: "monthly" },
+  3900: { plan: "starter", cycle: "yearly" }, 14900: { plan: "growth", cycle: "yearly" }, 59000: { plan: "scale", cycle: "yearly" },
 };
 
 async function sendMail(to: string, subject: string, html: string): Promise<void> {
@@ -73,6 +81,45 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+  // ── จ่ายผ่าน Payment Link (static: บัตร/PromptPay) → เปิดแพ็ก ──
+  if (event.type === "checkout.session.completed") {
+    const s = event.data.object as Stripe.Checkout.Session;
+    const workspaceId = s.client_reference_id ?? (s.metadata?.workspace_id ?? "");
+    if (!workspaceId) return new Response("missing_ref", { status: 200 });
+
+    const amount = Math.round((s.amount_total ?? 0) / 100); // สตางค์ → บาท
+    // แพ็ก/รอบ: ใช้ metadata ถ้ามี (dynamic) ไม่งั้นเดาจากยอด (static link)
+    const guess = PRICE_TO_PLAN[amount];
+    const plan = s.metadata?.plan_id ?? guess?.plan ?? "";
+    const cycle = (s.metadata?.cycle === "yearly" ? "yearly" : guess?.cycle) ?? "monthly";
+    if (!plan) return new Response(JSON.stringify({ ok: true, unmapped_amount: amount }), { status: 200, headers: { "content-type": "application/json" } });
+
+    const { data: row, error: selErr } = await admin
+      .from("workspace_state").select("data").eq("workspace_id", workspaceId).maybeSingle();
+    if (selErr) return new Response("db_error", { status: 500 });
+    const state = ((row as { data?: Record<string, unknown> } | null)?.data ?? {}) as Record<string, unknown>;
+
+    const { state: nextState, alreadyProcessed } = applyPaidInvoice(state, {
+      plan, cycle, amount,
+      xenditId: s.id,                          // ใช้ session.id เป็น idempotency key
+      invoiceId: "inv-" + Date.now().toString(36),
+      now: new Date(),
+    });
+    if (alreadyProcessed) return new Response(JSON.stringify({ ok: true, dedup: true }), { status: 200, headers: { "content-type": "application/json" } });
+
+    const { error: upErr } = await admin.from("workspace_state")
+      .upsert({ workspace_id: workspaceId, data: nextState, updated_at: new Date().toISOString() }, { onConflict: "workspace_id" });
+    if (upErr) return new Response("db_error", { status: 500 });
+
+    const userEmail = (s.customer_details?.email) ?? await lookupEmail(admin, workspaceId);
+    await Promise.all([
+      userEmail ? sendMail(userEmail, `✅ ยืนยันการชำระเงิน — แพ็ก ${plan} CEO AI Thailand`, confirmHtml(plan, amount, cycle)) : Promise.resolve(),
+      sendMail(ADMIN_EMAIL, `[CEO AI] Stripe Payment ฿${amount} — ${plan}/${cycle} — ${workspaceId.slice(0, 8)}`,
+        `<p>Stripe checkout (payment link) paid</p><p>Plan: ${plan} (${cycle}) · ฿${amount}</p><p>Workspace: <code>${workspaceId}</code></p>`),
+    ]);
+    return new Response(JSON.stringify({ ok: true, workspace_id: workspaceId, plan, cycle, amount }), { status: 200, headers: { "content-type": "application/json" } });
+  }
 
   // ── จ่ายสำเร็จ (ครั้งแรก + ทุกงวดอัตโนมัติ) → เปิด/ต่ออายุแพ็ก ──
   if (event.type === "invoice.paid") {

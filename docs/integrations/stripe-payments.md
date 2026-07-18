@@ -25,8 +25,21 @@ Stripe → webhook: stripe-webhook  [verify_jwt=false, verify Stripe-Signature]
 
 > ⚠️ live mode = ตัดเงินจริง. อยากทดสอบก่อน ใช้คีย์ `sk_test_…` + บัตรทดสอบ `4242 4242 4242 4242`
 
-## ขั้นตอน deploy (ทำครั้งเดียว)
+## 🅰️ กรณีใช้อยู่ตอนนี้: Payment Link (static) + auto-upgrade
+ระบบตอนนี้ใช้ **static Payment Link** (`stripePaymentLinkCard`/`stripePaymentLinkPromptPay`) — ปุ่มจ่ายทำงานแล้ว
+เพื่อให้ **อัปเกรดแพ็กอัตโนมัติ** ต้อง deploy **แค่ `stripe-webhook`** (ไม่ต้อง `stripe-create-checkout`, ไม่ต้องเปิด `stripeLive`):
+```bash
+supabase secrets set STRIPE_SECRET_KEY=sk_live_xxx --project-ref waigsnxhrlwtiotspaim
+supabase functions deploy stripe-webhook --no-verify-jwt --project-ref waigsnxhrlwtiotspaim
+```
+แล้วสร้าง Webhook endpoint (ขั้น 2 ด้านล่าง) เลือก event **`checkout.session.completed`** เป็นหลัก
+(webhook อ่าน `client_reference_id`=workspace + เดาแพ็กจากยอดเงิน → เปิดแพ็กให้อัตโนมัติ)
+> ⚠️ static link แบบ subscription: การ "ต่ออายุงวดถัดไป" ยังไม่ auto-extend (Stripe ตัดบัตรต่อ แต่ metadata ไม่ติด) —
+> billing-cron/แอดมินจัดการ หรืออัปเกรดเป็น dynamic checkout (`stripeLive`) ภายหลังเพื่อ auto-renew เต็มรูปแบบ
 
+---
+
+## 🅱️ Full auto (dynamic checkout + subscription) — deploy ครบ
 ### 1) ตั้ง secret + deploy edge functions
 ```bash
 # ตั้งคีย์ลับ (อย่า commit)
@@ -41,7 +54,7 @@ supabase functions deploy stripe-webhook --no-verify-jwt --project-ref waigsnxhr
 ### 2) สร้าง Webhook endpoint ใน Stripe → เอา whsec_ มาตั้ง
 `Stripe Dashboard → Developers → Webhooks → Add endpoint`
 - **Endpoint URL:** `https://waigsnxhrlwtiotspaim.supabase.co/functions/v1/stripe-webhook`
-- **Events:** เลือก `invoice.paid` และ `customer.subscription.deleted`
+- **Events:** `checkout.session.completed` (Payment Link) + `invoice.paid` + `customer.subscription.deleted`
 - Save → คัดลอก **Signing secret** (`whsec_…`) → ตั้ง:
 ```bash
 supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_xxx --project-ref waigsnxhrlwtiotspaim
