@@ -56,7 +56,7 @@ export const PAYMENT = {
   stripePaymentLinkCard: 'https://buy.stripe.com/9B6cN59V0cndax6fcI5AQ00',
   //  PromptPay (one-time) — จ่าย QR ครั้งเดียว (สร้าง Payment Link แบบ one-time + เปิด PromptPay ใน Stripe แล้ววาง URL ที่นี่)
   //  ⚠️ PromptPay ใช้กับ subscription ไม่ได้ ต้องเป็น one-time เท่านั้น
-  stripePaymentLinkPromptPay: '',
+  stripePaymentLinkPromptPay: 'https://buy.stripe.com/14AcN5aZ4drh9t26Gc5AQ01',
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
