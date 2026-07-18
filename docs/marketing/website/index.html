@@ -1,0 +1,487 @@
+<style>
+  :root{
+    --bg:#0a0f1c; --bg-soft:#0d1426; --panel:#111c34; --panel-2:#152442;
+    --line:#22304f; --line-soft:#1a2740;
+    --ink:#eaf0fb; --ink-mut:#94a6c8; --ink-dim:#64769a;
+    --amber:#f59e0b; --amber-hi:#ffc046; --cyan:#22d3ee; --good:#34d399; --pink:#f472b6;
+    --r:18px;
+    --font: "Kanit","IBM Plex Sans Thai","Noto Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --maxw:1120px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:var(--font);
+    font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:inherit; text-decoration:none}
+  h1,h2,h3{margin:0; text-wrap:balance; line-height:1.12; font-weight:800; letter-spacing:-.01em}
+  p{margin:0}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 22px}
+  .eyebrow{font-size:12.5px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--cyan)}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  /* backdrop */
+  .glow{position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(680px 420px at 78% -6%, rgba(245,158,11,.16), transparent 60%),
+      radial-gradient(700px 520px at 8% 4%, rgba(34,211,238,.12), transparent 62%);}
+  .grid-bg{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    background-image:linear-gradient(var(--line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--line-soft) 1px,transparent 1px);
+    background-size:54px 54px; mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 30%,transparent 75%);}
+  .page{position:relative; z-index:1}
+
+  /* nav */
+  nav{position:sticky; top:0; z-index:40; backdrop-filter:blur(12px);
+    background:rgba(10,15,28,.72); border-bottom:1px solid var(--line-soft)}
+  .nav-in{max-width:var(--maxw); margin:0 auto; padding:13px 22px; display:flex; align-items:center; gap:16px}
+  .brand{display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.01em}
+  .brand .mk{width:32px; height:32px; border-radius:9px; display:grid; place-items:center; font-size:17px;
+    background:linear-gradient(145deg,#12233f,#0c1830); border:1px solid var(--line); box-shadow:0 0 20px rgba(34,211,238,.18) inset}
+  .brand small{display:block; font-size:10.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-mut); margin-top:-2px}
+  .nav-links{margin-left:auto; display:flex; align-items:center; gap:22px}
+  .nav-links a.txt{font-size:14.5px; color:var(--ink-mut); font-weight:600}
+  .nav-links a.txt:hover{color:var(--ink)}
+  @media(max-width:720px){ .nav-links a.txt{display:none} }
+
+  .btn{display:inline-flex; align-items:center; gap:9px; font-family:var(--font); font-weight:800; cursor:pointer;
+    border:none; border-radius:12px; padding:12px 22px; font-size:15.5px; transition:transform .15s,box-shadow .2s,filter .2s}
+  .btn-amber{background:linear-gradient(180deg,var(--amber-hi),var(--amber)); color:#1a1204;
+    box-shadow:0 6px 22px rgba(245,158,11,.32)}
+  .btn-amber:hover{transform:translateY(-2px); box-shadow:0 10px 30px rgba(245,158,11,.42)}
+  .btn-ghost{background:rgba(34,211,238,.07); color:var(--cyan); border:1px solid rgba(34,211,238,.35)}
+  .btn-ghost:hover{background:rgba(34,211,238,.13)}
+  .btn-lg{padding:16px 30px; font-size:17px; border-radius:14px}
+
+  /* hero */
+  header{padding:64px 0 34px}
+  .hero{display:grid; grid-template-columns:1.05fr .95fr; gap:44px; align-items:center}
+  @media(max-width:900px){ .hero{grid-template-columns:1fr; gap:34px} header{padding:40px 0 20px} }
+  .h-badge{display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--ink-mut);
+    border:1px solid var(--line); background:var(--panel); padding:7px 14px; border-radius:999px; margin-bottom:22px}
+  .h-badge .dot{width:7px; height:7px; border-radius:50%; background:var(--good); box-shadow:0 0 0 4px rgba(52,211,153,.18)}
+  h1{font-size:clamp(34px,5.6vw,58px)}
+  h1 .hl{background:linear-gradient(120deg,var(--amber-hi),var(--amber)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .h-sub{margin-top:20px; font-size:clamp(16px,2.1vw,19px); color:var(--ink-mut); max-width:38ch}
+  .h-cta{margin-top:30px; display:flex; gap:13px; flex-wrap:wrap; align-items:center}
+  .h-chips{margin-top:20px; display:flex; gap:9px; flex-wrap:wrap}
+  .chip{font-size:13px; color:var(--ink-mut); border:1px solid var(--line-soft); background:rgba(255,255,255,.02); padding:6px 12px; border-radius:999px}
+  .chip b{color:var(--ink)}
+
+  /* team roster */
+  .roster{position:relative}
+  .roster-hd{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+  .roster-hd .t{font-size:13px; font-weight:700; letter-spacing:.06em; color:var(--ink-mut)}
+  .live{display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:700; color:var(--good)}
+  .live .pulse{width:8px; height:8px; border-radius:50%; background:var(--good); animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.5)}70%{box-shadow:0 0 0 8px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+  .agents{display:flex; flex-direction:column; gap:11px}
+  .agent{display:flex; gap:13px; align-items:flex-start; padding:14px 15px; border-radius:14px;
+    background:linear-gradient(180deg,var(--panel),var(--bg-soft)); border:1px solid var(--line);
+    opacity:0; transform:translateY(10px); animation:rise .6s forwards}
+  .agent:nth-child(1){animation-delay:.05s}.agent:nth-child(2){animation-delay:.16s}
+  .agent:nth-child(3){animation-delay:.27s}.agent:nth-child(4){animation-delay:.38s}
+  @keyframes rise{to{opacity:1; transform:none}}
+  .agent .av{width:42px; height:42px; flex:none; border-radius:11px; display:grid; place-items:center; font-size:21px;
+    background:#0c1526; border:1px solid var(--line)}
+  .agent .meta{flex:1; min-width:0}
+  .agent .nm{font-weight:700; font-size:15px; display:flex; align-items:center; gap:8px}
+  .agent .rl{font-size:12px; color:var(--ink-mut)}
+  .agent .task{margin-top:7px; font-size:12.5px; color:var(--cyan); background:rgba(34,211,238,.06);
+    border:1px solid rgba(34,211,238,.14); border-radius:8px; padding:5px 9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .agent .task::before{content:"▸ "; color:var(--ink-mut)}
+  .sdot{width:8px; height:8px; border-radius:50%; background:var(--good); flex:none; box-shadow:0 0 0 3px rgba(52,211,153,.16); animation:pulse 2.4s infinite}
+
+  /* sections */
+  section{padding:56px 0; position:relative}
+  .sec-head{max-width:640px; margin-bottom:34px}
+  .sec-head h2{font-size:clamp(25px,3.6vw,36px); margin-top:12px}
+  .sec-head p{margin-top:12px; color:var(--ink-mut); font-size:16.5px}
+  .reveal{opacity:0; transform:translateY(18px); transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1; transform:none}
+
+  /* timing strip */
+  .timing{display:flex; align-items:center; gap:26px; padding:24px 28px; border-radius:var(--r); flex-wrap:wrap;
+    background:linear-gradient(135deg,var(--panel-2),var(--bg-soft)); border:1px solid var(--line)}
+  .timing .big{font-size:52px; font-weight:800; color:var(--cyan); line-height:1; letter-spacing:-.02em}
+  .timing .tx{flex:1; min-width:240px}
+  .timing .tx b{color:var(--ink)}
+  .timing .src{font-size:12px; color:var(--ink-dim); margin-top:6px}
+
+  /* triggers triptych */
+  .trip{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+  @media(max-width:820px){ .trip{grid-template-columns:1fr} }
+  .tcard{padding:24px; border-radius:var(--r); background:var(--panel); border:1px solid var(--line); position:relative; overflow:hidden}
+  .tcard::before{content:""; position:absolute; inset:0 0 auto 0; height:3px; background:var(--accent)}
+  .tcard .ic{font-size:30px}
+  .tcard h3{margin-top:14px; font-size:20px}
+  .tcard .lbl{font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-top:4px}
+  .tcard p{margin-top:10px; color:var(--ink-mut); font-size:15px}
+  .tcard.pain{--accent:#f87171} .tcard.conv{--accent:var(--cyan)} .tcard.emo{--accent:var(--amber)}
+  .tcard.emo{background:linear-gradient(180deg,#1a1608,#0f1526); border-color:#3a2c0e}
+
+  /* steps */
+  .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; counter-reset:s}
+  @media(max-width:820px){ .steps{grid-template-columns:1fr} }
+  .step{padding:24px; border-radius:var(--r); background:var(--panel); border:1px solid var(--line); counter-increment:s}
+  .step .n{width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font-weight:800; color:var(--amber);
+    background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.28)}
+  .step .n::before{content:counter(s)}
+  .step h3{margin-top:14px; font-size:18px}
+  .step p{margin-top:8px; color:var(--ink-mut); font-size:15px}
+
+  /* features */
+  .feats{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+  @media(max-width:820px){ .feats{grid-template-columns:1fr 1fr} }
+  @media(max-width:540px){ .feats{grid-template-columns:1fr} }
+  .feat{padding:20px; border-radius:15px; background:var(--panel); border:1px solid var(--line); transition:border-color .2s,transform .2s}
+  .feat:hover{border-color:var(--cyan); transform:translateY(-3px)}
+  .feat .ic{font-size:24px}
+  .feat h3{margin-top:12px; font-size:16.5px}
+  .feat p{margin-top:6px; color:var(--ink-mut); font-size:14px}
+
+  /* personas */
+  .persos{display:grid; grid-template-columns:repeat(3,1fr); gap:16px}
+  @media(max-width:820px){ .persos{grid-template-columns:1fr} }
+  .perso{padding:24px; border-radius:var(--r); background:linear-gradient(180deg,var(--panel),var(--bg-soft)); border:1px solid var(--line)}
+  .perso .ic{font-size:30px}
+  .perso h3{margin-top:12px; font-size:18px}
+  .perso p{margin-top:8px; color:var(--ink-mut); font-size:14.5px}
+
+  /* challenger */
+  .chal{padding:40px 34px; border-radius:22px; text-align:center;
+    background:radial-gradient(600px 300px at 50% 0%,rgba(245,158,11,.12),transparent 65%),linear-gradient(180deg,var(--panel-2),var(--bg-soft));
+    border:1px solid var(--line)}
+  .chal h2{font-size:clamp(23px,3.4vw,33px); max-width:20ch; margin:0 auto}
+  .chal h2 .hl{color:var(--amber)}
+  .chal p{margin:16px auto 0; color:var(--ink-mut); max-width:52ch}
+
+  /* pricing */
+  .prices{display:grid; grid-template-columns:repeat(4,1fr); gap:14px}
+  @media(max-width:900px){ .prices{grid-template-columns:1fr 1fr} }
+  @media(max-width:520px){ .prices{grid-template-columns:1fr} }
+  .price{padding:24px 20px; border-radius:var(--r); background:var(--panel); border:1px solid var(--line); display:flex; flex-direction:column}
+  .price.feat-plan{border-color:var(--amber); box-shadow:0 0 0 1px var(--amber),0 14px 40px rgba(245,158,11,.14); position:relative}
+  .price.feat-plan .tag{position:absolute; top:-11px; left:50%; transform:translateX(-50%); font-size:11.5px; font-weight:800;
+    background:var(--amber); color:#1a1204; padding:3px 12px; border-radius:999px; letter-spacing:.03em}
+  .price .pn{font-size:15px; font-weight:700; color:var(--ink-mut)}
+  .price .pp{margin-top:8px; font-size:30px; font-weight:800; letter-spacing:-.02em}
+  .price .pp small{font-size:14px; font-weight:600; color:var(--ink-mut)}
+  .price ul{list-style:none; margin:16px 0 20px; padding:0; display:flex; flex-direction:column; gap:9px; font-size:14px; color:var(--ink-mut); flex:1}
+  .price li{display:flex; gap:8px}
+  .price li::before{content:"✓"; color:var(--good); font-weight:800}
+  .price .btn{width:100%; justify-content:center}
+  .price .btn.mut{background:rgba(255,255,255,.05); color:var(--ink); border:1px solid var(--line)}
+
+  /* faq */
+  .faq{display:flex; flex-direction:column; gap:10px; max-width:800px}
+  details{border:1px solid var(--line); border-radius:14px; background:var(--panel); overflow:hidden}
+  details[open]{border-color:var(--cyan)}
+  summary{cursor:pointer; padding:17px 20px; font-weight:700; font-size:16px; display:flex; align-items:center; gap:12px; list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary .q{flex:1}
+  summary .pm{color:var(--cyan); font-size:22px; transition:transform .2s; line-height:1}
+  details[open] summary .pm{transform:rotate(45deg)}
+  details .a{padding:0 20px 18px; color:var(--ink-mut); font-size:15px}
+
+  /* final cta */
+  .final{padding:52px 34px; border-radius:24px; text-align:center;
+    background:linear-gradient(135deg,#1b1305,#0d1526); border:1px solid #3a2c0e}
+  .final h2{font-size:clamp(26px,4vw,40px)}
+  .final p{margin:14px auto 26px; color:var(--ink-mut); max-width:44ch}
+
+  /* footer */
+  footer{border-top:1px solid var(--line-soft); padding:34px 0 46px; margin-top:20px}
+  .foot{display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; justify-content:space-between}
+  .foot .co{max-width:44ch; color:var(--ink-mut); font-size:14px}
+  .foot-links{display:flex; gap:26px; flex-wrap:wrap; font-size:14.5px}
+  .foot-links a{color:var(--ink-mut)} .foot-links a:hover{color:var(--cyan)}
+  .foot-legal{margin-top:22px; font-size:12.5px; color:var(--ink-dim)}
+
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important; transition:none!important}
+    .reveal{opacity:1; transform:none}
+  }
+</style>
+
+<div class="glow"></div>
+<div class="grid-bg"></div>
+
+<div class="page">
+  <nav>
+    <div class="nav-in">
+      <a class="brand" href="#top">
+        <span class="mk">🤖</span>
+        <span>CEO AI Thailand<small>บริษัท AI อัตโนมัติ</small></span>
+      </a>
+      <div class="nav-links">
+        <a class="txt" href="#how">วิธีใช้งาน</a>
+        <a class="txt" href="#features">ความสามารถ</a>
+        <a class="txt" href="#pricing">แพ็กเกจ</a>
+        <a class="btn btn-amber" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=nav&utm_campaign=header" target="_blank" rel="noopener">เริ่มฟรี</a>
+      </div>
+    </div>
+  </nav>
+
+  <a id="top"></a>
+  <header>
+    <div class="wrap hero">
+      <div>
+        <span class="h-badge"><span class="dot"></span> ที่ปรึกษาไทยจริง 20+ ปี × ทีม AI</span>
+        <h1>จ้าง<span class="hl">ทีม AI ทั้งบริษัท</span><br>มาทำงานให้คุณ 24 ชม.</h1>
+        <p class="h-sub">CEO · การตลาด · นักวิจัยตลาด · ทำเอกสาร ISO/มอก. — วางแผนและลงมือให้ธุรกิจคุณ เริ่มฟรี ไม่ต้องใช้บัตรเครดิต</p>
+        <div class="h-cta">
+          <a class="btn btn-amber btn-lg" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=cta&utm_campaign=hero" target="_blank" rel="noopener">เริ่มฟรี 15 วัน →</a>
+          <a class="btn btn-ghost btn-lg" href="https://ceoaithailand.org/b" target="_blank" rel="noopener">ดูธุรกิจที่เปิดแล้ว</a>
+        </div>
+        <div class="h-chips">
+          <span class="chip">🇹🇭 สั่งงาน<b>ภาษาไทย</b>ธรรมชาติ</span>
+          <span class="chip">🆓 เริ่มฟรี ไม่ต้องใช้บัตร</span>
+          <span class="chip">⚡ เริ่มใน <b>5 นาที</b></span>
+        </div>
+      </div>
+
+      <div class="roster">
+        <div class="roster-hd">
+          <span class="t">ทีม AI ของบริษัทคุณ</span>
+          <span class="live"><span class="pulse"></span> กำลังทำงาน</span>
+        </div>
+        <div class="agents" id="agents">
+          <div class="agent">
+            <div class="av">🧠</div>
+            <div class="meta">
+              <div class="nm">เอเจนต์ CEO <span class="sdot"></span></div>
+              <div class="rl">วางกลยุทธ์ · มอบหมายงาน</div>
+              <div class="task" data-tasks='["วางแผนเป้าหมายไตรมาสนี้","สรุปตัวเลขให้บอร์ดอนุมัติ","จัดลำดับงานสำคัญของทีม"]'>วางแผนเป้าหมายไตรมาสนี้</div>
+            </div>
+          </div>
+          <div class="agent">
+            <div class="av">📣</div>
+            <div class="meta">
+              <div class="nm">ฝ่ายการตลาด (CMO) <span class="sdot"></span></div>
+              <div class="rl">คอนเทนต์ · หาลูกค้า</div>
+              <div class="task" data-tasks='["ร่างคอนเทนต์ 7 วันข้างหน้า","วิเคราะห์กลุ่มลูกค้าเป้าหมาย","ออกแบบ funnel ปิดการขาย"]'>ร่างคอนเทนต์ 7 วันข้างหน้า</div>
+            </div>
+          </div>
+          <div class="agent">
+            <div class="av">🔎</div>
+            <div class="meta">
+              <div class="nm">นักวิจัยตลาด <span class="sdot"></span></div>
+              <div class="rl">ข้อมูล · คู่แข่ง · โอกาส</div>
+              <div class="task" data-tasks='["ค้นหาคู่แข่ง 5 รายในพื้นที่","สรุปเทรนด์ตลาดล่าสุด","ประเมินขนาดตลาด (TAM/SAM)"]'>ค้นหาคู่แข่ง 5 รายในพื้นที่</div>
+            </div>
+          </div>
+          <div class="agent">
+            <div class="av">📋</div>
+            <div class="meta">
+              <div class="nm">ผู้เชี่ยวชาญ ISO/มอก. <span class="sdot"></span></div>
+              <div class="rl">เอกสาร · เตรียม audit</div>
+              <div class="task" data-tasks='["เช็กเอกสารบังคับ ISO 9001","ประเมินความพร้อมก่อน audit","ทำเช็กลิสต์ขอ มอก."]'>เช็กเอกสารบังคับ ISO 9001</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="wrap">
+      <div class="timing reveal">
+        <div class="big tnum">87%</div>
+        <div class="tx">
+          <b>คนไทยคุยกับ AI เป็นภาษาไทย</b> เพื่อจัดการชีวิตประจำวัน และ AI กลายเป็นเครื่องมือของคน<b>ทุกวัย</b>แล้ว — จังหวะนี้แหละที่ธุรกิจเล็กจะมีทีม AI ได้เท่าบริษัทใหญ่
+          <div class="src">ที่มา: The Gemini Report — Southeast Asia 2026</div>
+        </div>
+        <a class="btn btn-ghost" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=cta&utm_campaign=timing" target="_blank" rel="noopener">เริ่มเลย</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">ทำไมลูกค้าถึงยอมจ่าย</span>
+        <h2>คนไม่ได้จ่ายให้ "สินค้าดี" — จ่ายให้ 3 สิ่งนี้</h2>
+        <p>เราออกแบบทุกอย่างรอบความต้องการเชิงลึกของเจ้าของธุรกิจ</p>
+      </div>
+      <div class="trip">
+        <div class="tcard pain reveal">
+          <div class="ic">🩹</div>
+          <div class="lbl">ขจัดความทุกข์</div>
+          <h3>ไม่ต้องแบกคนเดียว</h3>
+          <p>ไม่ต้องปวดหัวจ้างทีมทั้งแผนก หรือรอที่ปรึกษาว่าง — มีทีม AI ช่วยคิดและลงมือตั้งแต่วันแรก</p>
+        </div>
+        <div class="tcard conv reveal">
+          <div class="ic">⚡</div>
+          <div class="lbl">มอบความสะดวก</div>
+          <h3>เสร็จในนาที ไม่ใช่สัปดาห์</h3>
+          <p>เตรียมเอกสาร ISO/มอก. วางแผนการตลาด วิเคราะห์ตัวเลข — งานที่เคยกินเวลาเป็นสัปดาห์ จบได้เร็วขึ้นมาก</p>
+        </div>
+        <div class="tcard emo reveal">
+          <div class="ic">✨</div>
+          <div class="lbl">ขายอารมณ์/ประสบการณ์</div>
+          <h3>มั่นใจทุกการตัดสินใจ</h3>
+          <p>รู้สึกเหมือนมี CEO มืออาชีพคอยดูหลังให้ — ก้าวไปข้างหน้าอย่างมั่นใจ ไม่ต้องเดาอีกต่อไป</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">เริ่มใช้งานง่าย</span>
+        <h2>3 ขั้นตอน มีทีม AI ของตัวเอง</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><div class="n"></div><h3>สมัครฟรี</h3><p>เปิดใช้งานได้ทันที ไม่ต้องใช้บัตรเครดิต ทดลองแพ็กเต็ม 15 วัน</p></div>
+        <div class="step reveal"><div class="n"></div><h3>บอกเรื่องธุรกิจคุณ</h3><p>พิมพ์เป็นภาษาไทยธรรมชาติ — ทีม AI เข้าใจบริบทและเป้าหมายของคุณ</p></div>
+        <div class="step reveal"><div class="n"></div><h3>ทีม AI ลงมือทำ</h3><p>วางแผน ทำเอกสาร หาลูกค้า วิเคราะห์ — คุณแค่ตรวจและอนุมัติ</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">ทำอะไรได้บ้าง</span>
+        <h2>ทั้งบริษัทในที่เดียว</h2>
+      </div>
+      <div class="feats">
+        <div class="feat reveal"><div class="ic">🧠</div><h3>ทีมผู้บริหาร AI</h3><p>CEO / CMO / นักวิจัย วางแผนและมอบหมายงานให้กันเอง</p></div>
+        <div class="feat reveal"><div class="ic">📋</div><h3>เอกสาร ISO 9001 / มอก.</h3><p>ประเมินความพร้อม + บอกช่องโหว่ก่อน audit</p></div>
+        <div class="feat reveal"><div class="ic">📣</div><h3>กลยุทธ์การตลาด</h3><p>Persona, คอนเทนต์แพลน, funnel — ไม่ต้องจ้างเอเจนซี่</p></div>
+        <div class="feat reveal"><div class="ic">📊</div><h3>วิเคราะห์ธุรกิจ/การเงิน</h3><p>ดูตัวเลข จุดรั่ว โอกาสโต จากข้อมูลที่มีอยู่</p></div>
+        <div class="feat reveal"><div class="ic">🏪</div><h3>Marketplace + หน้าร้าน</h3><p>เปิดหน้าร้านสาธารณะ + ซื้อขาย B2B (RFQ) ในระบบ</p></div>
+        <div class="feat reveal"><div class="ic">🎯</div><h3>Business Model + วัดผลจริง</h3><p>วาง BMC แล้วป้อนผลลัพธ์จริง เทียบเป้ากับผล</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="who">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">สร้างมาเพื่อ</span>
+        <h2>ธุรกิจแบบไหนก็เริ่มได้</h2>
+      </div>
+      <div class="persos">
+        <div class="perso reveal"><div class="ic">🏭</div><h3>โรงงาน / SME ที่ต้องทำ ISO-มอก.</h3><p>เตรียมเอกสารและระบบคุณภาพให้พร้อม audit โดยไม่ต้องจ้างที่ปรึกษาเต็มเวลา</p></div>
+        <div class="perso reveal"><div class="ic">🎓</div><h3>คนเริ่มธุรกิจ / เพิ่งตกงาน</h3><p>เปิดบริษัทของตัวเองพร้อมทีม AI ช่วยคิดตั้งแต่ไอเดียจนถึงลูกค้าคนแรก</p></div>
+        <div class="perso reveal"><div class="ic">🛍️</div><h3>แม่ค้าออนไลน์ / รายย่อย</h3><p>เปิดหน้าร้าน วางแผนคอนเทนต์ หาคู่ค้า — ให้ AI ดูแลตอนคุณไม่ว่าง</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="chal reveal">
+        <h2>เจ้าใหญ่ทำ AI ให้องค์กรใหญ่ — <span class="hl">เราทำให้ SME ไทย</span> จ้างทีม AI ทั้งบริษัทได้</h2>
+        <p>ที่ปรึกษาจริง 20 ปี + ทีม AI = สิ่งที่แพลตฟอร์มต่างชาติให้คุณไม่ได้ เพราะเราเข้าใจบริบทธุรกิจไทย ISO และ มอก.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">แพ็กเกจ</span>
+        <h2>เริ่มฟรี จ่ายเมื่อพร้อม</h2>
+        <p>ทดลองแพ็ก Scale เต็มรูปแบบฟรี 15 วัน — ยกเลิกได้ทุกเมื่อ</p>
+      </div>
+      <div class="prices">
+        <div class="price reveal">
+          <div class="pn">Free</div>
+          <div class="pp tnum">฿0</div>
+          <ul><li>ทีม AI พื้นฐาน</li><li>เมืองบริษัท (เกม)</li><li>เริ่มได้ทันที</li></ul>
+          <a class="btn mut" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=pricing&utm_campaign=free" target="_blank" rel="noopener">เริ่มฟรี</a>
+        </div>
+        <div class="price reveal">
+          <div class="pn">Starter</div>
+          <div class="pp tnum">฿390<small>/เดือน</small></div>
+          <ul><li>ทุกอย่างใน Free</li><li>ซื้อขาย B2B / RFQ</li><li>โรงงานอัจฉริยะ</li></ul>
+          <a class="btn mut" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=pricing&utm_campaign=starter" target="_blank" rel="noopener">เลือก Starter</a>
+        </div>
+        <div class="price feat-plan reveal">
+          <span class="tag">แนะนำ</span>
+          <div class="pn">Growth</div>
+          <div class="pp tnum">฿1,490<small>/เดือน</small></div>
+          <ul><li>ทุกอย่างใน Starter</li><li>ISO 9001 QMS + AI Research</li><li>การตลาด + Analytics เต็ม</li></ul>
+          <a class="btn btn-amber" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=pricing&utm_campaign=growth" target="_blank" rel="noopener">เลือก Growth</a>
+        </div>
+        <div class="price reveal">
+          <div class="pn">Scale</div>
+          <div class="pp tnum">฿5,900<small>/เดือน</small></div>
+          <ul><li>ทุกอย่างใน Growth</li><li>เครื่องมือครบไม่จำกัด</li><li>ซัพพอร์ตลำดับความสำคัญ</li></ul>
+          <a class="btn mut" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=pricing&utm_campaign=scale" target="_blank" rel="noopener">เลือก Scale</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">คำถามที่พบบ่อย</span>
+        <h2>สงสัยอะไร ถามได้</h2>
+      </div>
+      <div class="faq">
+        <details class="reveal"><summary><span class="q">ธุรกิจเล็กมาก ๆ ใช้ได้ไหม?</span><span class="pm">+</span></summary><div class="a">ได้ครับ ออกแบบมาเพื่อมือใหม่และธุรกิจเล็กโดยเฉพาะ เริ่มฟรี ไม่ต้องมีทีม IT และสั่งงานเป็นภาษาไทยได้เลย</div></details>
+        <details class="reveal"><summary><span class="q">ต่างจากแชทบอท AI ทั่วไปยังไง?</span><span class="pm">+</span></summary><div class="a">ไม่ใช่แค่ตอบคำถาม แต่เป็น "ทีม" ที่วางแผน มอบหมายงาน ทำเอกสาร ISO/มอก. และวิเคราะห์ธุรกิจให้ — เข้าใจบริบทไทย</div></details>
+        <details class="reveal"><summary><span class="q">ต้องมี ISO ก่อนไหม?</span><span class="pm">+</span></summary><div class="a">ไม่ต้องครับ ระบบช่วยประเมินความพร้อมและบอกว่ายังขาดเอกสารอะไรก่อน audit — เหมาะทั้งคนที่เพิ่งเริ่มและคนที่มีระบบอยู่แล้ว</div></details>
+        <details class="reveal"><summary><span class="q">ข้อมูลปลอดภัยไหม?</span><span class="pm">+</span></summary><div class="a">ข้อมูลแต่ละธุรกิจแยกจากกัน ดูแลโดยผู้ให้บริการที่ปรึกษามากกว่า 20 ปีในประเทศไทย</div></details>
+        <details class="reveal"><summary><span class="q">ยกเลิกได้ไหม? ต้องเก่งเทคโนโลยีไหม?</span><span class="pm">+</span></summary><div class="a">ยกเลิกได้ทุกเมื่อ และไม่ต้องเก่งเทคโนโลยี — พิมพ์สั่งงานเป็นภาษาไทยธรรมชาติได้เลย</div></details>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="final reveal">
+        <h2>พร้อมจ้างทีม AI ตัวแรกหรือยัง?</h2>
+        <p>เริ่มฟรี 15 วัน ไม่ต้องใช้บัตรเครดิต — ตั้งบริษัท AI ของคุณได้ใน 5 นาที</p>
+        <a class="btn btn-amber btn-lg" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=cta&utm_campaign=final" target="_blank" rel="noopener">เริ่มฟรีตอนนี้ →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot">
+        <div>
+          <a class="brand" href="#top"><span class="mk">🤖</span><span>CEO AI Thailand<small>บริษัท AI อัตโนมัติ</small></span></a>
+          <p class="co" style="margin-top:14px">โดย B. Training Consultant — ที่ปรึกษา ISO / ธุรกิจ ประสบการณ์กว่า 20 ปีในประเทศไทย</p>
+        </div>
+        <div class="foot-links">
+          <a href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=footer&utm_campaign=start" target="_blank" rel="noopener">เริ่มใช้งาน</a>
+          <a href="https://ceoaithailand.org/b" target="_blank" rel="noopener">Marketplace</a>
+          <a href="tel:0817817773">โทร 081-781-7773</a>
+          <a href="mailto:support@b-tctraining.com">อีเมล</a>
+        </div>
+      </div>
+      <div class="foot-legal">© 2569 CEO AI Thailand · บริษัท AI อัตโนมัติสำหรับ SME ไทย</div>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // scroll reveal
+  (function(){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
+    document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+  })();
+  // live task feed on AI agent cards
+  (function(){
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    var tasks=document.querySelectorAll('#agents .task');
+    var idx=[0,0,0,0];
+    setInterval(function(){
+      tasks.forEach(function(t,i){
+        var list; try{list=JSON.parse(t.getAttribute('data-tasks'));}catch(e){return;}
+        idx[i]=(idx[i]+1)%list.length;
+        t.style.opacity=0;
+        setTimeout(function(){ t.textContent=list[idx[i]]; t.style.transition='opacity .4s'; t.style.opacity=1; },260);
+      });
+    },2600);
+  })();
+</script>
