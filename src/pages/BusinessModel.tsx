@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { trackAiCall } from '../lib/usage';
 import type { Agent, AppData, BMCData, PageId } from '../types';
 import EditableList from '../components/EditableList';
+import BmcOutcomeTracker from '../components/BmcOutcomeTracker';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { withSkillDirectives } from '../lib/skillDirectives';
 import { de24Summary, de24Markdown, de24ToBmcSeed } from '../lib/de24Report';
@@ -330,6 +331,8 @@ export default function BusinessModel({ data, onUpdate, onNavigate }: Props) {
           </div>
         ))}
       </div>
+
+      <BmcOutcomeTracker data={data} onUpdate={onUpdate} />
 
       <div className="bmc-de24-header">
         <div>

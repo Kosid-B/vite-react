@@ -6005,3 +6005,36 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .savework-skip { margin-top:14px; background:none; border:none; color:#64748b; font-family:inherit; font-size:13px; cursor:pointer; text-decoration:underline; }
 .savework-x { position:absolute; top:12px; right:14px; background:none; border:none; color:#64748b; font-size:22px; line-height:1; cursor:pointer; }
 @keyframes fadein { from { opacity:0 } to { opacity:1 } }
+
+/* BMC Outcome Tracker — ป้อนผลลัพธ์จริงตามกระบวนการ BMC */
+.oc-wrap { margin:22px 0; padding:18px; background:var(--panel,#0f172a); border:1px solid #1e293b; border-radius:14px; }
+.oc-head h3 { margin:0 0 4px; font-size:17px; color:var(--ink,#f8fafc); }
+.oc-head p { margin:0 0 14px; font-size:13px; color:var(--ink2,#94a3b8); line-height:1.5; }
+.oc-summary { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.oc-kpi { flex:1; min-width:88px; background:#0b1220; border:1px solid #1e293b; border-radius:10px; padding:10px 12px; text-align:center; }
+.oc-kpi-num { display:block; font-size:22px; font-weight:800; color:var(--ink,#f8fafc); }
+.oc-kpi-lbl { font-size:11.5px; color:var(--ink2,#94a3b8); }
+.oc-form { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; padding:12px; background:#0b1220; border-radius:10px; }
+.oc-form-row { display:flex; gap:8px; flex-wrap:wrap; }
+.oc-form-row > select, .oc-form-row > input { flex:1; min-width:120px; box-sizing:border-box; padding:9px 11px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#f8fafc; font-family:inherit; font-size:13.5px; }
+.oc-form-row .oc-unit { flex:0 0 120px; }
+.oc-add { flex:0 0 auto; background:#06b6d4; color:#00212b; border:none; border-radius:8px; padding:9px 18px; font-family:inherit; font-weight:800; font-size:13.5px; cursor:pointer; }
+.oc-add:hover { filter:brightness(1.06); }
+.oc-block { margin-bottom:14px; }
+.oc-block-title { font-size:13.5px; font-weight:800; color:var(--ink,#e2e8f0); margin-bottom:6px; }
+.oc-block-title span { color:var(--ink2,#94a3b8); font-weight:500; }
+.oc-item { background:#0b1220; border:1px solid #1e293b; border-radius:10px; padding:11px 13px; margin-bottom:7px; }
+.oc-item-top { display:flex; align-items:center; gap:8px; }
+.oc-metric { flex:1; font-weight:700; font-size:14px; color:var(--ink,#f8fafc); }
+.oc-status { font-size:12.5px; font-weight:700; }
+.oc-del { background:none; border:none; cursor:pointer; font-size:14px; opacity:.6; }
+.oc-del:hover { opacity:1; }
+.oc-item-nums { display:flex; align-items:center; gap:8px; margin:8px 0 6px; font-size:13px; color:var(--ink2,#94a3b8); }
+.oc-item-nums label { display:flex; align-items:center; gap:5px; color:var(--ink2,#94a3b8); }
+.oc-item-nums input { width:80px; padding:5px 8px; border-radius:6px; border:1px solid #334155; background:#0f172a; color:#f8fafc; font-family:inherit; font-size:13px; }
+.oc-pct { margin-left:auto; font-weight:800; color:var(--ink,#e2e8f0); }
+.oc-bar { height:6px; background:#1e293b; border-radius:99px; overflow:hidden; }
+.oc-bar-fill { height:100%; border-radius:99px; transition:width .3s; }
+.oc-note { margin-top:7px; font-size:12.5px; color:var(--ink2,#cbd5e1); }
+.oc-evi { display:inline-block; margin-top:6px; font-size:12.5px; color:#22d3ee; text-decoration:none; }
+.oc-empty { font-size:13px; color:var(--ink2,#64748b); text-align:center; padding:16px; }
