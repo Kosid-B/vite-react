@@ -188,6 +188,8 @@ export default function App() {
   // Guest mode (ลองก่อนสมัคร) — เข้าแอปด้วย localStorage โดยไม่ต้อง login (ลด friction #1)
   const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1');
   const startGuest = () => { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } setGuestMode(true); };
+  // ออกจากโหมดทดลอง → ล้าง flag แล้วกลับไปหน้า Landing (กันคนติดอยู่ในโหมด guest ถาวร)
+  const exitGuest = () => { try { localStorage.removeItem('ceo_ai_guest'); } catch { /* noop */ } track('guest_exit', {}); setShowAuth(false); setGuestMode(false); };
   // Aha-moment email capture (soft signup) — เก็บ lead ตอน guest เจอโมเมนต์ดีๆ
   const [leadCaptured, setLeadCaptured] = useState(() => localStorage.getItem('ceo_ai_lead') === '1');
   const [showSavePrompt, setShowSavePrompt] = useState(false);
@@ -436,6 +438,7 @@ export default function App() {
       )}
       {isSupabaseEnabled && !session && guestMode && (
         <div className="guest-bar">
+          <button className="guest-back" onClick={exitGuest} aria-label="กลับหน้าแรก">← หน้าแรก</button>
           <span>🧪 กำลังทดลองใช้ · ข้อมูลเก็บในเครื่องนี้ชั่วคราว</span>
           <button onClick={() => { track('guest_signup_click', {}); setShowAuth(true); }}>
             สมัครฟรีเพื่อบันทึกงาน →
