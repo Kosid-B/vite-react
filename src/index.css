@@ -5989,6 +5989,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .guest-bar { position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; padding:9px 16px; background:linear-gradient(90deg,#0e7490,#0369a1); color:#f0f9ff; font-size:13.5px; box-shadow:0 2px 10px rgba(0,0,0,.25); }
 .guest-bar button { flex:none; background:#f59e0b; color:#020617; border:none; border-radius:8px; padding:7px 16px; font-family:inherit; font-weight:800; font-size:13.5px; cursor:pointer; }
 .guest-bar button:hover { filter:brightness(1.05); }
+.guest-bar button.guest-back { background:transparent; color:#e0f2fe; border:1px solid rgba(224,242,254,.45); font-weight:700; padding:6px 12px; }
+.guest-bar button.guest-back:hover { background:rgba(224,242,254,.12); filter:none; }
 
 /* Aha-moment save-work prompt (soft email capture สำหรับ guest) */
 .savework-overlay { position:fixed; inset:0; z-index:200; background:rgba(2,6,23,.66); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px; animation:fadein .2s; }
