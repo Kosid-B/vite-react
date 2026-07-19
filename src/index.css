@@ -2395,7 +2395,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .skm-confirm-row { display: flex; gap: 4px; flex-wrap: wrap; }
 
 @media (max-width: 600px) {
-  .skm-grid { grid-template-columns: 1fr 1fr; }
+  /* จอมือถือ: 1 คอลัมน์ — กัน 2 คอลัมน์บีบการ์ดจนเนื้อหาล้น/หลุดจอขวา */
+  .skm-grid { grid-template-columns: 1fr; }
   .skm-cat-pill { min-width: 90px; }
 }
 
