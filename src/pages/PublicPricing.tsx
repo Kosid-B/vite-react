@@ -96,6 +96,25 @@ export default function PublicPricing() {
             </tbody>
           </table>
         </div>
+
+        {PAYMENT.stripePaymentLinkPilot && (
+          <div className="pp-pilot">
+            <span className="pp-pilot-badge">สำหรับโรงงาน/SME ที่ต้องทำ ISO/มอก.</span>
+            <h3>🎯 ISO Readiness Pilot — {PAYMENT.pilotPrice} <small>(จ่ายครั้งเดียว)</small></h3>
+            <p>
+              อยากได้คนช่วยลงมือจริง ไม่ใช่แค่ลองเอง? แพ็ก Pilot = <b>ที่ปรึกษาช่วยประเมินความพร้อม ISO/มอก.
+              ให้โดยตรง</b> (บอกว่าพร้อมกี่ % + ขาดเอกสารอะไรก่อน audit) <b>+ ใช้ระบบเต็ม 1 เดือน</b>
+              — ออกแบบจากประสบการณ์ที่ปรึกษาไทยจริงกว่า 20 ปี
+            </p>
+            <a className="pp-pilot-cta"
+               href={`${PAYMENT.stripePaymentLinkPilot}?utm_source=pricing&utm_medium=pilot&utm_campaign=iso_beachhead`}
+               target="_blank" rel="noreferrer">
+              เริ่ม Pilot — {PAYMENT.pilotPrice} →
+            </a>
+            <p className="pp-pilot-note">หรือโทรคุยก่อน 081-781-7773 · เหมาะกับคนที่มี audit ใกล้เข้ามา</p>
+          </div>
+        )}
+
         <p className="legal-note">
           เริ่มใช้งาน/ดูรายละเอียดแพ็กเกจแบบเต็มได้ที่ <a href={`${SITE}/`}>{SITE.replace('https://', '')}</a> →
           เมนู “แพ็กเกจ &amp; ชำระเงิน”
