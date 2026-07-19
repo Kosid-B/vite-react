@@ -104,6 +104,7 @@ const plans = [
 export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
   const [ctaHover, setCtaHover] = useState(false);
   const [navHover, setNavHover] = useState(false);
+  const [guestHover, setGuestHover] = useState(false);
 
   // Challenger headline — สลับ content 2 ครั้ง/วัน ที่เวลาไทย 11:00 และ 20:00 (เช็คทุกนาที)
   const [challenger, setChallenger] = useState(() => currentChallenger(Date.now()));
@@ -186,16 +187,22 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
             ไม่ต้องใช้บัตรเครดิต · เริ่มฟรี 15 วัน · ยกเลิกได้ทุกเมื่อ
           </div>
           {onTryGuest && (
-            <div style={{ marginTop: 14 }}>
+            <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
               <button
                 onClick={() => { track('landing_cta_click', { cta: 'hero_try_guest' }); onTryGuest(); }}
+                onMouseEnter={() => setGuestHover(true)}
+                onMouseLeave={() => setGuestHover(false)}
                 style={{
-                  background: 'none', border: 'none', color: C.cyan4, fontFamily: 'inherit',
-                  fontWeight: 600, fontSize: 15, cursor: 'pointer', textDecoration: 'underline',
+                  padding: '13px 30px', borderRadius: 12,
+                  border: `1.5px solid ${C.cyan5}`,
+                  background: guestHover ? 'rgba(6,182,212,0.16)' : 'rgba(6,182,212,0.06)',
+                  color: C.cyan3, fontFamily: 'inherit', fontWeight: 700, fontSize: 16,
+                  cursor: 'pointer', transition: 'all .2s',
                 }}
               >
-                หรือ ลองใช้เลยตอนนี้ — ไม่ต้องสมัคร ไม่ต้องกรอกอะไร →
+                ⚡ ลองเล่นเลยใน 30 วินาที — ไม่ต้องสมัคร ไม่ต้องกรอกบัตร →
               </button>
+              <span style={{ color: C.slate5, fontSize: 12.5 }}>ไม่ต้องล็อกอิน · เข้าใช้ทันที · เก็บงานไว้สมัครทีหลังได้</span>
             </div>
           )}
           <a
