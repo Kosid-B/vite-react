@@ -212,6 +212,18 @@
   @media(min-width:721px){ .sticky-cta{display:none} } /* มือถือเป็นหลัก (desktop มี CTA ใน nav อยู่แล้ว) */
   @media(max-width:720px){ body{padding-bottom:74px} } /* กัน sticky bar บังฟุตเตอร์ */
 
+  /* Cookie consent (PDPA) */
+  .consent{position:fixed; left:0; right:0; bottom:0; z-index:60; background:rgba(9,14,26,.97); backdrop-filter:blur(10px);
+    border-top:1px solid var(--line); padding:15px 18px calc(15px + env(safe-area-inset-bottom))}
+  .consent[hidden]{display:none}
+  .consent-in{max-width:var(--maxw); margin:0 auto; display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+  .consent-in p{flex:1; min-width:240px; font-size:13.5px; color:var(--ink-mut); line-height:1.5}
+  .consent-in a{color:var(--cyan); text-decoration:underline}
+  .consent-btns{display:flex; gap:10px; flex-wrap:wrap}
+  .consent-btns .btn{padding:11px 20px; font-size:14px}
+  .btn-line{background:rgba(255,255,255,.06); color:var(--ink); border:1px solid var(--line)}
+  .btn-line:hover{background:rgba(255,255,255,.1)}
+
   /* Peak-End — reassurance ลดความกังวลก่อนตัดสินใจ */
   .reassure{margin-top:18px; display:flex; gap:8px 18px; flex-wrap:wrap; justify-content:center; font-size:13.5px; color:var(--ink-mut)}
   .reassure span{display:inline-flex; align-items:center; gap:6px}
@@ -222,6 +234,47 @@
     .reveal{opacity:1; transform:none}
   }
 </style>
+
+<!-- ===== Analytics (GA4 + LINE) — gate ด้วย cookie consent (PDPA) ===== -->
+<!-- ⚠️ ทำงานเมื่อ deploy บนโดเมนจริง · ใน Artifact ถูก CSP บล็อก (try/catch กันหน้าเว็บพัง) -->
+<script>
+  (function(){
+    var KEY='ceo_ai_cookie_consent';
+    function consented(){ try{ return localStorage.getItem(KEY)==='all'; }catch(e){ return false; } }
+
+    // GA4 — ปิดจนกว่าจะยินยอม
+    window.dataLayer=window.dataLayer||[];
+    function gtag(){ dataLayer.push(arguments); } window.gtag=gtag;
+    if(!consented()){ window['ga-disable-G-CHJ99RY1Q1']=true; }
+    try{
+      var s=document.createElement('script'); s.async=1;
+      s.src='https://www.googletagmanager.com/gtag/js?id=G-CHJ99RY1Q1';
+      (document.head||document.documentElement).appendChild(s);
+    }catch(e){}
+    gtag('js', new Date());
+    // cross-domain: ผูก session ต่อเนื่องตอนคลิก CTA ไป ceoaithailand.org
+    gtag('config','G-CHJ99RY1Q1',{ linker:{ domains:['ceoaithailand.org','b-tctraining.com'] } });
+
+    // LINE Tag — โหลด lib ได้ แต่ยิง pv เมื่อยินยอมเท่านั้น
+    try{
+      (function(g,d,o){ g._ltq=g._ltq||[]; g._lt=g._lt||function(){ g._ltq.push(arguments); };
+        var h=location.protocol==='https:'?'https://d.line-scdn.net':'http://d.line-cdn.net';
+        var sc=d.createElement('script'); sc.async=1; sc.src=o||h+'/n/line_tag/public/release/v1/lt.js';
+        var t=d.getElementsByTagName('script')[0]; t.parentNode.insertBefore(sc,t);
+      })(window,document);
+      _lt('init',{ customerType:'account', tagId:'afc2c605-4307-45cc-b400-35bba3844d21' });
+      window.__lineTagPv=function(){ try{ _lt('send','pv',['afc2c605-4307-45cc-b400-35bba3844d21']); }catch(e){} };
+    }catch(e){ window.__lineTagPv=function(){}; }
+
+    // เปิดใช้งานการตลาดเมื่อยินยอม (เรียกซ้ำได้)
+    window.__enableMarketing=function(){
+      window['ga-disable-G-CHJ99RY1Q1']=false;
+      try{ gtag('event','page_view'); }catch(e){}
+      try{ window.__lineTagPv(); }catch(e){}
+    };
+    if(consented()){ window.__enableMarketing(); }
+  })();
+</script>
 
 <div class="glow"></div>
 <div class="grid-bg"></div>
@@ -483,6 +536,16 @@
     </div>
   </footer>
 
+  <div class="consent" id="consent" hidden>
+    <div class="consent-in">
+      <p>เราใช้คุกกี้เพื่อ<b>วิเคราะห์และการตลาด</b> (Google Analytics, LINE) เพื่อพัฒนาบริการ — คุณเลือกได้</p>
+      <div class="consent-btns">
+        <button class="btn btn-line" id="ckNec">จำเป็นเท่านั้น</button>
+        <button class="btn btn-amber" id="ckAll">ยอมรับทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+
   <div class="sticky-cta" id="stickyCta">
     <span class="t"><b>เริ่มฟรี 15 วัน</b> · ไม่ต้องใช้บัตร</span>
     <a class="btn btn-amber" href="https://ceoaithailand.org/start?utm_source=marketing_site&utm_medium=sticky&utm_campaign=mobile_bar" target="_blank" rel="noopener">เริ่มฟรี →</a>
@@ -490,6 +553,17 @@
 </div>
 
 <script>
+  // Cookie consent (PDPA) — โชว์เมื่อยังไม่เคยเลือก · "ยอมรับทั้งหมด" เปิด GA4+LINE
+  (function(){
+    var KEY='ceo_ai_cookie_consent', el=document.getElementById('consent');
+    var stored; try{ stored=localStorage.getItem(KEY); }catch(e){}
+    if(!stored){ el.hidden=false; }
+    function set(v){ try{ localStorage.setItem(KEY,v); }catch(e){} el.hidden=true;
+      if(v==='all' && window.__enableMarketing) window.__enableMarketing(); }
+    document.getElementById('ckAll').addEventListener('click',function(){ set('all'); });
+    document.getElementById('ckNec').addEventListener('click',function(){ set('necessary'); });
+  })();
+
   // scroll reveal
   (function(){
     var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
