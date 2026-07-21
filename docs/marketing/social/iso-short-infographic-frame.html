@@ -1,0 +1,86 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#000}
+  .frame{width:1080px;height:1920px;position:relative;overflow:hidden;
+    background:radial-gradient(900px 700px at 50% 22%,#16294c 0%,#0c1730 46%,#080d1a 78%);
+    font-family:"Kanit","IBM Plex Sans Thai","Noto Sans Thai",sans-serif;color:#eaf0fb}
+  .grid{position:absolute;inset:0;opacity:.35;
+    background-image:linear-gradient(rgba(60,90,140,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(60,90,140,.3) 1px,transparent 1px);
+    background-size:70px 70px;-webkit-mask-image:radial-gradient(ellipse 85% 60% at 50% 30%,#000 40%,transparent 78%)}
+  .glowA{position:absolute;width:700px;height:560px;top:-140px;right:-160px;background:radial-gradient(circle,rgba(245,158,11,.18),transparent 62%)}
+  .glowB{position:absolute;width:700px;height:560px;bottom:-40px;left:-180px;background:radial-gradient(circle,rgba(34,211,238,.16),transparent 62%)}
+
+  /* TOP title */
+  .top{position:absolute;top:88px;left:0;right:0;text-align:center;z-index:2}
+  .brandline{font-size:22px;font-weight:800;letter-spacing:5px;color:#67e8f9;margin-bottom:14px}
+  .h1{font-size:82px;font-weight:900;line-height:1.02;letter-spacing:-1px;color:#fff}
+  .h1 .amber{color:#f59e0b}
+  .sub{font-size:34px;font-weight:600;color:#aebfd6;margin-top:18px;line-height:1.35}
+  .redline{width:150px;height:5px;margin:24px auto 0;border-radius:99px;background:linear-gradient(90deg,#22d3ee,#f59e0b)}
+
+  /* MIDDLE product mock */
+  .mock{position:absolute;top:560px;left:70px;right:70px;background:linear-gradient(180deg,#12203c,#0d1830);
+    border:1px solid #24406e;border-radius:28px;padding:38px 40px;box-shadow:0 30px 80px rgba(0,0,0,.5);z-index:2}
+  .mock-h{display:flex;align-items:center;gap:16px;margin-bottom:26px}
+  .mock-badge{width:64px;height:64px;border-radius:16px;background:#0b1730;border:2px solid #22d3ee;display:flex;align-items:center;justify-content:center;font-size:34px}
+  .mock-t{font-size:32px;font-weight:800;color:#fff}
+  .mock-t small{display:block;font-size:22px;font-weight:500;color:#8fa3c4}
+  .pct{font-size:96px;font-weight:900;color:#22d3ee;line-height:1}
+  .pct span{font-size:40px;color:#8fa3c4}
+  .bar{height:22px;border-radius:99px;background:#0b1730;border:1px solid #24406e;margin:14px 0 30px;overflow:hidden}
+  .bar>i{display:block;height:100%;width:78%;border-radius:99px;background:linear-gradient(90deg,#22d3ee,#f59e0b)}
+  .row{display:flex;align-items:center;gap:16px;font-size:30px;padding:10px 0;color:#dbe6f7}
+  .row .ok{color:#34d399;font-weight:900}
+  .row .no{color:#f59e0b;font-weight:900}
+  .row .tag{margin-left:auto;font-size:22px;color:#f59e0b;font-weight:700}
+
+  /* 3 columns */
+  .cols{position:absolute;bottom:230px;left:56px;right:56px;display:flex;gap:20px;z-index:2}
+  .col{flex:1;text-align:center}
+  .col .ic{font-size:56px}
+  .col .cl{font-size:30px;font-weight:800;color:#f59e0b;margin:10px 0 8px}
+  .col .cd{font-size:24px;color:#aebfd6;line-height:1.35}
+  .divider{width:1px;background:linear-gradient(180deg,transparent,#2a4470,transparent)}
+
+  /* footer handle */
+  .foot{position:absolute;bottom:90px;left:0;right:0;text-align:center;z-index:2}
+  .foot .cta{display:inline-block;background:#f59e0b;color:#020617;font-weight:900;font-size:34px;padding:16px 44px;border-radius:16px}
+  .foot .handle{margin-top:20px;font-size:26px;color:#8fa3c4;font-weight:600}
+</style></head>
+<body>
+  <div class="frame">
+    <div class="grid"></div><div class="glowA"></div><div class="glowB"></div>
+
+    <div class="top">
+      <div class="brandline">CEO AI THAILAND</div>
+      <div class="h1">จ้าง "ทีม AI<br>ทั้ง<span class="amber">บริษัท</span>"</div>
+      <div class="sub">ผู้ช่วยทำ ISO/มอก. + บริหารธุรกิจ<br>ของโรงงานยุคใหม่</div>
+      <div class="redline"></div>
+    </div>
+
+    <div class="mock">
+      <div class="mock-h">
+        <div class="mock-badge">🛡️</div>
+        <div class="mock-t">ประเมินความพร้อม ISO 9001<small>ก่อน audit — ด้วย AI</small></div>
+      </div>
+      <div class="pct">78<span>% พร้อม</span></div>
+      <div class="bar"><i></i></div>
+      <div class="row"><span class="ok">✓</span> นโยบายคุณภาพ</div>
+      <div class="row"><span class="ok">✓</span> บันทึกตรวจภายใน</div>
+      <div class="row"><span class="no">✗</span> ประเมินผู้ขาย <span class="tag">ต้องทำก่อน audit</span></div>
+    </div>
+
+    <div class="cols">
+      <div class="col"><div class="ic">🛡️</div><div class="cl">ISO / มอก.</div><div class="cd">ประเมิน + สร้างเอกสารอัตโนมัติ</div></div>
+      <div class="divider"></div>
+      <div class="col"><div class="ic">🧠</div><div class="cl">ทีม AI</div><div class="cd">กลยุทธ์ · การตลาด · การเงิน</div></div>
+      <div class="divider"></div>
+      <div class="col"><div class="ic">⚡</div><div class="cl">เริ่มฟรี</div><div class="cd">ไม่ต้องสมัคร ไม่ต้องใช้บัตร</div></div>
+    </div>
+
+    <div class="foot">
+      <div class="cta">เริ่มฟรี — ลิงก์ในไบโอ →</div>
+      <div class="handle">ceoaithailand.org/start · โดยที่ปรึกษา ISO 20 ปี</div>
+    </div>
+  </div>
+</body></html>
