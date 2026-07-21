@@ -1,0 +1,74 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#000; }
+  .frame {
+    width:1000px; height:1000px; position:relative; overflow:hidden;
+    background:
+      radial-gradient(700px 620px at 50% 32%, #17325a 0%, #0f2039 48%, #0a1526 76%);
+    font-family: "Arial", system-ui, sans-serif;
+  }
+  .glowA { position:absolute; width:640px; height:520px; top:-140px; right:-160px;
+    background:radial-gradient(circle, rgba(230,184,79,.20), transparent 62%); }
+  .glowB { position:absolute; width:640px; height:520px; bottom:-160px; left:-160px;
+    background:radial-gradient(circle, rgba(56,110,180,.20), transparent 62%); }
+  .grid { position:absolute; inset:0; opacity:.4;
+    background-image:linear-gradient(rgba(70,100,150,.25) 1px,transparent 1px),
+                     linear-gradient(90deg, rgba(70,100,150,.25) 1px,transparent 1px);
+    background-size:66px 66px;
+    -webkit-mask-image:radial-gradient(circle at 50% 40%, #000 44%, transparent 74%); }
+
+  .center { position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; }
+
+  .emblem { filter: drop-shadow(0 16px 44px rgba(230,184,79,.28)); margin-bottom:40px; }
+
+  .wm-main { font-size:78px; font-weight:900; letter-spacing:-1px; color:#ffffff; line-height:1; text-align:center; }
+  .wm-main .amp { color:#e6b84f; }
+  .wm-sub { margin-top:22px; font-size:33px; font-weight:800; letter-spacing:9px;
+    color:#f4d27a; text-align:center; padding-left:9px; }
+  .wm-tag { margin-top:20px; font-size:29px; font-weight:600; letter-spacing:1px;
+    color:#aebfd6; text-align:center; }
+</style></head>
+<body>
+  <div class="frame">
+    <div class="glowA"></div>
+    <div class="glowB"></div>
+    <div class="grid"></div>
+    <div class="center">
+      <!-- Quality shield emblem (ISO / มอก. trust) -->
+      <svg class="emblem" width="300" height="310" viewBox="0 0 300 310" fill="none">
+        <defs>
+          <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f4d27a"/>
+            <stop offset="1" stop-color="#c9992f"/>
+          </linearGradient>
+          <linearGradient id="shieldfill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#15294a"/>
+            <stop offset="1" stop-color="#0d1c34"/>
+          </linearGradient>
+        </defs>
+        <!-- outer ring -->
+        <circle cx="150" cy="140" r="132" stroke="url(#gold)" stroke-width="4" opacity="0.55"/>
+        <!-- shield -->
+        <path d="M150 34 L248 74 V150 C248 214 206 250 150 274 C94 250 52 214 52 150 V74 Z"
+              fill="url(#shieldfill)" stroke="url(#gold)" stroke-width="6"/>
+        <!-- inner hairline -->
+        <path d="M150 54 L230 87 V150 C230 204 196 235 150 255 C104 235 70 204 70 150 V87 Z"
+              fill="none" stroke="url(#gold)" stroke-width="2" opacity="0.45"/>
+        <!-- checkmark (quality / passed audit) -->
+        <path d="M108 150 L140 184 L200 112" stroke="url(#gold)" stroke-width="17"
+              stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <!-- 20+ ปี ribbon badge -->
+        <circle cx="150" cy="272" r="42" fill="#0d1c34" stroke="url(#gold)" stroke-width="5"/>
+        <text x="150" y="268" text-anchor="middle" font-family="Arial" font-weight="900"
+              font-size="34" fill="#f4d27a">20+</text>
+        <text x="150" y="292" text-anchor="middle" font-family="Arial" font-weight="700"
+              font-size="17" fill="#aebfd6" letter-spacing="1">ปี</text>
+      </svg>
+
+      <div class="wm-main">B.&nbsp;Training<br>Consultant</div>
+      <div class="wm-sub">ISO · มอก.</div>
+      <div class="wm-tag">ที่ปรึกษาระบบมาตรฐาน · วางระบบธุรกิจ</div>
+    </div>
+  </div>
+</body></html>
