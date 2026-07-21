@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { track } from '../lib/analytics';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
+import { currentChallenger } from '../lib/challengerRotation';
 
 interface Props {
   onGetStarted: () => void;
+  /** ลองใช้แอปทันทีโดยไม่ต้องสมัคร (guest mode) — ลด friction #1 */
+  onTryGuest?: () => void;
 }
 
 const C = {
@@ -44,6 +47,27 @@ const features = [
   { icon: '🚀', title: 'ขยายธุรกิจอย่างเป็นระบบ', desc: 'ระบบ 6G Growth Intelligence พร้อมแผนขยาย TAM' },
 ];
 
+// ─── เนื้อหาจูงใจเพิ่มเติม ───
+const differentiators = [
+  { icon: '🏆', title: 'ที่ปรึกษาตัวจริง 20+ ปี', desc: 'สร้างโดย B. Training Consultant ผู้วางระบบมาตรฐาน/ISO ให้ธุรกิจไทยมากว่า 20 ปี — ประสบการณ์จริงถูกใส่ลงในระบบ ไม่ใช่แค่ AI ลอย ๆ' },
+  { icon: '🇹🇭', title: 'เข้าใจธุรกิจไทยจริง', desc: 'ISO/มอก.ภาษาไทย · DBD · PromptPay · ตลาด B2B ในประเทศ — ต่างจาก AI ทั่วไปที่ไม่รู้บริบทและกฎเกณฑ์ของไทย' },
+  { icon: '🧩', title: 'ครบจบในที่เดียว', desc: 'ทีมบริหาร AI + หน้าร้าน/ตลาด B2B + งานมาตรฐาน + การเงิน — ไม่ต้องต่อหลายเครื่องมือให้ยุ่งยาก' },
+];
+
+const outcomes = [
+  { icon: '📄', text: 'เอกสาร ISO / แผนธุรกิจ ที่พร้อมใช้และยื่นได้จริง — ไม่ใช่แค่ทฤษฎี' },
+  { icon: '🏪', text: 'หน้าร้านออนไลน์ + ช่องขาย B2B ที่ลูกค้าค้นเจอคุณบน Google' },
+  { icon: '🤖', text: 'ทีม AI ทำงานแทนคุณ 24 ชม. โดยไม่ต้องจ้างพนักงานเพิ่ม' },
+  { icon: '📈', text: 'เห็นทุกตัวเลขธุรกิจในที่เดียว ตัดสินใจได้เร็วและมั่นใจขึ้น' },
+];
+
+const learnCases = [
+  { icon: '🍜', name: 'Momofuku Ando', lesson: 'เริ่มใหม่หลังล้มเหลว วัย 48' },
+  { icon: '🧮', name: 'Warren Buffett', lesson: 'วินัยจัดสรรทุน ไม่ตาม FOMO' },
+  { icon: '💧', name: 'ร้าน “เนื้อแท้”', lesson: 'Cash is King — กำไร ≠ เงินสด' },
+  { icon: '🏁', name: 'BMW × Benz', lesson: 'ใช้คู่แข่งเป็นแรงยกแบรนด์' },
+];
+
 const plans = [
   {
     id: 'free',
@@ -77,9 +101,18 @@ const plans = [
   },
 ];
 
-export default function LandingPage({ onGetStarted }: Props) {
+export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
   const [ctaHover, setCtaHover] = useState(false);
   const [navHover, setNavHover] = useState(false);
+  const [guestHover, setGuestHover] = useState(false);
+
+  // Challenger headline — สลับ content 2 ครั้ง/วัน ที่เวลาไทย 11:00 และ 20:00 (เช็คทุกนาที)
+  const [challenger, setChallenger] = useState(() => currentChallenger(Date.now()));
+  useEffect(() => {
+    const tick = () => setChallenger(currentChallenger(Date.now()));
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: C.bg, color: C.white, fontFamily: "'Kanit', sans-serif", overflowX: 'hidden' }}>
@@ -101,6 +134,13 @@ export default function LandingPage({ onGetStarted }: Props) {
           </button>
         </div>
       </nav>
+
+      {/* ─── Challenger banner (สลับ 11:00 / 20:00 เวลาไทย · จุดยืน co-opetition) ─── */}
+      <div style={{ borderBottom: `1px solid ${C.border}`, background: 'linear-gradient(90deg, rgba(245,158,11,0.10), rgba(6,182,212,0.10))', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textAlign: 'center' }}>
+        <span style={{ flex: 'none', background: C.amber5, color: '#020617', fontWeight: 800, fontSize: 11, padding: '3px 9px', borderRadius: 999 }}>SME</span>
+        <span key={challenger} style={{ color: C.white, fontSize: 14, fontWeight: 600, lineHeight: 1.5, animation: 'lpFadeIn .5s ease' }}>{challenger}</span>
+      </div>
+      <style>{`@keyframes lpFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }`}</style>
 
       {/* ─── Hero ─── */}
       <section style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(90vh - 60px)', padding: '80px 24px', textAlign: 'center' }}>
@@ -146,6 +186,25 @@ export default function LandingPage({ onGetStarted }: Props) {
           <div style={{ marginTop: 12, color: C.slate5, fontSize: 13 }}>
             ไม่ต้องใช้บัตรเครดิต · เริ่มฟรี 15 วัน · ยกเลิกได้ทุกเมื่อ
           </div>
+          {onTryGuest && (
+            <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <button
+                onClick={() => { track('landing_cta_click', { cta: 'hero_try_guest' }); onTryGuest(); }}
+                onMouseEnter={() => setGuestHover(true)}
+                onMouseLeave={() => setGuestHover(false)}
+                style={{
+                  padding: '13px 30px', borderRadius: 12,
+                  border: `1.5px solid ${C.cyan5}`,
+                  background: guestHover ? 'rgba(6,182,212,0.16)' : 'rgba(6,182,212,0.06)',
+                  color: C.cyan3, fontFamily: 'inherit', fontWeight: 700, fontSize: 16,
+                  cursor: 'pointer', transition: 'all .2s',
+                }}
+              >
+                ⚡ ลองเล่นเลยใน 30 วินาที — ไม่ต้องสมัคร ไม่ต้องกรอกบัตร →
+              </button>
+              <span style={{ color: C.slate5, fontSize: 12.5 }}>ไม่ต้องล็อกอิน · เข้าใช้ทันที · เก็บงานไว้สมัครทีหลังได้</span>
+            </div>
+          )}
           <a
             href="/shop"
             onClick={() => track('landing_cta_click', { cta: 'hero_shop_signup' })}
@@ -225,6 +284,66 @@ export default function LandingPage({ onGetStarted }: Props) {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ─── ทำไมต้องเป็นเรา (Differentiation) ─── */}
+      <section style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
+            ทำไมต้อง <span style={{ color: C.cyan4 }}>CEO AI Thailand</span> — ไม่ใช่ AI ทั่วไป?
+          </h2>
+          <p style={{ textAlign: 'center', color: C.slate4, marginBottom: 44, fontSize: 16, maxWidth: 640, margin: '0 auto 44px' }}>
+            AI ทั่วไปตอบคำถามได้ แต่ไม่รู้จักธุรกิจไทยและไม่ลงมือทำงานให้ — เราต่างตรงนี้
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
+            {differentiators.map(d => (
+              <div key={d.title} style={{ padding: 28, borderRadius: 14, border: `1px solid ${C.border2}`, backgroundColor: C.bg3 }}>
+                <div style={{ fontSize: 36, marginBottom: 14 }}>{d.icon}</div>
+                <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 10, color: C.white }}>{d.title}</h3>
+                <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7 }}>{d.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── ผลลัพธ์ที่คุณจะได้ (Outcomes) ─── */}
+      <section style={{ padding: '80px 24px' }}>
+        <div style={{ maxWidth: 820, margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 44 }}>
+            ภายในไม่กี่นาที คุณจะได้ <span style={{ color: C.amber4 }}>ผลลัพธ์จริง</span>
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+            {outcomes.map(o => (
+              <div key={o.text} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '18px 20px', borderRadius: 12, border: `1px solid ${C.border}`, backgroundColor: C.bg2 }}>
+                <span style={{ fontSize: 26, lineHeight: 1 }}>{o.icon}</span>
+                <span style={{ color: C.white, fontSize: 15.5, lineHeight: 1.6 }}>{o.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── เรียนรู้จากเคสธุรกิจจริง (Social proof / content) ─── */}
+      <section style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
+            เรียนรู้จาก <span style={{ color: C.cyan4 }}>เคสธุรกิจระดับโลก</span> — แล้วลงมือกับธุรกิจคุณ
+          </h2>
+          <p style={{ textAlign: 'center', color: C.slate4, marginBottom: 44, fontSize: 16, maxWidth: 640, margin: '0 auto 44px' }}>
+            ในระบบมีคลังกรณีศึกษาพร้อมเครื่องมือลงมือจริง (canvas · checklist · สูตร) ให้คุณใช้กับธุรกิจตัวเองได้ทันที
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 18 }}>
+            {learnCases.map(c => (
+              <div key={c.name} style={{ padding: 22, borderRadius: 12, border: `1px solid ${C.border}`, backgroundColor: C.bg3, textAlign: 'center' }}>
+                <div style={{ fontSize: 34, marginBottom: 10 }}>{c.icon}</div>
+                <div style={{ fontWeight: 700, fontSize: 15.5, color: C.white, marginBottom: 6 }}>{c.name}</div>
+                <div style={{ color: C.slate4, fontSize: 13.5, lineHeight: 1.5 }}>{c.lesson}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ textAlign: 'center', color: C.slate5, marginTop: 28, fontSize: 13.5 }}>…และอีกหลายเคส พร้อมทักษะ (Skill) ที่นำไปใช้ได้จริงในตลาดของระบบ</p>
         </div>
       </section>
 

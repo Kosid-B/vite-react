@@ -81,10 +81,30 @@ export interface BMCData {
   revenue: string[];
 }
 
+/** ช่องใน Business Model Canvas (9 บล็อก) */
+export type BmcBlockKey =
+  | 'partners' | 'activities' | 'value' | 'relationships'
+  | 'segments' | 'resources' | 'channels' | 'costs' | 'revenue';
+
+/** ผลลัพธ์จริงที่ป้อนตามกระบวนการ BMC — ปิดลูป วางแผน → ลงมือ → วัดผล
+ *  รองรับทั้ง KPI (เป้า→ผลจริง→สถานะ) และข้อความ + ลิงก์หลักฐาน */
+export interface BmcOutcome {
+  id: string;
+  block: BmcBlockKey;      // ผูกกับช่อง BMC ไหน
+  metric: string;          // ตัวชี้วัด เช่น "ลูกค้าใหม่", "รายได้/เดือน"
+  target: number;          // เป้าหมาย
+  actual: number;          // ผลจริง (ป้อนเอง)
+  unit?: string;           // หน่วย เช่น ราย/บาท/ชิ้น
+  note?: string;           // บันทึกข้อความ
+  evidenceUrl?: string;    // ลิงก์หลักฐาน (แนบ)
+  updatedAt: string;       // ISO
+}
+
 export interface BusinessModelData {
   bmc: BMCData;
   de24: Array<{ done: boolean; notes: string }>;
   de24Owners?: (string | null)[]; // agentId ของ C-level เจ้าของแต่ละ Phase (CEO มอบหมาย)
+  outcomes?: BmcOutcome[];        // ผลลัพธ์จริงตามกระบวนการ BMC (Outcome Tracker)
 }
 
 /* ===== SIPOC — Process Management =====
@@ -479,6 +499,9 @@ export interface ISO9001Data {
   nextAuditDate: string;
   qualityPolicy: string;
   qualityObjectives: string[];
+  // Multi-standard: มาตรฐานที่กำลังดู + สถานะ clause แยกต่อมาตรฐาน (iso9001 ใช้ clauses ด้านบน)
+  activeStandard?: 'iso9001' | 'iso14001' | 'iso45001' | 'iso22301';
+  byStandard?: Partial<Record<'iso14001' | 'iso45001' | 'iso22301', ISOClauseCheck[]>>;
 }
 
 export interface AppData {
@@ -487,6 +510,9 @@ export interface AppData {
   contentPlan: ContentMonth[];
   actions: Action[];
   funnel: FunnelStage[];
+  funnelSource?: 'seed' | 'real';   // seed = ตัวอย่าง · real = ผู้ใช้กรอก/เชื่อม GA4 จริง
+  funnelSyncedAt?: string;           // วันที่อัปเดตข้อมูล funnel จริงล่าสุด
+  ahaDismissed?: boolean;            // ผู้ใช้ปิดการ์ด "Aha ใน 5 นาที" แล้ว
   roi: ROIInput;
   businessModel: BusinessModelData;
   aiCompany: AICompany;
@@ -513,6 +539,7 @@ export interface AppData {
   cityUnlocks?: string[];                 // ของปลดล็อกในเกม (cosmetic)
   streak?: { count: number; lastDay: string }; // ส่วนต่อเนื่องรายวัน (ทำงานจริงในแอป)
   proMode?: boolean;                      // โหมดโปร — ซ่อนองค์ประกอบเกมบน Dashboard
+  appliedPaymentIds?: string[];           // id ของ payment_submissions ที่อนุมัติแล้ว + เปิดใช้งานแพ็กแล้ว (กันเปิดซ้ำ)
   // CMO วิเคราะห์ตลาด+กลุ่มลูกค้า (Segmentation) รายสัปดาห์ทุกวันศุกร์ (ดึงข้อมูลตลาดจริง)
   cmoMarket?: { analysis: string; webUsed: boolean; updatedAt: string; weekTag: string };
   // C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO ทุกวันศุกร์
@@ -527,6 +554,12 @@ export interface AppData {
   cmoValidation?: { idea: string; report: string; verdict: 'go' | 'pivot' | 'kill' | ''; webUsed: boolean; updatedAt: string };
   // Pulse & A/B — วัด "อะไรทำให้อยากใช้งานต่อ" แบบโปร่งใส (opt-in, ไม่ระบุตัวตน) — ดู lib/experiments.ts
   experiments?: import('./lib/experiments').ExperimentsState;
+  // ห้องบอร์ด — CEO เสนอวาระ → บอร์ด/User อนุมัติ + สะสมทักษะบริหาร/การตลาด — ดู lib/boardRoom.ts
+  boardRoom?: import('./lib/boardRoom').BoardRoomState;
+  // บริหารทรัพยากรธุรกิจ — รายการ+จำนวน · C-Level ดูแล/ขอเพิ่ม-ลด · CEO อนุมัติ — ดู lib/resources.ts
+  resources?: import('./lib/resources').ResourcesState;
+  // 3 แรงขับที่ทำให้ลูกค้ายอมจ่าย (ขจัดความทุกข์/สะดวก/อารมณ์) — ดู lib/buyingTriggers.ts
+  buyingTriggers?: import('./lib/buyingTriggers').BuyingTriggersState;
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */
@@ -539,7 +572,7 @@ export interface FinanceEntry {
   recurring?: boolean;            // รายการรายเดือนซ้ำ
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade' | 'citylevelup' | 'pulse';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade' | 'citylevelup' | 'pulse' | 'boardroom' | 'resources';
 
 /* ===== Factory / โรงงานอัจฉริยะ ===== */
 export type MachineStatus = 'running' | 'idle' | 'maintenance' | 'breakdown';

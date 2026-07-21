@@ -11,6 +11,7 @@ import { track } from './lib/analytics';
 import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTriggers';
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
+import SaveWorkPrompt from './components/SaveWorkPrompt';
 import Sidebar from './components/Sidebar';
 // perf: lazy-load เฉพาะตอนต้องใช้ (ไม่อยู่ใน critical path ของ first paint)
 const AiAssist = lazy(() => import('./components/AiAssist'));
@@ -20,8 +21,9 @@ const BadgeGenerator = lazy(() => import('./components/BadgeGenerator'));
 const CmdK = lazy(() => import('./components/CmdK'));
 const OnboardingTour = lazy(() => import('./components/OnboardingTour'));
 import UpgradeWall from './components/UpgradeWall';
-import { canAccess, setAdminFullAccess } from './lib/access';
+import { canAccess, setAdminFullAccess, setGuestFullAccess } from './lib/access';
 import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
+import { isLineCallback, handleLineCallback } from './lib/lineLogin';
 import { isAdminEmail, INTEGRATIONS } from './config';
 import { readPendingHandoff, applyPendingHandoff } from './lib/handoffClient';
 import LegalLinks from './components/LegalLinks';
@@ -53,12 +55,16 @@ const Trade = lazy(() => import('./pages/Trade'));
 const CompanyCity = lazy(() => import('./pages/CompanyCity'));
 const Pulse = lazy(() => import('./pages/Pulse'));
 const InterCityTrade = lazy(() => import('./pages/InterCityTrade'));
+const BoardRoom = lazy(() => import('./pages/BoardRoom'));
+const Resources = lazy(() => import('./pages/Resources'));
 
 const STORAGE_KEY = 'cjux2';
 
 // ลำดับหน้า (ตาม sidebar) สำหรับปุ่ม ย้อนกลับ / หน้าถัดไป ท้ายทุกหน้า
 const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'dashboard', label: 'Dashboard' },
+  { id: 'boardroom', label: 'ห้องบอร์ด' },
+  { id: 'resources', label: 'ทรัพยากร' },
   { id: 'city', label: 'เมืองบริษัท' },
   { id: 'citylevelup', label: 'เมือง · Level Up' },
   { id: 'pulse', label: 'Pulse & A/B' },
@@ -146,6 +152,8 @@ function migrate(parsed: AppData): AppData {
     }
   }
   if (!parsed.experiments) parsed.experiments = defaultExperiments();
+  if (!parsed.boardRoom) parsed.boardRoom = { decisions: [] };
+  if (!parsed.resources) parsed.resources = { items: [], requests: [] };
   return parsed;
 }
 
@@ -177,6 +185,14 @@ export default function App() {
   });
   const [showAuth, setShowAuth] = useState(false);
   const [seenLanding, setSeenLanding] = useState(() => !!localStorage.getItem('ceo_ai_seen'));
+  // Guest mode (ลองก่อนสมัคร) — เข้าแอปด้วย localStorage โดยไม่ต้อง login (ลด friction #1)
+  const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1');
+  const startGuest = () => { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } setGuestMode(true); };
+  // ออกจากโหมดทดลอง → ล้าง flag แล้วกลับไปหน้า Landing (กันคนติดอยู่ในโหมด guest ถาวร)
+  const exitGuest = () => { try { localStorage.removeItem('ceo_ai_guest'); } catch { /* noop */ } track('guest_exit', {}); setShowAuth(false); setGuestMode(false); };
+  // Aha-moment email capture (soft signup) — เก็บ lead ตอน guest เจอโมเมนต์ดีๆ
+  const [leadCaptured, setLeadCaptured] = useState(() => localStorage.getItem('ceo_ai_lead') === '1');
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // ===== Supabase session + workspaces =====
@@ -200,6 +216,18 @@ export default function App() {
   useEffect(() => {
     setAdminFullAccess(isAdminEmail(session?.user.email ?? null));
   }, [session?.user.email]);
+
+  // ผู้ทดลอง (guest, ยังไม่ล็อกอิน) = ปลดล็อกฟีเจอร์เต็มให้สัมผัสคุณค่าก่อนสมัคร
+  useEffect(() => {
+    setGuestFullAccess(isSupabaseEnabled && !session && guestMode);
+  }, [session, guestMode]);
+
+  // Aha moment: guest เจอโมเมนต์ดีๆ (celebration) → เด้งขออีเมลบันทึกงาน (soft signup ครั้งเดียว)
+  useEffect(() => {
+    if (celebration && isSupabaseEnabled && !session && guestMode && !leadCaptured) {
+      setShowSavePrompt(true);
+    }
+  }, [celebration, session, guestMode, leadCaptured]);
 
   // เมื่อล็อกอิน: หาเวิร์กสเปซเริ่มต้น + โหลดรายชื่อเวิร์กสเปซทั้งหมด
   useEffect(() => {
@@ -263,6 +291,12 @@ export default function App() {
       showToast(r.msg);
     });
   }, [session, showToast]);
+
+  // กลับจากหน้ายินยอม LINE Login — แลก code → เปิด session (ยังไม่ล็อกอิน จึงไม่รอ session)
+  useEffect(() => {
+    if (!isLineCallback()) return;
+    handleLineCallback().then(r => { showToast(r.msg); });
+  }, [showToast]);
 
   const updateData = useCallback((incoming: AppData) => {
     // ต่อ streak รายวันเมื่อทำงานจริง (แก้ข้อมูลครั้งแรกของวัน)
@@ -380,7 +414,9 @@ export default function App() {
   // ไม่บังคับ login ทันที — กดปุ่ม "เริ่ม/เข้าระบบ" ค่อยไปหน้า Auth (login เป็นด่านที่สอง)
   if (isSupabaseEnabled && !session) {
     if (showAuth) return <Auth onBack={() => setShowAuth(false)} />;
-    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+    // ยังไม่กด "ลองก่อน" → หน้า Landing (มีปุ่มสมัคร + ปุ่มลองใช้เลยไม่ต้องสมัคร)
+    if (!guestMode) return <LandingPage onGetStarted={() => setShowAuth(true)} onTryGuest={startGuest} />;
+    // guest → ตกลงไปเรนเดอร์แอปด้านล่าง (ทดลองใช้ด้วย localStorage) พร้อมแบนเนอร์ชวนสมัคร
   }
 
   // โหมด local (ไม่มี backend): โชว์ landing ครั้งแรกครั้งเดียว แล้วเข้าแอปเลย
@@ -397,6 +433,18 @@ export default function App() {
   return (
     <div className="app">
       <Suspense fallback={null}><Celebrate moment={celebration} onDone={() => setCelebration(null)} /></Suspense>
+      {showSavePrompt && (
+        <SaveWorkPrompt onClose={() => setShowSavePrompt(false)} onCaptured={() => setLeadCaptured(true)} />
+      )}
+      {isSupabaseEnabled && !session && guestMode && (
+        <div className="guest-bar">
+          <button className="guest-back" onClick={exitGuest} aria-label="กลับหน้าแรก">← หน้าแรก</button>
+          <span>🧪 กำลังทดลองใช้ · ข้อมูลเก็บในเครื่องนี้ชั่วคราว</span>
+          <button onClick={() => { track('guest_signup_click', {}); setShowAuth(true); }}>
+            สมัครฟรีเพื่อบันทึกงาน →
+          </button>
+        </div>
+      )}
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
       <button className="hamburger" onClick={() => setSidebarOpen(true)} aria-label="เปิดเมนู">
@@ -443,10 +491,12 @@ export default function App() {
         )}
         {activePage === 'funnel' && <ConversionFunnel data={data} onUpdate={updateData} />}
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
-        {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} />}
+        {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} wsId={activeWs} />}
         {(activePage === 'city' || activePage === 'citylevelup') && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'pulse' && <Pulse data={data} onNavigate={setActivePage} onUpdate={updateData} />}
+        {activePage === 'boardroom' && <BoardRoom data={data} onNavigate={setActivePage} onUpdate={updateData} />}
+        {activePage === 'resources' && <Resources data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'citytrade' && <InterCityTrade data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'billing' && <Billing data={data} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'vrio' && <VRIO data={data} onUpdate={updateData} />}
@@ -455,8 +505,8 @@ export default function App() {
             ? <Marketplace data={data} onUpdate={updateData} />
             : <UpgradeWall page="market" data={data} onNavigate={setActivePage} />
         )}
-        {activePage === 'roadmap' && <Roadmap data={data} onUpdate={updateData} />}
-        {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} />}
+        {activePage === 'roadmap' && <Roadmap data={data} onUpdate={updateData} onNavigate={setActivePage} />}
+        {activePage === 'marketing' && <Marketing data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'team' && (
           canAccess(data, 'team')
             ? <Team activeWs={activeWs} workspaces={workspaces} currentUserId={session?.user.id ?? null} data={data}
@@ -470,7 +520,7 @@ export default function App() {
         )}
         {activePage === 'iso9001' && (
           canAccess(data, 'iso9001')
-            ? <ISO9001 data={data} onUpdate={updateData} />
+            ? <ISO9001 data={data} onUpdate={updateData} onNavigate={setActivePage} />
             : <UpgradeWall page="iso9001" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'cases' && <CaseStudies data={data} />}
@@ -526,6 +576,8 @@ export default function App() {
           <span>72/76 หมู่ที่ 1 ตำบลเนินพระ อำเภอเมืองระยอง จังหวัดระยอง 21000</span>
           <span className="app-footer__sep">·</span>
           <span>Tel. <a href="tel:0817817773" className="app-footer__link">0817817773</a></span>
+          <span className="app-footer__sep">·</span>
+          <span>Email <a href="mailto:support@b-tctraining.com" className="app-footer__link">support@b-tctraining.com</a></span>
           <span className="app-footer__sep">·</span>
           <a href="https://www.b-tctraining.com/" target="_blank" rel="noopener noreferrer" className="app-footer__link">
             www.b-tctraining.com

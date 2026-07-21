@@ -37,7 +37,7 @@ export default function CookieConsent() {
     <div className="cc-banner" role="dialog" aria-live="polite" aria-label="ความยินยอมการใช้คุกกี้">
       <style>{CC_CSS}</style>
       <div className="cc-text">
-        🍪 เราใช้คุกกี้ที่จำเป็นเพื่อให้ระบบทำงาน และคุกกี้วิเคราะห์ (Google Analytics) เพื่อพัฒนาบริการ
+        🍪 เราใช้คุกกี้ที่จำเป็นเพื่อให้ระบบทำงาน และคุกกี้วิเคราะห์/การตลาด (Google Analytics, LINE) เพื่อพัฒนาบริการ
         โดยเปิดใช้เมื่อคุณยินยอมเท่านั้น · อ่าน<a href="/legal#cookies">นโยบายคุกกี้</a>
       </div>
       <div className="cc-actions">

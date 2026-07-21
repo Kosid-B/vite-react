@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import { submitPaymentSlip, listMyPayments } from '../lib/payments';
 import ExpertEdge from '../components/ExpertEdge';
 
 function addDays(iso: string, n: number): string {
@@ -167,39 +168,80 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   const [showCost, setShowCost] = useState(false);
   const [payBusy, setPayBusy] = useState(false);
   const [payErr, setPayErr] = useState<string | null>(null);
+  const [slipBusy, setSlipBusy] = useState(false);
+  const [slipMsg, setSlipMsg] = useState<string | null>(null);
 
-  /** จ่ายผ่าน Xendit (hosted checkout: บัตร/PromptPay/e-wallet) — production เท่านั้น */
-  async function payWithXendit() {
+  // เปิดใช้งานแพ็กอัตโนมัติเมื่อแอดมินอนุมัติสลิป (client เจ้าของ workspace ทำเอง — ไม่มีการเขียนข้าม workspace)
+  useEffect(() => {
+    if (!isSupabaseEnabled || !wsId) return;
+    let cancelled = false;
+    listMyPayments(wsId).then(subs => {
+      if (cancelled) return;
+      const applied = data.appliedPaymentIds ?? [];
+      const approved = subs.find(s => s.status === 'approved' && !applied.includes(s.id));
+      if (!approved) return;
+      const now = new Date().toISOString();
+      const invoice: Invoice = { id: 'inv-' + approved.id.slice(0, 8), date: now, plan: approved.plan as PlanId, amount: approved.amount, status: 'paid' };
+      onUpdate({
+        ...data,
+        appliedPaymentIds: [...applied, approved.id],
+        subscription: {
+          ...data.subscription,
+          plan: approved.plan as PlanId,
+          status: 'active',
+          billingCycle: approved.cycle as 'monthly' | 'yearly',
+          currentPeriodEnd: addMonths(now, approved.cycle === 'yearly' ? 12 : 1),
+          trialEndDate: null,
+          invoices: [invoice, ...data.subscription.invoices],
+        },
+      });
+      setSlipMsg('✅ แอดมินยืนยันการชำระเงินแล้ว — เปิดใช้งานแพ็ก ' + approved.plan.toUpperCase());
+    }).catch(() => { /* เงียบ — ไม่ทำ UX พัง */ });
+    return () => { cancelled = true; };
+  }, [wsId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** อัปสลิปในแอป → คิวแอดมินยืนยัน (แทนส่ง LINE/อีเมล) */
+  async function uploadSlip(file?: File) {
+    if (!file || !wsId) return;
+    setSlipBusy(true);
+    setSlipMsg(null);
+    const { error } = await submitPaymentSlip({ wsId, plan: selected, cycle, amount: chargeAmount, file });
+    setSlipBusy(false);
+    setSlipMsg(error ? '⚠️ ' + error : '✅ ส่งสลิปแล้ว — แอดมินจะตรวจและเปิดใช้งานให้ (เห็นผลเมื่อรีเฟรชหน้าหลังอนุมัติ)');
+  }
+
+  /** จ่ายผ่าน Stripe (Checkout subscription — ตัดเงินอัตโนมัติทุกงวด) — production เท่านั้น */
+  async function payWithStripe() {
     if (!supabase || !wsId) return;
     setPayBusy(true);
     setPayErr(null);
     try {
-      const { data: res, error } = await supabase.functions.invoke('create-invoice', {
+      const { data: res, error } = await supabase.functions.invoke('stripe-create-checkout', {
         body: { plan: selected, cycle, workspaceId: wsId },
       });
-      if (error || !res?.invoice_url) throw new Error(res?.error ?? error?.message ?? 'สร้างใบชำระเงินไม่สำเร็จ');
-      window.location.href = res.invoice_url as string;
+      if (error || !res?.checkout_url) throw new Error(res?.error ?? error?.message ?? 'สร้างหน้าชำระเงินไม่สำเร็จ');
+      window.location.href = res.checkout_url as string;
     } catch (e) {
       setPayErr((e as Error).message);
       setPayBusy(false);
     }
   }
 
-  /** สมัครตัดเงินอัตโนมัติทุกงวด (auto-renew · Xendit Recurring) — production เท่านั้น */
-  async function subscribeRecurring() {
-    if (!supabase || !wsId) return;
+  /** จ่ายผ่าน Stripe Payment Link (static) — ทางลัดไม่ต้อง deploy edge function
+   *  แนบ client_reference_id=workspaceId + prefilled_email เพื่อให้ webhook map กลับได้ (ถ้าตั้ง)
+   *  method: 'card' (subscription) | 'promptpay' (one-time) — เลือกลิงก์ตามวิธีจ่าย */
+  async function payWithStripeLink(method: 'card' | 'promptpay') {
+    const base = method === 'promptpay' ? PAYMENT.stripePaymentLinkPromptPay : PAYMENT.stripePaymentLinkCard;
+    if (!base) return;
     setPayBusy(true);
-    setPayErr(null);
-    try {
-      const { data: res, error } = await supabase.functions.invoke('create-recurring-plan', {
-        body: { plan: selected, cycle, workspaceId: wsId },
-      });
-      if (error || !res?.action_url) throw new Error(res?.error ?? error?.message ?? 'สมัครตัดเงินอัตโนมัติไม่สำเร็จ');
-      window.location.href = res.action_url as string;
-    } catch (e) {
-      setPayErr((e as Error).message);
-      setPayBusy(false);
-    }
+    let email = '';
+    try { const { data } = await supabase!.auth.getUser(); email = data?.user?.email ?? ''; } catch { /* noop */ }
+    const url = new URL(base);
+    if (wsId) url.searchParams.set('client_reference_id', wsId);
+    if (email) url.searchParams.set('prefilled_email', email);
+    url.searchParams.set('utm_source', 'app');
+    url.searchParams.set('utm_campaign', `billing_${selected}_${cycle}_${method}`);
+    window.location.href = url.toString();
   }
 
   const selectedPlan = PLANS.find(p => p.id === selected)!;
@@ -635,9 +677,17 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             <div className="bill-slip-box">
               <div className="bill-slip-hd">📎 ส่งสลิปหลังโอนเงิน</div>
               <div className="bill-slip-desc">
-                หลังโอนเงินแล้ว กรุณาส่งสลิปพร้อม Workspace ID มาที่ช่องทางด้านล่าง
-                แอดมินจะเปิดใช้งานให้ภายใน 1 ชั่วโมง (วันทำการ)
+                หลังโอนเงินแล้ว อัปสลิปในระบบได้เลย (แนะนำ) — แอดมินตรวจแล้วเปิดใช้งานให้ภายใน 1 ชั่วโมง (วันทำการ)
               </div>
+              {isSupabaseEnabled && (
+                <label className={`bill-slip-upload${slipBusy ? ' busy' : ''}`}>
+                  {slipBusy ? '⏳ กำลังส่งสลิป…' : '📤 อัปสลิปในระบบ (รูป/PDF)'}
+                  <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" hidden disabled={slipBusy || !wsId}
+                    onChange={e => uploadSlip(e.target.files?.[0])} />
+                </label>
+              )}
+              {slipMsg && <div className="bill-slip-msg">{slipMsg}</div>}
+              <div className="bill-slip-or">หรือส่งผ่านช่องทางอื่น:</div>
               <div className="bill-slip-btns">
                 <a
                   className="bill-slip-btn bill-slip-line"
@@ -661,24 +711,39 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
               <span className="bill-amount">{baht(chargeAmount)}</span>
             </div>
 
-            {isSupabaseEnabled && PAYMENT.xenditLive && (
+            {isSupabaseEnabled && PAYMENT.stripeLive && (
               <>
-                <button className="bill-xendit" onClick={payWithXendit} disabled={payBusy || !wsId}>
-                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Xendit — บัตร / PromptPay / e-Wallet'}
+                <button className="bill-xendit" onClick={payWithStripe} disabled={payBusy || !wsId}>
+                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Stripe — บัตรเครดิต/เดบิต · ตัดเงินอัตโนมัติทุกงวด'}
                 </button>
-                {needPayment && PAYMENT.recurringLive && (
-                  <button className="bill-recurring" onClick={subscribeRecurring} disabled={payBusy || !wsId}>
-                    🔁 สมัครตัดเงินอัตโนมัติ ({cycle === 'yearly' ? 'รายปี' : 'รายเดือน'}) — ไม่ต้องจ่ายเองทุกงวด
-                  </button>
-                )}
                 {payErr && <div className="bill-warn">⚠️ {payErr}</div>}
                 <div className="bill-note">
-                  ชำระเงินปลอดภัยผ่าน Xendit — เปิดใช้งานแพ็กอัตโนมัติทันทีเมื่อชำระสำเร็จ
-                  {PAYMENT.recurringLive && ' · ตัดเงินอัตโนมัติยกเลิกได้ทุกเมื่อ'}
+                  ชำระเงินปลอดภัยผ่าน Stripe — เปิดใช้งานแพ็กอัตโนมัติทันทีเมื่อชำระสำเร็จ ·
+                  ตัดเงินอัตโนมัติทุก{cycle === 'yearly' ? 'ปี' : 'เดือน'} ยกเลิกได้ทุกเมื่อ
                 </div>
               </>
             )}
-            {isSupabaseEnabled && !PAYMENT.xenditLive && (
+            {/* ทางลัด: Stripe Payment Link (static) — บัตร (subscription) + PromptPay (one-time) */}
+            {isSupabaseEnabled && !PAYMENT.stripeLive && (PAYMENT.stripePaymentLinkCard || PAYMENT.stripePaymentLinkPromptPay) && (
+              <>
+                {PAYMENT.stripePaymentLinkCard && (
+                  <button className="bill-xendit" onClick={() => payWithStripeLink('card')} disabled={payBusy || !wsId}>
+                    {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายด้วยบัตรเครดิต/เดบิต — ตัดเงินอัตโนมัติทุกงวด'}
+                  </button>
+                )}
+                {PAYMENT.stripePaymentLinkPromptPay && (
+                  <button className="bill-promptpay" onClick={() => payWithStripeLink('promptpay')} disabled={payBusy || !wsId}>
+                    {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '📱 จ่ายด้วย PromptPay QR — ครั้งเดียว'}
+                  </button>
+                )}
+                <div className="bill-note">
+                  ชำระเงินปลอดภัยผ่าน Stripe · บัตร = ตัดอัตโนมัติทุกงวด · PromptPay = จ่ายครั้งเดียว
+                  <br />หลังชำระสำเร็จ ระบบเปิดใช้งานแพ็กให้ (อัตโนมัติเมื่อตั้ง Stripe webhook · ระหว่างนี้แจ้งแอดมิน)
+                </div>
+              </>
+            )}
+            {/* Xendit/Omise = retired (ใช้ Stripe แทน) — เก็บโค้ด adapter ไว้เผื่ออนาคต แต่ไม่แสดงปุ่ม */}
+            {isSupabaseEnabled && !PAYMENT.stripeLive && !PAYMENT.stripePaymentLinkCard && !PAYMENT.stripePaymentLinkPromptPay && (
               <div className="bill-soon">
                 ⏳ ระบบชำระออนไลน์อัตโนมัติกำลังเปิดใช้เร็วๆ นี้ — ระหว่างนี้โอนหรือสแกน QR ด้านบน
                 แล้วส่งสลิป แอดมินเปิดใช้งานให้ภายใน 1 ชม. (วันทำการ)

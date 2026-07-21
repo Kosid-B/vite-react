@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
  * ทุกลิงก์ชี้หน้า /legal (สาธารณะ) พร้อม anchor ของแต่ละส่วน */
 
 export const LEGAL_LINKS: { href: string; label: string }[] = [
+  { href: '/pricing', label: 'สินค้าและราคา' },
   { href: '/legal#company', label: 'ข้อมูลบริษัท' },
   { href: '/legal#privacy', label: 'ความเป็นส่วนตัว' },
   { href: '/legal#cookies', label: 'คุกกี้' },

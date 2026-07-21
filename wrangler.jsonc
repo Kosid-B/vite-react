@@ -25,6 +25,8 @@
   // Custom domain production — ผูกโดเมนกับ Worker (แทน A records → GitHub Pages ที่เป็น legacy)
   // custom_domain: true → Cloudflare สร้าง DNS + edge certificate ให้อัตโนมัติตอน deploy
   // (ต้องมีโซน ceoaithailand.org ในบัญชี Cloudflare เดียวกับ Worker — ดู docs/ops/GO-LIVE-CHECKLIST.md)
+  // ⚠️ เจ้าของโดเมน = Cloudflare Worker เจ้าเดียว · Vercel = PR preview (*.vercel.app) เท่านั้น ห้ามผูก custom domain
+  //    GitHub Pages = เลิกใช้ (ลบ public/CNAME แล้ว) · ดู docs/ops/DOMAIN-OWNERSHIP.md
   "routes": [
     { "pattern": "ceoaithailand.org", "custom_domain": true },
     { "pattern": "www.ceoaithailand.org", "custom_domain": true }

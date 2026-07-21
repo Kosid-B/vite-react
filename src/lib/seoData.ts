@@ -16,6 +16,8 @@ export interface SeoStorefront {
   promo?: string;
   images?: string[];
   phone?: string;
+  rating?: number;        // ค่าเฉลี่ยรีวิวจริง 1..5 (จาก aggregateRating) — emit schema เฉพาะเมื่อมีจริง
+  reviewCount?: number;   // จำนวนรีวิวจริง
 }
 
 export interface SeoData {
@@ -89,6 +91,16 @@ export function storefrontSeo(sf: SeoStorefront, origin: string): SeoData {
   };
   if (sf.phone) business.telephone = sf.phone;
   if (cat) business.knowsAbout = cat;
+  // AggregateRating (rich snippet ดาวใน Google) — เฉพาะเมื่อมีรีวิว "จริง" เท่านั้น (ไม่ปั้นดาวปลอม)
+  if (typeof sf.rating === 'number' && sf.rating >= 1 && sf.rating <= 5 && (sf.reviewCount ?? 0) >= 1) {
+    business.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: sf.rating,
+      reviewCount: sf.reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
 
   const breadcrumb = {
     '@context': 'https://schema.org',

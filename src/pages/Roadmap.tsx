@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { trackAiCall } from '../lib/usage';
-import type { AppData, RoadmapItem, RoadmapQuarter, RoadmapStatus, RoadmapPriority } from '../types';
+import type { AppData, AgentTask, PageId, RoadmapItem, RoadmapQuarter, RoadmapStatus, RoadmapPriority } from '../types';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { withSkillDirectives } from '../lib/skillDirectives';
+import { applyHarvestToData } from '../lib/taskHarvest';
 
 interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
+  onNavigate?: (p: PageId) => void;
 }
 
 const QUARTERS: RoadmapQuarter[] = ['Q1', 'Q2', 'Q3', 'Q4'];
@@ -25,9 +27,10 @@ const PRIORITY_META: Record<RoadmapPriority, { label: string; color: string }> =
   nice:   { label: 'Nice to Have', color: '#6b3fa0' },
 };
 
-export default function Roadmap({ data, onUpdate }: Props) {
+export default function Roadmap({ data, onUpdate, onNavigate }: Props) {
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [actionMsg, setActionMsg] = useState<{ id: string; text: string } | null>(null);
 
   const items = data.roadmap ?? [];
 
@@ -87,6 +90,39 @@ export default function Roadmap({ data, onUpdate }: Props) {
     } finally {
       setGeneratingId(null);
     }
+  }
+
+  /* ── เอาผล AI ไปทำต่อ (Navigation) ── */
+  // มอบงานให้ทีม AI: สร้าง task ให้เจ้าของ feature แล้วพาไปหน้า บริษัท AI
+  function assignToTeam(item: RoadmapItem) {
+    const c = data.aiCompany;
+    if (!c) { setActionMsg({ id: item.id, text: 'ยังไม่มีทีม AI — ไปตั้งทีมที่หน้า บริษัท AI ก่อน' }); return; }
+    const agent = c.agents.find(a => a.role === item.owner) ?? c.agents[0];
+    if (!agent) { setActionMsg({ id: item.id, text: 'ยังไม่มีเอเจนต์ในทีม' }); return; }
+    const task: AgentTask = {
+      id: 'rm-task-' + Date.now().toString(36),
+      agentId: agent.id,
+      title: `Roadmap: ${item.title} (${item.quarter}/${item.year})`,
+      detail: item.description + (item.aiOutput ? `\n\n— AI Insight —\n${item.aiOutput}` : ''),
+      status: 'queued',
+      requiresApproval: true,
+    };
+    onUpdate({ ...data, aiCompany: { ...c, tasks: [task, ...c.tasks], running: true } });
+    onNavigate?.('aicompany');
+  }
+
+  // เก็บผลวิเคราะห์เป็นข้อมูลจริง (ทรัพยากร/การเงิน) แล้วพาไปหน้า ทรัพยากร
+  function harvestToData(item: RoadmapItem) {
+    if (!item.aiOutput) return;
+    const agentId = data.aiCompany?.agents.find(a => a.role === item.owner)?.id;
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: next, added } = applyHarvestToData(data, item.aiOutput, agentId, today);
+    if (added.finance + added.resources === 0) {
+      setActionMsg({ id: item.id, text: 'ไม่พบตัวเลขการเงิน/ทรัพยากรที่ชัดเจนในผลวิเคราะห์ (ต้องมี ฿/บาท + คำบ่งชี้)' });
+      return;
+    }
+    onUpdate(next);
+    onNavigate?.('resources');
   }
 
   const doneCount = items.filter(i => i.status === 'done').length;
@@ -199,6 +235,17 @@ export default function Roadmap({ data, onUpdate }: Props) {
                       <div className="roadmap-ai-out">
                         <div className="roadmap-ai-out-hd">AI Insight</div>
                         <div className="roadmap-ai-out-body">{item.aiOutput}</div>
+                        {/* เอาผลไปทำต่อ — นำทางไปหน้าที่ลงมือได้จริง */}
+                        <div className="roadmap-ai-actions">
+                          <div className="roadmap-ai-actions-hd">เอาผลไปทำต่อ →</div>
+                          <button className="roadmap-act-btn" onClick={() => assignToTeam(item)}>
+                            🏭 มอบงานให้ทีม AI
+                          </button>
+                          <button className="roadmap-act-btn" onClick={() => harvestToData(item)}>
+                            📥 เก็บผลเป็นข้อมูล (ทรัพยากร/การเงิน)
+                          </button>
+                        </div>
+                        {actionMsg?.id === item.id && <div className="roadmap-act-msg">{actionMsg.text}</div>}
                       </div>
                     )}
                   </div>

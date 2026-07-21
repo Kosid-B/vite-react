@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { getStorefront, isFeatured, listStorefronts, type Storefront, type StorefrontKind } from '../lib/storefront';
+import { getStorefront, isFeatured, listStorefronts, listReviews, submitReview, reviewableOrders, type Storefront, type StorefrontKind, type StorefrontReview, type ReviewableOrder } from '../lib/storefront';
+import { isSupabaseEnabled } from '../lib/supabase';
 import { countLeads, submitLead, type LeadKind } from '../lib/leads';
 import { track } from '../lib/analytics';
 import { DBD_SECTORS } from '../data/dbd';
 import { applySeo, siteOrigin } from '../lib/seo';
 import { storefrontSeo, directorySeo, directoryItemList, sectorLabel } from '../lib/seoData';
+import { STARTER_LISTINGS } from '../lib/starterStorefronts';
 
 /* ===== Marketplace M1 — หน้าสาธารณะ (ไม่ต้องล็อกอิน) =====
  * /b        → สารบัญธุรกิจ จัดกลุ่มตามหมวด DBD
@@ -35,12 +37,29 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
   const [leadDraft, setLeadDraft] = useState({ name: '', contact: '', note: '' });
   const [leadMsg, setLeadMsg] = useState<string | null>(null);
   const [leadSent, setLeadSent] = useState(false);
+  const [reviews, setReviews] = useState<StorefrontReview[]>([]);
+  const [rvOrders, setRvOrders] = useState<ReviewableOrder[]>([]);
+  const [rvForm, setRvForm] = useState<{ rating: number; text: string; name: string; orderId: string } | null>(null);
+  const [rvMsg, setRvMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const s = decodeURIComponent(slug);
     getStorefront(s).then(setSf).catch(() => setSf(null));
     countLeads(s).then(setInterested).catch(() => {});
+    listReviews(s).then(setReviews).catch(() => {});
+    reviewableOrders(s).then(setRvOrders).catch(() => setRvOrders([]));
   }, [slug]);
+
+  async function sendReview() {
+    if (!sf || !rvForm) return;
+    setRvMsg(null);
+    const res = await submitReview({ slug: sf.slug, rating: rvForm.rating, text: rvForm.text, reviewerName: rvForm.name, orderId: rvForm.orderId });
+    if (!res.ok) { setRvMsg('⚠️ ' + (res.error || 'ส่งรีวิวไม่สำเร็จ')); return; }
+    track('review_submitted', { shop: sf.slug, rating: rvForm.rating });
+    setRvForm(null);
+    listReviews(sf.slug).then(setReviews).catch(() => {});
+    getStorefront(sf.slug).then(setSf).catch(() => {});   // refresh ค่าเฉลี่ย
+  }
 
   // SEO: อัปเดต title/meta/canonical/OG + JSON-LD ต่อร้าน (client-side; server ทำ inject แล้วบน production)
   useEffect(() => {
@@ -75,6 +94,13 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
       <div className="pub-card">
         <div className="pub-dbd">{sectorLabel(sf.dbd)}</div>
         <h1 className="pub-name">{sf.name}</h1>
+        {typeof sf.rating === 'number' && (sf.reviewCount ?? 0) > 0 && (
+          <div className="pub-rating" title={`${sf.rating} จาก 5 · ${sf.reviewCount} รีวิว`}>
+            <span className="pub-rating-stars">{'★'.repeat(Math.round(sf.rating))}{'☆'.repeat(5 - Math.round(sf.rating))}</span>
+            <span className="pub-rating-num">{sf.rating.toFixed(1)}</span>
+            <span className="pub-rating-count">({sf.reviewCount} รีวิว)</span>
+          </div>
+        )}
         {sf.vp && <p className="pub-vp">“{sf.vp}”</p>}
         {sf.promo && <div className="pub-promo">📣 {sf.promo}</div>}
         {sf.images.length > 0 && (
@@ -96,6 +122,52 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
             </ul>
           </>
         )}
+
+        {/* ⭐ รีวิวจริง — สะสมเป็น trust + AggregateRating SEO */}
+        <div className="pub-reviews">
+          <div className="pub-sec-hd">รีวิวจากลูกค้า {reviews.length > 0 && `(${reviews.length})`}</div>
+          {reviews.length === 0 && <div className="pub-rv-empty">ยังไม่มีรีวิว — เป็นคนแรกที่รีวิวร้านนี้</div>}
+          {reviews.slice(0, 8).map(r => (
+            <div key={r.id} className="pub-rv-item">
+              <div className="pub-rv-top">
+                <span className="pub-rv-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                <span className="pub-rv-name">{r.reviewerName || 'ลูกค้า'}</span>
+                {r.at && <span className="pub-rv-date">{r.at}</span>}
+              </div>
+              {r.text && <div className="pub-rv-text">{r.text}</div>}
+            </div>
+          ))}
+          {isSupabaseEnabled && rvOrders.length > 0 && (rvForm ? (
+            <div className="pub-rv-form">
+              <div className="pub-rv-verified">✅ ลูกค้าที่ปิดดีลกับร้านนี้แล้ว</div>
+              {rvOrders.length > 1 && (
+                <select value={rvForm.orderId} onChange={e => setRvForm({ ...rvForm, orderId: e.target.value })}>
+                  {rvOrders.map(o => <option key={o.id} value={o.id}>{o.title}</option>)}
+                </select>
+              )}
+              <div className="pub-rv-stars-pick">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <button key={n} className={`pub-rv-star ${n <= rvForm.rating ? 'on' : ''}`}
+                    onClick={() => setRvForm({ ...rvForm, rating: n })}>★</button>
+                ))}
+              </div>
+              <input placeholder="ชื่อของคุณ (ไม่บังคับ)" maxLength={60} value={rvForm.name}
+                onChange={e => setRvForm({ ...rvForm, name: e.target.value })} />
+              <textarea placeholder="เล่าประสบการณ์กับร้านนี้" maxLength={400} rows={2} value={rvForm.text}
+                onChange={e => setRvForm({ ...rvForm, text: e.target.value })} />
+              {rvMsg && <div className="skm-msg">{rvMsg}</div>}
+              <div className="pub-rv-actions">
+                <button className="pub-rv-send" onClick={sendReview}>ส่งรีวิว</button>
+                <button className="pub-rv-cancel" onClick={() => { setRvForm(null); setRvMsg(null); }}>ยกเลิก</button>
+              </div>
+            </div>
+          ) : (
+            <button className="pub-rv-cta" onClick={() => setRvForm({ rating: 5, text: '', name: '', orderId: rvOrders[0].id })}>✍️ เขียนรีวิว (ลูกค้าที่ยืนยันแล้ว)</button>
+          ))}
+          {isSupabaseEnabled && rvOrders.length === 0 && (
+            <div className="pub-rv-gate">🔒 รีวิวได้เฉพาะลูกค้าที่ปิดดีล/ออเดอร์กับร้านนี้แล้ว — เพื่อให้ทุกรีวิวมาจากลูกค้าตัวจริง</div>
+          )}
+        </div>
 
         {/* 🧪 Pre-order Validation — ลูกค้าจริงยกมือก่อนร้านลงทุนสร้าง */}
         <div className="pub-lead-box">
@@ -234,6 +306,24 @@ export function PublicDirectoryPage() {
       </div>
 
       {list === null && <div className="pub-loading">กำลังโหลด…</div>}
+
+      {/* 🏢 บริการจากผู้พัฒนาแพลตฟอร์ม (B. Training) — seed จริง กัน /b ว่าง (โปร่งใส ไม่ใช่ร้านปลอม) */}
+      {!q && !sector && (
+        <div className="pub-starter-sec">
+          <div className="pub-starter-hd">🏢 บริการจากผู้พัฒนาแพลตฟอร์ม <span>B. Training Consultant · ที่ปรึกษา 20+ ปี</span></div>
+          <div className="pub-dir-grid">
+            {STARTER_LISTINGS.map(l => (
+              <a key={l.id} className="pub-dir-card pub-starter-card"
+                href={l.href} target={l.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
+                <div className="pub-dbd">{l.category}</div>
+                <div className="pub-dir-name">{l.name}</div>
+                <div className="pub-dir-promo">“{l.vp}”</div>
+                <div className="pub-dir-desc">{l.services.join(' · ')}</div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ⭐ พื้นที่โฆษณา — ร้านแนะนำ */}
       {featured.length > 0 && (

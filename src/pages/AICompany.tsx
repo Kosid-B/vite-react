@@ -12,6 +12,7 @@ import Integrations from '../components/Integrations';
 import type { Auction } from '../lib/auctions';
 import { trackSkillPurchase } from '../lib/skillStats';
 import { withSkillDirectives } from '../lib/skillDirectives';
+import { applyHarvestToData } from '../lib/taskHarvest';
 import { COMPANY_LEVELS, XP_PER_TIER, getCompanyLevel } from '../lib/gamification';
 import { hasAdminFullAccess } from '../lib/access';
 import DBDSelect from '../components/DBDSelect';
@@ -201,8 +202,11 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
         impact: String(a.impact ?? ''),
         status: 'pending' as ApprovalStatus,
       }));
-      patch({ tasks: [...newTasks, ...c.tasks], approvals: [...newApprovals, ...c.approvals] });
-      setPlanMsg(`✓ CEO วางแผนเพิ่ม ${newTasks.length} งาน${newApprovals.length ? ` · ${newApprovals.length} เรื่องรออนุมัติ` : ''}`);
+      // เปิด running เพื่อให้ heartbeat "ลงมือทำ" งานที่เพิ่งมอบหมายจริง (agent-run) → ผลทยอยขึ้นบอร์ด
+      // (heartbeat ข้ามงานที่ต้องอนุมัติก่อน จึงปลอดภัย) — แก้ปัญหา "มอบงานแล้วไม่เห็นผลลัพธ์"
+      const willRun = newTasks.some((t: { status: TaskStatus }) => t.status === 'queued');
+      patch({ tasks: [...newTasks, ...c.tasks], approvals: [...newApprovals, ...c.approvals], running: c.running || willRun });
+      setPlanMsg(`✓ CEO วางแผนเพิ่ม ${newTasks.length} งาน${newApprovals.length ? ` · ${newApprovals.length} เรื่องรออนุมัติ` : ''}${willRun ? ' · ▶ ทีมเริ่มลงมือแล้ว ผลจะทยอยขึ้นในบอร์ด' : ''}`);
     } catch (e) {
       setPlanMsg('✕ วางแผนไม่สำเร็จ: ' + ((e as Error).message || 'error') + ' — ตรวจว่า deploy ai-plan + ตั้ง ANTHROPIC_API_KEY แล้ว');
     } finally {
@@ -264,6 +268,18 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     } finally {
       setRunningTaskIds(prev => { const s = new Set(prev); s.delete(taskId); return s; });
     }
+  }
+
+  // เก็บผลงาน C-Level → เติมข้อมูลทรัพยากร (คำขอ pending) + การเงิน อัตโนมัติ
+  function harvestTask(output: string | undefined, agentId: string) {
+    const { data: next, added } = applyHarvestToData(data, output ?? '', agentId, new Date().toISOString().slice(0, 10));
+    counter.current += 1;
+    if (!added.finance && !added.resources) {
+      setFeed(prev => [{ id: counter.current, time: nowTime(), text: '📥 ไม่พบตัวเลขการเงิน/ทรัพยากรที่ชัดเจนในผลงานนี้', color: '#c44b2b' }, ...prev].slice(0, 40));
+      return;
+    }
+    onUpdate(next);
+    setFeed(prev => [{ id: counter.current, time: nowTime(), text: `📥 เก็บผลงานเป็นข้อมูล: +${added.resources} คำขอทรัพยากร (รออนุมัติ), +${added.finance} รายการการเงิน`, color: '#2d6a4f' }, ...prev].slice(0, 40));
   }
 
   // Keep ref in sync so heartbeat always calls latest version
@@ -1922,6 +1938,10 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                       <div className="ai-task-output">
                         {t.executedAt && <div className="ai-task-output-meta">{ag?.role} · {t.executedAt}</div>}
                         <div className="ai-task-output-body">{t.output}</div>
+                        <button className="ai-task-harvest" onClick={() => harvestTask(t.output, t.agentId)}
+                          title="ดึงตัวเลขการเงิน/ทรัพยากรจากผลงานนี้ → สร้างคำขอทรัพยากร (รออนุมัติ) + รายการการเงิน">
+                          📥 เก็บเป็นข้อมูล (ทรัพยากร/การเงิน)
+                        </button>
                       </div>
                     )}
                     <div className="ai-task-foot">
@@ -2059,7 +2079,16 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       {/* ===== 🧠 CEO เลือก Skill พัฒนาธุรกิจ (agentic) ===== */}
       <SkillAdvisor
         recs={recommendSkills(data, [...SKILL_CATALOG, ...adminSkillList])}
-        onPick={sk => { setMktCategory(sk.category); setBuyConfirm(sk); }}
+        onPick={sk => {
+          setMktCategory(sk.category);
+          setMktTier(0);   // ล้างตัวกรอง tier กันการ์ดที่เลือกถูกซ่อน
+          setBuyConfirm(sk);
+          setMktMsg(`👇 CEO เลือก “${sk.name}” ให้แล้ว — เลือกวิธีชำระเงินที่การ์ดด้านล่างเพื่อรับ Skill`);
+          // เลื่อนไปที่การ์ด Skill ในตลาด (reaction อยู่คนละส่วนกับปุ่ม — ไม่งั้นดูเหมือนกดแล้วเงียบ)
+          setTimeout(() => {
+            document.getElementById(`skm-card-${sk.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 80);
+        }}
       />
 
       {/* ===== 🛒 Skill Marketplace ===== */}
@@ -2252,7 +2281,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                 const official = !!(sk as SkillEntry).official;
                 const valueNote = (sk as SkillEntry).valueNote;
                 return (
-                  <div key={sk.id} className={`skm-card${owned ? ' owned' : ''}${isConfirm ? ' confirm' : ''}${official ? ' official' : ''}`}
+                  <div key={sk.id} id={`skm-card-${sk.id}`} className={`skm-card${owned ? ' owned' : ''}${isConfirm ? ' confirm' : ''}${official ? ' official' : ''}`}
                     style={{ '--card-color': catMeta.color } as React.CSSProperties}>
                     <div className="skm-card-top">
                       <span className="skm-card-icon">{sk.icon}</span>

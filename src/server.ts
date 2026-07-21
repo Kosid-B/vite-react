@@ -21,13 +21,15 @@ interface Env {
 async function fetchStorefront(slug: string, env: Env): Promise<SeoStorefront | null> {
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return null;
   const q = `${env.SUPABASE_URL}/rest/v1/storefronts?slug=eq.${encodeURIComponent(slug)}` +
-    `&published=eq.true&select=slug,name,dbd,kind,vp,description,promo,images,phone&limit=1`;
+    `&published=eq.true&select=slug,name,dbd,kind,vp,description,promo,images,phone,rating,review_count&limit=1`;
   const res = await fetch(q, {
     headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SUPABASE_ANON_KEY}` },
   });
   if (!res.ok) return null;
-  const rows = (await res.json()) as SeoStorefront[];
-  return Array.isArray(rows) && rows[0] ? rows[0] : null;
+  const rows = (await res.json()) as Array<SeoStorefront & { review_count?: number }>;
+  const row = Array.isArray(rows) && rows[0] ? rows[0] : null;
+  // map review_count (snake) → reviewCount (camel) เพื่อให้ storefrontSeo แนบ AggregateRating
+  return row ? { ...row, reviewCount: row.review_count } : null;
 }
 
 /** รายชื่อร้านที่เผยแพร่ (slug + name + updatedAt) — ใช้ทำ sitemap และ ItemList หน้าตลาด */

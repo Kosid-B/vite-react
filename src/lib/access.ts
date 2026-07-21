@@ -43,9 +43,16 @@ let adminFullAccess = false;
 export function setAdminFullAccess(on: boolean): void { adminFullAccess = on; }
 export function hasAdminFullAccess(): boolean { return adminFullAccess; }
 
+/* ===== Guest mode (ลองก่อนสมัคร) =====
+ * ผู้เยี่ยมชม production ที่ยังไม่ล็อกอิน กด "ลองใช้เลย" → เข้าแอปด้วย localStorage (เหมือน local mode)
+ * ปลดล็อกทุกฟีเจอร์ให้สัมผัสคุณค่าก่อนสมัคร (ลด friction #1 ที่ทำให้ conversion = 0) */
+let guestFullAccess = false;
+export function setGuestFullAccess(on: boolean): void { guestFullAccess = on; }
+export function hasGuestFullAccess(): boolean { return guestFullAccess; }
+
 /** Plan rank จริงของ user ณ ขณะนี้ — -1 หมายถึงหมดอายุ/ไม่มี subscription */
 export function effectiveRank(data: AppData): number {
-  if (adminFullAccess) return PLAN_RANK['scale']; // แอดมินระบบ = Scale ฟรีเสมอ
+  if (adminFullAccess || guestFullAccess) return PLAN_RANK['scale']; // แอดมิน / ผู้ทดลอง (guest) = Scale เต็ม
   const { plan, status, trialEndDate, currentPeriodEnd } = data.subscription;
 
   if (status === 'active') {
@@ -63,7 +70,7 @@ export function effectiveRank(data: AppData): number {
 
 /** subscription หมดอายุหรือยัง */
 export function isExpired(data: AppData): boolean {
-  if (adminFullAccess) return false; // แอดมินไม่มีวันหมดอายุ
+  if (adminFullAccess || guestFullAccess) return false; // แอดมิน / ผู้ทดลอง ไม่นับหมดอายุ
   const { status, trialEndDate, currentPeriodEnd } = data.subscription;
   if (status === 'trial') return !trialEndDate || new Date(trialEndDate) < new Date();
   if (status === 'active') return !!(currentPeriodEnd && new Date(currentPeriodEnd) < new Date());

@@ -1,0 +1,106 @@
+<!-- ============================================================================
+  b-tctraining.com → ceoaithailand.org  ·  Bridge CTA Cards (6 หน้า ISO ยอดนิยม)
+  ----------------------------------------------------------------------------
+  ทำไม: GA4 (ชื่อโฮสต์ www.b-tctraining.com) ยืนยันว่าหน้า ISO/มอก. มีคนไทย organic
+        เข้าอ่าน ~48/เดือน ช่วงเช้า แต่ "กลับมา 0" + ไม่มีสะพานไปเครื่องมือ = leak ใหญ่สุด
+  แก้: วางการ์ดนี้ "กลาง–ท้ายบทความ" ของแต่ละหน้า (convert ดีสุด) → ส่งคนเข้า /start
+        ที่มี guest mode + email capture รออยู่
+
+  วิธีวาง (R-Web CMS):
+    1) เปิดบทความ → สลับตัวเขียนเป็นโหมด "HTML / โค้ด"
+    2) ก๊อปเฉพาะ <div>...</div> ของหน้านั้น (แต่ละบล็อกมีป้ายกำกับ) ไปวางกลาง/ท้ายเนื้อหา
+    3) บันทึก · เสร็จ (ไม่ต้องแก้อะไร — ลิงก์ + tracking ฝังครบ)
+
+  Tracking (ฝังใน onclick แล้ว · try/catch ปลอดภัย ไม่พังหน้าถ้าไม่มี script):
+    - GA4:  gtag('event','bridge_click',{link_id:'<หน้า>'})   → GA4 → เทียบ link_id ว่าหน้าไหน convert ดีสุด
+    - LINE: _lt(...'StartClick')                              → LINE Ads conversion
+    - UTM:  utm_source=btctraining · utm_medium=content_card · utm_campaign=<หน้า>
+  ============================================================================ -->
+
+
+<!-- ===== [1] หน้า ISO 22301 / BCP (แผนความต่อเนื่องธุรกิจ) ================= -->
+<div style="margin:26px 0;background:linear-gradient(135deg,#0b1220,#0f2233);border:1px solid #164e63;border-radius:16px;padding:22px;color:#fff;display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-family:inherit">
+  <div style="flex:1;min-width:240px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1px;color:#22d3ee">CEO AI THAILAND · เครื่องมือฟรี</div>
+    <div style="font-size:19px;font-weight:800;margin:6px 0 4px">อยากรู้ว่าองค์กรพร้อมทำ ISO 22301 / BCP กี่ %?</div>
+    <div style="font-size:14px;color:#94a3b8">ให้ AI ช่วยประเมินความพร้อม + บอกว่ายังขาดเอกสารอะไรก่อน audit — ออกแบบโดยที่ปรึกษาไทย 20 ปี · เริ่มฟรี ไม่ต้องใช้บัตร</div>
+  </div>
+  <a href="https://ceoaithailand.org/start?ref=btctraining&utm_source=btctraining&utm_medium=content_card&utm_campaign=iso22301" target="_blank" rel="noopener"
+     onclick="try{window.gtag&&gtag('event','bridge_click',{link_id:'iso22301'});}catch(e){}try{window._lt&&_lt('send','cv',{type:'StartClick'},['afc2c605-4307-45cc-b400-35bba3844d21']);}catch(e){}"
+     style="flex:none;background:#f59e0b;color:#020617;font-weight:800;font-size:16px;text-decoration:none;padding:14px 26px;border-radius:12px">ประเมินฟรี →</a>
+</div>
+
+
+<!-- ===== [2] หน้า IMS (บูรณาการระบบบริหาร / Integrated Management System) === -->
+<div style="margin:26px 0;background:linear-gradient(135deg,#0b1220,#0f2233);border:1px solid #164e63;border-radius:16px;padding:22px;color:#fff;display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-family:inherit">
+  <div style="flex:1;min-width:240px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1px;color:#22d3ee">CEO AI THAILAND · เครื่องมือฟรี</div>
+    <div style="font-size:19px;font-weight:800;margin:6px 0 4px">รวมหลายมาตรฐาน (IMS) ให้เป็นระบบเดียว — เช็กความพร้อมฟรี</div>
+    <div style="font-size:14px;color:#94a3b8">AI ช่วยไล่เอกสารที่ทับซ้อน/ที่ยังขาด ของ ISO 9001·14001·45001 ในที่เดียว — จากประสบการณ์ที่ปรึกษา 20 ปี · เริ่มฟรี</div>
+  </div>
+  <a href="https://ceoaithailand.org/start?ref=btctraining&utm_source=btctraining&utm_medium=content_card&utm_campaign=ims" target="_blank" rel="noopener"
+     onclick="try{window.gtag&&gtag('event','bridge_click',{link_id:'ims'});}catch(e){}try{window._lt&&_lt('send','cv',{type:'StartClick'},['afc2c605-4307-45cc-b400-35bba3844d21']);}catch(e){}"
+     style="flex:none;background:#f59e0b;color:#020617;font-weight:800;font-size:16px;text-decoration:none;padding:14px 26px;border-radius:12px">เช็กฟรี →</a>
+</div>
+
+
+<!-- ===== [3] หน้า ฝึกอบรม / Training =================================== -->
+<div style="margin:26px 0;background:linear-gradient(135deg,#0b1220,#0f2233);border:1px solid #164e63;border-radius:16px;padding:22px;color:#fff;display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-family:inherit">
+  <div style="flex:1;min-width:240px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1px;color:#22d3ee">CEO AI THAILAND · เครื่องมือฟรี</div>
+    <div style="font-size:19px;font-weight:800;margin:6px 0 4px">อบรมแล้ว ลงมือทำเอกสารจริงต่อเลย — ด้วย AI</div>
+    <div style="font-size:14px;color:#94a3b8">เปลี่ยนความรู้จากคอร์สเป็นเอกสารระบบที่ยื่นได้จริง มี AI ช่วยร่าง + เช็กความพร้อมก่อน audit · เริ่มฟรี ไม่ต้องใช้บัตร</div>
+  </div>
+  <a href="https://ceoaithailand.org/start?ref=btctraining&utm_source=btctraining&utm_medium=content_card&utm_campaign=training" target="_blank" rel="noopener"
+     onclick="try{window.gtag&&gtag('event','bridge_click',{link_id:'training'});}catch(e){}try{window._lt&&_lt('send','cv',{type:'StartClick'},['afc2c605-4307-45cc-b400-35bba3844d21']);}catch(e){}"
+     style="flex:none;background:#f59e0b;color:#020617;font-weight:800;font-size:16px;text-decoration:none;padding:14px 26px;border-radius:12px">ลองฟรี →</a>
+</div>
+
+
+<!-- ===== [4] หน้า ที่ปรึกษา / Consultant =============================== -->
+<div style="margin:26px 0;background:linear-gradient(135deg,#0b1220,#0f2233);border:1px solid #164e63;border-radius:16px;padding:22px;color:#fff;display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-family:inherit">
+  <div style="flex:1;min-width:240px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1px;color:#22d3ee">CEO AI THAILAND · เครื่องมือฟรี</div>
+    <div style="font-size:19px;font-weight:800;margin:6px 0 4px">ยังไม่พร้อมจ้างที่ปรึกษาเต็ม? เริ่มด้วยเครื่องมือประเมินฟรี</div>
+    <div style="font-size:14px;color:#94a3b8">รู้จุดที่ต้องแก้ก่อนคุยกับที่ปรึกษา — AI ที่รวมประสบการณ์ที่ปรึกษาไทย 20 ปี ช่วยประเมินให้ · เริ่มฟรี ไม่ต้องใช้บัตร</div>
+  </div>
+  <a href="https://ceoaithailand.org/start?ref=btctraining&utm_source=btctraining&utm_medium=content_card&utm_campaign=consultant" target="_blank" rel="noopener"
+     onclick="try{window.gtag&&gtag('event','bridge_click',{link_id:'consultant'});}catch(e){}try{window._lt&&_lt('send','cv',{type:'StartClick'},['afc2c605-4307-45cc-b400-35bba3844d21']);}catch(e){}"
+     style="flex:none;background:#f59e0b;color:#020617;font-weight:800;font-size:16px;text-decoration:none;padding:14px 26px;border-radius:12px">เริ่มฟรี →</a>
+</div>
+
+
+<!-- ===== [5] หน้า PDPA (คุ้มครองข้อมูลส่วนบุคคล) ======================= -->
+<div style="margin:26px 0;background:linear-gradient(135deg,#0b1220,#0f2233);border:1px solid #164e63;border-radius:16px;padding:22px;color:#fff;display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-family:inherit">
+  <div style="flex:1;min-width:240px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1px;color:#22d3ee">CEO AI THAILAND · เครื่องมือฟรี</div>
+    <div style="font-size:19px;font-weight:800;margin:6px 0 4px">ทำเอกสาร PDPA ให้ครบ ไม่ตกหล่น — ด้วย AI</div>
+    <div style="font-size:14px;color:#94a3b8">AI ช่วยไล่เช็กนโยบาย/บันทึก/เอกสารที่ PDPA ต้องมี + ร่างให้ — ออกแบบโดยที่ปรึกษาไทย 20 ปี · เริ่มฟรี ไม่ต้องใช้บัตร</div>
+  </div>
+  <a href="https://ceoaithailand.org/start?ref=btctraining&utm_source=btctraining&utm_medium=content_card&utm_campaign=pdpa" target="_blank" rel="noopener"
+     onclick="try{window.gtag&&gtag('event','bridge_click',{link_id:'pdpa'});}catch(e){}try{window._lt&&_lt('send','cv',{type:'StartClick'},['afc2c605-4307-45cc-b400-35bba3844d21']);}catch(e){}"
+     style="flex:none;background:#f59e0b;color:#020617;font-weight:800;font-size:16px;text-decoration:none;padding:14px 26px;border-radius:12px">เริ่มฟรี →</a>
+</div>
+
+
+<!-- ===== [6] หน้า BMC (Business Model Canvas / แผนธุรกิจ) ============== -->
+<div style="margin:26px 0;background:linear-gradient(135deg,#0b1220,#0f2233);border:1px solid #164e63;border-radius:16px;padding:22px;color:#fff;display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-family:inherit">
+  <div style="flex:1;min-width:240px">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1px;color:#22d3ee">CEO AI THAILAND · เครื่องมือฟรี</div>
+    <div style="font-size:19px;font-weight:800;margin:6px 0 4px">ทำ Business Model Canvas + แผนธุรกิจ ด้วยทีม AI ฟรี</div>
+    <div style="font-size:14px;color:#94a3b8">ให้ทีม AI (CEO/การตลาด/การเงิน) ช่วยร่าง BMC + วิเคราะห์ธุรกิจ แล้ววัดผลจริง — เริ่มฟรี ไม่ต้องใช้บัตร</div>
+  </div>
+  <a href="https://ceoaithailand.org/start?ref=btctraining&utm_source=btctraining&utm_medium=content_card&utm_campaign=bmc" target="_blank" rel="noopener"
+     onclick="try{window.gtag&&gtag('event','bridge_click',{link_id:'bmc'});}catch(e){}try{window._lt&&_lt('send','cv',{type:'StartClick'},['afc2c605-4307-45cc-b400-35bba3844d21']);}catch(e){}"
+     style="flex:none;background:#f59e0b;color:#020617;font-weight:800;font-size:16px;text-decoration:none;padding:14px 26px;border-radius:12px">เริ่มฟรี →</a>
+</div>
+
+
+<!-- ============================================================================
+  วัดผลใน GA4 (หลังวางครบ 1–2 สัปดาห์):
+    รายงาน Realtime/Events → event "bridge_click" → แยกตาม parameter "link_id"
+    → หน้าไหน click เยอะสุด = วางถูกจุด · เอา budget/เวลาไปเสริมหน้านั้น
+    เทียบต่อ: /start (ceoaithailand) → guest → email capture → signup  (funnel เดียวกัน)
+  หมายเหตุ: การ์ดพื้นเข้ม = ตั้งใจให้เด่นตัดกับบทความพื้นสว่าง (ดึงสายตา · Von Restorff)
+            ถ้าอยากได้โทนสว่างเข้าธีมเนื้อหา บอกได้ ทำเวอร์ชัน light ให้
+  ============================================================================ -->

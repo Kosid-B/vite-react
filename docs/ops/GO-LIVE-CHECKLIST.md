@@ -8,6 +8,25 @@
 
 ---
 
+## 0. สถานะ verified สด (2026-07-11 — ตรวจ prod `waigsnxhrlwtiotspaim` ผ่าน MCP)
+
+| ด้าน | สถานะ | หลักฐาน |
+|---|---|---|
+| Domain (root + www + cert) | ✅ | ผูก custom_domain ใน `wrangler.jsonc` · เปิด HTTPS ได้ |
+| Email (Resend SPF/DKIM/DMARC) | ✅ | verified เขียวครบ |
+| **DB — RLS** | ✅ | **28 ตาราง RLS enabled ครบ** (มี policy ทุกตาราง ยกเว้น `handoff_nonces` = deny-all by design) |
+| **DB — Security advisor** | ✅ | **0 defect** (1 lint = `handoff_nonces` RLS-no-policy ตั้งใจ · service_role bypass) |
+| **DB — Grant matrix** | ✅ | 13 RPC ถูกครบ (sensitive anon=false/auth=true) |
+| **DB — Performance advisor** | ✅ | เหลือแค่ INFO (unused index = pre-launch · FK ไม่มี index บางตัว — ไม่บล็อก) |
+| **Edge functions** | ✅ | **15 ฟังก์ชัน deployed + ACTIVE** (ai-assist, ai-plan, agent-run, create-invoice, xendit-webhook, sheets-oauth/sync, delete-account, crons) |
+| Migration ledger | ✅ | prod = repo (`0001–0015, 0018–0029`) |
+| **Supabase Auth redirect URL** | ⏳ | **ยังต้องตั้งใน dashboard** (ดู §3) — ด่านสุดท้ายที่ทำผ่าน MCP ไม่ได้ |
+| Payment (Xendit) | ⏳ | โค้ด/edge fn พร้อม · gate `xenditLive=false` (รอ KYC) |
+
+> **สรุป:** backend/DB/edge = **พร้อม production** (verified) · เหลือ **Auth redirect URL** (ทำใน Supabase dashboard 5 นาที) เป็นด่านเดียวที่บล็อกการ login จริง · Xendit รอ KYC (payments gate ปิดอยู่ ปลอดภัย)
+
+---
+
 ## 1. Domain routing → ผูกโดเมนกับ Worker (แทน A records เดิม)
 
 `wrangler.jsonc` ยังไม่มี `routes` และ `public/CNAME` เป็นของ GitHub Pages เดิม → ต้องผูกโดเมนกับ Worker แบบใดแบบหนึ่ง:

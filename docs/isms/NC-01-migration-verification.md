@@ -20,7 +20,7 @@
 |---|---|---|---|
 | ceo-ai-thailand-**dev** | `oudykxmtrnjeskglaluh` | ACTIVE | เป้าหมาย apply/verify |
 | tis-automate | `galtbbkcddugnsfkgyqm` | **INACTIVE** | ตรวจสถานะไม่ได้จนกว่าจะ resume |
-| **production** | `waigsnxhrlwtiotspaim` | **ไม่อยู่ใน MCP** | **ตรวจจากที่นี่ไม่ได้ — ต้องใช้สิทธิ์ prod แยก** |
+| **production** | `waigsnxhrlwtiotspaim` | ACTIVE_HEALTHY | **verified สด 2026-07-10** (org `bgvyelbcbxhzzfrzuqnh` เชื่อม MCP แล้ว — ดู §5b) |
 
 **สถานะ dev ก่อนแก้:** migration ledger มีแค่ **4 รายการ** (0001, 0002+0003, 0005, 0023) · **5 ตาราง** → พิสูจน์ว่า "0001–0012 applied แล้ว" **ไม่จริงบน dev**
 
@@ -49,8 +49,25 @@ apply migration ที่ขาดผ่าน MCP `apply_migration` ไปย�
 - **NC-02 (repo defect) — ✅ ปิดแล้ว 2026-07-10:** `0027_reconcile_prod_rpc_grants.sql` เคยอ้าง `delete_workspace(uuid)` และ `update_updated_at()` ที่ **ไม่มี migration ไหนใน repo สร้างเลย** → ฐานข้อมูลใหม่ที่ build จาก repo migrations ล้วน ๆ จะ **fail ที่ 0027**
   → **แก้ (guard):** ห่อ 2 บรรทัดนั้นด้วย `do $$ begin if to_regprocedure('public.delete_workspace(uuid)') is not null then ... end if; end $$;` (และแบบเดียวกันสำหรับ `update_updated_at()`) — บน repo/dev/CI ที่ไม่มีฟังก์ชัน → ข้ามสะอาด, บน prod ที่มีฟังก์ชัน → grant/revoke ทำงานเหมือนเดิม (พฤติกรรมไม่เปลี่ยน)
   → **verify บน dev (oudykxmtrnjeskglaluh) 2026-07-10:** ยืนยัน `to_regprocedure(...) is null` ทั้งคู่ (ฟังก์ชันไม่มีบน dev) → รัน guarded blocks ผ่าน `execute_sql` **สำเร็จไม่มี error** (ข้ามทั้ง 2 บล็อก) = พิสูจน์ว่า repo-only rebuild ผ่าน 0027 แล้ว
-- **NC-03 (drift):** ฟังก์ชัน 2 ตัวข้างต้นมีบน production (out-of-band) แต่ไม่มีใน repo → config drift ระหว่าง prod กับ migration history · guard ของ NC-02 ทำให้ repo build ผ่านโดยไม่ลบ drift — การ **สร้าง migration ต้นทางของ 2 ฟังก์ชันนี้ (reverse-engineer จาก prod)** ยังค้างเป็นงานปิด drift จริง (ต้องสิทธิ์ prod อ่าน `pg_get_functiondef`)
-- **prod ยังไม่ verified:** MCP นี้ไม่มีสิทธิ์ production → สถานะ apply จริงของ `waigsnxhrlwtiotspaim` **ยังตรวจไม่ได้จากที่นี่** ต้องรันตรวจแยกด้วยสิทธิ์ prod (has_function_privilege + list ตาราง เทียบ 0001–0028)
+- **NC-03 (drift) — ✅ ปิด repo-side แล้ว 2026-07-10:** ฟังก์ชัน 2 ตัวข้างต้นมีบน production (out-of-band) แต่ไม่มีใน repo → config drift
+  → **แก้:** `0029_reconcile_drift_functions.sql` — reverse-engineer นิยามจริงจาก prod (`pg_get_functiondef`) มาไว้ใน repo (CREATE OR REPLACE + grants ตรงกับ 0027) → repo สร้างฟังก์ชันเองแล้ว = repo ตรงกับ prod · บน prod เป็น idempotent no-op (body เดิม/grant เดิม)
+  → **verify + apply (2026-07-11, อนุมัติโดย Board):** `0029` บันทึกลง ledger prod แล้ว (idempotent — ฟังก์ชันมีอยู่ก่อน body/grant เดิม)
+
+## 5b. Production verification (สด 2026-07-10 — หลังได้สิทธิ์ prod org `bgvyelbcbxhzzfrzuqnh`)
+
+ตรวจ `waigsnxhrlwtiotspaim` ผ่าน MCP โดยตรง (read-only):
+
+| รายการ | ผล |
+|---|---|
+| **Grant matrix** (13 RPC) | ✅ ถูกต้องครบ — sensitive RPC ทั้งหมด anon=false/auth=true · `lead_count` anon=true (ตั้งใจ) · `update_updated_at` anon=false/auth=false (ล็อก) · `delete_workspace` auth=true |
+| **get_advisors(security)** | ✅ **0 lints** (ไม่มี defect) |
+| **TIS tables** (organizations/standards) | ✅ **ไม่มีบน prod** (แยกสะอาด ไม่ปนเปื้อน) |
+| **core tables** | ✅ `workspace_integrations`, `storefront_leads` มีครบ |
+
+**Findings + การแก้ (apply บน prod 2026-07-11 อนุมัติโดย Board):**
+- **`handoff_nonces` (repo `0028`) — ✅ apply บน prod แล้ว:** สร้างตาราง + `consume_handoff_nonce()` (SECURITY DEFINER) · verify: table+fn มีจริง, `service_role` exec=true, anon/authenticated exec=false → พร้อมก่อนเปิด `INTEGRATIONS.theossphereLive`
+- **migration ledger เลขเพี้ยน — ✅ reconcile แล้ว:** prod เคยบันทึก grant migrations ที่ version เพี้ยน (offset ~3: `reconcile_prod_rpc_grants` = prod `0024` แต่ repo `0027`) + ขาด row ของ `workspace_integrations`/`daily_ceo_report_cron`/`backup_cron` (schema apply แล้วแต่ ledger ไม่มี) → renumber (atomic transaction) + insert row ที่ขาด (ยืนยัน schema/cron มีจริงก่อนบันทึก) → **ledger prod = repo ตรงเป๊ะ: `0001–0015, 0018–0029`** (ยกเว้น TIS `0016/0017` ที่ไม่อยู่บน prod โดยตั้งใจ)
+- **prod มีตารางนอก repo (ยังเปิด):** trigger ที่เรียก `update_updated_at` อยู่บน `cj_*` + `storage.objects` (คนละแอป/legacy ในโปรเจกต์เดียวกัน) — นอกขอบเขต repo นี้ · ไม่กระทบความปลอดภัยของแอป (แค่ระบุไว้เพื่อความครบถ้วน)
 
 ## 6. เอกสารที่แก้ (ปิด overclaim)
 
@@ -59,6 +76,8 @@ apply migration ที่ขาดผ่าน MCP `apply_migration` ไปย�
 
 ## 7. สถานะ NC-01
 
-**ปิด (dev)** — dev verified + hardened + เอกสารแก้แล้ว
-**NC-02 ปิดแล้ว** — 0027 guarded + verify บน dev (repo-only rebuild ผ่าน 0027)
-**เปิดค้าง:** NC-03 (สร้าง migration ต้นทาง 2 ฟังก์ชันเพื่อปิด drift) + prod verification (ต้องสิทธิ์ prod)
+**ปิด (dev + prod)** — prod verified สด + hardened · grant matrix ถูกครบ, advisors 0 lints, TIS แยกสะอาด
+**NC-02 ปิดแล้ว** — 0027 guarded (repo-only rebuild ผ่าน 0027)
+**NC-03 ปิดแล้ว** — `0029` reverse-engineer ฟังก์ชันจาก prod (repo = prod) + บันทึกลง ledger prod
+**Prod hardening (2026-07-11):** apply `0028` handoff_nonces + reconcile ledger prod↔repo ครบ (`0001–0015, 0018–0029`)
+**เปิดค้าง (นอกขอบเขต repo นี้):** ตารางนอก repo บน prod (`cj_*`, `storage.objects`) — คนละแอป/legacy

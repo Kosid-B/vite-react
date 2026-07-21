@@ -28,8 +28,8 @@ export const PAYMENT = {
   // โอนเข้าบัญชีธนาคาร
   bankName: 'ธนาคารกสิกรไทย (KASIKORNBANK)',
   bankBranch: 'สาขาเซ็นทรัล ระยอง',
-  accountName: 'บจก. บี. เทรนนิ่ง แอนด์ คอนซัลแทนท์',
-  accountNo: '005-3-92560-0', // ⚠️ โปรดยืนยันเลขบัญชีให้ถูกต้อง
+  accountName: 'บจก. บี. เทรนนิ่ง คอนซัลแทนท์ (การจัดการ งานวิศวกรรม และเกษตรกรรม)',
+  accountNo: '009-8-92560-0', // ยืนยันตรงสมุดบัญชีจริง (กสิกรไทย สาขาเซ็นทรัล ระยอง)
   // PromptPay (สำหรับ QR) — ใช้เบอร์/เลขผู้เสียภาษีที่ลงทะเบียนพร้อมเพย์ไว้
   promptpayId: '0817817773',
   // ⚙️ ชำระออนไลน์อัตโนมัติผ่าน Xendit — เปลี่ยนเป็น true เมื่อ Xendit อนุมัติบัญชี (ผ่าน KYC),
@@ -38,6 +38,31 @@ export const PAYMENT = {
   // 🔁 ตัดเงินอัตโนมัติทุกงวด (auto-renew · Xendit Recurring API) — เปิดเมื่อ xenditLive แล้ว +
   //    deploy create-recurring-plan + recurring-webhook และตั้ง webhook URL ใน Xendit dashboard
   recurringLive: false,
+  // ⚙️ ชำระออนไลน์ผ่าน Omise / Opn Payments (ทางเลือกแทน Xendit) — เปลี่ยนเป็น true เมื่อ Omise อนุมัติบัญชี (KYC),
+  //    deploy ฟังก์ชัน omise-create-charge + omise-webhook และตั้ง secret OMISE_SECRET_KEY + OMISE_PUBLIC_KEY (ดู COMMAND.md)
+  omiseLive: false,
+  // Omise Public Key (pkey_… เป็น publishable key = public ฝังได้) — ใส่เมื่อ omiseLive
+  omisePublicKey: '',
+  // 💳 ชำระออนไลน์ผ่าน Stripe (subscription mode — ตัดเงินอัตโนมัติทุกงวดในตัว, ไม่ต้องพึ่ง cron) —
+  //    เปลี่ยนเป็น true เมื่อ Stripe อนุมัติบัญชี (KYC), deploy ฟังก์ชัน stripe-create-checkout + stripe-webhook
+  //    และตั้ง secret STRIPE_SECRET_KEY (sk_…) + STRIPE_WEBHOOK_SECRET (whsec_…) (ดู COMMAND.md)
+  stripeLive: false,
+  // Stripe Publishable Key (pk_… = public ฝังได้โดยดีไซน์ Stripe) — ใช้เมื่อ stripeLive (เผื่อ Payment Element อนาคต)
+  stripePublicKey: 'pk_live_51TGcB6EMwgw9S6CEZ7NQ1CA5Lly8WH6mK6QtsPGPOdErQ2J7qf3D6F3hJpqsvbMaXPv9ExYz2K58s11hkGgQGGcc00XRklUVkU',
+  // 🔗 Stripe Payment Link (static) — ทางลัดรับชำระเงินโดยไม่ต้อง deploy edge function
+  //    แนบ client_reference_id=workspaceId เพื่อให้ webhook map กลับได้ (ถ้าตั้ง)
+  //    ⚠️ 1 ลิงก์ = 1 ราคา/สินค้า · การอัปเกรดแพ็กอัตโนมัติต้องตั้ง webhook (ดู docs/integrations/stripe-payments.md)
+  //  บัตร (subscription) — ตัดเงินอัตโนมัติทุกงวด (Stripe รองรับเฉพาะบัตรกับ subscription)
+  stripePaymentLinkCard: 'https://buy.stripe.com/9B6cN59V0cndax6fcI5AQ00',
+  //  PromptPay (one-time) — จ่าย QR ครั้งเดียว (สร้าง Payment Link แบบ one-time + เปิด PromptPay ใน Stripe แล้ววาง URL ที่นี่)
+  //  ⚠️ PromptPay ใช้กับ subscription ไม่ได้ ต้องเป็น one-time เท่านั้น
+  stripePaymentLinkPromptPay: 'https://buy.stripe.com/14AcN5aZ4drh9t26Gc5AQ01',
+  // 🎯 ISO Readiness Pilot (one-time paid pilot ฿1,990) — ข้อเสนอปิดการขายสำหรับ outreach beachhead ISO
+  //    (concierge ประเมินความพร้อม + ใช้ระบบเต็ม 1 เดือน) · สร้าง Payment Link one-time ใน Stripe แล้ววาง URL ที่นี่
+  //    เว้นว่าง = ยังไม่เปิดขาย → การ์ด Pilot ในหน้า pricing จะซ่อนอัตโนมัติ (ไม่มีปุ่มพัง)
+  stripePaymentLinkPilot: '',
+  // ราคา Pilot (แสดงผลในการ์ด) — ปรับได้
+  pilotPrice: '฿1,990',
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
@@ -54,4 +79,13 @@ export const INTEGRATIONS = {
   // เปลี่ยนเป็น true เมื่อ: deploy handoff-import + ตั้ง secret THEOSSPHERE_HANDOFF_SECRET (แชร์กับ theossphere)
   //   (ดู docs/integrations/theossphere-handoff.md) · route /handoff รับ token แล้ว pre-fill
   theossphereLive: false,
+  // LINE Login: เข้าสู่ระบบด้วยบัญชี LINE (คนไทยมีทุกคน + ฟรี ไม่มีค่า SMS)
+  // เปลี่ยนเป็น true เมื่อ: (1) สร้าง LINE Login channel ใน LINE Developers + ใส่ lineChannelId ด้านล่าง
+  //   (2) deploy ฟังก์ชัน line-login (3) ตั้ง secret LINE_CHANNEL_ID/LINE_CHANNEL_SECRET
+  //   (ดู docs/integrations/line-login.md) · Callback URL ที่ต้องลงทะเบียนใน LINE = <origin>/oauth/line
+  lineLoginLive: false,
+  // LINE Login Channel ID (เป็นค่า public ฝังได้)
+  lineChannelId: '',
+  // เส้นทาง callback ที่ต้องลงทะเบียนใน LINE Developers (Callback URL)
+  lineRedirectPath: '/oauth/line',
 };
