@@ -1,0 +1,88 @@
+<!-- ============================================================================
+  b-tctraining.com → ceoaithailand.org · Bridge Auto-Inject (ติดครั้งเดียวทั้งเว็บ)
+  ----------------------------------------------------------------------------
+  แทนที่จะแปะการ์ด HTML ทีละหน้า 6 ครั้ง → ติดสคริปต์นี้ "ครั้งเดียว" ในโค้ดกลางของเว็บ
+  แล้วมันจะ: ตรวจ URL ของหน้า → เลือกการ์ดที่ตรงเรื่อง → แทรกท้ายเนื้อหาให้อัตโนมัติ + ยิง tracking
+
+  ── วิธีติดตั้งใน R-Web CMS ──────────────────────────────────────────────
+  1) เข้าระบบหลังบ้าน R-Web → หา "โค้ดที่กำหนดเอง / Custom Code / Footer Script"
+     (ปกติอยู่ที่: ตั้งค่าเว็บไซต์ → SEO/โค้ด, หรือ ธีม → แทรกโค้ดส่วนท้าย <footer>)
+  2) ก๊อป <script>...</script> ทั้งก้อนด้านล่าง → วาง → บันทึก
+  3) เสร็จ! เปิดหน้า ISO/PDPA/consultant ดู → การ์ดจะโผล่ท้ายบทความเอง
+     (ถ้าไม่มีช่อง footer script — ใช้แผน B: แปะการ์ดทีละหน้าจากไฟล์ btctraining-iso-bridge-cards.html)
+
+  ── ปรับแต่ง (ถ้าการ์ดแทรกผิดที่) ──────────────────────────────────────
+  แก้ค่า TARGET ในสคริปต์ให้ตรง container เนื้อหาบทความของธีมคุณ
+  (เปิดหน้าเว็บ → คลิกขวาที่เนื้อหา → Inspect → ดู class ของกล่องบทความ เช่น .entry-content)
+
+  ── tracking ──────────────────────────────────────────────────────────
+  ยิง GA4 gtag('event','bridge_click',{link_id}) [ต้องมี GA4 บนเว็บ — มีอยู่แล้ว]
+  + LINE _lt StartClick [ถ้ามี LINE tag] · ทุกอย่าง try/catch ปลอดภัย
+  ============================================================================ -->
+
+<script>
+(function () {
+  // ---- ปรับตรงนี้ได้ ----
+  var TARGET = 'article, .entry-content, .post-content, .article-content, .content-detail, main';
+  var ORIGIN = 'https://ceoaithailand.org/start';
+  var LINE_TAG = 'afc2c605-4307-45cc-b400-35bba3844d21';
+
+  // ---- คอนฟิกการ์ดต่อหน้า (เรียงเฉพาะ→กว้าง สำคัญ) ----
+  var RULES = [
+    { key:'iso22301',  test:/iso.?22301|business-continuity|bcp/i,
+      h:'อยากรู้ว่าองค์กรพร้อมทำ ISO 22301 / BCP กี่ %?',
+      s:'ให้ AI ประเมินความพร้อม + บอกว่ายังขาดเอกสารอะไรก่อน audit — โดยที่ปรึกษาไทย 20 ปี เริ่มฟรี', b:'ประเมินฟรี' },
+    { key:'pdpa',      test:/pdpa|คุ้มครองข้อมูล/i,
+      h:'ทำเอกสาร PDPA ให้ครบ ไม่ตกหล่น — ด้วย AI',
+      s:'AI ช่วยไล่เช็กนโยบาย/บันทึก/เอกสารที่ PDPA ต้องมี + ร่างให้ — เริ่มฟรี ไม่ต้องใช้บัตร', b:'เริ่มฟรี' },
+    { key:'bmc',       test:/business-model|bmc|แผนธุรกิจ/i,
+      h:'ทำ Business Model Canvas + แผนธุรกิจ ด้วยทีม AI ฟรี',
+      s:'ให้ทีม AI (CEO/การตลาด/การเงิน) ช่วยร่าง BMC + วิเคราะห์ธุรกิจ แล้ววัดผลจริง — เริ่มฟรี', b:'เริ่มฟรี' },
+    { key:'ims',       test:/integrated-management|บูรณาการระบบ/i,
+      h:'รวมหลายมาตรฐาน (IMS) ให้เป็นระบบเดียว — เช็กความพร้อมฟรี',
+      s:'AI ช่วยไล่เอกสารที่ทับซ้อน/ที่ยังขาด ของ ISO 9001·14001·45001 ในที่เดียว — เริ่มฟรี', b:'เช็กฟรี' },
+    { key:'training',  test:/training|ฝึกอบรม|อบรม/i,
+      h:'อบรมแล้ว ลงมือทำเอกสารจริงต่อเลย — ด้วย AI',
+      s:'เปลี่ยนความรู้จากคอร์สเป็นเอกสารระบบที่ยื่นได้จริง + เช็กความพร้อมก่อน audit · เริ่มฟรี', b:'ลองฟรี' },
+    { key:'consultant',test:/consultant|ที่ปรึกษา/i,
+      h:'ยังไม่พร้อมจ้างที่ปรึกษาเต็ม? เริ่มด้วยเครื่องมือประเมินฟรี',
+      s:'รู้จุดที่ต้องแก้ก่อนคุยกับที่ปรึกษา — AI ที่รวมประสบการณ์ที่ปรึกษาไทย 20 ปี · เริ่มฟรี', b:'เริ่มฟรี' }
+  ];
+
+  function run() {
+    try {
+      if (document.getElementById('ceoai-bridge')) return;         // กันแทรกซ้ำ
+      var path = decodeURIComponent(location.pathname).toLowerCase();
+      var r = null;
+      for (var i = 0; i < RULES.length; i++) { if (RULES[i].test.test(path)) { r = RULES[i]; break; } }
+      if (!r) return;                                              // หน้านี้ไม่เข้าเงื่อนไข → ไม่แทรก
+
+      var target = document.querySelector(TARGET) || document.body;
+      var url = ORIGIN + '?ref=btctraining&utm_source=btctraining&utm_medium=content_card&utm_campaign=' + r.key;
+
+      var card = document.createElement('div');
+      card.id = 'ceoai-bridge';
+      card.style.cssText = 'margin:26px 0;background:linear-gradient(135deg,#0b1220,#0f2233);border:1px solid #164e63;border-radius:16px;padding:22px;color:#fff;display:flex;gap:18px;align-items:center;flex-wrap:wrap;font-family:inherit';
+      card.innerHTML =
+        '<div style="flex:1;min-width:240px">' +
+          '<div style="font-size:12px;font-weight:800;letter-spacing:1px;color:#22d3ee">CEO AI THAILAND · เครื่องมือฟรี</div>' +
+          '<div style="font-size:19px;font-weight:800;margin:6px 0 4px">' + r.h + '</div>' +
+          '<div style="font-size:14px;color:#94a3b8">' + r.s + '</div>' +
+        '</div>' +
+        '<a href="' + url + '" target="_blank" rel="noopener" id="ceoai-bridge-cta" ' +
+          'style="flex:none;background:#f59e0b;color:#020617;font-weight:800;font-size:16px;text-decoration:none;padding:14px 26px;border-radius:12px">' + r.b + ' →</a>';
+
+      target.appendChild(card);
+
+      var a = document.getElementById('ceoai-bridge-cta');
+      a.addEventListener('click', function () {
+        try { window.gtag && gtag('event', 'bridge_click', { link_id: r.key }); } catch (e) {}
+        try { window._lt && _lt('send', 'cv', { type: 'StartClick' }, [LINE_TAG]); } catch (e) {}
+      });
+    } catch (e) { /* เงียบ — ไม่ให้กระทบหน้าเว็บ */ }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
+</script>
