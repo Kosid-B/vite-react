@@ -1,0 +1,32 @@
+<!-- ============================================================================
+  b-tctraining.com · CEO AI Thailand — Floating Banner (ธีมสว่าง+ฟ้า)
+  ----------------------------------------------------------------------------
+  แทนที่แบนเนอร์ลอยตัวเดิม (ธีมมืด) ด้วยเวอร์ชันสว่างให้กลมกลืนกับเว็บ b-tctraining
+  วาง/แทนที่ใน: ตั้งค่า → โค้ด และสคริปต์ → "ภายใต้ <head>" (ที่เดิมของแบนเนอร์)
+  โครงสร้าง/ID/สคริปต์ (ปิดจำ 7 วัน + LINE conversion) เหมือนเดิม — เปลี่ยนแค่สี
+  พื้นขาว · ขอบฟ้า · ตัวหนังสือฟ้า #1e5fa0 · ปุ่มส้ม #f59e0b (ตรงปุ่ม "ลองฟรี 15 วัน" ของเว็บ)
+  ============================================================================ -->
+<!-- ===== CEO AI Thailand — Bridge (floating banner + LINE conversion) ===== -->
+<div id="ceoai-bridge" style="position:fixed;left:0;right:0;bottom:0;z-index:99999;background:rgba(255,255,255,.98);border-top:2px solid #2e79c0;box-shadow:0 -6px 24px rgba(46,121,192,.18);font-family:inherit">
+  <div style="max-width:960px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;padding:12px 18px">
+    <span style="flex:none;background:#2e79c0;color:#fff;font-weight:800;font-size:11px;padding:3px 10px;border-radius:999px;letter-spacing:.5px">ใหม่</span>
+    <span style="color:#334155;font-size:14.5px;flex:1;min-width:200px;text-align:center"><b style="color:#1e5fa0">เจ้าใหญ่ทำ AI ให้องค์กรใหญ่ — เราทำให้ SME ไทยจ้างทีม AI ทั้งบริษัทได้</b> เริ่มฟรี ไม่ต้องใช้บัตร</span>
+    <a id="ceoai-bridge-go" href="https://ceoaithailand.org/start?ref=btctraining&utm_source=btctraining&utm_medium=bridge&utm_campaign=floating" target="_blank" rel="noopener"
+       style="flex:none;background:#f59e0b;color:#ffffff;font-weight:800;font-size:15px;text-decoration:none;padding:11px 22px;border-radius:10px;box-shadow:0 4px 14px rgba(245,158,11,.35)">ลองฟรี 15 วัน →</a>
+    <button id="ceoai-bridge-x" aria-label="ปิด" style="flex:none;background:none;border:none;color:#94a3b8;font-size:22px;cursor:pointer;line-height:1">×</button>
+  </div>
+</div>
+<script>(function(){
+  var K='ceoai_bridge_hidden', el=document.getElementById('ceoai-bridge');
+  if(!el) return;
+  try{ var t=localStorage.getItem(K); if(t && Date.now()-(+t)<6048e5){ el.style.display='none'; return; } }catch(e){}
+  // ปิดแบนเนอร์ (จำ 7 วัน)
+  document.getElementById('ceoai-bridge-x').addEventListener('click',function(){
+    el.style.display='none'; try{ localStorage.setItem(K,String(Date.now())); }catch(e){}
+  });
+  // คลิก "ลองฟรี" → ยิง LINE conversion (ใช้ _lt ตัวเดิม) แล้วค่อยไปต่อ
+  document.getElementById('ceoai-bridge-go').addEventListener('click',function(){
+    try{ if(window._lt){ _lt('send','cv',{type:'StartClick'},['afc2c605-4307-45cc-b400-35bba3844d21']); } }catch(e){}
+  });
+})();</script>
+<!-- ===== End Bridge ===== -->
