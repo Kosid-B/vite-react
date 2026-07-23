@@ -9,6 +9,9 @@
 //
 // Deploy:  supabase functions deploy stripe-webhook --no-verify-jwt --project-ref waigsnxhrlwtiotspaim
 // Secrets: supabase secrets set STRIPE_SECRET_KEY=sk_... STRIPE_WEBHOOK_SECRET=whsec_... RESEND_API_KEY=re_...
+//          (optional) GA_API_SECRET=... → ยิง GA4 purchase ฝั่ง server (Stripe บัตร/ต่ออายุ)
+//          สร้างที่ GA4 → Admin → Data Streams → เลือก stream → Measurement Protocol API secrets → Create
+//          ถ้าไม่ตั้ง = no-op (webhook ทำงานปกติ แค่ไม่ยิง GA4)
 // Webhook URL (ตั้งใน Stripe → Developers → Webhooks): https://<project>.supabase.co/functions/v1/stripe-webhook
 //   เลือก event: checkout.session.completed, invoice.paid, customer.subscription.deleted
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -22,6 +25,9 @@ const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 const WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
 const ADMIN_EMAIL = "support@b-tctraining.com";
 const FROM_EMAIL = "CEO AI Thailand <noreply@ceoaithailand.org>";
+// GA4 Measurement Protocol — วัด purchase ฝั่ง server (Stripe บัตร/ต่ออายุ ที่ไม่ผ่าน client)
+const GA_MEASUREMENT_ID = Deno.env.get("GA_MEASUREMENT_ID") ?? "G-CHJ99RY1Q1";
+const GA_API_SECRET = Deno.env.get("GA_API_SECRET") ?? "";
 
 const PLAN_LABEL: Record<string, string> = {
   starter: "Starter ฿390/เดือน", growth: "Growth ฿1,490/เดือน", scale: "Scale ฿5,900/เดือน",
@@ -32,6 +38,31 @@ const PRICE_TO_PLAN: Record<number, { plan: string; cycle: string }> = {
   390: { plan: "starter", cycle: "monthly" }, 1490: { plan: "growth", cycle: "monthly" }, 5900: { plan: "scale", cycle: "monthly" },
   3900: { plan: "starter", cycle: "yearly" }, 14900: { plan: "growth", cycle: "yearly" }, 59000: { plan: "scale", cycle: "yearly" },
 };
+
+// ยิง GA4 purchase (Measurement Protocol) — นับรายได้ Stripe/ต่ออายุที่เกิดฝั่ง server
+// no-op ถ้าไม่ตั้ง GA_API_SECRET · ห้าม throw (webhook ต้องตอบ 200 ให้ Stripe เสมอ)
+// หมายเหตุ: client_id = workspaceId (synthetic) → นับ value/purchase ได้ แต่ยังไม่ผูก attribution
+//          กับ session เว็บเดิม (ถ้าต้องการ ต้องเก็บ _ga client_id ตอน checkout — ทำภายหลังได้)
+async function sendGa4Purchase(o: { clientId: string; transactionId: string; value: number; plan: string; cycle: string; method: string }): Promise<void> {
+  if (!GA_API_SECRET) return;
+  try {
+    await fetch(`https://www.google-analytics.com/mp/collect?measurement_id=${GA_MEASUREMENT_ID}&api_secret=${GA_API_SECRET}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        client_id: o.clientId,
+        events: [{
+          name: "purchase",
+          params: {
+            transaction_id: o.transactionId, value: o.value, currency: "THB",
+            plan: o.plan, cycle: o.cycle, method: o.method,
+            items: [{ item_id: `plan_${o.plan}_${o.cycle}`, item_name: `${o.plan} ${o.cycle}`, price: o.value, quantity: 1 }],
+          },
+        }],
+      }),
+    });
+  } catch { /* analytics ต้องไม่ทำ webhook พัง */ }
+}
 
 async function sendMail(to: string, subject: string, html: string): Promise<void> {
   const key = Deno.env.get("RESEND_API_KEY");
@@ -114,6 +145,7 @@ Deno.serve(async (req) => {
 
     const userEmail = (s.customer_details?.email) ?? await lookupEmail(admin, workspaceId);
     await Promise.all([
+      sendGa4Purchase({ clientId: workspaceId, transactionId: s.id, value: amount, plan, cycle, method: "stripe_link" }),
       userEmail ? sendMail(userEmail, `✅ ยืนยันการชำระเงิน — แพ็ก ${plan} CEO AI Thailand`, confirmHtml(plan, amount, cycle)) : Promise.resolve(),
       sendMail(ADMIN_EMAIL, `[CEO AI] Stripe Payment ฿${amount} — ${plan}/${cycle} — ${workspaceId.slice(0, 8)}`,
         `<p>Stripe checkout (payment link) paid</p><p>Plan: ${plan} (${cycle}) · ฿${amount}</p><p>Workspace: <code>${workspaceId}</code></p>`),
@@ -163,6 +195,7 @@ Deno.serve(async (req) => {
 
     const userEmail = await lookupEmail(admin, workspaceId);
     await Promise.all([
+      sendGa4Purchase({ clientId: workspaceId, transactionId: inv.id, value: amount, plan, cycle, method: "stripe_subscription" }),
       userEmail ? sendMail(userEmail, `✅ ยืนยันการชำระเงิน — แพ็ก ${plan} CEO AI Thailand`, confirmHtml(plan, amount, cycle)) : Promise.resolve(),
       sendMail(ADMIN_EMAIL, `[CEO AI] Stripe Payment ฿${amount} — ${plan}/${cycle} — ${workspaceId.slice(0, 8)}`,
         `<p>Stripe invoice paid</p><p>Plan: ${plan} (${cycle}) · ฿${amount}</p><p>Workspace: <code>${workspaceId}</code></p>`),

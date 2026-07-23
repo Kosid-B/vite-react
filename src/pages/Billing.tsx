@@ -5,6 +5,7 @@ import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { submitPaymentSlip, listMyPayments } from '../lib/payments';
+import { track } from '../lib/analytics';
 import ExpertEdge from '../components/ExpertEdge';
 
 function addDays(iso: string, n: number): string {
@@ -196,6 +197,8 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         },
       });
       setSlipMsg('✅ แอดมินยืนยันการชำระเงินแล้ว — เปิดใช้งานแพ็ก ' + approved.plan.toUpperCase());
+      // GA4 purchase — รายได้จริง (สลิปได้รับอนุมัติจากแอดมิน)
+      track('purchase', { transaction_id: invoice.id, value: approved.amount, currency: 'THB', plan: approved.plan, cycle: approved.cycle });
     }).catch(() => { /* เงียบ — ไม่ทำ UX พัง */ });
     return () => { cancelled = true; };
   }, [wsId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -205,6 +208,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     if (!file || !wsId) return;
     setSlipBusy(true);
     setSlipMsg(null);
+    track('begin_checkout', { plan: selected, cycle, value: chargeAmount, currency: 'THB', method: 'slip' });
     const { error } = await submitPaymentSlip({ wsId, plan: selected, cycle, amount: chargeAmount, file });
     setSlipBusy(false);
     setSlipMsg(error ? '⚠️ ' + error : '✅ ส่งสลิปแล้ว — แอดมินจะตรวจและเปิดใช้งานให้ (เห็นผลเมื่อรีเฟรชหน้าหลังอนุมัติ)');
@@ -215,6 +219,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     if (!supabase || !wsId) return;
     setPayBusy(true);
     setPayErr(null);
+    track('begin_checkout', { plan: selected, cycle, value: chargeAmount, currency: 'THB', method: 'stripe' });
     try {
       const { data: res, error } = await supabase.functions.invoke('stripe-create-checkout', {
         body: { plan: selected, cycle, workspaceId: wsId },
@@ -241,6 +246,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     if (email) url.searchParams.set('prefilled_email', email);
     url.searchParams.set('utm_source', 'app');
     url.searchParams.set('utm_campaign', `billing_${selected}_${cycle}_${method}`);
+    track('begin_checkout', { plan: selected, cycle, value: chargeAmount, currency: 'THB', method: `stripe_link_${method}` });
     window.location.href = url.toString();
   }
 
@@ -273,6 +279,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     setSelected(id);
     const plan = PLANS.find(p => p.id === id)!;
     if (plan.price === 0) return;
+    track('plan_selected', { plan: id, value: plan.price, currency: 'THB' });
     onUpdate({ ...data, subscription: { ...sub, plan: id, status: 'pending_payment' } });
   }
 
@@ -297,6 +304,8 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         invoices: [invoice, ...sub.invoices],
       },
     });
+    // GA4 purchase — ยืนยันจ่ายเอง (เช่น PromptPay manual)
+    track('purchase', { transaction_id: invoice.id, value: chargeAmount, currency: 'THB', plan: selectedPlan.id, cycle });
   }
 
   function renewNow() {

@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}html,body{background:#000}
+.frame{width:1000px;height:1000px;position:relative;overflow:hidden;
+ background:radial-gradient(640px 560px at 50% 46%,#17284a 0%,#0d1730 48%,#0a0f1c 78%)}
+.glowA{position:absolute;width:640px;height:520px;top:-120px;right:-140px;background:radial-gradient(circle,rgba(245,158,11,.22),transparent 62%)}
+.glowB{position:absolute;width:660px;height:540px;bottom:-160px;left:-160px;background:radial-gradient(circle,rgba(34,211,238,.18),transparent 62%)}
+.c{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+svg{filter:drop-shadow(0 18px 50px rgba(34,211,238,.32))}
+</style></head><body><div class="frame"><div class="glowA"></div><div class="glowB"></div>
+<div class="c">
+<svg width="620" height="620" viewBox="0 0 300 300" fill="none">
+ <defs>
+  <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>
+  <linearGradient id="head" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12203c"/><stop offset="1" stop-color="#0c1730"/></linearGradient>
+ </defs>
+ <circle cx="150" cy="150" r="142" stroke="url(#ring)" stroke-width="7" opacity="0.9"/>
+ <line x1="150" y1="70" x2="150" y2="42" stroke="#f59e0b" stroke-width="8" stroke-linecap="round"/>
+ <circle cx="150" cy="33" r="13" fill="#f59e0b"/>
+ <rect x="74" y="72" width="152" height="126" rx="32" fill="url(#head)" stroke="#22d3ee" stroke-width="6"/>
+ <circle cx="118" cy="133" r="16" fill="#22d3ee"/><circle cx="182" cy="133" r="16" fill="#22d3ee"/>
+ <path d="M114 168 Q150 190 186 168" stroke="#67e8f9" stroke-width="8" stroke-linecap="round" fill="none"/>
+ <rect x="56" y="120" width="13" height="36" rx="6" fill="#22d3ee"/><rect x="231" y="120" width="13" height="36" rx="6" fill="#22d3ee"/>
+ <path d="M92 218 Q150 198 208 218 L208 242 Q150 260 92 242 Z" fill="#12203c" stroke="#f59e0b" stroke-width="5"/>
+</svg></div></div></body></html>

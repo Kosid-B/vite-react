@@ -1,0 +1,11 @@
+import pkg from '/opt/node22/lib/node_modules/playwright/index.js';
+const { chromium } = pkg;
+const out = process.argv[3] || '/tmp/out.png';
+const url = 'file://' + process.argv[2];
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1000, height: 1000 }, deviceScaleFactor: 2 });
+await p.goto(url, { waitUntil: 'networkidle' });
+const el = await p.$('.frame');
+await el.screenshot({ path: out });
+await b.close();
+console.log('saved', out);
