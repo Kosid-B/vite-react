@@ -65,9 +65,19 @@
   - `supabase functions deploy ai-assist ai-plan agent-run` (deploy 3 ตัวให้ import `_shared/modelRouter.ts` ติดไปด้วย)
   - วัด: คุณภาพ ai-assist บน Haiku ยอมรับได้ไหม + ต้นทุนลดจริง (A/B) · ถ้าดี ค่อยขยับ MODEL_COMPLEX
 
-### Phase 3 — เพิ่ม Open-source ไทย (Typhoon) + caching
-- เพิ่ม provider Fireworks/Together สำหรับ Typhoon (งานไทยล้วน)
-- เปิด prompt caching กับ context ซ้ำ (ISO/มอก. system prompt)
+### Phase 3 — เพิ่ม Open-source ไทย (Typhoon) + caching ✅ เสร็จ (โค้ด · รอ provider key)
+- สร้าง `supabase/functions/_shared/llm.ts` — helper `chat()` เรียก LLM แบบ **provider-agnostic**
+  (Anthropic **หรือ** OpenAI-compatible: Fireworks / Together / OpenTyphoon) เลือกจากชื่อโมเดล + env
+- wire `ai-plan` ผ่าน `chat()` แล้ว (Anthropic path เทียบเท่าโค้ดเดิม 100% → default ไม่เปลี่ยน)
+- **prompt caching**: helper รองรับ `cacheSystem` + beta header · มีผลจริงเมื่อ system prompt ยาว ≥ ~1k tokens
+  (prompt ปัจจุบันสั้นเกินเกณฑ์ → ยังไม่ประหยัด แต่ auto-cache เมื่อ context โตขึ้น เช่น ISO/มอก.)
+- **เปิด Typhoon จริง (ไม่ต้องแก้โค้ด):**
+  ```
+  supabase secrets set FIREWORKS_API_KEY=... MODEL_THAI=accounts/fireworks/models/typhoon-... \
+    --project-ref waigsnxhrlwtiotspaim
+  # แล้ว route งานไทยไป tier 'thai' + redeploy ai-plan
+  ```
+  > default = ไม่ตั้ง key → วิ่ง Anthropic เหมือนเดิม (ไม่มี provider ใหม่เปิดเอง) · ต้อง A/B วัดคุณภาพก่อนสลับจริง
 
 ### Phase 4 — Dashboard ต้นทุน AI จริง (วัด margin จริงต่อ workspace)
 - log token/cost ต่อ call → admin เห็นต้นทุน AI จริง เทียบราคาแพ็ก
