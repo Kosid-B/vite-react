@@ -64,6 +64,8 @@
   - `supabase secrets set MODEL_SIMPLE=claude-haiku-4-5-20251001 --project-ref waigsnxhrlwtiotspaim`
   - `supabase functions deploy ai-assist ai-plan agent-run` (deploy 3 ตัวให้ import `_shared/modelRouter.ts` ติดไปด้วย)
   - วัด: คุณภาพ ai-assist บน Haiku ยอมรับได้ไหม + ต้นทุนลดจริง (A/B) · ถ้าดี ค่อยขยับ MODEL_COMPLEX
+  - **Quality gate ก่อนเปิด:** รัน `node scripts/haiku-eval.mjs` (golden set 12 เคส + LLM-judge blind) →
+    GO/NO-GO ตามเกณฑ์ ratio≥95% / crit=0 / loss<20% · รายละเอียด [docs/strategy/HAIKU-AB-EVAL.md](./HAIKU-AB-EVAL.md)
 
 ### Phase 3 — เพิ่ม Open-source ไทย (Typhoon) + caching ✅ เสร็จ (โค้ด · รอ provider key)
 - สร้าง `supabase/functions/_shared/llm.ts` — helper `chat()` เรียก LLM แบบ **provider-agnostic**
