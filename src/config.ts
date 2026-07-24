@@ -46,7 +46,7 @@ export const PAYMENT = {
   // 💳 ชำระออนไลน์ผ่าน Stripe (subscription mode — ตัดเงินอัตโนมัติทุกงวดในตัว, ไม่ต้องพึ่ง cron) —
   //    เปลี่ยนเป็น true เมื่อ Stripe อนุมัติบัญชี (KYC), deploy ฟังก์ชัน stripe-create-checkout + stripe-webhook
   //    และตั้ง secret STRIPE_SECRET_KEY (sk_…) + STRIPE_WEBHOOK_SECRET (whsec_…) (ดู COMMAND.md)
-  stripeLive: false,
+  stripeLive: true,
   // Stripe Publishable Key (pk_… = public ฝังได้โดยดีไซน์ Stripe) — ใช้เมื่อ stripeLive (เผื่อ Payment Element อนาคต)
   stripePublicKey: 'pk_live_51TGcB6EMwgw9S6CEZ7NQ1CA5Lly8WH6mK6QtsPGPOdErQ2J7qf3D6F3hJpqsvbMaXPv9ExYz2K58s11hkGgQGGcc00XRklUVkU',
   // 🔗 Stripe Payment Link (static) — ทางลัดรับชำระเงินโดยไม่ต้อง deploy edge function

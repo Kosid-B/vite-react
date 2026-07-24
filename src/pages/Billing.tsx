@@ -720,34 +720,29 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
               <span className="bill-amount">{baht(chargeAmount)}</span>
             </div>
 
-            {isSupabaseEnabled && PAYMENT.stripeLive && (
+            {/* บัตร: dynamic checkout (เลือกแพ็ก/รอบได้ตรงราคา) ถ้า stripeLive · ไม่งั้น Payment Link (ราคาตายตัว) */}
+            {isSupabaseEnabled && (PAYMENT.stripeLive || PAYMENT.stripePaymentLinkCard || PAYMENT.stripePaymentLinkPromptPay) && (
               <>
-                <button className="bill-xendit" onClick={payWithStripe} disabled={payBusy || !wsId}>
-                  {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Stripe — บัตรเครดิต/เดบิต · ตัดเงินอัตโนมัติทุกงวด'}
-                </button>
-                {payErr && <div className="bill-warn">⚠️ {payErr}</div>}
-                <div className="bill-note">
-                  ชำระเงินปลอดภัยผ่าน Stripe — เปิดใช้งานแพ็กอัตโนมัติทันทีเมื่อชำระสำเร็จ ·
-                  ตัดเงินอัตโนมัติทุก{cycle === 'yearly' ? 'ปี' : 'เดือน'} ยกเลิกได้ทุกเมื่อ
-                </div>
-              </>
-            )}
-            {/* ทางลัด: Stripe Payment Link (static) — บัตร (subscription) + PromptPay (one-time) */}
-            {isSupabaseEnabled && !PAYMENT.stripeLive && (PAYMENT.stripePaymentLinkCard || PAYMENT.stripePaymentLinkPromptPay) && (
-              <>
-                {PAYMENT.stripePaymentLinkCard && (
+                {PAYMENT.stripeLive ? (
+                  <button className="bill-xendit" onClick={payWithStripe} disabled={payBusy || !wsId}>
+                    {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายผ่าน Stripe — บัตรเครดิต/เดบิต · ตัดเงินอัตโนมัติทุกงวด'}
+                  </button>
+                ) : PAYMENT.stripePaymentLinkCard && (
                   <button className="bill-xendit" onClick={() => payWithStripeLink('card')} disabled={payBusy || !wsId}>
                     {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '💳 จ่ายด้วยบัตรเครดิต/เดบิต — ตัดเงินอัตโนมัติทุกงวด'}
                   </button>
                 )}
+                {/* PromptPay one-time: แสดงเสมอถ้ามีลิงก์ (เสริมกับบัตร subscription — PromptPay ตัดต่อเนื่องไม่ได้) */}
                 {PAYMENT.stripePaymentLinkPromptPay && (
                   <button className="bill-promptpay" onClick={() => payWithStripeLink('promptpay')} disabled={payBusy || !wsId}>
                     {payBusy ? 'กำลังเปิดหน้าชำระเงิน…' : '📱 จ่ายด้วย PromptPay QR — ครั้งเดียว'}
                   </button>
                 )}
+                {payErr && <div className="bill-warn">⚠️ {payErr}</div>}
                 <div className="bill-note">
-                  ชำระเงินปลอดภัยผ่าน Stripe · บัตร = ตัดอัตโนมัติทุกงวด · PromptPay = จ่ายครั้งเดียว
-                  <br />หลังชำระสำเร็จ ระบบเปิดใช้งานแพ็กให้ (อัตโนมัติเมื่อตั้ง Stripe webhook · ระหว่างนี้แจ้งแอดมิน)
+                  ชำระเงินปลอดภัยผ่าน Stripe · บัตร = ตัดอัตโนมัติทุก{cycle === 'yearly' ? 'ปี' : 'เดือน'} ยกเลิกได้ทุกเมื่อ
+                  {PAYMENT.stripePaymentLinkPromptPay ? ' · PromptPay = จ่ายครั้งเดียว' : ''}
+                  <br />หลังชำระสำเร็จ ระบบเปิดใช้งานแพ็กให้อัตโนมัติ (Stripe webhook)
                 </div>
               </>
             )}
