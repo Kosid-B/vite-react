@@ -6,9 +6,11 @@
 // Secret:  supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { pickModel } from "../_shared/modelRouter.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
-const MODEL = Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-4-6";
+// ai-assist = คำแนะนำสั้นต่อหน้า = งาน 'simple' → ตั้ง secret MODEL_SIMPLE เพื่อย้ายไปโมเดลถูก (default = โมเดลเดิม)
+const MODEL = pickModel("simple");
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
