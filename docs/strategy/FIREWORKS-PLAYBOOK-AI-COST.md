@@ -79,8 +79,13 @@
   ```
   > default = ไม่ตั้ง key → วิ่ง Anthropic เหมือนเดิม (ไม่มี provider ใหม่เปิดเอง) · ต้อง A/B วัดคุณภาพก่อนสลับจริง
 
-### Phase 4 — Dashboard ต้นทุน AI จริง (วัด margin จริงต่อ workspace)
-- log token/cost ต่อ call → admin เห็นต้นทุน AI จริง เทียบราคาแพ็ก
+### Phase 4 — Dashboard ต้นทุน AI จริง (วัด margin จริงต่อ workspace) ✅ เสร็จ
+- `src/lib/aiCost.ts` (pure, tested 9 เคส) — `MODEL_PRICE` ราคาป้ายต่อ 1M token + `callCostThb()` +
+  `costReport()` เทียบ 3 สถานการณ์ (ปัจจุบัน Sonnet ทุกงาน / Tiering Haiku / + Typhoon งานไทย) + เงินที่ประหยัด
+- แผง **"🤖 ต้นทุน AI (ประมาณการ)"** ในแท็บเวิร์กสเปซ (Admin) — ประมาณ volume จากกิจกรรมจริง
+  (tasks + agents) แล้วโชว์ margin ปัจจุบัน → margin ถ้าเปิด tiering เต็มที่
+- `_shared/llm.ts` คืน `usage` (normalize input/output token ข้าม provider) → ต่อยอด log จริงต่อ call ได้ในอนาคต
+- หมายเหตุ: ตัวเลขเป็น **ประมาณการจากราคาป้าย** (ปรับ `MODEL_PRICE`/`USD_THB` ได้) — ยังไม่ใช่ actual billing
 
 ---
 
@@ -90,5 +95,16 @@
 - **secret ใหม่:** FIREWORKS_API_KEY / TYPHOON_API_KEY (ตั้งใน Supabase secrets ฝั่ง server เท่านั้น)
 - อย่าทำ Phase 2–3 ก่อน Phase 1 เสร็จ + มีระบบวัดคุณภาพ
 
-## เริ่มที่ไหน
-**Phase 1 (วางโครง Model Router)** = low-risk, ไม่เปลี่ยนพฤติกรรม, เปิดทางให้ Phase 2–4 → แนะนำเริ่มตรงนี้
+## สถานะ: Phase 1–4 เสร็จครบ (โค้ด) ✅ — เหลือ "เปิดสวิตช์" ด้วย secret
+โครงทั้งหมดพร้อมแล้ว โดย **default ยังวิ่ง Anthropic/Sonnet เหมือนเดิม** (ไม่มีอะไรเปลี่ยนจนกว่าจะตั้ง env)
+เปิดจริงเมื่อพร้อม A/B วัดคุณภาพ:
+```bash
+# 1) งานเบา (ai-assist) → Haiku (ประหยัด ~80%/call)
+supabase secrets set MODEL_SIMPLE=claude-haiku-4-5-20251001 --project-ref waigsnxhrlwtiotspaim
+# 2) งานไทย → Typhoon (open-source ผ่าน Fireworks) — ต้องมี key + ทดสอบคุณภาพก่อน
+supabase secrets set FIREWORKS_API_KEY=... MODEL_THAI=accounts/fireworks/models/typhoon-... \
+  --project-ref waigsnxhrlwtiotspaim
+# 3) redeploy edge functions ที่ import router/llm
+supabase functions deploy ai-assist ai-plan agent-run --project-ref waigsnxhrlwtiotspaim
+```
+> วัดผลจริงที่แผง "🤖 ต้นทุน AI (ประมาณการ)" ในแท็บเวิร์กสเปซ (Admin) — เทียบ margin ก่อน/หลังเปิด tiering
