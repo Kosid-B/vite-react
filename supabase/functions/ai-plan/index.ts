@@ -7,6 +7,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModel } from "../_shared/modelRouter.ts";
+import { chat } from "../_shared/llm.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 // ai-plan = วางแผน/แตกงานเชิงกลยุทธ์ = งาน 'complex' → คงโมเดลแรง (default = โมเดลเดิม, ตั้ง MODEL_COMPLEX เพื่อย้าย)
@@ -55,25 +56,15 @@ Deno.serve(async (req) => {
     `"approvals":[{"agentRole":"CMO","title":"...","detail":"...","impact":"งบ ฿..."}]}\n` +
     `ใส่ tasks 3-6 รายการ และ approvals 0-2 รายการ. status เป็นหนึ่งใน queued|in_progress|review.`;
 
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 1500,
-      system,
-      messages: [{ role: "user", content: userMsg }],
-    }),
-  });
+  // provider-agnostic (default Anthropic + โมเดลเดิม) · cacheSystem=true เผื่อ system prompt ยาวขึ้นในอนาคต
+  let text: string;
+  try {
+    const res = await chat({ model: MODEL, system, user: userMsg, maxTokens: 1500, cacheSystem: true });
+    text = res.text;
+  } catch (e) {
+    return json({ error: "llm_error", detail: String(e) }, 502);
+  }
 
-  if (!r.ok) return json({ error: "anthropic_error", detail: await r.text() }, 502);
-
-  const data = await r.json();
-  const text = (data?.content?.[0]?.text ?? "").trim();
   const parsed = extractJson(text);
   if (!parsed) return json({ error: "parse_failed", raw: text }, 502);
 
