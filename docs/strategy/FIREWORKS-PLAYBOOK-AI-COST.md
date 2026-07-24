@@ -52,14 +52,18 @@
 ---
 
 ## 🛠️ แผนลงมือ (phased — ทำทีละขั้น วัดผลจริง)
-### Phase 1 — วางโครง Model Router (โค้ด, low-risk)
-- สร้าง `supabase/functions/_shared/modelRouter.ts` — helper เลือกโมเดลตาม `taskType` + provider config
-- config: `{ simple: 'haiku', thai: 'typhoon', complex: 'sonnet' }` (env-driven, สลับได้ไม่ต้องแก้โค้ด)
-- ยังไม่เปลี่ยนพฤติกรรม (default = sonnet) — แค่วางท่อ
+### Phase 1 — วางโครง Model Router (โค้ด, low-risk) ✅ เสร็จ (PR #267)
+- สร้าง `supabase/functions/_shared/modelRouter.ts` — helper `pickModel(tier)` เลือกโมเดลตาม env
+- config: `MODEL_SIMPLE / MODEL_COMPLEX / MODEL_THAI` (env-driven, สลับได้ไม่ต้องแก้โค้ด)
+- ยังไม่เปลี่ยนพฤติกรรม (default = ANTHROPIC_MODEL/sonnet) — แค่วางท่อ + wire `ai-assist` → `pickModel('simple')`
 
-### Phase 2 — ย้ายงาน "ถูก" ไป Haiku (วัดคุณภาพ)
-- ai-assist (คำแนะนำสั้น), สกัด/สรุป → Haiku ก่อน (A/B เทียบคุณภาพ)
-- วัด: คุณภาพยอมรับได้ไหม + ต้นทุนลดจริงเท่าไร
+### Phase 2 — wire ทุก edge function เข้า router (วัดคุณภาพ) ✅ เสร็จ (โค้ด)
+- `ai-plan` → `pickModel('complex')` · `agent-run` → `MODEL_MAP[model] ?? pickModel('complex')` (คง override จาก frontend)
+- `ai-assist` → `pickModel('simple')` (จาก Phase 1)
+- **เปิดใช้จริง (ไม่ต้องแก้โค้ด แค่ตั้ง secret + redeploy):**
+  - `supabase secrets set MODEL_SIMPLE=claude-haiku-4-5-20251001 --project-ref waigsnxhrlwtiotspaim`
+  - `supabase functions deploy ai-assist ai-plan agent-run` (deploy 3 ตัวให้ import `_shared/modelRouter.ts` ติดไปด้วย)
+  - วัด: คุณภาพ ai-assist บน Haiku ยอมรับได้ไหม + ต้นทุนลดจริง (A/B) · ถ้าดี ค่อยขยับ MODEL_COMPLEX
 
 ### Phase 3 — เพิ่ม Open-source ไทย (Typhoon) + caching
 - เพิ่ม provider Fireworks/Together สำหรับ Typhoon (งานไทยล้วน)
