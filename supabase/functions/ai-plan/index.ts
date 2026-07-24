@@ -6,9 +6,11 @@
 // เรียกจาก frontend:  supabase.functions.invoke('ai-plan', { body: { goal, industry, agents } })
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { pickModel } from "../_shared/modelRouter.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
-const MODEL = Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-4-6";
+// ai-plan = วางแผน/แตกงานเชิงกลยุทธ์ = งาน 'complex' → คงโมเดลแรง (default = โมเดลเดิม, ตั้ง MODEL_COMPLEX เพื่อย้าย)
+const MODEL = pickModel("complex");
 
 const cors = {
   "Access-Control-Allow-Origin": "*",

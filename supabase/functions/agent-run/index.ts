@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Anthropic from 'npm:@anthropic-ai/sdk@0.26.0';
+import { pickModel } from '../_shared/modelRouter.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -65,7 +66,8 @@ serve(async (req) => {
     }
 
     const client = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY')! });
-    const actualModel = MODEL_MAP[model] ?? 'claude-sonnet-4-6';
+    // ถ้า frontend เลือกโมเดลมา (MODEL_MAP) ใช้ตามนั้น · ไม่ระบุ = งานเอเจนต์ 'complex' → router (default โมเดลเดิม)
+    const actualModel = MODEL_MAP[model] ?? pickModel('complex');
 
     const orgLines = (orgContext ?? [])
       .map((a: { role: string; mandate: string }) => `  • ${a.role}: ${a.mandate}`)
