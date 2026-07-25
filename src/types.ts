@@ -539,7 +539,8 @@ export interface AppData {
   cityUnlocks?: string[];                 // ของปลดล็อกในเกม (cosmetic)
   streak?: { count: number; lastDay: string }; // ส่วนต่อเนื่องรายวัน (ทำงานจริงในแอป)
   proMode?: boolean;                      // โหมดโปร — ซ่อนองค์ประกอบเกมบน Dashboard
-  appliedPaymentIds?: string[];           // id ของ payment_submissions ที่อนุมัติแล้ว + เปิดใช้งานแพ็กแล้ว (กันเปิดซ้ำ)
+  appliedPaymentIds?: string[];           // id ของ payment_submissions ที่เปิดใช้งานแพ็กแล้ว (กันเปิดซ้ำ) — PLG: เปิดทันทีที่อัปสลิป
+  revokedPaymentIds?: string[];           // id ของสลิปที่แอดมินตรวจย้อนหลังแล้วตีกลับ (สลิปปลอม/ไม่ตรง) → client ถอนแพ็กเอง
   // CMO วิเคราะห์ตลาด+กลุ่มลูกค้า (Segmentation) รายสัปดาห์ทุกวันศุกร์ (ดึงข้อมูลตลาดจริง)
   cmoMarket?: { analysis: string; webUsed: boolean; updatedAt: string; weekTag: string };
   // C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO ทุกวันศุกร์
