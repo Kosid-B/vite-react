@@ -6113,3 +6113,20 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .pn-empty { opacity: .55; padding: 60px 20px; text-align: center; font-size: 13.5px; }
 .pn-warn { font-size: 12.5px; color: var(--amber); background: var(--amber-bg); padding: 8px 10px; border-radius: var(--r); }
 .pn-disclaimer { font-size: 12px; opacity: .55; margin-top: 10px; }
+
+/* ===== AI ตรวจเอกสาร ISO/มอก. (Compliance Check) ===== */
+.cc-scorebar { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.cc-score { font-size: 34px; font-weight: 800; color: var(--accent); min-width: 84px; text-align: center; }
+.cc-score-meta { flex: 1; }
+.cc-track { height: 9px; background: var(--cream); border: 1px solid var(--sand); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+.cc-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width .4s ease; }
+.cc-summary { font-size: 13.5px; line-height: 1.6; color: var(--ink2); background: var(--rust-bg); border: 1px solid var(--sand); border-radius: var(--r); padding: 10px 12px; margin-bottom: 12px; }
+.cc-list { display: flex; flex-direction: column; gap: 8px; }
+.cc-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; background: var(--cream); border: 1px solid var(--sand); border-radius: var(--r); }
+.cc-badge { flex-shrink: 0; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; margin-top: 1px; }
+.cc-ok { background: rgba(34,197,94,.15); color: #22c55e; }
+.cc-warn { background: var(--amber-bg); color: var(--amber); }
+.cc-miss { background: rgba(239,68,68,.15); color: #ef4444; }
+.cc-item-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.cc-item-note { font-size: 12.5px; color: var(--ink3); margin-top: 2px; }
+.cc-gaps { font-size: 13px; color: var(--ink2); background: var(--amber-bg); border-radius: var(--r); padding: 9px 12px; margin-top: 12px; }

@@ -43,6 +43,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   boardroom: { label: 'ห้องบอร์ด', prompts: ['วาระไหนที่ CEO ควรเสนอบอร์ดอนุมัติก่อน', 'อธิบาย Decision Gate นี้ให้เข้าใจง่าย', 'ช่วยประเมินว่าข้อมูลพร้อมให้บอร์ดอนุมัติหรือยัง'], context: d => `ห้องบอร์ด: อนุมัติแล้ว ${(d.boardRoom?.decisions ?? []).filter(x => x.status === 'approved').length} วาระ` },
   resources: { label: 'ทรัพยากร', prompts: ['ทรัพยากรไหนที่ธุรกิจยังขาดและควรเพิ่ม', 'ช่วยจัดสรรทรัพยากรให้มีประสิทธิภาพสูงสุด', 'คำขอเพิ่ม/ลดทรัพยากรนี้ควรอนุมัติไหม'], context: d => { const r = d.resources; const items = r?.items ?? []; const cost = items.reduce((s, x) => s + (x.unitCost ? x.unitCost * x.quantity : 0), 0); return `ทรัพยากร: ${items.length} รายการ, ต้นทุนรวม ~฿${cost.toLocaleString('en-US')}/เดือน, คำขอรออนุมัติ ${(r?.requests ?? []).filter(q => q.status === 'pending').length}`; } },
   privacy: { label: 'ตัวช่วย PDPA', prompts: ['ข้อมูลส่วนบุคคลอะไรที่ธุรกิจแบบนี้มักต้องเก็บ', 'วัตถุประสงค์การใช้ข้อมูลควรระบุอะไรบ้าง', 'ต้องเตรียมอะไรให้พร้อมตาม PDPA'], context: () => 'ผู้ใช้กำลังร่างประกาศความเป็นส่วนตัว/SOP ตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)' },
+  compliance: { label: 'AI ตรวจเอกสาร ISO/มอก.', prompts: ['ISO 9001 ข้อ 9 การประเมินสมรรถนะ ต้องมีเอกสารอะไร', 'ปฏิบัติการแก้ไข (corrective action) ที่ดีต้องมีอะไรบ้าง', 'เตรียมตัวก่อน internal audit ต้องทำอะไร'], context: () => 'ผู้ใช้กำลังตรวจเอกสารเทียบข้อกำหนดมาตรฐาน ISO/มอก. เพื่อหา gap ก่อน audit' },
 };
 
 export default function AiAssist({ activePage, data }: Props) {

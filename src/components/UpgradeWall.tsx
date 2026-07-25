@@ -7,6 +7,7 @@ const PAGE_TITLE: Partial<Record<PageId, string>> = {
   team:      'ทีม / สมาชิก',
   iso9001:   'ISO 9001:2015 QMS',
   privacy:   'ตัวช่วย PDPA (Privacy Notice/SOP)',
+  compliance: 'AI ตรวจเอกสาร ISO / มอก.',
   factory:   'โรงงานอัจฉริยะ',
   analytics: 'SaaS Analytics',
   sipoc:     'SIPOC Process',
@@ -28,6 +29,7 @@ const PLAN_FEATURES: Partial<Record<string, string[]>> = {
     'ทีม / สมาชิก — บริหารทีม',
     'SaaS Analytics — วิเคราะห์ข้อมูล',
     'ISO 9001:2015 QMS — มาตรฐานคุณภาพ',
+    'AI ตรวจเอกสาร ISO/มอก. — หา gap ก่อน audit',
   ],
 };
 
