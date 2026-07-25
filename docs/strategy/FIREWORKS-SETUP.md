@@ -26,6 +26,29 @@ supabase functions deploy ai-plan ai-assist agent-run --project-ref waigsnxhrlwt
 ```
 > `_shared/llm.ts` เลือก provider จากชื่อโมเดลอัตโนมัติ: ชื่อขึ้นต้น `accounts/` หรือมี `/` → วิ่ง Fireworks · `claude*` → Anthropic
 
+## เชื่อมหลายโมเดล + ให้ระบบเลือกเอง (multi-model + auto-fallback)
+`_shared/modelRouter.ts` รองรับ **รายการโมเดลเรียงลำดับต่อ tier** + เลือกตามภาษา + fallback อัตโนมัติ
+ตั้งเป็น comma list (เรียงตามความชอบ) — ระบบลองตัวแรกก่อน · ล่ม/ตอบไม่ได้ → ตัวถัดไป · สุดท้าย fallback Claude เสมอ:
+```bash
+# งานไทย (Privacy Notice / ISO / คำแนะนำไทย) → Typhoon ก่อน แล้ว Llama แล้ว Claude
+supabase secrets set MODELS_THAI="typhoon-v2.1-12b-instruct,accounts/fireworks/models/llama-v3p3-70b-instruct"
+# งานเบา → Llama 8B (ถูก+เร็ว) แล้ว Haiku
+supabase secrets set MODELS_SIMPLE="accounts/fireworks/models/llama-v3p1-8b-instruct,claude-haiku-4-5-20251001"
+# งานหนัก → Llama 70B แล้ว fallback Claude เอง
+supabase secrets set MODELS_COMPLEX="accounts/fireworks/models/llama-v3p3-70b-instruct"
+supabase functions deploy ai-plan ai-assist agent-run --project-ref waigsnxhrlwtiotspaim
+```
+> **เลือกตามภาษาอัตโนมัติ:** ถ้า input เป็นภาษาไทย ระบบจะดันโมเดลใน `MODELS_THAI` (เช่น Typhoon) ขึ้นก่อนเสมอ
+> **default-safe:** ไม่ตั้ง `MODELS_*`/`MODEL_*` = ใช้ Claude เดิมตัวเดียว (พฤติกรรมไม่เปลี่ยน)
+
+### open-source ที่แนะนำ (จับคู่กับ tier)
+| tier | โมเดล | เหตุผล |
+|---|---|---|
+| `thai` | **Typhoon** (SCB 10X) | เทรนไทยโดยตรง — Privacy Notice/ISO/มอก. ดีสุด |
+| `simple` | **Llama 3.1 8B** | เร็ว+ถูกสุด สำหรับสรุป/จัดหมวด/เติมฟอร์ม |
+| `complex` | **Llama 3.3 70B / Qwen 2.5 72B** | ฉลาด/ราคาคุ้ม สำหรับวางแผน/วิเคราะห์ |
+| ทุก tier | **Claude (fallback สุดท้าย)** | กันทุกตัวล่ม — ตั้งอัตโนมัติ ไม่ต้องใส่เอง |
+
 ## หลังท่อผ่านแล้ว — สร้างฟีเจอร์ต่อ (ตามที่คุยไว้)
 | ลำดับ | ฟีเจอร์ | ขนาดงาน |
 |---|---|---|

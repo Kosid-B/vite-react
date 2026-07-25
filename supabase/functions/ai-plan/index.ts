@@ -6,12 +6,12 @@
 // เรียกจาก frontend:  supabase.functions.invoke('ai-plan', { body: { goal, industry, agents } })
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { pickModel } from "../_shared/modelRouter.ts";
-import { chat } from "../_shared/llm.ts";
+import { pickModels } from "../_shared/modelRouter.ts";
+import { chatWithFallback } from "../_shared/llm.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
-// ai-plan = วางแผน/แตกงานเชิงกลยุทธ์ = งาน 'complex' → คงโมเดลแรง (default = โมเดลเดิม, ตั้ง MODEL_COMPLEX เพื่อย้าย)
-const MODEL = pickModel("complex");
+// ai-plan = วางแผน/แตกงานเชิงกลยุทธ์ = งาน 'complex' → คงโมเดลแรง (default = โมเดลเดิม)
+// multi-model: ตั้ง MODELS_COMPLEX="llama-70b,..." เพื่อลองหลายตัว + fallback Claude · input ไทยดัน Typhoon ขึ้นก่อน
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -56,10 +56,12 @@ Deno.serve(async (req) => {
     `"approvals":[{"agentRole":"CMO","title":"...","detail":"...","impact":"งบ ฿..."}]}\n` +
     `ใส่ tasks 3-6 รายการ และ approvals 0-2 รายการ. status เป็นหนึ่งใน queued|in_progress|review.`;
 
-  // provider-agnostic (default Anthropic + โมเดลเดิม) · cacheSystem=true เผื่อ system prompt ยาวขึ้นในอนาคต
+  // multi-model + auto-fallback: เลือกโมเดลตาม tier 'complex' + ภาษาของ mission (ไทย→ดันโมเดลไทยขึ้นก่อน)
+  // ลองตามลำดับ ล่ม→ตัวถัดไป สุดท้าย fallback Claude เสมอ (default = โมเดลเดิม ถ้าไม่ตั้ง env)
+  const models = pickModels("complex", `${body.goal} ${body.industry ?? ""}`);
   let text: string;
   try {
-    const res = await chat({ model: MODEL, system, user: userMsg, maxTokens: 1500, cacheSystem: true });
+    const res = await chatWithFallback(models, { system, user: userMsg, maxTokens: 1500, cacheSystem: true });
     text = res.text;
   } catch (e) {
     return json({ error: "llm_error", detail: String(e) }, 502);
