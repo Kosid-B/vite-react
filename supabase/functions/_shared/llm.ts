@@ -130,3 +130,25 @@ export async function chat(opts: ChatOptions): Promise<ChatResult> {
     } : null,
   };
 }
+
+/**
+ * เรียกโมเดลตาม "รายการเรียงลำดับ" (จาก pickModels) — ลองตัวแรกก่อน · ถ้า error → ตัวถัดไป
+ * ใช้ทำ multi-model + auto-fallback: เชื่อม open-source หลายตัว ระบบเลือก/สลับเองเมื่อจำเป็น
+ * โยน error เฉพาะเมื่อ "ทุกตัวล้มเหลว" · ถ้า models ว่าง = ใช้ default ภายใน chat() ตามปกติ
+ */
+export async function chatWithFallback(
+  models: string[],
+  opts: Omit<ChatOptions, "model">,
+): Promise<ChatResult> {
+  // ถ้า models ว่าง → ใช้ Anthropic default (กันเรียกด้วย model="" แล้ว API พัง)
+  const list = models.length ? models : [Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-4-6"];
+  let lastErr: unknown = null;
+  for (const model of list) {
+    try {
+      return await chat({ ...opts, model });
+    } catch (e) {
+      lastErr = e; // provider ล่ม/ไม่ตั้ง key/โมเดลผิด → ลองตัวถัดไป
+    }
+  }
+  throw new Error(`all_models_failed:${String(lastErr)}`);
+}
