@@ -52,6 +52,23 @@ function renewalReminderHtml(plan: string, amount: number): string {
 </div>`;
 }
 
+function advanceReminderHtml(plan: string, amount: number, daysLeft: number): string {
+  const planLabel = plan === "starter" ? "Starter ฿390/เดือน" : plan === "growth" ? "Growth ฿1,490/เดือน" : plan === "scale" ? "Scale ฿5,900/เดือน" : plan;
+  return `
+<div style="font-family:Kanit,sans-serif;max-width:560px;margin:auto;background:#0f172a;color:#f8fafc;padding:32px;border-radius:12px">
+  <h2 style="color:#06b6d4;margin-top:0">🔔 ใกล้ครบกำหนดต่ออายุ — อีก ${daysLeft} วัน</h2>
+  <p>แพ็ก <strong style="color:#06b6d4">${planLabel}</strong> ของคุณจะครบรอบในอีก ${daysLeft} วัน</p>
+  <p>ต่ออายุล่วงหน้าได้เลยเพื่อใช้งานต่อเนื่อง ไม่มีสะดุด — ชำระผ่าน PromptPay ที่เมนู <strong>แพ็กเกจ</strong> ในแอป
+  แล้วอัปสลิป ระบบเปิดใช้งานให้ทันที</p>
+  <table style="width:100%;border-collapse:collapse;margin:16px 0">
+    <tr><td style="padding:8px;color:#94a3b8">ยอดต่ออายุ</td><td style="padding:8px;font-weight:600;color:#06b6d4">฿${amount.toLocaleString()}</td></tr>
+  </table>
+  <p style="color:#94a3b8;font-size:13px">ถ้าไม่ต่อ ระบบจะผ่อนผันให้อีก 7 วันหลังครบกำหนด ก่อนปรับกลับเป็น Free (ข้อมูลไม่หาย)</p>
+  <p style="color:#94a3b8;font-size:13px">มีข้อสงสัยติดต่อ <a href="mailto:${ADMIN_EMAIL}" style="color:#06b6d4">${ADMIN_EMAIL}</a></p>
+  <p style="color:#64748b;font-size:12px;margin-top:24px">CEO AI Thailand · แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย</p>
+</div>`;
+}
+
 function paymentFailedHtml(plan: string): string {
   const planLabel = plan === "starter" ? "Starter" : plan === "growth" ? "Growth" : plan === "scale" ? "Scale" : plan;
   return `
@@ -103,7 +120,8 @@ Deno.serve(async (req) => {
   const now = new Date();
   const GRACE_DAYS = 7;
   const RETRY_DAYS = 3;
-  let renewed = 0, pastDue = 0, downgraded = 0, failed = 0;
+  const ADVANCE_DAYS = 3; // เตือนล่วงหน้าก่อนครบกำหนดกี่วัน (กัน churn จาก 'ลืมต่อ')
+  let renewed = 0, pastDue = 0, downgraded = 0, failed = 0, remindedSoon = 0;
 
   const emailTasks: Promise<void>[] = [];
 
@@ -133,6 +151,25 @@ Deno.serve(async (req) => {
 
     const end = new Date(sub.currentPeriodEnd);
     const overdueMs = now.getTime() - end.getTime();
+
+    // เตือนล่วงหน้า (automate ผ่าน cron ล้วน ๆ ไม่พึ่ง payment gateway):
+    // ยังไม่ครบกำหนด + เหลือ ≤ ADVANCE_DAYS + จ่ายเอง (autoRenew=false) → ยิงเมล 'ใกล้ครบกำหนด' ครั้งเดียวต่อรอบ
+    // ถ้าเตือนชัดแล้วลูกค้ายังไม่ต่อ = สัญญาณจริงว่า benefit ไม่พอ → คัดกรองลูกค้าตัวจริงโดยตรง (ไม่ใช่หลุดเพราะลืม)
+    if (overdueMs < 0 && !sub.autoRenew && sub.status !== "cancelled"
+        && (-overdueMs) <= ADVANCE_DAYS * 86400000
+        && sub.reminderSentFor !== sub.currentPeriodEnd) {
+      const daysLeft = Math.max(1, Math.ceil((-overdueMs) / 86400000));
+      const amount = PRICE[sub.plan] ?? 0;
+      sub.reminderSentFor = sub.currentPeriodEnd; // กันเตือนซ้ำรายวัน (reset เองเมื่อรอบใหม่ → ค่าต่างจากเดิม)
+      remindedSoon++; dirty = true;
+
+      const wsId = row.workspace_id;
+      const planSnap = sub.plan;
+      emailTasks.push((async () => {
+        const userEmail = await getUserEmail(admin, wsId);
+        if (userEmail) await sendMail(userEmail, `🔔 ใกล้ครบกำหนดต่ออายุ (อีก ${daysLeft} วัน) — ${planSnap} CEO AI Thailand`, advanceReminderHtml(planSnap, amount, daysLeft));
+      })());
+    }
 
     if (overdueMs >= 0) {
       if (sub.autoRenew && sub.status !== "cancelled") {
@@ -195,7 +232,7 @@ Deno.serve(async (req) => {
   // ส่งอีเมลทั้งหมด (fire-and-forget หลัง DB update)
   await Promise.allSettled(emailTasks);
 
-  return json({ ok: true, renewed, past_due: pastDue, downgraded, failed, scanned: rows?.length ?? 0 }, 200);
+  return json({ ok: true, renewed, past_due: pastDue, downgraded, failed, reminded_soon: remindedSoon, scanned: rows?.length ?? 0 }, 200);
 });
 
 function json(obj: unknown, status = 200): Response {

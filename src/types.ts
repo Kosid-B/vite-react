@@ -280,6 +280,7 @@ export interface Subscription {
   trialEndDate: string | null;     // ISO วันสิ้นสุดการทดลองใช้ 15 วัน
   invoices: Invoice[];        // ประวัติใบแจ้งหนี้
   billingCycle?: 'monthly' | 'yearly'; // รอบบิล — รายปีจ่าย ~10 เดือน (ลด churn)
+  reminderSentFor?: string | null;     // currentPeriodEnd ที่ส่ง 'เตือนล่วงหน้าก่อนครบกำหนด' ไปแล้ว (กันเตือนซ้ำรายวัน)
 }
 
 /* ===== VRIO Analysis ===== */
