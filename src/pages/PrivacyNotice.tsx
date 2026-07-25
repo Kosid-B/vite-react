@@ -62,7 +62,7 @@ export default function PrivacyNotice() {
       setDraft(res.draft);
       setModelUsed(`AI: ${res.model ?? '-'}`);
       track('privacy_draft_generated', { doc_type: docType, mode: 'ai' });
-    } catch (e) {
+    } catch {
       setDraft(buildDraft(input)); // fallback ไม่ให้ผู้ใช้มือเปล่า
       setModelUsed('เทมเพลต (AI ไม่พร้อม)');
       setMsg('AI ไม่พร้อม (ตรวจว่า deploy privacy-notice + ตั้ง ANTHROPIC_API_KEY) — ใช้ร่างเทมเพลตแทน');
