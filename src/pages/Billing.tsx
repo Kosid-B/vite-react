@@ -3,6 +3,7 @@ import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
+import { GRACE_DAYS } from '../lib/access';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { submitPaymentSlip, listMyPayments } from '../lib/payments';
 import { track } from '../lib/analytics';
@@ -190,6 +191,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
           ...data.subscription,
           plan: approved.plan as PlanId,
           status: 'active',
+          autoRenew: false, // จ่ายเอง (PromptPay) ไม่มี auto-charge → cron ใช้เส้นทางเตือน+ผ่อนผัน+ตัด (กัน 'เดือนฟรีไม่สิ้นสุด')
           billingCycle: approved.cycle as 'monthly' | 'yearly',
           currentPeriodEnd: addMonths(now, approved.cycle === 'yearly' ? 12 : 1),
           trialEndDate: null,
@@ -298,6 +300,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         ...sub,
         plan: selectedPlan.id,
         status: 'active',
+        autoRenew: false, // จ่ายเอง → เตือน+ผ่อนผัน+ตัด (ไม่ auto-charge)
         billingCycle: cycle,
         currentPeriodEnd: addMonths(now, cycle === 'yearly' ? 12 : 1),
         trialEndDate: null,
@@ -327,14 +330,11 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
       subscription: {
         ...sub,
         status: 'active',
+        autoRenew: false, // ต่ออายุเอง → รอบหน้าเตือน+ผ่อนผันอีกครั้ง
         currentPeriodEnd: addMonths(base, yearly ? 12 : 1),
         invoices: [invoice, ...sub.invoices],
       },
     });
-  }
-
-  function setAutoRenew(v: boolean) {
-    onUpdate({ ...data, subscription: { ...sub, autoRenew: v } });
   }
 
   function cancelSub() {
@@ -498,14 +498,10 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             </div>
           </div>
           <div className="bill-sub-actions">
-            <label className="bill-autorenew">
-              <input
-                type="checkbox"
-                checked={sub.autoRenew}
-                onChange={e => setAutoRenew(e.target.checked)}
-              />
-              ต่ออายุอัตโนมัติ
-            </label>
+            <div className="bill-renew-note">
+              🔔 ต่ออายุเองผ่าน PromptPay — เมื่อครบกำหนดเราจะส่งอีเมลเตือน
+              และผ่อนผันให้อีก {GRACE_DAYS} วันก่อนปรับเป็นแพ็กฟรี (ไม่มีการตัดเงินอัตโนมัติ)
+            </div>
             {(effective === 'past_due' ||
               (dLeft !== null && dLeft <= 7) ||
               sub.status === 'cancelled') && (
@@ -515,7 +511,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             )}
             {sub.status !== 'cancelled' && (
               <button className="bill-cancel-btn" onClick={cancelSub}>
-                ยกเลิกต่ออายุ
+                ยกเลิกแพ็ก
               </button>
             )}
           </div>

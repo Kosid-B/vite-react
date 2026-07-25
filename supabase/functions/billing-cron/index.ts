@@ -167,8 +167,21 @@ Deno.serve(async (req) => {
           ]);
         })());
       } else if (sub.status !== "past_due") {
+        // จ่ายเอง (PromptPay ไม่มี auto-charge): ครบกำหนดแล้ว → ตั้ง past_due + เตือนล่วงหน้า
+        // ยังไม่ตัดสิทธิ์ทันที — ผ่อนผัน GRACE_DAYS ก่อน downgrade (นโยบาย "เตือน + ผ่อนผัน")
         sub.status = "past_due";
         pastDue++; dirty = true;
+
+        const amount = PRICE[sub.plan] ?? 0;
+        const wsId = row.workspace_id;
+        const planSnap = sub.plan;
+        emailTasks.push((async () => {
+          const userEmail = await getUserEmail(admin, wsId);
+          await Promise.all([
+            userEmail ? sendMail(userEmail, `🔔 ครบกำหนดต่ออายุ — ${planSnap} CEO AI Thailand`, renewalReminderHtml(planSnap, amount)) : Promise.resolve(),
+            sendMail(ADMIN_EMAIL, `[CEO AI] Past Due (grace ${GRACE_DAYS}d) — ${planSnap} — ${wsId.slice(0, 8)}`, adminBillingHtml("past_due", wsId, planSnap, userEmail ?? null)),
+          ]);
+        })());
       }
     }
 
