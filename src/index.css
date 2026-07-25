@@ -6141,3 +6141,11 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .kb-sugg:hover { border-color: var(--accent); color: var(--ink); }
 .kb-result { margin-top: 16px; }
 .kb-answer { font-size: 14px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; margin-top: 6px; }
+
+/* ===== Auth: สถานะรอยืนยันอีเมล (ลด drop-off) ===== */
+.auth-pending { text-align: center; padding: 8px 0 4px; }
+.auth-pending-ico { font-size: 40px; margin-bottom: 6px; }
+.auth-pending-title { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+.auth-pending-text { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin-bottom: 14px; }
+.auth-alt { display: block; width: 100%; margin-top: 10px; background: none; border: none; color: var(--ink3); font-family: inherit; font-size: 13px; cursor: pointer; }
+.auth-alt:hover { color: var(--ink); }

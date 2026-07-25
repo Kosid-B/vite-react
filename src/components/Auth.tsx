@@ -29,6 +29,8 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
   const [otpSent, setOtpSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ type: 'err' | 'ok'; text: string } | null>(null);
+  // อีเมลที่สมัครแล้วรอยืนยัน (โชว์ปุ่มส่งอีเมลอีกครั้ง + เตือนเช็ก spam) — ลด drop-off จุดตันใหญ่สุดของ onboarding
+  const [pendingConfirm, setPendingConfirm] = useState<string | null>(null);
 
   // Authentic nudge: เลือก "มุมอารมณ์" แบบ deterministic แล้ววัดผลว่ามุมไหนแปลงจริง (GA)
   const variant = useMemo(() => pickNudgeVariant(Math.floor(Date.now() / 86400000)), []);
@@ -43,9 +45,16 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
     try {
       if (mode === 'signup') {
         track('nudge_cta', { variant });   // วัดว่ามุมอารมณ์นี้นำสู่การสมัครจริง
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) throw error;
-        setMsg({ type: 'ok', text: 'สมัครสำเร็จ! ตรวจอีเมลเพื่อยืนยัน แล้วเข้าสู่ระบบได้เลย' });
+        if (data.session) {
+          // Confirm email ปิด → ล็อกอินทันที (App จับ session เอง) ไม่ต้องรออีเมล
+          track('signup_instant', {});
+        } else {
+          // ต้องยืนยันอีเมล → โชว์สถานะรอยืนยัน + ปุ่มส่งอีกครั้ง (กันผู้ใช้ค้างเงียบ ๆ)
+          setPendingConfirm(email);
+          track('signup_pending_confirm', {});
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -56,6 +65,17 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function resendConfirm() {
+    if (!supabase || !pendingConfirm) return;
+    setBusy(true); setMsg(null);
+    const { error } = await supabase.auth.resend({ type: 'signup', email: pendingConfirm });
+    setBusy(false);
+    track('signup_resend_confirm', {});
+    setMsg(error
+      ? { type: 'err', text: error.message || 'ส่งอีเมลไม่สำเร็จ' }
+      : { type: 'ok', text: 'ส่งอีเมลยืนยันอีกครั้งแล้ว — เช็กกล่องจดหมาย + โฟลเดอร์ Spam/Junk' });
   }
 
   async function magicLink() {
@@ -113,6 +133,24 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
         <div className="auth-brand">{BRAND.product}</div>
         <div className="auth-sub">{BRAND.tagline}</div>
 
+        {pendingConfirm ? (
+          <div className="auth-pending">
+            <div className="auth-pending-ico">📩</div>
+            <div className="auth-pending-title">ยืนยันอีเมลอีก 1 ขั้น</div>
+            <div className="auth-pending-text">
+              เราส่งลิงก์ยืนยันไปที่ <b>{pendingConfirm}</b><br />
+              กดลิงก์ในอีเมลเพื่อเข้าใช้งาน — <b>ถ้าไม่เจอ ลองเช็กโฟลเดอร์ Spam/Junk</b>
+            </div>
+            {msg && <div className={`auth-msg ${msg.type}`}>{msg.text}</div>}
+            <button type="button" className="auth-submit" onClick={resendConfirm} disabled={busy}>
+              {busy ? 'กำลังส่ง…' : 'ส่งอีเมลยืนยันอีกครั้ง'}
+            </button>
+            <button type="button" className="auth-alt" onClick={() => { setPendingConfirm(null); setMsg(null); }}>
+              ← ใช้อีเมลอื่น / กลับไปเข้าสู่ระบบ
+            </button>
+          </div>
+        ) : (
+        <>
         <AuthNudge nudge={nudge} />
 
         {/* เข้าสู่ระบบด้วย LINE (ปุ่มเด่น — คนไทยสะดวกสุด) แสดงเมื่อเปิดใช้งาน */}
@@ -182,6 +220,8 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
             )}
             <div className="auth-hint">เข้าสู่ระบบ/สมัครด้วยเบอร์เดียว — ไม่ต้องตั้งรหัสผ่าน</div>
           </form>
+        )}
+        </>
         )}
 
         <div className="auth-company">
