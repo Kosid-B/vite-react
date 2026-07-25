@@ -6,6 +6,7 @@ const PAGE_TITLE: Partial<Record<PageId, string>> = {
   market:    'Marketplace',
   team:      'ทีม / สมาชิก',
   iso9001:   'ISO 9001:2015 QMS',
+  privacy:   'ตัวช่วย PDPA (Privacy Notice/SOP)',
   factory:   'โรงงานอัจฉริยะ',
   analytics: 'SaaS Analytics',
   sipoc:     'SIPOC Process',
@@ -15,6 +16,7 @@ const PAGE_TITLE: Partial<Record<PageId, string>> = {
 
 const PLAN_FEATURES: Partial<Record<string, string[]>> = {
   starter: [
+    'ตัวช่วย PDPA — ร่าง Privacy Notice/SOP ด้วย AI',
     'ซื้อขาย B2B (RFQ) — หาคู่ค้า รับงานจริง',
     'ออเดอร์ + ติดตามสถานะจนปิดดีล',
     'AI calls 300 ครั้ง/เดือน',
