@@ -337,6 +337,24 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
       </div>
       )}
 
+      <div className="nav-section">
+        <div className="nav-label">Compliance (PDPA · ISO)</div>
+        <button className={`nav-item ${activePage === 'privacy' ? 'active' : ''}${locked('privacy') ? ' nav-locked' : ''}`} onClick={() => onNavigate('privacy')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          ตัวช่วย PDPA
+          {locked('privacy') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+        </button>
+        <button className={`nav-item ${activePage === 'compliance' ? 'active' : ''}${locked('compliance') ? ' nav-locked' : ''}`} onClick={() => onNavigate('compliance')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          AI ตรวจเอกสาร ISO/มอก.
+          {locked('compliance') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+        </button>
+      </div>
+
       <div className="nav-section" style={{ marginTop: 4 }}>
         <div className="nav-label">✦ AI Powered</div>
         <button

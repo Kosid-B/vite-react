@@ -30,9 +30,12 @@
   // ---- คอนฟิกการ์ดต่อหน้า (เรียงเฉพาะ→กว้าง สำคัญ — first match wins) ----
   // ปรับให้ตรงหน้าจริงของ b-tctraining จาก sitemap.xml (ก.ค. 2569)
   var RULES = [
+    // สร้างธุรกิจ → ชี้ไป app.theossphere.com (เครื่องมือสร้างธุรกิจในเครือ) ผ่าน url/eyebrow override
     { key:'srang-thurakij', test:/สร้างธุรกิจ|start-business|build-business|เริ่มธุรกิจ/i,
-      h:'เริ่มต้นธุรกิจ? จ้าง "ทีม AI ทั้งบริษัท" มาช่วยตั้งแต่วันแรก',
-      s:'CEO · การตลาด · การเงิน · ผู้ช่วยประเมินระบบ ISO — ทีม AI ช่วยคุณ 24 ชม. สั่งงานภาษาไทย เริ่มฟรี ไม่ต้องใช้บัตร', b:'เริ่มฟรี' },
+      url:'https://app.theossphere.com/?ref=btctraining&utm_source=btctraining&utm_medium=content_card&utm_campaign=srang-thurakij',
+      eyebrow:'THE OSSPHERE · เครื่องมือสร้างธุรกิจ',
+      h:'เริ่มต้น + วางระบบธุรกิจอย่างเป็นขั้นตอน',
+      s:'แพลตฟอร์มช่วยผู้ประกอบการวางแผนและสร้างธุรกิจเป็นระบบ — โดยที่ปรึกษาไทย 20 ปี เริ่มใช้ได้เลย', b:'เริ่มเลย' },
     // มอก./TIS → ชี้ไป TIS Automate (ผลิตภัณฑ์แยกที่ทำ มอก. จริง) ผ่าน url/eyebrow override
     { key:'tisi_mok',  test:/มอก|tisi|ใบอนุญาต|มาตรฐานผลิตภัณฑ์/i,
       url:'https://tis-automate.vercel.app/?ref=btctraining&utm_source=btctraining&utm_medium=content_card&utm_campaign=tisi_mok',

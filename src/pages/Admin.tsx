@@ -12,6 +12,7 @@ const PaymentsTab   = lazy(() => import('./AdminTabs/PaymentsTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
+import { costReport, estimateVolume } from '../lib/aiCost';
 import { aggregateExperiments, retentionCohorts, expReportCsv, expReportTsv, type ExperimentsAggregate, type RetentionReport } from '../lib/experiments';
 import { isAdminEmail, ADMIN_EMAILS, PAYMENT } from '../config';
 import { applyRefund } from '../../supabase/functions/_shared/refund.ts';
@@ -2251,6 +2252,36 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                         </table>
                       </div>
                     </>
+                  );
+                })()}
+
+                {opsRows.length > 0 && (() => {
+                  // ประมาณการต้นทุน AI ทั้งระบบจากกิจกรรมจริง (Fireworks Playbook · Phase 4)
+                  const tasksTotal = opsRows.reduce((s, r) => s + r.tasksTotal, 0);
+                  const agents = opsRows.reduce((s, r) => s + r.agents, 0);
+                  const revenue = opsRows.reduce((s, r) => s + r.revenue, 0);
+                  const rep = costReport(estimateVolume({ tasksTotal, agents }));
+                  const marginNow = revenue > 0 ? ((revenue - rep.current.totalThb) / revenue) * 100 : 0;
+                  const marginAgg = revenue > 0 ? ((revenue - rep.aggressive.totalThb) / revenue) * 100 : 0;
+                  return (
+                    <div className="ops-panel" style={{ marginTop: 16 }}>
+                      <div className="ops-title">🤖 ต้นทุน AI (ประมาณการ) — Model Tiering</div>
+                      <div className="ops-sub">
+                        ประมาณจากกิจกรรมจริง ({tasksTotal} งาน · {agents} เอเจนต์) × ราคาป้ายโมเดล ·
+                        เปิด tiering ด้วย secret <code>MODEL_SIMPLE</code>/<code>MODEL_THAI</code> (ไม่ต้องแก้โค้ด)
+                      </div>
+                      <div className="ops-kpis" style={{ marginTop: 10 }}>
+                        <div className="ops-kpi"><div className="ops-kpi-n">{fmtBaht(rep.current.totalThb)}</div><div className="ops-kpi-l">ปัจจุบัน (Sonnet ทุกงาน)/เดือน</div></div>
+                        <div className="ops-kpi"><div className="ops-kpi-n">{fmtBaht(rep.tiered.totalThb)}</div><div className="ops-kpi-l">Tiering (Haiku งานเบา)</div></div>
+                        <div className="ops-kpi"><div className="ops-kpi-n">{fmtBaht(rep.aggressive.totalThb)}</div><div className="ops-kpi-l">+ Typhoon งานไทย</div></div>
+                        <div className="ops-kpi ops-pos"><div className="ops-kpi-n">-{fmtBaht(rep.aggressiveSavingThb)}</div><div className="ops-kpi-l">ประหยัดสูงสุด/เดือน ({rep.aggressiveSavingPct.toFixed(0)}%)</div></div>
+                      </div>
+                      {revenue > 0 && (
+                        <div className="ops-sub" style={{ marginTop: 8 }}>
+                          มาร์จินจากต้นทุน AI: <b>{marginNow.toFixed(0)}%</b> → <b className="ops-pos">{marginAgg.toFixed(0)}%</b> ถ้าเปิด tiering + Typhoon เต็มที่
+                        </div>
+                      )}
+                    </div>
                   );
                 })()}
 
