@@ -8,6 +8,7 @@ const PAGE_TITLE: Partial<Record<PageId, string>> = {
   iso9001:   'ISO 9001:2015 QMS',
   privacy:   'ตัวช่วย PDPA (Privacy Notice/SOP)',
   compliance: 'AI ตรวจเอกสาร ISO / มอก.',
+  knowledge:  'คลังความรู้ ISO / PDPA (ถาม-ตอบ)',
   factory:   'โรงงานอัจฉริยะ',
   analytics: 'SaaS Analytics',
   sipoc:     'SIPOC Process',
