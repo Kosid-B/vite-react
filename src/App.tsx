@@ -57,6 +57,7 @@ const Pulse = lazy(() => import('./pages/Pulse'));
 const InterCityTrade = lazy(() => import('./pages/InterCityTrade'));
 const BoardRoom = lazy(() => import('./pages/BoardRoom'));
 const Resources = lazy(() => import('./pages/Resources'));
+const PrivacyNotice = lazy(() => import('./pages/PrivacyNotice'));
 
 const STORAGE_KEY = 'cjux2';
 
@@ -90,6 +91,7 @@ const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'analytics', label: 'SaaS Analytics' },
   { id: 'admin', label: 'ผู้ดูแลระบบ' },
   { id: 'iso9001', label: 'ISO 9001:2015 QMS' },
+  { id: 'privacy', label: 'ตัวช่วย PDPA' },
   { id: 'aisearch', label: 'AI Research' },
   { id: 'cases', label: 'Case Studies' },
 ];
@@ -522,6 +524,11 @@ export default function App() {
           canAccess(data, 'iso9001')
             ? <ISO9001 data={data} onUpdate={updateData} onNavigate={setActivePage} />
             : <UpgradeWall page="iso9001" data={data} onNavigate={setActivePage} />
+        )}
+        {activePage === 'privacy' && (
+          canAccess(data, 'privacy')
+            ? <PrivacyNotice />
+            : <UpgradeWall page="privacy" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'cases' && <CaseStudies data={data} />}
         {activePage === 'analytics' && (

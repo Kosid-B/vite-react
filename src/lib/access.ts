@@ -31,6 +31,7 @@ export const PAGE_MIN_PLAN: Partial<Record<PageId, PlanId>> = {
   market:    'growth',
   team:      'growth',
   iso9001:   'growth',
+  privacy:   'starter', // ตัวช่วย PDPA (Privacy Notice/SOP) — ฟีเจอร์ compliance เริ่มต้น
   analytics: 'growth',
   sipoc:     'growth', // SIPOC Process — ฟีเจอร์ในแพ็กเกจเสียเงิน
   admin:     'scale',
