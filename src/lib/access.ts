@@ -33,6 +33,7 @@ export const PAGE_MIN_PLAN: Partial<Record<PageId, PlanId>> = {
   iso9001:   'growth',
   privacy:   'starter', // ตัวช่วย PDPA (Privacy Notice/SOP) — ฟีเจอร์ compliance เริ่มต้น
   compliance: 'growth',  // AI ตรวจเอกสาร ISO/มอก. — เครื่องมือ compliance เชิงลึก
+  knowledge:  'starter', // คลังความรู้ ISO/PDPA (ถาม-ตอบ) — ฟีเจอร์ช่วยตัดสินใจเริ่มต้น
   analytics: 'growth',
   sipoc:     'growth', // SIPOC Process — ฟีเจอร์ในแพ็กเกจเสียเงิน
   admin:     'scale',
