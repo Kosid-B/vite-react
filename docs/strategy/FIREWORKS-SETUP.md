@@ -45,8 +45,8 @@ supabase functions deploy ai-plan ai-assist agent-run --project-ref waigsnxhrlwt
 | tier | โมเดล | เหตุผล |
 |---|---|---|
 | `thai` | **Typhoon** (SCB 10X) | เทรนไทยโดยตรง — Privacy Notice/ISO/มอก. ดีสุด |
-| `simple` | **Llama 3.1 8B** | เร็ว+ถูกสุด สำหรับสรุป/จัดหมวด/เติมฟอร์ม |
-| `complex` | **Llama 3.3 70B / Qwen 2.5 72B** | ฉลาด/ราคาคุ้ม สำหรับวางแผน/วิเคราะห์ |
+| `simple` | **Llama 3.1 8B / Mistral 7B** | เร็ว+ถูกสุด สำหรับสรุป/จัดหมวด/เติมฟอร์ม |
+| `complex` | **Llama 3.3 70B / Qwen 2.5 72B / Mixtral 8x7B** | ฉลาด/ราคาคุ้ม สำหรับวางแผน/วิเคราะห์ (Mixtral เด่นเชิงตรรกะ) |
 | ทุก tier | **Claude (fallback สุดท้าย)** | กันทุกตัวล่ม — ตั้งอัตโนมัติ ไม่ต้องใส่เอง |
 
 ## หลังท่อผ่านแล้ว — สร้างฟีเจอร์ต่อ (ตามที่คุยไว้)
