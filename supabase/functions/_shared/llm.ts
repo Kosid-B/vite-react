@@ -42,9 +42,11 @@ export function providerFor(model: string): Provider {
   if (forced === "anthropic" || forced === "openai") return forced;
   const m = (model || "").toLowerCase();
   if (m.startsWith("claude") || m.startsWith("anthropic")) return "anthropic";
-  // typhoon / llama / qwen / fireworks (accounts/…) / together (org/model) = OpenAI-compatible
+  // open-source (typhoon/llama/qwen/mistral/mixtral/gemma/deepseek) หรือ path provider
+  // (fireworks accounts/… · together org/model) = OpenAI-compatible
   if (m.includes("typhoon") || m.includes("llama") || m.includes("qwen") ||
-      m.startsWith("accounts/") || m.includes("/")) return "openai";
+      m.includes("mistral") || m.includes("mixtral") || m.includes("gemma") ||
+      m.includes("deepseek") || m.startsWith("accounts/") || m.includes("/")) return "openai";
   return "anthropic";
 }
 
