@@ -51,6 +51,52 @@ export async function submitPaymentSlip(input: {
   return { id: data?.id as string };
 }
 
+/** ตรวจสลิปกับ record ธนาคารจริงผ่าน SlipOK (server-side) → เปิดแพ็กให้เมื่อผ่าน
+ *  ใช้เมื่อ PAYMENT.slipOkLive = true · server เป็นผู้เขียน plan (ปิดช่องโหว่ client-trust) */
+export interface VerifySlipResult {
+  ok: boolean;
+  reason?: string;
+  code?: number;
+  subscription?: unknown;
+  appliedPaymentIds?: string[];
+  currentPeriodEnd?: string;
+}
+export async function verifySlip(input: {
+  workspaceId: string; submissionId: string; plan: string; cycle: string;
+}): Promise<VerifySlipResult> {
+  if (!isSupabaseEnabled || !supabase) return { ok: false, reason: 'offline' };
+  const { data, error } = await supabase.functions.invoke('verify-slip', { body: input });
+  if (error) {
+    // edge function ตอบ non-2xx → อ่าน body ที่แนบ reason มา (ถ้ามี)
+    const ctx = (error as { context?: { body?: unknown } })?.context;
+    let parsed: VerifySlipResult | null = null;
+    try {
+      const raw = ctx?.body;
+      if (typeof raw === 'string') parsed = JSON.parse(raw);
+      else if (raw && typeof raw === 'object') parsed = raw as VerifySlipResult;
+    } catch { /* ignore */ }
+    return parsed ?? { ok: false, reason: error.message || 'verify_failed' };
+  }
+  return (data as VerifySlipResult) ?? { ok: false, reason: 'no_response' };
+}
+
+/** ข้อความไทยของเหตุผลที่ตรวจสลิปไม่ผ่าน (map จาก reason ของ verify-slip) */
+export function slipReasonText(reason?: string): string {
+  switch (reason) {
+    case 'duplicate_slip':      return 'สลิปนี้เคยใช้เปิดแพ็กแล้ว (กันใช้ซ้ำ)';
+    case 'amount_too_low':
+    case 'amount_mismatch':     return 'ยอดโอนไม่ตรงกับราคาแพ็ก';
+    case 'receiver_mismatch':   return 'บัญชีผู้รับไม่ตรงกับบัญชีบริษัท — ตรวจว่าโอนเข้าบัญชีที่ถูกต้อง';
+    case 'slip_not_verified':   return 'ตรวจสลิปไม่ผ่าน — รูปอาจไม่ใช่สลิปโอนจริง หรืออ่าน QR ไม่ได้';
+    case 'slipok_not_configured':
+    case 'slipok_unreachable':
+    case 'slipok_bad_response': return 'ระบบตรวจสลิปไม่พร้อมชั่วคราว — ลองใหม่ หรือติดต่อทีมงาน';
+    case 'not_a_member':
+    case 'unauthorized':        return 'ไม่มีสิทธิ์ดำเนินการ — ลองล็อกอินใหม่';
+    default:                    return 'ตรวจสลิปไม่สำเร็จ กรุณาลองใหม่หรือติดต่อทีมงาน';
+  }
+}
+
 /** คำขอชำระเงินของ workspace ฉัน (ใช้ตรวจว่ามีอันที่อนุมัติแล้วเพื่อเปิดใช้งาน) */
 export async function listMyPayments(wsId: string | null): Promise<PaymentSubmission[]> {
   if (!isSupabaseEnabled || !supabase || !wsId) return [];

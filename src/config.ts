@@ -72,6 +72,14 @@ export const PAYMENT = {
   stripePaymentLinkPilot: '',
   // ราคา Pilot (แสดงผลในการ์ด) — ปรับได้
   pilotPrice: '฿1,990',
+  // 🔒 ตรวจสลิปกับ record ธนาคารจริงผ่าน SlipOK (ปิดช่องโหว่ "อัปรูปมั่วก็เปิดฟรี")
+  //   false (ตอนนี้): อัปสลิป → เปิดแพ็กทันที (เชื่อผู้ใช้) + แอดมินตรวจย้อนหลัง — UX ลื่นแต่มีความเสี่ยง
+  //   true: อัปสลิป → edge function verify-slip เรียก SlipOK ตรวจจริง (ยอด+บัญชีผู้รับ+กันสลิปซ้ำ)
+  //         แล้ว "เปิดแพ็กฝั่ง server" เท่านั้น — ปิดช่องโหว่สมบูรณ์
+  //   เปิดเป็น true เมื่อ: (1) สมัคร SlipOK (มาตรฐาน SME ไทย) ได้ branchId + apiKey
+  //     (2) deploy ฟังก์ชัน verify-slip (3) ตั้ง secret SLIPOK_API_KEY + SLIPOK_BRANCH_ID
+  //     (ออปชัน SLIPOK_RECEIVER_HINT = เลขบัญชีบางส่วนไว้จับคู่ผู้รับ · default 2560 จากบัญชี K BIZ)
+  slipOkLive: false,
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)

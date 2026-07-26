@@ -32,5 +32,8 @@ verify_jwt = false
 [functions.stripe-create-checkout]
 verify_jwt = true
 
+[functions.verify-slip]
+verify_jwt = true
+
 [functions.weekly-report]
 verify_jwt = false

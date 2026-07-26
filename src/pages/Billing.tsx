@@ -5,7 +5,7 @@ import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
 import { GRACE_DAYS } from '../lib/access';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
-import { submitPaymentSlip, listMyPayments } from '../lib/payments';
+import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText } from '../lib/payments';
 import { track } from '../lib/analytics';
 import ExpertEdge from '../components/ExpertEdge';
 
@@ -221,23 +221,50 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         return;
       }
 
-      // (2) เปิดแพ็กให้สลิปที่ยังไม่เปิด (ไม่รวมที่ถูกตีกลับ)
-      const toActivate = subs.find(s => s.status !== 'rejected' && !applied.includes(s.id));
-      if (toActivate) activateFromSlip(toActivate, applied, false);
+      // (2) เปิดแพ็กให้สลิปที่ยังไม่เปิด (ไม่รวมที่ถูกตีกลับ) — เฉพาะโหมด PLG เชื่อผู้ใช้ (!slipOkLive)
+      //     เมื่อ slipOkLive: server (verify-slip) เป็นผู้เปิดแพ็กหลังตรวจ SlipOK ผ่านเท่านั้น
+      //     → ไม่เปิดฝั่ง client (กันช่องโหว่ "อัปรูปมั่วแล้ว re-open หน้าเพื่อเปิดแพ็ก")
+      if (!PAYMENT.slipOkLive) {
+        const toActivate = subs.find(s => s.status !== 'rejected' && !applied.includes(s.id));
+        if (toActivate) activateFromSlip(toActivate, applied, false);
+      }
     }).catch(() => { /* เงียบ — ไม่ทำ UX พัง */ });
     return () => { cancelled = true; };
   }, [wsId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** อัปสลิปในแอป → เปิดใช้งานแพ็กทันที (PLG · ไม่รอ admin) + เก็บสลิปเข้าคิวตรวจย้อนหลัง */
+  /** อัปสลิป → (slipOkLive) ตรวจกับธนาคารจริงผ่าน SlipOK แล้ว server เปิดแพ็ก
+   *  (ไม่ live) เปิดแพ็กทันทีแบบ PLG เชื่อผู้ใช้ + แอดมินตรวจย้อนหลัง */
   async function uploadSlip(file?: File) {
     if (!file || !wsId) return;
     setSlipBusy(true);
     setSlipMsg(null);
     track('begin_checkout', { plan: selected, cycle, value: chargeAmount, currency: 'THB', method: 'slip' });
     const { error, id } = await submitPaymentSlip({ wsId, plan: selected, cycle, amount: chargeAmount, file });
+    if (error || !id) { setSlipBusy(false); setSlipMsg('⚠️ ' + (error ?? 'อัปสลิปไม่สำเร็จ')); return; }
+
+    if (PAYMENT.slipOkLive) {
+      // 🔒 ตรวจกับ record ธนาคารจริง — server เป็นผู้เปิดแพ็ก (client ไม่เปิดเอง = ปิดช่องโหว่)
+      setSlipMsg('🔎 กำลังตรวจสลิปกับธนาคาร…');
+      const res = await verifySlip({ workspaceId: wsId, submissionId: id, plan: selected, cycle });
+      setSlipBusy(false);
+      if (!res.ok) {
+        track('slip_verify_failed', { reason: res.reason ?? 'unknown' });
+        setSlipMsg('⚠️ ' + slipReasonText(res.reason));
+        return;
+      }
+      // sync สถานะจาก server (source of truth) — ไม่คำนวณซ้ำฝั่ง client
+      onUpdate({
+        ...data,
+        appliedPaymentIds: res.appliedPaymentIds ?? [...(data.appliedPaymentIds ?? []), id],
+        subscription: (res.subscription as typeof data.subscription) ?? data.subscription,
+      });
+      setSlipMsg('✅ ตรวจสลิปผ่าน — เปิดใช้งานแพ็ก ' + selected.toUpperCase() + ' แล้ว!');
+      track('purchase', { transaction_id: 'inv-' + id.slice(0, 8), value: chargeAmount, currency: 'THB', plan: selected, cycle });
+      return;
+    }
+
+    // โหมดเชื่อผู้ใช้ (ยังไม่เปิด SlipOK) — เปิดแพ็กทันที ไม่รอแอดมิน (ตรวจย้อนหลัง + ตีกลับได้)
     setSlipBusy(false);
-    if (error || !id) { setSlipMsg('⚠️ ' + (error ?? 'อัปสลิปไม่สำเร็จ')); return; }
-    // เปิดแพ็กทันที — ไม่รอแอดมิน (admin ตรวจย้อนหลัง + ตีกลับได้ถ้าสลิปไม่ตรง)
     activateFromSlip({ id, plan: selected, cycle, amount: chargeAmount }, data.appliedPaymentIds ?? [], true);
   }
 
@@ -709,10 +736,15 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             </div>
 
             <div className="bill-slip-box">
-              <div className="bill-slip-hd">📎 ส่งสลิปหลังโอนเงิน → เปิดแพ็กทันที</div>
+              <div className="bill-slip-hd">
+                {PAYMENT.slipOkLive ? '🔒 ส่งสลิปหลังโอนเงิน → ตรวจกับธนาคารจริง → เปิดแพ็ก' : '📎 ส่งสลิปหลังโอนเงิน → เปิดแพ็กทันที'}
+              </div>
               <div className="bill-slip-desc">
-                หลังโอนเงินแล้ว อัปสลิปในระบบได้เลย — <b>ระบบเปิดใช้งานแพ็กให้ทันที</b> ไม่ต้องรอแอดมิน
-                (ทีมงานตรวจสลิปย้อนหลังตามปกติ)
+                {PAYMENT.slipOkLive
+                  ? <>หลังโอนเงินแล้ว อัปสลิปได้เลย — ระบบ<b>ตรวจสลิปกับ record ธนาคารจริง</b> (ยอด · บัญชีผู้รับ · กันสลิปซ้ำ)
+                     ผ่านแล้วเปิดแพ็กให้อัตโนมัติภายในไม่กี่วินาที</>
+                  : <>หลังโอนเงินแล้ว อัปสลิปในระบบได้เลย — <b>ระบบเปิดใช้งานแพ็กให้ทันที</b> ไม่ต้องรอแอดมิน
+                     (ทีมงานตรวจสลิปย้อนหลังตามปกติ)</>}
               </div>
               {isSupabaseEnabled && (
                 <label className={`bill-slip-upload${slipBusy ? ' busy' : ''}`}>
