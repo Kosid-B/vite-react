@@ -7,12 +7,12 @@ import type { OnboardGoal, PageId } from '../types';
  *  เห็น aha เร็ว ไม่เจอ 20 เมนูพร้อมกัน · ที่เหลือปลดล็อกทีหลัง (โหมดโฟกัสใน Sidebar) */
 
 const GOALS: { goal: OnboardGoal; page: PageId; icon: string; title: string; desc: string; tag?: string }[] = [
-  { goal: 'pdpa', page: 'privacy', icon: '🔐', title: 'งาน PDPA', tag: 'ยอดฮิต',
-    desc: 'ร่าง Privacy Notice / SOP ตาม พ.ร.บ.คุ้มครองข้อมูลฯ — เห็นเอกสารเต็มใน 2 นาที' },
-  { goal: 'iso', page: 'compliance', icon: '📋', title: 'งาน ISO 9001 / มอก.',
-    desc: 'ตรวจความพร้อมเอกสารก่อน auditor มา — เห็น Readiness Score + ข้อที่ยังขาดทันที' },
-  { goal: 'aicompany', page: 'aicompany', icon: '🏢', title: 'สร้างบริษัท AI',
+  { goal: 'aicompany', page: 'aicompany', icon: '🏢', title: 'สร้างบริษัท AI', tag: 'เริ่มที่นี่',
     desc: 'ให้ CEO AI จัดทีมผู้บริหาร + วางแผน + เดินธุรกิจให้อัตโนมัติ' },
+  { goal: 'sell', page: 'storefront', icon: '🛒', title: 'เปิดร้าน & ขายของ',
+    desc: 'สร้างหน้าร้านออนไลน์ + ลงตลาด B2B รับลูกค้าและใบสั่งซื้อจริง' },
+  { goal: 'validate', page: 'bmc', icon: '💡', title: 'เริ่มจากไอเดีย',
+    desc: 'ออกแบบโมเดลธุรกิจ (MIT 24 ขั้น) + พิสูจน์ว่ามีลูกค้าจ่ายก่อนลงทุน' },
 ];
 
 export default function GoalChooser({ onPick, onSkip }: {

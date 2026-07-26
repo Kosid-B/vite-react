@@ -180,8 +180,11 @@ Google Sheets ของ User (เชื่อมบัญชีเอง) = Phas
 ### Onboarding "เข้าง่าย + ลึกได้" (คัดคนตั้งใจด้วยการลงมือ+จ่าย ไม่ใช่ UI ยาก)
 ```
 ผู้ใช้ใหม่ (onboardGoal ยังไม่เลือก + visitedPages ≤ 1) → components/GoalChooser.tsx
-  ถาม "วันนี้อยากทำอะไร?" 3 การ์ด: PDPA→privacy · ISO/มอก.→compliance · สร้างบริษัท AI→aicompany
+  ถาม "วันนี้อยากทำอะไร?" 3 การ์ด (โฟกัสวัตถุประสงค์จริง = สร้าง & ทำธุรกิจ ไม่ใช่ compliance):
+    สร้างบริษัท AI→aicompany · เปิดร้าน&ขายของ→storefront · เริ่มจากไอเดีย(validate)→bmc
   (+ skip "ดูภาพรวมก่อน"→onboardGoal='explore') → บันทึก AppData.onboardGoal + พาไปหน้านั้นทันที
+  ⚠️ PDPA/ISO = ฟีเจอร์เสริม (หมวด Compliance) ไม่ใช่พระเอก — CEO AI Thailand ≠ เครื่องมือ compliance
+     (นั่นเป็น domain ที่ปรึกษาของ B.Training · ดู docs/marketing/BRAND-ARCHITECTURE.md)
 Sidebar focus mode: onboardGoal set + !focusDismissed → โชว์เฉพาะหน้าเป้าหมาย + related + Billing/Dashboard
   + ปุ่ม "🔓 ปลดล็อกเมนูทั้งหมด" (→ focusDismissed=true) · FOCUS map ใน Sidebar.tsx
 OnboardingTour gate: โชว์เฉพาะ explore หรือผู้ใช้เดิม (ผู้เลือกเป้าหมายไม่เจอทัวร์ = ไม่ชนกัน) — App.tsx showTour

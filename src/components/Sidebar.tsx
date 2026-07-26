@@ -34,20 +34,20 @@ const FOCUS: Record<Exclude<OnboardGoal, 'explore'>, {
   primary: { id: PageId; label: string; desc: string; icon: string };
   related: { id: PageId; label: string }[];
 }> = {
-  pdpa: {
-    label: 'งาน PDPA',
-    primary: { id: 'privacy', label: 'ตัวช่วย PDPA', desc: 'ร่าง Privacy Notice / SOP — เห็นผลใน 2 นาที', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
-    related: [{ id: 'knowledge', label: 'คลังความรู้ PDPA' }],
-  },
-  iso: {
-    label: 'งาน ISO / มอก.',
-    primary: { id: 'compliance', label: 'AI ตรวจเอกสาร ISO/มอก.', desc: 'เห็น Readiness Score + ข้อที่ยังขาดทันที', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-    related: [{ id: 'iso9001', label: 'ISO 9001:2015 QMS' }, { id: 'knowledge', label: 'คลังความรู้ ISO' }],
-  },
   aicompany: {
     label: 'สร้างบริษัท AI',
     primary: { id: 'aicompany', label: 'บริษัท AI', desc: 'ให้ CEO AI จัดทีม + วางแผน + เดินธุรกิจ', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3m6-12h0m6 0h0m-6 4h0m6 0h0m-6 4h0m6 0h0' },
     related: [{ id: 'boardroom', label: 'ห้องบอร์ด' }, { id: 'resources', label: 'ทรัพยากร' }],
+  },
+  sell: {
+    label: 'เปิดร้าน & ขายของ',
+    primary: { id: 'storefront', label: 'หน้าร้านของฉัน', desc: 'สร้างหน้าร้าน + รับลูกค้า/ใบสั่งซื้อจริง', icon: 'M3 9l1-5h16l1 5M3 9a3 3 0 006 0 3 3 0 006 0 3 3 0 006 0M5 9v11a1 1 0 001 1h12a1 1 0 001-1V9M9 21v-6h6v6' },
+    related: [{ id: 'market', label: 'Marketplace' }, { id: 'trade', label: 'ซื้อขาย B2B (RFQ)' }],
+  },
+  validate: {
+    label: 'เริ่มจากไอเดีย',
+    primary: { id: 'bmc', label: 'โมเดลธุรกิจ 24 ขั้น (MIT)', desc: 'ออกแบบธุรกิจจากไอเดีย + พิสูจน์ตลาด', icon: 'M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z' },
+    related: [{ id: 'personas', label: 'ลูกค้าเป้าหมาย (Personas)' }, { id: 'marketing', label: 'กลยุทธ์การตลาด' }],
   },
 };
 

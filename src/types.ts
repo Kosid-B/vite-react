@@ -262,7 +262,8 @@ export type PlanId = 'free' | 'starter' | 'growth' | 'scale';
 export type SubStatus = 'none' | 'trial' | 'pending_payment' | 'active' | 'past_due' | 'cancelled';
 
 // เป้าหมายเริ่มต้นที่ผู้ใช้เลือกใน GoalChooser (onboarding "เข้าง่าย + ลึกได้")
-export type OnboardGoal = 'pdpa' | 'iso' | 'aicompany' | 'explore';
+// โฟกัสวัตถุประสงค์จริงของ CEO AI Thailand = สร้าง & ทำธุรกิจ (PDPA/ISO = ฟีเจอร์เสริม ไม่ใช่พระเอก)
+export type OnboardGoal = 'aicompany' | 'sell' | 'validate' | 'explore';
 
 export type InvoiceStatus = 'paid' | 'pending' | 'failed';
 
