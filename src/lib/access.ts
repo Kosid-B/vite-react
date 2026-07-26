@@ -3,6 +3,10 @@ import { isSupabaseEnabled } from './supabase';
 
 export const PLAN_RANK: Record<PlanId, number> = { free: 0, starter: 1, growth: 2, scale: 3 };
 
+/** ผ่อนผัน (grace): ครบกำหนดชำระแล้วยังใช้งานต่อได้กี่วันก่อนตัดสิทธิ์
+ *  ต้องตรงกับ GRACE_DAYS ใน supabase/functions/billing-cron (นโยบาย "เตือน + ผ่อนผัน") */
+export const GRACE_DAYS = 7;
+
 export const PLAN_NAME: Record<PlanId, string> = {
   free: 'ทดลองใช้ฟรี',
   starter: 'Starter',
@@ -58,8 +62,13 @@ export function effectiveRank(data: AppData): number {
   if (adminFullAccess || guestFullAccess) return PLAN_RANK['scale']; // แอดมิน / ผู้ทดลอง (guest) = Scale เต็ม
   const { plan, status, trialEndDate, currentPeriodEnd } = data.subscription;
 
-  if (status === 'active') {
-    if (currentPeriodEnd && new Date(currentPeriodEnd) < new Date()) return -1;
+  if (status === 'active' || status === 'past_due') {
+    // ผ่อนผัน: ครบกำหนดแล้ว (active ที่ cron ยังไม่รัน หรือ past_due ที่ cron ตั้งไว้)
+    // ยังใช้งานแพ็กเดิมต่อได้ในช่วง grace GRACE_DAYS วัน แล้วค่อยตัดเป็น -1 (cron จะ downgrade เป็น free)
+    if (currentPeriodEnd && new Date(currentPeriodEnd) < new Date()) {
+      const graceEnd = new Date(currentPeriodEnd).getTime() + GRACE_DAYS * 86400000;
+      return Date.now() < graceEnd ? PLAN_RANK[plan] : -1;
+    }
     return PLAN_RANK[plan];
   }
   if (status === 'trial') {
@@ -76,9 +85,14 @@ export function isExpired(data: AppData): boolean {
   if (adminFullAccess || guestFullAccess) return false; // แอดมิน / ผู้ทดลอง ไม่นับหมดอายุ
   const { status, trialEndDate, currentPeriodEnd } = data.subscription;
   if (status === 'trial') return !trialEndDate || new Date(trialEndDate) < new Date();
-  if (status === 'active') return !!(currentPeriodEnd && new Date(currentPeriodEnd) < new Date());
+  if (status === 'active' || status === 'past_due') {
+    // ระหว่าง grace ยังไม่นับหมดอายุ (ผ่อนผัน) — พ้น grace แล้วจึงถือว่าหมดอายุ
+    if (!currentPeriodEnd) return false;
+    const graceEnd = new Date(currentPeriodEnd).getTime() + GRACE_DAYS * 86400000;
+    return Date.now() >= graceEnd;
+  }
   if (status === 'none') return isSupabaseEnabled; // ถ้าเปิด Supabase → ต้องเริ่ม trial ก่อน
-  return status === 'cancelled' || status === 'past_due';
+  return status === 'cancelled';
 }
 
 /** user เข้าหน้านี้ได้ไหม */

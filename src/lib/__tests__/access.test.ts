@@ -64,6 +64,30 @@ describe('access control — เมทริกซ์แพ็กเกจ x ห
     expect(isExpired(d)).toBe(true);
   });
 
+  it('active หมดรอบแต่ยังอยู่ใน grace (2 วัน) = ใช้งานต่อได้ (ผ่อนผัน)', () => {
+    const recent = new Date(Date.now() - 2 * 86400000).toISOString(); // 2 วันก่อน < grace 7 วัน
+    const d = withSub('growth', 'active', { currentPeriodEnd: recent });
+    expect(effectiveRank(d)).toBe(2);          // ยังคงสิทธิ์ growth
+    expect(canAccess(d, 'analytics')).toBe(true);
+    expect(isExpired(d)).toBe(false);          // ยังไม่นับหมดอายุระหว่างผ่อนผัน
+  });
+
+  it('past_due ภายใน grace = ใช้งานแพ็กเดิมต่อได้ (เตือน + ผ่อนผัน)', () => {
+    const recent = new Date(Date.now() - 3 * 86400000).toISOString(); // 3 วันก่อน < grace 7 วัน
+    const d = withSub('growth', 'past_due', { currentPeriodEnd: recent });
+    expect(effectiveRank(d)).toBe(2);
+    expect(canAccess(d, 'analytics')).toBe(true);
+    expect(isExpired(d)).toBe(false);
+  });
+
+  it('past_due พ้น grace (10 วัน) = ตัดสิทธิ์ (rank = -1) + isExpired', () => {
+    const old = new Date(Date.now() - 10 * 86400000).toISOString(); // 10 วันก่อน > grace 7 วัน
+    const d = withSub('growth', 'past_due', { currentPeriodEnd: old });
+    expect(effectiveRank(d)).toBe(-1);
+    expect(canAccess(d, 'dashboard')).toBe(false);
+    expect(isExpired(d)).toBe(true);
+  });
+
   it('setAdminFullAccess(true) = Scale ฟรีเสมอ ไม่ว่า plan อะไร', () => {
     const d = withSub('free', 'none');
     setAdminFullAccess(true);

@@ -3,6 +3,7 @@ import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
+import { GRACE_DAYS } from '../lib/access';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { submitPaymentSlip, listMyPayments } from '../lib/payments';
 import { track } from '../lib/analytics';
@@ -172,46 +173,72 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   const [slipBusy, setSlipBusy] = useState(false);
   const [slipMsg, setSlipMsg] = useState<string | null>(null);
 
-  // เปิดใช้งานแพ็กอัตโนมัติเมื่อแอดมินอนุมัติสลิป (client เจ้าของ workspace ทำเอง — ไม่มีการเขียนข้าม workspace)
+  /** เปิดใช้งานแพ็กจากสลิป 1 ใบ (ใช้ทั้งตอนอัปทันที + ตอน re-open หน้า) — client เจ้าของ workspace ทำเอง
+   *  PLG: ไม่รอ admin อนุมัติ · autoRenew=false → cron เตือน+ผ่อนผัน+ตัด (กัน 'เดือนฟรีไม่สิ้นสุด') */
+  function activateFromSlip(sub: { id: string; plan: string; cycle: string; amount: number }, applied: string[], announce = false) {
+    const now = new Date().toISOString();
+    const invoice: Invoice = { id: 'inv-' + sub.id.slice(0, 8), date: now, plan: sub.plan as PlanId, amount: sub.amount, status: 'paid' };
+    onUpdate({
+      ...data,
+      appliedPaymentIds: [...applied, sub.id],
+      subscription: {
+        ...data.subscription,
+        plan: sub.plan as PlanId,
+        status: 'active',
+        autoRenew: false,
+        billingCycle: sub.cycle as 'monthly' | 'yearly',
+        currentPeriodEnd: addMonths(now, sub.cycle === 'yearly' ? 12 : 1),
+        trialEndDate: null,
+        invoices: [invoice, ...data.subscription.invoices],
+      },
+    });
+    if (announce) setSlipMsg('✅ เปิดใช้งานแพ็ก ' + sub.plan.toUpperCase() + ' แล้ว! (แอดมินจะตรวจสลิปย้อนหลัง)');
+    // GA4 purchase — รายได้จริง (ผู้ใช้ยืนยันด้วยสลิป)
+    track('purchase', { transaction_id: invoice.id, value: sub.amount, currency: 'THB', plan: sub.plan, cycle: sub.cycle });
+  }
+
+  // ตรวจสลิปของ workspace ตัวเองเมื่อเปิดหน้า:
+  //   1) สลิปที่แอดมินตรวจย้อนหลังแล้ว 'ตีกลับ' (rejected) + เคยเปิดแพ็กไปแล้ว → ถอนแพ็กกลับ free (กันสลิปปลอม)
+  //   2) สลิปที่ยังไม่เปิดแพ็ก (เช่นอัปจากเครื่องอื่น) → เปิดให้ (safety net ของ PLG auto-activate)
   useEffect(() => {
     if (!isSupabaseEnabled || !wsId) return;
     let cancelled = false;
     listMyPayments(wsId).then(subs => {
       if (cancelled) return;
       const applied = data.appliedPaymentIds ?? [];
-      const approved = subs.find(s => s.status === 'approved' && !applied.includes(s.id));
-      if (!approved) return;
-      const now = new Date().toISOString();
-      const invoice: Invoice = { id: 'inv-' + approved.id.slice(0, 8), date: now, plan: approved.plan as PlanId, amount: approved.amount, status: 'paid' };
-      onUpdate({
-        ...data,
-        appliedPaymentIds: [...applied, approved.id],
-        subscription: {
-          ...data.subscription,
-          plan: approved.plan as PlanId,
-          status: 'active',
-          billingCycle: approved.cycle as 'monthly' | 'yearly',
-          currentPeriodEnd: addMonths(now, approved.cycle === 'yearly' ? 12 : 1),
-          trialEndDate: null,
-          invoices: [invoice, ...data.subscription.invoices],
-        },
-      });
-      setSlipMsg('✅ แอดมินยืนยันการชำระเงินแล้ว — เปิดใช้งานแพ็ก ' + approved.plan.toUpperCase());
-      // GA4 purchase — รายได้จริง (สลิปได้รับอนุมัติจากแอดมิน)
-      track('purchase', { transaction_id: invoice.id, value: approved.amount, currency: 'THB', plan: approved.plan, cycle: approved.cycle });
+      const revoked = data.revokedPaymentIds ?? [];
+
+      // (1) ถอนสิทธิ์: สลิปที่ถูกตีกลับหลังเปิดแพ็กไปแล้ว
+      const toRevoke = subs.filter(s => s.status === 'rejected' && applied.includes(s.id) && !revoked.includes(s.id));
+      if (toRevoke.length) {
+        onUpdate({
+          ...data,
+          revokedPaymentIds: [...revoked, ...toRevoke.map(s => s.id)],
+          subscription: { ...data.subscription, plan: 'free', status: 'cancelled', autoRenew: false, currentPeriodEnd: null },
+        });
+        setSlipMsg('⚠️ สลิปไม่ผ่านการตรวจสอบ — แพ็กถูกปรับกลับเป็น Free กรุณาชำระใหม่หรือติดต่อทีมงาน');
+        track('slip_revoked', { count: toRevoke.length });
+        return;
+      }
+
+      // (2) เปิดแพ็กให้สลิปที่ยังไม่เปิด (ไม่รวมที่ถูกตีกลับ)
+      const toActivate = subs.find(s => s.status !== 'rejected' && !applied.includes(s.id));
+      if (toActivate) activateFromSlip(toActivate, applied, false);
     }).catch(() => { /* เงียบ — ไม่ทำ UX พัง */ });
     return () => { cancelled = true; };
   }, [wsId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** อัปสลิปในแอป → คิวแอดมินยืนยัน (แทนส่ง LINE/อีเมล) */
+  /** อัปสลิปในแอป → เปิดใช้งานแพ็กทันที (PLG · ไม่รอ admin) + เก็บสลิปเข้าคิวตรวจย้อนหลัง */
   async function uploadSlip(file?: File) {
     if (!file || !wsId) return;
     setSlipBusy(true);
     setSlipMsg(null);
     track('begin_checkout', { plan: selected, cycle, value: chargeAmount, currency: 'THB', method: 'slip' });
-    const { error } = await submitPaymentSlip({ wsId, plan: selected, cycle, amount: chargeAmount, file });
+    const { error, id } = await submitPaymentSlip({ wsId, plan: selected, cycle, amount: chargeAmount, file });
     setSlipBusy(false);
-    setSlipMsg(error ? '⚠️ ' + error : '✅ ส่งสลิปแล้ว — แอดมินจะตรวจและเปิดใช้งานให้ (เห็นผลเมื่อรีเฟรชหน้าหลังอนุมัติ)');
+    if (error || !id) { setSlipMsg('⚠️ ' + (error ?? 'อัปสลิปไม่สำเร็จ')); return; }
+    // เปิดแพ็กทันที — ไม่รอแอดมิน (admin ตรวจย้อนหลัง + ตีกลับได้ถ้าสลิปไม่ตรง)
+    activateFromSlip({ id, plan: selected, cycle, amount: chargeAmount }, data.appliedPaymentIds ?? [], true);
   }
 
   /** จ่ายผ่าน Stripe (Checkout subscription — ตัดเงินอัตโนมัติทุกงวด) — production เท่านั้น */
@@ -298,6 +325,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         ...sub,
         plan: selectedPlan.id,
         status: 'active',
+        autoRenew: false, // จ่ายเอง → เตือน+ผ่อนผัน+ตัด (ไม่ auto-charge)
         billingCycle: cycle,
         currentPeriodEnd: addMonths(now, cycle === 'yearly' ? 12 : 1),
         trialEndDate: null,
@@ -327,14 +355,11 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
       subscription: {
         ...sub,
         status: 'active',
+        autoRenew: false, // ต่ออายุเอง → รอบหน้าเตือน+ผ่อนผันอีกครั้ง
         currentPeriodEnd: addMonths(base, yearly ? 12 : 1),
         invoices: [invoice, ...sub.invoices],
       },
     });
-  }
-
-  function setAutoRenew(v: boolean) {
-    onUpdate({ ...data, subscription: { ...sub, autoRenew: v } });
   }
 
   function cancelSub() {
@@ -498,14 +523,10 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             </div>
           </div>
           <div className="bill-sub-actions">
-            <label className="bill-autorenew">
-              <input
-                type="checkbox"
-                checked={sub.autoRenew}
-                onChange={e => setAutoRenew(e.target.checked)}
-              />
-              ต่ออายุอัตโนมัติ
-            </label>
+            <div className="bill-renew-note">
+              🔔 ต่ออายุเองผ่าน PromptPay — เมื่อครบกำหนดเราจะส่งอีเมลเตือน
+              และผ่อนผันให้อีก {GRACE_DAYS} วันก่อนปรับเป็นแพ็กฟรี (ไม่มีการตัดเงินอัตโนมัติ)
+            </div>
             {(effective === 'past_due' ||
               (dLeft !== null && dLeft <= 7) ||
               sub.status === 'cancelled') && (
@@ -515,7 +536,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             )}
             {sub.status !== 'cancelled' && (
               <button className="bill-cancel-btn" onClick={cancelSub}>
-                ยกเลิกต่ออายุ
+                ยกเลิกแพ็ก
               </button>
             )}
           </div>
@@ -684,9 +705,10 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             </div>
 
             <div className="bill-slip-box">
-              <div className="bill-slip-hd">📎 ส่งสลิปหลังโอนเงิน</div>
+              <div className="bill-slip-hd">📎 ส่งสลิปหลังโอนเงิน → เปิดแพ็กทันที</div>
               <div className="bill-slip-desc">
-                หลังโอนเงินแล้ว อัปสลิปในระบบได้เลย (แนะนำ) — แอดมินตรวจแล้วเปิดใช้งานให้ภายใน 1 ชั่วโมง (วันทำการ)
+                หลังโอนเงินแล้ว อัปสลิปในระบบได้เลย — <b>ระบบเปิดใช้งานแพ็กให้ทันที</b> ไม่ต้องรอแอดมิน
+                (ทีมงานตรวจสลิปย้อนหลังตามปกติ)
               </div>
               {isSupabaseEnabled && (
                 <label className={`bill-slip-upload${slipBusy ? ' busy' : ''}`}>
@@ -750,7 +772,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             {isSupabaseEnabled && !PAYMENT.stripeLive && !PAYMENT.stripePaymentLinkCard && !PAYMENT.stripePaymentLinkPromptPay && (
               <div className="bill-soon">
                 ⏳ ระบบชำระออนไลน์อัตโนมัติกำลังเปิดใช้เร็วๆ นี้ — ระหว่างนี้โอนหรือสแกน QR ด้านบน
-                แล้วส่งสลิป แอดมินเปิดใช้งานให้ภายใน 1 ชม. (วันทำการ)
+                แล้วอัปสลิป ระบบเปิดใช้งานแพ็กให้ทันที (ทีมงานตรวจย้อนหลัง)
               </div>
             )}
             {payload ? (
@@ -764,7 +786,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                   </button>
                 )}
                 <div className="bill-note">
-                  หรือโอน/สแกน QR ด้านบนแล้วส่งสลิป — แอดมินเปิดใช้งานให้ภายใน 1 ชม.
+                  หรือโอน/สแกน QR ด้านบนแล้วอัปสลิป — ระบบเปิดใช้งานแพ็กให้ทันที
                 </div>
               </>
             ) : (

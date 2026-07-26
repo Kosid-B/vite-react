@@ -142,6 +142,20 @@ Admin (support@b-tctraining.com): ใช้ Scale ฟรีเสมอ — App.
   → effectiveRank/isExpired/planLabel bypass (access.ts). ระบบ admin = app_admins table + is_app_admin() (0005)
 ```
 
+### รอบบิลรายเดือน + PLG payment (ยืนยันโดย User ก.ค. 2569)
+```
+นโยบาย "เตือนล่วงหน้า + ผ่อนผัน": จ่ายเอง (PromptPay ไม่มี auto-charge) → autoRenew=false เสมอ (Billing.tsx)
+  billing-cron (daily 02:00 UTC) — automate ผ่าน cron ล้วน ไม่พึ่ง payment gateway:
+    • ADVANCE_DAYS=3: ก่อนครบกำหนด → อีเมล "🔔 ใกล้ครบกำหนด อีก N วัน" ครั้งเดียว/รอบ (sub.reminderSentFor กันซ้ำ)
+    • ครบกำหนด → past_due + อีเมล "ครบกำหนดต่ออายุ" · GRACE_DAYS=7 (access.ts: active/past_due ใช้แพ็กเดิมต่อได้)
+    • พ้น grace → downgrade free (ถ้าเตือนล่วงหน้าแล้วไม่ต่อ = คัดกรอง 'benefit ไม่พอ' โดยตรง ไม่ใช่หลุดเพราะลืม)
+  ⚠️ billing-cron ต้อง deploy มือ: supabase functions deploy billing-cron
+PLG (ไม่มี admin เป็น gate): อัปสลิปในแอป → เปิดแพ็ก 'ทันที' (Billing.activateFromSlip) ไม่รอ admin
+  payment_submissions row ยัง 'pending' = คิว 'ตรวจย้อนหลัง' (PaymentsTab) ไม่ใช่คิวอนุมัติ
+  admin ✅ยืนยันถูกต้อง=ปิดรายการ / 🚫ตีกลับ=rejected → client เจ้าของ ws ถอนแพ็กเอง (revokedPaymentIds)
+  appliedPaymentIds กันเปิดซ้ำ · Stripe webhook (stripe-webhook) = ทาง PLG อัตโนมัติเต็ม (รอ KYC ผ่าน)
+```
+
 ## Admin Operating Summary (สรุปผลการดำเนินงานของ User)
 ```
 หน้า admin แท็บ "เวิร์กสเปซ": ปุ่ม "📊 โหลดสรุปผลการดำเนินงาน" → wsLoad ทุก ws (RLS is_app_admin เห็นหมด)

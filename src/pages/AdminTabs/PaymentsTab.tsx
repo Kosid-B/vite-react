@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { listPendingPayments, reviewPayment, type PaymentSubmission } from '../../lib/payments';
 
-/** คิวยืนยันการชำระเงิน — แอดมินตรวจสลิปที่ผู้ใช้อัปในระบบ → อนุมัติ/ปฏิเสธ
- *  อนุมัติแล้ว: แพ็กเปิดใช้งานเมื่อผู้ใช้ (เจ้าของ workspace) เปิดหน้า "แพ็กเกจ & ชำระเงิน" อีกครั้ง */
+/** คิวตรวจสลิปย้อนหลัง (PLG) — แพ็กเปิดให้ผู้ใช้อัตโนมัติทันทีที่อัปสลิปแล้ว แอดมินไม่ใช่คอขวด
+ *  หน้าที่แอดมิน = ตรวจสอบย้อนหลัง:
+ *    ✅ ยืนยันถูกต้อง = ปิดรายการ (แพ็กใช้งานต่อ)
+ *    🚫 ตีกลับ = สลิปปลอม/ไม่ตรง → client เจ้าของ workspace จะถอนแพ็กกลับ Free เองเมื่อเปิดหน้าชำระเงิน */
 export default function PaymentsTab() {
   const [subs, setSubs] = useState<PaymentSubmission[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -24,20 +26,20 @@ export default function PaymentsTab() {
     setBusy(null);
     if (err) { setMsg('⚠️ ' + err); return; }
     setMsg(status === 'approved'
-      ? '✅ อนุมัติแล้ว — แพ็กจะเปิดใช้งานเมื่อผู้ใช้เปิดหน้าชำระเงินอีกครั้ง'
-      : 'ปฏิเสธคำขอแล้ว');
+      ? '✅ ยืนยันสลิปถูกต้องแล้ว — ปิดรายการ'
+      : '🚫 ตีกลับแล้ว — ผู้ใช้จะถูกถอนแพ็กกลับ Free เมื่อเปิดหน้าชำระเงินครั้งถัดไป');
     load();
   }
 
   return (
     <div className="pay-q">
-      <div className="pfa-sec-hd">💳 คิวยืนยันการชำระเงิน ({subs.length} รออนุมัติ)</div>
-      <p className="pfa-sec-sub">ผู้ใช้อัปสลิปในระบบ → ตรวจแล้วอนุมัติเพื่อเปิดใช้งานแพ็ก</p>
+      <div className="pfa-sec-hd">💳 คิวตรวจสลิปย้อนหลัง ({subs.length} รอตรวจ)</div>
+      <p className="pfa-sec-sub">แพ็กเปิดให้ผู้ใช้อัตโนมัติแล้ว (PLG) — ตรวจย้อนหลัง: ยืนยันถูกต้อง หรือตีกลับถ้าสลิปไม่ตรง</p>
       {msg && <div className="sipoc-gen-msg">{msg}</div>}
       {loading ? (
         <div className="pfa-empty">กำลังโหลด…</div>
       ) : subs.length === 0 ? (
-        <div className="pfa-empty">ไม่มีคำขอรออนุมัติ</div>
+        <div className="pfa-empty">ไม่มีสลิปรอตรวจ</div>
       ) : (
         <div className="pay-q-list">
           {subs.map(s => (
@@ -55,10 +57,10 @@ export default function PaymentsTab() {
               </div>
               <div className="pay-q-actions">
                 <button className="pay-q-approve" disabled={!!busy} onClick={() => review(s.id, 'approved')}>
-                  {busy === s.id + 'approved' ? '⏳' : '✅ อนุมัติ'}
+                  {busy === s.id + 'approved' ? '⏳' : '✅ ยืนยันถูกต้อง'}
                 </button>
                 <button className="pay-q-reject" disabled={!!busy} onClick={() => review(s.id, 'rejected')}>
-                  {busy === s.id + 'rejected' ? '⏳' : 'ปฏิเสธ'}
+                  {busy === s.id + 'rejected' ? '⏳' : '🚫 ตีกลับ'}
                 </button>
               </div>
             </div>
