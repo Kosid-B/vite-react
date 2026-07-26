@@ -38,37 +38,37 @@ const TRUST_PILLARS = [
 ];
 
 const steps = [
-  { n: '01', title: 'จ้าง', desc: 'เลือกทักษะ AI ที่คุณขาด — ISO, กลยุทธ์, การเงิน, การตลาด' },
+  { n: '01', title: 'ตั้งทีม', desc: 'บอกเป้าหมายธุรกิจ → CEO AI จัดทีมผู้บริหาร (กลยุทธ์ · การตลาด · ขาย · การเงิน)' },
   { n: '02', title: 'รัน', desc: 'AI เริ่มทำงานให้คุณ 24 ชม. ตั้งแต่วินาทีแรก ไม่มีวันหยุด' },
-  { n: '03', title: 'รับ', desc: 'เอกสารมาตรฐาน, แผนธุรกิจ ที่พร้อมยื่นได้ทันที' },
+  { n: '03', title: 'รับผล', desc: 'แผนธุรกิจ · หน้าร้าน · ดีล B2B — ผลลัพธ์ที่ลงมือทำได้จริง' },
 ];
 
 const stats = [
   { value: '500+', label: 'บริษัทในไทย' },
-  { value: '24/7', label: 'ทำงานไม่หยุด' },
-  { value: '3 วัน', label: 'ผ่าน ISO เร็วขึ้น 10x' },
-  { value: '฿0', label: 'ค่าที่ปรึกษา' },
+  { value: '24/7', label: 'ทีม AI ไม่หยุด' },
+  { value: '5 นาที', label: 'เปิดร้าน B2B' },
+  { value: '฿390', label: 'เริ่มมีทีม AI ทั้งบริษัท' },
 ];
 
 const features = [
-  { icon: '🛡️', title: 'ISO / TIS อัตโนมัติ', desc: 'สร้างเอกสารมาตรฐาน ISO 9001, TIS ครบชุดในไม่กี่นาที' },
-  { icon: '🧠', title: 'AI กลยุทธ์ธุรกิจ', desc: 'วิเคราะห์ VRIO, 24 Steps MIT, Business Model Canvas' },
+  { icon: '🧠', title: 'ทีมผู้บริหาร AI', desc: 'จัดทีม + วางแผนธุรกิจ (VRIO · 24 Steps MIT · Business Model Canvas)' },
+  { icon: '🏪', title: 'หน้าร้าน + ตลาด B2B', desc: 'เปิดร้านออนไลน์ รับลูกค้าและใบสั่งซื้อ ค้นเจอบน Google' },
   { icon: '📊', title: 'Dashboard อัจฉริยะ', desc: 'ติดตามความคืบหน้าทุก KPI แบบเรียลไทม์' },
-  { icon: '🚀', title: 'ขยายธุรกิจอย่างเป็นระบบ', desc: 'ระบบ 6G Growth Intelligence พร้อมแผนขยาย TAM' },
+  { icon: '🛡️', title: 'งานมาตรฐาน ISO/มอก. (ในตัว)', desc: 'ร่างเอกสาร ISO 9001 / TIS / PDPA เมื่อธุรกิจคุณต้องใช้' },
 ];
 
 // ─── เนื้อหาจูงใจเพิ่มเติม ───
 const differentiators = [
-  { icon: '🏆', title: 'ที่ปรึกษาตัวจริง 20+ ปี', desc: 'สร้างโดย B. Training Consultant ผู้วางระบบมาตรฐาน/ISO ให้ธุรกิจไทยมากว่า 20 ปี — ประสบการณ์จริงถูกใส่ลงในระบบ ไม่ใช่แค่ AI ลอย ๆ' },
-  { icon: '🇹🇭', title: 'เข้าใจธุรกิจไทยจริง', desc: 'ISO/มอก.ภาษาไทย · DBD · PromptPay · ตลาด B2B ในประเทศ — ต่างจาก AI ทั่วไปที่ไม่รู้บริบทและกฎเกณฑ์ของไทย' },
-  { icon: '🧩', title: 'ครบจบในที่เดียว', desc: 'ทีมบริหาร AI + หน้าร้าน/ตลาด B2B + งานมาตรฐาน + การเงิน — ไม่ต้องต่อหลายเครื่องมือให้ยุ่งยาก' },
+  { icon: '🏆', title: 'พัฒนาโดยผู้เชี่ยวชาญ 20+ ปี', desc: 'สร้างโดย B. Training Consultant ผู้วางระบบธุรกิจ/มาตรฐานให้ธุรกิจไทยกว่า 20 ปี — ประสบการณ์จริงถูกใส่ลงในระบบ ไม่ใช่แค่ AI ลอย ๆ' },
+  { icon: '🇹🇭', title: 'เข้าใจธุรกิจไทยจริง', desc: 'ตลาด B2B · DBD · PromptPay · ISO/มอก.ภาษาไทย — เข้าใจบริบทและกฎเกณฑ์ของไทย ต่างจาก AI ทั่วไป' },
+  { icon: '🧩', title: 'ครบจบในที่เดียว', desc: 'ทีมบริหาร AI + หน้าร้าน/ตลาด B2B + การเงิน + งานมาตรฐาน — ไม่ต้องต่อหลายเครื่องมือให้ยุ่งยาก' },
 ];
 
 const outcomes = [
-  { icon: '📄', text: 'เอกสาร ISO / แผนธุรกิจ ที่พร้อมใช้และยื่นได้จริง — ไม่ใช่แค่ทฤษฎี' },
-  { icon: '🏪', text: 'หน้าร้านออนไลน์ + ช่องขาย B2B ที่ลูกค้าค้นเจอคุณบน Google' },
   { icon: '🤖', text: 'ทีม AI ทำงานแทนคุณ 24 ชม. โดยไม่ต้องจ้างพนักงานเพิ่ม' },
+  { icon: '🏪', text: 'หน้าร้านออนไลน์ + ช่องขาย B2B ที่ลูกค้าค้นเจอคุณบน Google' },
   { icon: '📈', text: 'เห็นทุกตัวเลขธุรกิจในที่เดียว ตัดสินใจได้เร็วและมั่นใจขึ้น' },
+  { icon: '📄', text: 'เอกสาร ISO / แผนธุรกิจ ที่พร้อมใช้และยื่นได้จริง — ไม่ใช่แค่ทฤษฎี' },
 ];
 
 const learnCases = [
@@ -162,13 +162,13 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
         </div>
 
         <h1 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, lineHeight: 1.15, marginBottom: 24, maxWidth: 800 }}>
-          ธุรกิจคุณโตได้…<br />
-          <span style={{ color: C.cyan4 }}>ถ้าไม่ต้องรอพนักงาน<br />ทำเอกสาร</span>
+          สร้างและเดินธุรกิจ<br />
+          <span style={{ color: C.cyan4 }}>ด้วยทีมผู้บริหาร AI<br />ที่ทำงานให้ 24 ชม.</span>
         </h1>
 
         <p style={{ fontSize: 18, color: C.slate4, marginBottom: 48, maxWidth: 600, lineHeight: 1.7 }}>
-          เลิกจ้างที่ปรึกษาหลักแสนเพื่อมานั่งทำ ISO/TIS แบบเดิมๆ<br />
-          เปลี่ยนมาจ้าง <strong style={{ color: C.white }}>'พนักงาน AI'</strong> ที่รู้จบทุกขั้นตอนมาตรฐานไทยใน 3 วินาที
+          ให้ CEO AI จัดทีม วางแผน หาลูกค้า และเดินธุรกิจให้คุณ<br />
+          มี <strong style={{ color: C.white }}>'ทีม AI'</strong> ทั้งบริษัทได้ตั้งแต่ ฿390/เดือน — คุณสั่ง มันลงมือ คุณคุมทุกการตัดสินใจ
         </p>
 
         <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -253,7 +253,7 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
       {/* ─── Social Proof ─── */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
         <p style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.cyan5, marginBottom: 12 }}>
-          บริษัทชั้นนำในไทยกว่า 500 แห่ง กำลังรันมาตรฐานด้วยระบบอัตโนมัติ
+          บริษัทในไทยกว่า 500 แห่ง กำลังสร้าง & เดินธุรกิจด้วยทีม AI
         </p>
         <p style={{ color: C.slate5, fontSize: 14, marginBottom: 10 }}>TRUSTED BY INDUSTRY LEADERS</p>
         <p style={{ color: C.slate4, fontSize: 15 }}>
