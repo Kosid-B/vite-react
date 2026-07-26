@@ -27,6 +27,16 @@ const C = {
   dark:     '#020617',
 };
 
+// 6 ชั้นความน่าเชื่อถือ (จากสไลด์ "ทำไม AI เชื่อถือได้") — พูดเฉพาะฟีเจอร์ที่มีจริง
+const TRUST_PILLARS = [
+  { icon: '🛡️', title: 'ไม่ปล่อยให้ AI มั่ว', desc: 'AI ทำงานบนข้อมูล/เทมเพลตจริง ไม่แต่งลอย ๆ — งานที่ได้อ้างอิงของจริง เชื่อถือได้' },
+  { icon: '👤', title: 'คุณคุมคำตอบสุดท้าย', desc: 'ทุกงานให้คุณตรวจ + แก้ก่อนใช้เสมอ — AI ช่วยร่าง แต่คุณเป็นคนตัดสินใจ' },
+  { icon: '🔄', title: 'ไม่มีวันใช้ไม่ได้', desc: 'AI ล่ม → สลับโมเดลอัตโนมัติ → เทมเพลต ใช้งานต่อเนื่อง ไม่สะดุด' },
+  { icon: '💰', title: 'ราคาที่ SME จ่ายไหว', desc: 'เลือกโมเดล AI ให้เหมาะกับงาน (ไม่ใช้ของแพงเกินจำเป็น) — แพ็กราคาเข้าถึงได้' },
+  { icon: '🔒', title: 'ข้อมูลไม่รั่ว ไม่ปน', desc: 'แยกข้อมูลแต่ละธุรกิจ 100% + ควบคุมสิทธิ์เข้าถึง ปลอดภัย เป็นส่วนตัว' },
+  { icon: '📤', title: 'ข้อมูลเป็นของคุณ', desc: 'ส่งออก (Export) / ลบข้อมูลได้เองทุกเมื่อ — ไม่ผูกมัด ย้าย/เลิกได้อิสระ' },
+];
+
 const steps = [
   { n: '01', title: 'จ้าง', desc: 'เลือกทักษะ AI ที่คุณขาด — ISO, กลยุทธ์, การเงิน, การตลาด' },
   { n: '02', title: 'รัน', desc: 'AI เริ่มทำงานให้คุณ 24 ชม. ตั้งแต่วินาทีแรก ไม่มีวันหยุด' },
@@ -344,6 +354,33 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
             ))}
           </div>
           <p style={{ textAlign: 'center', color: C.slate5, marginTop: 28, fontSize: 13.5 }}>…และอีกหลายเคส พร้อมทักษะ (Skill) ที่นำไปใช้ได้จริงในตลาดของระบบ</p>
+        </div>
+      </section>
+
+      {/* ─── Trust (ทำไม AI เชื่อถือได้) ─── */}
+      <section style={{ padding: '80px 24px' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', color: C.cyan4, fontSize: 12.5, fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 12 }}>
+            ความน่าเชื่อถือของระบบ AI
+          </div>
+          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
+            AI ที่ <span style={{ color: C.cyan4 }}>ควบคุมได้</span> — ไม่ใช่ AI ที่เดาสุ่ม
+          </h2>
+          <p style={{ textAlign: 'center', color: C.slate4, fontSize: 16, lineHeight: 1.7, maxWidth: 640, margin: '0 auto 44px' }}>
+            6 ชั้นที่ทำให้ AI ของเราช่วย<strong style={{ color: C.white }}>สร้าง &amp; ทำธุรกิจ</strong>ได้อย่างมั่นใจ — สั่งงานได้ ตรวจสอบได้ ไม่เดาสุ่ม
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18 }}>
+            {TRUST_PILLARS.map(p => (
+              <div key={p.title} style={{ padding: 24, borderRadius: 12, border: `1px solid ${C.border}`, backgroundColor: C.bg3 }}>
+                <div style={{ fontSize: 30, marginBottom: 12 }}>{p.icon}</div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: C.white, marginBottom: 8 }}>{p.title}</div>
+                <div style={{ color: C.slate4, fontSize: 14, lineHeight: 1.55 }}>{p.desc}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ textAlign: 'center', color: C.slate5, marginTop: 28, fontSize: 13.5 }}>
+            พัฒนาโดย <strong style={{ color: C.slate4 }}>B. Training Consultant</strong> — ผู้เชี่ยวชาญ ISO / PDPA / มอก. 20+ ปี
+          </p>
         </div>
       </section>
 
