@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { track } from '../lib/analytics';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
+import ConsultHandoff from '../components/ConsultHandoff';
 import {
   retrieve, buildContext, ragInstruction,
   type KBChunk, type KBTopic,
@@ -134,6 +135,8 @@ export default function Knowledge() {
           </div>
         )}
       </div>
+
+      <ConsultHandoff topic="ISO / PDPA / มอก." from="knowledge" />
     </div>
   );
 }

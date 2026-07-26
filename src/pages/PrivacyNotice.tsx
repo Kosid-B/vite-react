@@ -5,6 +5,7 @@ import {
   buildDraft, privacySystemPrompt, privacyUserPrompt,
   type PrivacyInput, type DocType,
 } from '../lib/privacyNotice';
+import ConsultHandoff from '../components/ConsultHandoff';
 
 const DATA_OPTIONS = ['ชื่อ-นามสกุล', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'เลขบัตรประชาชน', 'ข้อมูลการชำระเงิน', 'พฤติกรรมการใช้งาน/คุกกี้'];
 const PURPOSE_OPTIONS = ['ติดต่อและให้บริการลูกค้า', 'ดำเนินการตามคำสั่งซื้อ/สัญญา', 'ส่งข่าวสาร/โปรโมชัน', 'สะสมแต้ม/สมาชิก', 'วิเคราะห์และพัฒนาบริการ', 'ปฏิบัติตามกฎหมาย'];
@@ -215,6 +216,8 @@ export default function PrivacyNotice() {
           <div className="pn-disclaimer">⚠️ เป็นร่างตั้งต้นตาม PDPA — ควรให้ที่ปรึกษา/นักกฎหมายตรวจทานก่อนใช้จริง</div>
         </div>
       </div>
+
+      <ConsultHandoff topic="PDPA" from="privacy" />
     </div>
   );
 }
