@@ -6,6 +6,7 @@ import {
   parseComplianceJson, STANDARD_LABEL,
   type StandardId, type ClauseResult,
 } from '../lib/complianceCheck';
+import ConsultHandoff from '../components/ConsultHandoff';
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
   covered: { label: 'ครบ', cls: 'cc-ok' },
@@ -166,6 +167,8 @@ export default function ComplianceCheck() {
             )}
         </div>
       </div>
+
+      <ConsultHandoff topic="มอก. / ISO 9001" from="compliance" />
     </div>
   );
 }
