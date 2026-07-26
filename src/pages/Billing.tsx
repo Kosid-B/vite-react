@@ -679,7 +679,9 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
           <div className="bill-pay-left">
             <div className="bill-pay-hd">ชำระเงินแพ็ก {selectedPlan.name}</div>
             <div className="bill-pay-sub">
-              สแกน PromptPay QR หรือโอนเข้าบัญชีธนาคารด้านล่าง ·{' '}
+              {PAYMENT.promptpayLive || PAYMENT.qrImageUrl
+                ? 'สแกน QR หรือโอนเข้าบัญชีธนาคารด้านล่าง'
+                : 'โอนเข้าบัญชีธนาคารด้านล่าง แล้วอัปสลิป — เปิดแพ็กทันที'} ·{' '}
               <a className="bill-guide-inline" href={`${import.meta.env.BASE_URL}payment-guide.pdf`}
                 target="_blank" rel="noopener noreferrer">
                 ดูคู่มือทีละขั้นตอน (PDF)
