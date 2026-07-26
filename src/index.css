@@ -5371,6 +5371,23 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .openshop-btn { flex: none; padding: 11px 20px; font-size: 14px; font-weight: 700; font-family: inherit; color: #06121a; background: var(--accent); border: none; border-radius: 10px; cursor: pointer; transition: .15s; }
 .openshop-btn:hover:not(:disabled) { opacity: .9; }
 .openshop-btn:disabled { opacity: .5; cursor: default; }
+
+/* 🎓 Consult handoff → B.Training (มอก./ISO) */
+.consult-handoff { display: flex; gap: 14px; margin-top: 20px; padding: 18px 20px; border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 7%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); }
+.ch-ico { flex: none; font-size: 30px; line-height: 1.1; }
+.ch-body { min-width: 0; }
+.ch-title { font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; margin-bottom: 6px; }
+.ch-desc { font-size: 13.5px; line-height: 1.55; color: var(--ink3); margin-bottom: 12px; }
+.ch-desc b { color: var(--accent); font-weight: 700; }
+.ch-actions { display: flex; gap: 9px; flex-wrap: wrap; }
+.ch-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; text-decoration: none;
+  padding: 8px 14px; border-radius: 9px; color: var(--ink2, #cbd5e1); background: rgba(148,163,184,.1); border: 1px solid var(--ink4, rgba(148,163,184,.28)); transition: .15s; }
+.ch-btn:hover { background: rgba(148,163,184,.18); color: var(--ink); }
+.ch-call { color: #06121a; background: var(--accent); border-color: transparent; }
+.ch-call:hover { color: #06121a; opacity: .9; }
+.ch-line { color: #06121a; background: #06c755; border-color: transparent; }
+.ch-line:hover { color: #06121a; opacity: .9; }
 .sf-voucher-btn { font-family:inherit; font-size:13.5px; font-weight:700; color:#0f172a; background:#fbbf24; border:none; border-radius:8px; padding:8px 16px; cursor:pointer; margin-left:auto; }
 .sf-voucher-btn:disabled { opacity:.5; cursor:not-allowed; }
 
