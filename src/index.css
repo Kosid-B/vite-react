@@ -2120,6 +2120,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 /* bank transfer details on payment panel */
 .bill-bank { background: var(--cream); border: 1px solid var(--cream3); border-radius: var(--r); padding: 14px 16px; margin-bottom: 16px; max-width: 360px; }
 .bill-bank-hd { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--ink3); text-transform: uppercase; margin-bottom: 10px; }
+.bill-bank-tag { margin-left: 8px; font-size: 10px; font-weight: 700; letter-spacing: normal; text-transform: none; color: #06121a; background: var(--accent); padding: 2px 7px; border-radius: 999px; vertical-align: middle; }
 .bill-bank-row { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--ink3); padding: 4px 0; }
 .bill-bank-row b { color: var(--ink); text-align: right; font-weight: 600; }
 

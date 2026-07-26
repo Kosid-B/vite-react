@@ -280,8 +280,10 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   const selectedPlan = PLANS.find(p => p.id === selected)!;
   const chargeAmount = priceFor(selected);
   const needPayment = chargeAmount > 0;
-  const payload = needPayment ? promptPayPayload(PAYMENT.promptpayId, chargeAmount) : '';
-  const qrUrl = needPayment ? promptPayQrUrl(PAYMENT.promptpayId, chargeAmount) : '';
+  // QR เลขภาษี (PromptPay) แสดงเฉพาะเมื่อ promptpayLive = true (ลงทะเบียนกับธนาคารแล้ว)
+  // K BIZ ไม่มี PromptPay เลขภาษี → promptpayLive=false → ไม่โชว์ QR ที่สแกนไม่ติด ใช้โอนเข้าบัญชี+สลิปแทน
+  const payload = needPayment && PAYMENT.promptpayLive ? promptPayPayload(PAYMENT.promptpayId, chargeAmount) : '';
+  const qrUrl = needPayment && PAYMENT.promptpayLive ? promptPayQrUrl(PAYMENT.promptpayId, chargeAmount) : '';
 
   const isTrial = sub.status === 'trial';
   const trialDaysLeft = sub.trialEndDate ? daysLeft(sub.trialEndDate) : 0;
@@ -685,7 +687,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             </div>
 
             <div className="bill-bank">
-              <div className="bill-bank-hd">โอนเข้าบัญชีธนาคาร</div>
+              <div className="bill-bank-hd">โอนเข้าบัญชีบริษัท{!PAYMENT.promptpayLive && !PAYMENT.qrImageUrl && <span className="bill-bank-tag">แนะนำ</span>}</div>
               <div className="bill-bank-row">
                 <span>ธนาคาร</span>
                 <b>{PAYMENT.bankName}</b>
@@ -775,30 +777,34 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                 แล้วอัปสลิป ระบบเปิดใช้งานแพ็กให้ทันที (ทีมงานตรวจย้อนหลัง)
               </div>
             )}
-            {payload ? (
-              <>
-                <button className="bill-copy" onClick={copyPayload}>
-                  {copied ? '✓ คัดลอกแล้ว' : 'คัดลอกข้อมูล PromptPay QR (payload)'}
-                </button>
-                {!isSupabaseEnabled && (
-                  <button className="bill-confirm" onClick={confirmPaid}>
-                    ฉันชำระเงินแล้ว — เปิดใช้งาน (เดโม)
-                  </button>
-                )}
-                <div className="bill-note">
-                  หรือโอน/สแกน QR ด้านบนแล้วอัปสลิป — ระบบเปิดใช้งานแพ็กให้ทันที
-                </div>
-              </>
-            ) : (
-              <div className="bill-warn">
-                ตั้งค่า PromptPay ID ของผู้รับใน <code>src/config.ts</code> ให้ถูกต้อง (เบอร์ 10 หลัก
-                หรือเลขผู้เสียภาษี 13 หลัก)
-              </div>
+            {payload && (
+              <button className="bill-copy" onClick={copyPayload}>
+                {copied ? '✓ คัดลอกแล้ว' : 'คัดลอกข้อมูล PromptPay QR (payload)'}
+              </button>
             )}
+            {!isSupabaseEnabled && (
+              <button className="bill-confirm" onClick={confirmPaid}>
+                ฉันชำระเงินแล้ว — เปิดใช้งาน (เดโม)
+              </button>
+            )}
+            <div className="bill-note">
+              {payload || PAYMENT.qrImageUrl
+                ? 'โอนหรือสแกน QR แล้วอัปสลิป — ระบบเปิดใช้งานแพ็กให้ทันที'
+                : 'โอนเข้าบัญชีบริษัทด้านบน แล้วอัปสลิป — ระบบเปิดใช้งานแพ็กให้ทันที'}
+            </div>
           </div>
 
           <div className="bill-pay-qr">
-            {qrUrl ? (
+            {PAYMENT.qrImageUrl ? (
+              <>
+                <div className="bill-qr-frame">
+                  <div className="bill-qr-brand">สแกนจ่าย</div>
+                  <img src={PAYMENT.qrImageUrl} alt="QR ชำระเงิน" width={196} height={196}
+                    onError={e => { (e.target as HTMLImageElement).style.visibility = 'hidden'; }} />
+                </div>
+                <div className="bill-qr-cap">Thai QR Payment · เข้าบัญชีบริษัท</div>
+              </>
+            ) : qrUrl ? (
               <>
                 <div className="bill-qr-frame">
                   <div className="bill-qr-brand">PromptPay</div>
@@ -815,7 +821,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                 <div className="bill-qr-cap">Thai QR Payment</div>
               </>
             ) : (
-              <div className="bill-qr-frame placeholder">รอข้อมูลพร้อมเพย์</div>
+              <div className="bill-qr-frame placeholder">โอนเข้าบัญชีบริษัท<br />ตามเลขด้านบน</div>
             )}
           </div>
         </div>
@@ -942,8 +948,12 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                       เลขประจำตัวผู้เสียภาษี: {COMPANY.taxId || '(โปรดระบุใน config)'}
                       <br />
                       {PAYMENT.bankName} เลขที่ {PAYMENT.accountNo}
-                      <br />
-                      PromptPay: {PAYMENT.promptpayId}
+                      {PAYMENT.promptpayLive && (
+                        <>
+                          <br />
+                          PromptPay: {PAYMENT.promptpayId}
+                        </>
+                      )}
                     </div>
                     <div>
                       <span className="inv-doc-lbl">ลูกค้า</span>ผู้ใช้ระบบ
