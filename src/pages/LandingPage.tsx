@@ -27,38 +27,48 @@ const C = {
   dark:     '#020617',
 };
 
+// 6 ชั้นความน่าเชื่อถือ (จากสไลด์ "ทำไม AI เชื่อถือได้") — พูดเฉพาะฟีเจอร์ที่มีจริง
+const TRUST_PILLARS = [
+  { icon: '🛡️', title: 'ไม่ปล่อยให้ AI มั่ว', desc: 'AI ทำงานบนข้อมูล/เทมเพลตจริง ไม่แต่งลอย ๆ — งานที่ได้อ้างอิงของจริง เชื่อถือได้' },
+  { icon: '👤', title: 'คุณคุมคำตอบสุดท้าย', desc: 'ทุกงานให้คุณตรวจ + แก้ก่อนใช้เสมอ — AI ช่วยร่าง แต่คุณเป็นคนตัดสินใจ' },
+  { icon: '🔄', title: 'ไม่มีวันใช้ไม่ได้', desc: 'AI ล่ม → สลับโมเดลอัตโนมัติ → เทมเพลต ใช้งานต่อเนื่อง ไม่สะดุด' },
+  { icon: '💰', title: 'ราคาที่ SME จ่ายไหว', desc: 'เลือกโมเดล AI ให้เหมาะกับงาน (ไม่ใช้ของแพงเกินจำเป็น) — แพ็กราคาเข้าถึงได้' },
+  { icon: '🔒', title: 'ข้อมูลไม่รั่ว ไม่ปน', desc: 'แยกข้อมูลแต่ละธุรกิจ 100% + ควบคุมสิทธิ์เข้าถึง ปลอดภัย เป็นส่วนตัว' },
+  { icon: '📤', title: 'ข้อมูลเป็นของคุณ', desc: 'ส่งออก (Export) / ลบข้อมูลได้เองทุกเมื่อ — ไม่ผูกมัด ย้าย/เลิกได้อิสระ' },
+];
+
 const steps = [
-  { n: '01', title: 'จ้าง', desc: 'เลือกทักษะ AI ที่คุณขาด — ISO, กลยุทธ์, การเงิน, การตลาด' },
+  { n: '01', title: 'ตั้งทีม', desc: 'บอกเป้าหมายธุรกิจ → CEO AI จัดทีมผู้บริหาร (กลยุทธ์ · การตลาด · ขาย · การเงิน)' },
   { n: '02', title: 'รัน', desc: 'AI เริ่มทำงานให้คุณ 24 ชม. ตั้งแต่วินาทีแรก ไม่มีวันหยุด' },
-  { n: '03', title: 'รับ', desc: 'เอกสารมาตรฐาน, แผนธุรกิจ ที่พร้อมยื่นได้ทันที' },
+  { n: '03', title: 'รับผล', desc: 'แผนธุรกิจ · หน้าร้าน · ดีล B2B — ผลลัพธ์ที่ลงมือทำได้จริง' },
 ];
 
 const stats = [
   { value: '500+', label: 'บริษัทในไทย' },
-  { value: '24/7', label: 'ทำงานไม่หยุด' },
-  { value: '3 วัน', label: 'ผ่าน ISO เร็วขึ้น 10x' },
-  { value: '฿0', label: 'ค่าที่ปรึกษา' },
+  { value: '24/7', label: 'ทีม AI ไม่หยุด' },
+  { value: '5 นาที', label: 'เปิดร้าน B2B' },
+  { value: '฿390', label: 'เริ่มมีทีม AI ทั้งบริษัท' },
 ];
 
 const features = [
-  { icon: '🛡️', title: 'ISO / TIS อัตโนมัติ', desc: 'สร้างเอกสารมาตรฐาน ISO 9001, TIS ครบชุดในไม่กี่นาที' },
-  { icon: '🧠', title: 'AI กลยุทธ์ธุรกิจ', desc: 'วิเคราะห์ VRIO, 24 Steps MIT, Business Model Canvas' },
+  { icon: '🧠', title: 'ทีมผู้บริหาร AI', desc: 'จัดทีม + วางแผนธุรกิจ (VRIO · 24 Steps MIT · Business Model Canvas)' },
+  { icon: '🏪', title: 'หน้าร้าน + ตลาด B2B', desc: 'เปิดร้านออนไลน์ รับลูกค้าและใบสั่งซื้อ ค้นเจอบน Google' },
   { icon: '📊', title: 'Dashboard อัจฉริยะ', desc: 'ติดตามความคืบหน้าทุก KPI แบบเรียลไทม์' },
-  { icon: '🚀', title: 'ขยายธุรกิจอย่างเป็นระบบ', desc: 'ระบบ 6G Growth Intelligence พร้อมแผนขยาย TAM' },
+  { icon: '🛡️', title: 'งานมาตรฐาน ISO/มอก. (ในตัว)', desc: 'ร่างเอกสาร ISO 9001 / TIS / PDPA เมื่อธุรกิจคุณต้องใช้' },
 ];
 
 // ─── เนื้อหาจูงใจเพิ่มเติม ───
 const differentiators = [
-  { icon: '🏆', title: 'ที่ปรึกษาตัวจริง 20+ ปี', desc: 'สร้างโดย B. Training Consultant ผู้วางระบบมาตรฐาน/ISO ให้ธุรกิจไทยมากว่า 20 ปี — ประสบการณ์จริงถูกใส่ลงในระบบ ไม่ใช่แค่ AI ลอย ๆ' },
-  { icon: '🇹🇭', title: 'เข้าใจธุรกิจไทยจริง', desc: 'ISO/มอก.ภาษาไทย · DBD · PromptPay · ตลาด B2B ในประเทศ — ต่างจาก AI ทั่วไปที่ไม่รู้บริบทและกฎเกณฑ์ของไทย' },
-  { icon: '🧩', title: 'ครบจบในที่เดียว', desc: 'ทีมบริหาร AI + หน้าร้าน/ตลาด B2B + งานมาตรฐาน + การเงิน — ไม่ต้องต่อหลายเครื่องมือให้ยุ่งยาก' },
+  { icon: '🏆', title: 'พัฒนาโดยผู้เชี่ยวชาญ 20+ ปี', desc: 'สร้างโดย B. Training Consultant ผู้วางระบบธุรกิจ/มาตรฐานให้ธุรกิจไทยกว่า 20 ปี — ประสบการณ์จริงถูกใส่ลงในระบบ ไม่ใช่แค่ AI ลอย ๆ' },
+  { icon: '🇹🇭', title: 'เข้าใจธุรกิจไทยจริง', desc: 'ตลาด B2B · DBD · PromptPay · ISO/มอก.ภาษาไทย — เข้าใจบริบทและกฎเกณฑ์ของไทย ต่างจาก AI ทั่วไป' },
+  { icon: '🧩', title: 'ครบจบในที่เดียว', desc: 'ทีมบริหาร AI + หน้าร้าน/ตลาด B2B + การเงิน + งานมาตรฐาน — ไม่ต้องต่อหลายเครื่องมือให้ยุ่งยาก' },
 ];
 
 const outcomes = [
-  { icon: '📄', text: 'เอกสาร ISO / แผนธุรกิจ ที่พร้อมใช้และยื่นได้จริง — ไม่ใช่แค่ทฤษฎี' },
-  { icon: '🏪', text: 'หน้าร้านออนไลน์ + ช่องขาย B2B ที่ลูกค้าค้นเจอคุณบน Google' },
   { icon: '🤖', text: 'ทีม AI ทำงานแทนคุณ 24 ชม. โดยไม่ต้องจ้างพนักงานเพิ่ม' },
+  { icon: '🏪', text: 'หน้าร้านออนไลน์ + ช่องขาย B2B ที่ลูกค้าค้นเจอคุณบน Google' },
   { icon: '📈', text: 'เห็นทุกตัวเลขธุรกิจในที่เดียว ตัดสินใจได้เร็วและมั่นใจขึ้น' },
+  { icon: '📄', text: 'เอกสาร ISO / แผนธุรกิจ ที่พร้อมใช้และยื่นได้จริง — ไม่ใช่แค่ทฤษฎี' },
 ];
 
 const learnCases = [
@@ -152,13 +162,13 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
         </div>
 
         <h1 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, lineHeight: 1.15, marginBottom: 24, maxWidth: 800 }}>
-          ธุรกิจคุณโตได้…<br />
-          <span style={{ color: C.cyan4 }}>ถ้าไม่ต้องรอพนักงาน<br />ทำเอกสาร</span>
+          สร้างและเดินธุรกิจ<br />
+          <span style={{ color: C.cyan4 }}>ด้วยทีมผู้บริหาร AI<br />ที่ทำงานให้ 24 ชม.</span>
         </h1>
 
         <p style={{ fontSize: 18, color: C.slate4, marginBottom: 48, maxWidth: 600, lineHeight: 1.7 }}>
-          เลิกจ้างที่ปรึกษาหลักแสนเพื่อมานั่งทำ ISO/TIS แบบเดิมๆ<br />
-          เปลี่ยนมาจ้าง <strong style={{ color: C.white }}>'พนักงาน AI'</strong> ที่รู้จบทุกขั้นตอนมาตรฐานไทยใน 3 วินาที
+          ให้ CEO AI จัดทีม วางแผน หาลูกค้า และเดินธุรกิจให้คุณ<br />
+          มี <strong style={{ color: C.white }}>'ทีม AI'</strong> ทั้งบริษัทได้ตั้งแต่ ฿390/เดือน — คุณสั่ง มันลงมือ คุณคุมทุกการตัดสินใจ
         </p>
 
         <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -243,7 +253,7 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
       {/* ─── Social Proof ─── */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
         <p style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.cyan5, marginBottom: 12 }}>
-          บริษัทชั้นนำในไทยกว่า 500 แห่ง กำลังรันมาตรฐานด้วยระบบอัตโนมัติ
+          บริษัทในไทยกว่า 500 แห่ง กำลังสร้าง & เดินธุรกิจด้วยทีม AI
         </p>
         <p style={{ color: C.slate5, fontSize: 14, marginBottom: 10 }}>TRUSTED BY INDUSTRY LEADERS</p>
         <p style={{ color: C.slate4, fontSize: 15 }}>
@@ -344,6 +354,33 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
             ))}
           </div>
           <p style={{ textAlign: 'center', color: C.slate5, marginTop: 28, fontSize: 13.5 }}>…และอีกหลายเคส พร้อมทักษะ (Skill) ที่นำไปใช้ได้จริงในตลาดของระบบ</p>
+        </div>
+      </section>
+
+      {/* ─── Trust (ทำไม AI เชื่อถือได้) ─── */}
+      <section style={{ padding: '80px 24px' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', color: C.cyan4, fontSize: 12.5, fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 12 }}>
+            ความน่าเชื่อถือของระบบ AI
+          </div>
+          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
+            AI ที่ <span style={{ color: C.cyan4 }}>ควบคุมได้</span> — ไม่ใช่ AI ที่เดาสุ่ม
+          </h2>
+          <p style={{ textAlign: 'center', color: C.slate4, fontSize: 16, lineHeight: 1.7, maxWidth: 640, margin: '0 auto 44px' }}>
+            6 ชั้นที่ทำให้ AI ของเราช่วย<strong style={{ color: C.white }}>สร้าง &amp; ทำธุรกิจ</strong>ได้อย่างมั่นใจ — สั่งงานได้ ตรวจสอบได้ ไม่เดาสุ่ม
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18 }}>
+            {TRUST_PILLARS.map(p => (
+              <div key={p.title} style={{ padding: 24, borderRadius: 12, border: `1px solid ${C.border}`, backgroundColor: C.bg3 }}>
+                <div style={{ fontSize: 30, marginBottom: 12 }}>{p.icon}</div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: C.white, marginBottom: 8 }}>{p.title}</div>
+                <div style={{ color: C.slate4, fontSize: 14, lineHeight: 1.55 }}>{p.desc}</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ textAlign: 'center', color: C.slate5, marginTop: 28, fontSize: 13.5 }}>
+            พัฒนาโดย <strong style={{ color: C.slate4 }}>B. Training Consultant</strong> — ผู้เชี่ยวชาญ ISO / PDPA / มอก. 20+ ปี
+          </p>
         </div>
       </section>
 

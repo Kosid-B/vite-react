@@ -12,6 +12,7 @@ import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTrig
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import SaveWorkPrompt from './components/SaveWorkPrompt';
+import GoalChooser from './components/GoalChooser';
 import Sidebar from './components/Sidebar';
 // perf: lazy-load เฉพาะตอนต้องใช้ (ไม่อยู่ใน critical path ของ first paint)
 const AiAssist = lazy(() => import('./components/AiAssist'));
@@ -436,8 +437,20 @@ export default function App() {
 
   const doneCount = data.actions.filter(a => a.done).length;
 
+  // First-run: ผู้ใช้ใหม่ (ยังไม่เลือกเป้าหมาย + เพิ่งเข้า) → ถาม "วันนี้อยากทำอะไร?" ก่อน
+  const showGoalChooser = data.onboardGoal == null && (data.visitedPages?.length ?? 0) <= 1;
+  // OnboardingTour ไม่ชนกับ GoalChooser: ผู้เลือกเป้าหมายไปที่เครื่องมือเลย (ไม่มีทัวร์) ·
+  // โชว์ทัวร์เฉพาะคน "ดูภาพรวมก่อน" (explore) หรือผู้ใช้เดิม (ทัวร์ self-gate ของมันเองอยู่แล้ว)
+  const showTour = data.onboardGoal === 'explore' || (data.onboardGoal == null && !showGoalChooser);
+
   return (
     <div className="app">
+      {showGoalChooser && (
+        <GoalChooser
+          onPick={(goal, page) => { updateData({ ...data, onboardGoal: goal }); setActivePage(page); }}
+          onSkip={() => updateData({ ...data, onboardGoal: 'explore' })}
+        />
+      )}
       <Suspense fallback={null}><Celebrate moment={celebration} onDone={() => setCelebration(null)} /></Suspense>
       {showSavePrompt && (
         <SaveWorkPrompt onClose={() => setShowSavePrompt(false)} onCaptured={() => setLeadCaptured(true)} />
@@ -477,6 +490,7 @@ export default function App() {
         data={data}
         collapsed={navCollapsed}
         onToggleCollapse={toggleNavCollapse}
+        onExitFocus={() => updateData({ ...data, focusDismissed: true })}
       />
 
       <main className={`main${navCollapsed ? ' nav-collapsed' : ''}`}>
@@ -634,7 +648,7 @@ export default function App() {
 
       <Suspense fallback={null}>
         <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
-        <OnboardingTour data={data} onNavigate={setActivePage} onUpdate={updateData} />
+        {showTour && <OnboardingTour data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         <AiAssist activePage={activePage} data={data} />
         <JourneyGuide data={data} onNavigate={setActivePage} onUpdate={updateData} />
       </Suspense>
