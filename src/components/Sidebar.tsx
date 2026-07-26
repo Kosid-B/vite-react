@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { AppData, PageId } from '../types';
+import type { AppData, PageId, OnboardGoal } from '../types';
 import type { Workspace } from '../lib/workspaces';
 import { BRAND, COMPANY, isAdminEmail } from '../config';
 import { canAccess, planLabel, PLAN_COLOR, PAGE_MIN_PLAN } from '../lib/access';
@@ -25,7 +25,31 @@ interface Props {
   data?: AppData;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  onExitFocus?: () => void;   // ปลดล็อกเมนูทั้งหมด (เลิกโหมดโฟกัสเป้าหมาย)
 }
+
+// โหมดโฟกัส: map เป้าหมาย → หน้าหลัก + หน้าที่เกี่ยวข้อง (ซ่อนเมนูอื่นก่อน เข้าง่าย)
+const FOCUS: Record<Exclude<OnboardGoal, 'explore'>, {
+  label: string;
+  primary: { id: PageId; label: string; desc: string; icon: string };
+  related: { id: PageId; label: string }[];
+}> = {
+  pdpa: {
+    label: 'งาน PDPA',
+    primary: { id: 'privacy', label: 'ตัวช่วย PDPA', desc: 'ร่าง Privacy Notice / SOP — เห็นผลใน 2 นาที', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
+    related: [{ id: 'knowledge', label: 'คลังความรู้ PDPA' }],
+  },
+  iso: {
+    label: 'งาน ISO / มอก.',
+    primary: { id: 'compliance', label: 'AI ตรวจเอกสาร ISO/มอก.', desc: 'เห็น Readiness Score + ข้อที่ยังขาดทันที', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+    related: [{ id: 'iso9001', label: 'ISO 9001:2015 QMS' }, { id: 'knowledge', label: 'คลังความรู้ ISO' }],
+  },
+  aicompany: {
+    label: 'สร้างบริษัท AI',
+    primary: { id: 'aicompany', label: 'บริษัท AI', desc: 'ให้ CEO AI จัดทีม + วางแผน + เดินธุรกิจ', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-16 0H3m6-12h0m6 0h0m-6 4h0m6 0h0m-6 4h0m6 0h0' },
+    related: [{ id: 'boardroom', label: 'ห้องบอร์ด' }, { id: 'resources', label: 'ทรัพยากร' }],
+  },
+};
 
 // เครื่องมือ — sub-menu ของ บริษัท AI · เรียงตาม "ลำดับขั้นการพัฒนาธุรกิจ" (ทำ 1 → 11 ตามนี้)
 // 4 ระยะ: เข้าใจลูกค้า → ออกแบบธุรกิจ → วางแผนการตลาด → ลงมือ & วัดผล
@@ -61,7 +85,7 @@ const TOOL_PAGE_IDS = TOOL_ITEMS.map(t => t.id);
 // หน้าในกลุ่ม "ธุรกิจ & การขาย" (ยุบได้)
 const BIZ_PAGE_IDS: PageId[] = ['market', 'storefront', 'trade', 'team', 'factory', 'analytics'];
 
-export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs, data, collapsed, onToggleCollapse }: Props) {
+export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs, data, collapsed, onToggleCollapse, onExitFocus }: Props) {
   const pct = totalActions > 0 ? Math.round((doneCount / totalActions) * 100) : 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const locked = (page: PageId) => !!(data && PAGE_MIN_PLAN[page] && !canAccess(data, page));
@@ -103,6 +127,10 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
     if (BIZ_PAGE_IDS.includes(activePage)) setBizOpen(true);
   }, [activePage]);
 
+  // โหมดโฟกัส: เลือกเป้าหมายแล้ว + ยังไม่ปลดล็อก → โชว์เฉพาะหน้าที่เกี่ยวกับเป้าหมาย (เข้าง่าย ไม่เจอ 20 เมนู)
+  const goal = data?.onboardGoal;
+  const focus = goal && goal !== 'explore' && !data?.focusDismissed ? FOCUS[goal] : null;
+
   return (
     <nav className={`sidebar${isOpen ? ' open' : ''}${collapsed ? ' collapsed' : ''}`}>
       <div className="sidebar-brand">
@@ -143,6 +171,42 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
         )}
       </div>
 
+      {focus ? (
+        <div className="nav-section nav-focus">
+          <div className="focus-head">
+            <span className="focus-eyebrow">🎯 กำลังโฟกัส</span>
+            <span className="focus-label">{focus.label}</span>
+          </div>
+          <button className={`nav-item nav-focus-primary ${activePage === focus.primary.id ? 'active' : ''}${locked(focus.primary.id) ? ' nav-locked' : ''}`}
+            onClick={() => onNavigate(focus.primary.id)}>
+            <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path d={focus.primary.icon} /></svg>
+            <span className="nav-tool-text">
+              <span className="nav-tool-label">{focus.primary.label}</span>
+              <span className="nav-tool-desc">{focus.primary.desc}</span>
+            </span>
+            {locked(focus.primary.id) ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+          </button>
+          {focus.related.map(r => (
+            <button key={r.id} className={`nav-item ${activePage === r.id ? 'active' : ''}${locked(r.id) ? ' nav-locked' : ''}`} onClick={() => onNavigate(r.id)}>
+              <span className="focus-bullet" aria-hidden="true">•</span>{r.label}
+              {locked(r.id) ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+            </button>
+          ))}
+          <div className="focus-essentials">
+            <button className={`nav-item ${activePage === 'billing' ? 'active' : ''}`} onClick={() => onNavigate('billing')}>
+              <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+              แพ็กเกจ & ชำระเงิน
+              <span className="nav-dot" />
+            </button>
+            <button className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`} onClick={() => onNavigate('dashboard')}>
+              <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+              Dashboard
+              <span className="nav-dot" />
+            </button>
+          </div>
+          <button className="focus-unlock" onClick={onExitFocus}>🔓 ปลดล็อกเมนูทั้งหมด</button>
+        </div>
+      ) : (<>
       <div className="nav-section">
         <div className="nav-label">✦ เริ่มที่นี่ · องค์กร AI</div>
 
@@ -404,6 +468,7 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           ? '🔰 โหมดมือใหม่ (ซ่อนเมนูขั้นสูง) — แตะเพื่อแสดงครบ'
           : '⚙️ แสดงครบทุกเมนู — แตะเพื่อกลับโหมดมือใหม่'}
       </button>
+      </>)}
 
       <div style={{ padding: '0 12px', marginTop: 8 }}>
         <div className="progress-block">

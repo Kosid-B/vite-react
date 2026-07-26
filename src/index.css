@@ -5763,6 +5763,48 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .beginner-toggle { display: block; width: calc(100% - 24px); margin: 8px 12px 0; padding: 8px 10px; background: rgba(148,163,184,.08); border: 1px dashed var(--ink4); border-radius: var(--r); color: var(--ink3); font-family: inherit; font-size: 12px; cursor: pointer; transition: .15s; text-align: center; }
 .beginner-toggle:hover { background: rgba(148,163,184,.16); color: var(--ink2); }
 
+/* ===== Goal Chooser (first-run "วันนี้อยากทำอะไร?") ===== */
+.goal-overlay { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; padding: 20px;
+  background: rgba(8,12,20,.72); backdrop-filter: blur(6px); animation: goal-fade .25s ease both; }
+@keyframes goal-fade { from { opacity: 0; } to { opacity: 1; } }
+.goal-card { width: min(760px, 96vw); background: var(--bg2, #0f172a); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px; padding: 34px clamp(20px, 4vw, 40px); box-shadow: 0 24px 70px rgba(0,0,0,.5);
+  animation: goal-rise .3s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes goal-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.goal-brand { font-size: 12.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); font-weight: 700; text-align: center; }
+.goal-title { margin: 10px 0 0; font-size: clamp(22px, 3.6vw, 30px); font-weight: 800; text-align: center; color: var(--ink1, #f8fafc); letter-spacing: -.01em; }
+.goal-sub { margin: 8px auto 24px; max-width: 42ch; text-align: center; font-size: 14px; line-height: 1.55; color: var(--ink3, #94a3b8); }
+.goal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 620px) { .goal-grid { grid-template-columns: 1fr; } }
+.goal-opt { position: relative; text-align: left; display: flex; flex-direction: column; gap: 7px;
+  padding: 20px 18px; border-radius: 14px; cursor: pointer; color: var(--ink1, #f8fafc);
+  background: rgba(148,163,184,.06); border: 1px solid rgba(255,255,255,.09); transition: .16s; }
+.goal-opt:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); transform: translateY(-2px); }
+.goal-opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.goal-opt-ico { font-size: 30px; line-height: 1; }
+.goal-opt-tag { position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 800; letter-spacing: .04em;
+  color: #06121a; background: var(--accent); padding: 2px 8px; border-radius: 999px; }
+.goal-opt-title { font-size: 16.5px; font-weight: 800; letter-spacing: -.01em; }
+.goal-opt-desc { font-size: 12.8px; line-height: 1.5; color: var(--ink3, #94a3b8); flex: 1; }
+.goal-opt-go { font-size: 13px; font-weight: 700; color: var(--accent); margin-top: 2px; }
+.goal-skip { display: block; margin: 22px auto 0; padding: 8px 14px; background: none; border: none;
+  color: var(--ink3, #94a3b8); font-family: inherit; font-size: 13.5px; cursor: pointer; border-radius: 8px; transition: .15s; }
+.goal-skip:hover { color: var(--ink1, #f8fafc); background: rgba(148,163,184,.1); }
+
+/* ===== Focus mode nav (โฟกัสเป้าหมาย ซ่อนเมนูอื่นก่อน) ===== */
+.nav-focus { padding-top: 6px; }
+.focus-head { display: flex; flex-direction: column; gap: 2px; padding: 4px 12px 12px; }
+.focus-eyebrow { font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.focus-label { font-size: 16px; font-weight: 800; color: var(--ink1, #f8fafc); letter-spacing: -.01em; }
+.nav-focus-primary { align-items: flex-start !important; background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent) !important; border-radius: 12px !important; margin: 0 8px 4px; }
+.focus-bullet { display: inline-grid; place-items: center; width: 18px; color: var(--accent); font-weight: 800; }
+.focus-essentials { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(148,163,184,.14); }
+.focus-unlock { display: block; width: calc(100% - 24px); margin: 12px 12px 0; padding: 9px 10px;
+  background: rgba(148,163,184,.08); border: 1px dashed var(--ink4, rgba(148,163,184,.4)); border-radius: var(--r, 10px);
+  color: var(--ink2, #cbd5e1); font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: .15s; text-align: center; }
+.focus-unlock:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--ink1, #f8fafc); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+
 /* ===== Admin: นำเข้า Case Study ===== */
 .cst-wrap { max-width: 760px; }
 .cst-h3 { font-size: 17px; color: var(--ink); margin: 0 0 4px; }
