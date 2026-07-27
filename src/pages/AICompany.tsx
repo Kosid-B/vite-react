@@ -8,6 +8,8 @@ import { listAdminSkills } from '../lib/adminSkills';
 import { recommendSkills } from '../lib/skillAdvisor';
 import SkillAuction from '../components/SkillAuction';
 import SkillAdvisor from '../components/SkillAdvisor';
+import DemoBadge from '../components/DemoBadge';
+import { isDemoRoster, isDemoCompany } from '../lib/demoData';
 import Integrations from '../components/Integrations';
 import type { Auction } from '../lib/auctions';
 import { trackSkillPurchase } from '../lib/skillStats';
@@ -1319,6 +1321,10 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           {pendingApprovals > 0 && <span className="meta-chip" style={{ borderColor: 'var(--rust)', color: 'var(--rust)' }}>{pendingApprovals} รออนุมัติ</span>}
         </div>
       </div>
+
+      {(isDemoRoster(data) || isDemoCompany(data)) && (
+        <DemoBadge hint="ปรับเป้าหมาย/ทีมให้ตรงธุรกิจคุณ หรือกด 'CEO แนะนำทีม' สร้างทีมใหม่" />
+      )}
 
       {/* ===== Control bar ===== */}
       <div className="ai-control">

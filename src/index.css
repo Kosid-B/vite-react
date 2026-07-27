@@ -819,6 +819,9 @@ body {
 .db-link { background: none; border: none; font-size: 13px; color: var(--rust); cursor: pointer; font-family: inherit; padding: 0; font-weight: 600; display: block; margin-top: 12px; }
 .db-link:hover { text-decoration: underline; }
 .db-firstrun-hint { margin: 14px 0; padding: 14px 18px; border-radius: 12px; font-size: 13.5px; line-height: 1.6; color: #94a3b8; background: rgba(6,182,212,.06); border: 1px dashed rgba(6,182,212,.3); }
+.demo-badge { margin: 0 0 16px; padding: 9px 14px; border-radius: 10px; font-size: 13px; line-height: 1.5; color: var(--ink2); background: rgba(168,140,60,.1); border: 1px dashed rgba(168,140,60,.4); }
+.demo-badge b { color: var(--ink); }
+.demo-badge__hint { color: var(--ink2); }
 .db-matrix { border: 1px solid var(--sand); border-radius: var(--r); overflow: hidden; }
 .db-mx-head { display: grid; grid-template-columns: 130px repeat(4, 1fr); background: var(--cream); border-bottom: 1px solid var(--sand); }
 .db-mx-stage-col { padding: 8px 12px; font-size: 12.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--ink4); }
