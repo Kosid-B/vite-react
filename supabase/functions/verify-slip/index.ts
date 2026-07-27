@@ -102,11 +102,19 @@ Deno.serve(async (req) => {
 
   if (!slip) return json({ ok: false, reason: "slipok_bad_response" }, 502);
 
-  // SlipOK code 1012 = สลิปซ้ำ (เคยส่งเข้าระบบแล้ว) → ปฏิเสธชัดเจน
+  // Error response = { code, message, (บางกรณี) data } · map ตามเอกสาร SlipOK v1.13
   if (!slipRes.ok || slip.success !== true || !slip.data) {
     const code = Number(slip.code ?? 0);
-    const reason = code === 1012 ? "duplicate_slip"
-      : code === 1013 ? "amount_mismatch"       // ยอดไม่ตรงที่แจ้ง (SlipOK ตรวจให้เมื่อส่ง amount)
+    const reason =
+        code === 1012 ? "duplicate_slip"       // สลิปซ้ำ (log:true ตรวจให้)
+      : code === 1013 ? "amount_mismatch"      // ยอดไม่ตรง (เฉพาะเมื่อส่ง amount)
+      : code === 1014 ? "receiver_mismatch"    // บัญชีผู้รับไม่ตรงบัญชีหลักของร้าน (log:true ตรวจให้)
+      : code === 1010 ? "bank_delay"           // BBL/SCB — ต้องรอ N นาทีแล้วตรวจใหม่ (ไม่ใช่ fail ถาวร)
+      : code === 1009 ? "bank_busy"            // ธนาคารขัดข้องชั่วคราว ลองใหม่ 15 นาที (ไม่เสียโควตา)
+      : code === 1007 || code === 1011 ? "qr_expired"   // QR หมดอายุ/ไม่มีรายการจริง
+      : code === 1008 ? "not_payment_qr"       // ไม่ใช่ QR ชำระเงิน
+      : code === 1005 || code === 1006 ? "bad_image"    // ไฟล์รูปไม่ถูกต้อง/ไม่มี QR
+      : code === 1003 || code === 1004 || code === 1015 ? "slipok_quota" // แพ็ก/โควตา SlipOK (ปัญหาฝั่งร้าน)
       : "slip_not_verified";
     return json({ ok: false, reason, code, detail: String(slip.message ?? "").slice(0, 200) }, 422);
   }
