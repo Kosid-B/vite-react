@@ -4811,6 +4811,10 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 /* ── Plan Badge (Sidebar) ── */
 .sidebar-plan-badge { display:inline-block; margin:8px 0 4px; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:700; border:1px solid; cursor:pointer; transition:opacity .15s; letter-spacing:.02em; }
 .sidebar-plan-badge:hover { opacity:.8; }
+.sidebar-plan-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.sidebar-streak { display:inline-flex; align-items:center; gap:3px; margin:8px 0 4px; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; background:rgba(249,115,22,.14); color:#fb923c; border:1px solid rgba(249,115,22,.3); }
+.sidebar-streak:hover { opacity:.8; }
+.sidebar.collapsed .sidebar-streak { display:none; }
 .nav-lock { margin-left:auto; font-size: 12.5px; opacity:.7; }
 .nav-locked { opacity:.55; }
 

@@ -2,6 +2,7 @@
 
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
+  homeSeo, faqPageHtml,
   type SeoData, type SeoStorefront,
 } from './lib/seoData';
 
@@ -110,6 +111,19 @@ export default {
         return new Response(llmsTxt(origin), {
           headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
         });
+      }
+
+      // /faq → หน้า answer-first แบบ static HTML (crawlable ไม่ต้องรอ JS) + FAQPage schema (AEO)
+      if (url.pathname === '/faq' || url.pathname === '/faq/') {
+        return new Response(faqPageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // หน้าแรก / → inject schema (Organization + SoftwareApplication + FAQPage) ให้ AI/Google สกัด entity
+      if (url.pathname === '/') {
+        try { return injectSeo(await env.ASSETS.fetch(request), homeSeo(origin)); }
+        catch { /* fallback → shell เดิม */ }
       }
 
       // /b/<slug> → inject meta ต่อร้าน

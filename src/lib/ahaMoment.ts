@@ -3,6 +3,14 @@
  *  ต่างจาก Setup Quest (เช็กลิสต์เต็มระบบ 7 ข้อ) — อันนี้โฟกัส 3 ก้าวสู่ aha เท่านั้น */
 
 import type { AppData, PageId } from '../types';
+import { DEFAULT_DATA as SEED } from '../data';
+
+// seed = ข้อมูลตัวอย่าง (demo) ที่ผู้ใช้ใหม่ได้มาก่อนลงมือ → aha ต้องติ๊ก done เฉพาะเมื่อค่า "ต่างจาก seed"
+// (mirror src/lib/journey.ts) มิฉะนั้นผู้ใช้ใหม่จะเห็นการ์ด "aha 5 นาที" เป็น 3/3 ทันที = ฆ่า activation moment
+const seedCo = SEED.aiCompany;
+const seedRoster = (seedCo.agents ?? []).map(a => a.id).join(',');
+const seedTaskCount = seedCo.tasks?.length ?? 0;
+const rosterOf = (d: AppData) => (d.aiCompany?.agents ?? []).map(a => a.id).join(',');
 
 export interface AhaStep {
   id: string;
@@ -14,22 +22,23 @@ export interface AhaStep {
   done: (d: AppData) => boolean;
 }
 
-/** 3 ก้าวสู่ Aha: บอกเป้าหมาย → ตั้งทีม → เริ่มทำงาน */
+/** 3 ก้าวสู่ Aha: บอกเป้าหมาย → ตั้งทีม → เริ่มทำงาน (ติ๊ก done เมื่อ user ลงมือเอง = ต่างจาก seed) */
 export const AHA_STEPS: AhaStep[] = [
   {
     id: 'goal', icon: '🎯', label: 'บอกเป้าหมายธุรกิจ',
     hint: 'ประเภทธุรกิจ + เป้าหมาย 1 ประโยค ให้ AI รู้ทิศทาง', mins: 2, page: 'aicompany',
-    done: d => !!d.aiCompany?.industry?.trim() && !!d.aiCompany?.goal?.trim(),
+    done: d => !!d.aiCompany?.industry?.trim() && !!d.aiCompany?.goal?.trim()
+      && (d.aiCompany.industry !== seedCo.industry || d.aiCompany.goal !== seedCo.goal),
   },
   {
     id: 'team', icon: '👥', label: 'ให้ CEO สร้างทีม AI',
     hint: 'กด "แนะนำทีม" — CEO จัดผังผู้บริหารให้อัตโนมัติ', mins: 2, page: 'aicompany',
-    done: d => (d.aiCompany?.agents?.length ?? 0) >= 3,
+    done: d => (d.aiCompany?.agents?.length ?? 0) >= 3 && rosterOf(d) !== seedRoster,
   },
   {
     id: 'run', icon: '▶️', label: 'เริ่มให้บริษัททำงาน',
     hint: 'มอบงานให้ทีม — เห็นบริษัทเดินเอง + เมืองเริ่มโต', mins: 1, page: 'aicompany',
-    done: d => Boolean(d.aiCompany?.running) || (d.aiCompany?.tasks?.length ?? 0) >= 1,
+    done: d => Boolean(d.aiCompany?.running) || (d.aiCompany?.tasks?.length ?? 0) > seedTaskCount,
   },
 ];
 

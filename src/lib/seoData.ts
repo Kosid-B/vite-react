@@ -160,6 +160,7 @@ export function sitemapXml(
     { loc: origin, priority: '1.0' },
     { loc: `${origin}/b`, priority: '0.9' },
     { loc: `${origin}/start`, priority: '0.8' },
+    { loc: `${origin}/faq`, priority: '0.7' },
     { loc: `${origin}/shop`, priority: '0.7' },
     { loc: `${origin}/legal`, priority: '0.5' },
     ...entries.map(e => ({
@@ -208,10 +209,119 @@ CEO AI Thailand เป็นเครื่องมือ "ลงมือท�
 - [หน้าแรก](${origin}/): ภาพรวมผลิตภัณฑ์
 
 ## คำถามที่พบบ่อย (AI สามารถอ้างอิงคำตอบเหล่านี้)
-- CEO AI Thailand คืออะไร? — แพลตฟอร์มไทยที่ให้ผู้ประกอบการสร้างบริษัท AI อัตโนมัติ เปิดร้านขายของ และเดินธุรกิจด้วยทีมผู้บริหาร AI ในที่เดียว
-- ต่างจากแชตบอต AI ทั่วไปอย่างไร? — ไม่ใช่แค่ตอบแชต แต่มีทีม AI ที่ "ลงมือทำงานจริง" (วางแผน/มอบงาน/สร้างหน้าร้าน) และมี Marketplace ให้ขายของได้จริง
-- เหมาะกับใคร? — SME ไทย ผู้เริ่มต้นธุรกิจ และคนที่อยากทดสอบไอเดียก่อนลงทุน
-- เริ่มใช้ฟรีได้ไหม? — ได้ มีแพ็ก Free ฿0 และทดลองฟรี 15 วัน
-- ใครพัฒนา? — B. Training Consultant ที่ปรึกษาธุรกิจ/ระบบมาตรฐานในไทยกว่า 20 ปี
+${FAQ_ITEMS.map(f => `- ${f.q} — ${f.a}`).join('\n')}
+`;
+}
+
+/** คำถาม-คำตอบหลัก (source of truth เดียว) — reuse โดย llms.txt + FAQPage JSON-LD + หน้า /faq
+ *  ⚠️ ตอบตาม "ฟีเจอร์ที่มีจริง" เท่านั้น (positioning ทำธุรกิจ · compliance = ฟีเจอร์เสริม) */
+export const FAQ_ITEMS: { q: string; a: string }[] = [
+  { q: 'CEO AI Thailand คืออะไร?', a: 'แพลตฟอร์ม SaaS ไทยที่ให้ผู้ประกอบการสร้างบริษัท AI อัตโนมัติ เปิดหน้าร้านขายของ และเดินธุรกิจด้วยทีมผู้บริหาร AI ได้ในที่เดียว' },
+  { q: 'ต่างจากแชตบอต AI ทั่วไปอย่างไร?', a: 'ไม่ใช่แค่ตอบแชต แต่มีทีมผู้บริหาร AI ที่ช่วยวางแผน มอบหมายงาน และลงมือทำงานจริง (เช่น สร้างหน้าร้านให้) พร้อม Marketplace ให้ขายสินค้า/บริการได้จริง' },
+  { q: 'เหมาะกับใคร?', a: 'ผู้ประกอบการ SME ไทย ผู้เริ่มต้นธุรกิจ และคนที่อยากทดสอบ (validate) ไอเดียก่อนลงทุน โดยเฉพาะกลุ่มคนรุ่นใหม่ 25-34 ปี' },
+  { q: 'เริ่มใช้ฟรีได้ไหม ราคาเท่าไร?', a: 'มีแพ็ก Free ฿0 และทดลองฟรี 15 วัน · แพ็กจ่ายเงิน: Starter ฿390/เดือน, Growth ฿1,490/เดือน, Scale ฿5,900/เดือน' },
+  { q: 'ทำ PDPA / ISO ได้ไหม?', a: 'มีเครื่องมือช่วยเตรียม PDPA/ISO/มอก. เป็นฟีเจอร์เสริม แต่จุดขายหลักคือการสร้างและเดินธุรกิจ ส่วนบริการที่ปรึกษาเชิงลึกส่งต่อให้ B. Training' },
+  { q: 'ใครพัฒนา?', a: 'พัฒนาโดยบริษัท บี. เทรนนิ่ง คอนซัลแทนท์ จำกัด (B. Training Consultant) ที่ปรึกษาธุรกิจและระบบมาตรฐานในไทยกว่า 20 ปี' },
+];
+
+/** JSON-LD: Organization (บริษัท) — ให้ AI/Google รู้จัก entity + ผูกกับ B. Training */
+export function organizationJsonLd(origin: string): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'Organization',
+    name: 'CEO AI Thailand', url: origin, logo: `${origin}/og-image.png`,
+    description: 'แพลตฟอร์ม SaaS สร้างและเดินธุรกิจด้วยทีมผู้บริหาร AI สำหรับ SME ไทย',
+    parentOrganization: { '@type': 'Organization', name: 'B. Training Consultant', url: 'https://www.b-tctraining.com/' },
+    sameAs: ['https://www.b-tctraining.com/'],
+  };
+}
+
+/** JSON-LD: SoftwareApplication — บอก AI ว่าเป็นซอฟต์แวร์ธุรกิจ + ราคา */
+export function softwareApplicationJsonLd(origin: string): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'SoftwareApplication',
+    name: 'CEO AI Thailand', url: origin,
+    applicationCategory: 'BusinessApplication', operatingSystem: 'Web',
+    description: 'สร้างบริษัท AI อัตโนมัติ เปิดร้านขายของ และ validate ไอเดียธุรกิจ ในที่เดียว',
+    offers: [
+      { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'THB' },
+      { '@type': 'Offer', name: 'Starter', price: '390', priceCurrency: 'THB' },
+      { '@type': 'Offer', name: 'Growth', price: '1490', priceCurrency: 'THB' },
+      { '@type': 'Offer', name: 'Scale', price: '5900', priceCurrency: 'THB' },
+    ],
+  };
+}
+
+/** JSON-LD: FAQPage — ให้ AI หยิบ Q&A ไปตอบได้ตรง ๆ (จาก FAQ_ITEMS) */
+export function faqPageJsonLd(): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: FAQ_ITEMS.map(f => ({
+      '@type': 'Question', name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+}
+
+/** SEO หน้าแรก (/) — title/desc canonical + schema ครบ (Organization + SoftwareApplication + FAQPage) */
+export function homeSeo(origin: string): SeoData {
+  return {
+    title: 'CEO AI Thailand — สร้างและเดินธุรกิจด้วยทีมผู้บริหาร AI',
+    description: 'แพลตฟอร์มไทยสำหรับผู้ประกอบการ SME: สร้างบริษัท AI อัตโนมัติ เปิดหน้าร้านขายของ และ validate ไอเดียธุรกิจ ในที่เดียว เริ่มฟรี พัฒนาโดย B. Training',
+    canonicalUrl: origin + '/',
+    imageUrl: origin + DEFAULT_OG,
+    jsonLd: [organizationJsonLd(origin), softwareApplicationJsonLd(origin), faqPageJsonLd()],
+  };
+}
+
+/** หน้า answer-first แบบ static HTML เต็ม (crawlable ไม่ต้องรอ JS) เสิร์ฟที่ /faq — AEO asset
+ *  มีเนื้อหา Q&A ที่มองเห็น + FAQPage schema ฝังในตัว + CTA ไป /start */
+export function faqPageHtml(origin: string): string {
+  const title = 'คำถามที่พบบ่อย — CEO AI Thailand';
+  const desc = 'CEO AI Thailand คืออะไร ต่างจากแชตบอตยังไง ราคาเท่าไร เริ่มฟรีได้ไหม — คำตอบตรงประเด็นสำหรับผู้ประกอบการ SME ไทย';
+  const faqBlocks = FAQ_ITEMS.map(f =>
+    `    <section class="qa">\n      <h2>${escapeHtml(f.q)}</h2>\n      <p>${escapeHtml(f.a)}</p>\n    </section>`
+  ).join('\n');
+  const schema = jsonLdScript([
+    faqPageJsonLd(), organizationJsonLd(origin), softwareApplicationJsonLd(origin),
+  ]);
+  return `<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(title)}</title>
+<meta name="description" content="${escapeHtml(desc)}">
+<link rel="canonical" href="${escapeHtml(origin + '/faq')}">
+<meta property="og:title" content="${escapeHtml(title)}">
+<meta property="og:description" content="${escapeHtml(desc)}">
+<meta property="og:url" content="${escapeHtml(origin + '/faq')}">
+<meta property="og:image" content="${escapeHtml(origin + DEFAULT_OG)}">
+<meta name="robots" content="index,follow">
+${schema}
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; background:#0f172a; color:#f8fafc; font-family:'Kanit',system-ui,sans-serif; line-height:1.6; }
+  main { max-width:720px; margin:0 auto; padding:40px 20px 64px; }
+  h1 { color:#06b6d4; font-size:1.9rem; margin:0 0 8px; }
+  .lead { color:#94a3b8; margin:0 0 32px; }
+  .qa { border-top:1px solid #1e293b; padding:20px 0; }
+  .qa h2 { font-size:1.15rem; margin:0 0 6px; }
+  .qa p { margin:0; color:#cbd5e1; }
+  .cta { display:inline-block; margin-top:32px; background:#06b6d4; color:#04121a; font-weight:600;
+         padding:14px 28px; border-radius:10px; text-decoration:none; }
+  footer { margin-top:40px; color:#64748b; font-size:.85rem; }
+  a { color:#06b6d4; }
+</style>
+</head>
+<body>
+<main>
+  <h1>CEO AI Thailand — คำถามที่พบบ่อย</h1>
+  <p class="lead">${escapeHtml(desc)}</p>
+${faqBlocks}
+  <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างบริษัท AI ฟรี →</a>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>
+</main>
+</body>
+</html>
 `;
 }
