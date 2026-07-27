@@ -28,6 +28,18 @@ export const PLAN_PRICE: Record<PlanId, string> = {
   scale: '฿5,900/เดือน',
 };
 
+/** ราคาต่อเดือน (บาท ตัวเลข) — ใช้คำนวณส่วนลดคูปอง */
+export const PLAN_PRICE_NUM: Record<PlanId, number> = {
+  free: 0, starter: 390, growth: 1490, scale: 5900,
+};
+
+/** ราคาต่อเดือนหลังหักคูปองส่วนลด (บาท, ปัดจำนวนเต็ม) — pure */
+export function discountedMonthly(plan: PlanId, couponPct = 0): number {
+  const base = PLAN_PRICE_NUM[plan] ?? 0;
+  const pct = Math.max(0, Math.min(100, couponPct));
+  return Math.round(base * (1 - pct / 100));
+}
+
 /** หน้าที่ต้องการ plan ขั้นต่ำกว่า free */
 export const PAGE_MIN_PLAN: Partial<Record<PageId, PlanId>> = {
   trade:     'starter', // ซื้อขาย B2B (RFQ/Orders) — เริ่มมีรายได้ = เริ่มจ่ายเบาๆ
