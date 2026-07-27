@@ -102,7 +102,8 @@ Deno.serve(async (req) => {
 
   if (!slip) return json({ ok: false, reason: "slipok_bad_response" }, 502);
 
-  // Error response = { code, message, (บางกรณี) data } · map ตามเอกสาร SlipOK v1.13
+  // Error response = { code, message, (บางกรณี) data } · map ครบ 16 codes ตามเอกสาร SlipOK v1.13
+  // แยก "ปัญหาสลิปลูกค้า" ออกจาก "ปัญหาฝั่งร้าน (config/โควตา)" — ห้ามโทษลูกค้าว่าสลิปปลอมเมื่อเป็นความผิดเรา
   if (!slipRes.ok || slip.success !== true || !slip.data) {
     const code = Number(slip.code ?? 0);
     const reason =
@@ -111,11 +112,18 @@ Deno.serve(async (req) => {
       : code === 1014 ? "receiver_mismatch"    // บัญชีผู้รับไม่ตรงบัญชีหลักของร้าน (log:true ตรวจให้)
       : code === 1010 ? "bank_delay"           // BBL/SCB — ต้องรอ N นาทีแล้วตรวจใหม่ (ไม่ใช่ fail ถาวร)
       : code === 1009 ? "bank_busy"            // ธนาคารขัดข้องชั่วคราว ลองใหม่ 15 นาที (ไม่เสียโควตา)
-      : code === 1007 || code === 1011 ? "qr_expired"   // QR หมดอายุ/ไม่มีรายการจริง
-      : code === 1008 ? "not_payment_qr"       // ไม่ใช่ QR ชำระเงิน
-      : code === 1005 || code === 1006 ? "bad_image"    // ไฟล์รูปไม่ถูกต้อง/ไม่มี QR
-      : code === 1003 || code === 1004 || code === 1015 ? "slipok_quota" // แพ็ก/โควตา SlipOK (ปัญหาฝั่งร้าน)
+      : code === 1011 ? "qr_expired"           // QR หมดอายุ/ไม่มีรายการจริง
+      : code === 1008 ? "not_payment_qr"       // QR ไม่ใช่ QR ชำระเงิน
+      : code === 1007 ? "no_qr"                // รูปไม่มี QR Code
+      : code === 1005 || code === 1006 ? "bad_image"    // ไฟล์ไม่ใช่ภาพ/รูปไม่ถูกต้อง
+      // ── ปัญหาฝั่งร้าน (ไม่ใช่ความผิดลูกค้า) ──
+      : code === 1000 || code === 1001 || code === 1002 ? "slipok_config"  // input/branch/API key ผิด
+      : code === 1003 || code === 1004 || code === 1015 ? "slipok_quota"   // แพ็กหมด/เกินโควตา/ไม่พบแพ็ก
       : "slip_not_verified";
+    // config/quota = ความผิดฝั่งร้าน → log ให้ทีมงานเห็นใน edge logs (ลูกค้าไม่ควรเจอเงียบ ๆ)
+    if (reason === "slipok_config" || reason === "slipok_quota") {
+      console.error(`SlipOK store-side error ${code}: ${String(slip.message ?? "")}`);
+    }
     return json({ ok: false, reason, code, detail: String(slip.message ?? "").slice(0, 200) }, 422);
   }
 
