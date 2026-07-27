@@ -4826,6 +4826,21 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .upgrade-wall__expired-badge { display:inline-block; background:#ef44441a; color:#ef4444; border:1px solid #ef444430; border-radius:20px; padding:4px 14px; font-size:13px; font-weight:600; margin-bottom:14px; }
 .upgrade-wall__title { font-size:20px; font-weight:700; color:var(--ink); margin:0 0 10px; }
 .upgrade-wall__desc { font-size:15px; color:var(--ink2); margin:0 0 20px; line-height:1.65; }
+.upgrade-wall__value { font-size:15px; color:var(--ink); margin:0 0 14px; line-height:1.6; font-weight:600; }
+.upgrade-wall__coupon { margin:0 0 18px; padding:12px 14px; border-radius:12px; background:rgba(249,115,22,.1); border:1px dashed rgba(249,115,22,.4); font-size:13.5px; color:var(--ink); }
+.upgrade-wall__price { margin-top:6px; display:flex; align-items:baseline; gap:10px; justify-content:center; }
+.upgrade-wall__price-old { text-decoration:line-through; color:var(--ink2); font-size:14px; }
+.upgrade-wall__price-new { font-size:20px; font-weight:800; }
+/* soft nudge (#4) — บาร์ชวนอัปเกรดตอนเห็นคุณค่า ปิดได้ ไม่ขวาง */
+.upgrade-nudge { position:relative; display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:0 0 16px; padding:14px 40px 14px 18px; border-radius:14px; background:linear-gradient(90deg, rgba(6,182,212,.12), rgba(124,58,237,.12)); border:1px solid rgba(6,182,212,.3); }
+.upgrade-nudge__x { position:absolute; top:8px; right:10px; background:none; border:none; color:var(--ink2); cursor:pointer; font-size:14px; line-height:1; padding:4px; }
+.upgrade-nudge__x:hover { color:var(--ink); }
+.upgrade-nudge__body { flex:1; min-width:200px; }
+.upgrade-nudge__hd { font-size:15px; font-weight:700; color:var(--ink); }
+.upgrade-nudge__sub { font-size:13px; color:var(--ink2); margin-top:2px; line-height:1.55; }
+.upgrade-nudge__cta { background:#06b6d4; color:#04121a; border:none; font-weight:700; padding:10px 18px; border-radius:10px; cursor:pointer; font-family:inherit; font-size:13.5px; white-space:nowrap; }
+.upgrade-nudge__cta:hover { opacity:.9; }
+.upgrade-nudge__cta s { opacity:.7; font-weight:500; margin-right:4px; }
 .upgrade-wall__features { list-style:none; padding:0; margin:0 0 24px; text-align:left; display:inline-block; }
 .upgrade-wall__features li { font-size:14px; color:var(--ink2); padding:3px 0; }
 .upgrade-wall__check { color:#22c55e; font-weight:700; margin-right:6px; }

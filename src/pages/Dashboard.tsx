@@ -8,6 +8,7 @@ import WeeklyDigest from '../components/WeeklyDigest';
 import SystemOverview from '../components/SystemOverview';
 import AhaMoment from '../components/AhaMoment';
 import { ahaProgress } from '../lib/ahaMoment';
+import UpgradeNudge from '../components/UpgradeNudge';
 import EcosystemFlow from '../components/EcosystemFlow';
 
 interface Props {
@@ -377,6 +378,9 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
       {/* widget รอง — เปิดเมื่อ activated แล้ว (ลด tracker ซ้อนกันตอนเริ่ม · โฟกัส 3 ก้าวสู่ aha ก่อน) */}
       {aha.activated ? (
         <>
+          {/* #4 soft upgrade nudge — โผล่ตอนเพิ่งเห็นคุณค่า (activated) + ยังอยู่แพ็ก free (ปิดได้) */}
+          {data.subscription.plan === 'free' && <UpgradeNudge data={data} onNavigate={onNavigate} />}
+
           {/* ===== วงจรธุรกิจครบวงจร — ทำ loop ให้ไหลต่อกันเร็วขึ้น ===== */}
           <EcosystemFlow data={data} onNavigate={onNavigate} />
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import type { AppData, PlanId, SubStatus } from '../../types';
-import { canAccess, effectiveRank, isExpired, planLabel, setAdminFullAccess } from '../access';
+import { canAccess, effectiveRank, isExpired, planLabel, setAdminFullAccess, discountedMonthly } from '../access';
 
 // สร้าง AppData จำลองที่มีแค่ subscription (canAccess/effectiveRank อ่านเฉพาะส่วนนี้)
 function withSub(plan: PlanId, status: SubStatus, opts: { trialEndDate?: string; currentPeriodEnd?: string } = {}): AppData {
@@ -100,5 +100,20 @@ describe('access control — เมทริกซ์แพ็กเกจ x ห
   it('planLabel ของ trial แสดงจำนวนวันคงเหลือ', () => {
     const d = withSub('free', 'trial', { trialEndDate: future });
     expect(planLabel(d)).toMatch(/ทดลอง/);
+  });
+});
+
+describe('discountedMonthly — ราคาหลังหักคูปอง (#6 PLG)', () => {
+  it('ไม่มีคูปอง = ราคาเต็ม', () => {
+    expect(discountedMonthly('growth')).toBe(1490);
+    expect(discountedMonthly('starter', 0)).toBe(390);
+  });
+  it('หัก % ถูกต้อง + ปัดจำนวนเต็ม', () => {
+    expect(discountedMonthly('growth', 10)).toBe(1341);   // 1490*0.9
+    expect(discountedMonthly('scale', 15)).toBe(5015);    // 5900*0.85
+  });
+  it('clamp % นอกช่วง 0-100', () => {
+    expect(discountedMonthly('starter', -5)).toBe(390);
+    expect(discountedMonthly('starter', 150)).toBe(0);
   });
 });
