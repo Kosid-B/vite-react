@@ -90,9 +90,12 @@ export function slipReasonText(reason?: string): string {
     case 'bank_delay':          return 'สลิปธนาคารนี้ (กรุงเทพ/ไทยพาณิชย์) ต้องรอตรวจสัก 1–8 นาทีหลังโอน — กรุณารอสักครู่แล้วอัปสลิปใหม่';
     case 'bank_busy':           return 'ระบบธนาคารขัดข้องชั่วคราว — ลองใหม่อีกครั้งใน 15 นาที';
     case 'qr_expired':          return 'QR บนสลิปหมดอายุ หรือไม่พบรายการจริง — ตรวจว่าเป็นสลิปโอนสำเร็จ';
-    case 'not_payment_qr':      return 'รูปนี้ไม่ใช่สลิปโอนเงิน — กรุณาอัปสลิปการโอนที่มี QR';
-    case 'bad_image':           return 'ไฟล์รูปไม่ถูกต้อง/อ่าน QR ไม่ได้ — อัปรูปสลิปที่ชัดเจน (JPG/PNG/WEBP)';
-    case 'slipok_quota':        return 'ระบบตรวจสลิปเต็มโควตาชั่วคราว — โปรดติดต่อทีมงาน (support@b-tctraining.com)';
+    case 'not_payment_qr':      return 'QR บนรูปไม่ใช่ QR สำหรับตรวจการชำระเงิน — กรุณาอัปสลิปการโอนจริง';
+    case 'no_qr':               return 'ไม่พบ QR บนรูป — อัปรูปสลิปเต็มใบที่เห็น QR ด้านล่างชัดเจน';
+    case 'bad_image':           return 'ไฟล์รูปไม่ถูกต้อง — อัปรูปสลิปที่ชัดเจน (JPG/PNG/WEBP)';
+    // ปัญหาฝั่งร้าน (ไม่ใช่ความผิดลูกค้า) — ให้ความมั่นใจว่าเงินไม่หาย ทีมงานจัดการให้
+    case 'slipok_config':
+    case 'slipok_quota':        return 'ระบบตรวจสลิปของร้านขัดข้องชั่วคราว — การโอนของคุณยังอยู่ครบ กรุณาติดต่อทีมงาน (support@b-tctraining.com / LINE) แล้วเราจะเปิดแพ็กให้ทันที';
     case 'slip_not_verified':   return 'ตรวจสลิปไม่ผ่าน — รูปอาจไม่ใช่สลิปโอนจริง หรืออ่าน QR ไม่ได้';
     case 'slipok_not_configured':
     case 'slipok_unreachable':
