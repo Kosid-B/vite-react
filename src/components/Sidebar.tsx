@@ -3,6 +3,7 @@ import type { AppData, PageId, OnboardGoal } from '../types';
 import type { Workspace } from '../lib/workspaces';
 import { BRAND, COMPANY, isAdminEmail } from '../config';
 import { canAccess, planLabel, PLAN_COLOR, PAGE_MIN_PLAN } from '../lib/access';
+import { streakCount } from '../lib/streak';
 import MfaSetup from './MfaSetup';
 import IsmsBadge from './IsmsBadge';
 import AmbientMusic from './AmbientMusic';
@@ -149,13 +150,25 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
         {data && (() => {
           const label = planLabel(data);
           const planColor = PLAN_COLOR[data.subscription.plan];
+          const streak = streakCount(data);
           return (
-            <div
-              className="sidebar-plan-badge"
-              style={{ background: `${planColor}18`, color: planColor, borderColor: `${planColor}35` }}
-              onClick={() => onNavigate('billing')}
-            >
-              {label}
+            <div className="sidebar-plan-row">
+              <div
+                className="sidebar-plan-badge"
+                style={{ background: `${planColor}18`, color: planColor, borderColor: `${planColor}35` }}
+                onClick={() => onNavigate('billing')}
+              >
+                {label}
+              </div>
+              {streak > 0 && (
+                <div
+                  className="sidebar-streak"
+                  title={`เข้าใช้งานต่อเนื่อง ${streak} วัน — กลับมาทุกวันเพื่อรักษาสถิติ`}
+                  onClick={() => onNavigate('dashboard')}
+                >
+                  🔥 {streak}
+                </div>
+              )}
             </div>
           );
         })()}
