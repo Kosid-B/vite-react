@@ -30,9 +30,10 @@ AI answer engines ชอบเนื้อหาที่:
 |---|---|---|
 | **`/llms.txt`** (บอก AI ว่าเว็บนี้คืออะไร + หน้าสำคัญ + FAQ) | ✅ **ทำแล้ว** | Worker เสิร์ฟที่ `${origin}/llms.txt` · แก้ข้อความที่ `src/lib/seoData.ts` (`llmsTxt`) |
 | server-side meta/OG/JSON-LD ต่อหน้าร้าน `/b/<slug>` | ✅ มีอยู่ | `src/server.ts` + `seoData.ts` |
-| **FAQPage + Organization + SoftwareApplication JSON-LD** บนหน้า public | ⏳ ถัดไป | เพิ่มใน `seoData.ts` → inject หน้า `/`, `/start`, `/pricing` |
-| **หน้า "คำถามที่พบบ่อย" (answer-first)** ตอบคำถามที่คนถาม AI | ⏳ ถัดไป | ดู question map ด้านล่าง |
-| robots.txt อนุญาต AI crawler (GPTBot, Google-Extended, PerplexityBot, ClaudeBot) | ⏳ ตรวจ | ต้องไม่บล็อก user-agent เหล่านี้ |
+| **FAQPage + Organization + SoftwareApplication JSON-LD** หน้าแรก `/` | ✅ **ทำแล้ว** | `homeSeo()` inject ที่ `/` (Worker) |
+| **หน้า `/faq` answer-first (static HTML, crawlable)** | ✅ **ทำแล้ว** | `faqPageHtml()` เสิร์ฟที่ `/faq` + FAQPage schema + CTA /start |
+| robots.txt อนุญาต AI crawler (GPTBot/Google-Extended/PerplexityBot/ClaudeBot/OAI) | ✅ **ทำแล้ว** | `public/robots.txt` ระบุ user-agent ชัด |
+| แหล่งความจริงเดียวของ FAQ | ✅ | `FAQ_ITEMS` ใน `seoData.ts` — reuse โดย llms.txt + FAQPage schema + /faq |
 
 ## Workstream 2 — Question Map (เนื้อหาที่ต้องมี)
 เขียนบทความ/หน้า answer-first ตอบคำถามที่กลุ่ม 25-34 ไทยถาม AI จริง (แต่ละหน้า = 1 คำถาม, ตอบใน 2-3 ประโยคแรก):

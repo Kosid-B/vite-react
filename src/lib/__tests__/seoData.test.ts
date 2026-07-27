@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   escapeHtml, jsonLdScript, sectorLabel,
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, llmsTxt,
+  homeSeo, faqPageHtml, faqPageJsonLd, organizationJsonLd, softwareApplicationJsonLd, FAQ_ITEMS,
   type SeoStorefront,
 } from '../seoData';
 
@@ -156,5 +157,48 @@ describe('llmsTxt', () => {
     expect(txt).toContain('B. Training');
     expect(txt).toContain('ไม่ใช่เครื่องมือ compliance');
     expect(txt).toContain('คำถามที่พบบ่อย');
+  });
+});
+
+describe('schema JSON-LD (GEO/AEO)', () => {
+  it('organizationJsonLd ผูก parent = B. Training', () => {
+    const o = organizationJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(o['@type']).toBe('Organization');
+    expect(o.url).toBe(ORIGIN);
+    expect((o.parentOrganization as Record<string, unknown>).name).toBe('B. Training Consultant');
+  });
+  it('softwareApplicationJsonLd มี offers ครบ 4 แพ็ก', () => {
+    const s = softwareApplicationJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(s['@type']).toBe('SoftwareApplication');
+    const offers = s.offers as Record<string, unknown>[];
+    expect(offers).toHaveLength(4);
+    expect(offers.map(o => o.price)).toEqual(['0', '390', '1490', '5900']);
+  });
+  it('faqPageJsonLd แปลง FAQ_ITEMS เป็น Question/Answer ครบ', () => {
+    const f = faqPageJsonLd() as Record<string, unknown>;
+    expect(f['@type']).toBe('FAQPage');
+    const items = f.mainEntity as Record<string, unknown>[];
+    expect(items).toHaveLength(FAQ_ITEMS.length);
+    expect(items[0]['@type']).toBe('Question');
+    expect((items[0].acceptedAnswer as Record<string, unknown>).text).toBe(FAQ_ITEMS[0].a);
+  });
+  it('homeSeo มี schema ครบ 3 ชนิด + canonical หน้าแรก', () => {
+    const seo = homeSeo(ORIGIN);
+    expect(seo.canonicalUrl).toBe(ORIGIN + '/');
+    expect(seo.jsonLd).toHaveLength(3);
+    expect(seo.title).toContain('CEO AI Thailand');
+  });
+});
+
+describe('faqPageHtml (/faq static page)', () => {
+  const html = faqPageHtml(ORIGIN);
+  it('เป็น HTML doc เต็ม + มี FAQ ที่มองเห็น (crawlable) ทุกข้อ', () => {
+    expect(html.startsWith('<!doctype html>')).toBe(true);
+    FAQ_ITEMS.forEach(f => expect(html).toContain(escapeHtml(f.q)));
+  });
+  it('มี FAQPage JSON-LD ฝัง + CTA ไป /start', () => {
+    expect(html).toContain('"@type":"FAQPage"');
+    expect(html).toContain(`${ORIGIN}/start`);
+    expect(html).toContain(`${ORIGIN}/faq`);
   });
 });
