@@ -78,8 +78,10 @@ export const PAYMENT = {
   //         แล้ว "เปิดแพ็กฝั่ง server" เท่านั้น — ปิดช่องโหว่สมบูรณ์
   //   เปิดเป็น true เมื่อ: (1) สมัคร SlipOK (มาตรฐาน SME ไทย) ได้ branchId + apiKey
   //     (2) deploy ฟังก์ชัน verify-slip (3) ตั้ง secret SLIPOK_API_KEY + SLIPOK_BRANCH_ID
-  //     (ออปชัน SLIPOK_RECEIVER_HINT = เลขบัญชีบางส่วนไว้จับคู่ผู้รับ · default 2560 จากบัญชี K BIZ)
-  slipOkLive: false,
+  //     (ออปชัน SLIPOK_RECEIVER_HINT = เลขบัญชีบางส่วนไว้จับคู่ผู้รับเพิ่ม · default ปิด เพราะ
+  //      บัญชีผูกกับสาขา SlipOK แล้ว SlipOK ตรวจผู้รับให้ในตัว)
+  //   ✅ LIVE: branch #72160 + บัญชี K BIZ 0098925600 เชื่อมต่อ SlipOK แล้ว (ก.ค. 2569)
+  slipOkLive: true,
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)

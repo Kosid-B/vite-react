@@ -16,8 +16,9 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const SLIPOK_API_KEY = Deno.env.get("SLIPOK_API_KEY") ?? "";
 const SLIPOK_BRANCH_ID = Deno.env.get("SLIPOK_BRANCH_ID") ?? "";
-// เลขบัญชีผู้รับของเรา (K BIZ 009-8-92560-0) — ใช้ตรวจว่าเงินเข้าบัญชีเราจริง (สลิปมักปิดบางหลัก เช่น xxx-x-x2560-x)
-const RECEIVER_HINT = Deno.env.get("SLIPOK_RECEIVER_HINT") ?? "2560";
+// ชั้นเสริม: จับคู่เลขบัญชีผู้รับบางส่วน — ค่าเริ่มต้น "" = ปิด (พึ่ง SlipOK ที่ผูกบัญชีกับสาขาแล้ว
+// → SlipOK ตรวจว่าเงินเข้าบัญชีเราจริงให้ในตัว) · ตั้ง SLIPOK_RECEIVER_HINT=2560 เพื่อเปิดชั้นนี้เพิ่ม
+const RECEIVER_HINT = Deno.env.get("SLIPOK_RECEIVER_HINT") ?? "";
 
 // ราคาจริง (ฝั่ง server เท่านั้น) — รายปี = 10 เดือน · หน่วย: บาท
 const PRICE_MONTHLY: Record<string, number> = { starter: 390, growth: 1490, scale: 5900 };
