@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import {
-  storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript,
+  storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
   type SeoData, type SeoStorefront,
 } from './lib/seoData';
 
@@ -103,6 +103,13 @@ export default {
             headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
           });
         } catch { /* fallback → static asset */ }
+      }
+
+      // llms.txt → บอก AI crawler (ChatGPT/Gemini/Perplexity) ว่าเว็บนี้คืออะไร + หน้าสำคัญ (GEO/AEO)
+      if (url.pathname === '/llms.txt') {
+        return new Response(llmsTxt(origin), {
+          headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
       }
 
       // /b/<slug> → inject meta ต่อร้าน
