@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   escapeHtml, jsonLdScript, sectorLabel,
-  storefrontSeo, directorySeo, directoryItemList, sitemapXml,
+  storefrontSeo, directorySeo, directoryItemList, sitemapXml, llmsTxt,
   type SeoStorefront,
 } from '../seoData';
 
@@ -138,5 +138,23 @@ describe('sitemapXml', () => {
     const only = sitemapXml([{ slug: 'shop-b' }], ORIGIN);
     const shopBlock = only.slice(only.indexOf('shop-b'));
     expect(shopBlock).not.toContain('<lastmod>');
+  });
+});
+
+describe('llmsTxt', () => {
+  const txt = llmsTxt(ORIGIN);
+  it('ขึ้นต้นด้วยชื่อผลิตภัณฑ์ + summary blockquote', () => {
+    expect(txt.startsWith('# CEO AI Thailand')).toBe(true);
+    expect(txt).toContain('\n> ');
+  });
+  it('มีหน้าเว็บสำคัญเป็น absolute URL จาก origin', () => {
+    expect(txt).toContain(`${ORIGIN}/start`);
+    expect(txt).toContain(`${ORIGIN}/b`);
+    expect(txt).toContain(`${ORIGIN}/pricing`);
+  });
+  it('ตอกย้ำ positioning ทำธุรกิจ + ผู้พัฒนา B. Training (ไม่ใช่เครื่องมือ compliance)', () => {
+    expect(txt).toContain('B. Training');
+    expect(txt).toContain('ไม่ใช่เครื่องมือ compliance');
+    expect(txt).toContain('คำถามที่พบบ่อย');
   });
 });
