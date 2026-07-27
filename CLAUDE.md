@@ -156,6 +156,31 @@ PLG (ไม่มี admin เป็น gate): อัปสลิปในแอ
   appliedPaymentIds กันเปิดซ้ำ · Stripe webhook (stripe-webhook) = ทาง PLG อัตโนมัติเต็ม (รอ KYC ผ่าน)
 ```
 
+### ตรวจสลิปกับธนาคารจริง (SlipOK) — ปิดช่องโหว่ "อัปรูปมั่วก็เปิดฟรี" (LIVE ก.ค. 2569)
+```
+ปัญหาเดิม: activateFromSlip เปิดแพ็กฝั่ง client (เชื่อรูป + เขียน plan เองได้) = ช่องโหว่
+แก้: ย้ายการตัดสิน+เปิดแพ็กไป server ผ่าน SlipOK (มาตรฐานตรวจสลิป SME ไทย ตรวจกับ record ธนาคารจริง)
+  supabase/functions/verify-slip — verify_jwt=true + membership check + ราคา server-side
+    → เรียก SlipOK (POST api.slipok.com/api/line/apikey/<branch>, header x-authorization, files+log:true)
+    → ตรวจ: ยอด>=ราคาแพ็ก · บัญชีผู้รับ (SlipOK คุมเองด้วย err 1014 เพราะบัญชีผูกกับสาขา) · กันสลิปซ้ำ (transRef unique + err 1012)
+    → ผ่านครบ เขียน plan ด้วย service-role (mirror activateFromSlip) + payment_submissions.approved
+  migration 0034: payment_submissions + trans_ref (unique กันซ้ำ), sender, verified_at, verify_method
+  config PAYMENT.slipOkLive=true → uploadSlip เรียก verify-slip; ปิด client auto-activate safety-net (Billing.tsx)
+    (slipOkLive=false = โหมดเดิม เปิดทันทีเชื่อผู้ใช้) · src/lib/payments.ts: verifySlip()+slipReasonText()
+  error map ครบ 16 codes: แยก "ปัญหาลูกค้า" (ยอด/ผู้รับ/ซ้ำ/รูป) จาก "ปัญหาร้าน" (1000-1004/1015=config/quota
+    → "การโอนของคุณยังอยู่ ทีมงานจะเปิดแพ็กให้" ไม่โทษลูกค้า + console.error log)
+─ ค่าจริง (production waigsnxhrlwtiotspaim) ─
+  Supabase secret: SLIPOK_API_KEY, SLIPOK_BRANCH_ID=72189  (ตั้งใน Edge Functions→Secrets ของ prod เท่านั้น)
+  บัญชี K BIZ 009-8-92560-0 (0098925600) เชื่อมกับสาขา SlipOK #72189 → SlipOK ตรวจผู้รับให้ในตัว
+  โควตา 100 ครั้ง/เดือน (ถึง 27 ส.ค. 2026) — 1 การจ่าย = 1 check · quota endpoint ไม่กินโควตา
+⚠️ GOTCHA สำคัญ (เสียเวลา debug เยอะ):
+  • API Key จริง = ค่าที่ขึ้นต้น "SLIPOKWL…" (สั้น ~13 ตัว) — หาในหน้า API/การ์ด API ของสาขา
+  • ❌ ห้ามใช้ค่าใต้ "เลขอ้างอิงการแจ้งเตือน" (slipok-xxxx-xxxx…43 ตัว) = เลขแจ้งเตือน LINE คนละตัว → ขึ้น 1002
+  • branch id + API key ต้องมาจากสาขาเดียวกัน · สร้างสาขาใหม่ = key เปลี่ยนด้วย
+  • ตั้ง secret ต้องอยู่ project prod (waigsnxhrlwtiotspaim) ไม่ใช่ dev (oudykxmtrnjeskglaluh)
+  • เปลี่ยน secret แล้ว redeploy ฟังก์ชันด้วย (warm instance ถือ env เก่า)
+```
+
 ## Admin Operating Summary (สรุปผลการดำเนินงานของ User)
 ```
 หน้า admin แท็บ "เวิร์กสเปซ": ปุ่ม "📊 โหลดสรุปผลการดำเนินงาน" → wsLoad ทุก ws (RLS is_app_admin เห็นหมด)
@@ -218,7 +243,8 @@ public.workspace_integrations — credential ของ integration ที่ Use
 | ai-plan | ✅ | CEO วางแผน + มอบงาน |
 | agent-run | ✅ | รันเอเจนต์ + Serper.dev (Google Search) |
 | generate-badge | ❌ | ISO badge PNG (public GET) |
-| billing-cron | ❌ | ต่ออายุ/downgrade อัตโนมัติ |
+| billing-cron | ❌ | ต่ออายุ/downgrade อัตโนมัติ (deployed prod v30) |
+| verify-slip | ✅ | ตรวจสลิปกับธนาคารจริงผ่าน SlipOK → เปิดแพ็ก server-side (deployed prod · LIVE) |
 | promptpay-webhook | ❌ | รับ webhook จาก payment gateway |
 
 ### agent-run — Serper.dev Integration
@@ -237,6 +263,7 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 │ GitHub Actions    : VITE_SUPABASE_URL ✅, VITE_SUPABASE_ANON_KEY ✅ (ใช้โดย deploy.yml legacy)
 │ Cloudflare Worker : ANTHROPIC_API_KEY (vars ใน wrangler/dashboard — ใช้โดย CeoAiAgent DO)
 │ Supabase Fn       : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅
+│                     SLIPOK_API_KEY ✅ (ขึ้นต้น SLIPOKWL…), SLIPOK_BRANCH_ID ✅ =72189 (ตรวจสลิป verify-slip)
 │ Pending           : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
 ├─ TIS Automate (แยก) ─────────────────────────────────────────────
 │ Supabase project  : galtbbkcddugnsfkgyqm — ไม่มี secret ฝั่ง client (publishable key ฝังได้)
