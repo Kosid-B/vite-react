@@ -49,6 +49,7 @@ function coerce(raw: unknown, idx: number): CaseStudy | null {
     result: o.result ? String(o.result) : undefined,
     keyLesson: o.keyLesson ? String(o.keyLesson) : undefined,
     applyTo: Array.isArray(o.applyTo) ? o.applyTo.map(String).filter(Boolean) : undefined,
+    imageUrl: o.imageUrl ? String(o.imageUrl) : undefined,
     lessons: lessons.length ? lessons : [{ icon: '💡', body: title }],
     color: o.color ? String(o.color) : colorFor(idx),
     source: 'json',
@@ -70,6 +71,8 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
   const [fKey, setFKey] = useState('');
   const [fApply, setFApply] = useState('');
   const [fLessons, setFLessons] = useState<CaseStudyLesson[]>([{ icon: '💡', title: '', body: '' }]);
+  const [fImage, setFImage] = useState('');
+  const [editId, setEditId] = useState<string | null>(null); // null = เพิ่มใหม่ · มีค่า = แก้ไขเคสเดิม
 
   // ── นำเข้า JSON ──
   const [jsonText, setJsonText] = useState('');
@@ -132,7 +135,23 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
   function removeCase(id: string) {
     if (!window.confirm('ลบ Case Study นี้?')) return;
     save(list.filter((c) => c.id !== id));
+    if (editId === id) resetForm();
     setMsg({ type: 'ok', text: 'ลบแล้ว' });
+  }
+
+  function resetForm() {
+    setEditId(null);
+    setFTitle(''); setFCompany(''); setFTag(''); setFIndustry(''); setFResult(''); setFKey(''); setFApply(''); setFImage('');
+    setFLessons([{ icon: '💡', title: '', body: '' }]);
+  }
+
+  /** โหลดเคสเดิมเข้าฟอร์มเพื่อแก้ไข */
+  function startEdit(c: CaseStudy) {
+    setEditId(c.id); setMode('form'); setMsg(null);
+    setFTitle(c.title ?? ''); setFCompany(c.company ?? ''); setFTag(c.tag ?? '');
+    setFIndustry(c.industry ?? ''); setFResult(c.result ?? ''); setFKey(c.keyLesson ?? '');
+    setFApply((c.applyTo ?? []).join('\n')); setFImage(c.imageUrl ?? '');
+    setFLessons(c.lessons?.length ? c.lessons : [{ icon: '💡', title: '', body: '' }]);
   }
 
   function submitForm(e: React.FormEvent) {
@@ -143,8 +162,9 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
       return;
     }
     const lessons = fLessons.filter((l) => l.body.trim());
-    addCase({
-      id: newId(),
+    const existing = editId ? list.find((c) => c.id === editId) : undefined;
+    const c: CaseStudy = {
+      id: editId ?? newId(),
       title: fTitle.trim(),
       company: fCompany.trim() || undefined,
       tag: fTag.trim() || undefined,
@@ -152,14 +172,20 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
       result: fResult.trim() || undefined,
       keyLesson: fKey.trim() || undefined,
       applyTo: fApply.split('\n').map((s) => s.trim()).filter(Boolean),
+      imageUrl: fImage.trim() || undefined,
       lessons: lessons.length ? lessons : [{ icon: '💡', body: fKey.trim() || fTitle.trim() }],
-      color: colorFor(list.length),
-      source: 'form',
-      createdAt: new Date().toISOString(),
-    });
-    setFTitle(''); setFCompany(''); setFTag(''); setFIndustry(''); setFResult(''); setFKey(''); setFApply('');
-    setFLessons([{ icon: '💡', title: '', body: '' }]);
-    setMsg({ type: 'ok', text: '✅ เพิ่ม Case Study แล้ว — ดูได้ที่หน้า Case Studies' });
+      color: existing?.color ?? colorFor(list.length),
+      source: existing?.source ?? 'form',
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+    };
+    if (editId) {
+      save(list.map((x) => (x.id === editId ? c : x)));
+      setMsg({ type: 'ok', text: '✅ แก้ไข Case Study แล้ว' });
+    } else {
+      addCase(c);
+      setMsg({ type: 'ok', text: '✅ เพิ่ม Case Study แล้ว — ดูได้ที่หน้า Case Studies' });
+    }
+    resetForm();
   }
 
   function importJson(text: string) {
@@ -290,7 +316,14 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
           <label>นำไปใช้ได้อย่างไร (บรรทัดละข้อ)
             <textarea value={fApply} onChange={(e) => setFApply(e.target.value)} rows={3} placeholder={'ข้อ 1\nข้อ 2'} />
           </label>
-          <button type="submit" className="cst-submit">+ เพิ่ม Case Study</button>
+          <label>รูปประกอบ (URL) — โชว์บนการ์ด/หน้า Case Studies
+            <input value={fImage} onChange={(e) => setFImage(e.target.value)} placeholder="https://…/photo.jpg" />
+          </label>
+          {fImage.trim() && <img className="cst-img-preview" src={fImage} alt="ตัวอย่างรูป" />}
+          <div className="cst-form-actions">
+            <button type="submit" className="cst-submit">{editId ? '💾 บันทึกการแก้ไข' : '+ เพิ่ม Case Study'}</button>
+            {editId && <button type="button" className="cst-cancel" onClick={resetForm}>ยกเลิกการแก้ไข</button>}
+          </div>
         </form>
       )}
 
@@ -344,6 +377,7 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
                   </div>
                 </div>
                 <div className="cst-item-actions">
+                  <button className="cst-edit" onClick={() => startEdit(c)}>✏️ แก้ไข</button>
                   <button className="cst-skill-btn" onClick={() => (skillFor === c.id ? closeSkill() : openSkill(c))}>
                     {skillFor === c.id ? 'ปิด' : '💰 เสนอเป็น Skill'}
                   </button>
