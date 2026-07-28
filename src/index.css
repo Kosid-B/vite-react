@@ -1673,6 +1673,42 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ai-panel { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
 
 /* Intake — รับข้อมูลจากผู้ใช้ → CEO มอบหมายงาน */
+/* ผลการดำเนินงาน (OpsDataPanel) */
+.ops-card { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 16px 18px; margin: 0 0 20px; }
+.ops-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
+.ops-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+.ops-sub { font-size: 12.5px; color: var(--ink3); }
+.ops-note { font-size: 12.5px; color: #92600a; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; }
+.ops-form-top { margin-bottom: 10px; }
+.ops-date { font-size: 13px; color: var(--ink2); display: inline-flex; align-items: center; gap: 8px; }
+.ops-date input { font-family: inherit; padding: 6px 10px; border: 1px solid var(--sand); border-radius: 8px; }
+.ops-groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.ops-group-hd { font-size: 13px; font-weight: 700; color: var(--brand, #1a4f8a); margin-bottom: 8px; }
+.ops-field { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+.ops-f-label { font-size: 12.5px; color: var(--ink2); }
+.ops-f-label small { color: var(--ink3); }
+.ops-field input { width: 110px; font-family: inherit; font-size: 13px; text-align: right; padding: 6px 9px; border: 1px solid var(--sand); border-radius: 8px; }
+.ops-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.ops-save { font-family: inherit; font-size: 13px; font-weight: 700; color: #fff; background: var(--brand, #1a4f8a); border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; }
+.ops-tpl, .ops-upl { font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink2); background: var(--paper, #f8fafc); border: 1px solid var(--sand); border-radius: 8px; padding: 9px 14px; cursor: pointer; }
+.ops-msg { font-size: 13px; color: var(--ink2); margin-top: 8px; }
+.ops-report { margin-top: 16px; border-top: 1px solid var(--sand); padding-top: 14px; }
+.ops-report-hd { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; color: var(--ink); }
+.ops-score { font-size: 26px; font-weight: 800; }
+.ops-score small { font-size: 13px; font-weight: 600; color: var(--ink3); }
+.ops-summary { margin: 10px 0; padding-left: 4px; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.ops-summary li { font-size: 13px; color: var(--ink2); line-height: 1.5; }
+.ops-metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin: 10px 0; }
+.ops-metric { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: var(--paper, #f8fafc); border: 1px solid var(--sand); border-radius: 8px; padding: 8px 10px; }
+.ops-m-label { font-size: 11.5px; color: var(--ink3); flex: 1; }
+.ops-m-val { font-size: 13px; font-weight: 700; color: var(--ink); }
+.ops-m-val small { font-size: 10px; color: var(--ink3); font-weight: 400; }
+.ops-m-trend { font-size: 11px; font-weight: 700; }
+.ops-m-trend.up { color: #16a34a; }
+.ops-m-trend.down { color: #dc2626; }
+.ops-m-trend.flat { color: var(--ink3); }
+.ops-count { font-size: 11.5px; color: var(--ink3); }
+
 .intake-card { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 16px 18px; margin-top: 16px; }
 .intake-head { display: flex; flex-direction: column; gap: 3px; margin-bottom: 12px; }
 .intake-title { font-size: 15px; font-weight: 800; color: var(--ink); }

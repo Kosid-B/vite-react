@@ -538,6 +538,8 @@ export interface AppData {
   visitedPages?: PageId[]; // หน้าที่เคยเปิดแล้ว — ใช้ติ๊กความคืบหน้าใน Journey Guide (ตัวนำทาง gamification)
   journeyHidden?: boolean;  // ผู้ใช้ซ่อนตัวนำทาง Journey Guide
   finance?: FinanceEntry[]; // รายรับ-รายจ่ายที่กรอกเอง — ขับเศรษฐกิจเมืองบริษัท (SIM)
+  // บันทึกผลการดำเนินงานรายวัน/สัปดาห์ (ตัวชี้วัดออกแบบจาก BMC + ประเภทธุรกิจ · lib/opsMetrics.ts)
+  opsData?: { entries: { date: string; values: Record<string, number> }[] };
   // ===== รางวัลจากเกมเมืองบริษัท (SIM) =====
   claimedRewards?: string[];              // id รางวัลที่รับแล้ว
   coupon?: { pct: number; reason: string }; // ส่วนลดค่าแพ็กเกจล่าสุด (เก็บ % สูงสุด)
