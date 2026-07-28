@@ -60,6 +60,18 @@ const COMPARE_ISO: CmpRow[] = [
   { label: 'ใครออกแบบ', chatgpt: 'แพลตฟอร์มต่างชาติ', ceo: 'ที่ปรึกษา ISO/ธุรกิจจริง 20+ ปี (B. Training)' },
 ];
 
+// "ต้นน้ำที่แข็งแรง" 8 ขั้น — ทำ positioning ให้จับต้องได้ (เส้นทาง MIT 24 Steps → scale)
+const FOUNDATION = [
+  'เลือกกลุ่มลูกค้าที่ถูกต้อง',
+  'เข้าใจปัญหาที่ลูกค้ายอมจ่ายเงินแก้',
+  'สร้าง Value Proposition ที่ชัดเจน',
+  'ทดสอบ Product–Market Fit',
+  'สร้างฐานลูกค้าที่มีคุณภาพ',
+  'ออกแบบ Customer Journey',
+  'สร้างกระบวนการขาย/บริการที่ทำซ้ำได้',
+  'จัดทำ SOP · KPI · ระบบบริหาร พร้อม Scalability',
+];
+
 // ROI — เทียบ "ค่าจ้างทีมจริงในตลาด" กับราคาแพ็ก (Pain point #2)
 // ⚠️ เป็นราคาตลาดอ้างอิงของ "การจ้างเอง" ไม่ใช่ตัวเลขผลลัพธ์ที่การันตี
 const ROI_ITEMS = [
@@ -225,6 +237,21 @@ export default function StartLanding() {
           </div>
         </div>
         <div className="start-src">ทีมผู้บริหาร AI คือ “กลไก” ที่ช่วยลงมือทำทั้งสองเสานี้ให้คุณ — ไม่ใช่แค่แชตตอบคำถาม</div>
+      </section>
+
+      {/* "ต้นน้ำที่แข็งแรง" 8 ขั้น — เส้นทางที่ CEO AI พาเดิน (ทำ positioning ให้เห็นเป็นรูป) */}
+      <section className="start-sec start-fdn-sec">
+        <h2 className="start-h2">“ต้นน้ำที่แข็งแรง” ประกอบด้วยอะไรบ้าง</h2>
+        <p className="start-price-note">CEO AI พาคุณทีละขั้น จากเลือกลูกค้าที่ใช่ → วางระบบพร้อมโต — ไม่ข้ามขั้น ไม่เดาสุ่ม</p>
+        <ol className="start-fdn-list">
+          {FOUNDATION.map((s, i) => (
+            <li key={i} className="start-fdn-item">
+              <span className="start-fdn-num">{i + 1}</span>
+              <span className="start-fdn-txt">{s}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="start-src">พื้นฐานแน่นตั้งแต่วันแรก = ธุรกิจที่ “ทำซ้ำ ควบคุม พัฒนา และขยายได้” ไม่ใช่แค่ขายได้วันนี้</div>
       </section>
 
       {/* Personas */}
