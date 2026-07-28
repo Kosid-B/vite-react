@@ -1,3 +1,4 @@
+import '../index.css';
 import { useEffect, useMemo, useState } from 'react';
 import { track } from '../lib/analytics';
 import { applySeo, siteOrigin } from '../lib/seo';

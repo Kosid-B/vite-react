@@ -1,3 +1,4 @@
+import '../index.css';
 import { useEffect, useState } from 'react';
 import { INTEGRATIONS } from '../config';
 import { stashHandoff } from '../lib/handoffClient';

@@ -1,3 +1,4 @@
+import './index.css';   // สไตล์ทั้งแอป — ย้ายมาจาก main.tsx เพื่อไม่ให้ marketing landing (`/`) โหลด index.css (~67KB)
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { AppData, PageId } from './types';
@@ -190,11 +191,18 @@ export default function App() {
     try { localStorage.setItem('ceo_ai_nav_collapsed', next ? '1' : '0'); } catch { /* noop */ }
     return next;
   });
-  const [showAuth, setShowAuth] = useState(false);
+  // เข้ามาจาก marketing landing (`/?enter=auth|guest`) — init สถานะจาก query ตั้งแต่แรก (กันกระพริบ LandingPage)
+  const entryParam = (() => { try { return new URLSearchParams(window.location.search).get('enter'); } catch { return null; } })();
+  const [showAuth, setShowAuth] = useState(entryParam === 'auth');
   const [seenLanding, setSeenLanding] = useState(() => !!localStorage.getItem('ceo_ai_seen'));
   // Guest mode (ลองก่อนสมัคร) — เข้าแอปด้วย localStorage โดยไม่ต้อง login (ลด friction #1)
-  const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1');
+  const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1' || entryParam === 'guest');
   const startGuest = () => { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } setGuestMode(true); };
+  // เข้ามาแบบ guest จาก landing → persist + ล้าง query ให้ URL สะอาด
+  useEffect(() => {
+    if (entryParam === 'guest') { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } }
+    if (entryParam) { try { window.history.replaceState({}, '', window.location.pathname); } catch { /* noop */ } }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // ออกจากโหมดทดลอง → ล้าง flag แล้วกลับไปหน้า Landing (กันคนติดอยู่ในโหมด guest ถาวร)
   const exitGuest = () => { try { localStorage.removeItem('ceo_ai_guest'); } catch { /* noop */ } track('guest_exit', {}); setShowAuth(false); setGuestMode(false); };
   // Aha-moment email capture (soft signup) — เก็บ lead ตอน guest เจอโมเมนต์ดีๆ

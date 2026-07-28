@@ -1,3 +1,4 @@
+import '../index.css';
 import { useEffect, useState } from 'react';
 import { getStorefront, isFeatured, listStorefronts, listReviews, submitReview, reviewableOrders, type Storefront, type StorefrontKind, type StorefrontReview, type ReviewableOrder } from '../lib/storefront';
 import { isSupabaseEnabled } from '../lib/supabase';

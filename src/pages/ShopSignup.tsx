@@ -1,3 +1,4 @@
+import '../index.css';
 import { useEffect, useState } from 'react';
 import { DBD_SECTORS } from '../data/dbd';
 import { SHOP_PACKAGES, submitShopApplication, validPhone, type ShopPackage } from '../lib/shopApply';
