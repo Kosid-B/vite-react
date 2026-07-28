@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { listPendingPayments, reviewPayment, grantAiTopup, type PaymentSubmission } from '../../lib/payments';
+import { listPendingPayments, reviewPayment, grantAiTopup,
+  listPendingTopups, approveTopupRequest, rejectTopupRequest,
+  type PaymentSubmission, type TopupRequest } from '../../lib/payments';
 import { TOPUP_PACKS } from '../../lib/topup';
 
 /** คิวตรวจสลิปย้อนหลัง (PLG) — แพ็กเปิดให้ผู้ใช้อัตโนมัติทันทีที่อัปสลิปแล้ว แอดมินไม่ใช่คอขวด
@@ -12,13 +14,27 @@ export default function PaymentsTab() {
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [topups, setTopups] = useState<TopupRequest[]>([]);
+  const [tuReqBusy, setTuReqBusy] = useState<string | null>(null);
+
   async function load() {
     setLoading(true);
-    try { setSubs(await listPendingPayments()); }
-    catch { setMsg('⚠️ โหลดคำขอไม่สำเร็จ'); }
+    try {
+      const [s, t] = await Promise.all([listPendingPayments(), listPendingTopups()]);
+      setSubs(s); setTopups(t);
+    } catch { setMsg('⚠️ โหลดคำขอไม่สำเร็จ'); }
     finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
+
+  async function decideTopup(id: string, approve: boolean) {
+    setTuReqBusy(id); setMsg(null);
+    const err = approve ? await approveTopupRequest(id) : await rejectTopupRequest(id);
+    setTuReqBusy(null);
+    if (err) { setMsg('⚠️ ' + err); return; }
+    setMsg(approve ? '✅ เปิด credits + ปิดคำขอแล้ว' : '🚫 ตีกลับคำขอ top-up แล้ว');
+    load();
+  }
 
   async function review(id: string, status: 'approved' | 'rejected') {
     setBusy(id + status);
@@ -48,7 +64,32 @@ export default function PaymentsTab() {
 
   return (
     <div className="pay-q">
-      {/* Grant Top-up — เปิด AI credits ให้ workspace หลังยืนยันการโอน (credits เดือนปัจจุบัน) */}
+      {/* คิวคำขอ Top-up — user แจ้งโอนแล้ว → กดเปิด credits ทีเดียว */}
+      <div className="topup-queue">
+        <div className="pfa-sec-hd">🔔 คำขอ Top-up รอเปิด ({topups.length})</div>
+        {topups.length === 0 ? (
+          <div className="pfa-empty">ไม่มีคำขอ top-up รอเปิด</div>
+        ) : (
+          <div className="topup-q-list">
+            {topups.map(t => (
+              <div key={t.id} className="topup-q-row">
+                <div className="topup-q-info">
+                  <b>+{t.credits.toLocaleString()} calls</b> · {t.price.toLocaleString()} ฿
+                  <span className="topup-q-meta">ws {t.workspaceId.slice(0, 8)}… · {t.createdAt.slice(0, 10)}</span>
+                </div>
+                <div className="topup-q-actions">
+                  <button className="topup-q-ok" disabled={tuReqBusy === t.id} onClick={() => decideTopup(t.id, true)}>
+                    {tuReqBusy === t.id ? '…' : '✅ เปิด credits'}
+                  </button>
+                  <button className="topup-q-no" disabled={tuReqBusy === t.id} onClick={() => decideTopup(t.id, false)}>🚫</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Grant Top-up (manual) — เปิด credits ด้วย Workspace ID เอง (สำรอง กรณีไม่มีคำขอในคิว) */}
       <div className="topup-grant">
         <div className="pfa-sec-hd">➕ เปิด AI Top-up ให้ลูกค้า</div>
         <p className="pfa-sec-sub">หลังยืนยันการโอน top-up — ใส่ Workspace ID + เลือกจำนวน แล้วเปิด credits (ใช้ได้เฉพาะเดือนนี้)</p>

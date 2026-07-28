@@ -512,6 +512,7 @@ export default function CaseStudies({ data }: { data?: AppData }) {
           <span className="cs-badge cs-badge-neutral">{cs.origin}</span>
         </div>
         <div className="cs-title">{cs.title}</div>
+        {cs.imageUrl && <img className="cs-image" src={cs.imageUrl} alt={cs.title} loading="lazy" />}
         <div className="cs-result">
           <svg width="14" height="14" fill="none" stroke={cs.color} viewBox="0 0 24 24" strokeWidth="2.2">
             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

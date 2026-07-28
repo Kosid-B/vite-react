@@ -33,6 +33,7 @@ import { validationInstruction, extractVerdict } from '../lib/marketValidation';
 import CSuiteReports from '../components/CSuiteReports';
 import IntakePanel from '../components/IntakePanel';
 import CompanyNamer from '../components/CompanyNamer';
+import BrandKitPanel from '../components/BrandKitPanel';
 import OcNode from './aicompany/OcNode';
 import {
   STATUS_LABEL, TASK_COLS, AGENT_PALETTE, AVATARS, MODELS, AVAILABLE_SKILLS,
@@ -1385,6 +1386,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       </div>
 
       <CompanyNamer data={data} onUpdate={onUpdate} />
+      <BrandKitPanel data={data} />
 
       {/* ===== CEO Mission ===== */}
       {(missionMsg || c.missionApproved) && (

@@ -373,6 +373,7 @@ export interface CaseStudy {
   keyLesson?: string;
   applyTo?: string[];
   examples?: CaseStudyExample[];
+  imageUrl?: string; // รูปประกอบเคส (URL) — โชว์บนการ์ด + og/schema
   source?: 'form' | 'json' | 'notebooklm' | string; // ช่องทางที่นำเข้า
   createdAt?: string;
 }

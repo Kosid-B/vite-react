@@ -145,3 +145,44 @@ export async function grantAiTopup(workspaceId: string, credits: number): Promis
   const { error } = await supabase.rpc('grant_ai_topup', { p_workspace: workspaceId, p_credits: credits });
   return error ? error.message : null;
 }
+
+/* ── Top-up requests: คิวในแอป (user แจ้งโอน → admin กดเปิด credits) ── */
+export interface TopupRequest {
+  id: string; workspaceId: string; packId: string; credits: number; price: number;
+  status: string; createdAt: string;
+}
+
+/** user: แจ้งคำขอ top-up (หลังโอน) → เข้าคิว pending */
+export async function submitTopupRequest(wsId: string, pack: { id: string; calls: number; price: number }): Promise<string | null> {
+  if (!isSupabaseEnabled || !supabase) return 'ใช้ได้เฉพาะโหมดออนไลน์';
+  const { error } = await supabase.from('ai_topup_request').insert({
+    workspace_id: wsId, pack_id: pack.id, credits: pack.calls, price: pack.price,
+  });
+  return error ? error.message : null;
+}
+
+/** admin: รายการคำขอ top-up ที่รอเปิด */
+export async function listPendingTopups(): Promise<TopupRequest[]> {
+  if (!isSupabaseEnabled || !supabase) return [];
+  const { data } = await supabase.from('ai_topup_request').select('*')
+    .eq('status', 'pending').order('created_at', { ascending: true });
+  return (data ?? []).map((r: Record<string, unknown>) => ({
+    id: String(r.id), workspaceId: String(r.workspace_id), packId: String(r.pack_id),
+    credits: Number(r.credits), price: Number(r.price), status: String(r.status), createdAt: String(r.created_at),
+  }));
+}
+
+/** admin: อนุมัติ → เปิด credits + ปิดคำขอ (atomic ผ่าน rpc) */
+export async function approveTopupRequest(id: string): Promise<string | null> {
+  if (!isSupabaseEnabled || !supabase) return 'ใช้ได้เฉพาะโหมดออนไลน์';
+  const { error } = await supabase.rpc('approve_topup_request', { p_id: id });
+  return error ? error.message : null;
+}
+
+/** admin: ตีกลับคำขอ */
+export async function rejectTopupRequest(id: string): Promise<string | null> {
+  if (!isSupabaseEnabled || !supabase) return 'ใช้ได้เฉพาะโหมดออนไลน์';
+  const { error } = await supabase.from('ai_topup_request')
+    .update({ status: 'rejected', decided_at: new Date().toISOString() }).eq('id', id);
+  return error ? error.message : null;
+}
