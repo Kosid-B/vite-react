@@ -65,6 +65,25 @@ Quota/เดือน (usage.ts): free 200 · starter 300 · growth 1,000 · sca
 5. **Top-up pack สำหรับ whale** — เปลี่ยนความเสี่ยงต้นทุนเป็นรายได้
 6. **A/B ราคา/ข้อเสนอ ผ่าน Pulse** (`experiments.ts`) — วัดจริงว่าอะไรทำให้ "ตัดสินใจเร็วขึ้น" ก่อน lock
 
+## เปิด model-tiering (Haiku งานเบา) — ลดต้นทุนโดยไม่แตะโค้ด
+
+`modelRouter.ts` เลือกโมเดลตาม env — default = Sonnet ทุก tier จนกว่าจะตั้ง secret:
+
+```bash
+# งานเบา (assist/สรุป/เติม template) → Haiku (ถูกกว่า Sonnet ~70% ต่อ call)
+supabase secrets set MODEL_SIMPLE=claude-haiku-4-5-20251001 --project-ref waigsnxhrlwtiotspaim
+
+# (ทางเลือก aggressive) งานไทยล้วน → Typhoon ผ่าน Fireworks
+# supabase secrets set MODELS_THAI="typhoon-v2.1-12b-instruct,claude-sonnet-4-6"
+
+# redeploy ให้ instance รับ env ใหม่ (warm instance ถือ env เก่า)
+supabase functions deploy ai-assist ai-plan agent-run --project-ref waigsnxhrlwtiotspaim
+```
+
+ผล: blended cost/call ฿0.49 → ~฿0.39 (tiering) หรือ ~฿0.19 (aggressive) → margin ทุกแพ็กขยับขึ้น
+~5–15 จุด **โดยไม่ลด quota** = คุณค่าต่อบาทสูงขึ้น (value prop แรงขึ้น). ต้องเช็คคุณภาพคำตอบไทยของ
+Haiku/Typhoon ก่อนเปิด production (A/B คุณภาพกับงานเบาก่อน).
+
 ## Formula (คำนวณซ้ำเมื่อราคาโมเดล/quota เปลี่ยน)
 
 ```
