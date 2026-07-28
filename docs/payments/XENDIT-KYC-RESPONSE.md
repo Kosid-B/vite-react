@@ -39,7 +39,7 @@ Thank you for the review. Please find below the requested information about our 
 **What the business does.** CEO AI Thailand is a **B2B SaaS platform** that helps Thai SMEs set up and run an "AI company" — a team of AI agents (CEO, marketing, operations, etc.) that assist the owner with real business tasks: planning, marketing content, documents, and ISO/TIS standards compliance. It is a productivity/management software product, not a financial product.
 
 **Products / what customers pay for (and what Xendit collects):**
-1. **SaaS subscriptions** — monthly plans: Free, Starter ฿390/mo, Growth ฿1,490/mo, Scale ฿5,900/mo, with a 15-day free trial. This is the primary use of Xendit (subscription invoices/checkout).
+1. **SaaS subscriptions** — monthly plans: Free, Starter ฿790/mo, Growth ฿1,490/mo, Scale ฿5,900/mo, with a 15-day free trial. This is the primary use of Xendit (subscription invoices/checkout).
 2. **Marketplace transactions** — registered business users may buy productivity "skills" and list storefronts; on business-to-business orders we charge a **3% platform fee**. Settlement of these transactions is the secondary use of Xendit.
 
 There are **no other payment types** (no cash advances, no gambling, no crypto, no peer-to-peer money transfer).
