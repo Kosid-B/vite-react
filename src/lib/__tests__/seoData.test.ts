@@ -3,6 +3,7 @@ import {
   escapeHtml, jsonLdScript, sectorLabel,
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, llmsTxt,
   homeSeo, faqPageHtml, faqPageJsonLd, organizationJsonLd, softwareApplicationJsonLd, FAQ_ITEMS,
+  mit24PageHtml, mit24FaqJsonLd, mit24ArticleJsonLd, MIT24_FAQ,
   type SeoStorefront,
 } from '../seoData';
 
@@ -139,6 +140,41 @@ describe('sitemapXml', () => {
     const only = sitemapXml([{ slug: 'shop-b' }], ORIGIN);
     const shopBlock = only.slice(only.indexOf('shop-b'));
     expect(shopBlock).not.toContain('<lastmod>');
+  });
+  it('มี /mit24 (บทความ answer-first) ใน sitemap', () => {
+    expect(xml).toContain(`<loc>${ORIGIN}/mit24</loc>`);
+  });
+});
+
+describe('mit24 (/mit24 answer-first article)', () => {
+  const html = mit24PageHtml(ORIGIN);
+  it('เป็น HTML doc + canonical /mit24 + robots index', () => {
+    expect(html.startsWith('<!doctype html>')).toBe(true);
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/mit24">`);
+    expect(html).toContain('index,follow');
+  });
+  it('answer-first: ประโยคแรกตอบ "MIT 24 Steps คืออะไร" + มีทั้ง 4 ระยะ + 24 ขั้น', () => {
+    expect(html).toContain(MIT24_FAQ[0].a);          // lead = คำตอบข้อแรก
+    expect(html).toContain('Disciplined Entrepreneurship');
+    expect(html).toContain('ระยะ 1:');
+    expect(html).toContain('ระยะ 4:');
+    expect(html).toContain('24. ');                   // ขั้นสุดท้าย (index 23 → เลข 24)
+  });
+  it('ฝัง Article + FAQPage schema + CTA ไป /start', () => {
+    expect(html).toContain('"@type":"Article"');
+    expect(html).toContain('"@type":"FAQPage"');
+    expect(html).toContain(`${ORIGIN}/start`);
+  });
+  it('mit24FaqJsonLd แปลง MIT24_FAQ เป็น Question/Answer ครบ', () => {
+    const j = mit24FaqJsonLd() as Record<string, unknown>;
+    expect(j['@type']).toBe('FAQPage');
+    expect((j.mainEntity as unknown[]).length).toBe(MIT24_FAQ.length);
+  });
+  it('mit24ArticleJsonLd: publisher = B. Training + mainEntityOfPage /mit24', () => {
+    const a = mit24ArticleJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(a['@type']).toBe('Article');
+    expect((a.publisher as Record<string, unknown>).name).toBe('B. Training Consultant');
+    expect(a.mainEntityOfPage).toBe(`${ORIGIN}/mit24`);
   });
 });
 

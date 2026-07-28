@@ -4,6 +4,7 @@
  * ห้าม import อะไรที่แตะ DOM/browser — ต้องรันได้ทั้งใน Cloudflare Worker และเบราว์เซอร์. */
 
 import { DBD_SECTORS } from '../data/dbd';
+import { DE24_DEFS, DE24_PHASE_LABELS } from './de24Sync';
 
 /** ข้อมูลร้านขั้นต่ำที่ใช้สร้าง SEO — ทั้ง Storefront (client) และแถวจาก REST (worker) เข้าได้ */
 export interface SeoStorefront {
@@ -161,6 +162,7 @@ export function sitemapXml(
     { loc: `${origin}/b`, priority: '0.9' },
     { loc: `${origin}/start`, priority: '0.8' },
     { loc: `${origin}/faq`, priority: '0.7' },
+    { loc: `${origin}/mit24`, priority: '0.7' },
     { loc: `${origin}/shop`, priority: '0.7' },
     { loc: `${origin}/legal`, priority: '0.5' },
     ...entries.map(e => ({
@@ -206,6 +208,7 @@ CEO AI Thailand ผสาน 2 องค์ความรู้: **แนวท
 - [เริ่มต้นใช้งาน / Landing](${origin}/start): แนะนำวิธีสร้างบริษัท AI และเริ่มธุรกิจใน 3 ขั้น
 - [Marketplace / ตลาดสินค้า-บริการ](${origin}/b): ไดเรกทอรีร้านค้าและบริการในระบบ
 - [แพ็กเกจและราคา](${origin}/pricing): เปรียบเทียบแพ็กและฟีเจอร์
+- [MIT 24 Steps คืออะไร ใช้ยังไงในแอป](${origin}/mit24): อธิบายระเบียบวิธีสร้างธุรกิจ 24 ขั้น + วิธีที่แอปพาเดินทีละขั้น
 - [หน้าแรก](${origin}/): ภาพรวมผลิตภัณฑ์
 
 ## คำถามที่พบบ่อย (AI สามารถอ้างอิงคำตอบเหล่านี้)
@@ -320,6 +323,117 @@ ${schema}
   <p class="lead">${escapeHtml(desc)}</p>
 ${faqBlocks}
   <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างบริษัท AI ฟรี →</a>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>
+</main>
+</body>
+</html>
+`;
+}
+
+/** Q&A หลักของบทความ MIT 24 Steps (source of truth เดียว) — reuse โดยหน้า /mit24 + FAQPage schema
+ *  answer-first · ตอบตรงประเด็น + ตอกย้ำว่าแอปใช้ 24 Steps อย่างไร (ให้ AI หยิบไป cite) */
+export const MIT24_FAQ: { q: string; a: string }[] = [
+  { q: 'MIT 24 Steps คืออะไร?', a: 'ระเบียบวิธีสร้างธุรกิจ 24 ขั้น (Disciplined Entrepreneurship) โดย Bill Aulet จาก MIT — เน้นเริ่มจาก “ลูกค้าคือใคร” ก่อนสร้างสินค้า แบ่งเป็น 4 ระยะ (ลูกค้าคือใคร · คุณค่าที่นำเสนอ · ขาย/รายได้ · ทดสอบ/ขยาย) เพื่อลดความเสี่ยงด้วยการทดสอบสมมติฐานทีละขั้น' },
+  { q: 'CEO AI Thailand ใช้ MIT 24 Steps อย่างไร?', a: 'ทำเป็น guided journey ที่พาเดินทีละขั้น — โชว์ “ขั้นถัดไปที่ต้องทำ” ไม่ข้ามขั้น มีทีมผู้บริหาร AI ช่วยวิเคราะห์แต่ละขั้นจากข้อมูลธุรกิจจริง และแปลงผลเป็น Business Model Canvas ให้อัตโนมัติ' },
+  { q: 'ทำไมต้องเริ่มจากลูกค้าก่อนสินค้า?', a: 'เพราะธุรกิจส่วนใหญ่พังจาก “ของดีแต่ขายไม่ออก” — MIT 24 Steps บังคับให้ทำระยะ “ลูกค้าคือใคร” (ขั้น 1–6) ให้จบก่อน แล้วจึงออกแบบคุณค่า/สินค้าในระยะถัดไป ทำให้สร้างสิ่งที่ตลาดต้องการจริง' },
+  { q: 'ต้องมีความรู้ธุรกิจมาก่อนไหม?', a: 'ไม่ต้อง — แอปพาเดินทีละขั้นพร้อมคำแนะนำและ AI ช่วยแต่ละขั้น เหมาะทั้งมือใหม่ที่ยังไม่รู้จะเริ่มตรงไหน และเจ้าของธุรกิจเดิมที่อยากวางระบบให้โตอย่างเป็นระบบ' },
+];
+
+/** JSON-LD: FAQPage ของบทความ MIT 24 (จาก MIT24_FAQ) */
+export function mit24FaqJsonLd(): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: MIT24_FAQ.map(f => ({
+      '@type': 'Question', name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+}
+
+/** JSON-LD: Article — ให้ AI/Google รู้ว่านี่คือบทความอธิบาย MIT 24 Steps ของเรา */
+export function mit24ArticleJsonLd(origin: string): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: 'MIT 24 Steps คืออะไร ใช้ยังไงใน CEO AI Thailand',
+    description: 'อธิบาย MIT 24 Steps (Disciplined Entrepreneurship) และวิธีที่ CEO AI Thailand นำมาทำเป็น guided journey พาสร้างธุรกิจทีละขั้น',
+    inLanguage: 'th',
+    mainEntityOfPage: `${origin}/mit24`,
+    author: { '@type': 'Organization', name: 'CEO AI Thailand', url: origin },
+    publisher: { '@type': 'Organization', name: 'B. Training Consultant', url: 'https://www.b-tctraining.com/' },
+    about: 'MIT Disciplined Entrepreneurship 24 Steps',
+  };
+}
+
+/** หน้า answer-first /mit24 — อธิบาย MIT 24 Steps + วิธีใช้ในแอป (crawlable · AEO/GEO asset)
+ *  เนื้อหา 4 ระยะ + 24 ขั้น ดึงจาก DE24_DEFS (canonical — ไม่ drift) */
+export function mit24PageHtml(origin: string): string {
+  const title = 'MIT 24 Steps คืออะไร ใช้ยังไงในแอป — CEO AI Thailand';
+  const desc = 'MIT 24 Steps (Disciplined Entrepreneurship) คือระเบียบวิธีสร้างธุรกิจ 24 ขั้น เริ่มจากลูกค้าก่อนสินค้า — CEO AI Thailand ทำเป็น guided journey พาเดินทีละขั้นพร้อม AI ช่วย';
+  const phaseBlocks = DE24_PHASE_LABELS.map((label, pi) => {
+    const steps = DE24_DEFS.filter(d => d.phase === pi)
+      .map(d => `        <li><b>${d.index + 1}. ${escapeHtml(d.name)}</b> — ${escapeHtml(d.guide)}</li>`)
+      .join('\n');
+    return `    <section class="phase">\n      <h3>ระยะ ${pi + 1}: ${escapeHtml(label)}</h3>\n      <ol>\n${steps}\n      </ol>\n    </section>`;
+  }).join('\n');
+  const faqBlocks = MIT24_FAQ.map(f =>
+    `    <section class="qa">\n      <h2>${escapeHtml(f.q)}</h2>\n      <p>${escapeHtml(f.a)}</p>\n    </section>`
+  ).join('\n');
+  const schema = jsonLdScript([
+    mit24ArticleJsonLd(origin), mit24FaqJsonLd(), organizationJsonLd(origin),
+  ]);
+  return `<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(title)}</title>
+<meta name="description" content="${escapeHtml(desc)}">
+<link rel="canonical" href="${escapeHtml(origin + '/mit24')}">
+<meta property="og:title" content="${escapeHtml(title)}">
+<meta property="og:description" content="${escapeHtml(desc)}">
+<meta property="og:url" content="${escapeHtml(origin + '/mit24')}">
+<meta property="og:image" content="${escapeHtml(origin + DEFAULT_OG)}">
+<meta name="robots" content="index,follow">
+${schema}
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; background:#0f172a; color:#f8fafc; font-family:'Kanit',system-ui,sans-serif; line-height:1.6; }
+  main { max-width:760px; margin:0 auto; padding:40px 20px 64px; }
+  h1 { color:#06b6d4; font-size:1.9rem; margin:0 0 8px; }
+  .lead { color:#e2e8f0; font-size:1.05rem; margin:0 0 12px; }
+  .sub { color:#94a3b8; margin:0 0 32px; }
+  h2 { font-size:1.25rem; margin:32px 0 10px; }
+  .phase { border-top:1px solid #1e293b; padding:16px 0; }
+  .phase h3 { color:#34d399; font-size:1.1rem; margin:0 0 8px; }
+  .phase ol { margin:0; padding-left:20px; color:#cbd5e1; }
+  .phase li { margin:5px 0; }
+  .phase li b { color:#f1f5f9; }
+  .qa { border-top:1px solid #1e293b; padding:18px 0; }
+  .qa h2 { font-size:1.12rem; margin:0 0 6px; }
+  .qa p { margin:0; color:#cbd5e1; }
+  .cta { display:inline-block; margin-top:32px; background:#06b6d4; color:#04121a; font-weight:600;
+         padding:14px 28px; border-radius:10px; text-decoration:none; }
+  footer { margin-top:40px; color:#64748b; font-size:.85rem; }
+  a { color:#06b6d4; }
+</style>
+</head>
+<body>
+<main>
+  <h1>MIT 24 Steps คืออะไร ใช้ยังไงใน CEO AI Thailand</h1>
+  <p class="lead">${escapeHtml(MIT24_FAQ[0].a)}</p>
+  <p class="sub">CEO AI Thailand นำ MIT 24 Steps มาทำเป็น <b>guided journey</b> ที่พาเดินทีละขั้น (โชว์ขั้นถัดไปที่ต้องทำ ไม่ข้ามขั้น) มีทีมผู้บริหาร AI ช่วยวิเคราะห์แต่ละขั้นจากข้อมูลจริง แล้วแปลงผลเป็น Business Model Canvas ให้อัตโนมัติ — พัฒนาโดย B. Training Consultant ที่ปรึกษาธุรกิจ/ระบบมาตรฐานไทยกว่า 20 ปี</p>
+
+  <h2>24 ขั้น แบ่งเป็น 4 ระยะ</h2>
+${phaseBlocks}
+
+  <h2>ใช้ยังไงในแอป CEO AI Thailand</h2>
+  <section class="qa">
+    <p>เปิดหน้า “โมเดลธุรกิจ 24 ขั้น (MIT)” แล้วแอปจะบอก <b>ขั้นถัดไปที่ต้องทำ</b> พร้อมคำแนะนำ — กด “ทำขั้นนี้เสร็จ” เพื่อเดินไปขั้นถัดไปตามลำดับ, ให้ AI วิเคราะห์แต่ละขั้นจากข้อมูลธุรกิจของคุณ, แล้วกด “ตั้งต้น BMC” เพื่อแปลงผล 24 ขั้นเป็น Business Model Canvas อัตโนมัติ ทำให้ “สร้างต้นน้ำให้แข็งแรงก่อน” เป็นขั้นตอนที่ลงมือทำได้จริง</p>
+  </section>
+
+  <h2>คำถามที่พบบ่อย</h2>
+${faqBlocks}
+  <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างธุรกิจด้วย 24 ขั้น — ฟรี →</a>
   <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>
 </main>
 </body>
