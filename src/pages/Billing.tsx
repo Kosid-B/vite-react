@@ -71,7 +71,7 @@ function buildCost(calls: number, price: number, infra: number, support: number,
 }
 
 const COST: Record<string, PlanCost> = {
-  starter: buildCost(300, 790, 60, 25, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
+  starter: buildCost(300, 590, 60, 25, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
   growth: buildCost(1000, 1490, 250, 180, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
   scale: buildCost(5000, 5900, 550, 300, 'Database, Edge Functions, Storage (priority tier)', 'ทีมพัฒนาและดูแลระบบ (dedicated)'),
 };
@@ -95,7 +95,7 @@ const PLANS: Plan[] = [
   {
     id: 'starter',
     name: 'Starter',
-    price: 790,
+    price: 590,
     tagline: 'เพิ่งเริ่มธุรกิจ — จ่ายเบาๆ เมื่อเริ่มมีรายได้',
     apiCalls: 300,
     costPerMonth: 232,

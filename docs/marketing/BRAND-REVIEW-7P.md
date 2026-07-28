@@ -40,7 +40,7 @@
 ---
 
 ## P2 · Price — 4.0/5 🟢
-**โครงสร้าง:** Free ฿0 → Starter ฿790 → Growth ฿1,490 → Scale ฿5,900 /เดือน · ทดลอง 15 วัน · จ่ายบัตร(subscription)+PromptPay ผ่าน Stripe live
+**โครงสร้าง:** Free ฿0 → Starter ฿590 → Growth ฿1,490 → Scale ฿5,900 /เดือน · ทดลอง 15 วัน · จ่ายบัตร(subscription)+PromptPay ผ่าน Stripe live
 
 **asset:**
 - บันได 4 ขั้น + **anchoring/decoy** ครบ (Scale ทำให้ Growth ดูคุ้ม) · Growth = hero tier

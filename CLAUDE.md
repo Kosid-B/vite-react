@@ -142,7 +142,7 @@ PAGE_MIN_PLAN = {
   admin: 'scale',
   // factory = FREE (part of AI Company feature)
 }
-Plans: free(0) → starter(1) ฿790/mo → growth(2) ฿1,490/mo → scale(3) ฿5,900/mo
+Plans: free(0) → starter(1) ฿590/mo → growth(2) ฿1,490/mo → scale(3) ฿5,900/mo
 Trial: 15 วัน auto-start เมื่อ login ครั้งแรก
 Admin (support@b-tctraining.com): ใช้ Scale ฟรีเสมอ — App.tsx เรียก setAdminFullAccess(isAdminEmail(email))
   → effectiveRank/isExpired/planLabel bypass (access.ts). ระบบ admin = app_admins table + is_app_admin() (0005)

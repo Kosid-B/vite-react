@@ -25,7 +25,7 @@ const PLANS: PlanRow[] = [
     features: ['สร้างทีม AI + มอบงานพื้นฐาน', 'เปิดหน้าร้าน Marketplace ฟรี', 'เข้าถึงฟีเจอร์หลักแบบจำกัด'],
   },
   {
-    name: 'Starter', monthly: '฿790 / เดือน', yearly: '฿7,900 / ปี',
+    name: 'Starter', monthly: '฿590 / เดือน', yearly: '฿5,900 / ปี',
     tagline: 'สำหรับเจ้าของธุรกิจรายเดี่ยว/มือใหม่',
     features: ['ทุกอย่างใน Free', 'ซื้อขาย B2B (RFQ) เต็มรูปแบบ', 'ทีม AI ช่วยงานการตลาด/เอกสาร'],
   },
@@ -47,7 +47,7 @@ export default function PublicPricing() {
     const meta = document.querySelector('meta[name="description"]') ?? (() => {
       const m = document.createElement('meta'); m.setAttribute('name', 'description'); document.head.appendChild(m); return m;
     })();
-    meta.setAttribute('content', `${BRAND.product} — SaaS ให้ SME ไทยจ้างทีม AI บริหารธุรกิจ + ตลาด B2B. แพ็กเกจ Free / Starter ฿790 / Growth ฿1,490 / Scale ฿5,900 ต่อเดือน. ชำระผ่าน PromptPay/โอนบัญชี.`);
+    meta.setAttribute('content', `${BRAND.product} — SaaS ให้ SME ไทยจ้างทีม AI บริหารธุรกิจ + ตลาด B2B. แพ็กเกจ Free / Starter ฿590 / Growth ฿1,490 / Scale ฿5,900 ต่อเดือน. ชำระผ่าน PromptPay/โอนบัญชี.`);
   }, []);
 
   return (

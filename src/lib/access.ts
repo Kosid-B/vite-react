@@ -23,14 +23,14 @@ export const PLAN_COLOR: Record<PlanId, string> = {
 
 export const PLAN_PRICE: Record<PlanId, string> = {
   free: 'ฟรี 15 วัน',
-  starter: '฿790/เดือน',
+  starter: '฿590/เดือน',
   growth: '฿1,490/เดือน',
   scale: '฿5,900/เดือน',
 };
 
 /** ราคาต่อเดือน (บาท ตัวเลข) — ใช้คำนวณส่วนลดคูปอง */
 export const PLAN_PRICE_NUM: Record<PlanId, number> = {
-  free: 0, starter: 790, growth: 1490, scale: 5900,
+  free: 0, starter: 590, growth: 1490, scale: 5900,
 };
 
 /* ===== Billing รายปี (จ่ายทีเดียว = ได้ 2 เดือนฟรี) =====

@@ -79,7 +79,7 @@
 ---
 
 ## F. Willingness-to-Pay — ทดสอบราคาแบบมีหลักฐาน
-- **CEO AI**: ทดสอบ starter ฿790 vs growth ฿1,490 → ดูใน funnel ว่า plan ไหนคนเลือก (ใช้ Pulse A/B ที่มีในแอป)
+- **CEO AI**: ทดสอบ starter ฿590 vs growth ฿1,490 → ดูใน funnel ว่า plan ไหนคนเลือก (ใช้ Pulse A/B ที่มีในแอป)
 - **TIS/BCMS (consulting)**: มูลค่าสูง — WTP พิสูจน์ที่ "lead → ยอมคุย → ปิดดีล ฿50k–85k" ไม่ใช่ราคาป้าย
 - **Pre-Sale Test ในระบบ**: เปิดหน้าร้าน `/b/<slug>` + สินค้า pre-order → วัดที่แผง 🧪 พิสูจน์ไอเดีย (เป้า 10 leads จริง)
 

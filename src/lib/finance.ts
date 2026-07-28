@@ -4,7 +4,7 @@ import type { AppData, FinanceEntry } from '../types';
  * รายการมาจาก 2 ทาง: (1) กรอกเอง (d.finance) (2) ดึงอัตโนมัติจากสิ่งที่ระบบรู้ (ค่าแพ็กเกจที่จ่าย)
  * รายการอัตโนมัติคำนวณสด ไม่เก็บซ้ำใน d.finance */
 
-export const PLAN_PRICE: Record<string, number> = { free: 0, starter: 790, growth: 1490, scale: 5900 };
+export const PLAN_PRICE: Record<string, number> = { free: 0, starter: 590, growth: 1490, scale: 5900 };
 const PLAN_LABEL: Record<string, string> = { free: 'ฟรี', starter: 'Starter', growth: 'Growth', scale: 'Scale' };
 
 /** รายการอัตโนมัติจากข้อมูลที่ระบบรู้จริง — ปัจจุบัน: ค่าแพ็กเกจรายเดือนที่ผู้ใช้จ่าย */

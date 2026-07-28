@@ -50,7 +50,7 @@
 
 ## Monetization (soft — โปรโมทไม่เกิน 1 โพสต์/สัปดาห์)
 - Membership question เก็บ lead → ส่งลิงก์ `/start`
-- คุณค่าฟรีรายสัปดาห์ → CTA รายเดือนชี้ Starter ฿790 / เปิดร้าน `/shop`
+- คุณค่าฟรีรายสัปดาห์ → CTA รายเดือนชี้ Starter ฿590 / เปิดร้าน `/shop`
 - สิทธิ์เฉพาะสมาชิกกลุ่ม: ส่วนลด/สิทธิ์ทดลอง Growth ก่อนใคร
 
 ## Launch Checklist
