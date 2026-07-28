@@ -1,0 +1,8 @@
+# Cloudflare Workers Assets — กำหนด Content-Type + charset ให้ไฟล์ static ที่เสิร์ฟตรง
+# แก้ปัญหาไทยเพี้ยน (mojibake) ของ /llms.txt เพราะ .txt ถูกเดาเป็น text/plain ไม่มี charset
+
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+
+/sitemap.xml
+  Content-Type: application/xml; charset=utf-8
