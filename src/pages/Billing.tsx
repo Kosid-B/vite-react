@@ -7,7 +7,7 @@ import { TOPUP_PACKS, pricePerCall, type TopupPack } from '../lib/topup';
 import { GRACE_DAYS, annualPrice } from '../lib/access';
 import { callCostThb, CALL_PROFILE } from '../lib/aiCost';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
-import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText } from '../lib/payments';
+import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText, submitTopupRequest } from '../lib/payments';
 import { track } from '../lib/analytics';
 import ExpertEdge from '../components/ExpertEdge';
 
@@ -174,6 +174,15 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   const [invoiceModal, setInvoiceModal] = useState<Invoice | null>(null);
   const [showCost, setShowCost] = useState(false);
   const [topupPack, setTopupPack] = useState<TopupPack | null>(null); // แพ็ก top-up ที่เลือกซื้อ
+  const [topupBusy, setTopupBusy] = useState(false);
+  const [topupSent, setTopupSent] = useState(false);
+  async function notifyTopup() {
+    if (!wsId || !topupPack) return;
+    setTopupBusy(true);
+    const err = await submitTopupRequest(wsId, { id: topupPack.id, calls: topupPack.calls, price: topupPack.price });
+    setTopupBusy(false);
+    if (!err) setTopupSent(true);
+  }
   const [payBusy, setPayBusy] = useState(false);
   const [payErr, setPayErr] = useState<string | null>(null);
   const [slipBusy, setSlipBusy] = useState(false);
@@ -521,9 +530,15 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                   <div className="topup-pay-hd">โอน {baht(topupPack.price)} → {PAYMENT.promptpayId} (PromptPay)</div>
                 )}
                 <div className="topup-pay-note">
-                  โอนแล้วแจ้งทีมงาน (support@b-tctraining.com) พร้อม Workspace ID: <b>{wsId ?? '—'}</b> และแพ็ก <b>{topupPack.label}</b>
-                  <br />ทีมงานยืนยันแล้วเปิด credits ให้ทันที (ระบบ auto-verify กำลังพัฒนา)
+                  โอนแล้วกดปุ่มด้านล่างเพื่อเข้าคิว — ทีมงานยืนยันแล้วเปิด credits ให้ (ปกติ &lt; 1 ชม.)
                 </div>
+                {topupSent ? (
+                  <div className="topup-sent">✅ ส่งคำขอแล้ว — รอทีมงานเปิด credits · ระหว่างนี้ใช้ AI ต่อได้ตามโควตาเดิม</div>
+                ) : (
+                  <button className="topup-notify" disabled={!wsId || topupBusy} onClick={notifyTopup}>
+                    {topupBusy ? '⏳ กำลังส่ง…' : `✅ แจ้งว่าโอนแล้ว (${topupPack.label})`}
+                  </button>
+                )}
               </div>
             )}
           </div>

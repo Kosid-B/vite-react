@@ -1499,6 +1499,22 @@ input:focus, textarea:focus, select:focus {
 .plg-txt { font-size: 12.5px; color: var(--ink3); margin-top: 6px; }
 .plg-nudge { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: #fbbf24; background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3); border-radius: 8px; padding: 8px 12px; margin-top: 10px; }
 .plg-nudge-btn { font-size: 12.5px; font-weight: 700; font-family: inherit; color: #0f172a; background: #fbbf24; border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+/* Top-up: ปุ่มแจ้งโอน (Billing) */
+.topup-notify { margin-top: 10px; width: 100%; font-family: inherit; font-size: 13px; font-weight: 700; color: #fff; background: #06b6d4; border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
+.topup-notify:disabled { opacity: .55; cursor: default; }
+.topup-sent { margin-top: 10px; font-size: 12.5px; color: #0e7490; background: rgba(6,182,212,.08); border: 1px solid rgba(6,182,212,.25); border-radius: 8px; padding: 9px 12px; }
+
+/* Top-up: คิวคำขอ (admin) */
+.topup-queue { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 14px 18px; margin-bottom: 16px; }
+.topup-q-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.topup-q-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border: 1px solid var(--sand); border-radius: 10px; padding: 10px 12px; }
+.topup-q-info { font-size: 13px; color: var(--ink); }
+.topup-q-meta { display: block; font-size: 11px; color: var(--ink3); margin-top: 2px; }
+.topup-q-actions { display: flex; gap: 6px; }
+.topup-q-ok { font-family: inherit; font-size: 12.5px; font-weight: 700; color: #fff; background: #22c55e; border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+.topup-q-ok:disabled { opacity: .6; cursor: default; }
+.topup-q-no { font-family: inherit; font-size: 12.5px; background: none; border: 1px solid var(--sand); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+
 /* Top-up admin grant */
 .topup-grant { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 14px 18px; margin-bottom: 16px; }
 .topup-grant-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
