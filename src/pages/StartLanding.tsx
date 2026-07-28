@@ -236,7 +236,8 @@ export default function StartLanding() {
             <p>SOP · KPI · การจัดการความเสี่ยง · ระบบควบคุม จากประสบการณ์ B. Training — ให้ธุรกิจโตได้โดยไม่ต้องพึ่งเจ้าของคนเดียว</p>
           </div>
         </div>
-        <div className="start-src">ทีมผู้บริหาร AI คือ “กลไก” ที่ช่วยลงมือทำทั้งสองเสานี้ให้คุณ — ไม่ใช่แค่แชตตอบคำถาม</div>
+        <div className="start-src">ทีมผู้บริหาร AI คือ “กลไก” ที่ช่วยลงมือทำทั้งสองเสานี้ให้คุณ — ไม่ใช่แค่แชตตอบคำถาม ·{' '}
+          <a href="/mit24" className="start-inline-link">MIT 24 Steps คืออะไร →</a></div>
       </section>
 
       {/* "ต้นน้ำที่แข็งแรง" 8 ขั้น — เส้นทางที่ CEO AI พาเดิน (ทำ positioning ให้เห็นเป็นรูป) */}
@@ -430,6 +431,8 @@ export default function StartLanding() {
       <footer className="start-foot">
         CEO AI Thailand — แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย ·{' '}
         <a href="/b">สารบัญธุรกิจ</a> ·{' '}
+        <a href="/mit24">MIT 24 Steps</a> ·{' '}
+        <a href="/faq">คำถามที่พบบ่อย</a> ·{' '}
         โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
         <br />
         เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a href="tel:08178177773">081-7817-7773</a>

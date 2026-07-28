@@ -465,6 +465,10 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
         เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย ·
         โทร <a href="tel:08178177773" style={{ color: C.cyan4, textDecoration: 'none', fontWeight: 600 }}>081-7817-7773</a>
         <br />
+        <a href="/mit24" style={{ color: C.cyan4, textDecoration: 'none' }}>MIT 24 Steps คืออะไร</a> ·{' '}
+        <a href="/faq" style={{ color: C.cyan4, textDecoration: 'none' }}>คำถามที่พบบ่อย</a> ·{' '}
+        <a href="/b" style={{ color: C.cyan4, textDecoration: 'none' }}>สารบัญธุรกิจ</a>
+        <br />
         © 2026 CEO AI Thailand · ceoaithailand.org · B. Training Consultant Co., Ltd.
         <br />
         <LegalLinks linkStyle={{ color: C.slate5, textDecoration: 'none' }} />

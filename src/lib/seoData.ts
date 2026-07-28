@@ -323,7 +323,7 @@ ${schema}
   <p class="lead">${escapeHtml(desc)}</p>
 ${faqBlocks}
   <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างบริษัท AI ฟรี →</a>
-  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/mit24')}">MIT 24 Steps คืออะไร</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>
 </main>
 </body>
 </html>
@@ -487,7 +487,7 @@ ${csuiteBlocks}
   <h2>คำถามที่พบบ่อย</h2>
 ${faqBlocks}
   <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างธุรกิจด้วย 24 ขั้น — ฟรี →</a>
-  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/faq')}">คำถามที่พบบ่อย</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>
 </main>
 </body>
 </html>

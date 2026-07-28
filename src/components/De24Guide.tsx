@@ -32,6 +32,10 @@ export default function De24Guide({ data, onUpdate, onFocusStep }: Props) {
         <div className="de24g-count"><b>{j.done}</b>/24 · {j.pct}%</div>
       </div>
       <div className="de24g-bar"><div className="de24g-bar-fill" style={{ width: `${j.pct}%` }} /></div>
+      <a className="de24g-learn" href="/mit24" target="_blank" rel="noopener noreferrer"
+        onClick={() => track('mit24_article_click', { from: 'bmc_guide' })}>
+        📖 MIT 24 Steps คืออะไร ใช้ยังไงในแอป — อ่านบทความ →
+      </a>
 
       {j.complete ? (
         <div className="de24g-done">
