@@ -7,6 +7,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModel } from "../_shared/modelRouter.ts";
+import { enforceAiQuota } from "../_shared/quota.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 // ai-assist = คำแนะนำสั้นต่อหน้า = งาน 'simple' → ตั้ง secret MODEL_SIMPLE เพื่อย้ายไปโมเดลถูก (default = โมเดลเดิม)
@@ -18,7 +19,7 @@ const cors = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-interface Body { page?: string; pageLabel?: string; instruction?: string; context?: string; stream?: boolean }
+interface Body { page?: string; pageLabel?: string; instruction?: string; context?: string; stream?: boolean; clientId?: string }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -28,6 +29,10 @@ Deno.serve(async (req) => {
   let body: Body;
   try { body = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
   if (!body?.instruction) return json({ error: "missing_instruction" }, 400);
+
+  // บังคับโควตา AI ฝั่ง server (flag-gated + fail-open) — ก่อนยิง Claude ทั้ง path ปกติ + stream
+  const blocked = await enforceAiQuota(req, body.clientId);
+  if (blocked) return blocked;
 
   // (ข) ถ้าขอ stream → คืน SSE ให้ข้อความทยอยขึ้น
   if (body.stream) return streamAssist(body);

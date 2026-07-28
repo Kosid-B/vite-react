@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Anthropic from 'npm:@anthropic-ai/sdk@0.26.0';
 import { pickModel } from '../_shared/modelRouter.ts';
+import { enforceAiQuota } from '../_shared/quota.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -40,6 +41,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
   try {
+    const reqBody = await req.json();
     const {
       role,
       name,
@@ -53,7 +55,12 @@ serve(async (req) => {
       orgContext,
       useWebSearch,    // เปิดใช้ Brave Search สำหรับงานนี้
       searchQuery,     // custom query (ถ้าไม่ระบุ ใช้ title + industry)
-    } = await req.json();
+      clientId,        // id ไม่ระบุตัวตน (สำหรับ guest quota bucket)
+    } = reqBody;
+
+    // บังคับโควตา AI ฝั่ง server (flag-gated + fail-open) — agent-run = งานหนักสุด
+    const blocked = await enforceAiQuota(req, clientId);
+    if (blocked) return blocked;
 
     // ─── Brave Search (ถ้าเปิดใช้และมี API key) ──────────────────────────
     let webContext = '';

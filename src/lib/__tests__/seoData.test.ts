@@ -218,7 +218,7 @@ describe('schema JSON-LD (GEO/AEO)', () => {
     expect(s['@type']).toBe('SoftwareApplication');
     const offers = s.offers as Record<string, unknown>[];
     expect(offers).toHaveLength(4);
-    expect(offers.map(o => o.price)).toEqual(['0', '390', '1490', '5900']);
+    expect(offers.map(o => o.price)).toEqual(['0', '590', '1490', '5900']);
   });
   it('faqPageJsonLd แปลง FAQ_ITEMS เป็น Question/Answer ครบ', () => {
     const f = faqPageJsonLd() as Record<string, unknown>;

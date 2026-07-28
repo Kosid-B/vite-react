@@ -23,15 +23,42 @@ export const PLAN_COLOR: Record<PlanId, string> = {
 
 export const PLAN_PRICE: Record<PlanId, string> = {
   free: 'ฟรี 15 วัน',
-  starter: '฿390/เดือน',
+  starter: '฿590/เดือน',
   growth: '฿1,490/เดือน',
   scale: '฿5,900/เดือน',
 };
 
 /** ราคาต่อเดือน (บาท ตัวเลข) — ใช้คำนวณส่วนลดคูปอง */
 export const PLAN_PRICE_NUM: Record<PlanId, number> = {
-  free: 0, starter: 390, growth: 1490, scale: 5900,
+  free: 0, starter: 590, growth: 1490, scale: 5900,
 };
+
+/* ===== Billing รายปี (จ่ายทีเดียว = ได้ 2 เดือนฟรี) =====
+ * เหตุผลเชิงธุรกิจ: ลูกค้า commit เร็วขึ้น + เงินสดล่วงหน้า + anchor ราคา
+ * ไม่ตัดราคารายเดือน (รายเดือนคงเดิม) — รายปีคือ "ส่วนลดแลกกับการผูกพันยาว"
+ * ดูที่มา: docs/marketing/PRICING-MARGIN-ANALYSIS.md §5 */
+export const ANNUAL_MONTHS_CHARGED = 10; // จ่าย 10 เดือน ใช้ 12 (2 เดือนฟรี ≈ ลด 16.7%)
+
+/** ราคารายปี (บาท) = ราคารายเดือน × 10 — free = 0 · pure */
+export function annualPrice(plan: PlanId): number {
+  return (PLAN_PRICE_NUM[plan] ?? 0) * ANNUAL_MONTHS_CHARGED;
+}
+
+/** ราคารายปี "เทียบเท่าต่อเดือน" (บาท ปัดเต็ม) — ใช้โชว์ว่าถูกลงเดือนละเท่าไร */
+export function annualPerMonth(plan: PlanId): number {
+  return Math.round(annualPrice(plan) / 12);
+}
+
+/** ประหยัดกี่บาท/ปี เมื่อจ่ายรายปีแทนรายเดือน */
+export function annualSavingThb(plan: PlanId): number {
+  return (PLAN_PRICE_NUM[plan] ?? 0) * 12 - annualPrice(plan);
+}
+
+/** ส่วนลดรายปีเป็น % (คงที่ ~16.7% จาก 2/12 เดือนฟรี) — pure */
+export function annualSavingPct(plan: PlanId): number {
+  const monthlyYear = (PLAN_PRICE_NUM[plan] ?? 0) * 12;
+  return monthlyYear > 0 ? Math.round((annualSavingThb(plan) / monthlyYear) * 100) : 0;
+}
 
 /** ราคาต่อเดือนหลังหักคูปองส่วนลด (บาท, ปัดจำนวนเต็ม) — pure */
 export function discountedMonthly(plan: PlanId, couponPct = 0): number {

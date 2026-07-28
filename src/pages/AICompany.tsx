@@ -32,6 +32,7 @@ import MarketValidation from '../components/MarketValidation';
 import { validationInstruction, extractVerdict } from '../lib/marketValidation';
 import CSuiteReports from '../components/CSuiteReports';
 import IntakePanel from '../components/IntakePanel';
+import CompanyNamer from '../components/CompanyNamer';
 import OcNode from './aicompany/OcNode';
 import {
   STATUS_LABEL, TASK_COLS, AGENT_PALETTE, AVATARS, MODELS, AVAILABLE_SKILLS,
@@ -95,6 +96,14 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   const [nameMsg, setNameMsg] = useState<string | null>(null);
   // C-level ขอเพิ่ม M-level (form เปิดบนการ์ดเอเจนต์ทีละใบ)
   const [mReq, setMReq] = useState<{ agentId: string; role: string; mandate: string; custom: boolean } | null>(null);
+
+  // ชื่อบริษัท/เป้าหมาย = controlled draft (แก้บั๊ก "พิมพ์แล้วหาย": เดิม uncontrolled + key={c.name}
+  //  ทำให้ remount ทุกครั้งที่ c.name เปลี่ยนจากภายนอก เช่น CEO เสนอชื่อ → ตัวที่พิมพ์ค้างหาย)
+  //  sync จาก props เมื่อค่าเปลี่ยนจากภายนอก (เช่น CEO เสนอชื่อ) แต่คงสิ่งที่ผู้ใช้พิมพ์ระหว่างแก้
+  const [nameDraft, setNameDraft] = useState(c.name);
+  const [goalDraft, setGoalDraft] = useState(c.goal);
+  useEffect(() => { setNameDraft(c.name); }, [c.name]);
+  useEffect(() => { setGoalDraft(c.goal); }, [c.goal]);
 
   // โหลด skill ที่ Admin ระบบเพิ่มเข้า Marketplace (แสดงให้ทุกบริษัท)
   useEffect(() => {
@@ -1329,7 +1338,9 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       {/* ===== Control bar ===== */}
       <div className="ai-control">
         <div className="ai-control-main">
-          <input className="ai-co-name" defaultValue={c.name} key={'n' + c.name}
+          {c.logoSvg && <span className="ai-co-logo" dangerouslySetInnerHTML={{ __html: c.logoSvg }} />}
+          <input className="ai-co-name" value={nameDraft}
+            onChange={e => setNameDraft(e.target.value)}
             onBlur={e => setCompanyField('name', e.target.value)} spellCheck={false} />
           <div className="ai-co-industry">
             <span className="ai-co-lbl">ประเภทธุรกิจ (DBD)</span>
@@ -1368,10 +1379,12 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
 
       <div className="ai-goal-box">
         <div className="ai-goal-lbl">🎯 เป้าหมายหลักที่บอร์ดตั้งไว้</div>
-        <textarea className="ai-goal-inp" rows={2} defaultValue={c.goal} key={'g' + c.goal}
+        <textarea className="ai-goal-inp" rows={2} value={goalDraft}
           onBlur={e => setCompanyField('goal', e.target.value)}
-          onChange={e => autoH(e.target)} ref={el => autoH(el)} spellCheck={false} />
+          onChange={e => { setGoalDraft(e.target.value); autoH(e.target); }} ref={el => autoH(el)} spellCheck={false} />
       </div>
+
+      <CompanyNamer data={data} onUpdate={onUpdate} />
 
       {/* ===== CEO Mission ===== */}
       {(missionMsg || c.missionApproved) && (

@@ -39,7 +39,7 @@ facebook-group-plan, networking-strategy, linkedin-strategy).
 เชื่อมกับ GA4 `G-CHJ99RY1Q1` (มี funnel events แล้ว — ดู `src/lib/analytics.ts`):
 - **Acquisition**: ผู้เข้าใหม่ต่อช่องทาง (organic / facebook / linkedin / referral)
 - **Activation**: สมัคร `/start` → เปิดร้าน `/shop` → เผยแพร่หน้าร้าน (`storefront published`)
-- **Revenue**: อัปเกรด Starter ฿390 → Growth ฿1,490; RFQ → ออเดอร์
+- **Revenue**: อัปเกรด Starter ฿590 → Growth ฿1,490; RFQ → ออเดอร์
 - **Liquidity ตลาด**: จำนวนร้าน published, จำนวน RFQ/สัปดาห์, อัตราจับคู่ (Marketplace Agent)
 
 > หมายเหตุ: เอกสารเหล่านี้เป็น **แผน** — ตัวเลขตลาด (TAM/SAM/SOM) เป็นการประมาณการพร้อมระบุสมมติฐาน

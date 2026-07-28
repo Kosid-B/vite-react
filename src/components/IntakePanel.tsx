@@ -10,9 +10,21 @@ import { trackAiCall } from '../lib/usage';
 
 const TEXT_EXT = /\.(txt|csv|tsv|md|markdown|json|log|text)$/i;
 
+const DRAFT_KEY = 'ceo_ai_intake_draft';
+
 export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdate: (d: AppData) => void }) {
   const c = data.aiCompany;
-  const [text, setText] = useState('');
+  // แก้บั๊ก "พิมพ์ข้อมูลแล้วหาย": เก็บ draft ใน sessionStorage → รอด remount/re-render (heartbeat ฯลฯ)
+  const [text, setTextState] = useState(() => {
+    try { return sessionStorage.getItem(DRAFT_KEY) ?? ''; } catch { return ''; }
+  });
+  const setText: typeof setTextState = (v) => {
+    setTextState(prev => {
+      const next = typeof v === 'function' ? (v as (p: string) => string)(prev) : v;
+      try { if (next) sessionStorage.setItem(DRAFT_KEY, next); else sessionStorage.removeItem(DRAFT_KEY); } catch { /* noop */ }
+      return next;
+    });
+  };
   const [fileName, setFileName] = useState('');
   const [msg, setMsg] = useState('');
   const [routed, setRouted] = useState<RoutedTask[]>([]);

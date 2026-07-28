@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, FactoryData, FactoryMachine, WorkOrder, MachineStatus, WorkOrderStatus, KaizenItem, TPMPillarStatus, InventoryItem, InventoryLot } from '../types';
 import DBDSelect from '../components/DBDSelect';
+import OpsDataPanel from '../components/OpsDataPanel';
 
 interface Props { data: AppData; onUpdate: (d: AppData) => void; }
 
@@ -238,6 +239,9 @@ export default function Factory({ data, onUpdate }: Props) {
     <div className="page">
       <h1 className="page-title">🏭 โรงงานอัจฉริยะ</h1>
       <p className="page-subtitle">OEE + Lean Management — ระบบบริหารโรงงานแบบอัตโนมัติด้วย AI</p>
+
+      {/* บันทึกผลการดำเนินงาน (ออกแบบตัวชี้วัดจาก BMC + ประเภทธุรกิจ) → ประเมินสมรรถนะ */}
+      <OpsDataPanel data={data} onUpdate={onUpdate} />
 
       {/* ── Factory Profile ── */}
       <div className="factory-profile-row">

@@ -47,7 +47,7 @@ const stats = [
   { value: '500+', label: 'บริษัทในไทย' },
   { value: '24/7', label: 'ทีม AI ไม่หยุด' },
   { value: '5 นาที', label: 'เปิดร้าน B2B' },
-  { value: '฿390', label: 'เริ่มมีทีม AI ทั้งบริษัท' },
+  { value: '฿590', label: 'เริ่มมีทีม AI ทั้งบริษัท' },
 ];
 
 const features = [
@@ -168,7 +168,7 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
 
         <p style={{ fontSize: 18, color: C.slate4, marginBottom: 48, maxWidth: 600, lineHeight: 1.7 }}>
           ให้ CEO AI จัดทีม วางแผน หาลูกค้า และเดินธุรกิจให้คุณ<br />
-          มี <strong style={{ color: C.white }}>'ทีม AI'</strong> ทั้งบริษัทได้ตั้งแต่ ฿390/เดือน — คุณสั่ง มันลงมือ คุณคุมทุกการตัดสินใจ
+          มี <strong style={{ color: C.white }}>'ทีม AI'</strong> ทั้งบริษัทได้ตั้งแต่ ฿590/เดือน — คุณสั่ง มันลงมือ คุณคุมทุกการตัดสินใจ
         </p>
 
         <div style={{ position: 'relative', display: 'inline-block' }}>

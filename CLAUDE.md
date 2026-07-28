@@ -57,7 +57,10 @@ src/lib/access.ts              — plan access control (canAccess, effectiveRank
 src/components/Sidebar.tsx     — navigation + plan badge + lock icons
 src/components/UpgradeWall.tsx — locked page overlay
 src/components/Billing.tsx     — subscription management UI
-src/pages/AICompany.tsx        — บริษัท AI page (factory, agent tasks)
+src/pages/AICompany.tsx        — บริษัท AI page (factory, agent tasks) · ชื่อ/เป้าหมาย = controlled draft (แก้บั๊กพิมพ์แล้วหาย)
+src/lib/companyIdentity.ts     — CEO เสนอชื่อบริษัท (หลัก Corporate Identity) + โลโก้ SVG monogram โปรซีเจอรัล (pure/tested) · components/CompanyNamer.tsx (AI ออนไลน์ / rule-based ออฟไลน์) → บอร์ดเลือก → aiCompany.name+logoSvg
+src/lib/opsMetrics.ts          — ออกแบบตัวชี้วัดผลการดำเนินงานจาก BMC + ประเภทธุรกิจ (รายวัน/สัปดาห์) + evaluatePerformance + CSV template/parse (pure/tested) · components/OpsDataPanel.tsx ในหน้า Factory → AppData.opsData.entries → ประเมินสมรรถนะ
+src/lib/marketSizing.ts        — วิจัยตลาด + ประเมินขนาดตลาด TAM/SAM/SOM (top-down + ช่วง) + opportunityScore 5 ปัจจัย + cmoResearchPrompt (pure/tested) · components/MarketSizingPanel.tsx ในหน้า 'marketing' — CMO (a-cmo มณี) นำเสนอ · AI ผ่าน agent-run + Serper (useWebSearch) / rule-based fallback
 src/pages/CaseStudies.tsx      — case studies (built-in CASES + data.caseStudies ที่แอดมินนำเข้า)
 src/pages/AdminTabs/CaseStudyTab.tsx — Content Studio: นำเข้า Case (ฟอร์ม/JSON/AI สรุป) + ปุ่ม "💰 เสนอเป็น Skill" แปลงเคส→สินค้า Marketplace พร้อมประเมินราคาอัตโนมัติ
 src/lib/skillValuation.ts      — suggestSkillFromCase() ประเมินหมวด/tier/ราคา/valueNote จากเคส (pure, tested)
@@ -142,7 +145,7 @@ PAGE_MIN_PLAN = {
   admin: 'scale',
   // factory = FREE (part of AI Company feature)
 }
-Plans: free(0) → starter(1) ฿390/mo → growth(2) ฿1,490/mo → scale(3) ฿5,900/mo
+Plans: free(0) → starter(1) ฿590/mo → growth(2) ฿1,490/mo → scale(3) ฿5,900/mo
 Trial: 15 วัน auto-start เมื่อ login ครั้งแรก
 Admin (support@b-tctraining.com): ใช้ Scale ฟรีเสมอ — App.tsx เรียก setAdminFullAccess(isAdminEmail(email))
   → effectiveRank/isExpired/planLabel bypass (access.ts). ระบบ admin = app_admins table + is_app_admin() (0005)
@@ -240,6 +243,8 @@ public.orders             — ออเดอร์ + ค่าธรรมเ�
 public.skill_auctions     — ประมูล skill แบบ English Auction (0012)
 public.skill_bids         — บิดประมูล โปร่งใสเห็นกันหมด (0012)
 public.workspace_integrations — credential ของ integration ที่ User เชื่อมเอง (LINE/Sheets) RLS per-workspace, revoke anon; ไม่อยู่ใน workspace_state (กัน secret รั่ว) (0020)
+public.ai_usage           — ตัวนับ AI calls ต่อ (bucket=ws/user/guest-IP, เดือน) บังคับ quota ฝั่ง server (0035) · RLS ปิดหมด เข้าผ่าน rpc bump_ai_usage/get_ai_usage (SECURITY DEFINER) · guest cap 25/เดือน/IP · flag ENFORCE_AI_QUOTA (default off, fail-open) wire ใน ai-assist/ai-plan/agent-run ผ่าน _shared/quota.ts · plan อ่านจาก workspace_plan mirror (trigger sync เฉพาะ role=service_role กัน spoof)
+public.ai_topup           — Top-up packs: credits AI เพิ่มต่อ workspace/เดือน (0036) · rpc grant_ai_topup (admin/service_role เท่านั้น) · bump/get_ai_usage รวม credits เข้า quota · แพ็ก src/lib/topup.ts (+500฿490/+1000฿990/+3000฿2900 · margin>20% แม้ worst-case) · UI: Billing (ซื้อ PromptPay) + PaymentsTab (admin เปิด credits)
 ```
 
 ## Edge Functions
