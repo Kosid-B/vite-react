@@ -81,7 +81,7 @@ B. Training Consultant  (บริษัทแม่ · b-tctraining.com)  — �
 
 ---
 
-## 8. Positioning (ยืนยัน ก.ค. 2569) — "AI Business Building System"
+## 8. Positioning (ยืนยัน ก.ค. 2569) — "AI Business Operating System"
 > แก่นแท้ = **ระบบสร้างธุรกิจด้วย AI ตั้งแต่ต้นน้ำ ให้เติบโตอย่างเป็นระบบและพร้อมขยาย** ·
 > สารหลัก **ไม่ใช่** "จ้างทีม AI ทั้งบริษัท" — "ทีม AI" = **กลไกสนับสนุน** · คุณค่าหลัก = ลดความเสี่ยงเริ่มธุรกิจ + ฐานลูกค้าแข็งแรง + scalability
 
@@ -104,4 +104,15 @@ B. Training Consultant  (บริษัทแม่ · b-tctraining.com)  — �
 | ธุรกิจยังพึ่งเจ้าของ | เตรียมธุรกิจให้ทำซ้ำ + ขยายได้ |
 
 > ⚠️ ISO ในที่นี้ = **"แนวคิดเชิงระบบเพื่อโต"** ไม่ใช่ "บริการทำใบรับรอง ISO" (นั่นยังเป็นงาน B.Training) — คงเส้น §7 ไว้
-> แหล่ง canonical ที่ต้องตรงกัน: `src/lib/seoData.ts` (llmsTxt · FAQ_ITEMS · Organization/SoftwareApplication desc) + หน้า `/start`
+> แหล่ง canonical ที่ต้องตรงกัน: `src/lib/seoData.ts` (llmsTxt · FAQ_ITEMS · Organization/SoftwareApplication desc · **mit24PageHtml `/mit24`**) + หน้า `/start`
+
+**เฟรมสั้น (ยืนยัน ก.ค. 2569):** *"MIT สอนวิธีคิด · CEO AI Thailand ช่วยคิด ทำ ติดตามผล"* — เปลี่ยน framework MIT ให้เป็น **AI Coach ทีละขั้น** (ไม่ใช่คอร์สเรียน)
+
+**24 Steps = 4 คำถามใหญ่ → C-suite AI ลงมือ** (แหล่งเต็ม: หน้า `/mit24`):
+| คำถาม (ขั้น) | AI ทำอะไร | บทบาทหลัก |
+|---|---|---|
+| ลูกค้าคือใคร? (1–6) | ICP · Persona · Beachhead · Segmentation | AI Researcher / CMO |
+| ทำอะไรให้ลูกค้า? (7–11) | Value Prop · จุดต่าง · Product Roadmap | AI CEO / CMO |
+| ลูกค้าได้มายังไง+คุ้มไหม? (12–19) | Journey · Funnel · Pricing · Sales · LTV/CAC | AI CMO / CFO |
+| ขยายยังไง? (20–24) | KPI · SOP · ISO · Dashboard · Scalability | AI COO / ISO Expert |
+> "ทีม AI" (CEO/CMO/CFO/COO/ISO Expert/Researcher) = **กลไก** ที่ขับ Operating System · ยังยึดลำดับ 24 Steps เป็นแกน ไม่ให้ข้ามขั้น

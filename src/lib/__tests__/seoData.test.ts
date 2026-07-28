@@ -165,6 +165,14 @@ describe('mit24 (/mit24 answer-first article)', () => {
     expect(html).toContain('"@type":"FAQPage"');
     expect(html).toContain(`${ORIGIN}/start`);
   });
+  it('มี framing AI Operating System + ตารางแมป 4 คำถาม + C-suite AI', () => {
+    expect(html).toContain('AI Business Operating System');
+    expect(html).toContain('คิด ทำ และติดตามผล');   // differentiation จาก "คอร์สเรียน"
+    expect(html).toContain('4 คำถามใหญ่');            // mapping table
+    expect(html).toContain('AI CEO');
+    expect(html).toContain('AI CFO');
+    expect(html).toContain('Scalability');
+  });
   it('mit24FaqJsonLd แปลง MIT24_FAQ เป็น Question/Answer ครบ', () => {
     const j = mit24FaqJsonLd() as Record<string, unknown>;
     expect(j['@type']).toBe('FAQPage');
