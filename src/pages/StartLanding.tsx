@@ -40,6 +40,33 @@ const FAQS: FaqItem[] = [
   { q: 'ข้อมูลธุรกิจของฉันปลอดภัยไหม?', a: 'ปลอดภัย ข้อมูลแต่ละธุรกิจแยกจากกันสมบูรณ์ คนอื่นเห็นเฉพาะหน้าร้านที่คุณเลือกเผยแพร่ ดูแลโดย B. Training Consultant ผู้ให้บริการที่ปรึกษามากกว่า 20 ปี' },
 ];
 
+// ตารางเทียบ "ต่างจาก ChatGPT ยังไง" — Pain point #1 (แก้ความสับสน "ก็ ChatGPT อีกตัว")
+// ข้อความเป็นข้อเท็จจริงของฟีเจอร์ที่มีจริง — ไม่โม้เกินจริง
+type CmpRow = { label: string; chatgpt: string; ceo: string };
+const COMPARE_BIZ: CmpRow[] = [
+  { label: 'รูปแบบการทำงาน', chatgpt: 'ตอบเป็นข้อความ ทีละคำถาม', ceo: 'ทีมผู้บริหาร AI วางแผน–มอบงาน–ลงมือทำต่อเนื่อง' },
+  { label: 'ขายของจริง', chatgpt: 'ต้องไปสร้างหน้าร้าน/ช่องทางเองที่อื่น', ceo: 'สร้างหน้าร้าน + Marketplace รับงาน B2B ในระบบ' },
+  { label: 'แผน/ระบบธุรกิจ', chatgpt: 'ต้อง prompt เองทุกครั้ง', ceo: 'เทมเพลตไทยพร้อมใช้: BMC · SIPOC · Persona · KPI' },
+  { label: 'บริบทไทย', chatgpt: 'ทั่วไป ไม่เจาะไทย', ceo: 'ออกแบบเพื่อ SME ไทย + หมวดธุรกิจ DBD' },
+  { label: 'ความต่อเนื่อง', chatgpt: 'จำบริบทได้จำกัด เริ่มใหม่บ่อย', ceo: 'เก็บสถานะธุรกิจ งานเดินต่อเป็นระบบ' },
+  { label: 'ใครอยู่เบื้องหลัง', chatgpt: 'แพลตฟอร์มต่างชาติ', ceo: 'ที่ปรึกษาธุรกิจไทย 20+ ปี (B. Training)' },
+];
+const COMPARE_ISO: CmpRow[] = [
+  { label: 'เอกสาร ISO ไทย', chatgpt: 'ต้อง prompt เขียนเองทุกครั้ง', ceo: 'มีโครงเทมเพลต ISO 9001/14001/45001/22301' },
+  { label: 'ประเมินก่อน audit', chatgpt: 'ไม่มีโครงประเมิน', ceo: 'Gap assessment มีโครง บอกสิ่งที่ยังขาด' },
+  { label: 'PDPA ไทย', chatgpt: 'ทั่วไป ไม่อิงกฎหมายไทย', ceo: 'อิงบริบท PDPA ไทย (ฟีเจอร์เสริม)' },
+  { label: 'ความต่อเนื่อง', chatgpt: 'จำบริบทได้จำกัด', ceo: 'เก็บสถานะเอกสาร/งานเป็นระบบ' },
+  { label: 'ใครออกแบบ', chatgpt: 'แพลตฟอร์มต่างชาติ', ceo: 'ที่ปรึกษา ISO/ธุรกิจจริง 20+ ปี (B. Training)' },
+];
+
+// ROI — เทียบ "ค่าจ้างทีมจริงในตลาด" กับราคาแพ็ก (Pain point #2)
+// ⚠️ เป็นราคาตลาดอ้างอิงของ "การจ้างเอง" ไม่ใช่ตัวเลขผลลัพธ์ที่การันตี
+const ROI_ITEMS = [
+  { ico: '📣', role: 'นักการตลาด (freelance/พาร์ตไทม์)', market: '~฿15,000–30,000/เดือน' },
+  { ico: '🔎', role: 'ผู้ช่วยวิจัยตลาด/ธุรการ', market: '~฿15,000+/เดือน' },
+  { ico: '⚙️', role: 'ที่ปรึกษาวางระบบธุรกิจ', market: '~฿20,000+/ครั้ง' },
+];
+
 export default function StartLanding() {
   const [copied, setCopied] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
@@ -52,6 +79,8 @@ export default function StartLanding() {
   }, []);
 
   useEffect(() => { track('start_variant', { variant: isIso ? 'iso' : 'default' }); }, [isIso]);
+
+  const compareRows = isIso ? COMPARE_ISO : COMPARE_BIZ;
 
   useEffect(() => {
     const o = siteOrigin();
@@ -212,6 +241,58 @@ export default function StartLanding() {
             <p>ของดีแต่ขายไม่เป็น เพราะไม่รู้จะพูดกับใคร พูดยังไง — เอเจนต์การตลาดวิเคราะห์กลุ่มลูกค้า (Persona),
             วางแผนคอนเทนต์รายเดือน, ออกแบบ funnel และวัดผลให้ทุกสัปดาห์
             เหมือนมีทีมการตลาดทั้งทีมในราคาศูนย์บาท</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ต่างจาก ChatGPT ยังไง — Pain #1 (แก้ "ก็ ChatGPT อีกตัว") */}
+      <section className="start-sec start-cmp-sec">
+        <h2 className="start-h2">แล้วต่างจาก ChatGPT ยังไง?</h2>
+        <p className="start-price-note">
+          {isIso
+            ? 'ChatGPT ตอบคำถามเก่ง แต่ไม่มีโครงเอกสาร ISO ไทยและไม่เก็บงานต่อเนื่องให้ — นี่คือส่วนต่าง'
+            : 'ChatGPT คือ “ผู้ช่วยตอบคำถาม” · CEO AI Thailand คือ “ทีมที่ลงมือทำธุรกิจให้” — เทียบตรงๆ'}
+        </p>
+        <div className="start-cmp-tablewrap">
+          <table className="start-cmp">
+            <thead>
+              <tr>
+                <th></th>
+                <th>ChatGPT / แชตบอตทั่วไป</th>
+                <th className="start-cmp-us">CEO AI Thailand</th>
+              </tr>
+            </thead>
+            <tbody>
+              {compareRows.map((r, i) => (
+                <tr key={i}>
+                  <td className="start-cmp-label">{r.label}</td>
+                  <td className="start-cmp-them">{r.chatgpt}</td>
+                  <td className="start-cmp-us">✓ {r.ceo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="start-src">ไม่ได้แข่งกับ ChatGPT — เราใช้ AI ระดับเดียวกัน แต่ห่อด้วย “ระบบทำธุรกิจ” ให้คนไทยใช้ได้เลย</p>
+      </section>
+
+      {/* ROI — เทียบค่าจ้างทีมจริง (Pain #2) */}
+      <section className="start-sec start-roi-sec">
+        <h2 className="start-h2">คุ้มแค่ไหน? เทียบกับจ้างทีมจริง</h2>
+        <p className="start-price-note">ถ้าจ้างคนมาทำงานเหล่านี้เอง ต้นทุนต่อเดือนในตลาดคือ:</p>
+        <div className="start-roi-grid">
+          {ROI_ITEMS.map((r, i) => (
+            <div key={i} className="start-roi-card">
+              <div className="start-roi-ico">{r.ico}</div>
+              <div className="start-roi-role">{r.role}</div>
+              <div className="start-roi-market">{r.market}</div>
+            </div>
+          ))}
+        </div>
+        <div className="start-roi-punch">
+          ทีม AI ครบชุดของคุณ เริ่มที่ <b>฿0</b> — อัปเป็น Starter เพียง <b>฿390/เดือน</b> เมื่อพร้อมรับงาน
+          <div className="start-roi-honest">
+            💡 พูดตรงๆ: AI ช่วย “เริ่ม + วางระบบ + การตลาด” ให้เร็วขึ้นมาก แต่ยอดขายยังต้องคุณลงมือปิดเอง — ไม่ใช่ปุ่มวิเศษ
           </div>
         </div>
       </section>

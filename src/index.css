@@ -4895,6 +4895,32 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .start-team-ico { font-size:28px; }
 .start-team-role { font-size:16px; font-weight:700; margin-top:8px; color:#fff; }
 .start-team-desc { font-size:13.5px; color:#94a3b8; margin-top:4px; }
+/* ต่างจาก ChatGPT — ตารางเทียบ */
+.start-cmp-tablewrap { margin-top:28px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.start-cmp { width:100%; border-collapse:separate; border-spacing:0; min-width:520px; font-size:14.5px; }
+.start-cmp th, .start-cmp td { padding:13px 16px; text-align:left; vertical-align:top; border-bottom:1px solid #1e293b; }
+.start-cmp thead th { font-size:14px; font-weight:700; color:#cbd5e1; background:#0f172a; }
+.start-cmp thead th:first-child { border-top-left-radius:12px; }
+.start-cmp thead th:last-child { border-top-right-radius:12px; }
+.start-cmp-label { font-weight:600; color:#94a3b8; white-space:nowrap; }
+.start-cmp-them { color:#64748b; }
+.start-cmp td.start-cmp-us { color:#e2e8f0; }
+.start-cmp th.start-cmp-us { color:#34d399; }
+.start-cmp .start-cmp-us { background:rgba(52,211,153,.06); border-left:1px solid rgba(52,211,153,.2); }
+.start-cmp tbody tr:last-child td { border-bottom:none; }
+
+/* ROI — เทียบค่าจ้างทีมจริง */
+.start-roi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:26px; }
+.start-roi-card { text-align:center; background:#0f172a; border:1px solid #1e293b; border-radius:12px; padding:20px 16px; }
+.start-roi-ico { font-size:26px; }
+.start-roi-role { font-size:14.5px; font-weight:600; color:#e2e8f0; margin-top:8px; line-height:1.5; }
+.start-roi-market { font-size:15px; font-weight:700; color:#f87171; margin-top:6px; }
+.start-roi-punch { text-align:center; font-size:17px; color:#e2e8f0; line-height:1.7; margin-top:26px;
+  background:linear-gradient(180deg,rgba(52,211,153,.08),transparent); border:1px solid rgba(52,211,153,.22);
+  border-radius:14px; padding:22px 20px; }
+.start-roi-punch b { color:#34d399; }
+.start-roi-honest { font-size:13.5px; color:#94a3b8; margin-top:12px; line-height:1.65; }
+
 .start-plans { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px; margin-top:30px; }
 .start-plan { position:relative; text-align:center; background:#0f172a; border:1px solid #1e293b; border-radius:14px; padding:28px 20px; }
 .start-plan.hot { border-color:#f59e0b; box-shadow:0 0 24px rgba(245,158,11,.25); }
