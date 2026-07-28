@@ -54,14 +54,18 @@ Quota/เดือน (usage.ts): free 200 · starter 300 · growth 1,000 · sca
 - **guest cap 25/เดือน ต่อ IP** (x-forwarded-for) — ปิดรูรั่ว "anon-key ยิงฟรีไม่จำกัด" โดยไม่ต้องแก้ client
 - **FAIL-OPEN + FLAG-GATED**: ทำงานเฉพาะ `ENFORCE_AI_QUOTA=true` · error ใด ๆ = อนุญาต (ไม่พัง prod)
 
-เปิดใช้จริง (หลังทดสอบ):
+เปิดใช้จริง:
 ```bash
-# 1) apply migration (เพิ่มตาราง+RPC — ไม่เปลี่ยนพฤติกรรมจนกว่าจะตั้ง flag)
-supabase db push --project-ref waigsnxhrlwtiotspaim   # หรือ apply_migration ผ่าน MCP
-# 2) เปิด flag + redeploy 3 functions
-supabase secrets set ENFORCE_AI_QUOTA=true --project-ref waigsnxhrlwtiotspaim
+# ✅ 1) migration — apply แล้วบน prod (ผ่าน MCP 2026-07-28) + smoke test ผ่าน (guest cap 25 ทำงาน)
+#    หมายเหตุ: DDL idempotent (if not exists / or replace / drop-if-exists) → db push ซ้ำได้ไม่พัง
+# 2) redeploy 3 functions (CLI bundle _shared อัตโนมัติ — ปลอดภัยกว่า MCP)
 supabase functions deploy ai-assist ai-plan agent-run --project-ref waigsnxhrlwtiotspaim
+# 3) เปิด flag (secret ตั้งได้เฉพาะฝั่ง operator)
+supabase secrets set ENFORCE_AI_QUOTA=true --project-ref waigsnxhrlwtiotspaim
+supabase functions deploy ai-assist ai-plan agent-run --project-ref waigsnxhrlwtiotspaim  # redeploy รับ env ใหม่
 ```
+⚠️ ตรวจครั้งแรกที่มี payment จริง: ยืนยันว่า trigger เขียน workspace_plan (role='service_role' detection ถูก)
+— ถ้า mirror ว่าง paid user จะถูก cap ที่ 200 ชั่วคราว (ปัจจุบัน payer = 0 → ไม่มีผล)
 ⚠️ ข้อจำกัดที่เหลือ: plan อ่านจาก JSON ที่ client แก้ได้ → whale แก้เป็น scale เองได้ (กัน guest/free/runaway ได้เต็ม
 แต่ whale-spoof ต้อง harden ด้วย plan column/payment_submissions ในงานถัดไป)
 
