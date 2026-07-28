@@ -4,7 +4,8 @@ import Root from './Root.tsx'
 import ErrorBoundary from './components/ErrorBoundary.tsx'
 import CookieConsent from './components/CookieConsent.tsx'
 import { installGlobalErrorReporting } from './lib/errorReport'
-import './index.css'
+// หมายเหตุ: index.css ย้ายไป import ใน App + หน้า public ที่ใช้คลาส (ไม่ import global ที่นี่)
+// → marketing landing (`/`) ไม่ต้องโหลด index.css (~67KB) · CookieConsent/IsmsBadge = self-contained
 
 installGlobalErrorReporting(); // จับ error นอก React → รายงานไป GA4 + observability
 

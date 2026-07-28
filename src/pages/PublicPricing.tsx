@@ -1,3 +1,4 @@
+import '../index.css';
 import { useEffect } from 'react';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 

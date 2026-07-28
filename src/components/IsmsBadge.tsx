@@ -1,6 +1,7 @@
 /**
  * ป้ายโปรโมทว่าแพลตฟอร์มพัฒนาตามมาตรฐาน ISO/IEC 27001:2022 (ISMS)
  * ใช้ในฟุตเตอร์ทั้งหน้า public และในแอป — ธีมมืด (cyan accent)
+ * self-contained (มี <style> ในตัว) → เรนเดอร์สวยแม้หน้านั้นไม่ได้โหลด index.css (marketing landing)
  */
 export default function IsmsBadge({ compact = false }: { compact?: boolean }) {
   return (
@@ -8,9 +9,20 @@ export default function IsmsBadge({ compact = false }: { compact?: boolean }) {
       className={`isms-badge${compact ? ' compact' : ''}`}
       title="แพลตฟอร์มพัฒนาและดูแลตามมาตรฐาน ISO/IEC 27001:2022 — ระบบบริหารความมั่นคงปลอดภัยสารสนเทศ (ISMS)"
     >
+      <style>{ISMS_CSS}</style>
       <span aria-hidden="true">🛡️</span>
       พัฒนาตามมาตรฐาน <strong>ISO/IEC&nbsp;27001:2022</strong>
       <span className="isms-badge-sub">ISMS · ความมั่นคงปลอดภัยสารสนเทศ</span>
     </span>
   );
 }
+
+const ISMS_CSS = `
+.isms-badge{ display:inline-flex; align-items:center; flex-wrap:wrap; justify-content:center; gap:6px;
+  padding:6px 14px; border:1px solid rgba(6,182,212,.35); border-radius:999px; background:rgba(6,182,212,.08);
+  color:#67e8f9; font-size:12px; font-weight:500; line-height:1.4; }
+.isms-badge strong{ color:#a5f3fc; font-weight:700; white-space:nowrap; }
+.isms-badge-sub{ color:rgba(103,232,249,.7); font-size:11px; font-weight:400; }
+.isms-badge.compact{ width:100%; margin-top:8px; padding:7px 8px; font-size:11px; }
+.isms-badge.compact .isms-badge-sub{ flex-basis:100%; text-align:center; font-size:10px; }
+`;
