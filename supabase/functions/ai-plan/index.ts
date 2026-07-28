@@ -8,6 +8,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModels } from "../_shared/modelRouter.ts";
 import { chatWithFallback } from "../_shared/llm.ts";
+import { enforceAiQuota } from "../_shared/quota.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 // ai-plan = วางแผน/แตกงานเชิงกลยุทธ์ = งาน 'complex' → คงโมเดลแรง (default = โมเดลเดิม)
@@ -20,7 +21,7 @@ const cors = {
 };
 
 interface AgentIn { role: string; mandate?: string }
-interface Body { goal: string; industry?: string; agents?: AgentIn[] }
+interface Body { goal: string; industry?: string; agents?: AgentIn[]; clientId?: string }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -30,6 +31,9 @@ Deno.serve(async (req) => {
   let body: Body;
   try { body = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
   if (!body?.goal) return json({ error: "missing_goal" }, 400);
+
+  const blocked = await enforceAiQuota(req, body.clientId); // flag-gated + fail-open
+  if (blocked) return blocked;
 
   const roles = (body.agents ?? []).map((a) => `- ${a.role}: ${a.mandate ?? ""}`).join("\n") || "- CEO\n- CTO\n- CMO";
 

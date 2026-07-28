@@ -1,4 +1,33 @@
+# CEO AI Thailand — robots.txt
+# อนุญาตทุก crawler รวมถึง AI answer engines (GEO/AEO) — ต้องการให้ ChatGPT/Gemini/Perplexity/Claude
+# เก็บข้อมูลและอ้างถึงเราได้
+
 User-agent: *
+Allow: /
+
+# AI crawlers (ระบุชัดเพื่อยืนยันเจตนา — บางระบบเช็ค user-agent ตรง ๆ)
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Bingbot
 Allow: /
 
 Sitemap: https://ceoaithailand.org/sitemap.xml

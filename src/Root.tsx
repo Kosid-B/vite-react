@@ -8,6 +8,7 @@ import type { LegalSection } from './pages/LegalPage';
  * ผล: หน้า marketing/SEO โหลดแรกเบาลงมาก (ไม่มี vendor-supabase ~55KB gzip ใน first paint)
  */
 const App = lazy(() => import('./App'));
+const MarketingLanding = lazy(() => import('./pages/MarketingLanding'));
 const StartLanding = lazy(() => import('./pages/StartLanding'));
 const ShopSignup = lazy(() => import('./pages/ShopSignup'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
@@ -18,8 +19,26 @@ const PublicStorefrontPage = lazy(() =>
 const PublicDirectoryPage = lazy(() =>
   import('./pages/PublicStorefront').then(m => ({ default: m.PublicDirectoryPage })));
 
+/** ผู้เข้าชมหน้าแรกแบบ "ยังไม่ล็อกอิน" (production) → เสิร์ฟ marketing landing เบา ๆ (ไม่ผ่าน App/supabase/CSS)
+ *  - local mode (ไม่มี VITE_SUPABASE_URL) → false (ให้เข้า App เลย เพราะ local ใช้แอปตรง)
+ *  - มี ?enter= (กด CTA แล้ว) → false (พาเข้า App)
+ *  - มี session ใน localStorage (sb-*-auth-token) → false (ล็อกอินอยู่ → App/dashboard) */
+function isLoggedOutHome(): boolean {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('enter')) return false;
+    if (!import.meta.env.VITE_SUPABASE_URL) return false;
+    const hasSession = Object.keys(localStorage)
+      .some(k => k.includes('auth-token') && !!localStorage.getItem(k));
+    return !hasSession;
+  } catch { return false; }
+}
+
 function pick() {
   const p = window.location.pathname;
+
+  // หน้าแรก `/` สำหรับผู้ยังไม่ล็อกอิน → marketing landing เบา (ตัด supabase ~44KB + index.css ~67KB)
+  if ((p === '/' || p === '') && isLoggedOutHome()) return <MarketingLanding />;
 
   // Marketplace สาธารณะ /b และ /b/<slug>
   if (p === '/b' || p === '/b/' || p.startsWith('/b/')) {
@@ -44,7 +63,11 @@ function pick() {
 
 export default function Root() {
   return (
-    <Suspense fallback={<div className="auth-wrap"><div className="auth-loading">กำลังโหลด…</div></div>}>
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#020617', color: '#64748b', fontFamily: 'Kanit, system-ui, sans-serif' }}>
+        กำลังโหลด…
+      </div>
+    }>
       {pick()}
     </Suspense>
   );

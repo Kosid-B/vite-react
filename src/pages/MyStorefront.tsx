@@ -3,6 +3,7 @@ import type { AppData, PageId } from '../types';
 import { getMyStorefront, saveStorefront, setFeatured, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { draftVpLocal } from '../lib/firstDeal';
+import { openShopPrompt, parseShopDraft, shopDraftLocal } from '../lib/openShop';
 import { sellerAhaProgress } from '../lib/ahaMoment';
 import { trackAiCall } from '../lib/usage';
 import { track } from '../lib/analytics';
@@ -35,6 +36,8 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
   const [vpBusy, setVpBusy] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
   const [justPublished, setJustPublished] = useState(false);
+  const [goalInput, setGoalInput] = useState('');   // PoC "เปิดร้านให้ฉัน"
+  const [shopBusy, setShopBusy] = useState(false);
   const startRef = useRef<number>(Date.now());  // จับเวลา onboarding (วัด <5 นาที จริง)
 
   useEffect(() => {
@@ -70,6 +73,40 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
     if (error || !url) { setMsg('⚠️ อัปโหลดรูปไม่สำเร็จ: ' + (error ?? '')); return; }
     patch({ images: [...sf.images, url] });
     setMsg('📷 เพิ่มรูปแล้ว — อย่าลืมกดเผยแพร่เพื่อบันทึก');
+  }
+
+  /** PoC "เปิดร้านให้ฉัน" — goal 1 บรรทัด → AI จัดร้านครบ (ชื่อ/หมวด/คำอธิบาย/บริการ/จุดขาย)
+   *  ส่ง "งานเสร็จ" (ฟอร์มพร้อมเผยแพร่) ไม่ใช่แค่คำแนะนำ · พังเมื่อไร fallback local ไม่ให้มือเปล่า */
+  async function openShop() {
+    const goal = goalInput.trim();
+    if (!goal || !sf) return;
+    setShopBusy(true);
+    setMsg(null);
+    track('openshop_run', {});
+    let draft = null as ReturnType<typeof shopDraftLocal> | null;
+    try {
+      if (isSupabaseEnabled && supabase) {
+        trackAiCall();
+        const { instruction, context } = openShopPrompt(goal);
+        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
+          body: { page: 'storefront', pageLabel: 'หน้าร้านของฉัน', instruction, context },
+        });
+        if (!error) draft = parseShopDraft(res?.summary ?? '');
+      }
+    } catch { /* ตกไป fallback */ }
+    const mode = draft ? 'ai' : 'local';
+    if (!draft) draft = shopDraftLocal(goal);
+    patch({
+      name: draft.name,
+      slug: defaultSlug(draft.name),
+      dbd: draft.dbd || sf.dbd,
+      description: draft.description || sf.description,
+      services: draft.services.length ? draft.services : sf.services,
+      vp: draft.vp || sf.vp,
+    });
+    setShopBusy(false);
+    track('openshop_done', { mode });
+    setMsg('🤖 AI จัดร้านให้แล้ว! ตรวจข้อมูลด้านล่าง แล้วกด "🚀 เผยแพร่หน้าร้าน" — งานเสร็จส่งถึงมือ');
   }
 
   /** AI Agent เขียน Value Proposition — prod: Claude ผ่าน ai-assist · local: template จากข้อมูลจริง */
@@ -169,6 +206,28 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
         หน้าร้านสาธารณะให้ลูกค้าค้นเจอธุรกิจของคุณ — สร้างจากข้อมูลที่กรอกไว้แล้ว
         แสดงในสารบัญธุรกิจตามหมวด DBD พร้อมช่องทางติดต่อตรงถึงคุณ (ระบบไม่เก็บค่าคอมมิชชัน)
       </p>
+
+      {/* 🤖 PoC "เปิดร้านให้ฉัน" — goal 1 บรรทัด → AI ส่งงานเสร็จ (ฟอร์มพร้อมเผยแพร่) */}
+      <div className="openshop-card">
+        <div className="openshop-head">
+          <span className="openshop-badge">🤖 AI Agent</span>
+          <span className="openshop-title">ให้ AI เปิดร้านให้คุณ — บอกแค่บรรทัดเดียว</span>
+        </div>
+        <div className="openshop-sub">AI จะจัด ชื่อร้าน · หมวดธุรกิจ · คำอธิบาย · บริการ · จุดขาย ให้ครบ แล้วคุณแค่ตรวจ + กดเผยแพร่</div>
+        <div className="openshop-row">
+          <input
+            className="openshop-input"
+            value={goalInput}
+            onChange={e => setGoalInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') openShop(); }}
+            placeholder="เช่น ขายกาแฟคั่วมือ รับออร์เดอร์ร้านคาเฟ่ B2B"
+            disabled={shopBusy}
+          />
+          <button className="openshop-btn" onClick={openShop} disabled={shopBusy || !goalInput.trim()}>
+            {shopBusy ? '⏳ กำลังจัดร้าน…' : 'เปิดร้านให้เลย →'}
+          </button>
+        </div>
+      </div>
 
       <HelpBox
         id="storefront-seller"

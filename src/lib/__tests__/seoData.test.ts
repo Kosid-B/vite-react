@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   escapeHtml, jsonLdScript, sectorLabel,
-  storefrontSeo, directorySeo, directoryItemList, sitemapXml,
+  storefrontSeo, directorySeo, directoryItemList, sitemapXml, llmsTxt,
+  homeSeo, faqPageHtml, faqPageJsonLd, organizationJsonLd, softwareApplicationJsonLd, FAQ_ITEMS,
+  mit24PageHtml, mit24FaqJsonLd, mit24ArticleJsonLd, MIT24_FAQ,
   type SeoStorefront,
 } from '../seoData';
 
@@ -138,5 +140,111 @@ describe('sitemapXml', () => {
     const only = sitemapXml([{ slug: 'shop-b' }], ORIGIN);
     const shopBlock = only.slice(only.indexOf('shop-b'));
     expect(shopBlock).not.toContain('<lastmod>');
+  });
+  it('มี /mit24 (บทความ answer-first) ใน sitemap', () => {
+    expect(xml).toContain(`<loc>${ORIGIN}/mit24</loc>`);
+  });
+});
+
+describe('mit24 (/mit24 answer-first article)', () => {
+  const html = mit24PageHtml(ORIGIN);
+  it('เป็น HTML doc + canonical /mit24 + robots index', () => {
+    expect(html.startsWith('<!doctype html>')).toBe(true);
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/mit24">`);
+    expect(html).toContain('index,follow');
+  });
+  it('answer-first: ประโยคแรกตอบ "MIT 24 Steps คืออะไร" + มีทั้ง 4 ระยะ + 24 ขั้น', () => {
+    expect(html).toContain(MIT24_FAQ[0].a);          // lead = คำตอบข้อแรก
+    expect(html).toContain('Disciplined Entrepreneurship');
+    expect(html).toContain('ระยะ 1:');
+    expect(html).toContain('ระยะ 4:');
+    expect(html).toContain('24. ');                   // ขั้นสุดท้าย (index 23 → เลข 24)
+  });
+  it('ฝัง Article + FAQPage schema + CTA ไป /start', () => {
+    expect(html).toContain('"@type":"Article"');
+    expect(html).toContain('"@type":"FAQPage"');
+    expect(html).toContain(`${ORIGIN}/start`);
+  });
+  it('มี framing AI Operating System + ตารางแมป 4 คำถาม + C-suite AI', () => {
+    expect(html).toContain('AI Business Operating System');
+    expect(html).toContain('คิด ทำ และติดตามผล');   // differentiation จาก "คอร์สเรียน"
+    expect(html).toContain('4 คำถามใหญ่');            // mapping table
+    expect(html).toContain('AI CEO');
+    expect(html).toContain('AI CFO');
+    expect(html).toContain('Scalability');
+  });
+  it('mit24FaqJsonLd แปลง MIT24_FAQ เป็น Question/Answer ครบ', () => {
+    const j = mit24FaqJsonLd() as Record<string, unknown>;
+    expect(j['@type']).toBe('FAQPage');
+    expect((j.mainEntity as unknown[]).length).toBe(MIT24_FAQ.length);
+  });
+  it('mit24ArticleJsonLd: publisher = B. Training + mainEntityOfPage /mit24', () => {
+    const a = mit24ArticleJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(a['@type']).toBe('Article');
+    expect((a.publisher as Record<string, unknown>).name).toBe('B. Training Consultant');
+    expect(a.mainEntityOfPage).toBe(`${ORIGIN}/mit24`);
+  });
+});
+
+describe('llmsTxt', () => {
+  const txt = llmsTxt(ORIGIN);
+  it('ขึ้นต้นด้วยชื่อผลิตภัณฑ์ + summary blockquote', () => {
+    expect(txt.startsWith('# CEO AI Thailand')).toBe(true);
+    expect(txt).toContain('\n> ');
+  });
+  it('มีหน้าเว็บสำคัญเป็น absolute URL จาก origin', () => {
+    expect(txt).toContain(`${ORIGIN}/start`);
+    expect(txt).toContain(`${ORIGIN}/b`);
+    expect(txt).toContain(`${ORIGIN}/pricing`);
+  });
+  it('ตอกย้ำ positioning "สร้างธุรกิจ" (MIT 24 Steps × ระบบ ISO) + ผู้พัฒนา B. Training · compliance = ฟีเจอร์เสริม', () => {
+    expect(txt).toContain('B. Training');
+    expect(txt).toContain('24 Steps');            // เสาที่ 1 (MIT)
+    expect(txt).toContain('ระบบบริหาร');           // เสาที่ 2 (ISO systems)
+    expect(txt).toContain('ฟีเจอร์เสริม');          // compliance ไม่ใช่พระเอก
+    expect(txt).toContain('คำถามที่พบบ่อย');
+  });
+});
+
+describe('schema JSON-LD (GEO/AEO)', () => {
+  it('organizationJsonLd ผูก parent = B. Training', () => {
+    const o = organizationJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(o['@type']).toBe('Organization');
+    expect(o.url).toBe(ORIGIN);
+    expect((o.parentOrganization as Record<string, unknown>).name).toBe('B. Training Consultant');
+  });
+  it('softwareApplicationJsonLd มี offers ครบ 4 แพ็ก', () => {
+    const s = softwareApplicationJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(s['@type']).toBe('SoftwareApplication');
+    const offers = s.offers as Record<string, unknown>[];
+    expect(offers).toHaveLength(4);
+    expect(offers.map(o => o.price)).toEqual(['0', '590', '1490', '5900']);
+  });
+  it('faqPageJsonLd แปลง FAQ_ITEMS เป็น Question/Answer ครบ', () => {
+    const f = faqPageJsonLd() as Record<string, unknown>;
+    expect(f['@type']).toBe('FAQPage');
+    const items = f.mainEntity as Record<string, unknown>[];
+    expect(items).toHaveLength(FAQ_ITEMS.length);
+    expect(items[0]['@type']).toBe('Question');
+    expect((items[0].acceptedAnswer as Record<string, unknown>).text).toBe(FAQ_ITEMS[0].a);
+  });
+  it('homeSeo มี schema ครบ 3 ชนิด + canonical หน้าแรก', () => {
+    const seo = homeSeo(ORIGIN);
+    expect(seo.canonicalUrl).toBe(ORIGIN + '/');
+    expect(seo.jsonLd).toHaveLength(3);
+    expect(seo.title).toContain('CEO AI Thailand');
+  });
+});
+
+describe('faqPageHtml (/faq static page)', () => {
+  const html = faqPageHtml(ORIGIN);
+  it('เป็น HTML doc เต็ม + มี FAQ ที่มองเห็น (crawlable) ทุกข้อ', () => {
+    expect(html.startsWith('<!doctype html>')).toBe(true);
+    FAQ_ITEMS.forEach(f => expect(html).toContain(escapeHtml(f.q)));
+  });
+  it('มี FAQPage JSON-LD ฝัง + CTA ไป /start', () => {
+    expect(html).toContain('"@type":"FAQPage"');
+    expect(html).toContain(`${ORIGIN}/start`);
+    expect(html).toContain(`${ORIGIN}/faq`);
   });
 });

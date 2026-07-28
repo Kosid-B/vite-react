@@ -37,6 +37,9 @@ jobs:
       - name: Deploy Worker + assets to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
+          # ⚠️ ต้อง >= 3.91.0 เพื่ออ่าน wrangler.jsonc (JSONC) — เดิม action ติดตั้ง 3.90.0
+          # ทำให้ deploy ล้มทุกครั้งด้วย "Missing entry-point" (มองไม่เห็น main ใน wrangler.jsonc)
+          wranglerVersion: '3.114.0'
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy

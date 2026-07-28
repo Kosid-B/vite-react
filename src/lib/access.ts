@@ -3,6 +3,10 @@ import { isSupabaseEnabled } from './supabase';
 
 export const PLAN_RANK: Record<PlanId, number> = { free: 0, starter: 1, growth: 2, scale: 3 };
 
+/** ผ่อนผัน (grace): ครบกำหนดชำระแล้วยังใช้งานต่อได้กี่วันก่อนตัดสิทธิ์
+ *  ต้องตรงกับ GRACE_DAYS ใน supabase/functions/billing-cron (นโยบาย "เตือน + ผ่อนผัน") */
+export const GRACE_DAYS = 7;
+
 export const PLAN_NAME: Record<PlanId, string> = {
   free: 'ทดลองใช้ฟรี',
   starter: 'Starter',
@@ -19,10 +23,49 @@ export const PLAN_COLOR: Record<PlanId, string> = {
 
 export const PLAN_PRICE: Record<PlanId, string> = {
   free: 'ฟรี 15 วัน',
-  starter: '฿390/เดือน',
+  starter: '฿590/เดือน',
   growth: '฿1,490/เดือน',
   scale: '฿5,900/เดือน',
 };
+
+/** ราคาต่อเดือน (บาท ตัวเลข) — ใช้คำนวณส่วนลดคูปอง */
+export const PLAN_PRICE_NUM: Record<PlanId, number> = {
+  free: 0, starter: 590, growth: 1490, scale: 5900,
+};
+
+/* ===== Billing รายปี (จ่ายทีเดียว = ได้ 2 เดือนฟรี) =====
+ * เหตุผลเชิงธุรกิจ: ลูกค้า commit เร็วขึ้น + เงินสดล่วงหน้า + anchor ราคา
+ * ไม่ตัดราคารายเดือน (รายเดือนคงเดิม) — รายปีคือ "ส่วนลดแลกกับการผูกพันยาว"
+ * ดูที่มา: docs/marketing/PRICING-MARGIN-ANALYSIS.md §5 */
+export const ANNUAL_MONTHS_CHARGED = 10; // จ่าย 10 เดือน ใช้ 12 (2 เดือนฟรี ≈ ลด 16.7%)
+
+/** ราคารายปี (บาท) = ราคารายเดือน × 10 — free = 0 · pure */
+export function annualPrice(plan: PlanId): number {
+  return (PLAN_PRICE_NUM[plan] ?? 0) * ANNUAL_MONTHS_CHARGED;
+}
+
+/** ราคารายปี "เทียบเท่าต่อเดือน" (บาท ปัดเต็ม) — ใช้โชว์ว่าถูกลงเดือนละเท่าไร */
+export function annualPerMonth(plan: PlanId): number {
+  return Math.round(annualPrice(plan) / 12);
+}
+
+/** ประหยัดกี่บาท/ปี เมื่อจ่ายรายปีแทนรายเดือน */
+export function annualSavingThb(plan: PlanId): number {
+  return (PLAN_PRICE_NUM[plan] ?? 0) * 12 - annualPrice(plan);
+}
+
+/** ส่วนลดรายปีเป็น % (คงที่ ~16.7% จาก 2/12 เดือนฟรี) — pure */
+export function annualSavingPct(plan: PlanId): number {
+  const monthlyYear = (PLAN_PRICE_NUM[plan] ?? 0) * 12;
+  return monthlyYear > 0 ? Math.round((annualSavingThb(plan) / monthlyYear) * 100) : 0;
+}
+
+/** ราคาต่อเดือนหลังหักคูปองส่วนลด (บาท, ปัดจำนวนเต็ม) — pure */
+export function discountedMonthly(plan: PlanId, couponPct = 0): number {
+  const base = PLAN_PRICE_NUM[plan] ?? 0;
+  const pct = Math.max(0, Math.min(100, couponPct));
+  return Math.round(base * (1 - pct / 100));
+}
 
 /** หน้าที่ต้องการ plan ขั้นต่ำกว่า free */
 export const PAGE_MIN_PLAN: Partial<Record<PageId, PlanId>> = {
@@ -33,6 +76,7 @@ export const PAGE_MIN_PLAN: Partial<Record<PageId, PlanId>> = {
   iso9001:   'growth',
   privacy:   'starter', // ตัวช่วย PDPA (Privacy Notice/SOP) — ฟีเจอร์ compliance เริ่มต้น
   compliance: 'growth',  // AI ตรวจเอกสาร ISO/มอก. — เครื่องมือ compliance เชิงลึก
+  knowledge:  'starter', // คลังความรู้ ISO/PDPA (ถาม-ตอบ) — ฟีเจอร์ช่วยตัดสินใจเริ่มต้น
   analytics: 'growth',
   sipoc:     'growth', // SIPOC Process — ฟีเจอร์ในแพ็กเกจเสียเงิน
   admin:     'scale',
@@ -57,8 +101,13 @@ export function effectiveRank(data: AppData): number {
   if (adminFullAccess || guestFullAccess) return PLAN_RANK['scale']; // แอดมิน / ผู้ทดลอง (guest) = Scale เต็ม
   const { plan, status, trialEndDate, currentPeriodEnd } = data.subscription;
 
-  if (status === 'active') {
-    if (currentPeriodEnd && new Date(currentPeriodEnd) < new Date()) return -1;
+  if (status === 'active' || status === 'past_due') {
+    // ผ่อนผัน: ครบกำหนดแล้ว (active ที่ cron ยังไม่รัน หรือ past_due ที่ cron ตั้งไว้)
+    // ยังใช้งานแพ็กเดิมต่อได้ในช่วง grace GRACE_DAYS วัน แล้วค่อยตัดเป็น -1 (cron จะ downgrade เป็น free)
+    if (currentPeriodEnd && new Date(currentPeriodEnd) < new Date()) {
+      const graceEnd = new Date(currentPeriodEnd).getTime() + GRACE_DAYS * 86400000;
+      return Date.now() < graceEnd ? PLAN_RANK[plan] : -1;
+    }
     return PLAN_RANK[plan];
   }
   if (status === 'trial') {
@@ -75,9 +124,14 @@ export function isExpired(data: AppData): boolean {
   if (adminFullAccess || guestFullAccess) return false; // แอดมิน / ผู้ทดลอง ไม่นับหมดอายุ
   const { status, trialEndDate, currentPeriodEnd } = data.subscription;
   if (status === 'trial') return !trialEndDate || new Date(trialEndDate) < new Date();
-  if (status === 'active') return !!(currentPeriodEnd && new Date(currentPeriodEnd) < new Date());
+  if (status === 'active' || status === 'past_due') {
+    // ระหว่าง grace ยังไม่นับหมดอายุ (ผ่อนผัน) — พ้น grace แล้วจึงถือว่าหมดอายุ
+    if (!currentPeriodEnd) return false;
+    const graceEnd = new Date(currentPeriodEnd).getTime() + GRACE_DAYS * 86400000;
+    return Date.now() >= graceEnd;
+  }
   if (status === 'none') return isSupabaseEnabled; // ถ้าเปิด Supabase → ต้องเริ่ม trial ก่อน
-  return status === 'cancelled' || status === 'past_due';
+  return status === 'cancelled';
 }
 
 /** user เข้าหน้านี้ได้ไหม */

@@ -5,6 +5,7 @@ import {
   buildDraft, privacySystemPrompt, privacyUserPrompt,
   type PrivacyInput, type DocType,
 } from '../lib/privacyNotice';
+import ConsultHandoff from '../components/ConsultHandoff';
 
 const DATA_OPTIONS = ['ชื่อ-นามสกุล', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'เลขบัตรประชาชน', 'ข้อมูลการชำระเงิน', 'พฤติกรรมการใช้งาน/คุกกี้'];
 const PURPOSE_OPTIONS = ['ติดต่อและให้บริการลูกค้า', 'ดำเนินการตามคำสั่งซื้อ/สัญญา', 'ส่งข่าวสาร/โปรโมชัน', 'สะสมแต้ม/สมาชิก', 'วิเคราะห์และพัฒนาบริการ', 'ปฏิบัติตามกฎหมาย'];
@@ -12,6 +13,21 @@ const PURPOSE_OPTIONS = ['ติดต่อและให้บริการ
 function toggle(list: string[], v: string): string[] {
   return list.includes(v) ? list.filter(x => x !== v) : [...list, v];
 }
+
+/** ตัวอย่างสำเร็จรูป — คลิกเดียวเห็นร่างเต็ม (self-serve aha ไม่ต้องกรอกเอง)
+ *  ใช้ `satisfies` ให้ฟิลด์ string คงชนิดจริง (เติมลง state<string> ได้ตรง ๆ) */
+const SAMPLE = {
+  bizName: 'ร้านกาแฟดีใจ',
+  bizType: 'คาเฟ่ & ขายเมล็ดกาแฟออนไลน์',
+  website: 'LINE @deejaicafe',
+  dataCollected: ['ชื่อ-นามสกุล', 'เบอร์โทรศัพท์', 'อีเมล', 'ที่อยู่', 'ข้อมูลการชำระเงิน'],
+  purposes: ['ติดต่อและให้บริการลูกค้า', 'ดำเนินการตามคำสั่งซื้อ/สัญญา', 'ส่งข่าวสาร/โปรโมชัน'],
+  thirdParties: ['บริษัทขนส่ง', 'ผู้ให้บริการชำระเงิน'],
+  retention: '2 ปีหลังสิ้นสุดการเป็นสมาชิก',
+  contactEmail: 'privacy@deejaicafe.co.th',
+  contactPhone: '081-234-5678',
+  docType: 'privacy' as DocType,
+} satisfies PrivacyInput;
 
 export default function PrivacyNotice() {
   const [docType, setDocType] = useState<DocType>('privacy');
@@ -39,9 +55,20 @@ export default function PrivacyNotice() {
     };
   }
 
-  async function generate(useAi: boolean) {
-    const input = currentInput();
-    if (!bizName.trim()) { setMsg('กรุณากรอกชื่อกิจการก่อน'); return; }
+  /** เติมข้อมูลตัวอย่าง + ร่างทันที — เส้นทางสั้นสุดสู่ aha (ไม่ต้องพิมพ์อะไรเลย) */
+  function trySample() {
+    setDocType(SAMPLE.docType);
+    setBizName(SAMPLE.bizName); setBizType(SAMPLE.bizType); setWebsite(SAMPLE.website);
+    setDataCollected(SAMPLE.dataCollected); setPurposes(SAMPLE.purposes);
+    setThirdParties(SAMPLE.thirdParties.join(', ')); setRetention(SAMPLE.retention);
+    setContactEmail(SAMPLE.contactEmail); setContactPhone(SAMPLE.contactPhone);
+    track('privacy_sample_tried', {});
+    generate(isSupabaseEnabled, SAMPLE); // ใช้ override กันปัญหา setState async
+  }
+
+  async function generate(useAi: boolean, override?: PrivacyInput) {
+    const input = override ?? currentInput();
+    if (!input.bizName.trim()) { setMsg('กรุณากรอกชื่อกิจการก่อน'); return; }
     setMsg(''); setCopied(false); setModelUsed('');
 
     // ออฟไลน์ / ไม่ใช้ AI → ร่างจากเทมเพลตทันที (ใช้ได้เสมอ)
@@ -164,6 +191,7 @@ export default function PrivacyNotice() {
               <button className="pn-btn" onClick={() => generate(false)} disabled={loading} title="ร่างจากเทมเพลต ไม่ใช้ AI">📄 เทมเพลต</button>
             )}
           </div>
+          <button className="pn-try-sample" onClick={trySample} disabled={loading}>🎯 ยังไม่มีข้อมูล? ลองตัวอย่างสำเร็จรูป — เห็นผลใน 10 วินาที</button>
           {msg && <div className="pn-warn">{msg}</div>}
         </div>
 
@@ -180,10 +208,16 @@ export default function PrivacyNotice() {
           </div>
           {draft
             ? <textarea className="pn-input pn-draft" value={draft} onChange={e => setDraft(e.target.value)} spellCheck={false} />
-            : <div className="pn-empty">กรอกข้อมูลด้านซ้าย แล้วกด “สร้างร่าง” — แก้ไขข้อความในกล่องนี้ได้ก่อนคัดลอก/ดาวน์โหลด</div>}
+            : <div className="pn-empty">
+                <div style={{ marginBottom: 12 }}>กรอกข้อมูลด้านซ้าย แล้วกด “สร้างร่าง” — หรือดูตัวอย่างก่อน</div>
+                <button className="pn-btn pn-btn-primary" onClick={trySample} disabled={loading}>🎯 ลองตัวอย่างสำเร็จรูป</button>
+                <div style={{ marginTop: 10, fontSize: 12, opacity: .75 }}>เห็นร่าง Privacy Notice เต็ม ๆ ทันที แล้วค่อยแก้เป็นของคุณ</div>
+              </div>}
           <div className="pn-disclaimer">⚠️ เป็นร่างตั้งต้นตาม PDPA — ควรให้ที่ปรึกษา/นักกฎหมายตรวจทานก่อนใช้จริง</div>
         </div>
       </div>
+
+      <ConsultHandoff topic="PDPA" from="privacy" />
     </div>
   );
 }

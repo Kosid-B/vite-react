@@ -4,6 +4,11 @@
 Thai SaaS app "บริษัท AI อัตโนมัติ" — Vite + React SPA, no router (navigation = React state).
 Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supabase backend.
 
+**Positioning (ยืนยัน ก.ค. 2569): "AI Business Operating System"** — ระบบสร้างธุรกิจด้วย AI ตั้งแต่ต้นน้ำ ให้โตอย่างเป็นระบบ+พร้อมขยาย
+ผสาน 2 เสา: **MIT 24 Steps** (หา PMF/ลูกค้า/คุณค่า) × **ระบบบริหาร/ISO 20+ ปี B.TC** (SOP/KPI/Risk/scalability).
+สารหลัก **ไม่ใช่** "จ้างทีม AI ทั้งบริษัท" — "ทีม AI" = กลไกสนับสนุน · คุณค่าหลัก = ลดความเสี่ยงเริ่มธุรกิจ + ฐานลูกค้าแข็งแรง + scale.
+compliance (PDPA/ISO) = ฟีเจอร์เสริม (ไม่ใช่บริการทำใบเซอร์ — งานที่ปรึกษาส่งต่อ B.Training). แหล่ง canonical: `src/lib/seoData.ts` + `/start` + [BRAND-ARCHITECTURE.md](docs/marketing/BRAND-ARCHITECTURE.md) §8
+
 ## Stack
 - **Frontend**: Vite + React + TypeScript, CSS variables (dark theme `#0f172a`)
 - **Backend**: Supabase (Auth, Postgres RLS, Edge Functions)
@@ -58,6 +63,7 @@ src/pages/AdminTabs/CaseStudyTab.tsx — Content Studio: นำเข้า Case
 src/lib/skillValuation.ts      — suggestSkillFromCase() ประเมินหมวด/tier/ราคา/valueNote จากเคส (pure, tested)
 src/pages/BoardRoom.tsx        — หน้า 'boardroom' ห้องบอร์ด: CEO เสนอวาระ → User อนุมัติ + สะสมทักษะบริหาร/การตลาด (lib/boardRoom.ts: AGENDA 5 DE gates + feature, skillLevels)
 src/pages/Resources.tsx        — หน้า 'resources' บริหารทรัพยากร: รายการ+จำนวน · C-Level ดูแล/ขอเพิ่ม-ลด · CEO/บอร์ดอนุมัติ · AI จัดสรร (agent-run จริง + fallback heuristic)
+src/lib/cfoAnalysis.ts         — CFO AI วิเคราะห์การเงิน "ธุรกิจตัวเอง" ของ SME จากตัวเลขจริง (d.finance): cfoMetrics(recurring/breakEvenGap/topExpense) + cfoFlags(ธงสุขภาพ) + cfoLocalAdvice(fallback offline) + cfoPrompt(ai-assist · ห้ามแต่งตัวเลข) · pure/tested · แสดงใน components/CfoAnalysis.tsx ใต้คลังเมือง (CompanyCity) — ต่อยอด cfoReport.ts (KPI report) เป็นชั้นให้คำแนะนำเชิงลงมือ
 src/lib/resources.ts           — Resource/Request types + templates + applyApproval + parseAiAllocations (pure, tested)
 src/lib/resourceBridge.ts      — คำขอก้อนใหญ่→ห้องบอร์ด(+XP) + ทรัพยากรอนุมัติ→รายจ่าย finance อัตโนมัติ (pure, tested)
 src/pages/CityLevelUp.tsx      — หน้า 'citylevelup' เมือง 3 มิติ Level Up (ใช้ lib/cityScape.ts)
@@ -136,10 +142,49 @@ PAGE_MIN_PLAN = {
   admin: 'scale',
   // factory = FREE (part of AI Company feature)
 }
-Plans: free(0) → starter(1) ฿390/mo → growth(2) ฿1,490/mo → scale(3) ฿5,900/mo
+Plans: free(0) → starter(1) ฿590/mo → growth(2) ฿1,490/mo → scale(3) ฿5,900/mo
 Trial: 15 วัน auto-start เมื่อ login ครั้งแรก
 Admin (support@b-tctraining.com): ใช้ Scale ฟรีเสมอ — App.tsx เรียก setAdminFullAccess(isAdminEmail(email))
   → effectiveRank/isExpired/planLabel bypass (access.ts). ระบบ admin = app_admins table + is_app_admin() (0005)
+```
+
+### รอบบิลรายเดือน + PLG payment (ยืนยันโดย User ก.ค. 2569)
+```
+นโยบาย "เตือนล่วงหน้า + ผ่อนผัน": จ่ายเอง (PromptPay ไม่มี auto-charge) → autoRenew=false เสมอ (Billing.tsx)
+  billing-cron (daily 02:00 UTC) — automate ผ่าน cron ล้วน ไม่พึ่ง payment gateway:
+    • ADVANCE_DAYS=3: ก่อนครบกำหนด → อีเมล "🔔 ใกล้ครบกำหนด อีก N วัน" ครั้งเดียว/รอบ (sub.reminderSentFor กันซ้ำ)
+    • ครบกำหนด → past_due + อีเมล "ครบกำหนดต่ออายุ" · GRACE_DAYS=7 (access.ts: active/past_due ใช้แพ็กเดิมต่อได้)
+    • พ้น grace → downgrade free (ถ้าเตือนล่วงหน้าแล้วไม่ต่อ = คัดกรอง 'benefit ไม่พอ' โดยตรง ไม่ใช่หลุดเพราะลืม)
+  ⚠️ billing-cron ต้อง deploy มือ: supabase functions deploy billing-cron
+PLG (ไม่มี admin เป็น gate): อัปสลิปในแอป → เปิดแพ็ก 'ทันที' (Billing.activateFromSlip) ไม่รอ admin
+  payment_submissions row ยัง 'pending' = คิว 'ตรวจย้อนหลัง' (PaymentsTab) ไม่ใช่คิวอนุมัติ
+  admin ✅ยืนยันถูกต้อง=ปิดรายการ / 🚫ตีกลับ=rejected → client เจ้าของ ws ถอนแพ็กเอง (revokedPaymentIds)
+  appliedPaymentIds กันเปิดซ้ำ · Stripe webhook (stripe-webhook) = ทาง PLG อัตโนมัติเต็ม (รอ KYC ผ่าน)
+```
+
+### ตรวจสลิปกับธนาคารจริง (SlipOK) — ปิดช่องโหว่ "อัปรูปมั่วก็เปิดฟรี" (LIVE ก.ค. 2569)
+```
+ปัญหาเดิม: activateFromSlip เปิดแพ็กฝั่ง client (เชื่อรูป + เขียน plan เองได้) = ช่องโหว่
+แก้: ย้ายการตัดสิน+เปิดแพ็กไป server ผ่าน SlipOK (มาตรฐานตรวจสลิป SME ไทย ตรวจกับ record ธนาคารจริง)
+  supabase/functions/verify-slip — verify_jwt=true + membership check + ราคา server-side
+    → เรียก SlipOK (POST api.slipok.com/api/line/apikey/<branch>, header x-authorization, files+log:true)
+    → ตรวจ: ยอด>=ราคาแพ็ก · บัญชีผู้รับ (SlipOK คุมเองด้วย err 1014 เพราะบัญชีผูกกับสาขา) · กันสลิปซ้ำ (transRef unique + err 1012)
+    → ผ่านครบ เขียน plan ด้วย service-role (mirror activateFromSlip) + payment_submissions.approved
+  migration 0034: payment_submissions + trans_ref (unique กันซ้ำ), sender, verified_at, verify_method
+  config PAYMENT.slipOkLive=true → uploadSlip เรียก verify-slip; ปิด client auto-activate safety-net (Billing.tsx)
+    (slipOkLive=false = โหมดเดิม เปิดทันทีเชื่อผู้ใช้) · src/lib/payments.ts: verifySlip()+slipReasonText()
+  error map ครบ 16 codes: แยก "ปัญหาลูกค้า" (ยอด/ผู้รับ/ซ้ำ/รูป) จาก "ปัญหาร้าน" (1000-1004/1015=config/quota
+    → "การโอนของคุณยังอยู่ ทีมงานจะเปิดแพ็กให้" ไม่โทษลูกค้า + console.error log)
+─ ค่าจริง (production waigsnxhrlwtiotspaim) ─
+  Supabase secret: SLIPOK_API_KEY, SLIPOK_BRANCH_ID=72189  (ตั้งใน Edge Functions→Secrets ของ prod เท่านั้น)
+  บัญชี K BIZ 009-8-92560-0 (0098925600) เชื่อมกับสาขา SlipOK #72189 → SlipOK ตรวจผู้รับให้ในตัว
+  โควตา 100 ครั้ง/เดือน (ถึง 27 ส.ค. 2026) — 1 การจ่าย = 1 check · quota endpoint ไม่กินโควตา
+⚠️ GOTCHA สำคัญ (เสียเวลา debug เยอะ):
+  • API Key จริง = ค่าที่ขึ้นต้น "SLIPOKWL…" (สั้น ~13 ตัว) — หาในหน้า API/การ์ด API ของสาขา
+  • ❌ ห้ามใช้ค่าใต้ "เลขอ้างอิงการแจ้งเตือน" (slipok-xxxx-xxxx…43 ตัว) = เลขแจ้งเตือน LINE คนละตัว → ขึ้น 1002
+  • branch id + API key ต้องมาจากสาขาเดียวกัน · สร้างสาขาใหม่ = key เปลี่ยนด้วย
+  • ตั้ง secret ต้องอยู่ project prod (waigsnxhrlwtiotspaim) ไม่ใช่ dev (oudykxmtrnjeskglaluh)
+  • เปลี่ยน secret แล้ว redeploy ฟังก์ชันด้วย (warm instance ถือ env เก่า)
 ```
 
 ## Admin Operating Summary (สรุปผลการดำเนินงานของ User)
@@ -163,6 +208,20 @@ Google Sheets ของ User (เชื่อมบัญชีเอง) = Phas
 `Personas`, `Content Plan`, `Priority Actions`, `Business Model · MIT24`, `Product Roadmap`,
 `กลยุทธ์การตลาด`, `VRIO Analysis`, `SIPOC Process`
 
+### Onboarding "เข้าง่าย + ลึกได้" (คัดคนตั้งใจด้วยการลงมือ+จ่าย ไม่ใช่ UI ยาก)
+```
+ผู้ใช้ใหม่ (onboardGoal ยังไม่เลือก + visitedPages ≤ 1) → components/GoalChooser.tsx
+  ถาม "วันนี้อยากทำอะไร?" 3 การ์ด (โฟกัสวัตถุประสงค์จริง = สร้าง & ทำธุรกิจ ไม่ใช่ compliance):
+    สร้างบริษัท AI→aicompany · เปิดร้าน&ขายของ→storefront · เริ่มจากไอเดีย(validate)→bmc
+  (+ skip "ดูภาพรวมก่อน"→onboardGoal='explore') → บันทึก AppData.onboardGoal + พาไปหน้านั้นทันที
+  ⚠️ PDPA/ISO = ฟีเจอร์เสริม (หมวด Compliance) ไม่ใช่พระเอก — CEO AI Thailand ≠ เครื่องมือ compliance
+     (นั่นเป็น domain ที่ปรึกษาของ B.Training · ดู docs/marketing/BRAND-ARCHITECTURE.md)
+Sidebar focus mode: onboardGoal set + !focusDismissed → โชว์เฉพาะหน้าเป้าหมาย + related + Billing/Dashboard
+  + ปุ่ม "🔓 ปลดล็อกเมนูทั้งหมด" (→ focusDismissed=true) · FOCUS map ใน Sidebar.tsx
+OnboardingTour gate: โชว์เฉพาะ explore หรือผู้ใช้เดิม (ผู้เลือกเป้าหมายไม่เจอทัวร์ = ไม่ชนกัน) — App.tsx showTour
+GA4: goal_chooser_shown, goal_chosen{goal}, goal_skip · AppData: onboardGoal, focusDismissed
+```
+
 Public routes (ไม่ต้อง login): `/start` (viral landing), `/b`, `/b/<slug>` (หน้าร้านสาธารณะ)
 Command reference: ดู `COMMAND.md`
 
@@ -181,6 +240,7 @@ public.orders             — ออเดอร์ + ค่าธรรมเ�
 public.skill_auctions     — ประมูล skill แบบ English Auction (0012)
 public.skill_bids         — บิดประมูล โปร่งใสเห็นกันหมด (0012)
 public.workspace_integrations — credential ของ integration ที่ User เชื่อมเอง (LINE/Sheets) RLS per-workspace, revoke anon; ไม่อยู่ใน workspace_state (กัน secret รั่ว) (0020)
+public.ai_usage           — ตัวนับ AI calls ต่อ (bucket=ws/user/guest-IP, เดือน) บังคับ quota ฝั่ง server (0035) · RLS ปิดหมด เข้าผ่าน rpc bump_ai_usage/get_ai_usage (SECURITY DEFINER) · guest cap 25/เดือน/IP · flag ENFORCE_AI_QUOTA (default off, fail-open) wire ใน ai-assist/ai-plan/agent-run ผ่าน _shared/quota.ts
 ```
 
 ## Edge Functions
@@ -190,7 +250,8 @@ public.workspace_integrations — credential ของ integration ที่ Use
 | ai-plan | ✅ | CEO วางแผน + มอบงาน |
 | agent-run | ✅ | รันเอเจนต์ + Serper.dev (Google Search) |
 | generate-badge | ❌ | ISO badge PNG (public GET) |
-| billing-cron | ❌ | ต่ออายุ/downgrade อัตโนมัติ |
+| billing-cron | ❌ | ต่ออายุ/downgrade อัตโนมัติ (deployed prod v30) |
+| verify-slip | ✅ | ตรวจสลิปกับธนาคารจริงผ่าน SlipOK → เปิดแพ็ก server-side (deployed prod · LIVE) |
 | promptpay-webhook | ❌ | รับ webhook จาก payment gateway |
 
 ### agent-run — Serper.dev Integration
@@ -209,6 +270,7 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 │ GitHub Actions    : VITE_SUPABASE_URL ✅, VITE_SUPABASE_ANON_KEY ✅ (ใช้โดย deploy.yml legacy)
 │ Cloudflare Worker : ANTHROPIC_API_KEY (vars ใน wrangler/dashboard — ใช้โดย CeoAiAgent DO)
 │ Supabase Fn       : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅
+│                     SLIPOK_API_KEY ✅ (ขึ้นต้น SLIPOKWL…), SLIPOK_BRANCH_ID ✅ =72189 (ตรวจสลิป verify-slip)
 │ Pending           : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
 ├─ TIS Automate (แยก) ─────────────────────────────────────────────
 │ Supabase project  : galtbbkcddugnsfkgyqm — ไม่มี secret ฝั่ง client (publishable key ฝังได้)
@@ -232,10 +294,15 @@ node .claude/skills/run-ceo-ai-thailand/driver.mjs --out /tmp/shot.png --nav "�
 
 ## Deploy Flow
 ```
-Production = Cloudflare Workers: npm run build → npx wrangler deploy (worker ceo-ai-thailand)
-Custom domain: ceoaithailand.org (จัดการ DNS ใน Cloudflare)
-Legacy: push to main → GitHub Actions (deploy.yml) → GitHub Pages (ยังรันอยู่ ไม่ใช่ production)
-Vercel: PR preview อัตโนมัติ
+Production = Cloudflare Workers (worker ceo-ai-thailand ผูก custom domain ceoaithailand.org)
+AUTO-DEPLOY: push/merge เข้า main → .github/workflows/cloudflare-deploy.yml → wrangler deploy
+  ต้องมี GitHub secrets: CLOUDFLARE_API_TOKEN (Workers Scripts:Edit + Zone Workers Routes:Edit
+    + DNS:Edit + Account Settings:Read + User Details:Read) + CLOUDFLARE_ACCOUNT_ID
+  ⚠️ GOTCHA: wrangler-action ต้อง pin wranglerVersion >= 3.91.0 (อ่าน wrangler.jsonc/JSONC)
+    — 3.90.0 ล้มด้วย "Missing entry-point" · ดู prerender-seo.mjs รันตอน build (static /llms.txt,/faq,/mit24,/sitemap.xml)
+Manual (สำรอง): npm run build → npx wrangler deploy
+Legacy: deploy.yml → GitHub Pages (ยังรันอยู่ ไม่ใช่ production host จริง)
+Vercel: PR preview อัตโนมัติ (*.vercel.app เท่านั้น — ห้ามผูก custom domain)
 ```
 
 ## Email / DNS (ceoaithailand.org)

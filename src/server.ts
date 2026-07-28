@@ -1,7 +1,8 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import {
-  storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript,
+  storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
+  homeSeo, faqPageHtml, mit24PageHtml,
   type SeoData, type SeoStorefront,
 } from './lib/seoData';
 
@@ -96,13 +97,40 @@ export default {
     // ===== SEO ฝั่ง server (marketplace) — เฉพาะ GET =====
     if (request.method === 'GET') {
       // sitemap.xml แบบ dynamic จากตาราง storefronts (override public/sitemap.xml)
+      // ⚠️ ต้องคืน XML "เสมอ" — ห้าม fall through ไป ASSETS (index.html) เพราะ Google จะเห็นเป็น HTML แล้ว reject
       if (url.pathname === '/sitemap.xml') {
-        try {
-          const xml = sitemapXml(await listPublished(env), origin);
-          return new Response(xml, {
-            headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
-          });
-        } catch { /* fallback → static asset */ }
+        let stores: { slug: string; name: string; updatedAt?: string }[] = [];
+        try { stores = await listPublished(env); } catch { /* net/json error → sitemap หน้า static ล้วน */ }
+        return new Response(sitemapXml(stores, origin), {
+          headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // llms.txt → บอก AI crawler (ChatGPT/Gemini/Perplexity) ว่าเว็บนี้คืออะไร + หน้าสำคัญ (GEO/AEO)
+      if (url.pathname === '/llms.txt') {
+        return new Response(llmsTxt(origin), {
+          headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // /faq → หน้า answer-first แบบ static HTML (crawlable ไม่ต้องรอ JS) + FAQPage schema (AEO)
+      if (url.pathname === '/faq' || url.pathname === '/faq/') {
+        return new Response(faqPageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // /mit24 → บทความ answer-first: MIT 24 Steps คืออะไร ใช้ยังไงในแอป + Article/FAQPage schema (GEO/AEO)
+      if (url.pathname === '/mit24' || url.pathname === '/mit24/') {
+        return new Response(mit24PageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // หน้าแรก / → inject schema (Organization + SoftwareApplication + FAQPage) ให้ AI/Google สกัด entity
+      if (url.pathname === '/') {
+        try { return injectSeo(await env.ASSETS.fetch(request), homeSeo(origin)); }
+        catch { /* fallback → shell เดิม */ }
       }
 
       // /b/<slug> → inject meta ต่อร้าน

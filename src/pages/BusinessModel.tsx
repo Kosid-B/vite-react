@@ -3,6 +3,7 @@ import { trackAiCall } from '../lib/usage';
 import type { Agent, AppData, BMCData, PageId } from '../types';
 import EditableList from '../components/EditableList';
 import BmcOutcomeTracker from '../components/BmcOutcomeTracker';
+import De24Guide from '../components/De24Guide';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { withSkillDirectives } from '../lib/skillDirectives';
 import { de24Summary, de24Markdown, de24ToBmcSeed } from '../lib/de24Report';
@@ -161,6 +162,14 @@ export default function BusinessModel({ data, onUpdate, onNavigate }: Props) {
     setAssignMsg(`✅ CEO มอบหมายแล้ว: ${lines.join(' · ')} — สั่งงาน 4 งานเข้า Kanban · ▶ เปิดหน้า "บริษัท AI" ทีมจะลงมือทำและแสดงผลลัพธ์`);
   }
 
+  // guided journey → เปิดขั้นนั้นในแคนวาสด้านล่าง + เลื่อนไปหา (จดบันทึก/ให้ AI ช่วย)
+  function focusStep(idx: number) {
+    setExpandedStep(idx);
+    setTimeout(() => {
+      document.getElementById(`de24-step-${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+  }
+
   function updateBMC(key: BMCKey, items: string[]) {
     onUpdate({ ...data, businessModel: { ...bm, bmc: { ...bm.bmc, [key]: items } } });
   }
@@ -294,6 +303,9 @@ export default function BusinessModel({ data, onUpdate, onNavigate }: Props) {
         </div>
       </div>
 
+      {/* Guided journey — โชว์ "ขั้นถัดไปที่ต้องทำ" ก่อน (เข้าง่าย ไม่ล้นด้วย 24 ขั้นพร้อมกัน) */}
+      <De24Guide data={data} onUpdate={onUpdate} onFocusStep={focusStep} />
+
       <div className="de-hero">
         <div className="de-hero-badge">วิธีสร้างธุรกิจแบบ MIT</div>
         <div className="de-hero-title">เริ่มจาก “ลูกค้า” ก่อน — ไม่ใช่ “สินค้า”</div>
@@ -395,7 +407,7 @@ export default function BusinessModel({ data, onUpdate, onNavigate }: Props) {
               const state = bm.de24[si];
               const isExp = expandedStep === si;
               return (
-                <div key={si} className={`bmc-step${state.done ? ' bmc-step-done' : ''}`}>
+                <div key={si} id={`de24-step-${si}`} className={`bmc-step${state.done ? ' bmc-step-done' : ''}`}>
                   <div className="bmc-step-row" onClick={() => setExpandedStep(isExp ? null : si)}>
                     <button
                       className={`bmc-step-chk${state.done ? ' done' : ''}`}

@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
 import type { AppData, Persona } from '../types';
 import EditableList from '../components/EditableList';
+import DemoBadge from '../components/DemoBadge';
+import { isDemoPersonas } from '../lib/demoData';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { track } from '../lib/analytics';
 import {
@@ -130,6 +132,8 @@ export default function Personas({ data, onUpdate }: Props) {
           <span className="meta-chip">3 Stakeholders</span>
         </div>
       </div>
+
+      {isDemoPersonas(data) && <DemoBadge hint="แก้ชื่อ/ปัญหา/เป้าหมายให้ตรงลูกค้าจริงของคุณ" />}
 
       <div className="persona-launcher">
         <div className="pl-row">

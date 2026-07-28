@@ -27,7 +27,7 @@ ISO วิเคราะห์ธุรกิจ และมี marketplace �
 - ข้อมูลทั้งหมดของ workspace เก็บแยกกัน (คนอื่นเห็นไม่ได้) — บังคับสิทธิ์ตาม workspace
 
 ระบบแพ็กเกจ (Plan) 4 ระดับ:
-- Free (฿0) → Starter (฿390/เดือน) → Growth (฿1,490/เดือน) → Scale (฿5,900/เดือน)
+- Free (฿0) → Starter (฿590/เดือน) → Growth (฿1,490/เดือน) → Scale (฿5,900/เดือน)
 - ผู้ใช้ใหม่ได้ทดลอง (trial) แพ็ก Scale ฟรี 15 วันอัตโนมัติเมื่อล็อกอินครั้งแรก
 - บางหน้าปลดล็อกตามแพ็กเกจ: หน้าที่ต้องจ่ายจะแสดง "กำแพงอัปเกรด" (upgrade wall) พร้อมปุ่มไปหน้าแพ็กเกจ
 - อีเมลแอดมิน support@b-tctraining.com = ได้ใช้ทุกอย่างฟรีเสมอ (Scale) + เห็นเมนูผู้ดูแลระบบ
@@ -156,7 +156,7 @@ C-Level (AI) ดูแลและขอเพิ่ม/ลด → CEO หรื
 
 ### 4.8 แพ็กเกจ & ชำระเงิน (Billing)
 ```
-หน้า "แพ็กเกจ & ชำระเงิน": แสดง 4 แพ็ก (Free/Starter ฿390/Growth ฿1,490/Scale ฿5,900)
+หน้า "แพ็กเกจ & ชำระเงิน": แสดง 4 แพ็ก (Free/Starter ฿590/Growth ฿1,490/Scale ฿5,900)
 ปุ่มอัปเกรด → แสดง QR PromptPay (เบอร์ 081-781-7773 / บัญชีกสิกร 009-8-92560-0
 ชื่อ บจก. บี. เทรนนิ่ง คอนซัลแทนท์) + อัปโหลดสลิป
 สลิปเข้าคิวรออนุมัติ (PaymentSubmission status=pending) → แอดมินอนุมัติ → อัปเกรดแพ็กอัตโนมัติ
@@ -279,7 +279,7 @@ with roles owner/admin/member; can invite members. All data is isolated per work
 see their own workspace). System admin email support@b-tctraining.com sees all workspaces + an
 Admin area, and always has full (Scale) access for free.
 
-PLANS: Free ฿0 → Starter ฿390/mo → Growth ฿1,490/mo → Scale ฿5,900/mo. New users get a free 15-day
+PLANS: Free ฿0 → Starter ฿590/mo → Growth ฿1,490/mo → Scale ฿5,900/mo. New users get a free 15-day
 Scale trial on first login; after it ends they drop to Free until upgrade. Gate pages by plan and
 show an "upgrade wall" on locked pages: RFQ trade = Starter+; AI Research, Team, ISO, SaaS Analytics
 = Growth+; Admin = admin email only; AI Company = free.

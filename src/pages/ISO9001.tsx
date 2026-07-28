@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, PageId, ISO9001Data, ISOClauseCheck, ISOStatus, Nonconformity, ISODocument, InternalAudit } from '../types';
 import ExpertEdge from '../components/ExpertEdge';
+import ConsultHandoff from '../components/ConsultHandoff';
 import { assessReadiness } from '../lib/isoGapAssessment';
 import { STANDARDS, STANDARD_ORDER, guideOf, seedClauses, type StandardId } from '../lib/isoStandards';
 import { track } from '../lib/analytics';
@@ -556,6 +557,8 @@ export default function ISO9001({ data, onUpdate, onNavigate }: Props) {
           )}
         </div>
       )}
+
+      <ConsultHandoff topic="ISO 9001 / มอก." from="iso9001" />
     </div>
   );
 }

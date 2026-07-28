@@ -16,7 +16,7 @@
 - **Moat:** 2 product แชร์ data model 24 ขั้น → handoff ไร้รอยต่อที่คู่แข่งลอกยาก
 
 ### P2 · Price
-- CEO AI (ปัจจุบัน): Free · Starter ฿390 · Growth ฿1,490 · Scale ฿5,900 /เดือน
+- CEO AI (ปัจจุบัน): Free · Starter ฿590 · Growth ฿1,490 · Scale ฿5,900 /เดือน
 - theossphere: _(ยืนยันราคาจริง — ใส่ในตารางข้อ 2)_
 - **กลยุทธ์:** bundle "Full Journey" ราคา **< ผลรวม 2 ระบบ** (bundle discount ~15–25%) เป็น hero tier + anchor
 
@@ -51,7 +51,7 @@
 | Tier | ได้อะไร | ราคา/เดือน (ตั้งต้น) | ใครเหมาะ |
 |---|---|---|---|
 | **Learn** | theossphere เท่านั้น — คอร์ส/เครื่องมือวางแผน 24 ขั้น | _฿?? (theossphere)_ | เพิ่งเริ่ม อยากเรียนกรอบก่อน |
-| **Execute** | CEO AI เท่านั้น (Starter/Growth/Scale เดิม) | ฿390 / ฿1,490 / ฿5,900 | มีแผนแล้ว อยากได้ทีมลงมือ |
+| **Execute** | CEO AI เท่านั้น (Starter/Growth/Scale เดิม) | ฿590 / ฿1,490 / ฿5,900 | มีแผนแล้ว อยากได้ทีมลงมือ |
 | **Full Journey** ⭐ | **ทั้ง 2 + Context Handoff ไร้รอยต่อ + dashboard รวม** | **bundle −15–25%** จากผลรวม | จริงจัง อยากครบวงจร (hero tier) |
 
 ### หลักตั้งราคา (value-based)
@@ -63,7 +63,7 @@
 ### ตัวอย่างบันได (เมื่อใส่ราคา theossphere จริง)
 ```
 Learn        ฿L/เดือน
-Execute      ฿390 / ฿1,490 / ฿5,900
+Execute      ฿590 / ฿1,490 / ฿5,900
 Full Journey ≈ (L + Execute tier) × 0.80   ← ประหยัด 20% + ได้ handoff/ dashboard รวม
 ```
 

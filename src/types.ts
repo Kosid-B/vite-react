@@ -261,6 +261,10 @@ export interface AICompany {
 export type PlanId = 'free' | 'starter' | 'growth' | 'scale';
 export type SubStatus = 'none' | 'trial' | 'pending_payment' | 'active' | 'past_due' | 'cancelled';
 
+// เป้าหมายเริ่มต้นที่ผู้ใช้เลือกใน GoalChooser (onboarding "เข้าง่าย + ลึกได้")
+// โฟกัสวัตถุประสงค์จริงของ CEO AI Thailand = สร้าง & ทำธุรกิจ (PDPA/ISO = ฟีเจอร์เสริม ไม่ใช่พระเอก)
+export type OnboardGoal = 'aicompany' | 'sell' | 'validate' | 'explore';
+
 export type InvoiceStatus = 'paid' | 'pending' | 'failed';
 
 export interface Invoice {
@@ -280,6 +284,7 @@ export interface Subscription {
   trialEndDate: string | null;     // ISO วันสิ้นสุดการทดลองใช้ 15 วัน
   invoices: Invoice[];        // ประวัติใบแจ้งหนี้
   billingCycle?: 'monthly' | 'yearly'; // รอบบิล — รายปีจ่าย ~10 เดือน (ลด churn)
+  reminderSentFor?: string | null;     // currentPeriodEnd ที่ส่ง 'เตือนล่วงหน้าก่อนครบกำหนด' ไปแล้ว (กันเตือนซ้ำรายวัน)
 }
 
 /* ===== VRIO Analysis ===== */
@@ -539,7 +544,11 @@ export interface AppData {
   cityUnlocks?: string[];                 // ของปลดล็อกในเกม (cosmetic)
   streak?: { count: number; lastDay: string }; // ส่วนต่อเนื่องรายวัน (ทำงานจริงในแอป)
   proMode?: boolean;                      // โหมดโปร — ซ่อนองค์ประกอบเกมบน Dashboard
-  appliedPaymentIds?: string[];           // id ของ payment_submissions ที่อนุมัติแล้ว + เปิดใช้งานแพ็กแล้ว (กันเปิดซ้ำ)
+  appliedPaymentIds?: string[];           // id ของ payment_submissions ที่เปิดใช้งานแพ็กแล้ว (กันเปิดซ้ำ) — PLG: เปิดทันทีที่อัปสลิป
+  revokedPaymentIds?: string[];           // id ของสลิปที่แอดมินตรวจย้อนหลังแล้วตีกลับ (สลิปปลอม/ไม่ตรง) → client ถอนแพ็กเอง
+  // ===== Onboarding: เลือกเป้าหมาย (เข้าง่าย + ลึกได้) =====
+  onboardGoal?: OnboardGoal;              // เป้าหมายที่ผู้ใช้เลือกตอนเริ่ม (null/undefined = ยังไม่เลือก → โชว์ GoalChooser)
+  focusDismissed?: boolean;               // ปลดล็อกเมนูทั้งหมดแล้ว (เลิกโหมดโฟกัส) — true = โชว์ nav ครบ
   // CMO วิเคราะห์ตลาด+กลุ่มลูกค้า (Segmentation) รายสัปดาห์ทุกวันศุกร์ (ดึงข้อมูลตลาดจริง)
   cmoMarket?: { analysis: string; webUsed: boolean; updatedAt: string; weekTag: string };
   // C-Level ทุกตำแหน่งวิเคราะห์ + รายงานผลต่อ CEO ทุกวันศุกร์
@@ -572,7 +581,7 @@ export interface FinanceEntry {
   recurring?: boolean;            // รายการรายเดือนซ้ำ
 }
 
-export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade' | 'citylevelup' | 'pulse' | 'boardroom' | 'resources' | 'privacy' | 'compliance';
+export type PageId = 'dashboard' | 'journey' | 'funnel' | 'roi' | 'personas' | 'content' | 'actions' | 'aisearch' | 'bmc' | 'aicompany' | 'billing' | 'vrio' | 'market' | 'team' | 'admin' | 'roadmap' | 'marketing' | 'iso9001' | 'cases' | 'analytics' | 'factory' | 'sipoc' | 'storefront' | 'trade' | 'city' | 'citytrade' | 'citylevelup' | 'pulse' | 'boardroom' | 'resources' | 'privacy' | 'compliance' | 'knowledge';
 
 /* ===== Factory / โรงงานอัจฉริยะ ===== */
 export type MachineStatus = 'running' | 'idle' | 'maintenance' | 'breakdown';

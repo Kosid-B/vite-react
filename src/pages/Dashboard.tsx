@@ -7,7 +7,11 @@ import ExpertEdge from '../components/ExpertEdge';
 import WeeklyDigest from '../components/WeeklyDigest';
 import SystemOverview from '../components/SystemOverview';
 import AhaMoment from '../components/AhaMoment';
+import { ahaProgress } from '../lib/ahaMoment';
+import UpgradeNudge from '../components/UpgradeNudge';
 import EcosystemFlow from '../components/EcosystemFlow';
+import { de24Journey } from '../lib/de24Journey';
+import { track } from '../lib/analytics';
 
 interface Props {
   data: AppData;
@@ -323,6 +327,13 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
   const pColors = ['#c44b2b', '#a05c1a', '#4a453e'];
   const pBgs = ['#fdf3f0', '#fdf6ec', '#f5f0e8'];
 
+  // PLG first-run focus: ผู้ใช้ที่ยังไม่ผ่าน aha (goal→team→run) เห็น "path เดียว" (AhaMoment)
+  // แล้วค่อยเปิด widget รอง (วงจร/ภาพรวม/retention/ดีลแรก) เมื่อ activated — ลด tracker ซ้อนกันตอนเริ่ม
+  const aha = ahaProgress(data);
+
+  // MIT 24-Step guided journey — นำ "ขั้นถัดไป" มาเตือนบนหน้าแรก (ดึงกลับมาเดินต่อ = retention)
+  const journey = de24Journey(data);
+
   // AI Company stats
   const agentWorking = aiCompany.agents.filter(a => a.status === 'working').length;
   const agentIdle = aiCompany.agents.filter(a => a.status === 'idle').length;
@@ -366,22 +377,50 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
         </div>
       </div>
 
-      {/* ===== Aha Moment ใน 5 นาที (activation ผู้ใช้ใหม่) ===== */}
+      {/* ===== Aha Moment ใน 5 นาที (activation ผู้ใช้ใหม่) — path เดียวตอน first-run ===== */}
       <AhaMoment data={data} onUpdate={onUpdate} onNavigate={onNavigate} />
 
-      {/* ===== วงจรธุรกิจครบวงจร — ทำ loop ให้ไหลต่อกันเร็วขึ้น ===== */}
-      <EcosystemFlow data={data} onNavigate={onNavigate} />
+      {/* MIT 24-Step nudge — โผล่เมื่อเริ่มเดินแล้วแต่ยังไม่ครบ = มีเหตุผลให้กลับมาทำต่อ (retention) */}
+      {journey.started && !journey.complete && journey.current && (
+        <button className="db-de24-nudge" onClick={() => {
+          track('de24_nudge_click', { from: 'dashboard', step: journey.current!.num });
+          onNavigate('bmc');
+        }}>
+          <span className="db-de24-nudge-ic">🧭</span>
+          <span className="db-de24-nudge-body">
+            <b>MIT 24 Steps — ขั้นถัดไปของคุณ</b>
+            <span className="db-de24-nudge-step">#{journey.current.num} {journey.current.name} · {journey.done}/24 ({journey.pct}%)</span>
+          </span>
+          <span className="db-de24-nudge-bar"><i style={{ width: `${journey.pct}%` }} /></span>
+          <span className="db-de24-nudge-go">ทำต่อ →</span>
+        </button>
+      )}
 
-      {/* ===== ภาพรวมทุกระบบในภาพเดียว ===== */}
-      <SystemOverview data={data} onNavigate={onNavigate} />
+      {/* widget รอง — เปิดเมื่อ activated แล้ว (ลด tracker ซ้อนกันตอนเริ่ม · โฟกัส 3 ก้าวสู่ aha ก่อน) */}
+      {aha.activated ? (
+        <>
+          {/* #4 soft upgrade nudge — โผล่ตอนเพิ่งเห็นคุณค่า (activated) + ยังอยู่แพ็ก free (ปิดได้) */}
+          {data.subscription.plan === 'free' && <UpgradeNudge data={data} onNavigate={onNavigate} />}
 
-      {/* ===== สรุปสัปดาห์นี้ (retention) ===== */}
-      <WeeklyDigest data={data} onNavigate={onNavigate} />
+          {/* ===== วงจรธุรกิจครบวงจร — ทำ loop ให้ไหลต่อกันเร็วขึ้น ===== */}
+          <EcosystemFlow data={data} onNavigate={onNavigate} />
 
-      {/* ===== First Revenue Engine: ภารกิจดีลแรกใน 30 วัน (แก้ churn) ===== */}
-      <ExpertEdge compact onNavigate={onNavigate} />
+          {/* ===== ภาพรวมทุกระบบในภาพเดียว ===== */}
+          <SystemOverview data={data} onNavigate={onNavigate} />
 
-      <FirstDealWidget data={data} wsId={wsId} onNavigate={onNavigate} />
+          {/* ===== สรุปสัปดาห์นี้ (retention) ===== */}
+          <WeeklyDigest data={data} onNavigate={onNavigate} />
+
+          {/* ===== First Revenue Engine: ภารกิจดีลแรกใน 30 วัน (แก้ churn) ===== */}
+          <ExpertEdge compact onNavigate={onNavigate} />
+
+          <FirstDealWidget data={data} wsId={wsId} onNavigate={onNavigate} />
+        </>
+      ) : (
+        <div className="db-firstrun-hint">
+          ✨ ทำ 3 ก้าวด้านบนให้ครบก่อน — แล้ว Dashboard เต็ม (วงจรธุรกิจ · ภาพรวมระบบ · ภารกิจดีลแรก) จะเปิดให้อัตโนมัติ
+        </div>
+      )}
 
       {/* ===== Gamification: ระดับบริษัท + Setup Quest + Badges ===== */}
       {data.proMode ? (

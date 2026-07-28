@@ -10,6 +10,7 @@ import { fmtBaht } from '../lib/finance';
 import { streakCount } from '../lib/streak';
 import { track } from '../lib/analytics';
 import CityTreasury from '../components/CityTreasury';
+import CfoAnalysis from '../components/CfoAnalysis';
 import CityRewards from '../components/CityRewards';
 import CityscapeHero from '../components/CityscapeHero';
 
@@ -61,6 +62,9 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
 
       {/* คลังเมือง — รายรับ/รายจ่าย ขับเศรษฐกิจเมือง */}
       <CityTreasury data={data} onUpdate={onUpdate} />
+
+      {/* CFO AI — วิเคราะห์สุขภาพการเงินจากตัวเลขจริงในคลังเมือง */}
+      <CfoAnalysis data={data} />
 
       {/* รางวัลเมือง — รับรางวัลจริงจากการเล่นเกม */}
       <CityRewards data={data} onUpdate={onUpdate} />

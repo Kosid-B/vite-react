@@ -1,3 +1,4 @@
+import '../index.css';
 import { useEffect, useMemo, useState } from 'react';
 import { track } from '../lib/analytics';
 import { applySeo, siteOrigin } from '../lib/seo';
@@ -7,7 +8,7 @@ import FaqAccordion, { type FaqItem } from '../components/FaqAccordion';
 
 /* ===== Landing page ไวรัล — /start (สาธารณะ ไม่ต้องล็อกอิน) =====
  * กลุ่มเป้าหมาย: Gen Z จบใหม่หางานไม่ได้ + กลุ่ม "เสมือนว่างงาน" (มีงานแต่รายได้ไม่พอ)
- * เป้าหมาย: สมัครฟรี → สร้างหน้าร้าน → มีรายได้จาก RFQ → อัปเกรด Starter ฿390 */
+ * เป้าหมาย: สมัครฟรี → สร้างหน้าร้าน → มีรายได้จาก RFQ → อัปเกรด Starter ฿590 */
 
 const PAGE_URL = 'https://ceoaithailand.org/start';
 const SHARE_TEXT = 'ตกงาน/รายได้ไม่พอ ไม่ใช่ทางตัน — เปิดบริษัทของตัวเองพร้อมทีม AI ทั้งบริษัท เริ่มฟรี ไม่ต้องใช้บัตรเครดิต';
@@ -27,7 +28,7 @@ const TEAM = [
 
 const PLANS = [
   { name: 'ฟรี', price: '฿0', desc: 'เริ่มธุรกิจ + หน้าร้าน + สารบัญธุรกิจ', note: 'ไม่ต้องใช้บัตรเครดิต', cta: true },
-  { name: 'Starter', price: '฿390', per: '/เดือน', desc: 'รับงานผ่าน RFQ + ออเดอร์ — จ่ายเมื่อเริ่มมีรายได้', note: 'เท่าค่ากาแฟ 3 แก้ว', hot: true },
+  { name: 'Starter', price: '฿590', per: '/เดือน', desc: 'รับงานผ่าน RFQ + ออเดอร์ — จ่ายเมื่อเริ่มมีรายได้', note: 'ถูกกว่าจ้างผู้ช่วย 1 คนหลายสิบเท่า', hot: true },
   { name: 'Growth', price: '฿1,490', per: '/เดือน', desc: 'ทีม AI เต็มรูปแบบ + วิจัยตลาด + Analytics', note: 'เมื่อธุรกิจเดินแล้ว' },
 ];
 
@@ -36,8 +37,48 @@ const FAQS: FaqItem[] = [
   { q: 'ไม่มีความรู้ธุรกิจ ไม่เคยเปิดร้าน ใช้ได้ไหม?', a: 'ได้ ระบบออกแบบมาเพื่อมือใหม่โดยเฉพาะ — CEO AI จะถามสิ่งที่คุณถนัด แล้วร่างแผนธุรกิจ (BMC) วางขั้นตอนการทำงาน และแนะนำทีละก้าวให้คุณอนุมัติ ไม่ต้องเริ่มจากศูนย์คนเดียว' },
   { q: 'AI ช่วยอะไรได้บ้างจริง ๆ?', a: 'มีทีมเอเจนต์ช่วยจริง: CEO วางแผนและมอบงาน, ฝ่ายการตลาดคิดคอนเทนต์/กลุ่มลูกค้า, นักวิจัยตลาดหาข้อมูลคู่แข่งและราคาตลาด, นักวิเคราะห์ดูตัวเลขและจุดรั่ว — ทำงานให้ตลอด 24 ชั่วโมง' },
   { q: 'มีรายได้จากตรงไหน แล้ว RFQ คืออะไร?', a: 'RFQ คือใบขอเสนอราคาจากธุรกิจอื่น — เมื่อคุณเปิดหน้าร้านในระบบ ธุรกิจที่ต้องการสินค้า/บริการจะส่งคำขอมาถึงคุณ คุณเสนอราคา ปิดดีล กลายเป็นออเดอร์และรายได้จริง' },
-  { q: 'ต้องจ่ายเมื่อไหร่ ค่าใช้จ่ายเท่าไหร่?', a: 'เริ่มฟรี ฿0. อัปเกรด Starter ฿390/เดือนเมื่อพร้อมรับงานผ่าน RFQ (เท่าค่ากาแฟ 3 แก้ว) และระบบคิดค่าดำเนินการเพียง 3% เมื่อคุณปิดดีลได้จริงเท่านั้น — เราโตเมื่อคุณมีรายได้' },
+  { q: 'ต้องจ่ายเมื่อไหร่ ค่าใช้จ่ายเท่าไหร่?', a: 'เริ่มฟรี ฿0. อัปเกรด Starter ฿590/เดือนเมื่อพร้อมรับงานผ่าน RFQ (ถูกกว่าจ้างผู้ช่วย 1 คนหลายสิบเท่า) และระบบคิดค่าดำเนินการเพียง 3% เมื่อคุณปิดดีลได้จริงเท่านั้น — เราโตเมื่อคุณมีรายได้' },
   { q: 'ข้อมูลธุรกิจของฉันปลอดภัยไหม?', a: 'ปลอดภัย ข้อมูลแต่ละธุรกิจแยกจากกันสมบูรณ์ คนอื่นเห็นเฉพาะหน้าร้านที่คุณเลือกเผยแพร่ ดูแลโดย B. Training Consultant ผู้ให้บริการที่ปรึกษามากกว่า 20 ปี' },
+];
+
+// ตารางเทียบ "ต่างจาก ChatGPT ยังไง" — Pain point #1 (แก้ความสับสน "ก็ ChatGPT อีกตัว")
+// ข้อความเป็นข้อเท็จจริงของฟีเจอร์ที่มีจริง — ไม่โม้เกินจริง
+type CmpRow = { label: string; chatgpt: string; ceo: string };
+const COMPARE_BIZ: CmpRow[] = [
+  { label: 'สิ่งที่ได้', chatgpt: 'ช่วยตอบคำถาม', ceo: 'ช่วยสร้างธุรกิจเป็นขั้นตอน' },
+  { label: 'วิธีคิด', chatgpt: 'สร้างข้อความและไอเดีย', ceo: 'ตรวจสอบสมมติฐานทางธุรกิจ (PMF)' },
+  { label: 'โฟกัส', chatgpt: 'เน้นเครื่องมือ AI', ceo: 'เน้นผลลัพธ์ทางธุรกิจ' },
+  { label: 'กรอบการทำงาน', chatgpt: 'ไม่มีกรอบดำเนินงาน', ceo: 'ใช้แนวทาง MIT 24 Steps' },
+  { label: 'ระบบบริหาร', chatgpt: 'ไม่เชื่อมกับระบบ', ceo: 'เชื่อม SOP · KPI · Risk · ISO' },
+  { label: 'ระยะการใช้งาน', chatgpt: 'เหมาะกับงานรายครั้ง', ceo: 'ออกแบบเพื่อเติบโตระยะยาว' },
+  { label: 'การพึ่งพา', chatgpt: 'ธุรกิจยังพึ่งเจ้าของ', ceo: 'เตรียมธุรกิจให้ทำซ้ำ + ขยายได้' },
+];
+const COMPARE_ISO: CmpRow[] = [
+  { label: 'เอกสาร ISO ไทย', chatgpt: 'ต้อง prompt เขียนเองทุกครั้ง', ceo: 'มีโครงเทมเพลต ISO 9001/14001/45001/22301' },
+  { label: 'ประเมินก่อน audit', chatgpt: 'ไม่มีโครงประเมิน', ceo: 'Gap assessment มีโครง บอกสิ่งที่ยังขาด' },
+  { label: 'PDPA ไทย', chatgpt: 'ทั่วไป ไม่อิงกฎหมายไทย', ceo: 'อิงบริบท PDPA ไทย (ฟีเจอร์เสริม)' },
+  { label: 'ความต่อเนื่อง', chatgpt: 'จำบริบทได้จำกัด', ceo: 'เก็บสถานะเอกสาร/งานเป็นระบบ' },
+  { label: 'ใครออกแบบ', chatgpt: 'แพลตฟอร์มต่างชาติ', ceo: 'ที่ปรึกษา ISO/ธุรกิจจริง 20+ ปี (B. Training)' },
+];
+
+// "ต้นน้ำที่แข็งแรง" 8 ขั้น — ทำ positioning ให้จับต้องได้ (เส้นทาง MIT 24 Steps → scale)
+const FOUNDATION = [
+  'เลือกกลุ่มลูกค้าที่ถูกต้อง',
+  'เข้าใจปัญหาที่ลูกค้ายอมจ่ายเงินแก้',
+  'สร้าง Value Proposition ที่ชัดเจน',
+  'ทดสอบ Product–Market Fit',
+  'สร้างฐานลูกค้าที่มีคุณภาพ',
+  'ออกแบบ Customer Journey',
+  'สร้างกระบวนการขาย/บริการที่ทำซ้ำได้',
+  'จัดทำ SOP · KPI · ระบบบริหาร พร้อม Scalability',
+];
+
+// ROI — เทียบ "ค่าจ้างทีมจริงในตลาด" กับราคาแพ็ก (Pain point #2)
+// ⚠️ เป็นราคาตลาดอ้างอิงของ "การจ้างเอง" ไม่ใช่ตัวเลขผลลัพธ์ที่การันตี
+const ROI_ITEMS = [
+  { ico: '📣', role: 'นักการตลาด (freelance/พาร์ตไทม์)', market: '~฿15,000–30,000/เดือน' },
+  { ico: '🔎', role: 'ผู้ช่วยวิจัยตลาด/ธุรการ', market: '~฿15,000+/เดือน' },
+  { ico: '⚙️', role: 'ที่ปรึกษาวางระบบธุรกิจ', market: '~฿20,000+/ครั้ง' },
 ];
 
 export default function StartLanding() {
@@ -52,6 +93,8 @@ export default function StartLanding() {
   }, []);
 
   useEffect(() => { track('start_variant', { variant: isIso ? 'iso' : 'default' }); }, [isIso]);
+
+  const compareRows = isIso ? COMPARE_ISO : COMPARE_BIZ;
 
   useEffect(() => {
     const o = siteOrigin();
@@ -138,11 +181,11 @@ export default function StartLanding() {
             <div className="start-badge">✦ &nbsp;สำหรับคนจบใหม่ · คนหางาน · คนที่งานประจำไม่พอกิน&nbsp; ✦</div>
             <h1 className="start-h1">
               ไม่มีใครจ้าง ไม่ได้แปลว่าไปต่อไม่ได้<br />
-              <span className="start-h1-hl">เปิดบริษัทของคุณเอง — พร้อมทีม AI ทั้งบริษัท</span>
+              <span className="start-h1-hl">เปิดบริษัทของคุณเอง — สร้างถูกตั้งแต่ต้น พร้อมทีม AI ช่วยลงมือ</span>
             </h1>
             <p className="start-sub">
               ปีนี้คนจบ ป.ตรี ว่างงานกว่า <b>116,000 คน</b> และอีก <b>4.4 ล้านคน</b> มีงานแต่รายได้ไม่พอ*<br />
-              คุณไม่ได้ตัวคนเดียว — และคุณไม่ต้องรอใครจ้าง เมื่อมี CEO, ฝ่ายการตลาด และนักวิจัยตลาด เป็น AI ทำงานให้คุณ
+              คุณไม่ต้องเริ่มแบบเดาสุ่ม — เรามีกรอบ <b>MIT 24 Steps</b> + ระบบบริหาร <b>20 ปี</b> พาคุณหาลูกค้าที่ใช่และวางระบบให้พร้อมโต โดยมีทีม AI ลงมือทำให้
             </p>
             {/* Payoff chips — ส่งต่อความคาดหวังทันทีใน 3–6 วิ (สแกนเห็นผลลัพธ์ก่อนอ่านยาว) */}
             <div className="start-vchips">
@@ -173,6 +216,44 @@ export default function StartLanding() {
           </div>
         </div>
         <div className="start-src">ที่มา: The Gemini Report — Southeast Asia 2026</div>
+      </section>
+
+      {/* แก่น positioning — สร้างต้นน้ำให้แข็งแรง + 2 เสาหลัก (MIT 24 Steps × ระบบ ISO) */}
+      <section className="start-sec start-core-sec">
+        <h2 className="start-h2">ไม่รีบสร้างให้ใหญ่ — แต่สร้าง “ต้นน้ำ” ให้แข็งแรงก่อน</h2>
+        <p className="start-price-note">
+          ธุรกิจที่โตยั่งยืนเริ่มจากพื้นฐานที่ถูก: เลือกลูกค้าที่ใช่ · เข้าใจปัญหาที่เขายอมจ่าย · สร้างคุณค่าที่ชัด ·
+          ทดสอบตลาด แล้วค่อยวางระบบให้ทำซ้ำและขยายได้
+        </p>
+        <div className="start-core-grid">
+          <div className="start-core-card">
+            <div className="start-core-tag">เสาที่ 1 · หาทิศให้ถูก</div>
+            <div className="start-core-name">🎯 แนวทาง 24 Steps ของ MIT</div>
+            <p>ค้นหากลุ่มลูกค้าเป้าหมาย กำหนดคุณค่า ทดสอบ Product–Market Fit และสร้างรายได้ — อย่างมีระเบียบวิธี ไม่เดาสุ่ม</p>
+          </div>
+          <div className="start-core-card">
+            <div className="start-core-tag">เสาที่ 2 · วางระบบให้โต</div>
+            <div className="start-core-name">⚙️ ระบบบริหาร/ISO 20+ ปี</div>
+            <p>SOP · KPI · การจัดการความเสี่ยง · ระบบควบคุม จากประสบการณ์ B. Training — ให้ธุรกิจโตได้โดยไม่ต้องพึ่งเจ้าของคนเดียว</p>
+          </div>
+        </div>
+        <div className="start-src">ทีมผู้บริหาร AI คือ “กลไก” ที่ช่วยลงมือทำทั้งสองเสานี้ให้คุณ — ไม่ใช่แค่แชตตอบคำถาม ·{' '}
+          <a href="/mit24" className="start-inline-link">MIT 24 Steps คืออะไร →</a></div>
+      </section>
+
+      {/* "ต้นน้ำที่แข็งแรง" 8 ขั้น — เส้นทางที่ CEO AI พาเดิน (ทำ positioning ให้เห็นเป็นรูป) */}
+      <section className="start-sec start-fdn-sec">
+        <h2 className="start-h2">“ต้นน้ำที่แข็งแรง” ประกอบด้วยอะไรบ้าง</h2>
+        <p className="start-price-note">CEO AI พาคุณทีละขั้น จากเลือกลูกค้าที่ใช่ → วางระบบพร้อมโต — ไม่ข้ามขั้น ไม่เดาสุ่ม</p>
+        <ol className="start-fdn-list">
+          {FOUNDATION.map((s, i) => (
+            <li key={i} className="start-fdn-item">
+              <span className="start-fdn-num">{i + 1}</span>
+              <span className="start-fdn-txt">{s}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="start-src">พื้นฐานแน่นตั้งแต่วันแรก = ธุรกิจที่ “ทำซ้ำ ควบคุม พัฒนา และขยายได้” ไม่ใช่แค่ขายได้วันนี้</div>
       </section>
 
       {/* Personas */}
@@ -212,6 +293,58 @@ export default function StartLanding() {
             <p>ของดีแต่ขายไม่เป็น เพราะไม่รู้จะพูดกับใคร พูดยังไง — เอเจนต์การตลาดวิเคราะห์กลุ่มลูกค้า (Persona),
             วางแผนคอนเทนต์รายเดือน, ออกแบบ funnel และวัดผลให้ทุกสัปดาห์
             เหมือนมีทีมการตลาดทั้งทีมในราคาศูนย์บาท</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ต่างจาก ChatGPT ยังไง — Pain #1 (แก้ "ก็ ChatGPT อีกตัว") */}
+      <section className="start-sec start-cmp-sec">
+        <h2 className="start-h2">แล้วต่างจาก ChatGPT ยังไง?</h2>
+        <p className="start-price-note">
+          {isIso
+            ? 'ChatGPT ตอบคำถามเก่ง แต่ไม่มีโครงเอกสาร ISO ไทยและไม่เก็บงานต่อเนื่องให้ — นี่คือส่วนต่าง'
+            : 'ChatGPT คือ “ผู้ช่วยตอบคำถาม” · CEO AI Thailand คือ “ทีมที่ลงมือทำธุรกิจให้” — เทียบตรงๆ'}
+        </p>
+        <div className="start-cmp-tablewrap">
+          <table className="start-cmp">
+            <thead>
+              <tr>
+                <th></th>
+                <th>ChatGPT / แชตบอตทั่วไป</th>
+                <th className="start-cmp-us">CEO AI Thailand</th>
+              </tr>
+            </thead>
+            <tbody>
+              {compareRows.map((r, i) => (
+                <tr key={i}>
+                  <td className="start-cmp-label">{r.label}</td>
+                  <td className="start-cmp-them">{r.chatgpt}</td>
+                  <td className="start-cmp-us">✓ {r.ceo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="start-src">ไม่ได้แข่งกับ ChatGPT — เราใช้ AI ระดับเดียวกัน แต่ห่อด้วย “ระบบทำธุรกิจ” ให้คนไทยใช้ได้เลย</p>
+      </section>
+
+      {/* ROI — เทียบค่าจ้างทีมจริง (Pain #2) */}
+      <section className="start-sec start-roi-sec">
+        <h2 className="start-h2">คุ้มแค่ไหน? เทียบกับจ้างทีมจริง</h2>
+        <p className="start-price-note">ถ้าจ้างคนมาทำงานเหล่านี้เอง ต้นทุนต่อเดือนในตลาดคือ:</p>
+        <div className="start-roi-grid">
+          {ROI_ITEMS.map((r, i) => (
+            <div key={i} className="start-roi-card">
+              <div className="start-roi-ico">{r.ico}</div>
+              <div className="start-roi-role">{r.role}</div>
+              <div className="start-roi-market">{r.market}</div>
+            </div>
+          ))}
+        </div>
+        <div className="start-roi-punch">
+          ทีม AI ครบชุดของคุณ เริ่มที่ <b>฿0</b> — อัปเป็น Starter เพียง <b>฿590/เดือน</b> เมื่อพร้อมรับงาน
+          <div className="start-roi-honest">
+            💡 พูดตรงๆ: AI ช่วย “เริ่ม + วางระบบ + การตลาด” ให้เร็วขึ้นมาก แต่ยอดขายยังต้องคุณลงมือปิดเอง — ไม่ใช่ปุ่มวิเศษ
           </div>
         </div>
       </section>
@@ -299,6 +432,8 @@ export default function StartLanding() {
       <footer className="start-foot">
         CEO AI Thailand — แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย ·{' '}
         <a href="/b">สารบัญธุรกิจ</a> ·{' '}
+        <a href="/mit24">MIT 24 Steps</a> ·{' '}
+        <a href="/faq">คำถามที่พบบ่อย</a> ·{' '}
         โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
         <br />
         เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a href="tel:08178177773">081-7817-7773</a>

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ahaProgress, AHA_STEPS, SELLER_AHA_STEPS, sellerAhaProgress } from '../ahaMoment';
+import { DEFAULT_DATA } from '../../data';
 import type { AppData } from '../../types';
 
 const mk = (over: Partial<AppData['aiCompany']>): AppData =>
@@ -22,11 +23,11 @@ describe('ahaProgress — 3 ก้าวสู่ Aha', () => {
     expect(a.nextStep?.id).toBe('team');
   });
 
-  it('ทีม ≥3 + มีงาน → activated ครบ 3/3', () => {
+  it('ทีม (roster ต่างจาก seed) + running → activated ครบ 3/3', () => {
     const a = ahaProgress(mk({
       industry: 'x', goal: 'y',
-      agents: [{}, {}, {}] as never,
-      tasks: [{}] as never,
+      agents: [{ id: 'u1' }, { id: 'u2' }, { id: 'u3' }] as never,
+      running: true,
     }));
     expect(a.doneCount).toBe(3);
     expect(a.activated).toBe(true);
@@ -36,8 +37,16 @@ describe('ahaProgress — 3 ก้าวสู่ Aha', () => {
   });
 
   it('running=true นับว่าเริ่มทำงานแล้ว แม้ไม่มี task', () => {
-    const a = ahaProgress(mk({ industry: 'x', goal: 'y', agents: [{}, {}, {}] as never, running: true }));
+    const a = ahaProgress(mk({ industry: 'x', goal: 'y', agents: [{ id: 'u1' }, { id: 'u2' }, { id: 'u3' }] as never, running: true }));
     expect(a.steps.find(s => s.id === 'run')?.complete).toBe(true);
+  });
+
+  // regression: ข้อมูล demo ที่ seed มาให้ ต้องไม่ทำให้ผู้ใช้ใหม่ "activated" อัตโนมัติ (มิฉะนั้นฆ่า aha moment)
+  it('ข้อมูล seed (DEFAULT_DATA) ยังไม่ activated — ผู้ใช้ใหม่ต้องลงมือเอง', () => {
+    const a = ahaProgress(DEFAULT_DATA);
+    expect(a.activated).toBe(false);
+    expect(a.doneCount).toBe(0);
+    expect(a.nextStep?.id).toBe('goal');
   });
 
   it('AHA_STEPS มี 3 ก้าว และรวมเวลา = 5 นาที', () => {

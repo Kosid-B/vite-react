@@ -1,3 +1,4 @@
+import './index.css';   // สไตล์ทั้งแอป — ย้ายมาจาก main.tsx เพื่อไม่ให้ marketing landing (`/`) โหลด index.css (~67KB)
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { AppData, PageId } from './types';
@@ -12,6 +13,7 @@ import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTrig
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import SaveWorkPrompt from './components/SaveWorkPrompt';
+import GoalChooser from './components/GoalChooser';
 import Sidebar from './components/Sidebar';
 // perf: lazy-load เฉพาะตอนต้องใช้ (ไม่อยู่ใน critical path ของ first paint)
 const AiAssist = lazy(() => import('./components/AiAssist'));
@@ -59,6 +61,7 @@ const BoardRoom = lazy(() => import('./pages/BoardRoom'));
 const Resources = lazy(() => import('./pages/Resources'));
 const PrivacyNotice = lazy(() => import('./pages/PrivacyNotice'));
 const ComplianceCheck = lazy(() => import('./pages/ComplianceCheck'));
+const Knowledge = lazy(() => import('./pages/Knowledge'));
 
 const STORAGE_KEY = 'cjux2';
 
@@ -94,6 +97,7 @@ const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'iso9001', label: 'ISO 9001:2015 QMS' },
   { id: 'privacy', label: 'ตัวช่วย PDPA' },
   { id: 'compliance', label: 'AI ตรวจเอกสาร ISO/มอก.' },
+  { id: 'knowledge', label: 'คลังความรู้ ISO/PDPA' },
   { id: 'aisearch', label: 'AI Research' },
   { id: 'cases', label: 'Case Studies' },
 ];
@@ -187,11 +191,18 @@ export default function App() {
     try { localStorage.setItem('ceo_ai_nav_collapsed', next ? '1' : '0'); } catch { /* noop */ }
     return next;
   });
-  const [showAuth, setShowAuth] = useState(false);
+  // เข้ามาจาก marketing landing (`/?enter=auth|guest`) — init สถานะจาก query ตั้งแต่แรก (กันกระพริบ LandingPage)
+  const entryParam = (() => { try { return new URLSearchParams(window.location.search).get('enter'); } catch { return null; } })();
+  const [showAuth, setShowAuth] = useState(entryParam === 'auth');
   const [seenLanding, setSeenLanding] = useState(() => !!localStorage.getItem('ceo_ai_seen'));
   // Guest mode (ลองก่อนสมัคร) — เข้าแอปด้วย localStorage โดยไม่ต้อง login (ลด friction #1)
-  const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1');
+  const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1' || entryParam === 'guest');
   const startGuest = () => { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } setGuestMode(true); };
+  // เข้ามาแบบ guest จาก landing → persist + ล้าง query ให้ URL สะอาด
+  useEffect(() => {
+    if (entryParam === 'guest') { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } }
+    if (entryParam) { try { window.history.replaceState({}, '', window.location.pathname); } catch { /* noop */ } }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // ออกจากโหมดทดลอง → ล้าง flag แล้วกลับไปหน้า Landing (กันคนติดอยู่ในโหมด guest ถาวร)
   const exitGuest = () => { try { localStorage.removeItem('ceo_ai_guest'); } catch { /* noop */ } track('guest_exit', {}); setShowAuth(false); setGuestMode(false); };
   // Aha-moment email capture (soft signup) — เก็บ lead ตอน guest เจอโมเมนต์ดีๆ
@@ -434,8 +445,20 @@ export default function App() {
 
   const doneCount = data.actions.filter(a => a.done).length;
 
+  // First-run: ผู้ใช้ใหม่ (ยังไม่เลือกเป้าหมาย + เพิ่งเข้า) → ถาม "วันนี้อยากทำอะไร?" ก่อน
+  const showGoalChooser = data.onboardGoal == null && (data.visitedPages?.length ?? 0) <= 1;
+  // OnboardingTour ไม่ชนกับ GoalChooser: ผู้เลือกเป้าหมายไปที่เครื่องมือเลย (ไม่มีทัวร์) ·
+  // โชว์ทัวร์เฉพาะคน "ดูภาพรวมก่อน" (explore) หรือผู้ใช้เดิม (ทัวร์ self-gate ของมันเองอยู่แล้ว)
+  const showTour = data.onboardGoal === 'explore' || (data.onboardGoal == null && !showGoalChooser);
+
   return (
     <div className="app">
+      {showGoalChooser && (
+        <GoalChooser
+          onPick={(goal, page) => { updateData({ ...data, onboardGoal: goal }); setActivePage(page); }}
+          onSkip={() => updateData({ ...data, onboardGoal: 'explore' })}
+        />
+      )}
       <Suspense fallback={null}><Celebrate moment={celebration} onDone={() => setCelebration(null)} /></Suspense>
       {showSavePrompt && (
         <SaveWorkPrompt onClose={() => setShowSavePrompt(false)} onCaptured={() => setLeadCaptured(true)} />
@@ -475,6 +498,7 @@ export default function App() {
         data={data}
         collapsed={navCollapsed}
         onToggleCollapse={toggleNavCollapse}
+        onExitFocus={() => updateData({ ...data, focusDismissed: true })}
       />
 
       <main className={`main${navCollapsed ? ' nav-collapsed' : ''}`}>
@@ -536,6 +560,11 @@ export default function App() {
           canAccess(data, 'compliance')
             ? <ComplianceCheck />
             : <UpgradeWall page="compliance" data={data} onNavigate={setActivePage} />
+        )}
+        {activePage === 'knowledge' && (
+          canAccess(data, 'knowledge')
+            ? <Knowledge />
+            : <UpgradeWall page="knowledge" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'cases' && <CaseStudies data={data} />}
         {activePage === 'analytics' && (
@@ -627,7 +656,7 @@ export default function App() {
 
       <Suspense fallback={null}>
         <CmdK activePage={activePage} onNavigate={setActivePage} data={data} />
-        <OnboardingTour data={data} onNavigate={setActivePage} onUpdate={updateData} />
+        {showTour && <OnboardingTour data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         <AiAssist activePage={activePage} data={data} />
         <JourneyGuide data={data} onNavigate={setActivePage} onUpdate={updateData} />
       </Suspense>
