@@ -60,6 +60,7 @@ src/components/Billing.tsx     — subscription management UI
 src/pages/AICompany.tsx        — บริษัท AI page (factory, agent tasks) · ชื่อ/เป้าหมาย = controlled draft (แก้บั๊กพิมพ์แล้วหาย)
 src/lib/companyIdentity.ts     — CEO เสนอชื่อบริษัท (หลัก Corporate Identity) + โลโก้ SVG monogram โปรซีเจอรัล (pure/tested) · components/CompanyNamer.tsx (AI ออนไลน์ / rule-based ออฟไลน์) → บอร์ดเลือก → aiCompany.name+logoSvg
 src/lib/opsMetrics.ts          — ออกแบบตัวชี้วัดผลการดำเนินงานจาก BMC + ประเภทธุรกิจ (รายวัน/สัปดาห์) + evaluatePerformance + CSV template/parse (pure/tested) · components/OpsDataPanel.tsx ในหน้า Factory → AppData.opsData.entries → ประเมินสมรรถนะ
+src/lib/marketSizing.ts        — วิจัยตลาด + ประเมินขนาดตลาด TAM/SAM/SOM (top-down + ช่วง) + opportunityScore 5 ปัจจัย + cmoResearchPrompt (pure/tested) · components/MarketSizingPanel.tsx ในหน้า 'marketing' — CMO (a-cmo มณี) นำเสนอ · AI ผ่าน agent-run + Serper (useWebSearch) / rule-based fallback
 src/pages/CaseStudies.tsx      — case studies (built-in CASES + data.caseStudies ที่แอดมินนำเข้า)
 src/pages/AdminTabs/CaseStudyTab.tsx — Content Studio: นำเข้า Case (ฟอร์ม/JSON/AI สรุป) + ปุ่ม "💰 เสนอเป็น Skill" แปลงเคส→สินค้า Marketplace พร้อมประเมินราคาอัตโนมัติ
 src/lib/skillValuation.ts      — suggestSkillFromCase() ประเมินหมวด/tier/ราคา/valueNote จากเคส (pure, tested)

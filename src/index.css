@@ -1673,6 +1673,41 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ai-panel { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); overflow: hidden; }
 
 /* Intake — รับข้อมูลจากผู้ใช้ → CEO มอบหมายงาน */
+/* วิจัยตลาด + ขนาดตลาด (MarketSizingPanel · CMO) */
+.ms-card { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 16px 18px; margin: 0 0 18px; }
+.ms-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ms-avatar { font-size: 30px; flex: none; }
+.ms-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+.ms-sub { font-size: 12px; color: var(--ink3); }
+.ms-run { margin-left: auto; font-family: inherit; font-size: 13px; font-weight: 700; color: #fff; background: #2d6a4f; border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; }
+.ms-run:disabled { opacity: .6; cursor: default; }
+.ms-msg { font-size: 12.5px; color: var(--ink2); margin: 8px 0; }
+.ms-inputs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+.ms-inputs label { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; color: var(--ink3); }
+.ms-inputs input { font-family: inherit; font-size: 13px; padding: 7px 10px; border: 1px solid var(--sand); border-radius: 8px; }
+.ms-tam { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.ms-tam-card { text-align: center; border-radius: 12px; padding: 14px 8px; color: #fff; }
+.ms-tam-card.tam { background: linear-gradient(135deg, #1a4f8a, #2d6a4f); }
+.ms-tam-card.sam { background: linear-gradient(135deg, #2d6a4f, #40916c); }
+.ms-tam-card.som { background: linear-gradient(135deg, #b45309, #d97706); }
+.ms-tam-k { font-size: 12px; font-weight: 800; letter-spacing: 1px; opacity: .9; }
+.ms-tam-v { font-size: 22px; font-weight: 800; margin: 2px 0; }
+.ms-tam-label { font-size: 11px; opacity: .9; }
+.ms-tam-range { font-size: 10px; opacity: .75; margin-top: 3px; }
+.ms-som-note { text-align: center; font-size: 12.5px; color: var(--ink2); margin: 10px 0 4px; font-weight: 600; }
+.ms-assump { margin: 6px 0 0; padding-left: 18px; }
+.ms-assump li { font-size: 11.5px; color: var(--ink3); line-height: 1.5; }
+.ms-opp { margin-top: 14px; border-top: 1px solid var(--sand); padding-top: 12px; }
+.ms-opp-hd { font-size: 14px; font-weight: 700; color: var(--ink); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.ms-opp-score { font-size: 13px; font-weight: 700; color: var(--brand, #1a4f8a); }
+.ms-opp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 10px 0; }
+.ms-opp-f { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--ink2); }
+.ms-opp-f select { font-family: inherit; padding: 4px 8px; border: 1px solid var(--sand); border-radius: 6px; }
+.ms-opp-verdict { font-size: 12.5px; color: var(--ink2); line-height: 1.5; }
+.ms-ai { margin-top: 14px; background: rgba(45,106,79,.06); border: 1px solid rgba(45,106,79,.25); border-radius: 10px; padding: 12px 14px; }
+.ms-ai-hd { font-size: 13px; font-weight: 700; color: #2d6a4f; margin-bottom: 6px; }
+.ms-ai-body { font-size: 13px; color: var(--ink2); line-height: 1.65; white-space: pre-wrap; }
+
 /* ผลการดำเนินงาน (OpsDataPanel) */
 .ops-card { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 16px 18px; margin: 0 0 20px; }
 .ops-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 12px; }
