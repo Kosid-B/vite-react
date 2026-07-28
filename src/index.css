@@ -4903,6 +4903,15 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .start-core-name { font-size:18px; font-weight:700; color:#fff; margin:12px 0 8px; }
 .start-core-card p { font-size:14.5px; line-height:1.75; color:#94a3b8; margin:0; }
 
+/* "ต้นน้ำที่แข็งแรง" 8 ขั้น */
+.start-fdn-list { list-style:none; margin:26px 0 0; padding:0;
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; counter-reset:fdn; }
+.start-fdn-item { display:flex; align-items:center; gap:12px; background:#0f172a; border:1px solid #1e293b;
+  border-radius:12px; padding:14px 16px; }
+.start-fdn-num { flex-shrink:0; width:28px; height:28px; border-radius:50%; display:grid; place-items:center;
+  font-size:14px; font-weight:700; color:#020617; background:linear-gradient(135deg,#34d399,#22d3ee); }
+.start-fdn-txt { font-size:14.5px; line-height:1.5; color:#e2e8f0; }
+
 /* ต่างจาก ChatGPT — ตารางเทียบ */
 .start-cmp-tablewrap { margin-top:28px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
 .start-cmp { width:100%; border-collapse:separate; border-spacing:0; min-width:520px; font-size:14.5px; }
