@@ -1,7 +1,22 @@
 import type { PlanId } from '../types';
+import { isSupabaseEnabled, supabase } from './supabase';
 
 /** PLG — ติดตามการใช้งาน AI calls ต่อเดือน เพื่อแสดง usage meter
  *  และชวนอัปเกรดเมื่อใกล้เต็มโควตา (usage-based expansion) */
+
+export interface ServerUsage { used: number; quota: number; plan: string; topup?: number }
+
+/** ดึง usage จริงฝั่ง server (นับต่อ workspace + รวม top-up credits) — null ถ้า offline/ยังไม่พร้อม
+ *  ใช้แทนตัวนับ localStorage เมื่อออนไลน์ (ตรงกับที่ edge functions บังคับ quota จริง) */
+export async function fetchServerUsage(): Promise<ServerUsage | null> {
+  if (!isSupabaseEnabled || !supabase) return null;
+  try {
+    const { data, error } = await supabase.rpc('get_ai_usage');
+    if (error || !data) return null;
+    const d = data as { used?: number; quota?: number; plan?: string; topup?: number };
+    return { used: d.used ?? 0, quota: d.quota ?? 0, plan: d.plan ?? 'free', topup: d.topup ?? 0 };
+  } catch { return null; }
+}
 
 export const PLAN_AI_CALLS: Record<PlanId, number> = {
   free: 200,     // ช่วงทดลอง

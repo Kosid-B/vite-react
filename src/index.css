@@ -1224,6 +1224,8 @@ input:focus, textarea:focus, select:focus {
 .ai-co-name { font-family: 'Kanit', sans-serif; font-weight: 600; font-size: 22px; color: #fff; background: none; border: none; outline: none; width: 100%; cursor: text; }
 .ai-co-logo { display: inline-flex; flex: none; width: 38px; height: 38px; margin-right: 10px; vertical-align: middle; }
 .ai-co-logo svg { width: 38px; height: 38px; border-radius: 8px; }
+.db-brand-logo { display: inline-flex; flex: none; width: 26px; height: 26px; }
+.db-brand-logo svg { width: 26px; height: 26px; border-radius: 6px; }
 .ai-co-industry { display: flex; align-items: center; gap: 8px; }
 
 /* CEO เสนอชื่อบริษัท + โลโก้ (CompanyNamer) */
@@ -1707,6 +1709,25 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ms-ai { margin-top: 14px; background: rgba(45,106,79,.06); border: 1px solid rgba(45,106,79,.25); border-radius: 10px; padding: 12px 14px; }
 .ms-ai-hd { font-size: 13px; font-weight: 700; color: #2d6a4f; margin-bottom: 6px; }
 .ms-ai-body { font-size: 13px; color: var(--ink2); line-height: 1.65; white-space: pre-wrap; }
+
+/* คู่แข่ง + ช่องว่าง (MarketSizingPanel) */
+.ms-comp { margin-top: 16px; border-top: 1px solid var(--sand); padding-top: 12px; }
+.ms-comp-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+.ms-comp-run { font-family: inherit; font-size: 12px; font-weight: 700; color: #fff; background: #2d6a4f; border: none; border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+.ms-comp-run:disabled { opacity: .6; cursor: default; }
+.ms-comp-table { display: flex; flex-direction: column; gap: 8px; }
+.ms-comp-row { display: flex; gap: 10px; align-items: stretch; border: 1px solid var(--sand); border-radius: 10px; padding: 10px 12px; }
+.ms-comp-row.budget { border-left: 4px solid #94a3b8; }
+.ms-comp-row.mid { border-left: 4px solid #2d6a4f; }
+.ms-comp-row.premium { border-left: 4px solid #b45309; }
+.ms-comp-tier { flex: none; width: 64px; font-size: 12px; font-weight: 800; color: var(--ink2); display: flex; align-items: center; }
+.ms-comp-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+.ms-comp-sw { font-size: 11.5px; color: var(--ink2); line-height: 1.5; }
+.ms-comp-sw.weak { color: #b45309; }
+.ms-gap { margin-top: 12px; background: rgba(180,83,9,.06); border: 1px solid rgba(180,83,9,.25); border-radius: 10px; padding: 12px 14px; }
+.ms-gap-hd { font-size: 13px; font-weight: 700; color: #b45309; margin-bottom: 4px; }
+.ms-gap-body { font-size: 12.5px; color: var(--ink2); line-height: 1.6; }
+.ms-gap-move { color: #2d6a4f; font-weight: 600; }
 
 /* ผลการดำเนินงาน (OpsDataPanel) */
 .ops-card { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 16px 18px; margin: 0 0 20px; }
@@ -5570,6 +5591,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .cfo-title { font-size:16px; font-weight:800; }
 .cfo-sub { font-size:12px; color:var(--ink3); }
 .cfo-empty { font-size:13.5px; color:var(--ink3); text-align:center; padding:14px; line-height:1.6; }
+.cfo-ops { font-size:12.5px; color:var(--ink2); background:rgba(45,106,79,.08); border:1px solid rgba(45,106,79,.22); border-radius:8px; padding:8px 12px; margin-bottom:10px; line-height:1.5; }
 .cfo-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px; }
 .cfo-metric { border:1px solid var(--sand); border-radius:10px; padding:10px 12px; text-align:center; background:var(--cream); }
 .cfo-metric span { font-size:12px; color:var(--ink3); display:block; }

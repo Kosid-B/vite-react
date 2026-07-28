@@ -654,6 +654,7 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
       <div className="db-row2" style={{ marginTop: 14 }}>
         <div className="db-panel">
           <div className="db-panel-hd" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {aiCompany.logoSvg && <span className="db-brand-logo" dangerouslySetInnerHTML={{ __html: aiCompany.logoSvg }} />}
             AI Company — {aiCompany.name}
             {aiCompany.running && (
               <span className="db-ai-running-badge">● กำลังทำงาน</span>

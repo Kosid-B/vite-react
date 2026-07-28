@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData } from '../types';
 import { cfoMetrics, cfoFlags, cfoLocalAdvice, cfoPrompt } from '../lib/cfoAnalysis';
+import { opsFinanceBridge } from '../lib/opsMetrics';
 import { fmtBaht } from '../lib/finance';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { track } from '../lib/analytics';
@@ -16,6 +17,8 @@ export default function CfoAnalysis({ data }: { data: AppData }) {
   const m = cfoMetrics(data);
   const flags = cfoFlags(m);
   const localAdvice = cfoLocalAdvice(m);
+  const bridge = opsFinanceBridge(data.opsData?.entries ?? []); // ผลดำเนินงานจริง → ให้ CFO ใช้
+  const hasAny = m.hasData || bridge.days > 0;
   const [busy, setBusy] = useState(false);
   const [aiAdvice, setAiAdvice] = useState<string[] | null>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
@@ -35,7 +38,7 @@ export default function CfoAnalysis({ data }: { data: AppData }) {
         body: {
           page: 'cfo', pageLabel: 'CFO วิเคราะห์การเงิน',
           instruction: cfoPrompt(data),
-          context: '',
+          context: bridge.days > 0 ? `ผลการดำเนินงานจริงจากหน้าโรงงาน: ${bridge.note}` : '',
         },
       });
       if (error) throw error;
@@ -61,14 +64,18 @@ export default function CfoAnalysis({ data }: { data: AppData }) {
         <span className="cfo-sub">จาก “ตัวเลขจริง” ในคลังเมือง · ไม่ใช่คำแนะนำการลงทุน</span>
       </div>
 
-      {!m.hasData ? (
+      {bridge.days > 0 && (
+        <div className="cfo-ops">📊 {bridge.note}</div>
+      )}
+
+      {!hasAny ? (
         <div className="cfo-empty">
-          ยังไม่มีรายการการเงิน — บันทึกรายรับ/รายจ่ายในคลังเมืองด้านบนก่อน แล้ว CFO AI จะวิเคราะห์ให้
+          ยังไม่มีรายการการเงิน — บันทึกรายรับ/รายจ่ายในคลังเมือง หรือผลดำเนินงานในหน้าโรงงานอัจฉริยะก่อน แล้ว CFO AI จะวิเคราะห์ให้
         </div>
       ) : (
         <>
           {/* เมตริกประจำเดือน — โฟกัสความยั่งยืน (recurring) */}
-          <div className="cfo-grid">
+          {m.hasData && <div className="cfo-grid">
             <div className="cfo-metric">
               <span>รายรับประจำ/เดือน</span>
               <b className="up">{fmtBaht(m.recurringRevenue)}</b>
@@ -89,7 +96,7 @@ export default function CfoAnalysis({ data }: { data: AppData }) {
                 {m.breakEvenGap > 0 ? fmtBaht(m.breakEvenGap) : '✅ คุ้มแล้ว'}
               </b>
             </div>
-          </div>
+          </div>}
 
           {/* ธงสุขภาพการเงิน */}
           <div className="cfo-flags">

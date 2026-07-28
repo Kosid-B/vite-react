@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  buildMetricSchema, evaluatePerformance, csvTemplate, parseOpsCsv, type OpsEntry,
+  buildMetricSchema, evaluatePerformance, csvTemplate, parseOpsCsv, opsFinanceBridge, type OpsEntry,
 } from '../opsMetrics';
 
 const BMC = {
@@ -70,6 +70,27 @@ describe('evaluatePerformance', () => {
   it('ไม่มีข้อมูลพอ → ข้อความชวนบันทึกต่อ', () => {
     const r = evaluatePerformance(schema, []);
     expect(r.summary.join(' ')).toContain('บันทึกข้อมูลต่อเนื่อง');
+  });
+});
+
+describe('opsFinanceBridge (Ops → CFO/เมือง)', () => {
+  it('รวมรายได้/ต้นทุน + กำไรขั้นต้น + มาร์จิน + เฉลี่ย/วัน', () => {
+    const b = opsFinanceBridge([
+      { date: '2026-07-01', values: { revenue_total: 1000, cost_variable: 400 } },
+      { date: '2026-07-02', values: { revenue_total: 1500, cost_variable: 600 } },
+    ]);
+    expect(b.days).toBe(2);
+    expect(b.revenue).toBe(2500);
+    expect(b.cost).toBe(1000);
+    expect(b.gross).toBe(1500);
+    expect(b.margin).toBe(60);
+    expect(b.avgDailyRevenue).toBe(1250);
+    expect(b.note).toContain('มาร์จิน 60%');
+  });
+  it('ไม่มีข้อมูล → note ชวนเริ่มบันทึก', () => {
+    const b = opsFinanceBridge([]);
+    expect(b.days).toBe(0);
+    expect(b.note).toContain('เริ่มบันทึก');
   });
 });
 

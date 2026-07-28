@@ -4,6 +4,7 @@ import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { withSkillDirectives } from '../lib/skillDirectives';
 import { trackAiCall } from '../lib/usage';
 import { estimateSizing, opportunityScore, cmoResearchPrompt, type OppFactors } from '../lib/marketSizing';
+import { competitorArchetypes, findGap, competitorPrompt, tierLabel } from '../lib/competitorAnalysis';
 
 /* 📣 วิจัยตลาด + ประเมินขนาดตลาด (TAM/SAM/SOM) — CMO (มณี) รับผิดชอบนำเสนอ
  * ออนไลน์: CMO วิจัยด้วย agent-run + Google Search (Serper) · ออฟไลน์: ประมาณจากสมมติฐาน (แก้ได้) */
@@ -30,6 +31,11 @@ export default function MarketSizingPanel({ data }: { data: AppData; onUpdate?: 
   const [aiOut, setAiOut] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [compOut, setCompOut] = useState<string | null>(null);
+  const [compBusy, setCompBusy] = useState(false);
+
+  const archetypes = useMemo(() => competitorArchetypes(c?.industry), [c?.industry]);
+  const gap = useMemo(() => findGap({ differentiator: (bmc?.value ?? [])[0] }), [bmc?.value]);
 
   const sizing = useMemo(() => estimateSizing({
     annualRevenuePerCustomer: arpu, businessBase: base || undefined, serviceablePct: svPct, capturePctYr1: capPct,
@@ -66,6 +72,30 @@ export default function MarketSizingPanel({ data }: { data: AppData; onUpdate?: 
     } finally {
       setBusy(false);
     }
+  }
+
+  async function runCompetitor() {
+    if (!isSupabaseEnabled || !supabase) { setMsg('โหมด local: ดูอาร์เชไทป์คู่แข่ง + ช่องว่างด้านล่าง — CMO วิเคราะห์คู่แข่งจริงเมื่อออนไลน์'); return; }
+    setCompBusy(true); setCompOut(null); setMsg('');
+    try {
+      trackAiCall();
+      const { data: res, error } = await supabase.functions.invoke('agent-run', {
+        body: {
+          role: cmo?.role ?? 'CMO', name: cmo?.name,
+          mandate: withSkillDirectives(cmo?.mandate ?? 'วิเคราะห์คู่แข่ง', c?.purchasedSkills),
+          model: cmo?.model ?? 'claude-sonnet-4-6',
+          title: 'วิเคราะห์คู่แข่ง + หาช่องว่างตลาด',
+          detail: `หมวด: ${c?.industry ?? '-'} · คุณค่า: ${(bmc?.value ?? []).join(', ') || '-'}`,
+          goal: competitorPrompt({ industry: c?.industry, value: (bmc?.value ?? [])[0], goal: c?.goal }),
+          industry: c?.industry ?? '', companyName: c?.name ?? '',
+          useWebSearch: true, searchQuery: `คู่แข่ง ${c?.industry ?? ''} ไทย เจ้าตลาด ราคา`,
+        },
+      });
+      if (error) throw error;
+      setCompOut(res?.output ?? '(ไม่มีผลลัพธ์)');
+    } catch (e) {
+      setMsg('✕ วิเคราะห์คู่แข่งไม่สำเร็จ: ' + (e as Error).message);
+    } finally { setCompBusy(false); }
   }
 
   return (
@@ -126,6 +156,38 @@ export default function MarketSizingPanel({ data }: { data: AppData; onUpdate?: 
           <div className="ms-ai-body">{aiOut}</div>
         </div>
       )}
+
+      {/* คู่แข่ง + ช่องว่าง */}
+      <div className="ms-comp">
+        <div className="ms-comp-hd">
+          🥊 คู่แข่ง + ช่องว่างตลาด
+          <button className="ms-comp-run" onClick={runCompetitor} disabled={compBusy}>
+            {compBusy ? '⏳ วิเคราะห์…' : 'ให้ CMO วิเคราะห์คู่แข่งจริง'}
+          </button>
+        </div>
+        <div className="ms-comp-table">
+          {archetypes.map((a, i) => (
+            <div key={i} className={`ms-comp-row ${a.tier}`}>
+              <span className="ms-comp-tier">{tierLabel(a.tier)}</span>
+              <div className="ms-comp-cell">
+                <div className="ms-comp-name">{a.name}</div>
+                <div className="ms-comp-sw">✅ {a.strengths}</div>
+                <div className="ms-comp-sw weak">⚠️ {a.weaknesses}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="ms-gap">
+          <div className="ms-gap-hd">🎯 ช่องว่างที่เปิดอยู่</div>
+          <div className="ms-gap-body"><b>{gap.gap}</b><br />{gap.why}<br /><span className="ms-gap-move">→ {gap.moveHint}</span></div>
+        </div>
+        {compOut && (
+          <div className="ms-ai">
+            <div className="ms-ai-hd">{cmo?.avatar ?? '📣'} {cmo?.name ?? 'CMO'} วิเคราะห์คู่แข่ง</div>
+            <div className="ms-ai-body">{compOut}</div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

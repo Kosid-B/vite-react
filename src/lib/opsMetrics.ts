@@ -135,6 +135,33 @@ export function evaluatePerformance(schema: OpsMetric[], entries: OpsEntry[]): P
   return { metrics, summary, score, entriesUsed: sorted.length };
 }
 
+/* ── สะพานเชื่อม Ops → CFO/เมือง: สรุปตัวเลขการเงินจากผลดำเนินงานจริง ── */
+export interface OpsFinanceBridge {
+  days: number;            // จำนวนวันที่มีข้อมูลรายได้
+  revenue: number;         // รวมรายได้ (revenue_total)
+  cost: number;            // รวมต้นทุนผันแปร (cost_variable)
+  gross: number;           // กำไรขั้นต้น
+  margin: number;          // %
+  avgDailyRevenue: number;
+  note: string;            // ข้อความให้ CFO/เมืองใช้
+}
+
+/** สรุปผลดำเนินงานเป็นตัวเลขการเงิน — ให้ CFO วิเคราะห์ + เมืองเติบโตจาก "ตัวเลขจริง" */
+export function opsFinanceBridge(entries: OpsEntry[]): OpsFinanceBridge {
+  const rev = entries.map(e => e.values.revenue_total).filter((v): v is number => typeof v === 'number');
+  const cost = entries.map(e => e.values.cost_variable).filter((v): v is number => typeof v === 'number');
+  const revenue = rev.reduce((s, v) => s + v, 0);
+  const totalCost = cost.reduce((s, v) => s + v, 0);
+  const gross = revenue - totalCost;
+  const margin = revenue > 0 ? round((gross / revenue) * 100) : 0;
+  const days = rev.length;
+  const avgDailyRevenue = days ? round(revenue / days) : 0;
+  const note = days === 0
+    ? 'ยังไม่มีข้อมูลผลดำเนินงานรายวัน — เริ่มบันทึกในหน้าโรงงานอัจฉริยะเพื่อให้ CFO วิเคราะห์จากตัวเลขจริง'
+    : `จากผลดำเนินงาน ${days} วัน: รายได้รวม ฿${revenue.toLocaleString()} · กำไรขั้นต้น ฿${gross.toLocaleString()} (มาร์จิน ${margin}%) · เฉลี่ย ฿${avgDailyRevenue.toLocaleString()}/วัน`;
+  return { days, revenue, cost: totalCost, gross, margin, avgDailyRevenue, note };
+}
+
 /* ── CSV (เทมเพลตให้โหลด + parse ไฟล์ที่อัปกลับ) ── */
 export function csvTemplate(schema: OpsMetric[]): string {
   const header = ['date', ...schema.map(m => m.key)].join(',');
