@@ -3,7 +3,7 @@ import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
-import { GRACE_DAYS } from '../lib/access';
+import { GRACE_DAYS, annualPrice } from '../lib/access';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText } from '../lib/payments';
 import { track } from '../lib/analytics';
@@ -146,7 +146,11 @@ const PLANS: Plan[] = [
 ];
 
 // แพ็กรายปี — จ่ายเท่า ~10 เดือน (ประหยัด ~17% และลด churn)
-const YEARLY_PRICE: Record<PlanId, number> = { free: 0, starter: 3900, growth: 14900, scale: 59000 };
+// ที่มาราคา = canonical helper ใน access.ts (annualPrice) กันเลขรายปี drift จาก 2 ที่
+const YEARLY_PRICE: Record<PlanId, number> = {
+  free: annualPrice('free'), starter: annualPrice('starter'),
+  growth: annualPrice('growth'), scale: annualPrice('scale'),
+};
 
 export default function Billing({ data, onUpdate, wsId }: Props) {
   // PLG: usage meter + referral link

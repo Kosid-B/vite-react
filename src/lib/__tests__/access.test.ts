@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import type { AppData, PlanId, SubStatus } from '../../types';
-import { canAccess, effectiveRank, isExpired, planLabel, setAdminFullAccess, discountedMonthly } from '../access';
+import { canAccess, effectiveRank, isExpired, planLabel, setAdminFullAccess, discountedMonthly,
+  annualPrice, annualPerMonth, annualSavingThb, annualSavingPct } from '../access';
 
 // สร้าง AppData จำลองที่มีแค่ subscription (canAccess/effectiveRank อ่านเฉพาะส่วนนี้)
 function withSub(plan: PlanId, status: SubStatus, opts: { trialEndDate?: string; currentPeriodEnd?: string } = {}): AppData {
@@ -115,5 +116,27 @@ describe('discountedMonthly — ราคาหลังหักคูปอง
   it('clamp % นอกช่วง 0-100', () => {
     expect(discountedMonthly('starter', -5)).toBe(390);
     expect(discountedMonthly('starter', 150)).toBe(0);
+  });
+});
+
+describe('billing รายปี (2 เดือนฟรี)', () => {
+  it('annualPrice = รายเดือน × 10 (จ่าย 10 ใช้ 12)', () => {
+    expect(annualPrice('starter')).toBe(3900);   // 390 × 10
+    expect(annualPrice('growth')).toBe(14900);   // 1490 × 10
+    expect(annualPrice('scale')).toBe(59000);    // 5900 × 10
+    expect(annualPrice('free')).toBe(0);
+  });
+
+  it('annualPerMonth ถูกกว่าราคารายเดือนเสมอ', () => {
+    expect(annualPerMonth('starter')).toBe(325); // 3900/12
+    expect(annualPerMonth('starter')).toBeLessThan(390);
+    expect(annualPerMonth('growth')).toBeLessThan(1490);
+  });
+
+  it('annualSaving = ประหยัด 2 เดือน ≈ 17%', () => {
+    expect(annualSavingThb('starter')).toBe(780);  // 390 × 2
+    expect(annualSavingThb('growth')).toBe(2980);
+    expect(annualSavingPct('growth')).toBe(17);    // round(2/12 × 100)
+    expect(annualSavingPct('free')).toBe(0);       // ไม่หารด้วยศูนย์
   });
 });
