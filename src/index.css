@@ -1222,7 +1222,31 @@ input:focus, textarea:focus, select:focus {
 .ai-control { display: flex; align-items: stretch; gap: 16px; flex-wrap: wrap; background: var(--cream3); border-radius: var(--r-lg); padding: 18px 20px; margin-bottom: 14px; box-shadow: var(--shadow); }
 .ai-control-main { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
 .ai-co-name { font-family: 'Kanit', sans-serif; font-weight: 600; font-size: 22px; color: #fff; background: none; border: none; outline: none; width: 100%; cursor: text; }
+.ai-co-logo { display: inline-flex; flex: none; width: 38px; height: 38px; margin-right: 10px; vertical-align: middle; }
+.ai-co-logo svg { width: 38px; height: 38px; border-radius: 8px; }
 .ai-co-industry { display: flex; align-items: center; gap: 8px; }
+
+/* CEO เสนอชื่อบริษัท + โลโก้ (CompanyNamer) */
+.cn-box { margin: 14px 0 4px; }
+.cn-toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; font-family: inherit; font-size: 14px; font-weight: 600; color: #fff; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); border-radius: 10px; padding: 11px 14px; cursor: pointer; }
+.cn-toggle:hover { background: rgba(255,255,255,.1); }
+.cn-caret { font-size: 11px; opacity: .7; }
+.cn-panel { margin-top: 10px; }
+.cn-hint-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.cn-hint { flex: 1; min-width: 200px; font-family: inherit; font-size: 13px; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--sand); background: var(--white); color: var(--ink); }
+.cn-regen { font-family: inherit; font-size: 13px; font-weight: 700; color: #0f172a; background: #67e8f9; border: none; border-radius: 8px; padding: 9px 16px; cursor: pointer; }
+.cn-regen:disabled { opacity: .6; cursor: default; }
+.cn-msg { font-size: 13px; color: var(--ink2); margin-bottom: 10px; }
+.cn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.cn-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; background: var(--white); border: 1.5px solid var(--sand); border-radius: 12px; padding: 14px 10px; }
+.cn-card.chosen { border-color: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,.15); }
+.cn-logo svg { width: 64px; height: 64px; border-radius: 12px; }
+.cn-name { font-size: 15px; font-weight: 700; color: var(--ink); }
+.cn-tagline { font-size: 11.5px; color: var(--ink3); line-height: 1.4; }
+.cn-why { font-size: 11px; color: var(--ink2); line-height: 1.45; }
+.cn-pick { margin-top: 4px; font-family: inherit; font-size: 12.5px; font-weight: 700; color: #fff; background: var(--brand, #1a4f8a); border: none; border-radius: 8px; padding: 7px 12px; cursor: pointer; width: 100%; }
+.cn-pick:disabled { background: #22c55e; cursor: default; }
+.cn-empty { font-size: 13px; color: var(--ink3); padding: 12px; text-align: center; }
 .ai-co-lbl { font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink4); }
 .ai-co-ind-inp { font-size: 13.5px; color: rgba(255,255,255,.8); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 4px 10px; outline: none; font-family: inherit; flex: 1; max-width: 320px; }
 

@@ -32,6 +32,7 @@ import MarketValidation from '../components/MarketValidation';
 import { validationInstruction, extractVerdict } from '../lib/marketValidation';
 import CSuiteReports from '../components/CSuiteReports';
 import IntakePanel from '../components/IntakePanel';
+import CompanyNamer from '../components/CompanyNamer';
 import OcNode from './aicompany/OcNode';
 import {
   STATUS_LABEL, TASK_COLS, AGENT_PALETTE, AVATARS, MODELS, AVAILABLE_SKILLS,
@@ -1337,6 +1338,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       {/* ===== Control bar ===== */}
       <div className="ai-control">
         <div className="ai-control-main">
+          {c.logoSvg && <span className="ai-co-logo" dangerouslySetInnerHTML={{ __html: c.logoSvg }} />}
           <input className="ai-co-name" value={nameDraft}
             onChange={e => setNameDraft(e.target.value)}
             onBlur={e => setCompanyField('name', e.target.value)} spellCheck={false} />
@@ -1381,6 +1383,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           onBlur={e => setCompanyField('goal', e.target.value)}
           onChange={e => { setGoalDraft(e.target.value); autoH(e.target); }} ref={el => autoH(el)} spellCheck={false} />
       </div>
+
+      <CompanyNamer data={data} onUpdate={onUpdate} />
 
       {/* ===== CEO Mission ===== */}
       {(missionMsg || c.missionApproved) && (

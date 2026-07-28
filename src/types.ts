@@ -233,6 +233,7 @@ export interface CustomSkill {
 
 export interface AICompany {
   name: string;
+  logoSvg?: string;      // โลโก้ SVG ที่บอร์ดเลือก (จาก CEO เสนอชื่อ+โลโก้ · companyIdentity.ts)
   goal: string;          // เป้าหมายหลัก (Mission) ที่บอร์ดตั้งไว้
   industry: string;
   running: boolean;      // ระบบอัตโนมัติกำลังทำงานอยู่หรือไม่
