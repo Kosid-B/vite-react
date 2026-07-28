@@ -10,6 +10,7 @@ export interface Storefront {
   slug: string;
   workspaceId?: string; // เจ้าของหน้าร้าน — ใช้ตอนสร้างออเดอร์ (M3)
   name: string;
+  logoSvg?: string;     // โลโก้แบรนด์ (SVG) จาก CEO เสนอชื่อ+โลโก้ — โชว์บนหน้าร้าน + JSON-LD logo
   dbd: string;
   kind: StorefrontKind; // ประเภทร้าน — ใช้กรองสินค้า/บริการบนสารบัญตลาด
   vp: string;           // Value Proposition — จุดขายหนึ่งประโยค (AI Agent ช่วยเขียน)
@@ -52,6 +53,7 @@ export function coerceStorefront(s: Partial<Storefront> | null | undefined): Sto
     slug: str(v.slug),
     workspaceId: v.workspaceId,
     name: str(v.name),
+    logoSvg: v.logoSvg ? str(v.logoSvg) : undefined,
     dbd: str(v.dbd),
     kind: (v.kind === 'product' || v.kind === 'service' || v.kind === 'both') ? v.kind : 'both',
     vp: str(v.vp),
@@ -77,7 +79,7 @@ function loadLocal(): Storefront | null {
 }
 
 interface Row {
-  slug: string; workspace_id?: string; name: string; dbd: string; kind?: StorefrontKind;
+  slug: string; workspace_id?: string; name: string; logo_svg?: string | null; dbd: string; kind?: StorefrontKind;
   vp?: string; promo?: string; images?: string[]; description: string;
   services: string[]; phone: string; line_id: string; email: string; website: string;
   published: boolean; featured_until?: string | null; updated_at?: string;
@@ -87,7 +89,7 @@ interface Row {
 function rowToStorefront(r: Row): Storefront {
   // ผ่าน coerceStorefront เพื่อเติม field ที่ DB คืน null/หาย (name/dbd/description/phone/…) ให้ครบชนิด
   return coerceStorefront({
-    slug: r.slug, workspaceId: r.workspace_id, name: r.name, dbd: r.dbd,
+    slug: r.slug, workspaceId: r.workspace_id, name: r.name, logoSvg: r.logo_svg ?? undefined, dbd: r.dbd,
     kind: r.kind, vp: r.vp, promo: r.promo, images: r.images, description: r.description,
     services: r.services, phone: r.phone, lineId: r.line_id,
     email: r.email, website: r.website, published: r.published,
@@ -188,7 +190,7 @@ export async function saveStorefront(wsId: string | null, sf: Storefront): Promi
   if (isSupabaseEnabled && supabase) {
     if (!wsId) return 'ยังไม่พบ workspace — ลองรีเฟรชหน้า';
     const { error } = await supabase.from('storefronts').upsert({
-      slug: sf.slug, workspace_id: wsId, name: sf.name, dbd: sf.dbd, kind: sf.kind,
+      slug: sf.slug, workspace_id: wsId, name: sf.name, logo_svg: sf.logoSvg ?? null, dbd: sf.dbd, kind: sf.kind,
       vp: sf.vp, promo: sf.promo, images: sf.images,
       description: sf.description, services: sf.services, phone: sf.phone,
       line_id: sf.lineId, email: sf.email, website: sf.website,

@@ -43,9 +43,11 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
   useEffect(() => {
     getMyStorefront(wsId).then(existing => {
       // ยังไม่มีหน้าร้าน → ร่างจากข้อมูลบริษัทที่กรอกไว้แล้ว (productDesc / productDbd / BMC)
-      setSf(existing ?? {
+      // มีร้านแล้วแต่ยังไม่มีโลโก้ → เติมจากโลโก้บริษัทที่บอร์ดเลือก (แบรนด์ตรงกันทั้งระบบ)
+      setSf(existing ? { ...existing, logoSvg: existing.logoSvg ?? c.logoSvg } : {
         slug: defaultSlug(c.name),
         name: c.name,
+        logoSvg: c.logoSvg,
         dbd: c.productDbd ?? c.industry ?? '',
         kind: 'both',
         vp: '',

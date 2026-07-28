@@ -1370,6 +1370,8 @@ input:focus, textarea:focus, select:focus {
 .pub-link { color: #38bdf8; text-decoration: none; }
 .pub-card { background: var(--white); border: 1px solid var(--sand); border-radius: 16px; padding: 28px 30px; }
 .pub-dbd { display: inline-block; font-size: 12.5px; font-weight: 700; letter-spacing: .04em; color: #67e8f9; background: rgba(56,189,248,.1); border: 1px solid rgba(56,189,248,.3); border-radius: 999px; padding: 3px 10px; }
+.pub-logo { width: 72px; height: 72px; margin-top: 6px; }
+.pub-logo svg { width: 72px; height: 72px; border-radius: 14px; }
 .pub-name { font-size: 26px; font-weight: 800; margin: 12px 0 8px; }
 .pub-desc { font-size: 15px; color: var(--ink2); line-height: 1.8; margin: 0 0 8px; }
 .pub-sec-hd { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink4); margin: 20px 0 8px; }

@@ -19,6 +19,7 @@ export interface SeoStorefront {
   phone?: string;
   rating?: number;        // ค่าเฉลี่ยรีวิวจริง 1..5 (จาก aggregateRating) — emit schema เฉพาะเมื่อมีจริง
   reviewCount?: number;   // จำนวนรีวิวจริง
+  logoUrl?: string;       // URL โลโก้ SVG ของร้าน (worker เสิร์ฟ /b/<slug>/logo.svg) → JSON-LD logo
 }
 
 export interface SeoData {
@@ -92,6 +93,7 @@ export function storefrontSeo(sf: SeoStorefront, origin: string): SeoData {
   };
   if (sf.phone) business.telephone = sf.phone;
   if (cat) business.knowsAbout = cat;
+  if (sf.logoUrl) business.logo = sf.logoUrl; // โลโก้แบรนด์ (Google ใช้ใน Knowledge Graph)
   // AggregateRating (rich snippet ดาวใน Google) — เฉพาะเมื่อมีรีวิว "จริง" เท่านั้น (ไม่ปั้นดาวปลอม)
   if (typeof sf.rating === 'number' && sf.rating >= 1 && sf.rating <= 5 && (sf.reviewCount ?? 0) >= 1) {
     business.aggregateRating = {

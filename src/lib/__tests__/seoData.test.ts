@@ -103,6 +103,11 @@ describe('storefrontSeo', () => {
     const zero = storefrontSeo({ ...SF, rating: 5, reviewCount: 0 }, ORIGIN);
     expect((zero.jsonLd[0] as { aggregateRating?: unknown }).aggregateRating).toBeUndefined();
   });
+  it('มี logoUrl → emit LocalBusiness.logo · ไม่มี → ไม่ emit', () => {
+    const withLogo = storefrontSeo({ ...SF, logoUrl: `${ORIGIN}/b/x/logo.svg` }, ORIGIN);
+    expect((withLogo.jsonLd[0] as { logo?: string }).logo).toBe(`${ORIGIN}/b/x/logo.svg`);
+    expect((seo.jsonLd[0] as { logo?: string }).logo).toBeUndefined();
+  });
 });
 
 describe('directorySeo + directoryItemList', () => {
