@@ -4895,6 +4895,14 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .start-team-ico { font-size:28px; }
 .start-team-role { font-size:16px; font-weight:700; margin-top:8px; color:#fff; }
 .start-team-desc { font-size:13.5px; color:#94a3b8; margin-top:4px; }
+/* แก่น positioning — 2 เสาหลัก (MIT × ISO) */
+.start-core-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; margin-top:26px; }
+.start-core-card { background:#0f172a; border:1px solid #1e293b; border-radius:14px; padding:24px 22px; }
+.start-core-tag { display:inline-block; font-size:12.5px; font-weight:700; color:#34d399;
+  background:rgba(52,211,153,.1); border:1px solid rgba(52,211,153,.25); border-radius:100px; padding:3px 12px; }
+.start-core-name { font-size:18px; font-weight:700; color:#fff; margin:12px 0 8px; }
+.start-core-card p { font-size:14.5px; line-height:1.75; color:#94a3b8; margin:0; }
+
 /* ต่างจาก ChatGPT — ตารางเทียบ */
 .start-cmp-tablewrap { margin-top:28px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
 .start-cmp { width:100%; border-collapse:separate; border-spacing:0; min-width:520px; font-size:14.5px; }

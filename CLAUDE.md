@@ -4,6 +4,11 @@
 Thai SaaS app "บริษัท AI อัตโนมัติ" — Vite + React SPA, no router (navigation = React state).
 Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supabase backend.
 
+**Positioning (ยืนยัน ก.ค. 2569): "AI Business Building System"** — ระบบสร้างธุรกิจด้วย AI ตั้งแต่ต้นน้ำ ให้โตอย่างเป็นระบบ+พร้อมขยาย
+ผสาน 2 เสา: **MIT 24 Steps** (หา PMF/ลูกค้า/คุณค่า) × **ระบบบริหาร/ISO 20+ ปี B.TC** (SOP/KPI/Risk/scalability).
+สารหลัก **ไม่ใช่** "จ้างทีม AI ทั้งบริษัท" — "ทีม AI" = กลไกสนับสนุน · คุณค่าหลัก = ลดความเสี่ยงเริ่มธุรกิจ + ฐานลูกค้าแข็งแรง + scale.
+compliance (PDPA/ISO) = ฟีเจอร์เสริม (ไม่ใช่บริการทำใบเซอร์ — งานที่ปรึกษาส่งต่อ B.Training). แหล่ง canonical: `src/lib/seoData.ts` + `/start` + [BRAND-ARCHITECTURE.md](docs/marketing/BRAND-ARCHITECTURE.md) §8
+
 ## Stack
 - **Frontend**: Vite + React + TypeScript, CSS variables (dark theme `#0f172a`)
 - **Backend**: Supabase (Auth, Postgres RLS, Edge Functions)
