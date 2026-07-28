@@ -10,6 +10,8 @@ import AhaMoment from '../components/AhaMoment';
 import { ahaProgress } from '../lib/ahaMoment';
 import UpgradeNudge from '../components/UpgradeNudge';
 import EcosystemFlow from '../components/EcosystemFlow';
+import { de24Journey } from '../lib/de24Journey';
+import { track } from '../lib/analytics';
 
 interface Props {
   data: AppData;
@@ -329,6 +331,9 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
   // แล้วค่อยเปิด widget รอง (วงจร/ภาพรวม/retention/ดีลแรก) เมื่อ activated — ลด tracker ซ้อนกันตอนเริ่ม
   const aha = ahaProgress(data);
 
+  // MIT 24-Step guided journey — นำ "ขั้นถัดไป" มาเตือนบนหน้าแรก (ดึงกลับมาเดินต่อ = retention)
+  const journey = de24Journey(data);
+
   // AI Company stats
   const agentWorking = aiCompany.agents.filter(a => a.status === 'working').length;
   const agentIdle = aiCompany.agents.filter(a => a.status === 'idle').length;
@@ -374,6 +379,22 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
 
       {/* ===== Aha Moment ใน 5 นาที (activation ผู้ใช้ใหม่) — path เดียวตอน first-run ===== */}
       <AhaMoment data={data} onUpdate={onUpdate} onNavigate={onNavigate} />
+
+      {/* MIT 24-Step nudge — โผล่เมื่อเริ่มเดินแล้วแต่ยังไม่ครบ = มีเหตุผลให้กลับมาทำต่อ (retention) */}
+      {journey.started && !journey.complete && journey.current && (
+        <button className="db-de24-nudge" onClick={() => {
+          track('de24_nudge_click', { from: 'dashboard', step: journey.current!.num });
+          onNavigate('bmc');
+        }}>
+          <span className="db-de24-nudge-ic">🧭</span>
+          <span className="db-de24-nudge-body">
+            <b>MIT 24 Steps — ขั้นถัดไปของคุณ</b>
+            <span className="db-de24-nudge-step">#{journey.current.num} {journey.current.name} · {journey.done}/24 ({journey.pct}%)</span>
+          </span>
+          <span className="db-de24-nudge-bar"><i style={{ width: `${journey.pct}%` }} /></span>
+          <span className="db-de24-nudge-go">ทำต่อ →</span>
+        </button>
+      )}
 
       {/* widget รอง — เปิดเมื่อ activated แล้ว (ลด tracker ซ้อนกันตอนเริ่ม · โฟกัส 3 ก้าวสู่ aha ก่อน) */}
       {aha.activated ? (
