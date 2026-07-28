@@ -3,8 +3,8 @@
 --   guest (anon-key JWT, ไม่มี user) ยิงได้ + trackAiCall นับใน localStorage (รีเซ็ตได้)
 -- แก้: ตัวนับฝั่ง server ต่อ (workspace เดือน) + guest bucket เพดานต่ำ · เพิ่ม/เช็คแบบ atomic
 -- โมเดลบังคับใช้: edge function เรียก rpc bump_ai_usage() ก่อนเรียก Claude — allowed=false → 429
--- ⚠️ quota อ่าน plan จาก workspace_state JSON (ตรงกับ client) — user แก้ JSON เป็น scale เองได้
---   = ยังกัน whale-spoof ไม่ได้ (งาน hardening แยก) แต่กัน guest/free/runaway ได้เต็ม (ตัวรั่วใหญ่สุด)
+-- plan อ่านจาก workspace_plan mirror (service-role/trigger เขียนเท่านั้น) — client แก้ JSON ไม่ขยับ quota
+--   = กัน whale-spoof ได้ + กัน guest/free/runaway ได้เต็ม
 
 -- ── ตัวนับ (ปิด RLS ทั้งหมด → เข้าได้เฉพาะ SECURITY DEFINER RPC / service role) ──
 create table if not exists public.ai_usage (
@@ -16,6 +16,55 @@ create table if not exists public.ai_usage (
 );
 alter table public.ai_usage enable row level security;
 -- ไม่มี policy โดยตั้งใจ = ตารางนี้เข้าถึงได้เฉพาะผ่าน RPC (security definer) เท่านั้น
+
+-- ── plan mirror ที่ client แก้ไม่ได้ (กัน whale-spoof) ──
+-- ปัญหา: plan อยู่ใน workspace_state.data JSON ที่ member เขียนเองได้ (แก้เป็น scale เพื่อ quota 5000)
+-- แก้: mirror plan ลงตารางแยกที่ "อัปเดตเฉพาะเมื่อผู้เขียนเป็น service_role" (webhook/verify-slip/billing-cron
+--   ทุกทางจ่ายเงินเขียน workspace_state ผ่าน service-role อยู่แล้ว) — member เขียน JSON ไม่ขยับ mirror
+-- ครอบคลุมทุกทางจ่าย (slip/Stripe/Xendit) โดยไม่ต้องแก้ payment webhook เลย
+create table if not exists public.workspace_plan (
+  workspace_id uuid primary key references public.workspaces(id) on delete cascade,
+  plan         text not null default 'free' check (plan in ('free','starter','growth','scale')),
+  updated_at   timestamptz not null default now()
+);
+alter table public.workspace_plan enable row level security;
+-- select ให้สมาชิกดูได้ · ไม่มี policy insert/update/delete → client เขียนไม่ได้ (เฉพาะ trigger/service-role bypass RLS)
+drop policy if exists wp_member_select on public.workspace_plan;
+create policy wp_member_select on public.workspace_plan for select using (public.is_member(workspace_id));
+
+-- trigger: sync plan → mirror เฉพาะเมื่อ role = service_role (ไม่ใช่ member client save)
+create or replace function public.sync_workspace_plan()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_role text := coalesce((current_setting('request.jwt.claims', true))::jsonb ->> 'role', '');
+  v_plan text;
+begin
+  if v_role = 'service_role' then
+    v_plan := new.data -> 'subscription' ->> 'plan';
+    if v_plan in ('free','starter','growth','scale') then
+      insert into public.workspace_plan (workspace_id, plan, updated_at)
+        values (new.workspace_id, v_plan, now())
+        on conflict (workspace_id) do update set plan = excluded.plan, updated_at = now();
+    end if;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists trg_sync_workspace_plan on public.workspace_state;
+create trigger trg_sync_workspace_plan
+  after insert or update of data on public.workspace_state
+  for each row execute function public.sync_workspace_plan();
+
+-- backfill: seed mirror จาก payment_submissions ที่ approved (trusted — client แก้ status ไม่ได้)
+-- เลือก tier สูงสุดต่อ workspace (generous — ไม่ throttle payer จริงพลาด) · Stripe/Xendit ที่ไม่มีแถวนี้
+-- จะได้ mirror ตอน webhook เขียน workspace_state ครั้งถัดไป
+insert into public.workspace_plan (workspace_id, plan)
+select ps.workspace_id,
+  (array['scale','growth','starter'])[min(array_position(array['scale','growth','starter'], ps.plan))]
+from public.payment_submissions ps
+where ps.status = 'approved' and ps.plan in ('starter','growth','scale')
+group by ps.workspace_id
+on conflict (workspace_id) do nothing;
 
 -- โควตาต่อแพ็ก — ต้องตรงกับ src/lib/usage.ts PLAN_AI_CALLS
 create or replace function public.ai_quota_for(p_plan text)
@@ -63,10 +112,10 @@ begin
       v_bucket := 'user:' || v_uid::text;
     else
       v_bucket := 'ws:' || v_ws::text;
-      select coalesce(ws.data -> 'subscription' ->> 'plan', 'free')
-        into v_plan
-        from public.workspace_state ws
-        where ws.workspace_id = v_ws;
+      -- อ่าน plan จาก mirror ที่ client แก้ไม่ได้ (fallback free ถ้ายังไม่มี = free/trial → quota 200)
+      select wp.plan into v_plan
+        from public.workspace_plan wp
+        where wp.workspace_id = v_ws;
       v_plan := coalesce(v_plan, 'free');
     end if;
     v_quota := public.ai_quota_for(v_plan);
@@ -119,8 +168,9 @@ begin
     v_bucket := 'user:' || v_uid::text;
   else
     v_bucket := 'ws:' || v_ws::text;
-    select coalesce(ws.data -> 'subscription' ->> 'plan', 'free') into v_plan
-      from public.workspace_state ws where ws.workspace_id = v_ws;
+    select wp.plan into v_plan
+      from public.workspace_plan wp where wp.workspace_id = v_ws;
+    v_plan := coalesce(v_plan, 'free');
   end if;
   select count into v_count from public.ai_usage where bucket = v_bucket and month = v_month;
   return jsonb_build_object('used', coalesce(v_count, 0), 'quota', public.ai_quota_for(coalesce(v_plan,'free')), 'plan', coalesce(v_plan,'free'));
