@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
-import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
+import { getAiUsage, PLAN_AI_CALLS, fetchServerUsage, type ServerUsage } from '../lib/usage';
 import { TOPUP_PACKS, pricePerCall, type TopupPack } from '../lib/topup';
 import { GRACE_DAYS, annualPrice } from '../lib/access';
 import { callCostThb, CALL_PROFILE } from '../lib/aiCost';
@@ -153,9 +153,12 @@ const YEARLY_PRICE: Record<PlanId, number> = {
 export default function Billing({ data, onUpdate, wsId }: Props) {
   // PLG: usage meter + referral link
   const [refCopied, setRefCopied] = useState(false);
-  const aiUsed = getAiUsage().count;
-  const aiQuota = PLAN_AI_CALLS[data.subscription.plan];
-  const aiPct = Math.min(100, Math.round((aiUsed / aiQuota) * 100));
+  // usage: ใช้ค่าจริงจาก server (นับต่อ workspace + รวม top-up) ถ้าออนไลน์ · fallback localStorage
+  const [srvUsage, setSrvUsage] = useState<ServerUsage | null>(null);
+  useEffect(() => { fetchServerUsage().then(setSrvUsage); }, []);
+  const aiUsed = srvUsage ? srvUsage.used : getAiUsage().count;
+  const aiQuota = srvUsage ? srvUsage.quota : PLAN_AI_CALLS[data.subscription.plan];
+  const aiPct = aiQuota > 0 ? Math.min(100, Math.round((aiUsed / aiQuota) * 100)) : 0;
   const refLink = 'https://ceoaithailand.org/?ref=' + (data.aiCompany.name || 'friend').replace(/\s+/g, '-');
   const copyRef = () => {
     navigator.clipboard?.writeText(refLink).then(() => {
