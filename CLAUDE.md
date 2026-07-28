@@ -240,7 +240,8 @@ public.orders             — ออเดอร์ + ค่าธรรมเ�
 public.skill_auctions     — ประมูล skill แบบ English Auction (0012)
 public.skill_bids         — บิดประมูล โปร่งใสเห็นกันหมด (0012)
 public.workspace_integrations — credential ของ integration ที่ User เชื่อมเอง (LINE/Sheets) RLS per-workspace, revoke anon; ไม่อยู่ใน workspace_state (กัน secret รั่ว) (0020)
-public.ai_usage           — ตัวนับ AI calls ต่อ (bucket=ws/user/guest-IP, เดือน) บังคับ quota ฝั่ง server (0035) · RLS ปิดหมด เข้าผ่าน rpc bump_ai_usage/get_ai_usage (SECURITY DEFINER) · guest cap 25/เดือน/IP · flag ENFORCE_AI_QUOTA (default off, fail-open) wire ใน ai-assist/ai-plan/agent-run ผ่าน _shared/quota.ts
+public.ai_usage           — ตัวนับ AI calls ต่อ (bucket=ws/user/guest-IP, เดือน) บังคับ quota ฝั่ง server (0035) · RLS ปิดหมด เข้าผ่าน rpc bump_ai_usage/get_ai_usage (SECURITY DEFINER) · guest cap 25/เดือน/IP · flag ENFORCE_AI_QUOTA (default off, fail-open) wire ใน ai-assist/ai-plan/agent-run ผ่าน _shared/quota.ts · plan อ่านจาก workspace_plan mirror (trigger sync เฉพาะ role=service_role กัน spoof)
+public.ai_topup           — Top-up packs: credits AI เพิ่มต่อ workspace/เดือน (0036) · rpc grant_ai_topup (admin/service_role เท่านั้น) · bump/get_ai_usage รวม credits เข้า quota · แพ็ก src/lib/topup.ts (+500฿490/+1000฿990/+3000฿2900 · margin>20% แม้ worst-case) · UI: Billing (ซื้อ PromptPay) + PaymentsTab (admin เปิด credits)
 ```
 
 ## Edge Functions

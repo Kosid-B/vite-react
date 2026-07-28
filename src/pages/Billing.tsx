@@ -3,6 +3,7 @@ import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
+import { TOPUP_PACKS, pricePerCall, type TopupPack } from '../lib/topup';
 import { GRACE_DAYS, annualPrice } from '../lib/access';
 import { callCostThb, CALL_PROFILE } from '../lib/aiCost';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
@@ -169,6 +170,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   const [copied, setCopied] = useState(false);
   const [invoiceModal, setInvoiceModal] = useState<Invoice | null>(null);
   const [showCost, setShowCost] = useState(false);
+  const [topupPack, setTopupPack] = useState<TopupPack | null>(null); // แพ็ก top-up ที่เลือกซื้อ
   const [payBusy, setPayBusy] = useState(false);
   const [payErr, setPayErr] = useState<string | null>(null);
   const [slipBusy, setSlipBusy] = useState(false);
@@ -486,6 +488,42 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
               </button>
             </div>
           )}
+
+          {/* Top-up: ซื้อ AI calls เพิ่มเป็นครั้ง (ไม่ต้องอัปแพ็กถาวร) — credits ใช้ได้เฉพาะเดือนนี้ */}
+          <div className="topup-box">
+            <div className="topup-hd">➕ ซื้อ AI เพิ่มเป็นครั้ง (Top-up)</div>
+            <div className="topup-sub">ไม่อยากอัปแพ็กถาวร? เติมเฉพาะเดือนนี้ได้ — จ่ายครั้งเดียว credits เพิ่มทันทีหลังยืนยัน</div>
+            <div className="topup-packs">
+              {TOPUP_PACKS.map(p => (
+                <button
+                  key={p.id}
+                  className={`topup-pack${topupPack?.id === p.id ? ' active' : ''}${p.best ? ' best' : ''}`}
+                  onClick={() => setTopupPack(topupPack?.id === p.id ? null : p)}
+                >
+                  {p.best && <span className="topup-best">คุ้มสุด</span>}
+                  <span className="topup-calls">{p.label}</span>
+                  <span className="topup-price">{baht(p.price)}</span>
+                  <span className="topup-per">เฉลี่ย ฿{pricePerCall(p)}/call</span>
+                </button>
+              ))}
+            </div>
+            {topupPack && (
+              <div className="topup-pay">
+                {PAYMENT.promptpayLive ? (
+                  <>
+                    <div className="topup-pay-hd">สแกนจ่าย {baht(topupPack.price)} ผ่าน PromptPay</div>
+                    <img className="topup-qr" src={promptPayQrUrl(PAYMENT.promptpayId, topupPack.price)} alt="PromptPay QR" width={160} height={160} />
+                  </>
+                ) : (
+                  <div className="topup-pay-hd">โอน {baht(topupPack.price)} → {PAYMENT.promptpayId} (PromptPay)</div>
+                )}
+                <div className="topup-pay-note">
+                  โอนแล้วแจ้งทีมงาน (support@b-tctraining.com) พร้อม Workspace ID: <b>{wsId ?? '—'}</b> และแพ็ก <b>{topupPack.label}</b>
+                  <br />ทีมงานยืนยันแล้วเปิด credits ให้ทันที (ระบบ auto-verify กำลังพัฒนา)
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className="plg-card">
           <div className="plg-hd">🎁 ชวนเพื่อนใช้ {BRAND.product}</div>

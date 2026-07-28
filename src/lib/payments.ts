@@ -137,3 +137,11 @@ export async function reviewPayment(id: string, status: 'approved' | 'rejected',
     .eq('id', id);
   return error ? error.message : '';
 }
+
+/** แอดมินเปิด AI credits (top-up) ให้ workspace หลังยืนยันการชำระเงิน — เรียก rpc grant_ai_topup
+ *  (server gate ด้วย is_app_admin) · credits ใช้ได้เฉพาะเดือนปัจจุบัน */
+export async function grantAiTopup(workspaceId: string, credits: number): Promise<string | null> {
+  if (!isSupabaseEnabled || !supabase) return 'ต้องเชื่อม Supabase ก่อน';
+  const { error } = await supabase.rpc('grant_ai_topup', { p_workspace: workspaceId, p_credits: credits });
+  return error ? error.message : null;
+}

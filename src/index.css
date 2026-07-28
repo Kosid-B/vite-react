@@ -1471,6 +1471,28 @@ input:focus, textarea:focus, select:focus {
 .plg-txt { font-size: 12.5px; color: var(--ink3); margin-top: 6px; }
 .plg-nudge { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: #fbbf24; background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.3); border-radius: 8px; padding: 8px 12px; margin-top: 10px; }
 .plg-nudge-btn { font-size: 12.5px; font-weight: 700; font-family: inherit; color: #0f172a; background: #fbbf24; border: none; border-radius: 6px; padding: 5px 12px; cursor: pointer; }
+/* Top-up admin grant */
+.topup-grant { background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); padding: 14px 18px; margin-bottom: 16px; }
+.topup-grant-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.topup-grant-sel { font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid var(--sand); border-radius: 8px; background: var(--white); color: var(--ink); }
+
+/* Top-up packs (ซื้อ AI เพิ่มเป็นครั้ง) */
+.topup-box { margin-top: 12px; border-top: 1px dashed var(--sand); padding-top: 12px; }
+.topup-hd { font-size: 13px; font-weight: 700; color: var(--ink); }
+.topup-sub { font-size: 11.5px; color: var(--ink3); line-height: 1.5; margin: 3px 0 10px; }
+.topup-packs { display: flex; gap: 8px; flex-wrap: wrap; }
+.topup-pack { position: relative; flex: 1; min-width: 90px; display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; background: var(--white); border: 1.5px solid var(--sand); border-radius: 10px; padding: 10px 8px; cursor: pointer; font-family: inherit; transition: border-color .15s, background .15s; }
+.topup-pack:hover { border-color: #38bdf8; }
+.topup-pack.active { border-color: #06b6d4; background: rgba(6,182,212,.06); }
+.topup-pack.best { border-color: #22c55e; }
+.topup-best { position: absolute; top: -8px; font-size: 9.5px; font-weight: 800; color: #052e16; background: #22c55e; border-radius: 999px; padding: 1px 8px; }
+.topup-calls { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.topup-price { font-size: 15px; font-weight: 800; color: #06b6d4; }
+.topup-per { font-size: 10.5px; color: var(--ink3); }
+.topup-pay { margin-top: 12px; text-align: center; background: rgba(6,182,212,.05); border: 1px solid rgba(6,182,212,.2); border-radius: 10px; padding: 12px; }
+.topup-pay-hd { font-size: 13px; font-weight: 700; color: var(--ink); }
+.topup-qr { margin: 8px auto; border-radius: 8px; background: #fff; }
+.topup-pay-note { font-size: 11.5px; color: var(--ink3); line-height: 1.6; margin-top: 6px; }
 .plg-ref-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.6; margin-bottom: 10px; }
 .plg-ref-row { display: flex; gap: 8px; }
 .plg-ref-link { flex: 1; min-width: 0; font-size: 12.5px; font-family: inherit; color: var(--ink2); background: rgba(255,255,255,.06); border: 1px solid var(--sand); border-radius: 6px; padding: 6px 10px; outline: none; }
