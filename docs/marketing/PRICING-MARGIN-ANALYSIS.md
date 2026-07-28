@@ -48,6 +48,23 @@ Quota/เดือน (usage.ts): free 200 · starter 300 · growth 1,000 · sca
 | **quota ไม่ enforce** (soft meter) | ไม่จำกัด | whale Scale ยิง 50,000 calls = ต้นทุน ฿24,500 จ่าย ฿5,900 → **-฿18,600** | **enforce ฝั่ง server** (นับใน DB/Edge Fn ต่อ user) + เกิน quota → บล็อก/ให้ top-up |
 | **trackAiCall = localStorage** | — | รีเซ็ตได้ ไม่ผูก server | ย้ายตัวนับไป server-side |
 
+### ✅ สถานะ: server-side enforcement สร้างแล้ว (ship dark — รอเปิดสวิตช์)
+`supabase/migrations/0035_ai_usage.sql` + `_shared/quota.ts` wire เข้า ai-assist/ai-plan/agent-run:
+- ตัวนับ atomic ต่อ **workspace/เดือน** (rpc `bump_ai_usage`) — plan อ่านจาก workspace_state · โควตาตรงกับ usage.ts
+- **guest cap 25/เดือน ต่อ IP** (x-forwarded-for) — ปิดรูรั่ว "anon-key ยิงฟรีไม่จำกัด" โดยไม่ต้องแก้ client
+- **FAIL-OPEN + FLAG-GATED**: ทำงานเฉพาะ `ENFORCE_AI_QUOTA=true` · error ใด ๆ = อนุญาต (ไม่พัง prod)
+
+เปิดใช้จริง (หลังทดสอบ):
+```bash
+# 1) apply migration (เพิ่มตาราง+RPC — ไม่เปลี่ยนพฤติกรรมจนกว่าจะตั้ง flag)
+supabase db push --project-ref waigsnxhrlwtiotspaim   # หรือ apply_migration ผ่าน MCP
+# 2) เปิด flag + redeploy 3 functions
+supabase secrets set ENFORCE_AI_QUOTA=true --project-ref waigsnxhrlwtiotspaim
+supabase functions deploy ai-assist ai-plan agent-run --project-ref waigsnxhrlwtiotspaim
+```
+⚠️ ข้อจำกัดที่เหลือ: plan อ่านจาก JSON ที่ client แก้ได้ → whale แก้เป็น scale เองได้ (กัน guest/free/runaway ได้เต็ม
+แต่ whale-spoof ต้อง harden ด้วย plan column/payment_submissions ในงานถัดไป)
+
 ## 4. Share token / BYOK — จำเป็นไหม?
 
 **ไม่จำเป็นเป็นโมเดลหลัก** — เศรษฐศาสตร์ผ่าน 20% อยู่แล้ว และ BYOK เพิ่ม friction (ต้องไปขอ API key เอง) = **ขัดเป้าหมาย "ตัดสินใจลงทุนเร็วขึ้น"**.
