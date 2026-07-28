@@ -21,7 +21,7 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
   const setText: typeof setTextState = (v) => {
     setTextState(prev => {
       const next = typeof v === 'function' ? (v as (p: string) => string)(prev) : v;
-      try { next ? sessionStorage.setItem(DRAFT_KEY, next) : sessionStorage.removeItem(DRAFT_KEY); } catch { /* noop */ }
+      try { if (next) sessionStorage.setItem(DRAFT_KEY, next); else sessionStorage.removeItem(DRAFT_KEY); } catch { /* noop */ }
       return next;
     });
   };
