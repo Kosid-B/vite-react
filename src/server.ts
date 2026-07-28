@@ -19,18 +19,33 @@ interface Env {
 }
 
 /** อ่านแถวหน้าร้าน (เฉพาะที่เผยแพร่) ผ่าน Supabase REST — คืน null ถ้าไม่มี/พลาด (fallback shell) */
-async function fetchStorefront(slug: string, env: Env): Promise<SeoStorefront | null> {
+async function fetchStorefront(slug: string, env: Env, origin: string): Promise<SeoStorefront | null> {
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return null;
   const q = `${env.SUPABASE_URL}/rest/v1/storefronts?slug=eq.${encodeURIComponent(slug)}` +
-    `&published=eq.true&select=slug,name,dbd,kind,vp,description,promo,images,phone,rating,review_count&limit=1`;
+    `&published=eq.true&select=slug,name,dbd,kind,vp,description,promo,images,phone,rating,review_count,logo_svg&limit=1`;
   const res = await fetch(q, {
     headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SUPABASE_ANON_KEY}` },
   });
   if (!res.ok) return null;
-  const rows = (await res.json()) as Array<SeoStorefront & { review_count?: number }>;
+  const rows = (await res.json()) as Array<SeoStorefront & { review_count?: number; logo_svg?: string | null }>;
   const row = Array.isArray(rows) && rows[0] ? rows[0] : null;
-  // map review_count (snake) → reviewCount (camel) เพื่อให้ storefrontSeo แนบ AggregateRating
-  return row ? { ...row, reviewCount: row.review_count } : null;
+  if (!row) return null;
+  // map review_count (snake) → reviewCount (camel) + logoUrl (worker เสิร์ฟ SVG ที่ /b/<slug>/logo.svg)
+  const logoUrl = row.logo_svg ? `${origin}/b/${encodeURIComponent(slug)}/logo.svg` : undefined;
+  return { ...row, reviewCount: row.review_count, logoUrl };
+}
+
+/** อ่านโลโก้ SVG ของร้าน (published) — คืน null ถ้าไม่มี */
+async function fetchStorefrontLogo(slug: string, env: Env): Promise<string | null> {
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return null;
+  const q = `${env.SUPABASE_URL}/rest/v1/storefronts?slug=eq.${encodeURIComponent(slug)}` +
+    `&published=eq.true&select=logo_svg&limit=1`;
+  const res = await fetch(q, {
+    headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SUPABASE_ANON_KEY}` },
+  });
+  if (!res.ok) return null;
+  const rows = (await res.json()) as Array<{ logo_svg?: string | null }>;
+  return rows?.[0]?.logo_svg ?? null;
 }
 
 /** รายชื่อร้านที่เผยแพร่ (slug + name + updatedAt) — ใช้ทำ sitemap และ ItemList หน้าตลาด */
@@ -133,11 +148,23 @@ export default {
         catch { /* fallback → shell เดิม */ }
       }
 
+      // /b/<slug>/logo.svg → เสิร์ฟโลโก้แบรนด์ของร้าน (SVG) สำหรับ JSON-LD logo + แชร์
+      const logoM = url.pathname.match(/^\/b\/([^/]+)\/logo\.svg$/);
+      if (logoM) {
+        try {
+          const svg = await fetchStorefrontLogo(decodeURIComponent(logoM[1]), env);
+          if (svg && svg.trim().startsWith('<svg')) {
+            return new Response(svg, { headers: { 'content-type': 'image/svg+xml; charset=utf-8', 'cache-control': 'public, max-age=3600' } });
+          }
+        } catch { /* fall through → 404 */ }
+        return new Response('not found', { status: 404 });
+      }
+
       // /b/<slug> → inject meta ต่อร้าน
       const m = url.pathname.match(/^\/b\/([^/]+)\/?$/);
       if (m) {
         try {
-          const sf = await fetchStorefront(decodeURIComponent(m[1]), env);
+          const sf = await fetchStorefront(decodeURIComponent(m[1]), env, origin);
           if (sf) return injectSeo(await env.ASSETS.fetch(request), storefrontSeo(sf, origin));
         } catch { /* fallback → shell เดิม (React แสดง "ไม่พบร้าน") */ }
       }

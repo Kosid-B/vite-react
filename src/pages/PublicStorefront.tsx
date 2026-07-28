@@ -94,6 +94,7 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
     <PublicShell title={sf.name}>
       <div className="pub-card">
         <div className="pub-dbd">{sectorLabel(sf.dbd)}</div>
+        {sf.logoSvg && <div className="pub-logo" dangerouslySetInnerHTML={{ __html: sf.logoSvg }} />}
         <h1 className="pub-name">{sf.name}</h1>
         {typeof sf.rating === 'number' && (sf.reviewCount ?? 0) > 0 && (
           <div className="pub-rating" title={`${sf.rating} จาก 5 · ${sf.reviewCount} รีวิว`}>
