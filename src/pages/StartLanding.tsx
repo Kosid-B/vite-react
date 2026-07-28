@@ -44,12 +44,13 @@ const FAQS: FaqItem[] = [
 // ข้อความเป็นข้อเท็จจริงของฟีเจอร์ที่มีจริง — ไม่โม้เกินจริง
 type CmpRow = { label: string; chatgpt: string; ceo: string };
 const COMPARE_BIZ: CmpRow[] = [
-  { label: 'รูปแบบการทำงาน', chatgpt: 'ตอบเป็นข้อความ ทีละคำถาม', ceo: 'ทีมผู้บริหาร AI วางแผน–มอบงาน–ลงมือทำต่อเนื่อง' },
-  { label: 'ขายของจริง', chatgpt: 'ต้องไปสร้างหน้าร้าน/ช่องทางเองที่อื่น', ceo: 'สร้างหน้าร้าน + Marketplace รับงาน B2B ในระบบ' },
-  { label: 'แผน/ระบบธุรกิจ', chatgpt: 'ต้อง prompt เองทุกครั้ง', ceo: 'เทมเพลตไทยพร้อมใช้: BMC · SIPOC · Persona · KPI' },
-  { label: 'บริบทไทย', chatgpt: 'ทั่วไป ไม่เจาะไทย', ceo: 'ออกแบบเพื่อ SME ไทย + หมวดธุรกิจ DBD' },
-  { label: 'ความต่อเนื่อง', chatgpt: 'จำบริบทได้จำกัด เริ่มใหม่บ่อย', ceo: 'เก็บสถานะธุรกิจ งานเดินต่อเป็นระบบ' },
-  { label: 'ใครอยู่เบื้องหลัง', chatgpt: 'แพลตฟอร์มต่างชาติ', ceo: 'ที่ปรึกษาธุรกิจไทย 20+ ปี (B. Training)' },
+  { label: 'สิ่งที่ได้', chatgpt: 'ช่วยตอบคำถาม', ceo: 'ช่วยสร้างธุรกิจเป็นขั้นตอน' },
+  { label: 'วิธีคิด', chatgpt: 'สร้างข้อความและไอเดีย', ceo: 'ตรวจสอบสมมติฐานทางธุรกิจ (PMF)' },
+  { label: 'โฟกัส', chatgpt: 'เน้นเครื่องมือ AI', ceo: 'เน้นผลลัพธ์ทางธุรกิจ' },
+  { label: 'กรอบการทำงาน', chatgpt: 'ไม่มีกรอบดำเนินงาน', ceo: 'ใช้แนวทาง MIT 24 Steps' },
+  { label: 'ระบบบริหาร', chatgpt: 'ไม่เชื่อมกับระบบ', ceo: 'เชื่อม SOP · KPI · Risk · ISO' },
+  { label: 'ระยะการใช้งาน', chatgpt: 'เหมาะกับงานรายครั้ง', ceo: 'ออกแบบเพื่อเติบโตระยะยาว' },
+  { label: 'การพึ่งพา', chatgpt: 'ธุรกิจยังพึ่งเจ้าของ', ceo: 'เตรียมธุรกิจให้ทำซ้ำ + ขยายได้' },
 ];
 const COMPARE_ISO: CmpRow[] = [
   { label: 'เอกสาร ISO ไทย', chatgpt: 'ต้อง prompt เขียนเองทุกครั้ง', ceo: 'มีโครงเทมเพลต ISO 9001/14001/45001/22301' },
@@ -167,11 +168,11 @@ export default function StartLanding() {
             <div className="start-badge">✦ &nbsp;สำหรับคนจบใหม่ · คนหางาน · คนที่งานประจำไม่พอกิน&nbsp; ✦</div>
             <h1 className="start-h1">
               ไม่มีใครจ้าง ไม่ได้แปลว่าไปต่อไม่ได้<br />
-              <span className="start-h1-hl">เปิดบริษัทของคุณเอง — พร้อมทีม AI ทั้งบริษัท</span>
+              <span className="start-h1-hl">เปิดบริษัทของคุณเอง — สร้างถูกตั้งแต่ต้น พร้อมทีม AI ช่วยลงมือ</span>
             </h1>
             <p className="start-sub">
               ปีนี้คนจบ ป.ตรี ว่างงานกว่า <b>116,000 คน</b> และอีก <b>4.4 ล้านคน</b> มีงานแต่รายได้ไม่พอ*<br />
-              คุณไม่ได้ตัวคนเดียว — และคุณไม่ต้องรอใครจ้าง เมื่อมี CEO, ฝ่ายการตลาด และนักวิจัยตลาด เป็น AI ทำงานให้คุณ
+              คุณไม่ต้องเริ่มแบบเดาสุ่ม — เรามีกรอบ <b>MIT 24 Steps</b> + ระบบบริหาร <b>20 ปี</b> พาคุณหาลูกค้าที่ใช่และวางระบบให้พร้อมโต โดยมีทีม AI ลงมือทำให้
             </p>
             {/* Payoff chips — ส่งต่อความคาดหวังทันทีใน 3–6 วิ (สแกนเห็นผลลัพธ์ก่อนอ่านยาว) */}
             <div className="start-vchips">
@@ -202,6 +203,28 @@ export default function StartLanding() {
           </div>
         </div>
         <div className="start-src">ที่มา: The Gemini Report — Southeast Asia 2026</div>
+      </section>
+
+      {/* แก่น positioning — สร้างต้นน้ำให้แข็งแรง + 2 เสาหลัก (MIT 24 Steps × ระบบ ISO) */}
+      <section className="start-sec start-core-sec">
+        <h2 className="start-h2">ไม่รีบสร้างให้ใหญ่ — แต่สร้าง “ต้นน้ำ” ให้แข็งแรงก่อน</h2>
+        <p className="start-price-note">
+          ธุรกิจที่โตยั่งยืนเริ่มจากพื้นฐานที่ถูก: เลือกลูกค้าที่ใช่ · เข้าใจปัญหาที่เขายอมจ่าย · สร้างคุณค่าที่ชัด ·
+          ทดสอบตลาด แล้วค่อยวางระบบให้ทำซ้ำและขยายได้
+        </p>
+        <div className="start-core-grid">
+          <div className="start-core-card">
+            <div className="start-core-tag">เสาที่ 1 · หาทิศให้ถูก</div>
+            <div className="start-core-name">🎯 แนวทาง 24 Steps ของ MIT</div>
+            <p>ค้นหากลุ่มลูกค้าเป้าหมาย กำหนดคุณค่า ทดสอบ Product–Market Fit และสร้างรายได้ — อย่างมีระเบียบวิธี ไม่เดาสุ่ม</p>
+          </div>
+          <div className="start-core-card">
+            <div className="start-core-tag">เสาที่ 2 · วางระบบให้โต</div>
+            <div className="start-core-name">⚙️ ระบบบริหาร/ISO 20+ ปี</div>
+            <p>SOP · KPI · การจัดการความเสี่ยง · ระบบควบคุม จากประสบการณ์ B. Training — ให้ธุรกิจโตได้โดยไม่ต้องพึ่งเจ้าของคนเดียว</p>
+          </div>
+        </div>
+        <div className="start-src">ทีมผู้บริหาร AI คือ “กลไก” ที่ช่วยลงมือทำทั้งสองเสานี้ให้คุณ — ไม่ใช่แค่แชตตอบคำถาม</div>
       </section>
 
       {/* Personas */}

@@ -153,9 +153,11 @@ describe('llmsTxt', () => {
     expect(txt).toContain(`${ORIGIN}/b`);
     expect(txt).toContain(`${ORIGIN}/pricing`);
   });
-  it('ตอกย้ำ positioning ทำธุรกิจ + ผู้พัฒนา B. Training (ไม่ใช่เครื่องมือ compliance)', () => {
+  it('ตอกย้ำ positioning "สร้างธุรกิจ" (MIT 24 Steps × ระบบ ISO) + ผู้พัฒนา B. Training · compliance = ฟีเจอร์เสริม', () => {
     expect(txt).toContain('B. Training');
-    expect(txt).toContain('ไม่ใช่เครื่องมือ compliance');
+    expect(txt).toContain('24 Steps');            // เสาที่ 1 (MIT)
+    expect(txt).toContain('ระบบบริหาร');           // เสาที่ 2 (ISO systems)
+    expect(txt).toContain('ฟีเจอร์เสริม');          // compliance ไม่ใช่พระเอก
     expect(txt).toContain('คำถามที่พบบ่อย');
   });
 });
