@@ -18,7 +18,7 @@ const C = {
   border2:  '#334155',
   white:    '#ffffff',
   slate4:   '#94a3b8',
-  slate5:   '#64748b',
+  slate5:   '#8b96a9',   // ยกจาก #64748b (4.23:1 = ตก AA) → ~6.7:1 บนพื้น #020617 · ยังจางกว่า slate4
   cyan3:    '#67e8f9',
   cyan4:    '#22d3ee',
   cyan5:    '#06b6d4',

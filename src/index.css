@@ -4920,7 +4920,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .start-cta-main { display:inline-block; font-size:18px; font-weight:700; color:#020617; background:#f59e0b; border-radius:12px; padding:16px 40px; text-decoration:none; box-shadow:0 0 32px rgba(245,158,11,.45); transition:all .2s; }
 .start-cta-main:hover { background:#fbbf24; transform:scale(1.04); }
 .start-cta-sub { font-size:14px; color:#67e8f9; text-decoration:none; }
-.start-src { font-size:12px; color:#64748b; margin-top:20px; }
+.start-src { font-size:12px; color:#8b96a9; margin-top:20px; }
 .start-inline-link { color:#34d399; text-decoration:none; font-weight:600; }
 .start-inline-link:hover { text-decoration:underline; }
 .start-sec { max-width:920px; margin:0 auto; padding:56px 24px; width:100%; box-sizing:border-box; }
@@ -5008,7 +5008,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .start-share-btn.fb { border-color:#3b82f688; }
 .start-share-btn.copy { border-color:#06b6d488; }
 .start-final-cta { margin-top:36px; }
-.start-foot { text-align:center; font-size:13px; color:#64748b; padding:22px; border-top:1px solid #1e293b; margin-top:auto; }
+.start-foot { text-align:center; font-size:13px; color:#8b96a9; padding:22px; border-top:1px solid #1e293b; margin-top:auto; }
 .start-foot a { color:#67e8f9; }
 
 /* ── /start: payoff chips (ส่งต่อความคาดหวัง 3–6 วิ) ── */
