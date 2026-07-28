@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
@@ -7,7 +7,8 @@ import { TOPUP_PACKS, pricePerCall, type TopupPack } from '../lib/topup';
 import { GRACE_DAYS, annualPrice } from '../lib/access';
 import { callCostThb, CALL_PROFILE } from '../lib/aiCost';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
-import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText, submitTopupRequest } from '../lib/payments';
+import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText, submitTopupRequest,
+  submitTopupSlip, verifyTopupSlip } from '../lib/payments';
 import { track } from '../lib/analytics';
 import ExpertEdge from '../components/ExpertEdge';
 
@@ -176,12 +177,25 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   const [topupPack, setTopupPack] = useState<TopupPack | null>(null); // แพ็ก top-up ที่เลือกซื้อ
   const [topupBusy, setTopupBusy] = useState(false);
   const [topupSent, setTopupSent] = useState(false);
+  const [topupResult, setTopupResult] = useState<string | null>(null); // ผลตรวจสลิปอัตโนมัติ
+  const topupSlipRef = useRef<HTMLInputElement>(null);
   async function notifyTopup() {
     if (!wsId || !topupPack) return;
     setTopupBusy(true);
     const err = await submitTopupRequest(wsId, { id: topupPack.id, calls: topupPack.calls, price: topupPack.price });
     setTopupBusy(false);
     if (!err) setTopupSent(true);
+  }
+  // อัปสลิป top-up → ตรวจ SlipOK → เปิด credits อัตโนมัติ (ถ้าผ่าน)
+  async function onTopupSlip(file: File) {
+    if (!wsId || !topupPack) return;
+    setTopupBusy(true); setTopupResult(null);
+    const sub = await submitTopupSlip(wsId, { id: topupPack.id, calls: topupPack.calls, price: topupPack.price }, file);
+    if (sub.error || !sub.requestId) { setTopupBusy(false); setTopupResult('⚠️ ' + (sub.error ?? 'อัปสลิปไม่สำเร็จ')); return; }
+    const res = await verifyTopupSlip({ workspaceId: wsId, requestId: sub.requestId });
+    setTopupBusy(false);
+    if (res.ok) { setTopupSent(true); setTopupResult(`✅ เปิด +${topupPack.calls.toLocaleString()} AI calls แล้ว!`); }
+    else setTopupResult('❌ ' + slipReasonText(res.reason) + ' — หรือกด "แจ้งว่าโอนแล้ว" ให้ทีมงานเปิดให้');
   }
   const [payBusy, setPayBusy] = useState(false);
   const [payErr, setPayErr] = useState<string | null>(null);
@@ -529,15 +543,26 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                 ) : (
                   <div className="topup-pay-hd">โอน {baht(topupPack.price)} → {PAYMENT.promptpayId} (PromptPay)</div>
                 )}
-                <div className="topup-pay-note">
-                  โอนแล้วกดปุ่มด้านล่างเพื่อเข้าคิว — ทีมงานยืนยันแล้วเปิด credits ให้ (ปกติ &lt; 1 ชม.)
-                </div>
                 {topupSent ? (
-                  <div className="topup-sent">✅ ส่งคำขอแล้ว — รอทีมงานเปิด credits · ระหว่างนี้ใช้ AI ต่อได้ตามโควตาเดิม</div>
+                  <div className="topup-sent">{topupResult ?? '✅ ส่งคำขอแล้ว — รอทีมงานเปิด credits'}</div>
                 ) : (
-                  <button className="topup-notify" disabled={!wsId || topupBusy} onClick={notifyTopup}>
-                    {topupBusy ? '⏳ กำลังส่ง…' : `✅ แจ้งว่าโอนแล้ว (${topupPack.label})`}
-                  </button>
+                  <>
+                    {PAYMENT.slipOkLive && (
+                      <>
+                        <div className="topup-pay-note">โอนแล้ว <b>อัปสลิป</b> เพื่อเปิด credits อัตโนมัติทันที (ตรวจกับธนาคารจริง)</div>
+                        <button className="topup-notify" disabled={!wsId || topupBusy} onClick={() => topupSlipRef.current?.click()}>
+                          {topupBusy ? '⏳ กำลังตรวจสลิป…' : '📎 อัปสลิป → เปิด credits อัตโนมัติ'}
+                        </button>
+                        <input ref={topupSlipRef} type="file" accept="image/*,.pdf" style={{ display: 'none' }}
+                          onChange={e => { const f = e.target.files?.[0]; if (f) onTopupSlip(f); if (topupSlipRef.current) topupSlipRef.current.value = ''; }} />
+                      </>
+                    )}
+                    {topupResult && <div className="topup-pay-note">{topupResult}</div>}
+                    <div className="topup-pay-note" style={{ marginTop: 6 }}>หรือแจ้งให้ทีมงานเปิดให้ (ปกติ &lt; 1 ชม.):</div>
+                    <button className="topup-notify" style={{ background: '#64748b' }} disabled={!wsId || topupBusy} onClick={notifyTopup}>
+                      ✅ แจ้งว่าโอนแล้ว (เข้าคิว)
+                    </button>
+                  </>
                 )}
               </div>
             )}

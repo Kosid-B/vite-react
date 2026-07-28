@@ -186,3 +186,34 @@ export async function rejectTopupRequest(id: string): Promise<string | null> {
     .update({ status: 'rejected', decided_at: new Date().toISOString() }).eq('id', id);
   return error ? error.message : null;
 }
+
+/** user: อัปสลิป top-up → สร้างคำขอ (slip_path) → คืน requestId ให้ verify ต่อ */
+export async function submitTopupSlip(wsId: string, pack: { id: string; calls: number; price: number }, file: File): Promise<{ error?: string; requestId?: string }> {
+  if (!isSupabaseEnabled || !supabase) return { error: 'ใช้ได้เฉพาะโหมดออนไลน์' };
+  if (file.size > 5_242_880) return { error: 'ไฟล์ใหญ่เกิน 5MB' };
+  const path = `${wsId}/topup-${Date.now()}.${extOf(file)}`;
+  const up = await supabase.storage.from('payment-slips').upload(path, file, { contentType: file.type });
+  if (up.error) return { error: up.error.message };
+  const { data, error } = await supabase.from('ai_topup_request').insert({
+    workspace_id: wsId, pack_id: pack.id, credits: pack.calls, price: pack.price, slip_path: path,
+  }).select('id').maybeSingle();
+  if (error) return { error: error.message };
+  return { requestId: data?.id as string };
+}
+
+/** ตรวจสลิป top-up กับธนาคารจริง (SlipOK) → เปิด credits ทันทีเมื่อผ่าน */
+export async function verifyTopupSlip(input: { workspaceId: string; requestId: string }): Promise<VerifySlipResult> {
+  if (!isSupabaseEnabled || !supabase) return { ok: false, reason: 'offline' };
+  const { data, error } = await supabase.functions.invoke('verify-topup-slip', { body: input });
+  if (error) {
+    const ctx = (error as { context?: { body?: unknown } })?.context;
+    let parsed: VerifySlipResult | null = null;
+    try {
+      const raw = ctx?.body;
+      if (typeof raw === 'string') parsed = JSON.parse(raw);
+      else if (raw && typeof raw === 'object') parsed = raw as VerifySlipResult;
+    } catch { /* ignore */ }
+    return parsed ?? { ok: false, reason: error.message || 'verify_failed' };
+  }
+  return (data as VerifySlipResult) ?? { ok: false, reason: 'no_response' };
+}
