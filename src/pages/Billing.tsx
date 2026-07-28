@@ -4,6 +4,7 @@ import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
 import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS } from '../lib/usage';
 import { GRACE_DAYS, annualPrice } from '../lib/access';
+import { callCostThb, CALL_PROFILE } from '../lib/aiCost';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText } from '../lib/payments';
 import { track } from '../lib/analytics';
@@ -46,37 +47,33 @@ interface Plan {
 interface CostItem { label: string; amount: number; note: string; }
 interface PlanCost { items: CostItem[]; total: number; price: number; margin: number; }
 
+/* ต้นทุน AI คิดจาก "blended cost จริง" (aiCost.ts) ไม่ใช่ ฿0.76/call (เคส agent หนักสุด) —
+ * mix งานจริง 50% assist / 20% plan / 30% agent → ~฿0.49/call (Sonnet)
+ * ที่มา: docs/marketing/PRICING-MARGIN-ANALYSIS.md */
+const BLENDED_CALL_THB =
+  0.5 * callCostThb('claude-sonnet-4-6', CALL_PROFILE.assist.in, CALL_PROFILE.assist.out) +
+  0.2 * callCostThb('claude-sonnet-4-6', CALL_PROFILE.plan.in, CALL_PROFILE.plan.out) +
+  0.3 * callCostThb('claude-sonnet-4-6', CALL_PROFILE.agent.in, CALL_PROFILE.agent.out);
+
+/** สร้าง PlanCost จาก quota จริง + ค่า infra/support — margin คำนวณสด (กัน hardcode ล้าสมัย) */
+function buildCost(calls: number, price: number, infra: number, support: number, infraNote: string, supportNote: string): PlanCost {
+  const ai = Math.round(calls * BLENDED_CALL_THB);
+  const total = ai + infra + support;
+  return {
+    items: [
+      { label: 'Claude AI API', amount: ai, note: `${calls.toLocaleString()} calls × ~฿${BLENDED_CALL_THB.toFixed(2)}/call (blended · Sonnet)` },
+      { label: 'Supabase + Hosting', amount: infra, note: infraNote },
+      { label: 'Support & Development', amount: support, note: supportNote },
+    ],
+    total, price,
+    margin: +(((price - total) / price) * 100).toFixed(1),
+  };
+}
+
 const COST: Record<string, PlanCost> = {
-  starter: {
-    items: [
-      { label: 'Claude AI API', amount: 228, note: '300 calls × ~฿0.76/call (Sonnet model)' },
-      { label: 'Supabase + Hosting', amount: 60, note: 'Database, Edge Functions, Storage' },
-      { label: 'Support & Development', amount: 25, note: 'ทีมพัฒนาและดูแลระบบ' },
-    ],
-    total: 313,
-    price: 390,
-    margin: 19.7,
-  },
-  growth: {
-    items: [
-      { label: 'Claude AI API', amount: 760, note: '1,000 calls × ~฿0.76/call (Sonnet model)' },
-      { label: 'Supabase + Hosting', amount: 250, note: 'Database, Edge Functions, Storage' },
-      { label: 'Support & Development', amount: 180, note: 'ทีมพัฒนาและดูแลระบบ' },
-    ],
-    total: 1190,
-    price: 1490,
-    margin: 20.1,
-  },
-  scale: {
-    items: [
-      { label: 'Claude AI API', amount: 3800, note: '5,000 calls × ~฿0.76/call (Sonnet model)' },
-      { label: 'Supabase + Hosting', amount: 550, note: 'Database, Edge Functions, Storage (priority tier)' },
-      { label: 'Support & Development', amount: 300, note: 'ทีมพัฒนาและดูแลระบบ (dedicated)' },
-    ],
-    total: 4650,
-    price: 5900,
-    margin: 21.2,
-  },
+  starter: buildCost(300, 390, 60, 25, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
+  growth: buildCost(1000, 1490, 250, 180, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
+  scale: buildCost(5000, 5900, 550, 300, 'Database, Edge Functions, Storage (priority tier)', 'ทีมพัฒนาและดูแลระบบ (dedicated)'),
 };
 
 const PLANS: Plan[] = [
@@ -653,7 +650,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
           <div className="bill-cost-wrap">
             <div className="bill-cost-intro">
               ราคาที่คุณจ่ายประกอบด้วยต้นทุน AI API + Infrastructure + ทีมพัฒนา
-              บวกกำไรบริษัท <b>~20%</b> เพื่อความยั่งยืนของแพลตฟอร์ม
+              ส่วนที่เหลือคือกำไรที่นำกลับไปพัฒนาแพลตฟอร์มต่อเนื่อง (คิดจากการใช้งานจริงแบบเฉลี่ย)
             </div>
             <div className="bill-cost-grid">
               {(['starter', 'growth', 'scale'] as const).map(key => {
@@ -694,7 +691,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
                     </div>
                     <div className="bill-cost-api-note">
                       💡 Claude Sonnet ~$3/MTok input · $15/MTok output<br />
-                      ≈ ฿0.76/call (อัตรา $1 = ฿36)
+                      ≈ ฿{BLENDED_CALL_THB.toFixed(2)}/call เฉลี่ยงานจริง (อัตรา $1 = ฿36)
                     </div>
                   </div>
                 );
