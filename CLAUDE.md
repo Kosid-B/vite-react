@@ -293,10 +293,15 @@ node .claude/skills/run-ceo-ai-thailand/driver.mjs --out /tmp/shot.png --nav "�
 
 ## Deploy Flow
 ```
-Production = Cloudflare Workers: npm run build → npx wrangler deploy (worker ceo-ai-thailand)
-Custom domain: ceoaithailand.org (จัดการ DNS ใน Cloudflare)
-Legacy: push to main → GitHub Actions (deploy.yml) → GitHub Pages (ยังรันอยู่ ไม่ใช่ production)
-Vercel: PR preview อัตโนมัติ
+Production = Cloudflare Workers (worker ceo-ai-thailand ผูก custom domain ceoaithailand.org)
+AUTO-DEPLOY: push/merge เข้า main → .github/workflows/cloudflare-deploy.yml → wrangler deploy
+  ต้องมี GitHub secrets: CLOUDFLARE_API_TOKEN (Workers Scripts:Edit + Zone Workers Routes:Edit
+    + DNS:Edit + Account Settings:Read + User Details:Read) + CLOUDFLARE_ACCOUNT_ID
+  ⚠️ GOTCHA: wrangler-action ต้อง pin wranglerVersion >= 3.91.0 (อ่าน wrangler.jsonc/JSONC)
+    — 3.90.0 ล้มด้วย "Missing entry-point" · ดู prerender-seo.mjs รันตอน build (static /llms.txt,/faq,/mit24,/sitemap.xml)
+Manual (สำรอง): npm run build → npx wrangler deploy
+Legacy: deploy.yml → GitHub Pages (ยังรันอยู่ ไม่ใช่ production host จริง)
+Vercel: PR preview อัตโนมัติ (*.vercel.app เท่านั้น — ห้ามผูก custom domain)
 ```
 
 ## Email / DNS (ceoaithailand.org)
