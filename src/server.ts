@@ -2,7 +2,7 @@
 
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
-  homeSeo, faqPageHtml,
+  homeSeo, faqPageHtml, mit24PageHtml,
   type SeoData, type SeoStorefront,
 } from './lib/seoData';
 
@@ -116,6 +116,13 @@ export default {
       // /faq → หน้า answer-first แบบ static HTML (crawlable ไม่ต้องรอ JS) + FAQPage schema (AEO)
       if (url.pathname === '/faq' || url.pathname === '/faq/') {
         return new Response(faqPageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // /mit24 → บทความ answer-first: MIT 24 Steps คืออะไร ใช้ยังไงในแอป + Article/FAQPage schema (GEO/AEO)
+      if (url.pathname === '/mit24' || url.pathname === '/mit24/') {
+        return new Response(mit24PageHtml(origin), {
           headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
         });
       }
