@@ -97,13 +97,13 @@ export default {
     // ===== SEO ฝั่ง server (marketplace) — เฉพาะ GET =====
     if (request.method === 'GET') {
       // sitemap.xml แบบ dynamic จากตาราง storefronts (override public/sitemap.xml)
+      // ⚠️ ต้องคืน XML "เสมอ" — ห้าม fall through ไป ASSETS (index.html) เพราะ Google จะเห็นเป็น HTML แล้ว reject
       if (url.pathname === '/sitemap.xml') {
-        try {
-          const xml = sitemapXml(await listPublished(env), origin);
-          return new Response(xml, {
-            headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
-          });
-        } catch { /* fallback → static asset */ }
+        let stores: { slug: string; name: string; updatedAt?: string }[] = [];
+        try { stores = await listPublished(env); } catch { /* net/json error → sitemap หน้า static ล้วน */ }
+        return new Response(sitemapXml(stores, origin), {
+          headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
       }
 
       // llms.txt → บอก AI crawler (ChatGPT/Gemini/Perplexity) ว่าเว็บนี้คืออะไร + หน้าสำคัญ (GEO/AEO)
