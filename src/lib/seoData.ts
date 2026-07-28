@@ -313,7 +313,7 @@ ${schema}
   .qa p { margin:0; color:#cbd5e1; }
   .cta { display:inline-block; margin-top:32px; background:#06b6d4; color:#04121a; font-weight:600;
          padding:14px 28px; border-radius:10px; text-decoration:none; }
-  footer { margin-top:40px; color:#64748b; font-size:.85rem; }
+  footer { margin-top:40px; color:#8b96a9; font-size:.85rem; }
   a { color:#06b6d4; }
 </style>
 </head>
@@ -450,7 +450,7 @@ ${schema}
   .qa p { margin:0; color:#cbd5e1; }
   .cta { display:inline-block; margin-top:32px; background:#06b6d4; color:#04121a; font-weight:600;
          padding:14px 28px; border-radius:10px; text-decoration:none; }
-  footer { margin-top:40px; color:#64748b; font-size:.85rem; }
+  footer { margin-top:40px; color:#8b96a9; font-size:.85rem; }
   a { color:#06b6d4; }
 </style>
 </head>
