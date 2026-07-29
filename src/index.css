@@ -5227,6 +5227,37 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   .start-sec.reveal { opacity:1; transform:none; transition:none; }
 }
 
+/* ── /sale: direct-response sale page (ใช้ palette เดียวกับ /start) ── */
+.sale-stack { max-width:760px; margin:22px auto 0; display:flex; flex-direction:column; gap:10px; }
+.sale-stack-row { display:flex; align-items:center; justify-content:space-between; gap:14px; background:#0f172a; border:1px solid #1e293b; border-left:3px solid #22c55e; border-radius:12px; padding:14px 18px; }
+.sale-stack-item { font-size:15px; font-weight:600; color:#fff; line-height:1.45; }
+.sale-stack-worth { flex:none; font-size:12.5px; color:#94a3b8; text-align:right; max-width:38%; line-height:1.35; }
+.sale-stack-total { max-width:760px; margin:16px auto 0; text-align:center; font-size:16px; color:#e2e8f0; background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.35); border-radius:12px; padding:14px 18px; }
+.sale-stack-total b { color:#22c55e; }
+
+.sale-toggle { display:flex; justify-content:center; gap:8px; margin:6px auto 22px; background:#0f172a; border:1px solid #1e293b; border-radius:999px; padding:5px; width:max-content; }
+.sale-toggle-btn { font-family:inherit; font-size:14.5px; font-weight:700; color:#94a3b8; background:transparent; border:none; border-radius:999px; padding:9px 20px; cursor:pointer; transition:all .18s; }
+.sale-toggle-btn.active { color:#020617; background:#f59e0b; }
+
+.sale-pricecard { max-width:420px; margin:0 auto; background:#0f172a; border:1.5px solid #f59e0b; border-radius:18px; padding:30px 28px; text-align:center; box-shadow:0 0 40px rgba(245,158,11,.14); }
+.sale-pricecard-name { font-size:16px; font-weight:700; color:#22d3ee; letter-spacing:.05em; text-transform:uppercase; }
+.sale-pricecard-price { font-size:46px; font-weight:800; color:#fff; margin:6px 0 2px; line-height:1.05; }
+.sale-pricecard-price span { font-size:18px; font-weight:500; color:#94a3b8; }
+.sale-pricecard-sub { font-size:14px; color:#94a3b8; margin-bottom:22px; line-height:1.6; }
+.sale-pricecard-cta { display:block !important; margin:0 auto 14px; }
+.sale-pricecard-foot { font-size:12.5px; color:#64748b; line-height:1.5; }
+
+.sale-guarantee { max-width:720px; margin:0 auto; display:flex; align-items:flex-start; gap:16px; background:#0f172a; border:1px solid #1e293b; border-radius:16px; padding:22px 24px; }
+.sale-guarantee-ico { font-size:34px; flex:none; line-height:1; }
+.sale-guarantee-title { font-size:18px; font-weight:800; color:#fff; margin-bottom:6px; }
+.sale-guarantee-body { font-size:14.5px; color:#94a3b8; line-height:1.7; }
+
+@media (max-width:640px) {
+  .sale-stack-row { flex-direction:column; align-items:flex-start; gap:4px; }
+  .sale-stack-worth { max-width:100%; text-align:left; }
+  .sale-guarantee { flex-direction:column; gap:10px; }
+}
+
 /* ── First Revenue Engine: ภารกิจดีลแรกใน 30 วัน (แก้ churn) ── */
 .fd-panel { background:var(--cream3); border:1.5px solid #f59e0b66; border-radius:14px; padding:18px 20px; margin-bottom:18px; }
 .fd-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }

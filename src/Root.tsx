@@ -10,6 +10,7 @@ import type { LegalSection } from './pages/LegalPage';
 const App = lazy(() => import('./App'));
 const MarketingLanding = lazy(() => import('./pages/MarketingLanding'));
 const StartLanding = lazy(() => import('./pages/StartLanding'));
+const SalePage = lazy(() => import('./pages/SalePage'));
 const ShopSignup = lazy(() => import('./pages/ShopSignup'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const PublicPricing = lazy(() => import('./pages/PublicPricing'));
@@ -46,6 +47,7 @@ function pick() {
     return slug ? <PublicStorefrontPage slug={slug} /> : <PublicDirectoryPage />;
   }
   if (p === '/start' || p === '/start/') return <StartLanding />;
+  if (p === '/sale' || p === '/sale/') return <SalePage />;
   if (['/pricing', '/product', '/plans'].some(x => p === x || p === x + '/')) return <PublicPricing />;
   if (p === '/shop' || p === '/shop/') return <ShopSignup />;
   if (p === '/handoff' || p === '/handoff/') return <HandoffLanding />;
