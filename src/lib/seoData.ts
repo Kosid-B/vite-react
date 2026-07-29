@@ -163,6 +163,7 @@ export function sitemapXml(
     { loc: origin, priority: '1.0' },
     { loc: `${origin}/b`, priority: '0.9' },
     { loc: `${origin}/start`, priority: '0.8' },
+    { loc: `${origin}/sale`, priority: '0.8' },
     { loc: `${origin}/faq`, priority: '0.7' },
     { loc: `${origin}/mit24`, priority: '0.7' },
     { loc: `${origin}/shop`, priority: '0.7' },
