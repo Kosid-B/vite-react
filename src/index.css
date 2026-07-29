@@ -4654,17 +4654,25 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 
 /* ===== Case Studies Page ===== */
 .cs-wrap { max-width: 860px; }
-.cs-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+/* Law of Prägnanz + Uniform Connectedness: grid คอลัมน์เท่ากัน = สมดุล ไม่ ragged
+ * Law of Similarity/Common Region: accent สีซ้ายจัดกลุ่มการ์ดด้วยสายตา
+ * Von Restorff: active เด่นชัด (ring + พื้นเข้ม) ไม่จมเหมือนถูกปิด */
+.cs-tabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); gap: 12px; margin-bottom: 22px; }
 .cs-tab {
-  display: flex; flex-direction: column; align-items: flex-start;
-  gap: 3px; padding: 10px 16px; border-radius: var(--r);
-  border: 1.5px solid var(--sand); background: var(--cream3);
-  cursor: pointer; transition: .15s; text-align: left;
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  gap: 4px; padding: 11px 14px; border-radius: var(--r);
+  border: 1.5px solid var(--sand); border-left: 3px solid var(--tab-color, var(--rust));
+  background: var(--cream3); cursor: pointer; transition: transform .12s, box-shadow .12s, background .12s, border-color .12s;
+  text-align: left; min-height: 60px; min-width: 0; width: 100%;
 }
-.cs-tab:hover { border-color: var(--tab-color, var(--rust)); }
-.cs-tab.active { border-color: var(--tab-color, var(--rust)); background: color-mix(in srgb, var(--tab-color, var(--rust)) 12%, var(--cream3)); }
-.cs-tab-tag { font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--tab-color, var(--rust)); }
-.cs-tab-company { font-size: 14px; font-weight: 600; color: var(--ink2); }
+.cs-tab:hover { border-color: var(--tab-color, var(--rust)); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.cs-tab.active {
+  border-color: var(--tab-color, var(--rust));
+  background: color-mix(in srgb, var(--tab-color, var(--rust)) 15%, var(--cream3));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--tab-color, var(--rust)) 40%, transparent);
+}
+.cs-tab-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--tab-color, var(--rust)); line-height: 1.3; }
+.cs-tab-company { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.25; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
 
 .cs-header { border-left: 3px solid var(--rust); padding: 16px 20px; background: var(--cream3); border-radius: 0 var(--r) var(--r) 0; margin-bottom: 20px; }
 .cs-header-meta { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -4731,7 +4739,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 
 @media (max-width: 700px) {
   .db-insight-grid { grid-template-columns: 1fr; }
-  .cs-tabs { flex-direction: column; }
+  .cs-tabs { grid-template-columns: 1fr 1fr; }
 }
 
 /* ===== Brave Search API Guide (CaseStudies) ===== */
