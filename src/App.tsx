@@ -6,6 +6,7 @@ import { DEFAULT_DATA } from './data';
 import { defaultExperiments, recordActiveDay } from './lib/experiments';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
+import { resolveWsLoad, localBelongsTo } from './lib/wsSync';
 import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
 import { track } from './lib/analytics';
@@ -177,6 +178,8 @@ export default function App() {
   const [data, setData] = useState<AppData>(loadData);
   const dataRef = useRef(data);
   useEffect(() => { dataRef.current = data; }, [data]);
+  // ข้อมูลใน dataRef เป็นของ workspace ไหน (null = ยังไม่ผูก ws เช่นงาน guest) — กัน race สลับ ws เขียนข้ามกัน
+  const dataWsRef = useRef<string | null>(null);
   const [celebration, setCelebration] = useState<EmotionalMoment | null>(null);
   const [activePage, setActivePage] = useState<PageId>('dashboard');
   const [activeStage, setActiveStage] = useState(0);
@@ -261,31 +264,48 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user.id]);
 
-  // โหลดข้อมูลของเวิร์กสเปซที่เลือก — ถ้าคลาวด์ว่าง ให้ดันข้อมูลปัจจุบันขึ้นไป
+  // โหลดข้อมูลของเวิร์กสเปซที่เลือก — จัดการ race สลับ ws ไม่ให้ข้อมูลข้ามกัน
   useEffect(() => {
     if (!isSupabaseEnabled || !activeWs) return;
+    const ws = activeWs;
+    // 1) flush ข้อมูลค้างของ ws ก่อนหน้าให้เสร็จก่อนโหลด ws ใหม่ (กัน debounce timer เก่ายิงข้อมูล ws ใหม่ทับ ws เก่า)
+    if (cloudTimer.current) { clearTimeout(cloudTimer.current); cloudTimer.current = undefined; }
+    const pendingPrev = pendingWsRef.current;
+    if (pendingPrev && pendingPrev !== ws) {
+      void wsSave(pendingPrev, dataRef.current).then(ok => { if (ok && pendingWsRef.current === pendingPrev) pendingWsRef.current = null; });
+    }
     let cancelled = false;
     (async () => {
-      const cloud = await wsLoad(activeWs);
+      const cloud = await wsLoad(ws);
       if (cancelled) return;
       const local = dataRef.current;
-      if (cloud) {
-        const merged = migrate(cloud);
-        const cloudRev = merged.rev ?? 0;
-        const localRev = local.rev ?? 0;
-        // กันบั๊กเดิม: ถ้า local ใหม่กว่า cloud (เซฟก่อนหน้าหลุด/ยังไม่ทันขึ้น) → ดัน local ขึ้น ไม่ให้ cloud เก่าทับ
-        if (localRev > cloudRev) {
-          pendingWsRef.current = activeWs;
-          void wsSave(activeWs, local).then(ok => { if (ok) pendingWsRef.current = null; });
-        } else {
-          setData(merged);
-          dataRef.current = merged;
-          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* empty */ }
-        }
+      const merged = cloud ? migrate(cloud) : null;
+      const belongs = localBelongsTo(dataWsRef.current, ws);
+      const action = resolveWsLoad({
+        hasCloud: !!cloud,
+        cloudRev: merged?.rev ?? 0,
+        localRev: local.rev ?? 0,
+        localBelongsToThisWs: belongs,
+      });
+      if (action === 'use-cloud' && merged) {
+        setData(merged);
+        dataRef.current = merged;
+        dataWsRef.current = ws;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* empty */ }
+      } else if (action === 'init-fresh-push') {
+        // สลับมา ws ใหม่ที่คลาวด์ว่าง — เริ่มด้วยข้อมูลเริ่มต้น (ห้ามเอาข้อมูล ws เดิมมาปน)
+        const fresh = migrate(JSON.parse(JSON.stringify(DEFAULT_DATA)) as AppData);
+        setData(fresh);
+        dataRef.current = fresh;
+        dataWsRef.current = ws;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)); } catch { /* empty */ }
+        pendingWsRef.current = ws;
+        void wsSave(ws, fresh).then(ok => { if (ok && pendingWsRef.current === ws) pendingWsRef.current = null; });
       } else {
-        // cloud ว่าง (workspace ใหม่/ยังไม่เคยเซฟ) → ดันข้อมูล local ขึ้นทันที
-        pendingWsRef.current = activeWs;
-        void wsSave(activeWs, local).then(ok => { if (ok) pendingWsRef.current = null; });
+        // keep-local-push: local เป็นของ ws นี้ + ใหม่กว่า/คลาวด์ว่าง → เก็บ local แล้วดันขึ้น
+        dataWsRef.current = ws;
+        pendingWsRef.current = ws;
+        void wsSave(ws, local).then(ok => { if (ok && pendingWsRef.current === ws) pendingWsRef.current = null; });
       }
     })();
     return () => { cancelled = true; };
