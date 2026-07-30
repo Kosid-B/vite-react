@@ -5918,6 +5918,26 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ops-kpi{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:10px; padding:10px 12px; }
 .ops-kpi-n{ font-weight:800; font-size:18px; }
 .ops-kpi-l{ color:var(--muted,#94a3b8); font-size:12.5px; margin-top:2px; }
+/* Activation funnel + engagement segments */
+.fnl{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:10px; padding:14px; margin:14px 0; }
+.fnl-hd{ font-size:14px; font-weight:700; margin-bottom:12px; }
+.fnl-hd b{ color:#4ade80; }
+.fnl-stages{ display:flex; flex-direction:column; gap:9px; }
+.fnl-stage-top{ display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:3px; }
+.fnl-stage-count{ color:var(--muted,#94a3b8); font-variant-numeric:tabular-nums; }
+.fnl-bar{ height:9px; background:var(--border,#1f2937); border-radius:5px; overflow:hidden; }
+.fnl-bar-fill{ height:100%; background:linear-gradient(90deg,#3b82f6,#60a5fa); border-radius:5px; transition:width .3s; }
+.fnl-drop{ color:#f87171; font-size:11px; margin-top:2px; }
+.fnl-segs-hd{ font-size:12.5px; color:var(--muted,#94a3b8); margin:14px 0 8px; }
+.fnl-segs{ display:grid; grid-template-columns:repeat(auto-fit,minmax(90px,1fr)); gap:8px; }
+.fnl-seg{ border:1px solid var(--border,#1f2937); border-radius:9px; padding:9px; text-align:center; cursor:help; }
+.fnl-seg-n{ font-weight:800; font-size:18px; }
+.fnl-seg-l{ font-size:12px; margin-top:2px; }
+.fnl-seg-p{ font-size:11px; color:var(--muted,#94a3b8); }
+.fnl-seg-deep{ border-color:#15803d; } .fnl-seg-deep .fnl-seg-n{ color:#4ade80; }
+.fnl-seg-active{ border-color:#1d4ed8; } .fnl-seg-active .fnl-seg-n{ color:#60a5fa; }
+.fnl-seg-shallow{ border-color:#b45309; } .fnl-seg-shallow .fnl-seg-n{ color:#fbbf24; }
+.fnl-seg-inactive .fnl-seg-n{ color:var(--muted,#94a3b8); }
 .ops-table-wrap{ overflow-x:auto; border:1px solid var(--border,#1f2937); border-radius:10px; }
 .ops-table{ width:100%; border-collapse:collapse; font-size:13.5px; white-space:nowrap; }
 .ops-table th{ text-align:left; background:var(--bg,#0f172a); color:var(--muted,#94a3b8); font-weight:600; padding:8px 10px; position:sticky; top:0; }
