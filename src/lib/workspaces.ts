@@ -97,12 +97,35 @@ export async function wsLoad(wsId: string): Promise<AppData | null> {
   return d && Object.keys(d).length > 0 ? d : null;
 }
 
-/** เขียน AppData ขึ้น workspace_state — คืน true เมื่อสำเร็จ (ให้ caller รู้ว่าเซฟลงจริงไหม + retry ได้) */
+/** outcome จาก ws_save_state → ควรถือว่า "ข้อมูลปลอดภัยแล้ว" ไหม
+ *  'written' = เขียนลงจริง · 'stale' = cloud ใหม่กว่า (ไม่เขียนทับ แต่ไม่ใช่ error → ไม่ต้อง retry) */
+export function wsSaveOk(outcome: unknown): boolean {
+  return outcome === 'written' || outcome === 'stale';
+}
+
+/** error นี้แปลว่า RPC ยังไม่ถูก deploy (migration 0040 ยังไม่ apply) → ให้ fallback upsert เดิม */
+export function isMissingRpc(err: { code?: string; message?: string } | null): boolean {
+  if (!err) return false;
+  const msg = err.message ?? '';
+  return err.code === 'PGRST202' || err.code === '42883'
+    || /could not find the function/i.test(msg)
+    || /function .*ws_save_state.* does not exist/i.test(msg);
+}
+
+/** เขียน AppData ขึ้น workspace_state — คืน true เมื่อข้อมูลปลอดภัย (เซฟลง หรือ cloud ใหม่กว่าอยู่แล้ว)
+ *  ใช้ compare-and-set ฝั่ง server (0040) กัน 2 อุปกรณ์แก้พร้อมกัน last-write ทับของใหม่
+ *  fallback: ถ้า RPC ยังไม่ deploy → upsert เดิม (ยังเซฟได้ แต่ไม่มี compare-and-set) */
 export async function wsSave(wsId: string, data: AppData): Promise<boolean> {
   if (!supabase) return false;
-  const { error } = await supabase
-    .from('workspace_state')
-    .upsert({ workspace_id: wsId, data, updated_at: new Date().toISOString() }, { onConflict: 'workspace_id' });
-  if (error) { console.warn('[ws] save:', error.message); return false; }
-  return true;
+  const { data: outcome, error } = await supabase.rpc('ws_save_state', { p_workspace_id: wsId, p_data: data });
+  if (!error) return wsSaveOk(outcome);
+  if (isMissingRpc(error)) {
+    const { error: e2 } = await supabase
+      .from('workspace_state')
+      .upsert({ workspace_id: wsId, data, updated_at: new Date().toISOString() }, { onConflict: 'workspace_id' });
+    if (e2) { console.warn('[ws] save fallback:', e2.message); return false; }
+    return true;
+  }
+  console.warn('[ws] save:', error.message);
+  return false;
 }
