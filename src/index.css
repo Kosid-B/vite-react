@@ -4675,6 +4675,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 
 /* ===== Case Studies Page ===== */
 .cs-wrap { max-width: 860px; }
+.cs-loading { padding: 40px 0; text-align: center; color: var(--ink3); font-size: 14px; }
 /* Law of Prägnanz + Uniform Connectedness: grid คอลัมน์เท่ากัน = สมดุล ไม่ ragged
  * Law of Similarity/Common Region: accent สีซ้ายจัดกลุ่มการ์ดด้วยสายตา
  * Von Restorff: active เด่นชัด (ring + พื้นเข้ม) ไม่จมเหมือนถูกปิด */
