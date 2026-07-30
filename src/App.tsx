@@ -559,7 +559,7 @@ export default function App() {
         {activePage === 'journey' && (
           <JourneyMap data={data} activeStage={activeStage} onStageChange={setActiveStage} onUpdate={updateData} />
         )}
-        {activePage === 'personas' && <Personas data={data} onUpdate={updateData} />}
+        {activePage === 'personas' && <Personas data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'content' && (
           <ContentPlan data={data} activeMonth={activeMonth} onMonthChange={setActiveMonth} onUpdate={updateData} />
         )}

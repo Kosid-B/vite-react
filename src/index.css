@@ -445,11 +445,24 @@ body {
 /* PERSONAS */
 /* ===== Persona launcher — สร้างจาก Market Research (hybrid) ===== */
 .persona-launcher { margin-bottom: 16px; }
+/* Gate: บังคับทำ research ก่อนสร้าง persona */
+.pl-gate { margin-bottom: 16px; text-align: center; background: var(--cream3); border: 1.5px dashed var(--accent); border-radius: 14px; padding: 26px 22px; }
+.pl-gate-ico { font-size: 34px; line-height: 1; }
+.pl-gate-title { font-size: 18px; font-weight: 800; color: var(--ink); margin: 8px 0 6px; }
+.pl-gate-body { font-size: 13.5px; color: var(--ink2); line-height: 1.7; max-width: 560px; margin: 0 auto 16px; }
+.pl-gate-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.pl-gate-cta { padding: 11px 22px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.pl-gate-skip { padding: 11px 18px; background: transparent; color: var(--ink3); border: 1px solid var(--sand); border-radius: var(--r); font-family: inherit; font-size: 13px; cursor: pointer; }
+.pl-insight { margin-bottom: 10px; padding: 8px 12px; background: rgba(45,106,79,.1); border-radius: var(--r); font-size: 12.5px; color: var(--ink2); }
+.pl-cta-alt { background: #1a4f8a; }
 .pl-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .pl-cta { padding: 9px 16px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 13.5px; cursor: pointer; }
 .pl-hint { font-size: 12px; color: var(--ink3); }
 .pl-msg { margin-top: 10px; padding: 9px 12px; background: rgba(45,106,79,.1); border-left: 3px solid var(--accent); border-radius: var(--r); font-size: 12.5px; color: var(--ink2); }
 .pl-msg-inline { margin-top: 8px; }
+/* B2B: บทบาทในคณะตัดสินใจ (chip แก้ได้) บนการ์ด persona */
+.p-committee { display: block; width: 100%; margin: 0 0 10px; padding: 6px 10px; background: rgba(26,79,138,.08); border: 1px solid rgba(26,79,138,.25); border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 600; color: #1a4f8a; }
+.p-committee:focus { outline: 2px solid rgba(26,79,138,.4); }
 .pl-panel { margin-top: 12px; padding: 14px; background: var(--white); border: 1px solid var(--sand); border-radius: var(--r-lg); display: flex; flex-direction: column; gap: 10px; }
 .pl-seg-hd { font-size: 12.5px; font-weight: 600; color: var(--ink2); }
 .pl-seg-hd em { font-weight: 400; color: var(--ink3); }
@@ -1751,6 +1764,14 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ms-ai-body { font-size: 13px; color: var(--ink2); line-height: 1.65; white-space: pre-wrap; }
 
 /* คู่แข่ง + ช่องว่าง (MarketSizingPanel) */
+/* ยืนยันผลวิจัย → ปลดล็อก Personas */
+.ms-confirm { margin-top: 18px; border-top: 2px solid var(--accent); padding-top: 14px; text-align: center; }
+.ms-confirm-hd { font-size: 14.5px; font-weight: 800; color: var(--ink); margin-bottom: 10px; }
+.ms-confirm-mode { font-size: 13px; color: var(--ink2); display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+.ms-mode { padding: 7px 14px; background: var(--cream2); border: 1px solid var(--sand); border-radius: 999px; font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink3); cursor: pointer; }
+.ms-mode.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.ms-confirm-btn { padding: 11px 26px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.ms-confirm-note { margin-top: 10px; font-size: 12px; color: var(--ink3); }
 .ms-comp { margin-top: 16px; border-top: 1px solid var(--sand); padding-top: 12px; }
 .ms-comp-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
 .ms-comp-run { font-family: inherit; font-size: 12px; font-weight: 700; color: #fff; background: #2d6a4f; border: none; border-radius: 8px; padding: 7px 12px; cursor: pointer; }

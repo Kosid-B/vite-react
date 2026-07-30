@@ -15,6 +15,8 @@ export interface SegmentTemplate {
   fear: string[];
   search: string[];     // ช่องทางค้นหาจริง — feed เข้า Marketplace SEO keyword + Ads
   action: string[];
+  committeeRole?: string;    // B2B: บทบาทในการตัดสินใจซื้อ
+  firmographics?: string[];  // B2B: ข้อมูลองค์กร
 }
 
 /** ลำดับขั้นตอนย่อย (guided flow) — เรียง "ใครก่อน แล้วค่อยลึก" กันกรอกมั่ว */
@@ -90,6 +92,54 @@ export const THAI_SEGMENTS: SegmentTemplate[] = [
   },
 ];
 
+/** B2B buying committee — persona แยกตามบทบาทในการตัดสินใจซื้อ (Economic/Technical/User/Champion)
+ *  หลัก: ดีล B2B ไม่มี "คนซื้อคนเดียว" ต้องออกแบบสารให้ครบทุกบทบาทในคณะตัดสินใจ
+ *  (ตัวอย่างอิงบริบทที่ปรึกษา/ระบบ SME ไทย — แก้ให้ตรงลูกค้าจริงได้) */
+export const B2B_SEGMENTS: SegmentTemplate[] = [
+  {
+    id: 'b2b-economic',
+    segment: 'ผู้ตัดสินใจ (Economic Buyer)',
+    role: 'MD / เจ้าของธุรกิจ',
+    committeeRole: 'Economic buyer — ถือเงิน/อนุมัติดีลขั้นสุดท้าย',
+    firmographics: ['บริษัท 20–200 คน', 'อุตสาหกรรม/บริการ', 'มีอำนาจอนุมัติงบ'],
+    quote: 'รู้ว่ามีปัญหา แต่ไม่มีเวลาหาทางแก้ — ต้องการคนที่วางแผนแล้วทำให้เป็นจริงได้',
+    pains: ['ธุรกิจโตแต่ระบบไม่ตาม', 'ไม่มีเวลาลงรายละเอียด', 'เคยจ้างที่ปรึกษาแล้วไม่ได้ผล'],
+    gains: ['เห็น revenue growth / ลดต้นทุนชัดเจน', 'มีคนลงมือทำจริง ไม่ใช่แค่สไลด์'],
+    goal: ['ผลลัพธ์ทางธุรกิจที่วัดได้', 'ระบบที่สเกลได้โดยไม่พึ่งเจ้าของ'],
+    fear: ['เสียเงินแล้วไม่ได้ผล', 'ทีมต่อต้านการเปลี่ยนแปลง', 'ผูกมัดสัญญายาว'],
+    search: ['Google "ที่ปรึกษาธุรกิจ SME ไทย"', 'LinkedIn/บทความ strategy', 'บอกต่อจากเจ้าของธุรกิจ', 'งานสัมมนา/หอการค้า'],
+    action: ['ตัดสินใจร่วมกับหุ้นส่วน', 'อ่านรีวิว/case study ก่อนติดต่อ', 'นัด discovery call'],
+  },
+  {
+    id: 'b2b-financial',
+    segment: 'ผู้คุมงบ (Financial Buyer)',
+    role: 'CFO / Finance Director',
+    committeeRole: 'Financial gatekeeper — ตรวจ ROI/สัญญาก่อนอนุมัติ',
+    firmographics: ['รายงานตรงต่อ MD', 'คุมงบ/จัดซื้อ', 'ต้องมี business case'],
+    quote: 'ต้องการตัวเลขชัดเจนก่อนอนุมัติงบ — ROI คืออะไร และวัดได้อย่างไร?',
+    pains: ['ถูกตำหนิถ้าโปรเจกต์ไม่คุ้ม', 'scope creep ทำงบบาน', 'ไม่มี exit clause ถ้างานไม่ดี'],
+    gains: ['business case ที่ defend ต่อบอร์ดได้', 'cost-benefit ละเอียด', 'milestone/payment term ชัด'],
+    goal: ['พิสูจน์ความคุ้มค่าต่อบอร์ด', 'คุมความเสี่ยงงบประมาณ'],
+    fear: ['จ่ายแล้วไม่เห็นผลลัพธ์ที่วัดได้', 'ต้นทุนแฝง'],
+    search: ['รับข้อมูลจาก MD (ไม่ค้นเอง)', 'อ่าน proposal/contract ละเอียด', 'อาจค้น "consultant fee structure B2B"'],
+    action: ['ตรวจ proposal/สัญญาทุกบรรทัด', 'ขอ reference ลูกค้าเก่า', 'ต่อรอง payment terms ก่อนเซ็น'],
+  },
+  {
+    id: 'b2b-user',
+    segment: 'ผู้ใช้งานจริง (User Buyer)',
+    role: 'Operations / Line Manager',
+    committeeRole: 'End user — เป็นคน implement จริง ชี้เป็น/ตายตอนใช้',
+    firmographics: ['คุมทีมหน้างาน 10–30 คน', 'รับผิดชอบ day-to-day', 'เข้ามาหลัง MD ตัดสินใจ'],
+    quote: 'ถ้าแผนทำตามไม่ได้จริงในทีม ก็ไม่มีประโยชน์ — ต้องใช้ได้จริงหน้างาน',
+    pains: ['แผนสวยแต่ทำไม่ได้จริง', 'ที่ปรึกษาไม่เข้าใจงานประจำวัน', 'เปลี่ยนเร็วเกินทีม resist'],
+    gains: ['process ที่ทีมทำตามได้จริง', 'tool/template ใช้ได้ทันที', 'ที่ปรึกษาลงมาคุยกับทีมจริง'],
+    goal: ['งานหน้างานราบรื่นขึ้น', 'ทีมยอมรับและทำตาม'],
+    fear: ['ภาระงานเพิ่มโดยไม่ช่วยจริง', 'ระบบใหม่ทำงานสะดุด'],
+    search: ['ไม่อยู่ในการค้นหาเริ่มต้น', 'เข้ามาใน loop หลัง MD ตัดสินใจ', 'อาจค้น "OKR template", "process improvement"'],
+    action: ['เข้าร่วม kick-off/workshop', 'เป็น point of contact หลัก', 'ทดสอบ framework กับทีมก่อน roll out'],
+  },
+];
+
 const PALETTES = [
   { bg: '#eff4fb', tc: '#1a4f8a' }, { bg: '#fdf3f0', tc: '#c44b2b' },
   { bg: '#edf7f2', tc: '#2d6a4f' }, { bg: '#fdf6ec', tc: '#a05c1a' },
@@ -118,6 +168,8 @@ export function personaFromSegment(seg: SegmentTemplate, index: number): Persona
     fear: [...seg.fear],
     search: [...seg.search],
     action: [...seg.action],
+    ...(seg.committeeRole ? { committeeRole: seg.committeeRole } : {}),
+    ...(seg.firmographics ? { firmographics: [...seg.firmographics] } : {}),
   };
 }
 

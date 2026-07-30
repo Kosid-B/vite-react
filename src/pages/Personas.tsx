@@ -1,20 +1,22 @@
 import { useRef, useState } from 'react';
-import type { AppData, Persona } from '../types';
+import type { AppData, Persona, PageId } from '../types';
 import EditableList from '../components/EditableList';
 import DemoBadge from '../components/DemoBadge';
 import { isDemoPersonas } from '../lib/demoData';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { track } from '../lib/analytics';
 import {
-  THAI_SEGMENTS, personaFromSegment, blankPersona, personaFromResearch,
+  THAI_SEGMENTS, B2B_SEGMENTS, personaFromSegment, blankPersona, personaFromResearch,
 } from '../lib/personaTemplates';
 
 interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
+  onNavigate?: (page: PageId) => void;
 }
 
 type PKey = keyof Pick<Persona, 'pains' | 'gains' | 'goal' | 'fear' | 'search' | 'action'>;
+type LKey = PKey | 'firmographics';   // ฟิลด์ที่เป็น list แก้ได้ (รวม B2B firmographics)
 const P_SECTIONS: { key: PKey; hd: string; color: string }[] = [
   { key: 'pains',  hd: '😣 Pain Points — ปัญหา/ความเจ็บปวด', color: '#b91c1c' },
   { key: 'gains',  hd: '😍 Gain Points — สิ่งที่อยากได้',      color: '#15803d' },
@@ -24,9 +26,13 @@ const P_SECTIONS: { key: PKey; hd: string; color: string }[] = [
   { key: 'action', hd: 'พฤติกรรมในกระบวนการ',  color: '#1c1814' },
 ];
 
-export default function Personas({ data, onUpdate }: Props) {
+export default function Personas({ data, onUpdate, onNavigate }: Props) {
+  const insight = data.marketInsight;
+  const gated = !insight?.savedAt;                       // ยังไม่ยืนยัน research/sizing → ต้องทำก่อน
+  const segments = insight?.mode === 'b2b' ? B2B_SEGMENTS : THAI_SEGMENTS;
+  const [bypass, setBypass] = useState(false);           // ผู้ใช้เลือก "ข้ามชั่วคราว"
   const [showNew, setShowNew] = useState(false);
-  const [segId, setSegId] = useState(THAI_SEGMENTS[0].id);
+  const [segId, setSegId] = useState(() => segments[0].id);
   const [aiText, setAiText] = useState('');
   const [aiBusy, setAiBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -39,16 +45,25 @@ export default function Personas({ data, onUpdate }: Props) {
     append(blankPersona(data.personas.length));
   }
   function addFromSegment(id: string) {
-    const seg = THAI_SEGMENTS.find((s) => s.id === id);
+    const seg = segments.find((s) => s.id === id);
     if (!seg) return;
     append(personaFromSegment(seg, data.personas.length));
     track('persona_added', { source: 'segment', segment: seg.id });
     setMsg(`✅ เพิ่ม Persona "${seg.segment}" (จาก Market Research) — แก้เพิ่มได้ในการ์ด`);
     setShowNew(false);
   }
+  // B2B: เพิ่มครบทั้งคณะตัดสินใจ (buying committee) ในคลิกเดียว
+  function addAllCommittee() {
+    const start = data.personas.length;
+    const add = B2B_SEGMENTS.map((s, i) => personaFromSegment(s, start + i));
+    onUpdate({ ...data, personas: [...data.personas, ...add] });
+    track('persona_added', { source: 'b2b_committee' });
+    setMsg('✅ เพิ่มครบทั้งคณะตัดสินใจ B2B (ผู้ตัดสินใจ/ผู้คุมงบ/ผู้ใช้งาน) — แก้ให้ตรงลูกค้าจริงได้');
+    setShowNew(false);
+  }
   // Hybrid: ฐานจาก segment (gains/search จาก research) + AI สกัด pains/quote จากข้อความวิจัย
   async function addFromResearch() {
-    const seg = THAI_SEGMENTS.find((s) => s.id === segId) ?? THAI_SEGMENTS[0];
+    const seg = segments.find((s) => s.id === segId) ?? segments[0];
     const base = personaFromSegment(seg, data.personas.length);
     if (!isSupabaseEnabled || !supabase) {
       append(base);
@@ -101,7 +116,7 @@ export default function Personas({ data, onUpdate }: Props) {
     onUpdate({ ...data, personas });
   }
 
-  function saveItem(pi: number, key: PKey, idx: number, value: string) {
+  function saveItem(pi: number, key: LKey, idx: number, value: string) {
     const personas = data.personas.map((p, i) => {
       if (i !== pi) return p;
       const arr = [...(p[key] ?? [])];
@@ -111,12 +126,12 @@ export default function Personas({ data, onUpdate }: Props) {
     onUpdate({ ...data, personas });
   }
 
-  function addItem(pi: number, key: PKey) {
+  function addItem(pi: number, key: LKey) {
     const personas = data.personas.map((p, i) => i === pi ? { ...p, [key]: [...(p[key] ?? []), 'รายการใหม่'] } : p);
     onUpdate({ ...data, personas });
   }
 
-  function delItem(pi: number, key: PKey, idx: number) {
+  function delItem(pi: number, key: LKey, idx: number) {
     const personas = data.personas.map((p, i) => {
       if (i !== pi) return p;
       return { ...p, [key]: (p[key] ?? []).filter((_, j) => j !== idx) };
@@ -135,19 +150,51 @@ export default function Personas({ data, onUpdate }: Props) {
 
       {isDemoPersonas(data) && <DemoBadge hint="แก้ชื่อ/ปัญหา/เป้าหมายให้ตรงลูกค้าจริงของคุณ" />}
 
+      {/* Gate: research → sizing → personas — ต้องยืนยันผลวิจัยตลาดก่อนสร้าง persona */}
+      {gated && !bypass ? (
+        <div className="pl-gate">
+          <div className="pl-gate-ico">🔬</div>
+          <div className="pl-gate-title">ทำ Market Research + ประเมินขนาดตลาดก่อน</div>
+          <div className="pl-gate-body">
+            Persona ที่ดีเกิดจาก<b>งานวิจัย ไม่ใช่การเดา</b> — ให้ CMO วิจัยตลาด + ประเมิน TAM/SAM/SOM
+            แล้วกด <b>“ยืนยันผล”</b> ในหน้ากลยุทธ์การตลาด จากนั้นระบบจะพา segment และเลือกโหมด
+            <b> B2B / B2C</b> มาสร้าง persona ให้แม่นขึ้น
+          </div>
+          <div className="pl-gate-actions">
+            <button className="pl-gate-cta" onClick={() => { track('persona_gate_nav', {}); onNavigate?.('marketing'); }}>
+              → ไปทำ Market Research + Sizing
+            </button>
+            <button className="pl-gate-skip" onClick={() => { track('persona_gate_skip', {}); setBypass(true); }}>
+              ข้ามชั่วคราว (สร้างเองก่อน)
+            </button>
+          </div>
+        </div>
+      ) : (
       <div className="persona-launcher">
+        {insight?.savedAt && (
+          <div className="pl-insight">
+            ✅ อ้างอิงผลวิจัย · โหมด <b>{insight.mode.toUpperCase()}</b>
+            {insight.som ? ` · SOM ≈ ฿${insight.som.toLocaleString()}/ปี` : ''}
+            {insight.oppLabel ? ` · โอกาส: ${insight.oppLabel}` : ''}
+          </div>
+        )}
         <div className="pl-row">
           <button className="pl-cta" onClick={() => setShowNew((v) => !v)}>
             {showNew ? '× ปิด' : '✨ สร้าง Persona จาก Market Research'}
           </button>
+          {insight?.mode === 'b2b' && (
+            <button className="pl-cta pl-cta-alt" onClick={addAllCommittee}>
+              👥 เพิ่มครบทั้งคณะตัดสินใจ B2B
+            </button>
+          )}
           <span className="pl-hint">แนะนำ: อย่าเดา — เริ่มจาก segment จริง แล้วให้ AI เติมจากงานวิจัย (ช่องทางค้นหา → SEO/Ads)</span>
         </div>
         {msg && <div className="pl-msg">{msg}</div>}
         {showNew && (
           <div className="pl-panel">
-            <div className="pl-seg-hd">1) เลือกกลุ่มเป้าหมาย (จาก Market Research)</div>
+            <div className="pl-seg-hd">1) เลือกกลุ่มเป้าหมาย {insight?.mode === 'b2b' ? '(คณะตัดสินใจ B2B)' : '(จาก Market Research)'}</div>
             <div className="pl-segs">
-              {THAI_SEGMENTS.map((s) => (
+              {segments.map((s) => (
                 <button
                   key={s.id}
                   className={`pl-seg${segId === s.id ? ' active' : ''}`}
@@ -181,6 +228,7 @@ export default function Personas({ data, onUpdate }: Props) {
           </div>
         )}
       </div>
+      )}
 
       <div className="persona-grid">
         {data.personas.map((p, pi) => (
@@ -217,6 +265,34 @@ export default function Personas({ data, onUpdate }: Props) {
                 spellCheck={false}
               />
             </div>
+
+            {/* B2B: บทบาทในคณะตัดสินใจ + firmographics (แสดงเมื่อ persona เป็นแบบ B2B) */}
+            {p.committeeRole && (
+              <input
+                className="p-committee"
+                defaultValue={p.committeeRole}
+                key={`committee-${pi}`}
+                onBlur={e => saveField(pi, 'committeeRole', e.target.value)}
+                spellCheck={false}
+                title="บทบาทในการตัดสินใจซื้อ (B2B)"
+              />
+            )}
+            {p.firmographics && (
+              <div className="p-section">
+                <div className="p-sec-hd" style={{ color: '#1a4f8a' }}>🏢 Firmographics (ข้อมูลองค์กร)</div>
+                <EditableList
+                  items={p.firmographics ?? []}
+                  itemKey={`firmographics-${pi}`}
+                  onSave={(idx, val) => saveItem(pi, 'firmographics', idx, val)}
+                  onAdd={() => addItem(pi, 'firmographics')}
+                  onDelete={idx => delItem(pi, 'firmographics', idx)}
+                  multiline={false}
+                  bordered
+                  addLabel="＋ เพิ่ม"
+                  addStyle={{ fontSize: 11, padding: '3px 4px', marginTop: 2 }}
+                />
+              </div>
+            )}
 
             {P_SECTIONS.map(sec => (
               <div key={sec.key} className="p-section">
