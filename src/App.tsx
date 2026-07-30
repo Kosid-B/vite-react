@@ -219,6 +219,8 @@ export default function App() {
   // R8 — Durable Object ของ AI agent แยกต่อ workspace
   useEffect(() => { setAgentWorkspace(activeWs); }, [activeWs]);
   const cloudTimer = useRef<ReturnType<typeof setTimeout>>();
+  // workspace ที่มีข้อมูลรอเซฟขึ้นคลาวด์ (ยังไม่ยืนยันสำเร็จ) — ใช้ flush ตอนปิดแท็บ + retry
+  const pendingWsRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isSupabaseEnabled || !supabase) return;
@@ -266,26 +268,38 @@ export default function App() {
     (async () => {
       const cloud = await wsLoad(activeWs);
       if (cancelled) return;
+      const local = dataRef.current;
       if (cloud) {
         const merged = migrate(cloud);
-        setData(merged);
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* empty */ }
+        const cloudRev = merged.rev ?? 0;
+        const localRev = local.rev ?? 0;
+        // กันบั๊กเดิม: ถ้า local ใหม่กว่า cloud (เซฟก่อนหน้าหลุด/ยังไม่ทันขึ้น) → ดัน local ขึ้น ไม่ให้ cloud เก่าทับ
+        if (localRev > cloudRev) {
+          pendingWsRef.current = activeWs;
+          void wsSave(activeWs, local).then(ok => { if (ok) pendingWsRef.current = null; });
+        } else {
+          setData(merged);
+          dataRef.current = merged;
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* empty */ }
+        }
       } else {
-        wsSave(activeWs, data);
+        // cloud ว่าง (workspace ใหม่/ยังไม่เคยเซฟ) → ดันข้อมูล local ขึ้นทันที
+        pendingWsRef.current = activeWs;
+        void wsSave(activeWs, local).then(ok => { if (ok) pendingWsRef.current = null; });
       }
     })();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeWs]);
 
   // Auto-start 15-day trial for new users (Supabase mode, status=none)
   useEffect(() => {
     if (!isSupabaseEnabled || !session || data.subscription.status !== 'none') return;
     const trialEnd = new Date(Date.now() + 15 * 86400000).toISOString();
-    const next = { ...data, subscription: { ...data.subscription, plan: 'free' as const, status: 'trial' as const, trialEndDate: trialEnd } };
+    const next = { ...data, rev: (data.rev ?? 0) + 1, subscription: { ...data.subscription, plan: 'free' as const, status: 'trial' as const, trialEndDate: trialEnd } };
     setData(next);
+    dataRef.current = next;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* empty */ }
-    if (activeWs) wsSave(activeWs, next);
+    if (activeWs) { pendingWsRef.current = activeWs; void wsSave(activeWs, next).then(ok => { if (ok) pendingWsRef.current = null; }); }
     showToast('ยินดีต้อนรับ! เริ่มทดลองใช้ฟรี 15 วันแล้ว 🎉');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user.id, data.subscription.status, activeWs]);
@@ -327,7 +341,10 @@ export default function App() {
     // Emotional trigger: ยิงการฉลอง/ให้กำลังใจทันทีเมื่อ 'เพิ่งข้าม' หมุดสำคัญ
     const moment = detectEmotionalMoment(dataRef.current, next);
     if (moment) { setCelebration(moment); track('emotional_trigger', { id: moment.id, tone: moment.tone }); }
+    // rev เพิ่มขึ้นทุกครั้งที่แก้ (นับจากค่า local ปัจจุบัน) — ใช้กัน cloud เก่าทับ local ใหม่ตอน load
+    next = { ...next, rev: (dataRef.current.rev ?? 0) + 1 };
     setData(next);
+    dataRef.current = next;   // อัปเดตทันที ให้ flush/debounce ที่ยิงทีหลังได้ข้อมูลล่าสุดเสมอ
     try {
       const serial = JSON.stringify(next);
       requestAnimationFrame(() => {
@@ -336,19 +353,54 @@ export default function App() {
     } catch { /* empty */ }
     // sync ขึ้นคลาวด์แบบ debounce เมื่อล็อกอิน + เลือกเวิร์กสเปซแล้ว
     if (isSupabaseEnabled && activeWs) {
+      pendingWsRef.current = activeWs;   // มีข้อมูลรอเซฟ (เผื่อ flush ตอนปิดแท็บ)
       clearTimeout(cloudTimer.current);
-      const ws = activeWs;
-      cloudTimer.current = setTimeout(() => wsSave(ws, next), 800);
+      cloudTimer.current = setTimeout(() => {
+        const ws = pendingWsRef.current;
+        if (!ws) return;
+        // ใช้ dataRef.current (ล่าสุดเสมอ) ไม่ใช่ closure เก่า
+        wsSave(ws, dataRef.current).then(ok => {
+          if (ok) { pendingWsRef.current = null; }
+          else {
+            // เซฟล้ม — คงสถานะ "รอเซฟ" ไว้ + เตือนจริง (เลิกหลอกว่าเซฟแล้ว) แล้ว retry อัตโนมัติ
+            showToast('⚠️ ยังบันทึกขึ้นคลาวด์ไม่สำเร็จ — กำลังลองใหม่');
+            clearTimeout(cloudTimer.current);
+            cloudTimer.current = setTimeout(() => {
+              const ws2 = pendingWsRef.current;
+              if (ws2) wsSave(ws2, dataRef.current).then(ok2 => { if (ok2) pendingWsRef.current = null; });
+            }, 4000);
+          }
+        });
+      }, 800);
     }
     showToast();
   }, [showToast, activeWs]);
+
+  // Flush ข้อมูลที่ค้างขึ้นคลาวด์ทันที (ไม่รอ debounce) — เรียกตอนปิด/สลับแท็บ กันข้อมูลรอบสุดท้ายหลุด
+  const flushCloud = useCallback(() => {
+    if (cloudTimer.current) { clearTimeout(cloudTimer.current); cloudTimer.current = undefined; }
+    const ws = pendingWsRef.current;
+    if (!ws || !isSupabaseEnabled) return;
+    void wsSave(ws, dataRef.current).then(ok => { if (ok) pendingWsRef.current = null; });
+  }, []);
+
+  // ปิดแท็บ / สลับไปแอปอื่น (มือถือ) → flush ทันที (บั๊กเดิม: debounce ถูกยกเลิกตอน unmount → ข้อมูลหาย)
+  useEffect(() => {
+    const onVis = () => { if (document.visibilityState === 'hidden') flushCloud(); };
+    document.addEventListener('visibilitychange', onVis);
+    window.addEventListener('pagehide', flushCloud);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      window.removeEventListener('pagehide', flushCloud);
+    };
+  }, [flushCloud]);
 
   async function handleCreateWorkspace(name: string) {
     const id = await createWorkspace(name);
     if (id) { setWorkspaces(await listWorkspaces()); setActiveWs(id); }
   }
 
-  useEffect(() => () => { clearTimeout(toastTimer.current); clearTimeout(cloudTimer.current); }, []);
+  useEffect(() => () => { clearTimeout(toastTimer.current); flushCloud(); }, [flushCloud]);
 
   // Context Handoff (theossphere): pre-fill แผน 24 ขั้นครั้งแรกหลังผู้ใช้พร้อม
   // gate ด้วย theossphereLive (=false → dead code) · one-shot · หน่วงให้ workspace โหลดเสร็จก่อน

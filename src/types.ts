@@ -512,6 +512,9 @@ export interface ISO9001Data {
 }
 
 export interface AppData {
+  /** revision monotonic (นับทุกครั้งที่แก้ข้อมูล) — ใช้กัน cloud เก่าทับ local ใหม่ตอน sync
+   *  undefined = ข้อมูลเก่าก่อนมีระบบ rev (ถือว่า rev 0) */
+  rev?: number;
   stages: Stage[];
   personas: Persona[];
   contentPlan: ContentMonth[];

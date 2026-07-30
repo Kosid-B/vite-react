@@ -97,10 +97,12 @@ export async function wsLoad(wsId: string): Promise<AppData | null> {
   return d && Object.keys(d).length > 0 ? d : null;
 }
 
-export async function wsSave(wsId: string, data: AppData): Promise<void> {
-  if (!supabase) return;
+/** เขียน AppData ขึ้น workspace_state — คืน true เมื่อสำเร็จ (ให้ caller รู้ว่าเซฟลงจริงไหม + retry ได้) */
+export async function wsSave(wsId: string, data: AppData): Promise<boolean> {
+  if (!supabase) return false;
   const { error } = await supabase
     .from('workspace_state')
     .upsert({ workspace_id: wsId, data, updated_at: new Date().toISOString() }, { onConflict: 'workspace_id' });
-  if (error) console.warn('[ws] save:', error.message);
+  if (error) { console.warn('[ws] save:', error.message); return false; }
+  return true;
 }
