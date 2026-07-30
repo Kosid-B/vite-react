@@ -15,14 +15,15 @@ const custom: CaseStudy = {
 };
 
 describe('CaseStudies — รวม built-in + ที่แอดมินนำเข้า', () => {
-  it('แสดงเคสในตัว (Tencent) เสมอ แม้ไม่มี data', () => {
+  // built-in cases โหลดแบบ dynamic import → ใช้ findByText รอโหลดเสร็จ
+  it('แสดงเคสในตัว (Tencent) เสมอ แม้ไม่มี data', async () => {
     render(<CaseStudies />);
-    expect(screen.getByText('Tencent Gaming')).toBeInTheDocument();
+    expect(await screen.findByText('Tencent Gaming')).toBeInTheDocument();
   });
 
-  it('แสดงทั้งเคสในตัว + เคสที่นำเข้า (caseStudies) พร้อมกัน', () => {
+  it('แสดงทั้งเคสในตัว + เคสที่นำเข้า (caseStudies) พร้อมกัน', async () => {
     render(<CaseStudies data={{ caseStudies: [custom] } as AppData} />);
-    expect(screen.getByText('Tencent Gaming')).toBeInTheDocument();       // built-in
-    expect(screen.getByText('Growth First Digital')).toBeInTheDocument(); // imported
+    expect(await screen.findByText('Tencent Gaming')).toBeInTheDocument();  // built-in (async)
+    expect(screen.getByText('Growth First Digital')).toBeInTheDocument();   // imported (จาก data prop)
   });
 });
