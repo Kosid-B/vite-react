@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { trackAiCall } from '../lib/usage';
 import type { AppData, Agent, ApprovalStatus, TaskStatus, SkillPlanItem, CustomSkill, RoleCompetency } from '../types';
 import { autoH } from '../utils';
@@ -6,11 +6,11 @@ import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillEntry } from '../data/skillCatalog';
 import { listAdminSkills } from '../lib/adminSkills';
 import { recommendSkills } from '../lib/skillAdvisor';
-import SkillAuction from '../components/SkillAuction';
-import SkillAdvisor from '../components/SkillAdvisor';
+const SkillAuction = lazy(() => import('../components/SkillAuction'));
+const SkillAdvisor = lazy(() => import('../components/SkillAdvisor'));
 import DemoBadge from '../components/DemoBadge';
 import { isDemoRoster, isDemoCompany } from '../lib/demoData';
-import Integrations from '../components/Integrations';
+const Integrations = lazy(() => import('../components/Integrations'));
 import type { Auction } from '../lib/auctions';
 import { trackSkillPurchase } from '../lib/skillStats';
 import { withSkillDirectives } from '../lib/skillDirectives';
@@ -25,15 +25,15 @@ import { segmentationInstruction, shouldRunWeekly, weekTag } from '../lib/segmen
 import { marketInsightInstruction } from '../lib/marketInsightTH';
 import { SALES_TEAM, salesTeamInstruction } from '../lib/salesTeam';
 import { cLevelAgents, shouldRunCLevel, weeklyInstruction } from '../lib/weeklyReports';
-import SkillInvestmentPlan from '../components/SkillInvestmentPlan';
-import PersonalBrand from '../components/PersonalBrand';
+const SkillInvestmentPlan = lazy(() => import('../components/SkillInvestmentPlan'));
+const PersonalBrand = lazy(() => import('../components/PersonalBrand'));
 import { brandInstruction } from '../lib/personalBrand';
-import MarketValidation from '../components/MarketValidation';
+const MarketValidation = lazy(() => import('../components/MarketValidation'));
 import { validationInstruction, extractVerdict } from '../lib/marketValidation';
-import CSuiteReports from '../components/CSuiteReports';
-import IntakePanel from '../components/IntakePanel';
-import CompanyNamer from '../components/CompanyNamer';
-import BrandKitPanel from '../components/BrandKitPanel';
+const CSuiteReports = lazy(() => import('../components/CSuiteReports'));
+const IntakePanel = lazy(() => import('../components/IntakePanel'));
+const CompanyNamer = lazy(() => import('../components/CompanyNamer'));
+const BrandKitPanel = lazy(() => import('../components/BrandKitPanel'));
 import OcNode from './aicompany/OcNode';
 import {
   STATUS_LABEL, TASK_COLS, AGENT_PALETTE, AVATARS, MODELS, AVAILABLE_SKILLS,
@@ -1385,8 +1385,10 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           onChange={e => { setGoalDraft(e.target.value); autoH(e.target); }} ref={el => autoH(el)} spellCheck={false} />
       </div>
 
-      <CompanyNamer data={data} onUpdate={onUpdate} />
-      <BrandKitPanel data={data} />
+      <Suspense fallback={null}>
+        <CompanyNamer data={data} onUpdate={onUpdate} />
+        <BrandKitPanel data={data} />
+      </Suspense>
 
       {/* ===== CEO Mission ===== */}
       {(missionMsg || c.missionApproved) && (
@@ -1420,7 +1422,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       </div>
 
       {/* ===== รับข้อมูลจากผู้ใช้ → CEO มอบหมายงาน ===== */}
-      <IntakePanel data={data} onUpdate={onUpdate} />
+      <Suspense fallback={null}><IntakePanel data={data} onUpdate={onUpdate} /></Suspense>
 
       {/* ===== ผังองค์กร ===== */}
       <section className="ai-panel" style={{ marginTop: 16 }}>
@@ -1575,14 +1577,16 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       </section>
 
       {/* ===== รายงาน C-Suite ต่อ CEO (แยกเป็น CSuiteReports.tsx) ===== */}
-      <CSuiteReports
-        data={data} onUpdate={onUpdate} isSupabaseEnabled={isSupabaseEnabled}
-        csuiteMsg={csuiteMsg} setCsuiteMsg={setCsuiteMsg}
-        cfoShown={cfoShown} setCfoShown={setCfoShown} cfoSubmitToCeo={cfoSubmitToCeo}
-        cmoRunning={cmoRunning} runCmoSegmentation={runCmoSegmentation}
-        cmoInsightRunning={cmoInsightRunning} runCmoInsight={runCmoInsight}
-        cmoSalesRunning={cmoSalesRunning} buildSalesTeam={buildSalesTeam} runSalesTeam={runSalesTeam}
-      />
+      <Suspense fallback={null}>
+        <CSuiteReports
+          data={data} onUpdate={onUpdate} isSupabaseEnabled={isSupabaseEnabled}
+          csuiteMsg={csuiteMsg} setCsuiteMsg={setCsuiteMsg}
+          cfoShown={cfoShown} setCfoShown={setCfoShown} cfoSubmitToCeo={cfoSubmitToCeo}
+          cmoRunning={cmoRunning} runCmoSegmentation={runCmoSegmentation}
+          cmoInsightRunning={cmoInsightRunning} runCmoInsight={runCmoInsight}
+          cmoSalesRunning={cmoSalesRunning} buildSalesTeam={buildSalesTeam} runSalesTeam={runSalesTeam}
+        />
+      </Suspense>
 
       {/* ===== C-Level รายงานผลต่อ CEO (ทุกวันศุกร์) ===== */}
       <section className="ai-panel clw" style={{ marginTop: 16 }}>
@@ -1612,11 +1616,13 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           : isSupabaseEnabled && <div className="clw-empty">ยังไม่มีรายงานรอบสัปดาห์ — กดปุ่มด้านบน หรือรอรอบวันศุกร์</div>}
       </section>
 
-      <SkillInvestmentPlan data={data} onUpdate={onUpdate} />
+      <Suspense fallback={null}>
+        <SkillInvestmentPlan data={data} onUpdate={onUpdate} />
 
-      <PersonalBrand data={data} onUpdate={onUpdate} onRefine={runCmoBrand} refining={cmoBrandRunning} supabaseEnabled={isSupabaseEnabled} />
+        <PersonalBrand data={data} onUpdate={onUpdate} onRefine={runCmoBrand} refining={cmoBrandRunning} supabaseEnabled={isSupabaseEnabled} />
 
-      <MarketValidation data={data} onRun={runCmoValidation} running={cmoValRunning} supabaseEnabled={isSupabaseEnabled} />
+        <MarketValidation data={data} onRun={runCmoValidation} running={cmoValRunning} supabaseEnabled={isSupabaseEnabled} />
+      </Suspense>
 
       <div className="ai-2col">
         {/* ===== ทีมเอเจนต์ ===== */}
@@ -2002,7 +2008,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       </section>
 
       {/* ===== Integrations (แยก ระบบดูแลให้ vs เชื่อมบัญชีคุณเอง · เก็บ secret ปลอดภัย per-workspace) ===== */}
-      <Integrations wsId={wsId ?? null} data={data} />
+      <Suspense fallback={null}><Integrations wsId={wsId ?? null} data={data} /></Suspense>
 
       {/* ===== HRD Skill Plan ===== */}
       {(() => {
@@ -2098,6 +2104,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       </section>
 
       {/* ===== 🧠 CEO เลือก Skill พัฒนาธุรกิจ (agentic) ===== */}
+      <Suspense fallback={null}>
       <SkillAdvisor
         recs={recommendSkills(data, [...SKILL_CATALOG, ...adminSkillList])}
         onPick={sk => {
@@ -2111,6 +2118,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           }, 80);
         }}
       />
+      </Suspense>
 
       {/* ===== 🛒 Skill Marketplace ===== */}
       {(() => {
@@ -2198,8 +2206,10 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
             )}
 
             {/* 🔨 ประมูล Skill จากบริษัท (English Auction) */}
-            <SkillAuction wsId={wsId ?? 'local'} companyName={c.name} owned={purchased}
-              payMethods={PAY_METHODS} onClaim={claimAuctionSkill} />
+            <Suspense fallback={null}>
+              <SkillAuction wsId={wsId ?? 'local'} companyName={c.name} owned={purchased}
+                payMethods={PAY_METHODS} onClaim={claimAuctionSkill} />
+            </Suspense>
 
             {/* User Custom Skill Upload */}
             <div className="skm-custom-section">
