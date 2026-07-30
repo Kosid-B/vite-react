@@ -22,6 +22,20 @@ export interface Persona {
   fear: string[];
   search: string[];
   action: string[];
+  // ── B2B (optional) — สำหรับ persona แบบองค์กร/buying committee ──
+  committeeRole?: string;   // บทบาทในการตัดสินใจซื้อ เช่น Economic buyer / Technical / User / Champion
+  firmographics?: string[]; // ข้อมูลองค์กร: ขนาดบริษัท · อุตสาหกรรม · งบ · โครงสร้างการอนุมัติ
+}
+
+/** ผลวิจัยตลาด + ขนาดตลาด ที่ "ยืนยันแล้ว" — เป็น gate ก่อนสร้าง Personas (research → sizing → personas)
+ *  มีค่า savedAt = ผ่านขั้น research/sizing แล้ว · เก็บใน AppData.marketInsight */
+export interface MarketInsight {
+  savedAt: string;                 // ISO timestamp ที่ยืนยันผล
+  mode: 'b2b' | 'b2c';             // ตลาดแบบไหน → กำหนดชนิด persona (buying committee vs ผู้บริโภค)
+  segments: string[];              // กลุ่มเป้าหมายจาก BMC/research
+  tam?: number; sam?: number; som?: number;
+  oppScore?: number; oppLabel?: string;
+  industry?: string;
 }
 
 export interface ContentCol {
@@ -512,8 +526,13 @@ export interface ISO9001Data {
 }
 
 export interface AppData {
+  /** revision monotonic (นับทุกครั้งที่แก้ข้อมูล) — ใช้กัน cloud เก่าทับ local ใหม่ตอน sync
+   *  undefined = ข้อมูลเก่าก่อนมีระบบ rev (ถือว่า rev 0) */
+  rev?: number;
   stages: Stage[];
   personas: Persona[];
+  /** ผลวิจัยตลาด+ขนาดตลาดที่ยืนยันแล้ว (gate ก่อนทำ Personas) — undefined = ยังไม่ทำ */
+  marketInsight?: MarketInsight;
   contentPlan: ContentMonth[];
   actions: Action[];
   funnel: FunnelStage[];

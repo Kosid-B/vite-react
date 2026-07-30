@@ -18,10 +18,12 @@ const FACTOR_LABELS: { key: keyof OppFactors; label: string; invert?: boolean }[
   { key: 'differentiation', label: 'จุดต่างของเรา' },
 ];
 
-export default function MarketSizingPanel({ data }: { data: AppData; onUpdate?: (d: AppData) => void }) {
+export default function MarketSizingPanel({ data, onUpdate }: { data: AppData; onUpdate?: (d: AppData) => void }) {
   const c = data.aiCompany;
   const cmo = c?.agents.find(a => /cmo|market|ตลาด/i.test(a.role)) ?? c?.agents[0];
   const bmc = data.businessModel?.bmc;
+  const [mode, setMode] = useState<'b2b' | 'b2c'>(data.marketInsight?.mode ?? 'b2c');
+  const saved = data.marketInsight;
 
   const [arpu, setArpu] = useState(12000);
   const [base, setBase] = useState(0); // 0 = ใช้ default SME ไทย
@@ -188,6 +190,39 @@ export default function MarketSizingPanel({ data }: { data: AppData; onUpdate?: 
           </div>
         )}
       </div>
+
+      {/* ยืนยันผล → ปลดล็อกขั้น Personas (research → sizing → personas) */}
+      {onUpdate && (
+        <div className="ms-confirm">
+          <div className="ms-confirm-hd">✅ ยืนยันผลวิจัย → ใช้ต่อในขั้น Personas</div>
+          <div className="ms-confirm-mode">
+            ตลาดของคุณเป็นแบบ:
+            <button className={`ms-mode${mode === 'b2c' ? ' active' : ''}`} onClick={() => setMode('b2c')}>B2C (ผู้บริโภค)</button>
+            <button className={`ms-mode${mode === 'b2b' ? ' active' : ''}`} onClick={() => setMode('b2b')}>B2B (องค์กร)</button>
+          </div>
+          <button
+            className="ms-confirm-btn"
+            onClick={() => onUpdate({
+              ...data,
+              marketInsight: {
+                savedAt: new Date().toISOString(),
+                mode,
+                segments: bmc?.segments ?? [],
+                tam: sizing.tam, sam: sizing.sam, som: sizing.som,
+                oppScore: opp.score, oppLabel: opp.label,
+                industry: c?.industry,
+              },
+            })}
+          >
+            {saved ? '↻ อัปเดตผลวิจัย (บันทึกใหม่)' : 'ยืนยันผล → ไปทำ Personas ได้'}
+          </button>
+          {saved && (
+            <div className="ms-confirm-note">
+              บันทึกล่าสุด {new Date(saved.savedAt).toLocaleString('th-TH')} · โหมด {saved.mode.toUpperCase()} — ขั้น Personas ปลดล็อกแล้ว
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
