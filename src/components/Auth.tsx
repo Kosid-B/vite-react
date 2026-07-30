@@ -6,9 +6,23 @@ import LegalLinks from './LegalLinks';
 import { pickNudgeVariant, buildNudge } from '../lib/authNudge';
 import AuthNudge from './AuthNudge';
 import { lineLoginEnabled, startLineLogin } from '../lib/lineLogin';
+import { authRedirectOrigin } from '../lib/seo';
 
 type Mode = 'signin' | 'signup';
 type Method = 'email' | 'phone';
+
+/** แปล error จาก Supabase auth เป็นไทยที่บอกทางออก — ลด drop-off ตอน onboarding
+ *  (คืน null ถ้าไม่มี mapping เฉพาะ → ใช้ข้อความเดิม) */
+function thaiAuthError(raw: string): string | null {
+  const m = raw.toLowerCase();
+  if (m.includes('invalid login credentials'))
+    return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง — ลืมรหัส? ใช้ปุ่ม Magic Link ด้านล่างเข้าได้เลย';
+  if (m.includes('email not confirmed'))
+    return 'ยังไม่ได้ยืนยันอีเมล — เช็กกล่องจดหมาย/Spam หรือกด Magic Link ด้านล่าง';
+  if (m.includes('email rate limit') || m.includes('rate limit'))
+    return 'ขออีเมลถี่เกินไป รอสักครู่แล้วลองใหม่อีกครั้งครับ';
+  return null;
+}
 
 /** แปลงเบอร์ไทยเป็นรูปแบบสากล E.164 (+66...) — คืน null ถ้ารูปแบบไม่ถูก */
 function toE164Thai(raw: string): string | null {
@@ -45,8 +59,20 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
     try {
       if (mode === 'signup') {
         track('nudge_cta', { variant });   // วัดว่ามุมอารมณ์นี้นำสู่การสมัครจริง
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
+        const { data, error } = await supabase.auth.signUp({
+          email, password,
+          options: { emailRedirectTo: authRedirectOrigin() },  // กันลิงก์ยืนยันเด้งไป preview ที่ตาย (404)
+        });
+        if (error) {
+          // อีเมลนี้มีบัญชีแล้ว → พาไปแท็บ "เข้าสู่ระบบ" แทน ไม่ทิ้งลูกค้าค้างที่ error อังกฤษ
+          if (/already registered|already been registered|user already exists/i.test(error.message)) {
+            setMode('signin');
+            track('signup_existing_redirect', {});
+            setMsg({ type: 'ok', text: 'อีเมลนี้มีบัญชีอยู่แล้ว — กรอกรหัสผ่านแล้วกด “เข้าสู่ระบบ” ได้เลย (ลืมรหัส? ใช้ปุ่ม Magic Link ด้านล่าง)' });
+            return;
+          }
+          throw error;
+        }
         if (data.session) {
           // Confirm email ปิด → ล็อกอินทันที (App จับ session เอง) ไม่ต้องรออีเมล
           track('signup_instant', {});
@@ -61,7 +87,8 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
         // เข้าสู่ระบบสำเร็จ — App จะจับ session เปลี่ยนเอง
       }
     } catch (err) {
-      setMsg({ type: 'err', text: (err as Error).message || 'เกิดข้อผิดพลาด' });
+      const raw = (err as Error).message || 'เกิดข้อผิดพลาด';
+      setMsg({ type: 'err', text: thaiAuthError(raw) ?? raw });
     } finally {
       setBusy(false);
     }
@@ -70,20 +97,28 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
   async function resendConfirm() {
     if (!supabase || !pendingConfirm) return;
     setBusy(true); setMsg(null);
-    const { error } = await supabase.auth.resend({ type: 'signup', email: pendingConfirm });
+    const { error } = await supabase.auth.resend({
+      type: 'signup', email: pendingConfirm,
+      options: { emailRedirectTo: authRedirectOrigin() },
+    });
     setBusy(false);
     track('signup_resend_confirm', {});
     setMsg(error
-      ? { type: 'err', text: error.message || 'ส่งอีเมลไม่สำเร็จ' }
+      ? { type: 'err', text: thaiAuthError(error.message) ?? error.message ?? 'ส่งอีเมลไม่สำเร็จ' }
       : { type: 'ok', text: 'ส่งอีเมลยืนยันอีกครั้งแล้ว — เช็กกล่องจดหมาย + โฟลเดอร์ Spam/Junk' });
   }
 
   async function magicLink() {
     if (!supabase || !email) { setMsg({ type: 'err', text: 'กรอกอีเมลก่อน' }); return; }
     setBusy(true); setMsg(null);
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: authRedirectOrigin() },  // บังคับเด้งกลับ production ไม่ใช่ preview ที่ตาย
+    });
     setBusy(false);
-    setMsg(error ? { type: 'err', text: error.message } : { type: 'ok', text: 'ส่งลิงก์เข้าสู่ระบบไปที่อีเมลแล้ว' });
+    setMsg(error
+      ? { type: 'err', text: thaiAuthError(error.message) ?? error.message }
+      : { type: 'ok', text: 'ส่งลิงก์เข้าสู่ระบบไปที่อีเมลแล้ว — เช็กกล่องจดหมาย + โฟลเดอร์ Spam/Junk' });
   }
 
   // ── เข้าสู่ระบบด้วยเบอร์โทร (OTP ทาง SMS) ── (login และ signup ใช้ flow เดียวกัน)

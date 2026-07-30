@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { track } from '../lib/analytics';
+import { authRedirectOrigin } from '../lib/seo';
 
 /**
  * Aha-moment email capture (soft signup) — เด้งตอนผู้ทดลอง (guest) เจอโมเมนต์ดีๆ
@@ -18,7 +19,7 @@ export default function SaveWorkPrompt({ onClose, onCaptured }: { onClose: () =>
     setBusy(true); setMsg(null);
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: authRedirectOrigin() },  // production เสมอ กันลิงก์เด้งไป preview ที่ตาย (404)
     });
     setBusy(false);
     if (error) { setMsg({ type: 'err', text: error.message }); return; }

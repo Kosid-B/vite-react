@@ -58,3 +58,13 @@ export function siteOrigin(): string {
   const h = window.location.hostname;
   return (h === 'localhost' || h === '127.0.0.1') ? 'https://ceoaithailand.org' : window.location.origin;
 }
+
+/** origin ปลายทางของลิงก์ยืนยันอีเมล/Magic Link (auth) — ต้องเป็นโดเมน production จริงเสมอ
+ *  อนุญาตเฉพาะ ceoaithailand.org (+ www); โดเมนอื่น (preview *.vercel.app / localhost) เด้งไป canonical
+ *  กันบั๊ก: user บนโดเมน preview → signInWithOtp เด้งกลับ preview ที่หมดอายุ → 404 DEPLOYMENT_NOT_FOUND */
+export function authRedirectOrigin(): string {
+  const canonical = 'https://ceoaithailand.org';
+  if (typeof window === 'undefined') return canonical;
+  const h = window.location.hostname;
+  return (h === 'ceoaithailand.org' || h === 'www.ceoaithailand.org') ? window.location.origin : canonical;
+}
