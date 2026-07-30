@@ -11,6 +11,38 @@ const SUPABASE_URL     = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const BUCKET = 'badges';
 
+// ---- Input validation (public endpoint: กัน SVG โตเกิน/ค่าปลอม) ----
+const MAX_NAME = 60, MAX_SUB = 80;
+const ALLOWED_FMT = new Set(['square', 'banner', 'story']);
+const clampText = (v: unknown, max: number): string => (typeof v === 'string' ? v : '').slice(0, max);
+const clampScore = (v: unknown): number => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : 98;
+};
+const safeFmt = (v: unknown): string => { const s = String(v ?? 'square'); return ALLOWED_FMT.has(s) ? s : 'square'; };
+/** storage key ปลอดภัย: เหลือเฉพาะ a-z0-9+ไทย (กัน path traversal '../' และ key injection จาก company) */
+function safeKey(company: string, score: number, fmt: string): string {
+  const base = company.trim().toLowerCase()
+    .replace(/[^a-z0-9฀-๿]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 30) || 'company';
+  return `${base}-${score}-${fmt}.png`;
+}
+
+// ---- Rate limit ต่อ IP (best-effort ต่อ warm instance) — public endpoint กัน abuse/DoS ----
+const RL_MAX = 20, RL_WINDOW_MS = 60_000;
+const rlHits = new Map<string, number[]>();
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const arr = (rlHits.get(ip) ?? []).filter((t) => now - t < RL_WINDOW_MS);
+  arr.push(now);
+  rlHits.set(ip, arr);
+  if (rlHits.size > 5000) for (const [k, v] of rlHits) if (v.every((t) => now - t >= RL_WINDOW_MS)) rlHits.delete(k);
+  return arr.length > RL_MAX;
+}
+const clientIp = (req: Request): string =>
+  (req.headers.get('x-forwarded-for')?.split(',')[0] ?? '').trim() || 'unknown';
+
 let wasmReady = false;
 async function ensureWasm() {
   if (!wasmReady) {
@@ -179,28 +211,30 @@ async function uploadToStorage(png:Uint8Array,key:string):Promise<string>{
 
 Deno.serve(async(req:Request)=>{
   if(req.method==='OPTIONS') return new Response('ok',{headers:CORS});
+  if(req.method!=='GET'&&req.method!=='POST') return new Response(JSON.stringify({error:'method_not_allowed'}),{status:405,headers:{...CORS,'Content-Type':'application/json'}});
+  if(rateLimited(clientIp(req))) return new Response(JSON.stringify({error:'rate_limited'}),{status:429,headers:{...CORS,'Content-Type':'application/json','Retry-After':'60'}});
   try{
     let company='บริษัทของคุณ',subtitle='',score=98,fmt='square',directReturn=false;
     if(req.method==='GET'){
       const p=new URL(req.url).searchParams;
-      company=p.get('company')||company;
-      subtitle=p.get('subtitle')||'';
-      score=Math.min(100,Math.max(0,parseInt(p.get('score')||'98')));
-      fmt=p.get('fmt')||'square';
+      company=clampText(p.get('company')||company,MAX_NAME);
+      subtitle=clampText(p.get('subtitle')||'',MAX_SUB);
+      score=clampScore(p.get('score')??'98');
+      fmt=safeFmt(p.get('fmt'));
       directReturn=true;
     }else{
       const body=await req.json().catch(()=>({}));
-      company=body.companyName||body.company||company;
-      subtitle=body.subtitle||'';
-      score=body.score!=null?body.score:score;
-      fmt=body.fmt||'square';
+      company=clampText(body.companyName||body.company||company,MAX_NAME);
+      subtitle=clampText(body.subtitle||'',MAX_SUB);
+      score=clampScore(body.score!=null?body.score:score);
+      fmt=safeFmt(body.fmt);
     }
     const isBanner=fmt==='banner',isStory=fmt==='story';
     const W=isBanner?1200:1080,H=isBanner?630:isStory?1920:1080;
     const svg=isBanner?bannerSVG(W,H,company,subtitle,score):squareSVG(W,H,company,subtitle,score,isStory);
     const png=await svgToPng(svg);
     if(directReturn) return new Response(png,{headers:{...CORS,'Content-Type':'image/png','Cache-Control':'public, max-age=86400'}});
-    const slug=`${company.trim().replace(/\s+/g,'-').slice(0,30)}-${score}-${fmt}.png`;
+    const slug=safeKey(company,score,fmt);
     const imageUrl=await uploadToStorage(png,slug);
     const shareUrl=`${SUPABASE_URL}/functions/v1/generate-badge?${new URLSearchParams({company,subtitle,score:String(score),fmt})}`;
     return new Response(JSON.stringify({imageUrl,shareUrl}),{headers:{...CORS,'Content-Type':'application/json'}});
