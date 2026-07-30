@@ -30,6 +30,14 @@ export default function Personas({ data, onUpdate, onNavigate }: Props) {
   const insight = data.marketInsight;
   const gated = !insight?.savedAt;                       // ยังไม่ยืนยัน research/sizing → ต้องทำก่อน
   const segments = insight?.mode === 'b2b' ? B2B_SEGMENTS : THAI_SEGMENTS;
+  // สรุปผล research/sizing → prefill ให้ AI อัตโนมัติ (ข้อ 2: ไม่ต้องวาง text เอง)
+  const researchPrefill = insight ? [
+    insight.industry ? `อุตสาหกรรม: ${insight.industry}` : '',
+    insight.segments?.length ? `กลุ่มเป้าหมาย: ${insight.segments.join(', ')}` : '',
+    insight.som ? `ขนาดตลาดที่คว้าได้ (SOM): ฿${insight.som.toLocaleString()}/ปี` : '',
+    insight.oppLabel ? `โอกาสตลาด: ${insight.oppLabel}` : '',
+    insight.mode === 'b2b' ? 'ตลาดแบบ B2B (ขายให้องค์กร — มีคณะตัดสินใจหลายบทบาท)' : 'ตลาดแบบ B2C (ผู้บริโภค)',
+  ].filter(Boolean).join('\n') : '';
   const [bypass, setBypass] = useState(false);           // ผู้ใช้เลือก "ข้ามชั่วคราว"
   const [showNew, setShowNew] = useState(false);
   const [segId, setSegId] = useState(() => segments[0].id);
@@ -71,7 +79,7 @@ export default function Personas({ data, onUpdate, onNavigate }: Props) {
       setShowNew(false);
       return;
     }
-    if (!aiText.trim()) {
+    if (!aiText.trim() && !researchPrefill) {
       setMsg('⚠️ วางข้อความ Market Research ในช่องด้านบนก่อน หรือกด "+ ใช้ template segment นี้เลย"');
       aiRef.current?.focus();
       aiRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -79,14 +87,18 @@ export default function Personas({ data, onUpdate, onNavigate }: Props) {
     }
     setAiBusy(true);
     try {
+      const b2b = insight?.mode === 'b2b';
       const { data: res, error } = await supabase.functions.invoke('ai-assist', {
         body: {
           page: 'personas', pageLabel: 'Persona',
-          instruction:
-            'จากข้อมูล Market Research ต่อไปนี้ สร้างโปรไฟล์ลูกค้า (persona) — ' +
-            'summary = quote 1 ประโยคที่ลูกค้ากลุ่มนี้น่าจะพูด (สะท้อนความเจ็บปวดจริง), ' +
-            'suggestions = Pain Points 3-5 ข้อ (สั้น กระชับ เจาะจง)',
-          context: aiText.trim(),
+          instruction: b2b
+            ? `จากข้อมูล Market Research (ตลาด B2B) สร้างโปรไฟล์ผู้มีส่วนตัดสินใจซื้อในองค์กรสำหรับบทบาท "${seg.role}" (${seg.committeeRole ?? ''}) — ` +
+              'summary = quote 1 ประโยคที่คนบทบาทนี้พูดในที่ประชุมจัดซื้อ (สะท้อน business pain/ความเสี่ยง/แรงกดดันที่เขากลัว), ' +
+              'suggestions = Pain Points เชิงธุรกิจ 3-5 ข้อ (เจาะ ROI · ความเสี่ยง · การอนุมัติงบ · ผลกระทบต่อทีม)'
+            : 'จากข้อมูล Market Research ต่อไปนี้ สร้างโปรไฟล์ลูกค้า (persona) — ' +
+              'summary = quote 1 ประโยคที่ลูกค้ากลุ่มนี้น่าจะพูด (สะท้อนความเจ็บปวดจริง), ' +
+              'suggestions = Pain Points 3-5 ข้อ (สั้น กระชับ เจาะจง)',
+          context: [researchPrefill, aiText.trim()].filter(Boolean).join('\n\n'),
         },
       });
       if (error) throw error;
@@ -208,7 +220,8 @@ export default function Personas({ data, onUpdate, onNavigate }: Props) {
                 + ใช้ template segment นี้เลย
               </button>
             </div>
-            <div className="pl-seg-hd">2) (ทางเลือก) วางข้อความ Market Research ให้ AI เติม pains + quote จริง
+            <div className="pl-seg-hd">2) (ทางเลือก) เพิ่มบทสัมภาษณ์/ผลสำรวจให้ AI เติม pains + quote จริง
+              {researchPrefill && <em> — ผลวิจัยตลาดที่ยืนยันไว้ถูกแนบให้ AI อัตโนมัติแล้ว</em>}
               {!isSupabaseEnabled && <em> — โหมด Local: จะใช้ template segment แทน</em>}
             </div>
             <textarea
