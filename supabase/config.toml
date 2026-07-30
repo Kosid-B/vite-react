@@ -3,8 +3,12 @@
 project_id = "waigsnxhrlwtiotspaim"
 
 # ---- Edge Functions: ตั้ง verify_jwt ให้ตรงกับที่ต้องการ ----
-# ‼️ สำคัญ: ถ้าไม่ระบุ CLI จะ default verify_jwt=true — ทำให้ฟังก์ชัน public (badge/webhook/cron) พังได้
+# ‼️ สำคัญ: ถ้าไม่ระบุ CLI จะ default verify_jwt=true → ฟังก์ชัน public (badge/webhook/cron/OAuth callback) พัง (401)
+# กติกา: ระบุ "ทุก" ฟังก์ชันไว้ที่นี่ ให้ไฟล์นี้เป็น source of truth เดียว (กัน config drift ตอน bulk deploy)
+# ค่าที่ตั้งต้องตรงกับ comment header ในแต่ละ index.ts
 
+# ===== กลุ่ม 1: ต้องล็อกอิน (verify_jwt = true) =====
+# LLM / ฟีเจอร์ผู้ใช้ — กันคนนอกเรียกเผาเครดิต + คำนวณราคา/สิทธิ์ฝั่ง server
 [functions.ai-assist]
 verify_jwt = true
 
@@ -14,22 +18,29 @@ verify_jwt = true
 [functions.agent-run]
 verify_jwt = true
 
+[functions.compliance-check]
+verify_jwt = true
+
+[functions.privacy-notice]
+verify_jwt = true
+
 [functions.delete-account]
 verify_jwt = true
 
-[functions.generate-badge]
-verify_jwt = false
-
-[functions.billing-cron]
-verify_jwt = false
-
-[functions.promptpay-webhook]
-verify_jwt = false
-
-[functions.stripe-webhook]
-verify_jwt = false
-
+# ชำระเงิน — ตรวจ getUser + คำนวณราคาฝั่ง server (กันปลอมราคาจาก client)
 [functions.stripe-create-checkout]
+verify_jwt = true
+
+[functions.create-invoice]
+verify_jwt = true
+
+[functions.create-recurring-plan]
+verify_jwt = true
+
+[functions.omise-create-charge]
+verify_jwt = true
+
+[functions.refund-invoice]
 verify_jwt = true
 
 [functions.verify-slip]
@@ -38,5 +49,48 @@ verify_jwt = true
 [functions.verify-topup-slip]
 verify_jwt = true
 
+# เชื่อมบัญชี User เอง (Google Sheets) — ตรวจสมาชิก workspace
+[functions.sheets-oauth]
+verify_jwt = true
+
+[functions.sheets-sync]
+verify_jwt = true
+
+# ===== กลุ่ม 2: public (verify_jwt = false) — ยืนยันตัวเองด้วยวิธีอื่น =====
+# GET สาธารณะ
+[functions.generate-badge]
+verify_jwt = false
+
+# Webhook จาก payment gateway — ยืนยันด้วย x-callback-token / signature
+[functions.promptpay-webhook]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.xendit-webhook]
+verify_jwt = false
+
+[functions.recurring-webhook]
+verify_jwt = false
+
+# OAuth callback — ตอนเรียกยังไม่มี session
+[functions.line-login]
+verify_jwt = false
+
+# Import ข้ามระบบ — ยืนยันด้วยลายเซ็น HMAC
+[functions.handoff-import]
+verify_jwt = false
+
+# Cron / งานตามเวลา — ยืนยันด้วย CRON_SECRET
+[functions.billing-cron]
+verify_jwt = false
+
 [functions.weekly-report]
+verify_jwt = false
+
+[functions.daily-ceo-report]
+verify_jwt = false
+
+[functions.backup-export]
 verify_jwt = false

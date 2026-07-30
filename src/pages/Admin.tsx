@@ -12,6 +12,7 @@ const PaymentsTab   = lazy(() => import('./AdminTabs/PaymentsTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
+import { funnelSummary, type FunnelSummary } from '../lib/funnel';
 import { costReport, estimateVolume } from '../lib/aiCost';
 import { aggregateExperiments, retentionCohorts, expReportCsv, expReportTsv, type ExperimentsAggregate, type RetentionReport } from '../lib/experiments';
 import { isAdminEmail, ADMIN_EMAILS, PAYMENT } from '../config';
@@ -143,6 +144,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const [opsRows, setOpsRows] = useState<OpsRow[]>([]);
   const [opsLoading, setOpsLoading] = useState(false);
   const [opsMsg, setOpsMsg] = useState<string | null>(null);
+  const [funnel, setFunnel] = useState<FunnelSummary | null>(null);
   const [expAgg, setExpAgg] = useState<ExperimentsAggregate | null>(null);
   const [retention, setRetention] = useState<RetentionReport | null>(null);
 
@@ -372,6 +374,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
               cityTier: '-', companyLevel: '-', streak: 0 };
       });
       setOpsRows(out);
+      setFunnel(funnelSummary(states));
       setExpAgg(aggregateExperiments(states.map(s => s?.experiments)));
       setRetention(retentionCohorts(states.map(s => s?.experiments)));
       setOpsMsg(`สรุปแล้ว ${out.length} เวิร์กสเปซ`);
@@ -2222,6 +2225,38 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                         <div className="ops-kpi"><div className="ops-kpi-n">{t.dealsClosed}</div><div className="ops-kpi-l">ดีลปิด</div></div>
                         <div className="ops-kpi"><div className="ops-kpi-n">{t.tasksDone}</div><div className="ops-kpi-l">งานเสร็จ</div></div>
                       </div>
+
+                      {/* ===== Activation Funnel + Engagement segments (ตอบ GA4: หลุดตรงไหนก่อน activate) ===== */}
+                      {funnel && funnel.total > 0 && (
+                        <div className="fnl">
+                          <div className="fnl-hd">🚦 Activation Funnel — <b>{funnel.activationRate}%</b> สร้างบริษัท/ร้าน จาก {funnel.total} เวิร์กสเปซ</div>
+                          <div className="fnl-stages">
+                            {funnel.stages.map((s, i) => (
+                              <div key={s.key} className="fnl-stage">
+                                <div className="fnl-stage-top">
+                                  <span className="fnl-stage-label">{i + 1}. {s.label}</span>
+                                  <span className="fnl-stage-count">{s.count} · {s.pct}%</span>
+                                </div>
+                                <div className="fnl-bar"><div className="fnl-bar-fill" style={{ width: `${s.pct}%` }} /></div>
+                                {i > 0 && s.dropFromPrev > 0 && (
+                                  <div className="fnl-drop">↓ หลุด {s.dropFromPrev}% จากขั้นก่อน</div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="fnl-segs-hd">ความลึกการใช้งาน (มิเรอร์ GA4: กลุ่มลึก vs ตื้น)</div>
+                          <div className="fnl-segs">
+                            {funnel.segments.map(sg => (
+                              <div key={sg.key} className={`fnl-seg fnl-seg-${sg.key}`} title={sg.hint}>
+                                <div className="fnl-seg-n">{sg.count}</div>
+                                <div className="fnl-seg-l">{sg.label}</div>
+                                <div className="fnl-seg-p">{sg.pct}%</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="ops-table-wrap">
                         <table className="ops-table">
                           <thead><tr>
