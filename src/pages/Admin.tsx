@@ -14,6 +14,7 @@ import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
 import { funnelSummary, type FunnelSummary } from '../lib/funnel';
 import { costReport, estimateVolume } from '../lib/aiCost';
+import { PLAN_COST } from '../lib/planCost';
 import { aggregateExperiments, retentionCohorts, expReportCsv, expReportTsv, type ExperimentsAggregate, type RetentionReport } from '../lib/experiments';
 import { isAdminEmail, ADMIN_EMAILS, PAYMENT } from '../config';
 import { applyRefund } from '../../supabase/functions/_shared/refund.ts';
@@ -32,9 +33,10 @@ function pct(n: number, d: number): string {
 }
 
 // ---- Pricing & Cost Reference (mirrors Billing.tsx) ----
+// cost = แหล่งความจริงเดียว lib/planCost.ts (buildCost จริง — ไม่ hardcode เลข stale)
 const PLAN_LIST = [
-  { id: 'growth', name: 'Growth', price: 1490, cost: 1190, apiCalls: 1000 },
-  { id: 'scale',  name: 'Scale',  price: 5900, cost: 4650, apiCalls: 5000 },
+  { id: 'growth', name: 'Growth', price: 1490, cost: PLAN_COST.growth.total, apiCalls: 700 },
+  { id: 'scale',  name: 'Scale',  price: 5900, cost: PLAN_COST.scale.total, apiCalls: 5000 },
 ];
 
 interface Competitor {
@@ -51,7 +53,7 @@ const COMPETITORS: Competitor[] = [
 ];
 
 // Price sensitivity for Growth plan
-const GROWTH_COST = 1190;
+const GROWTH_COST = PLAN_COST.growth.total;
 const SENSITIVITY = [999, 1290, 1490, 1790, 1990].map(p => ({
   price: p,
   profit: p - GROWTH_COST,
@@ -1527,7 +1529,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                   annual: 14900,
                   color: 'var(--accent)',
                   badge: '⭐ ยอดนิยม',
-                  features: ['AI Company Builder', '1,000 calls/เดือน', 'VRIO + 24 Steps', 'PromptPay Billing', 'Workspace team'],
+                  features: ['AI Company Builder', '700 calls/เดือน', 'VRIO + 24 Steps', 'PromptPay Billing', 'Workspace team'],
                   target: 'Thai SME / Solopreneurs',
                 },
                 {

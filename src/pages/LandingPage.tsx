@@ -90,12 +90,22 @@ const plans = [
     cta: 'เริ่มทดลองฟรี',
   },
   {
+    id: 'starter',
+    name: 'Starter',
+    price: '฿790',
+    period: '/เดือน',
+    tagline: 'เพิ่งเริ่มธุรกิจ — จ่ายเบาๆ เมื่อเริ่มมีรายได้',
+    features: ['ทุกอย่างในแพ็กฟรี', 'AI calls 300 ครั้ง/เดือน', 'เอเจนต์ AI สูงสุด 5 ตัว', 'ซื้อขาย B2B (RFQ) + ออเดอร์', 'หน้าร้านสาธารณะ + สารบัญธุรกิจ'],
+    highlight: false,
+    cta: 'เริ่มต้นเลย',
+  },
+  {
     id: 'growth',
     name: 'Growth',
     price: '฿1,490',
     period: '/เดือน',
     tagline: 'สำหรับ SME ที่ต้องการทีม AI ทำงานจริง',
-    features: ['เอเจนต์ AI ไม่จำกัด', 'AI calls 1,000 ครั้ง/เดือน', 'งานในระบบไม่จำกัด', 'บอร์ดอนุมัติ + แจ้งเตือน', 'รายงานผลรายสัปดาห์'],
+    features: ['เอเจนต์ AI ไม่จำกัด', 'AI calls 700 ครั้ง/เดือน', 'งานในระบบไม่จำกัด', 'บอร์ดอนุมัติ + แจ้งเตือน', 'รายงานผลรายสัปดาห์'],
     highlight: true,
     cta: 'เริ่มต้นเลย',
   },
@@ -386,7 +396,7 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
 
       {/* ─── Pricing ─── */}
       <section id="pricing" style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1120, margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12, color: C.white }}>
             แพ็กเกจ <span style={{ color: C.cyan4 }}>สำหรับทุกขนาดธุรกิจ</span>
           </h2>

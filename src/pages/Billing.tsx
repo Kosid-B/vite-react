@@ -5,7 +5,12 @@ import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS, fetchServerUsage, type ServerUsage } from '../lib/usage';
 import { TOPUP_PACKS, pricePerCall, type TopupPack } from '../lib/topup';
 import { GRACE_DAYS, annualPrice } from '../lib/access';
-import { callCostThb, CALL_PROFILE } from '../lib/aiCost';
+import { foundingEffectivePlan } from '../lib/founding';
+import { grantWelcomeKit } from '../lib/welcomeKit';
+import { referralLink, REF_REWARD_CALLS } from '../lib/referral';
+import { getPendingRef, clearPendingRef, claimReferral } from '../lib/referralClient';
+import FoundingBanner from '../components/FoundingBanner';
+import { PLAN_COST as COST, BLENDED_CALL_THB } from '../lib/planCost';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText, submitTopupRequest,
   submitTopupSlip, verifyTopupSlip } from '../lib/payments';
@@ -46,37 +51,7 @@ interface Plan {
   costPerMonth: number;
 }
 
-interface CostItem { label: string; amount: number; note: string; }
-interface PlanCost { items: CostItem[]; total: number; price: number; margin: number; }
-
-/* ต้นทุน AI คิดจาก "blended cost จริง" (aiCost.ts) ไม่ใช่ ฿0.76/call (เคส agent หนักสุด) —
- * mix งานจริง 50% assist / 20% plan / 30% agent → ~฿0.49/call (Sonnet)
- * ที่มา: docs/marketing/PRICING-MARGIN-ANALYSIS.md */
-const BLENDED_CALL_THB =
-  0.5 * callCostThb('claude-sonnet-4-6', CALL_PROFILE.assist.in, CALL_PROFILE.assist.out) +
-  0.2 * callCostThb('claude-sonnet-4-6', CALL_PROFILE.plan.in, CALL_PROFILE.plan.out) +
-  0.3 * callCostThb('claude-sonnet-4-6', CALL_PROFILE.agent.in, CALL_PROFILE.agent.out);
-
-/** สร้าง PlanCost จาก quota จริง + ค่า infra/support — margin คำนวณสด (กัน hardcode ล้าสมัย) */
-function buildCost(calls: number, price: number, infra: number, support: number, infraNote: string, supportNote: string): PlanCost {
-  const ai = Math.round(calls * BLENDED_CALL_THB);
-  const total = ai + infra + support;
-  return {
-    items: [
-      { label: 'Claude AI API', amount: ai, note: `${calls.toLocaleString()} calls × ~฿${BLENDED_CALL_THB.toFixed(2)}/call (blended · Sonnet)` },
-      { label: 'Supabase + Hosting', amount: infra, note: infraNote },
-      { label: 'Support & Development', amount: support, note: supportNote },
-    ],
-    total, price,
-    margin: +(((price - total) / price) * 100).toFixed(1),
-  };
-}
-
-const COST: Record<string, PlanCost> = {
-  starter: buildCost(300, 790, 60, 25, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
-  growth: buildCost(1000, 1490, 250, 180, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
-  scale: buildCost(5000, 5900, 550, 300, 'Database, Edge Functions, Storage (priority tier)', 'ทีมพัฒนาและดูแลระบบ (dedicated)'),
-};
+/* ต้นทุน/มาร์จินต่อแพ็ก = แหล่งความจริงเดียว lib/planCost.ts (ใช้ร่วม Analytics/Admin) */
 
 const PLANS: Plan[] = [
   {
@@ -114,12 +89,12 @@ const PLANS: Plan[] = [
     name: 'Growth',
     price: 1490,
     tagline: 'สำหรับ SME ที่ต้องการทีม AI ทำงานจริง',
-    apiCalls: 1000,
-    costPerMonth: 1190,
+    apiCalls: 700,
+    costPerMonth: 773,
     highlight: true,
     features: [
       'เอเจนต์ AI ไม่จำกัด',
-      'AI calls 1,000 ครั้ง/เดือน',
+      'AI calls 700 ครั้ง/เดือน',
       'งานในระบบไม่จำกัด',
       'เชื่อมต่อทุกเครื่องมือ',
       'บอร์ดอนุมัติ + แจ้งเตือน',
@@ -158,9 +133,11 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   const [srvUsage, setSrvUsage] = useState<ServerUsage | null>(null);
   useEffect(() => { fetchServerUsage().then(setSrvUsage); }, []);
   const aiUsed = srvUsage ? srvUsage.used : getAiUsage().count;
-  const aiQuota = srvUsage ? srvUsage.quota : PLAN_AI_CALLS[data.subscription.plan];
+  // โควตา: Founding Member ที่จ่าย Starter → ใช้โควตาระดับ Growth (700)
+  const aiQuota = srvUsage ? srvUsage.quota : PLAN_AI_CALLS[foundingEffectivePlan(data.subscription.plan, data.foundingMember, new Date())];
   const aiPct = aiQuota > 0 ? Math.min(100, Math.round((aiUsed / aiQuota) * 100)) : 0;
-  const refLink = 'https://ceoaithailand.org/?ref=' + (data.aiCompany.name || 'friend').replace(/\s+/g, '-');
+  // ref code = workspace id (attribute ฝั่ง server) · local mode ไม่มี wsId → ลิงก์เปล่า (referral ทำงานเฉพาะออนไลน์)
+  const refLink = referralLink(wsId);
   const copyRef = () => {
     navigator.clipboard?.writeText(refLink).then(() => {
       setRefCopied(true);
@@ -207,9 +184,12 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   function activateFromSlip(sub: { id: string; plan: string; cycle: string; amount: number }, applied: string[], announce = false) {
     const now = new Date().toISOString();
     const invoice: Invoice = { id: 'inv-' + sub.id.slice(0, 8), date: now, plan: sub.plan as PlanId, amount: sub.amount, status: 'paid' };
+    // Value-add bundle: สมัครแพ็กจ่ายเงิน → ปลด Welcome Kit Skills อัตโนมัติ (idempotent, ต้นทุน ≈ 0)
+    const kit = grantWelcomeKit(data.aiCompany.purchasedSkills);
     onUpdate({
       ...data,
       appliedPaymentIds: [...applied, sub.id],
+      aiCompany: { ...data.aiCompany, purchasedSkills: kit.skills },
       subscription: {
         ...data.subscription,
         plan: sub.plan as PlanId,
@@ -221,9 +201,22 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         invoices: [invoice, ...data.subscription.invoices],
       },
     });
-    if (announce) setSlipMsg('✅ เปิดใช้งานแพ็ก ' + sub.plan.toUpperCase() + ' แล้ว! (แอดมินจะตรวจสลิปย้อนหลัง)');
+    if (announce) {
+      const kitMsg = kit.added.length ? ` + แถม ${kit.added.length} Skills พิเศษ 🎁` : '';
+      setSlipMsg('✅ เปิดใช้งานแพ็ก ' + sub.plan.toUpperCase() + ' แล้ว!' + kitMsg + ' (แอดมินจะตรวจสลิปย้อนหลัง)');
+    }
     // GA4 purchase — รายได้จริง (ผู้ใช้ยืนยันด้วยสลิป)
     track('purchase', { transaction_id: invoice.id, value: sub.amount, currency: 'THB', plan: sub.plan, cycle: sub.cycle });
+    // funnel: จ่ายเงินตามแพ็ก (paid_starter / paid_growth / paid_scale)
+    track('paid_' + sub.plan, { value: sub.amount, cycle: sub.cycle });
+    // Referral: ผู้ถูกชวนสมัครแพ็กจ่ายเงิน → server ให้เครดิตทั้งคู่ (referee ต้องเป็นแพ็กจ่ายเงิน — ตรวจฝั่ง server)
+    const ref = getPendingRef();
+    if (ref && wsId && ref !== wsId) {
+      claimReferral(ref).then((r) => {
+        if (r.ok) { clearPendingRef(); track('referral_rewarded', { reward: r.reward ?? REF_REWARD_CALLS }); }
+        else if (r.reason === 'self' || r.reason === 'already' || r.reason === 'bad_referrer') clearPendingRef();
+      });
+    }
   }
 
   // ตรวจสลิปของ workspace ตัวเองเมื่อเปิดหน้า:
@@ -496,6 +489,9 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         </div>
       </div>
 
+      {/* โปรฯ Founding Member (1,000 คนแรก) — สมัคร Starter ได้สิทธิ์ระดับ Growth */}
+      <FoundingBanner data={data} onUpdate={onUpdate} wsId={wsId} onPickStarter={() => setSelected('starter')} />
+
       {/* PLG: usage meter (expansion loop) + referral (viral loop) */}
       <div className="plg-row">
         <div className="plg-card">
@@ -508,7 +504,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
           </div>
           {aiPct >= 80 && sub.plan !== 'scale' && (
             <div className="plg-nudge">
-              🚀 ใกล้เต็มโควตาแล้ว — อัปเกรดเป็น {sub.plan === 'growth' ? 'Scale (5,000 calls/เดือน)' : 'Growth (1,000 calls/เดือน)'}
+              🚀 ใกล้เต็มโควตาแล้ว — อัปเกรดเป็น {sub.plan === 'growth' ? 'Scale (5,000 calls/เดือน)' : 'Growth (700 calls/เดือน)'}
               <button className="plg-nudge-btn" onClick={() => choosePlan(sub.plan === 'growth' ? 'scale' : 'growth')}>
                 อัปเกรดเลย →
               </button>
@@ -571,7 +567,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         <div className="plg-card">
           <div className="plg-hd">🎁 ชวนเพื่อนใช้ {BRAND.product}</div>
           <div className="plg-ref-desc">
-            เพื่อนสมัครผ่านลิงก์ของคุณและชำระแพ็กแรก — รับส่วนลด 10% ในรอบบิลถัดไปทั้งคู่
+            เพื่อนสมัครผ่านลิงก์ของคุณและชำระแพ็กจ่ายเงิน — <b>ทั้งคู่ได้ +{REF_REWARD_CALLS} AI calls</b> ทันที (เดือนที่สมัคร)
           </div>
           <div className="plg-ref-row">
             <input className="plg-ref-link" readOnly value={refLink} onFocus={e => e.target.select()} />
@@ -678,9 +674,9 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             {p.price > 0 && cycle === 'yearly' && (
               <div className="bill-plan-save">เท่ากับจ่าย 10 เดือน — ฟรี 2 เดือน (จาก {baht(p.price * 12)})</div>
             )}
-            {p.price > 0 && COST[p.id] && (
+            {p.price > 0 && COST[p.id as keyof typeof COST] && (
               <div className="bill-plan-margin-badge">
-                กำไรบริษัท {COST[p.id].margin.toFixed(0)}% · ต้นทุน {baht(COST[p.id].total)}
+                กำไรบริษัท {COST[p.id as keyof typeof COST].margin.toFixed(0)}% · ต้นทุน {baht(COST[p.id as keyof typeof COST].total)}
               </div>
             )}
             <div className="bill-plan-tag">{p.tagline}</div>

@@ -1,5 +1,9 @@
 import { lazy, Suspense } from 'react';
 import type { LegalSection } from './pages/LegalPage';
+import { captureRefFromUrl } from './lib/referralClient';
+
+// จับ ?ref= ตั้งแต่แรกที่เข้าเว็บ (ทำงานทุกเส้นทาง รวมหน้า marketing ที่ไม่ผ่าน App) — first-touch
+if (typeof window !== 'undefined') captureRefFromUrl();
 
 /**
  * Root router แบบบาง (ไม่ import supabase) — ตัดสินเส้นทางจาก URL ก่อนโหลดอะไรหนัก:

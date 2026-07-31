@@ -16,6 +16,7 @@ import LandingPage from './pages/LandingPage';
 import SaveWorkPrompt from './components/SaveWorkPrompt';
 import GoalChooser from './components/GoalChooser';
 import Sidebar from './components/Sidebar';
+import ConversionNudge from './components/ConversionNudge';
 // perf: lazy-load เฉพาะตอนต้องใช้ (ไม่อยู่ใน critical path ของ first paint)
 const AiAssist = lazy(() => import('./components/AiAssist'));
 const JourneyGuide = lazy(() => import('./components/JourneyGuide'));
@@ -321,8 +322,19 @@ export default function App() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* empty */ }
     if (activeWs) { pendingWsRef.current = activeWs; void wsSave(activeWs, next).then(ok => { if (ok) pendingWsRef.current = null; }); }
     showToast('ยินดีต้อนรับ! เริ่มทดลองใช้ฟรี 15 วันแล้ว 🎉');
+    track('trial_started', { plan: 'free' }); // funnel: เริ่มทดลอง (ยิงครั้งเดียว — effect guard ด้วย status transition)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user.id, data.subscription.status, activeWs]);
+
+  // funnel: activation = สร้างทีม AI สำเร็จครั้งแรก (มีเอเจนต์ ≥ 1) — ยิงครั้งเดียว/เบราว์เซอร์ (localStorage guard)
+  useEffect(() => {
+    if ((data.aiCompany?.agents?.length ?? 0) < 1) return;
+    try {
+      if (localStorage.getItem('ceo_ai_activation_sent')) return;
+      localStorage.setItem('ceo_ai_activation_sent', '1');
+      track('activation', { agents: data.aiCompany.agents.length });
+    } catch { /* noop */ }
+  }, [data.aiCompany?.agents?.length]);
 
   const showToast = useCallback((msg?: string) => {
     if (msg) setToastMsg(msg);
@@ -574,6 +586,7 @@ export default function App() {
       />
 
       <main className={`main${navCollapsed ? ' nav-collapsed' : ''}`}>
+        <ConversionNudge data={data} activePage={activePage} onNavigate={setActivePage} />
         <Suspense fallback={<div className="page-loading" />}>
         {activePage === 'dashboard' && <Dashboard data={data} onNavigate={setActivePage} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'journey' && (
