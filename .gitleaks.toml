@@ -1,0 +1,16 @@
+# gitleaks config — CEO AI Thailand
+# ใช้ rule มาตรฐานทั้งหมด + allowlist เฉพาะ false-positive / คีย์ public-by-design
+# (ตรวจจริงในเครื่อง: gitleaks 8.30.1 · current tree = 0 leaks หลัง allowlist นี้)
+title = "CEO AI Thailand gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "public-by-design keys + false positives (ไม่ใช่ credential จริง)"
+regexes = [
+  # Supabase publishable/anon key = public โดยดีไซน์ (RLS-gated · ตรงกับ wrangler.jsonc/supabase.ts)
+  '''sb_publishable_[A-Za-z0-9_-]+''',
+  # ชื่อโมเดล Anthropic/OSS ในคำสั่งตัวอย่าง "supabase secrets set MODEL_*=..." (ไม่ใช่ secret)
+  '''claude-[a-z0-9.-]+''',
+]
