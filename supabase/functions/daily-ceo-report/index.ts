@@ -15,7 +15,7 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
 const FROM_EMAIL = "CEO AI Thailand <noreply@ceoaithailand.org>";
 const APP_URL = "https://ceoaithailand.org";
-const PLAN_PRICE: Record<string, number> = { free: 0, starter: 590, growth: 1490, scale: 5900 };
+const PLAN_PRICE: Record<string, number> = { free: 0, starter: 790, growth: 1490, scale: 5900 };
 const MKT = /cmo|market|ตลาด|แบรนด์|content|โฆษณา|campaign/i;
 const baht = (n: number) => "฿" + Math.round(n).toLocaleString("th-TH");
 

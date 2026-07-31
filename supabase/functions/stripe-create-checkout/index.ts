@@ -17,8 +17,8 @@ const STRIPE_SECRET_KEY = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
 const APP_ORIGIN = "https://ceoaithailand.org";
 
 // ราคาจริง (ฝั่ง server เท่านั้น) — รายปี = 10 เดือน
-const PRICE_MONTHLY: Record<string, number> = { starter: 590, growth: 1490, scale: 5900 };
-const PRICE_YEARLY: Record<string, number> = { starter: 5900, growth: 14900, scale: 59000 };
+const PRICE_MONTHLY: Record<string, number> = { starter: 790, growth: 1490, scale: 5900 };
+const PRICE_YEARLY: Record<string, number> = { starter: 7900, growth: 14900, scale: 59000 };
 const PLAN_LABEL: Record<string, string> = { starter: "Starter", growth: "Growth", scale: "Scale" };
 
 const cors = {
