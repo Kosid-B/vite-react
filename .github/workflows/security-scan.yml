@@ -1,0 +1,40 @@
+name: Security Scan
+
+# ISO/IEC 27001:2022 controls: 8.28 (secure coding), 8.8 (technical vulnerability mgmt)
+# ป้องกันคีย์ลับหลุดเข้า repo (root cause ของ R1) + ตรวจช่องโหว่ dependency ที่ ship จริงอัตโนมัติ
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  secret-scan:
+    name: Secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install gitleaks
+        # แตกเฉพาะ binary ลง /tmp — อย่าแตกลง repo (tarball มี README.md ของ gitleaks ที่มี example secret → จะโดนสแกนเจอ)
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar xz -C /tmp gitleaks
+          sudo mv /tmp/gitleaks /usr/local/bin/gitleaks
+      - name: Scan working tree for secrets
+        # --no-git = สแกนไฟล์ปัจจุบัน (กัน secret ใหม่หลุดเข้า code) · allowlist คีย์ public-by-design ใน .gitleaks.toml
+        run: gitleaks detect --source . --no-git --config .gitleaks.toml --no-banner --redact -v
+
+  dependency-audit:
+    name: Dependency vulnerability audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --legacy-peer-deps
+      # gate: fail เฉพาะช่องโหว่ high/critical ใน dependency ที่ ship ถึงผู้ใช้จริง (prod)
+      - name: Audit production dependencies (gate)
+        run: npm audit --omit=dev --audit-level=high
+      # informational: ช่องโหว่ dev/build-tool (เช่น eslint/brace-expansion) — log ไว้ดู ไม่ fail build
+      - name: Audit all dependencies (informational)
+        run: npm audit --audit-level=high || true
