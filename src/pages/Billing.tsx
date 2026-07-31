@@ -6,6 +6,9 @@ import { getAiUsage, PLAN_AI_CALLS, fetchServerUsage, type ServerUsage } from '.
 import { TOPUP_PACKS, pricePerCall, type TopupPack } from '../lib/topup';
 import { GRACE_DAYS, annualPrice } from '../lib/access';
 import { foundingEffectivePlan } from '../lib/founding';
+import { grantWelcomeKit } from '../lib/welcomeKit';
+import { referralLink, REF_REWARD_CALLS } from '../lib/referral';
+import { getPendingRef, clearPendingRef, claimReferral } from '../lib/referralClient';
 import FoundingBanner from '../components/FoundingBanner';
 import { callCostThb, CALL_PROFILE } from '../lib/aiCost';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
@@ -163,7 +166,8 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   // โควตา: Founding Member ที่จ่าย Starter → ใช้โควตาระดับ Growth (700)
   const aiQuota = srvUsage ? srvUsage.quota : PLAN_AI_CALLS[foundingEffectivePlan(data.subscription.plan, data.foundingMember, new Date())];
   const aiPct = aiQuota > 0 ? Math.min(100, Math.round((aiUsed / aiQuota) * 100)) : 0;
-  const refLink = 'https://ceoaithailand.org/?ref=' + (data.aiCompany.name || 'friend').replace(/\s+/g, '-');
+  // ref code = workspace id (attribute ฝั่ง server) · local mode ไม่มี wsId → ลิงก์เปล่า (referral ทำงานเฉพาะออนไลน์)
+  const refLink = referralLink(wsId);
   const copyRef = () => {
     navigator.clipboard?.writeText(refLink).then(() => {
       setRefCopied(true);
@@ -210,9 +214,12 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   function activateFromSlip(sub: { id: string; plan: string; cycle: string; amount: number }, applied: string[], announce = false) {
     const now = new Date().toISOString();
     const invoice: Invoice = { id: 'inv-' + sub.id.slice(0, 8), date: now, plan: sub.plan as PlanId, amount: sub.amount, status: 'paid' };
+    // Value-add bundle: สมัครแพ็กจ่ายเงิน → ปลด Welcome Kit Skills อัตโนมัติ (idempotent, ต้นทุน ≈ 0)
+    const kit = grantWelcomeKit(data.aiCompany.purchasedSkills);
     onUpdate({
       ...data,
       appliedPaymentIds: [...applied, sub.id],
+      aiCompany: { ...data.aiCompany, purchasedSkills: kit.skills },
       subscription: {
         ...data.subscription,
         plan: sub.plan as PlanId,
@@ -224,9 +231,20 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         invoices: [invoice, ...data.subscription.invoices],
       },
     });
-    if (announce) setSlipMsg('✅ เปิดใช้งานแพ็ก ' + sub.plan.toUpperCase() + ' แล้ว! (แอดมินจะตรวจสลิปย้อนหลัง)');
+    if (announce) {
+      const kitMsg = kit.added.length ? ` + แถม ${kit.added.length} Skills พิเศษ 🎁` : '';
+      setSlipMsg('✅ เปิดใช้งานแพ็ก ' + sub.plan.toUpperCase() + ' แล้ว!' + kitMsg + ' (แอดมินจะตรวจสลิปย้อนหลัง)');
+    }
     // GA4 purchase — รายได้จริง (ผู้ใช้ยืนยันด้วยสลิป)
     track('purchase', { transaction_id: invoice.id, value: sub.amount, currency: 'THB', plan: sub.plan, cycle: sub.cycle });
+    // Referral: ผู้ถูกชวนสมัครแพ็กจ่ายเงิน → server ให้เครดิตทั้งคู่ (referee ต้องเป็นแพ็กจ่ายเงิน — ตรวจฝั่ง server)
+    const ref = getPendingRef();
+    if (ref && wsId && ref !== wsId) {
+      claimReferral(ref).then((r) => {
+        if (r.ok) { clearPendingRef(); track('referral_rewarded', { reward: r.reward ?? REF_REWARD_CALLS }); }
+        else if (r.reason === 'self' || r.reason === 'already' || r.reason === 'bad_referrer') clearPendingRef();
+      });
+    }
   }
 
   // ตรวจสลิปของ workspace ตัวเองเมื่อเปิดหน้า:
@@ -577,7 +595,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         <div className="plg-card">
           <div className="plg-hd">🎁 ชวนเพื่อนใช้ {BRAND.product}</div>
           <div className="plg-ref-desc">
-            เพื่อนสมัครผ่านลิงก์ของคุณและชำระแพ็กแรก — รับส่วนลด 10% ในรอบบิลถัดไปทั้งคู่
+            เพื่อนสมัครผ่านลิงก์ของคุณและชำระแพ็กจ่ายเงิน — <b>ทั้งคู่ได้ +{REF_REWARD_CALLS} AI calls</b> ทันที (เดือนที่สมัคร)
           </div>
           <div className="plg-ref-row">
             <input className="plg-ref-link" readOnly value={refLink} onFocus={e => e.target.select()} />

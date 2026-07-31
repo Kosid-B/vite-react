@@ -77,7 +77,7 @@ export default function FoundingBanner({ data, onUpdate, wsId, onPickStarter }: 
         สมัคร Starter ฿790 — รับสิทธิ์ระดับ <span style={{ color: C.cyan3 }}>Growth</span> {elite ? 'ตลอดชีพ' : '12 เดือน'}
       </div>
       <div style={{ color: C.slate, fontSize: 13, marginTop: 6, lineHeight: 1.6 }}>
-        ปลดฟีเจอร์ Growth (AI Search · ตลาด · ทีม · ISO · Analytics) + โควตา 700 calls/เดือน — จ่ายราคา Starter
+        ปลดฟีเจอร์ Growth (AI Search · ตลาด · ทีม · ISO · Analytics) + โควตา 700 calls/เดือน + แถม Skills พิเศษ — จ่ายราคา Starter
         {elite && ' · ล็อกสิทธิ์ตลอดชีพในฐานะผู้ร่วมก่อตั้ง'}
       </div>
       <div style={{ marginTop: 14 }}>
