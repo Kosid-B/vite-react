@@ -1,0 +1,36 @@
+name: Security Scan
+
+# ISO/IEC 27001:2022 controls: 8.28 (secure coding), 8.8 (technical vulnerability mgmt)
+# ป้องกันคีย์ลับหลุดเข้า git (root cause ของ R1) + ตรวจช่องโหว่ dependency อัตโนมัติ
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  secret-scan:
+    name: Secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # สแกนทั้ง history เพื่อจับคีย์ที่เผลอ commit
+      - name: Install gitleaks
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar xz
+          sudo mv gitleaks /usr/local/bin/gitleaks
+      - name: Scan for secrets
+        run: gitleaks detect --source . --no-banner --redact -v
+
+  dependency-audit:
+    name: Dependency vulnerability audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --legacy-peer-deps
+      # fail เฉพาะช่องโหว่ระดับ high/critical (low/moderate ปัจจุบันจะผ่าน แต่ log ไว้)
+      - run: npm audit --audit-level=high

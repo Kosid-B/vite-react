@@ -50,3 +50,9 @@ backup-*.json
 # Claude Code agent worktrees (runtime artifacts)
 .claude/worktrees/
 content-prototype-seed.json
+*.mp4
+*.png
+*.docx
+fireworksbatchinput.jsonl
+การตลาด/
+งานแก้ไข/
