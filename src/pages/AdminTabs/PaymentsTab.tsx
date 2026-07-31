@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { listPendingPayments, reviewPayment, grantAiTopup,
+import { listPendingPayments, listApprovedPayments, reviewPayment, grantAiTopup,
   listPendingTopups, approveTopupRequest, rejectTopupRequest,
   type PaymentSubmission, type TopupRequest } from '../../lib/payments';
 import { TOPUP_PACKS } from '../../lib/topup';
@@ -16,12 +16,13 @@ export default function PaymentsTab() {
 
   const [topups, setTopups] = useState<TopupRequest[]>([]);
   const [tuReqBusy, setTuReqBusy] = useState<string | null>(null);
+  const [approved, setApproved] = useState<PaymentSubmission[]>([]);
 
   async function load() {
     setLoading(true);
     try {
-      const [s, t] = await Promise.all([listPendingPayments(), listPendingTopups()]);
-      setSubs(s); setTopups(t);
+      const [s, t, a] = await Promise.all([listPendingPayments(), listPendingTopups(), listApprovedPayments()]);
+      setSubs(s); setTopups(t); setApproved(a);
     } catch { setMsg('⚠️ โหลดคำขอไม่สำเร็จ'); }
     finally { setLoading(false); }
   }
@@ -133,6 +134,31 @@ export default function PaymentsTab() {
                   {busy === s.id + 'rejected' ? '⏳' : '🚫 ตีกลับ'}
                 </button>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* การจ่ายที่สำเร็จแล้ว (approved) — เห็นยอดขายจริง ไม่ใช่แค่คิวรอตรวจ */}
+      <div className="pfa-sec-hd" style={{ marginTop: 22 }}>
+        💰 การจ่ายที่สำเร็จแล้ว ({approved.length} ล่าสุด)
+        {approved.length > 0 && (
+          <span className="pay-done-total"> · รวม ฿{approved.reduce((sum, s) => sum + s.amount, 0).toLocaleString()}</span>
+        )}
+      </div>
+      <p className="pfa-sec-sub">รายการที่ยืนยันแล้ว (SlipOK/แอดมิน) — แพ็กเปิดใช้งานอยู่</p>
+      {approved.length === 0 ? (
+        <div className="pfa-empty">ยังไม่มีการจ่ายที่สำเร็จ</div>
+      ) : (
+        <div className="pay-done-list">
+          {approved.map(s => (
+            <div key={s.id} className="pay-done-row">
+              <span className="pay-done-plan">{s.plan.toUpperCase()}</span>
+              <span className="pay-done-cycle">{s.cycle === 'yearly' ? 'รายปี' : 'รายเดือน'}</span>
+              <span className="pay-done-amount">฿{s.amount.toLocaleString()}</span>
+              <span className="pay-done-ws">ws {s.workspaceId.slice(0, 8)}…</span>
+              <span className="pay-done-date">{s.createdAt}</span>
+              {s.note && <span className="pay-done-note" title={s.note}>{s.note.startsWith('SlipOK') ? '🏦 SlipOK' : '✓ แอดมิน'}</span>}
             </div>
           ))}
         </div>

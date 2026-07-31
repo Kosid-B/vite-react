@@ -20,6 +20,33 @@ const SLIPOK_BRANCH_ID = Deno.env.get("SLIPOK_BRANCH_ID") ?? "";
 // → SlipOK ตรวจว่าเงินเข้าบัญชีเราจริงให้ในตัว) · ตั้ง SLIPOK_RECEIVER_HINT=2560 เพื่อเปิดชั้นนี้เพิ่ม
 const RECEIVER_HINT = Deno.env.get("SLIPOK_RECEIVER_HINT") ?? "";
 
+// แจ้งเตือน admin เมื่อมีการจ่ายสำเร็จ (ใช้ Resend เหมือน promptpay-webhook/billing-cron)
+const ADMIN_EMAIL = "support@b-tctraining.com";
+const FROM_EMAIL = "CEO AI Thailand <noreply@ceoaithailand.org>";
+async function sendMail(to: string, subject: string, html: string): Promise<void> {
+  const key = Deno.env.get("RESEND_API_KEY");
+  if (!key) return;
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html }),
+  }).catch(() => {}); // fire-and-forget — ไม่ให้อีเมลล้มมากระทบการเปิดแพ็ก
+}
+function adminPaidHtml(plan: string, amount: number, cycle: string, wsId: string, payer: string | null, sender: string, ref: string): string {
+  return `<div style="font-family:sans-serif;max-width:520px">
+  <h2 style="color:#06b6d4">💰 มีการชำระเงินสำเร็จ (SlipOK)</h2>
+  <table style="font-size:14px;line-height:1.9">
+    <tr><td style="color:#64748b">แพ็ก</td><td><b>${plan}</b> · ${cycle === "yearly" ? "รายปี" : "รายเดือน"}</td></tr>
+    <tr><td style="color:#64748b">ยอด</td><td><b>฿${amount.toLocaleString()}</b></td></tr>
+    <tr><td style="color:#64748b">ผู้ใช้</td><td>${payer ?? "-"}</td></tr>
+    <tr><td style="color:#64748b">ผู้โอน (สลิป)</td><td>${sender || "-"}</td></tr>
+    <tr><td style="color:#64748b">Workspace</td><td>${wsId.slice(0, 8)}</td></tr>
+    <tr><td style="color:#64748b">Ref</td><td>${ref || "-"}</td></tr>
+  </table>
+  <p style="color:#94a3b8;font-size:13px">ตรวจกับธนาคารผ่าน SlipOK แล้ว · แพ็กเปิดอัตโนมัติ (ไม่ต้อง action)</p>
+</div>`;
+}
+
 // ราคาจริง (ฝั่ง server เท่านั้น) — รายปี = 10 เดือน · หน่วย: บาท
 const PRICE_MONTHLY: Record<string, number> = { starter: 390, growth: 1490, scale: 5900 };
 const PRICE_YEARLY: Record<string, number> = { starter: 3900, growth: 14900, scale: 59000 };
@@ -187,6 +214,13 @@ Deno.serve(async (req) => {
   const save = await admin.from("workspace_state")
     .upsert({ workspace_id: workspaceId, data: state, updated_at: now }, { onConflict: "workspace_id" });
   if (save.error) return json({ ok: false, reason: "activation_failed", detail: save.error.message }, 500);
+
+  // แจ้ง admin ทุกการจ่ายสำเร็จ (fire-and-forget — ไม่ block การตอบกลับ)
+  sendMail(
+    ADMIN_EMAIL,
+    `[CEO AI] 💰 ชำระเงิน ฿${paidAmount.toLocaleString()} — ${plan} — ${workspaceId.slice(0, 8)}`,
+    adminPaidHtml(plan, paidAmount, cycle, workspaceId, user.email ?? null, senderName, transRef || ""),
+  );
 
   return json({
     ok: true, plan, cycle,

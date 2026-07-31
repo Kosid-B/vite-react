@@ -128,6 +128,14 @@ export async function listPendingPayments(): Promise<PaymentSubmission[]> {
   return subs;
 }
 
+/** แอดมิน: การจ่ายที่สำเร็จแล้ว (approved) ล่าสุด — ให้เห็นยอดขายจริง ไม่ใช่แค่คิวรอตรวจ */
+export async function listApprovedPayments(limit = 50): Promise<PaymentSubmission[]> {
+  if (!isSupabaseEnabled || !supabase) return [];
+  const { data } = await supabase.from('payment_submissions').select('*')
+    .eq('status', 'approved').order('reviewed_at', { ascending: false }).limit(limit);
+  return (data as Row[] ?? []).map(toSub);
+}
+
 /** แอดมิน: อนุมัติ/ปฏิเสธคำขอ */
 export async function reviewPayment(id: string, status: 'approved' | 'rejected', note = ''): Promise<string> {
   if (!isSupabaseEnabled || !supabase) return 'ใช้ได้เฉพาะโหมดออนไลน์';
