@@ -15,8 +15,8 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const XENDIT_SECRET_KEY = Deno.env.get("XENDIT_SECRET_KEY") ?? "";
 const APP_ORIGIN = "https://ceoaithailand.org";
 
-const PRICE_MONTHLY: Record<string, number> = { starter: 390, growth: 1490, scale: 5900 };
-const PRICE_YEARLY: Record<string, number> = { starter: 3900, growth: 14900, scale: 59000 };
+const PRICE_MONTHLY: Record<string, number> = { starter: 590, growth: 1490, scale: 5900 };
+const PRICE_YEARLY: Record<string, number> = { starter: 5900, growth: 14900, scale: 59000 };
 
 const cors = {
   "Access-Control-Allow-Origin": "*",

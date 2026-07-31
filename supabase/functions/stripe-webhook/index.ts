@@ -30,13 +30,15 @@ const GA_MEASUREMENT_ID = Deno.env.get("GA_MEASUREMENT_ID") ?? "G-CHJ99RY1Q1";
 const GA_API_SECRET = Deno.env.get("GA_API_SECRET") ?? "";
 
 const PLAN_LABEL: Record<string, string> = {
-  starter: "Starter ฿390/เดือน", growth: "Growth ฿1,490/เดือน", scale: "Scale ฿5,900/เดือน",
+  starter: "Starter ฿590/เดือน", growth: "Growth ฿1,490/เดือน", scale: "Scale ฿5,900/เดือน",
 };
 
-// เดาแพ็ก/รอบจากยอดเงิน (บาท) — ใช้กับ Payment Link แบบ static ที่ไม่มี metadata plan/cycle
+// เดาแพ็ก/รอบจากยอดเงิน (บาท) — fallback สำหรับ Payment Link แบบ static ที่ไม่มี metadata plan/cycle
+// ⚠️ starter รายปี = 590×10 = 5900 ชนกับ scale รายเดือน (5900) → เดาจากยอดล้วนไม่ได้
+//    dynamic checkout ส่ง metadata.plan_id เสมอ (ใช้ก่อน map นี้) จึงแยกได้ถูกในทางปฏิบัติ
 const PRICE_TO_PLAN: Record<number, { plan: string; cycle: string }> = {
-  390: { plan: "starter", cycle: "monthly" }, 1490: { plan: "growth", cycle: "monthly" }, 5900: { plan: "scale", cycle: "monthly" },
-  3900: { plan: "starter", cycle: "yearly" }, 14900: { plan: "growth", cycle: "yearly" }, 59000: { plan: "scale", cycle: "yearly" },
+  590: { plan: "starter", cycle: "monthly" }, 1490: { plan: "growth", cycle: "monthly" }, 5900: { plan: "scale", cycle: "monthly" },
+  14900: { plan: "growth", cycle: "yearly" }, 59000: { plan: "scale", cycle: "yearly" },
 };
 
 // ยิง GA4 purchase (Measurement Protocol) — นับรายได้ Stripe/ต่ออายุที่เกิดฝั่ง server
