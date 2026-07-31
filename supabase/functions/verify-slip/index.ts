@@ -49,8 +49,8 @@ function adminPaidHtml(plan: string, amount: number, cycle: string, wsId: string
 
 // ราคาจริง (ฝั่ง server เท่านั้น) — รายปี = 10 เดือน · หน่วย: บาท
 // ต้องตรงกับ canonical: src/lib/access.ts PLAN_PRICE_NUM (starter 590 · growth 1490 · scale 5900)
-const PRICE_MONTHLY: Record<string, number> = { starter: 590, growth: 1490, scale: 5900 };
-const PRICE_YEARLY: Record<string, number> = { starter: 5900, growth: 14900, scale: 59000 };
+const PRICE_MONTHLY: Record<string, number> = { starter: 790, growth: 1490, scale: 5900 };
+const PRICE_YEARLY: Record<string, number> = { starter: 7900, growth: 14900, scale: 59000 };
 
 const cors = {
   "Access-Control-Allow-Origin": "*",

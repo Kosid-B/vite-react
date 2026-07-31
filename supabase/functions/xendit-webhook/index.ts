@@ -16,10 +16,10 @@ const CALLBACK_TOKEN = Deno.env.get("XENDIT_CALLBACK_TOKEN") ?? "";
 const ADMIN_EMAIL = "support@b-tctraining.com";
 const FROM_EMAIL = "CEO AI Thailand <noreply@ceoaithailand.org>";
 
-const PRICE_MONTHLY: Record<string, number> = { starter: 590, growth: 1490, scale: 5900 };
-const PRICE_YEARLY: Record<string, number> = { starter: 5900, growth: 14900, scale: 59000 };
+const PRICE_MONTHLY: Record<string, number> = { starter: 790, growth: 1490, scale: 5900 };
+const PRICE_YEARLY: Record<string, number> = { starter: 7900, growth: 14900, scale: 59000 };
 const PLAN_LABEL: Record<string, string> = {
-  starter: "Starter ฿590/เดือน", growth: "Growth ฿1,490/เดือน", scale: "Scale ฿5,900/เดือน",
+  starter: "Starter ฿790/เดือน", growth: "Growth ฿1,490/เดือน", scale: "Scale ฿5,900/เดือน",
 };
 
 async function sendMail(to: string, subject: string, html: string): Promise<void> {
