@@ -16,6 +16,7 @@ import LandingPage from './pages/LandingPage';
 import SaveWorkPrompt from './components/SaveWorkPrompt';
 import GoalChooser from './components/GoalChooser';
 import Sidebar from './components/Sidebar';
+import ConversionNudge from './components/ConversionNudge';
 // perf: lazy-load เฉพาะตอนต้องใช้ (ไม่อยู่ใน critical path ของ first paint)
 const AiAssist = lazy(() => import('./components/AiAssist'));
 const JourneyGuide = lazy(() => import('./components/JourneyGuide'));
@@ -585,6 +586,7 @@ export default function App() {
       />
 
       <main className={`main${navCollapsed ? ' nav-collapsed' : ''}`}>
+        <ConversionNudge data={data} activePage={activePage} onNavigate={setActivePage} />
         <Suspense fallback={<div className="page-loading" />}>
         {activePage === 'dashboard' && <Dashboard data={data} onNavigate={setActivePage} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'journey' && (
