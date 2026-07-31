@@ -237,6 +237,8 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     }
     // GA4 purchase — รายได้จริง (ผู้ใช้ยืนยันด้วยสลิป)
     track('purchase', { transaction_id: invoice.id, value: sub.amount, currency: 'THB', plan: sub.plan, cycle: sub.cycle });
+    // funnel: จ่ายเงินตามแพ็ก (paid_starter / paid_growth / paid_scale)
+    track('paid_' + sub.plan, { value: sub.amount, cycle: sub.cycle });
     // Referral: ผู้ถูกชวนสมัครแพ็กจ่ายเงิน → server ให้เครดิตทั้งคู่ (referee ต้องเป็นแพ็กจ่ายเงิน — ตรวจฝั่ง server)
     const ref = getPendingRef();
     if (ref && wsId && ref !== wsId) {
