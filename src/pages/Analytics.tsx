@@ -1,11 +1,13 @@
 import type { AppData } from '../types';
+import { marginFraction } from '../lib/planCost';
 
 interface Props { data: AppData }
 
+// margin/apiCalls = แหล่งความจริงเดียว lib/planCost.ts (ไม่ hardcode — กันเลข stale)
 const PLANS = [
-  { id: 'free',   name: 'Free (Trial)', price: 0,    apiCalls: 50,   margin: 0    },
-  { id: 'growth', name: 'Growth',       price: 1490, apiCalls: 700,  margin: 0.63 },
-  { id: 'scale',  name: 'Scale',        price: 5900, apiCalls: 5000, margin: 0.65 },
+  { id: 'free',   name: 'Free (Trial)', price: 0,    apiCalls: 50,   margin: 0                     },
+  { id: 'growth', name: 'Growth',       price: 1490, apiCalls: 700,  margin: marginFraction('growth') },
+  { id: 'scale',  name: 'Scale',        price: 5900, apiCalls: 5000, margin: marginFraction('scale')  },
 ] as const;
 
 const ASSUMED_MONTHLY_CHURN = 0.04;   // 4% benchmark

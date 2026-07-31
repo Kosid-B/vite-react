@@ -10,7 +10,7 @@ import { grantWelcomeKit } from '../lib/welcomeKit';
 import { referralLink, REF_REWARD_CALLS } from '../lib/referral';
 import { getPendingRef, clearPendingRef, claimReferral } from '../lib/referralClient';
 import FoundingBanner from '../components/FoundingBanner';
-import { callCostThb, CALL_PROFILE } from '../lib/aiCost';
+import { PLAN_COST as COST, BLENDED_CALL_THB } from '../lib/planCost';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText, submitTopupRequest,
   submitTopupSlip, verifyTopupSlip } from '../lib/payments';
@@ -51,37 +51,7 @@ interface Plan {
   costPerMonth: number;
 }
 
-interface CostItem { label: string; amount: number; note: string; }
-interface PlanCost { items: CostItem[]; total: number; price: number; margin: number; }
-
-/* ต้นทุน AI คิดจาก "blended cost จริง" (aiCost.ts) ไม่ใช่ ฿0.76/call (เคส agent หนักสุด) —
- * mix งานจริง 50% assist / 20% plan / 30% agent → ~฿0.49/call (Sonnet)
- * ที่มา: docs/marketing/PRICING-MARGIN-ANALYSIS.md */
-const BLENDED_CALL_THB =
-  0.5 * callCostThb('claude-sonnet-4-6', CALL_PROFILE.assist.in, CALL_PROFILE.assist.out) +
-  0.2 * callCostThb('claude-sonnet-4-6', CALL_PROFILE.plan.in, CALL_PROFILE.plan.out) +
-  0.3 * callCostThb('claude-sonnet-4-6', CALL_PROFILE.agent.in, CALL_PROFILE.agent.out);
-
-/** สร้าง PlanCost จาก quota จริง + ค่า infra/support — margin คำนวณสด (กัน hardcode ล้าสมัย) */
-function buildCost(calls: number, price: number, infra: number, support: number, infraNote: string, supportNote: string): PlanCost {
-  const ai = Math.round(calls * BLENDED_CALL_THB);
-  const total = ai + infra + support;
-  return {
-    items: [
-      { label: 'Claude AI API', amount: ai, note: `${calls.toLocaleString()} calls × ~฿${BLENDED_CALL_THB.toFixed(2)}/call (blended · Sonnet)` },
-      { label: 'Supabase + Hosting', amount: infra, note: infraNote },
-      { label: 'Support & Development', amount: support, note: supportNote },
-    ],
-    total, price,
-    margin: +(((price - total) / price) * 100).toFixed(1),
-  };
-}
-
-const COST: Record<string, PlanCost> = {
-  starter: buildCost(300, 790, 60, 25, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
-  growth: buildCost(700, 1490, 250, 180, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
-  scale: buildCost(5000, 5900, 550, 300, 'Database, Edge Functions, Storage (priority tier)', 'ทีมพัฒนาและดูแลระบบ (dedicated)'),
-};
+/* ต้นทุน/มาร์จินต่อแพ็ก = แหล่งความจริงเดียว lib/planCost.ts (ใช้ร่วม Analytics/Admin) */
 
 const PLANS: Plan[] = [
   {
@@ -704,9 +674,9 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             {p.price > 0 && cycle === 'yearly' && (
               <div className="bill-plan-save">เท่ากับจ่าย 10 เดือน — ฟรี 2 เดือน (จาก {baht(p.price * 12)})</div>
             )}
-            {p.price > 0 && COST[p.id] && (
+            {p.price > 0 && COST[p.id as keyof typeof COST] && (
               <div className="bill-plan-margin-badge">
-                กำไรบริษัท {COST[p.id].margin.toFixed(0)}% · ต้นทุน {baht(COST[p.id].total)}
+                กำไรบริษัท {COST[p.id as keyof typeof COST].margin.toFixed(0)}% · ต้นทุน {baht(COST[p.id as keyof typeof COST].total)}
               </div>
             )}
             <div className="bill-plan-tag">{p.tagline}</div>
