@@ -21,7 +21,7 @@ export async function fetchServerUsage(): Promise<ServerUsage | null> {
 export const PLAN_AI_CALLS: Record<PlanId, number> = {
   free: 200,     // ช่วงทดลอง
   starter: 300,  // ต่อเดือน — แพ็กเริ่มต้นสำหรับคนเพิ่งเริ่มธุรกิจ
-  growth: 1000,  // ต่อเดือน
+  growth: 700,   // ต่อเดือน — ปรับ 1000→700 เพื่อยกมาร์จิน worst-case ~38%→~48% (usage จริงต่ำกว่าเพดานมาก)
   scale: 5000,   // ต่อเดือน
 };
 

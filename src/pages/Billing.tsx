@@ -74,7 +74,7 @@ function buildCost(calls: number, price: number, infra: number, support: number,
 
 const COST: Record<string, PlanCost> = {
   starter: buildCost(300, 790, 60, 25, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
-  growth: buildCost(1000, 1490, 250, 180, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
+  growth: buildCost(700, 1490, 250, 180, 'Database, Edge Functions, Storage', 'ทีมพัฒนาและดูแลระบบ'),
   scale: buildCost(5000, 5900, 550, 300, 'Database, Edge Functions, Storage (priority tier)', 'ทีมพัฒนาและดูแลระบบ (dedicated)'),
 };
 
@@ -114,12 +114,12 @@ const PLANS: Plan[] = [
     name: 'Growth',
     price: 1490,
     tagline: 'สำหรับ SME ที่ต้องการทีม AI ทำงานจริง',
-    apiCalls: 1000,
-    costPerMonth: 1190,
+    apiCalls: 700,
+    costPerMonth: 773,
     highlight: true,
     features: [
       'เอเจนต์ AI ไม่จำกัด',
-      'AI calls 1,000 ครั้ง/เดือน',
+      'AI calls 700 ครั้ง/เดือน',
       'งานในระบบไม่จำกัด',
       'เชื่อมต่อทุกเครื่องมือ',
       'บอร์ดอนุมัติ + แจ้งเตือน',
@@ -508,7 +508,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
           </div>
           {aiPct >= 80 && sub.plan !== 'scale' && (
             <div className="plg-nudge">
-              🚀 ใกล้เต็มโควตาแล้ว — อัปเกรดเป็น {sub.plan === 'growth' ? 'Scale (5,000 calls/เดือน)' : 'Growth (1,000 calls/เดือน)'}
+              🚀 ใกล้เต็มโควตาแล้ว — อัปเกรดเป็น {sub.plan === 'growth' ? 'Scale (5,000 calls/เดือน)' : 'Growth (700 calls/เดือน)'}
               <button className="plg-nudge-btn" onClick={() => choosePlan(sub.plan === 'growth' ? 'scale' : 'growth')}>
                 อัปเกรดเลย →
               </button>

@@ -33,7 +33,7 @@ function pct(n: number, d: number): string {
 
 // ---- Pricing & Cost Reference (mirrors Billing.tsx) ----
 const PLAN_LIST = [
-  { id: 'growth', name: 'Growth', price: 1490, cost: 1190, apiCalls: 1000 },
+  { id: 'growth', name: 'Growth', price: 1490, cost: 1190, apiCalls: 700 },
   { id: 'scale',  name: 'Scale',  price: 5900, cost: 4650, apiCalls: 5000 },
 ];
 
@@ -1527,7 +1527,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                   annual: 14900,
                   color: 'var(--accent)',
                   badge: '⭐ ยอดนิยม',
-                  features: ['AI Company Builder', '1,000 calls/เดือน', 'VRIO + 24 Steps', 'PromptPay Billing', 'Workspace team'],
+                  features: ['AI Company Builder', '700 calls/เดือน', 'VRIO + 24 Steps', 'PromptPay Billing', 'Workspace team'],
                   target: 'Thai SME / Solopreneurs',
                 },
                 {

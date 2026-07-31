@@ -4,7 +4,7 @@ interface Props { data: AppData }
 
 const PLANS = [
   { id: 'free',   name: 'Free (Trial)', price: 0,    apiCalls: 50,   margin: 0    },
-  { id: 'growth', name: 'Growth',       price: 1490, apiCalls: 1000, margin: 0.63 },
+  { id: 'growth', name: 'Growth',       price: 1490, apiCalls: 700,  margin: 0.63 },
   { id: 'scale',  name: 'Scale',        price: 5900, apiCalls: 5000, margin: 0.65 },
 ] as const;
 
