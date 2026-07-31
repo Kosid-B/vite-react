@@ -1,5 +1,6 @@
 import type { AppData, PageId, PlanId } from '../types';
 import { isSupabaseEnabled } from './supabase';
+import { isFoundingPremiumActive } from './founding';
 
 export const PLAN_RANK: Record<PlanId, number> = { free: 0, starter: 1, growth: 2, scale: 3 };
 
@@ -96,8 +97,19 @@ let guestFullAccess = false;
 export function setGuestFullAccess(on: boolean): void { guestFullAccess = on; }
 export function hasGuestFullAccess(): boolean { return guestFullAccess; }
 
-/** Plan rank จริงของ user ณ ขณะนี้ — -1 หมายถึงหมดอายุ/ไม่มี subscription */
+/** Plan rank จริงของ user ณ ขณะนี้ — -1 หมายถึงหมดอายุ/ไม่มี subscription
+ *  Founding Member: จ่าย Starter จริง (active/past_due) → ยกสิทธิ์เป็น Growth ระหว่างสิทธิ์ยัง active */
 export function effectiveRank(data: AppData): number {
+  const base = baseRank(data);
+  // ยกเฉพาะผู้ที่ "จ่าย Starter อยู่จริง" (rank = starter) — ถ้า sub หลุด (rank -1) จะไม่ได้สิทธิ์ (กันแจกฟรี)
+  if (base === PLAN_RANK['starter'] && isFoundingPremiumActive(data.foundingMember, new Date())) {
+    return PLAN_RANK['growth'];
+  }
+  return base;
+}
+
+/** rank ตาม subscription ล้วน (ก่อนคิดสิทธิ์ founding) */
+function baseRank(data: AppData): number {
   if (adminFullAccess || guestFullAccess) return PLAN_RANK['scale']; // แอดมิน / ผู้ทดลอง (guest) = Scale เต็ม
   const { plan, status, trialEndDate, currentPeriodEnd } = data.subscription;
 

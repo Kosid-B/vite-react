@@ -525,6 +525,15 @@ export interface ISO9001Data {
   byStandard?: Partial<Record<'iso14001' | 'iso45001' | 'iso22301', ISOClauseCheck[]>>;
 }
 
+/** สิทธิ์ Founding Member — โปรฯ "1,000 คนแรก" สมัคร Starter → ได้สิทธิ์ระดับ Growth
+ *  100 คนแรก = ตลอดชีพ · ที่เหลือ = 12 เดือน (lib/founding.ts) */
+export interface FoundingMember {
+  seq: number;            // ลำดับที่ได้ (1..1000) จาก server (atomic)
+  claimedAt: string;      // ISO วันที่รับสิทธิ์
+  lifetime: boolean;      // true = 100 คนแรก (สิทธิ์ตลอดชีพ)
+  premiumUntil?: string;  // ISO วันหมดสิทธิ์ (เฉพาะ non-lifetime)
+}
+
 export interface AppData {
   /** revision monotonic (นับทุกครั้งที่แก้ข้อมูล) — ใช้กัน cloud เก่าทับ local ใหม่ตอน sync
    *  undefined = ข้อมูลเก่าก่อนมีระบบ rev (ถือว่า rev 0) */
@@ -563,6 +572,7 @@ export interface AppData {
   // ===== รางวัลจากเกมเมืองบริษัท (SIM) =====
   claimedRewards?: string[];              // id รางวัลที่รับแล้ว
   coupon?: { pct: number; reason: string }; // ส่วนลดค่าแพ็กเกจล่าสุด (เก็บ % สูงสุด)
+  foundingMember?: FoundingMember;        // สิทธิ์ Founding Member (โปรฯ 1,000 คนแรก) — undefined = ยังไม่ได้รับ
   featuredVoucherDays?: number;           // สิทธิ์ดันร้านขึ้น "แนะนำ" สะสม (วัน)
   cityUnlocks?: string[];                 // ของปลดล็อกในเกม (cosmetic)
   streak?: { count: number; lastDay: string }; // ส่วนต่อเนื่องรายวัน (ทำงานจริงในแอป)

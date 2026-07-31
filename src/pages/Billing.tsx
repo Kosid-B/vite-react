@@ -5,6 +5,8 @@ import { BRAND, COMPANY, PAYMENT } from '../config';
 import { getAiUsage, PLAN_AI_CALLS, fetchServerUsage, type ServerUsage } from '../lib/usage';
 import { TOPUP_PACKS, pricePerCall, type TopupPack } from '../lib/topup';
 import { GRACE_DAYS, annualPrice } from '../lib/access';
+import { foundingEffectivePlan } from '../lib/founding';
+import FoundingBanner from '../components/FoundingBanner';
 import { callCostThb, CALL_PROFILE } from '../lib/aiCost';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText, submitTopupRequest,
@@ -158,7 +160,8 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   const [srvUsage, setSrvUsage] = useState<ServerUsage | null>(null);
   useEffect(() => { fetchServerUsage().then(setSrvUsage); }, []);
   const aiUsed = srvUsage ? srvUsage.used : getAiUsage().count;
-  const aiQuota = srvUsage ? srvUsage.quota : PLAN_AI_CALLS[data.subscription.plan];
+  // โควตา: Founding Member ที่จ่าย Starter → ใช้โควตาระดับ Growth (700)
+  const aiQuota = srvUsage ? srvUsage.quota : PLAN_AI_CALLS[foundingEffectivePlan(data.subscription.plan, data.foundingMember, new Date())];
   const aiPct = aiQuota > 0 ? Math.min(100, Math.round((aiUsed / aiQuota) * 100)) : 0;
   const refLink = 'https://ceoaithailand.org/?ref=' + (data.aiCompany.name || 'friend').replace(/\s+/g, '-');
   const copyRef = () => {
@@ -495,6 +498,9 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
           )}
         </div>
       </div>
+
+      {/* โปรฯ Founding Member (1,000 คนแรก) — สมัคร Starter ได้สิทธิ์ระดับ Growth */}
+      <FoundingBanner data={data} onUpdate={onUpdate} wsId={wsId} onPickStarter={() => setSelected('starter')} />
 
       {/* PLG: usage meter (expansion loop) + referral (viral loop) */}
       <div className="plg-row">

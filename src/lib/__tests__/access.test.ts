@@ -104,6 +104,40 @@ describe('access control — เมทริกซ์แพ็กเกจ x ห
   });
 });
 
+describe('Founding Member — จ่าย Starter ได้สิทธิ์ Growth (คุมต้นทุน)', () => {
+  const lifetime = { seq: 1, claimedAt: '2026-07-31T00:00:00.000Z', lifetime: true };
+  const withFounding = (plan: PlanId, status: SubStatus, fm: unknown, cpe?: string): AppData => ({
+    ...withSub(plan, status, { currentPeriodEnd: cpe }), foundingMember: fm,
+  } as unknown as AppData);
+
+  it('active starter + founding = ยกเป็น Growth (เข้า analytics ได้)', () => {
+    const d = withFounding('starter', 'active', lifetime, future);
+    expect(effectiveRank(d)).toBe(2);            // growth
+    expect(canAccess(d, 'analytics')).toBe(true);
+    expect(canAccess(d, 'admin')).toBe(false);   // ไม่ถึง scale
+  });
+
+  it('sub หลุด (พ้น grace) + founding = ไม่ได้สิทธิ์ (กันแจกฟรี)', () => {
+    const old = new Date(Date.now() - 10 * 86400000).toISOString();
+    const d = withFounding('starter', 'past_due', lifetime, old);
+    expect(effectiveRank(d)).toBe(-1);           // ไม่จ่าย = ไม่มีสิทธิ์
+    expect(canAccess(d, 'analytics')).toBe(false);
+  });
+
+  it('founding หมดอายุ (12 เดือน) = กลับเป็น Starter ล้วน', () => {
+    const expired = { seq: 300, claimedAt: '2026-07-31T00:00:00.000Z', lifetime: false, premiumUntil: past };
+    const d = withFounding('starter', 'active', expired, future);
+    expect(effectiveRank(d)).toBe(1);            // starter
+    expect(canAccess(d, 'analytics')).toBe(false);
+    expect(canAccess(d, 'trade')).toBe(true);
+  });
+
+  it('ไม่มี founding = starter คงเดิม', () => {
+    const d = withSub('starter', 'active', { currentPeriodEnd: future });
+    expect(effectiveRank(d)).toBe(1);
+  });
+});
+
 describe('discountedMonthly — ราคาหลังหักคูปอง (#6 PLG)', () => {
   it('ไม่มีคูปอง = ราคาเต็ม', () => {
     expect(discountedMonthly('growth')).toBe(1490);
