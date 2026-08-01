@@ -45,10 +45,18 @@ const steps = [
 ];
 
 const stats = [
-  { value: '500+', label: 'บริษัทในไทย' },
-  { value: '24/7', label: 'ทีม AI ไม่หยุด' },
-  { value: '5 นาที', label: 'เปิดร้าน B2B' },
+  { value: '20+ ปี', label: 'ประสบการณ์วางระบบธุรกิจไทย' },
+  { value: '500+', label: 'ธุรกิจไทยที่เราให้คำปรึกษา' },
+  { value: '24/7', label: 'ทีม AI ทำงานไม่หยุด' },
   { value: '฿790', label: 'เริ่มมีทีม AI ทั้งบริษัท' },
+];
+
+// ป้ายความน่าเชื่อถือที่ "ตรวจสอบได้จริง" — ไม่ใช่ตัวเลขลอย (เพิ่ม trust แบบซื่อสัตย์)
+const TRUST_MARKERS = [
+  { icon: '🏢', text: 'บริษัทจดทะเบียนจริง — B. Training Consultant Co., Ltd.' },
+  { icon: '📞', text: 'โทรคุยกับคนจริงได้ 081-7817-7773' },
+  { icon: '🎫', text: 'ทดลองฟรี 15 วัน ไม่ต้องผูกบัตร · ยกเลิกได้ทุกเมื่อ' },
+  { icon: '📤', text: 'ข้อมูลเป็นของคุณ — ส่งออก/ลบได้เองทุกเมื่อ' },
 ];
 
 const features = [
@@ -264,15 +272,26 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
         </div>
       </section>
 
-      {/* ─── Social Proof ─── */}
+      {/* ─── Social Proof (ซื่อสัตย์: track record ที่ปรึกษาจริง ไม่อ้างจำนวนผู้ใช้ AI) ─── */}
       <section style={{ padding: '64px 24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.cyan5, marginBottom: 12 }}>
-          บริษัทในไทยกว่า 500 แห่ง กำลังสร้าง & เดินธุรกิจด้วยทีม AI
+        <p style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.cyan5, marginBottom: 14 }}>
+          เบื้องหลังระบบ คือทีมที่ปรึกษาตัวจริง
         </p>
-        <p style={{ color: C.slate5, fontSize: 14, marginBottom: 10 }}>TRUSTED BY INDUSTRY LEADERS</p>
-        <p style={{ color: C.slate4, fontSize: 15 }}>
-          พัฒนาโดยทีมที่ปรึกษาที่ให้บริการธุรกิจในประเทศไทยมา<strong style={{ color: C.cyan4 }}>มากกว่า 20 ปี</strong>
+        <h3 style={{ fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: 700, color: C.white, lineHeight: 1.5, maxWidth: 720, margin: '0 auto 14px' }}>
+          B. Training Consultant ให้คำปรึกษา&วางระบบธุรกิจไทยมาแล้วกว่า{' '}
+          <span style={{ color: C.cyan4 }}>500 ราย</span> ตลอด <span style={{ color: C.cyan4 }}>20+ ปี</span>
+        </h3>
+        <p style={{ color: C.slate4, fontSize: 15.5, lineHeight: 1.7, maxWidth: 640, margin: '0 auto 32px' }}>
+          ประสบการณ์วางระบบ · มาตรฐาน ISO/มอก. · PDPA ของจริง ถูกกลั่นลงในระบบ AI นี้ —
+          ไม่ใช่ AI ที่เพิ่งเกิดเมื่อวาน แต่มีองค์ความรู้ 20 ปีอยู่เบื้องหลัง
         </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12, maxWidth: 820, margin: '0 auto' }}>
+          {TRUST_MARKERS.map(m => (
+            <div key={m.text} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 16px', borderRadius: 999, border: `1px solid ${C.border2}`, background: C.bg2, color: C.slate4, fontSize: 13.5, fontWeight: 500 }}>
+              <span style={{ fontSize: 15 }}>{m.icon}</span> {m.text}
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ─── Steps ─── */}
