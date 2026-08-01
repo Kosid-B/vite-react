@@ -60,6 +60,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'กรอบ attraction + retention ครบวงจร (+ IDE Gravity Model วงจรชีวิต) · เทียบคอร์ส growth marketing ฿5,000–20,000',
   },
   {
+    id: 'superorganism-strategy',
+    name: 'Superorganism Strategy (อยู่รอด+เติบโต ครบวงจร)',
+    category: 'strategy', tier: 3, price: 2000, icon: '🐜',
+    desc: 'กรอบ "อภิสิ่งมีชีวิต" 4 ส่วน: แก่นอัตลักษณ์+Resilience · การเติบโตแบบไวรัส (K-factor/PMF/LTV:CAC) · ความเชี่ยวชาญ/ป้องกัน (UVP/Value Chain) · วิวัฒนาการตาม PLC + eQMS ปิดวงจร — แผนแม่บทของแพ็กพรีเมียม',
+    official: true,
+    tags: ['CEO', 'Founder', 'COO', 'Growth'],
+    valueNote: 'แผนแม่บทอยู่รอด+เติบโตระยะยาว (Enterprise Strategy OS) · เทียบที่ปรึกษากลยุทธ์ ฿50,000–150,000/โปรเจกต์',
+  },
+  {
     id: 'core-identity-resilience',
     name: 'Core Identity & Resilience (แก่นธุรกิจ + ภูมิคุ้มกันวิกฤต)',
     category: 'strategy', tier: 3, price: 2000, icon: '🐜',
