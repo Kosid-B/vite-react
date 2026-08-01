@@ -41,6 +41,7 @@ import {
   C_LEVEL_SPECS, NAME_POOLS, GENERIC_NAMES, M_CUSTOM, isCLevel, mSuggestionsFor,
   PAY_METHODS, nowTime,
 } from './aicompany/constants';
+import { effectiveOwnedSkills, isBundledByScale } from '../lib/skillAccess';
 
 interface Props {
   data: AppData;
@@ -51,6 +52,8 @@ interface Props {
 
 export default function AICompany({ data, onUpdate, wsId }: Props) {
   const c = data.aiCompany;
+  // ไฮบริด pricing: Scale ปลดล็อก official skills ฟรี → ใช้ effOwned สำหรับ "สิทธิ์ใช้งาน" (directives/ตลาด)
+  const effOwned = effectiveOwnedSkills(data);
   const canWebSearch = data.subscription?.plan === 'growth' || data.subscription?.plan === 'scale';
   const [feed, setFeed] = useState<{ id: number; time: string; text: string; color: string }[]>([]);
   const feedRef = useRef<HTMLDivElement>(null);
@@ -248,7 +251,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
         body: {
           role: agent.role,
           name: agent.name,
-          mandate: withSkillDirectives(agent.mandate, c.purchasedSkills),
+          mandate: withSkillDirectives(agent.mandate, effOwned),
           model: agent.model,
           title: task.title,
           detail: task.detail,
@@ -308,7 +311,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'HR Manager',
-          mandate: withSkillDirectives('เขียน Job Description ที่ครบถ้วน ชัดเจน ดึงดูดผู้สมัครคุณภาพ', c.purchasedSkills),
+          mandate: withSkillDirectives('เขียน Job Description ที่ครบถ้วน ชัดเจน ดึงดูดผู้สมัครคุณภาพ', effOwned),
           model: 'claude-sonnet-4-6',
           title: `สร้าง JD สำหรับตำแหน่ง ${agent.role}`,
           detail: `หน้าที่ (Mandate): ${agent.mandate}\nรายงานต่อ: ${c.agents.find(a => a.id === agent.reportsTo)?.role ?? 'บอร์ด'}`,
@@ -355,7 +358,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'CEO',
-          mandate: withSkillDirectives('วิเคราะห์โครงสร้างองค์กรและแนะนำตำแหน่งที่ควรจ้างตามเป้าหมายธุรกิจ', c.purchasedSkills),
+          mandate: withSkillDirectives('วิเคราะห์โครงสร้างองค์กรและแนะนำตำแหน่งที่ควรจ้างตามเป้าหมายธุรกิจ', effOwned),
           model: 'claude-sonnet-4-6',
           title: 'แนะนำตำแหน่งที่ขาดในผังองค์กร',
           detail: [
@@ -441,7 +444,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'CEO',
-          mandate: withSkillDirectives('กำหนดบทบาทหน้าที่ของทุกตำแหน่งในองค์กรให้สอดคล้องกับกระบวนการธุรกิจและเป้าหมายบริษัท', c.purchasedSkills),
+          mandate: withSkillDirectives('กำหนดบทบาทหน้าที่ของทุกตำแหน่งในองค์กรให้สอดคล้องกับกระบวนการธุรกิจและเป้าหมายบริษัท', effOwned),
           model: 'claude-sonnet-4-6',
           title: 'กำหนดบทบาทหน้าที่ (Role Mandate) ทุกตำแหน่ง',
           detail: [
@@ -595,7 +598,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: 'CEO',
-          mandate: withSkillDirectives('ร่าง Mission Statement ที่ชัดเจน ทะเยอทะยาน และเป็นแรงบันดาลใจ สอดคล้องกับเป้าหมายและทักษะขององค์กร', c.purchasedSkills),
+          mandate: withSkillDirectives('ร่าง Mission Statement ที่ชัดเจน ทะเยอทะยาน และเป็นแรงบันดาลใจ สอดคล้องกับเป้าหมายและทักษะขององค์กร', effOwned),
           model: 'claude-sonnet-4-6',
           title: 'ร่าง Mission Statement สำหรับบริษัท',
           detail: [
@@ -659,7 +662,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
-          role: hrdAgent.role, name: hrdAgent.name, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
+          role: hrdAgent.role, name: hrdAgent.name, mandate: withSkillDirectives(hrdAgent.mandate, effOwned), model: hrdAgent.model,
           title: 'กำหนด Skill Plan ตาม Mission ของบริษัท',
           detail: [
             `บริษัท: ${c.name} | Mission: ${c.mission || c.goal}`,
@@ -718,7 +721,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
-          role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
+          role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, effOwned), model: hrdAgent.model,
           title: `ออกแบบกระบวนการมาตรฐานสำหรับ Skill: ${skill.name}`,
           detail: [
             `ชื่อ Skill: ${skill.name}`,
@@ -758,7 +761,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
-          role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, c.purchasedSkills), model: hrdAgent.model,
+          role: hrdAgent.role, mandate: withSkillDirectives(hrdAgent.mandate, effOwned), model: hrdAgent.model,
           title: 'ออกแบบ Competency Assessment Framework',
           detail: [
             `บริษัท: ${c.name} | Mission: ${c.mission || c.goal}`,
@@ -2207,7 +2210,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
 
             {/* 🔨 ประมูล Skill จากบริษัท (English Auction) */}
             <Suspense fallback={null}>
-              <SkillAuction wsId={wsId ?? 'local'} companyName={c.name} owned={purchased}
+              <SkillAuction wsId={wsId ?? 'local'} companyName={c.name} owned={effOwned}
                 payMethods={PAY_METHODS} onClaim={claimAuctionSkill} />
             </Suspense>
 
@@ -2304,7 +2307,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
             {/* Skill Grid */}
             <div className="skm-grid">
               {filtered.map(sk => {
-                const owned = purchased.includes(sk.id);
+                const owned = effOwned.includes(sk.id);
+                const bundled = isBundledByScale(data, sk.id);
                 const isConfirm = buyConfirm?.id === sk.id;
                 const catMeta = CATEGORY_META[sk.category];
                 const tierMeta = TIER_META[sk.tier];
@@ -2321,7 +2325,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                       <span className="skm-tier-badge" style={{ background: tierMeta.bg, color: tierMeta.color }}>
                         {tierMeta.label}
                       </span>
-                      {owned && <span className="skm-owned-badge">✓ โหลดแล้ว</span>}
+                      {owned && <span className="skm-owned-badge">{bundled ? '🏢 รวมในแพ็ก Scale' : '✓ โหลดแล้ว'}</span>}
                     </div>
                     <div className="skm-card-name">{sk.name}</div>
                     <div className="skm-card-cat" style={{ color: catMeta.color }}>{catMeta.icon} {catMeta.label}</div>
@@ -2343,7 +2347,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                         <span className="skm-price-xp">+{XP_PER_TIER[sk.tier]} XP</span>
                       </div>
                       {owned ? (
-                        <button className="skm-btn owned" disabled>✓ ใช้งานได้แล้ว</button>
+                        <button className="skm-btn owned" disabled>{bundled ? '🏢 ใช้ได้ (แพ็ก Scale)' : '✓ ใช้งานได้แล้ว'}</button>
                       ) : hasAdminFullAccess() ? (
                         <button className="skm-btn" onClick={() => { setMktMsg(null); purchaseSkill(sk, 'admin-free'); }}>
                           🎁 รับฟรี
