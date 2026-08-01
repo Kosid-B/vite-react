@@ -33,6 +33,15 @@ export const TIER_META: Record<SkillTier, { label: string; color: string; bg: st
 export const SKILL_CATALOG: SkillEntry[] = [
   // ── Tier 3 · Enterprise · ฿2,000 ──────────────────────────────────────────
   {
+    id: 'ai-search-visibility',
+    name: 'AI Search Visibility (GEO/AEO)',
+    category: 'marketing', tier: 3, price: 2000, icon: '🧲',
+    desc: 'ให้ AI (ChatGPT/Gemini/Google AI) และลูกค้าค้นเจอธุรกิจคุณ — วางโครงสร้างข้อมูล (schema/FAQ/llms.txt) + เนื้อหาตอบคำถาม ให้ AI หยิบไปแนะนำคุณเอง',
+    official: true,
+    tags: ['CEO', 'Marketing Manager', 'SEO Specialist', 'Founder'],
+    valueNote: 'ยุค AI ค้นหาแทนคน — "ถูก AI แนะนำ" คือ discoverability ใหม่ · เทียบเอเจนซี SEO/GEO ฿15,000–50,000/เดือน',
+  },
+  {
     id: 'business-building-24-step',
     name: '24 Steps Business Builder (MIT)',
     category: 'strategy', tier: 3, price: 2000, icon: '🧭',
