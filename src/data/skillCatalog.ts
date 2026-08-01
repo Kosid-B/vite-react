@@ -51,6 +51,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'แก้ปัญหาใหญ่ต้องกล้าทิ้งวิธีเดิม · เทียบ workshop นวัตกรรม/ที่ปรึกษากลยุทธ์ ฿30,000–100,000/โปรเจกต์',
   },
   {
+    id: 'black-hole-marketing',
+    name: 'Black Hole Marketing (ดึงดูด + กักเก็บ)',
+    category: 'marketing', tier: 3, price: 2000, icon: '🕳️',
+    desc: 'กลยุทธ์ "หลุมดำ" 4 เสา: Singularity (คุณค่า 10x) · Gravitational Field (แผ่การรับรู้) · Event Horizon (Aha + switching cost) · Accretion Disk (ชุมชน+referral+network effect) — ให้ลูกค้าเข้าวงโคจรแล้วไม่อยากหลุด',
+    official: true,
+    tags: ['CEO', 'Marketing Manager', 'Founder', 'Growth'],
+    valueNote: 'กรอบ attraction + retention ครบวงจร (+ IDE Gravity Model วงจรชีวิต) · เทียบคอร์ส growth marketing ฿5,000–20,000',
+  },
+  {
     id: 'business-building-24-step',
     name: '24 Steps Business Builder (MIT)',
     category: 'strategy', tier: 3, price: 2000, icon: '🧭',
