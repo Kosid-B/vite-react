@@ -6,6 +6,7 @@ import MarketSizingPanel from '../components/MarketSizingPanel';
 import { marketingFromDe24 } from '../lib/marketingStrategy';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { withSkillDirectives } from '../lib/skillDirectives';
+import { effectiveOwnedSkills } from '../lib/skillAccess';
 import { trackAiCall } from '../lib/usage';
 
 interface Props { data: AppData; onUpdate: (d: AppData) => void; onNavigate?: (p: PageId) => void; }
@@ -158,7 +159,7 @@ export default function Marketing({ data, onUpdate, onNavigate }: Props) {
       const { data: res, error } = await supabase.functions.invoke('agent-run', {
         body: {
           role: cmo?.role ?? 'CMO',
-          mandate: withSkillDirectives(cmo?.mandate ?? 'วางแผนและดำเนินการการตลาด', data.aiCompany?.purchasedSkills),
+          mandate: withSkillDirectives(cmo?.mandate ?? 'วางแผนและดำเนินการการตลาด', effectiveOwnedSkills(data)),
           model: cmo?.model ?? 'claude-sonnet-4-6',
           title: 'วางแผนการตลาดจากผล MIT 24-Step',
           detail: `ผล MIT 24-Step ที่ทำแล้ว: ${doneSteps || '(ยังไม่ได้ทำขั้นการตลาด)'} · ช่องทางปัจจุบัน: ${channels.map(c => c.name).join(', ') || 'ยังไม่มี'}`,
