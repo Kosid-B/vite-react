@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { track } from '../lib/analytics';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
+import InstantPreview from '../components/InstantPreview';
 import { currentChallenger } from '../lib/challengerRotation';
 
 interface Props {
@@ -247,6 +248,9 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
           </a>
         </div>
       </section>
+
+      {/* ─── Instant Proof (Black Hole: เห็นค่าก่อนสมัคร) ─── */}
+      <InstantPreview onGetStarted={onGetStarted} />
 
       {/* ─── Stats ─── */}
       <section style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, backgroundColor: C.bg2, padding: '48px 24px' }}>
