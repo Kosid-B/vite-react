@@ -42,6 +42,15 @@ export const SKILL_CATALOG: SkillEntry[] = [
     valueNote: 'ยุค AI ค้นหาแทนคน — "ถูก AI แนะนำ" คือ discoverability ใหม่ · เทียบเอเจนซี SEO/GEO ฿15,000–50,000/เดือน',
   },
   {
+    id: 'first-principles-innovation',
+    name: 'First-Principles Innovation (แก้คอขวดจากต้นตอ)',
+    category: 'strategy', tier: 3, price: 2000, icon: '🧩',
+    desc: 'แก้ปัญหาคอขวดด้วยการนิยามปัญหาที่ "ต้นตอ" + กล้าทดลองวิธีนอกกรอบ (first principles) แทนการปรับของเดิมทีละนิด — พร้อมกรอบทดลองสเกลเล็กก่อนขยาย',
+    official: true,
+    tags: ['CEO', 'Founder', 'COO', 'Product Manager'],
+    valueNote: 'แก้ปัญหาใหญ่ต้องกล้าทิ้งวิธีเดิม · เทียบ workshop นวัตกรรม/ที่ปรึกษากลยุทธ์ ฿30,000–100,000/โปรเจกต์',
+  },
+  {
     id: 'business-building-24-step',
     name: '24 Steps Business Builder (MIT)',
     category: 'strategy', tier: 3, price: 2000, icon: '🧭',
