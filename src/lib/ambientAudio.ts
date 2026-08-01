@@ -1,6 +1,7 @@
-/* ===== Ambient Soundscape — เพลงบรรเลงเบาๆ แบบโปรซีเจอรัล (Web Audio API) =====
- * ไม่มีไฟล์เสียง/ไม่มีลิขสิทธิ์ · สร้างเสียงสดจาก oscillator (แนวเดียวกับ cityScape ที่วาด SVG โปรซีเจอรัล)
- * ผูกกับ "เวลาจริง": เช้าสดใส → กลางวันสว่าง → เย็นอบอุ่น → กลางคืนสงบ (reuse detectTime)
+/* ===== Ambient Soundscape — เปียโนบรรเลง + เสียงน้ำตกคลอ (โปรซีเจอรัล · Web Audio API) =====
+ * ไม่มีไฟล์เสียง/ไม่มีลิขสิทธิ์ · สังเคราะห์สด: โน้ตเปียโน (attack เร็ว + decay + ฮาร์มอนิก)
+ *   + เลเยอร์น้ำตก (white-noise ผ่าน highpass/lowpass + LFO โยกความดังให้เหมือนน้ำไหลเป็นระลอก)
+ * ผูกกับ "เวลาจริง": เช้าสดใส → กลางวันสว่าง → เย็นอบอุ่น → กลางคืนสงบ (reuse detectTime · เปลี่ยนโทน/สเกล)
  * จริยธรรม: ปิดเป็นค่าเริ่มต้น (opt-in) · เบามาก · เริ่มเล่นได้เฉพาะหลัง user gesture (autoplay policy) */
 
 import { detectTime, type TimeName } from './cityScape';
@@ -43,6 +44,10 @@ class AmbientEngine {
   private padOscs: OscillatorNode[] = [];
   private padFilter: BiquadFilterNode | null = null;
   private lfo: OscillatorNode | null = null;
+  private waterSrc: AudioBufferSourceNode | null = null;   // เลเยอร์น้ำตก (noise loop)
+  private waterGain: GainNode | null = null;
+  private waterLfo: OscillatorNode | null = null;
+  private waterNodes: AudioNode[] = [];                    // ฟิลเตอร์น้ำ (สำหรับ cleanup)
   private melTimer: number | null = null;
   private moodTimer: number | null = null;
   private _enabled = false;
@@ -107,6 +112,7 @@ class AmbientEngine {
 
     this.mood = currentMood();
     this.buildPad();
+    this.buildWater();
     this.scheduleMelody(MOODS[this.mood].stepMs);
     this.moodTimer = window.setInterval(() => this.refreshMood(), 60000); // เช็คเวลาทุก 1 นาที
   }
@@ -116,7 +122,9 @@ class AmbientEngine {
     if (this.moodTimer) { clearInterval(this.moodTimer); this.moodTimer = null; }
     const ctx = this.ctx, master = this.master;
     const oscs = this.padOscs, lfo = this.lfo, filter = this.padFilter;
+    const wSrc = this.waterSrc, wLfo = this.waterLfo, wGain = this.waterGain, wNodes = this.waterNodes;
     this.padOscs = []; this.lfo = null; this.padFilter = null;
+    this.waterSrc = null; this.waterLfo = null; this.waterGain = null; this.waterNodes = [];
     this.ctx = null; this.master = null;
     if (!ctx || !master) return;
     const t = ctx.currentTime;
@@ -126,6 +134,10 @@ class AmbientEngine {
       oscs.forEach(o => { try { o.stop(); o.disconnect(); } catch { /* ignore */ } });
       try { lfo?.stop(); } catch { /* ignore */ }
       try { filter?.disconnect(); } catch { /* ignore */ }
+      try { wSrc?.stop(); wSrc?.disconnect(); } catch { /* ignore */ }
+      try { wLfo?.stop(); } catch { /* ignore */ }
+      try { wGain?.disconnect(); } catch { /* ignore */ }
+      wNodes.forEach(n => { try { n.disconnect(); } catch { /* ignore */ } });
       try { ctx.close(); } catch { /* ignore */ }
     }, 1400);
   }
@@ -139,7 +151,7 @@ class AmbientEngine {
     filter.frequency.value = m.cutoff;
     filter.Q.value = 0.7;
     const padGain = ctx.createGain();
-    padGain.gain.value = m.padGain * 0.5;
+    padGain.gain.value = m.padGain * 0.30;   // pad นุ่มลง — ให้เปียโน + น้ำตกเด่น
     filter.connect(padGain); padGain.connect(master);
     this.padFilter = filter;
 
@@ -164,6 +176,31 @@ class AmbientEngine {
     this.lfo = lfo;
   }
 
+  /* เลเยอร์น้ำตก: white-noise วนลูป ผ่าน highpass (ตัดทึบ) + lowpass (นุ่มแบบน้ำ)
+   * + LFO ช้า โยกความดังเล็กน้อยให้เหมือนน้ำไหลเป็นระลอก (คลอเบา ๆ ใต้เปียโน) */
+  private buildWater() {
+    const ctx = this.ctx, master = this.master;
+    if (!ctx || !master) return;
+    const dur = 2;
+    const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.7;
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 320;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200; lp.Q.value = 0.4;
+    const wGain = ctx.createGain(); wGain.gain.value = 0.05;   // เบา — คลอ ไม่กลบเปียโน
+    src.connect(hp); hp.connect(lp); lp.connect(wGain); wGain.connect(master);
+
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.13;
+    const lfoGain = ctx.createGain(); lfoGain.gain.value = 0.02;
+    lfo.connect(lfoGain); lfoGain.connect(wGain.gain);
+
+    src.start(); lfo.start();
+    this.waterSrc = src; this.waterGain = wGain; this.waterLfo = lfo; this.waterNodes = [hp, lp, lfoGain];
+  }
+
   private scheduleMelody(delay: number) {
     this.melTimer = window.setTimeout(() => {
       this.playNote();
@@ -172,26 +209,51 @@ class AmbientEngine {
     }, delay);
   }
 
+  /* โน้ตเปียโน: attack เร็ว (คมแบบค้อนตีสาย) + decay สองช่วง (เร็วแล้วหางยาว)
+   * + ฮาร์มอนิก (fundamental triangle + overtone 2/3 sine) ให้ทิมเบอร์อบอุ่นแบบเปียโน */
   private playNote() {
     const ctx = this.ctx, master = this.master;
     if (!ctx || !master) return;
     const m = MOODS[this.mood];
     const deg = m.scale[Math.floor(Math.random() * m.scale.length)];
-    const oct = Math.random() < 0.35 ? 12 : 0;
-    const freq = semi(m.root, deg + oct + 12); // สูงกว่า pad 1 ออกเทฟ ให้ทำนองเด่น
-    const o = ctx.createOscillator();
-    o.type = m.wave;
-    o.frequency.value = freq;
-    const g = ctx.createGain();
+    const oct = Math.random() < 0.3 ? 12 : 0;
+    const freq = semi(m.root, deg + oct + 12);       // สูงกว่า pad 1 ออกเทฟ ให้ทำนองเด่น
     const now = ctx.currentTime;
-    const peak = m.melodyGain * 0.18;
+
+    const g = ctx.createGain();
+    const peak = m.melodyGain * 0.16;
     g.gain.setValueAtTime(0.0001, now);
-    g.gain.linearRampToValueAtTime(peak, now + 0.25);          // attack นุ่ม
-    g.gain.exponentialRampToValueAtTime(0.0001, now + 2.6);    // release ยาว
-    o.connect(g); g.connect(master);
-    o.start(now);
-    o.stop(now + 2.8);
-    o.onended = () => { try { o.disconnect(); g.disconnect(); } catch { /* ignore */ } };
+    g.gain.exponentialRampToValueAtTime(peak, now + 0.012);        // attack คม
+    g.gain.exponentialRampToValueAtTime(peak * 0.28, now + 0.9);   // decay ช่วงแรก
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 3.0);        // หางยาว (sustain/release)
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = Math.min(m.cutoff * 2.2, 5000);
+    lp.Q.value = 0.5;
+    lp.connect(g); g.connect(master);
+
+    const partials: Array<{ mult: number; type: OscillatorType; gain: number }> = [
+      { mult: 1, type: 'triangle', gain: 1 },
+      { mult: 2, type: 'sine', gain: 0.34 },
+      { mult: 3, type: 'sine', gain: 0.12 },
+    ];
+    const oscs = partials.map(p => {
+      const o = ctx.createOscillator();
+      o.type = p.type;
+      o.frequency.value = freq * p.mult;
+      o.detune.value = (Math.random() - 0.5) * 4;      // detune จิ๋ว ให้มีมิติ
+      const pg = ctx.createGain();
+      pg.gain.value = p.gain;
+      o.connect(pg); pg.connect(lp);
+      o.start(now);
+      o.stop(now + 3.2);
+      return o;
+    });
+    oscs[oscs.length - 1].onended = () => {
+      oscs.forEach(o => { try { o.disconnect(); } catch { /* ignore */ } });
+      try { lp.disconnect(); g.disconnect(); } catch { /* ignore */ }
+    };
   }
 
   private refreshMood() {
