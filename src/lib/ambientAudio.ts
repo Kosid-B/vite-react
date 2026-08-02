@@ -16,22 +16,21 @@ export interface AmbientState { enabled: boolean; volume: number; mood: TimeName
 interface Mood {
   root: number;        // Hz ของโน้ตหลัก (tonic)
   scale: number[];     // semitone offsets ของสเกล (เพนทาโทนิก กันเสียงชนกัน)
-  padGain: number;     // ความดัง pad
   melodyGain: number;  // ความดังโน้ตทำนอง
   cutoff: number;      // lowpass cutoff (สว่าง/ทึบ)
-  stepMs: number;      // ระยะห่างเฉลี่ยระหว่างโน้ต
-  wave: OscillatorType;
+  stepMs: number;      // ระยะห่างเฉลี่ยระหว่างโน้ต (ต่ำ = ถี่ขึ้น)
 }
 
 const semi = (root: number, s: number) => root * Math.pow(2, s / 12);
 
-/* detectTime คืน morning|noon|evening|night (cyber = โหมดปรับมือ ไม่เกิดจากเวลา) */
+/* detectTime คืน morning|noon|evening|night (cyber = โหมดปรับมือ ไม่เกิดจากเวลา)
+ * ไม่มี pad/คอร์ดโดรนแล้ว — เหลือ เมโลดี + น้ำตก + สายลม · stepMs ลดลงให้เมโลดีถี่ขึ้น */
 const MOODS: Record<TimeName, Mood> = {
-  morning: { root: 261.63, scale: [0, 2, 4, 7, 9, 12], padGain: 0.50, melodyGain: 0.50, cutoff: 1400, stepMs: 3200, wave: 'triangle' },
-  noon:    { root: 293.66, scale: [0, 2, 4, 7, 9, 12], padGain: 0.45, melodyGain: 0.55, cutoff: 1900, stepMs: 2800, wave: 'triangle' },
-  evening: { root: 220.00, scale: [0, 3, 5, 7, 10, 12], padGain: 0.55, melodyGain: 0.45, cutoff: 1000, stepMs: 3800, wave: 'sine' },
-  night:   { root: 196.00, scale: [0, 3, 5, 7, 10, 12], padGain: 0.60, melodyGain: 0.40, cutoff: 700,  stepMs: 4800, wave: 'sine' },
-  cyber:   { root: 246.94, scale: [0, 2, 3, 7, 8, 12], padGain: 0.50, melodyGain: 0.50, cutoff: 1500, stepMs: 2600, wave: 'triangle' },
+  morning: { root: 261.63, scale: [0, 2, 4, 7, 9, 12], melodyGain: 0.50, cutoff: 1400, stepMs: 1900 },
+  noon:    { root: 293.66, scale: [0, 2, 4, 7, 9, 12], melodyGain: 0.55, cutoff: 1900, stepMs: 1700 },
+  evening: { root: 220.00, scale: [0, 3, 5, 7, 10, 12], melodyGain: 0.45, cutoff: 1000, stepMs: 2300 },
+  night:   { root: 196.00, scale: [0, 3, 5, 7, 10, 12], melodyGain: 0.40, cutoff: 700,  stepMs: 2900 },
+  cyber:   { root: 246.94, scale: [0, 2, 3, 7, 8, 12], melodyGain: 0.50, cutoff: 1500, stepMs: 1600 },
 };
 
 function currentMood(): TimeName {
@@ -168,17 +167,17 @@ class AmbientEngine {
 
     const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 100;
     const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 480; lp.Q.value = 0.6;
-    const wGain = ctx.createGain(); wGain.gain.value = 0.05;   // เบา คลอใต้เมโลดี
+    const wGain = ctx.createGain(); wGain.gain.value = 0.09;   // ลมดังขึ้น
     src.connect(hp); hp.connect(lp); lp.connect(wGain); wGain.connect(master);
 
-    // LFO1: โยก cutoff ช้า ๆ = เสียงลมพัดผ่าน (whoosh/gust)
+    // LFO1: โยก cutoff ช้า ๆ = เสียงลมพัดผ่าน (whoosh/gust) — เพิ่มช่วงกวาดให้ "พัดผ่าน" ชัดขึ้น
     const fLfo = ctx.createOscillator(); fLfo.frequency.value = 0.07;
-    const fLfoGain = ctx.createGain(); fLfoGain.gain.value = 260;
+    const fLfoGain = ctx.createGain(); fLfoGain.gain.value = 340;
     fLfo.connect(fLfoGain); fLfoGain.connect(lp.frequency);
 
-    // LFO2: โยกความดัง = ลมเป็นระลอก (swell ขึ้นลง)
+    // LFO2: โยกความดัง = ลมเป็นระลอก (swell ขึ้นลง) — swell ลึกขึ้น ให้ช่วงที่พัดแรง "ดังขึ้น"
     const gLfo = ctx.createOscillator(); gLfo.frequency.value = 0.045;
-    const gLfoGain = ctx.createGain(); gLfoGain.gain.value = 0.03;
+    const gLfoGain = ctx.createGain(); gLfoGain.gain.value = 0.06;
     gLfo.connect(gLfoGain); gLfoGain.connect(wGain.gain);
 
     src.start(); fLfo.start(); gLfo.start();
@@ -201,11 +200,11 @@ class AmbientEngine {
 
     const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 320;
     const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200; lp.Q.value = 0.4;
-    const wGain = ctx.createGain(); wGain.gain.value = 0.05;   // เบา — คลอ ไม่กลบเปียโน
+    const wGain = ctx.createGain(); wGain.gain.value = 0.10;   // น้ำดังขึ้น
     src.connect(hp); hp.connect(lp); lp.connect(wGain); wGain.connect(master);
 
     const lfo = ctx.createOscillator(); lfo.frequency.value = 0.13;
-    const lfoGain = ctx.createGain(); lfoGain.gain.value = 0.02;
+    const lfoGain = ctx.createGain(); lfoGain.gain.value = 0.035;   // ระลอกน้ำชัดขึ้น
     lfo.connect(lfoGain); lfoGain.connect(wGain.gain);
 
     src.start(); lfo.start();
@@ -228,7 +227,7 @@ class AmbientEngine {
     const m = MOODS[this.mood];
     const deg = m.scale[Math.floor(Math.random() * m.scale.length)];
     const oct = Math.random() < 0.3 ? 12 : 0;
-    const freq = semi(m.root, deg + oct + 12);       // สูงกว่า pad 1 ออกเทฟ ให้ทำนองเด่น
+    const freq = semi(m.root, deg + oct + 12);       // สูงกว่า tonic 1 ออกเทฟ ให้ทำนองเด่น
     const now = ctx.currentTime;
 
     const g = ctx.createGain();
