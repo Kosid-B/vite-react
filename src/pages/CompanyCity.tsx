@@ -12,6 +12,7 @@ import { track } from '../lib/analytics';
 import CityTreasury from '../components/CityTreasury';
 import CfoAnalysis from '../components/CfoAnalysis';
 import ResiliencePlanner from '../components/ResiliencePlanner';
+import ProofCardShare from '../components/ProofCardShare';
 import CityRewards from '../components/CityRewards';
 import CityscapeHero from '../components/CityscapeHero';
 
@@ -19,7 +20,7 @@ import CityscapeHero from '../components/CityscapeHero';
  * เมืองโตตามความคืบหน้าจริง: อาคารสูงขึ้นเมื่อทำงานจริง, ปลดล็อกย่านใหม่ตามเหตุการณ์สำคัญ
  * เศรษฐกิจเมืองขับด้วยรายรับ/รายจ่ายจริง (คลังเมือง) */
 
-export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppData; onNavigate: (p: PageId) => void; onUpdate: (d: AppData) => void }) {
+export default function CompanyCity({ data, onNavigate, onUpdate, wsId = null }: { data: AppData; onNavigate: (p: PageId) => void; onUpdate: (d: AppData) => void; wsId?: string | null }) {
   const s = useMemo(() => cityStats(data), [data]);
   const devMap = useMemo(() => partnerDevelopmentMap(data), [data]);
   const [partnerView, setPartnerView] = useState(false);
@@ -69,6 +70,9 @@ export default function CompanyCity({ data, onNavigate, onUpdate }: { data: AppD
 
       {/* Resilience Planner — จำลองวิกฤต (Superorganism เสา 1: อยู่รอดทุกวิกฤต) */}
       <ResiliencePlanner data={data} />
+
+      {/* Proof Card — แชร์ผลงานลง social 1 คลิก (Viral Loop เฟส B) */}
+      <ProofCardShare data={data} wsId={wsId} />
 
       {/* รางวัลเมือง — รับรางวัลจริงจากการเล่นเกม */}
       <CityRewards data={data} onUpdate={onUpdate} />

@@ -608,7 +608,7 @@ export default function App() {
         {activePage === 'roi' && <ROICalculator data={data} onUpdate={updateData} />}
         {activePage === 'bmc' && <BusinessModel data={data} onUpdate={updateData} onNavigate={setActivePage} />}
         {activePage === 'aicompany' && <AICompany data={data} onUpdate={updateData} wsId={activeWs} />}
-        {(activePage === 'city' || activePage === 'citylevelup') && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} />}
+        {(activePage === 'city' || activePage === 'citylevelup') && <CompanyCity data={data} onNavigate={setActivePage} onUpdate={updateData} wsId={activeWs} />}
         {activePage === 'pulse' && <Pulse data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'boardroom' && <BoardRoom data={data} onNavigate={setActivePage} onUpdate={updateData} />}
         {activePage === 'resources' && <Resources data={data} onUpdate={updateData} onNavigate={setActivePage} />}
