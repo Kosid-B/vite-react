@@ -12,6 +12,7 @@ const PaymentsTab   = lazy(() => import('./AdminTabs/PaymentsTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
+import MarketplaceMetricsPanel from '../components/MarketplaceMetricsPanel';
 import { funnelSummary, type FunnelSummary } from '../lib/funnel';
 import { costReport, estimateVolume } from '../lib/aiCost';
 import { PLAN_COST } from '../lib/planCost';
@@ -2227,6 +2228,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                         <div className="ops-kpi"><div className="ops-kpi-n">{t.dealsClosed}</div><div className="ops-kpi-l">ดีลปิด</div></div>
                         <div className="ops-kpi"><div className="ops-kpi-n">{t.tasksDone}</div><div className="ops-kpi-l">งานเสร็จ</div></div>
                       </div>
+
+                      {/* สุขภาพ marketplace ระดับแพลตฟอร์ม (GMV/take/liquidity/ซัพพลาย-ดีมานด์) */}
+                      <MarketplaceMetricsPanel txns={t.dealsClosed} gmv={t.dealsValue} />
 
                       {/* ===== Activation Funnel + Engagement segments (ตอบ GA4: หลุดตรงไหนก่อน activate) ===== */}
                       {funnel && funnel.total > 0 && (
