@@ -1,6 +1,7 @@
 import type { AppData } from '../types';
 import { marginFraction } from '../lib/planCost';
 import PmfSurveyPanel from '../components/PmfSurveyPanel';
+import KFactorPanel from '../components/KFactorPanel';
 
 interface Props { data: AppData }
 
@@ -307,6 +308,7 @@ export default function Analytics({ data }: Props) {
         </div>
       </div>
       <PmfSurveyPanel />
+      <KFactorPanel />
     </div>
   );
 }
