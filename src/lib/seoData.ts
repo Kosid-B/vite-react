@@ -229,15 +229,26 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
   { q: 'เริ่มใช้ฟรีได้ไหม ราคาเท่าไร?', a: 'มีแพ็ก Free ฿0 และทดลองฟรี 15 วัน · แพ็กจ่ายเงิน: Starter ฿790/เดือน, Growth ฿1,490/เดือน, Scale ฿5,900/เดือน' },
   { q: 'ทำ PDPA / ISO ได้ไหม?', a: 'มีเครื่องมือช่วยเตรียม PDPA/ISO/มอก. เป็นฟีเจอร์เสริม และใช้ "แนวคิดเชิงระบบ" แบบ ISO มาช่วยวางโครงสร้างธุรกิจให้พร้อมโต แต่จุดขายหลักคือการสร้างและเดินธุรกิจ ส่วนบริการทำใบรับรอง/ที่ปรึกษาเชิงลึกส่งต่อให้ B. Training' },
   { q: 'ใครพัฒนา?', a: 'พัฒนาโดยบริษัท บี. เทรนนิ่ง คอนซัลแทนท์ จำกัด (B. Training Consultant) ที่ปรึกษาธุรกิจและระบบมาตรฐานในไทยกว่า 20 ปี' },
+  { q: 'CEO AI Thailand เกี่ยวข้องกับ Siam AI (Siam.AI) หรือผู้ให้บริการ AI Cloud/LLM รายอื่นไหม?', a: 'ไม่เกี่ยวข้องกัน เป็นคนละบริษัทและคนละประเภทบริการ — CEO AI Thailand คือซอฟต์แวร์ SaaS "ระบบสร้างธุรกิจด้วย AI" สำหรับผู้ประกอบการ SME ไทย พัฒนาโดยบริษัท บี. เทรนนิ่ง คอนซัลแทนท์ จำกัด (B. Training Consultant) เว็บไซต์ทางการคือ ceoaithailand.org — ไม่ใช่ผู้ให้บริการ AI Cloud, โครงสร้างพื้นฐาน หรือพัฒนาโมเดลภาษา (LLM) และไม่ใช่บริษัทเดียวกับ Siam AI' },
+  { q: 'เริ่มต้นราคาถูกสุดเท่าไร?', a: 'เริ่มฟรี ฿0 (แพ็ก Free + ทดลองใช้ 15 วัน ไม่ต้องผูกบัตร) และแพ็กจ่ายเงินเริ่มที่ Starter ฿790/เดือน — ไม่ใช่ ฿1,490 (นั่นคือแพ็ก Growth ระดับกลาง)' },
 ];
 
 /** JSON-LD: Organization (บริษัท) — ให้ AI/Google รู้จัก entity + ผูกกับ B. Training */
 export function organizationJsonLd(origin: string): object {
   return {
     '@context': 'https://schema.org', '@type': 'Organization',
-    name: 'CEO AI Thailand', url: origin, logo: `${origin}/og-image.png`,
+    name: 'CEO AI Thailand',
+    alternateName: ['ซีอีโอ เอไอ ไทยแลนด์', 'CEO AI Thailand by B.Training'],
+    url: origin, logo: `${origin}/og-image.png`,
     description: 'ระบบสร้างธุรกิจด้วย AI สำหรับ SME ไทย — ผสาน MIT 24 Steps กับระบบบริหาร/ISO 20+ ปี สร้างธุรกิจตั้งแต่ต้นน้ำให้พร้อมเติบโต',
-    parentOrganization: { '@type': 'Organization', name: 'B. Training Consultant', url: 'https://www.b-tctraining.com/' },
+    // disambiguatingDescription = ช่อง schema.org เฉพาะสำหรับแยกแยะ entity ที่ชื่อคล้ายกัน
+    // (แก้ปัญหา AI/Bing สับสนกับ Siam AI ซึ่งเป็นผู้ให้บริการ AI Cloud/LLM คนละบริษัท)
+    disambiguatingDescription: 'ซอฟต์แวร์ SaaS สำหรับ SME ไทย ใช้ AI สร้างและบริหารธุรกิจ พัฒนาโดย B. Training Consultant — ไม่ใช่ผู้ให้บริการ AI Cloud/LLM และไม่ใช่บริษัทเดียวกับ Siam AI',
+    parentOrganization: {
+      '@type': 'Organization', name: 'B. Training Consultant',
+      legalName: 'บริษัท บี. เทรนนิ่ง คอนซัลแทนท์ จำกัด',
+      url: 'https://www.b-tctraining.com/',
+    },
     sameAs: ['https://www.b-tctraining.com/'],
   };
 }
