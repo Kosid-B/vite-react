@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, PageId, ISO9001Data, ISOClauseCheck, ISOStatus, Nonconformity, ISODocument, InternalAudit } from '../types';
 import ExpertEdge from '../components/ExpertEdge';
+import EqmsPanel from '../components/EqmsPanel';
 import ConsultHandoff from '../components/ConsultHandoff';
 import { assessReadiness } from '../lib/isoGapAssessment';
 import { STANDARDS, STANDARD_ORDER, guideOf, seedClauses, type StandardId } from '../lib/isoStandards';
@@ -205,6 +206,9 @@ export default function ISO9001({ data, onUpdate, onNavigate }: Props) {
             <div className="iso-kpi-card"><div className="iso-kpi-label">ยังไม่สอดคล้อง</div><div className="iso-kpi-val" style={{color:'#dc2626'}}>{red}</div><div className="iso-kpi-sub">Clauses</div></div>
             <div className="iso-kpi-card"><div className="iso-kpi-label">Open NC</div><div className="iso-kpi-val" style={{color: iso.nonconformities.filter(n=>n.status==='open').length>0?'#dc2626':'#16a34a'}}>{iso.nonconformities.filter(n=>n.status==='open').length}</div><div className="iso-kpi-sub">รายการ</div></div>
           </div>
+
+          {/* 🔄 eQMS วงจรปิด PDCA/CAPA (Superorganism เสา 4 — compliance → ปรับปรุงต่อเนื่อง) */}
+          <EqmsPanel clauses={activeClauses} nonconformities={iso.nonconformities} audits={iso.audits} />
 
           {/* 🎯 ที่ปรึกษา active — สิ่งที่ต้องทำก่อน audit (codify B. Training 20 ปี) */}
           <div className="iso-panel iso-advisor" style={{ marginTop: 14 }}>
