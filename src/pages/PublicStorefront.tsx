@@ -14,18 +14,31 @@ import { STARTER_LISTINGS } from '../lib/starterStorefronts';
  * /b/<slug> → หน้าร้านของบริษัท
  * SEO: production inject meta ฝั่ง server (src/server.ts); ที่นี่ applySeo ยืนยันฝั่ง client */
 
-function PublicShell({ children, title }: { children: React.ReactNode; title: string }) {
+/* Built-in identity (Viral Loop เฟส A): ลิงก์ "สร้างด้วย CEO AI Thailand" ที่ทุกหน้าร้านสาธารณะ
+ * = โฆษณาถาวรบนหน้าร้านของผู้ใช้ (แบบ Canva/Typeform) ดึง visitor ไป /start · UTM ไว้วัด attribution */
+function madeWithHref(slug?: string): string {
+  return `/start?utm_source=storefront&utm_medium=made_with&utm_campaign=${encodeURIComponent(slug || 'directory')}`;
+}
+
+function PublicShell({ children, title, refSlug }: { children: React.ReactNode; title: string; refSlug?: string }) {
   useEffect(() => { document.title = `${title} — CEO AI Thailand`; }, [title]);
+  const spot = (where: string) => () => track('storefront_madewith_click', { slug: refSlug || 'directory', spot: where });
   return (
     <div className="pub-wrap">
       <header className="pub-head">
         <a className="pub-brand" href="/b">🏪 สารบัญธุรกิจ · CEO AI Thailand</a>
-        <a className="pub-cta" href="/">สร้างหน้าร้านของคุณฟรี →</a>
+        <a className="pub-cta" href={madeWithHref(refSlug)} onClick={spot('header')}>สร้างหน้าร้านของคุณฟรี →</a>
       </header>
       <main className="pub-main">{children}</main>
       <footer className="pub-foot">
-        CEO AI Thailand — แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย ·{' '}
-        โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
+        <a href={madeWithHref(refSlug)} onClick={spot('footer')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, textDecoration: 'none', color: '#06b6d4' }}>
+          ⚡ สร้างด้วย CEO AI Thailand — สร้างหน้าร้าน + บริษัท AI ฟรี
+        </a>
+        <div style={{ marginTop: 6 }}>
+          แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย ·{' '}
+          โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
+        </div>
       </footer>
     </div>
   );
@@ -91,7 +104,7 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
   }
 
   return (
-    <PublicShell title={sf.name}>
+    <PublicShell title={sf.name} refSlug={sf.slug}>
       <div className="pub-card">
         <div className="pub-dbd">{sectorLabel(sf.dbd)}</div>
         {sf.logoSvg && <div className="pub-logo" dangerouslySetInnerHTML={{ __html: sf.logoSvg }} />}

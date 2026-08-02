@@ -46,7 +46,7 @@
 
 | ส่วนกรอบ | Premium ควรมี | ในระบบตอนนี้ | ช่องว่างพรีเมียม 🔨 |
 |---|---|---|---|
-| **1 · Identity/Resilience** | VRIO เชิงลึก · CFO scenario/cash-flow · Risk | ✅ VRIO · CFO analysis · finance | 🔨 **Scenario/Resilience planner** (จำลองวิกฤต + แผนสำรอง) |
+| **1 · Identity/Resilience** | VRIO เชิงลึก · CFO scenario/cash-flow · Risk | ✅ VRIO · CFO analysis · finance · **Resilience Planner** | ✅ **Resilience Planner** — จำลองวิกฤต→runway+ช่องว่าง (ทำแล้ว ส.ค. 2569) |
 | **2 · Viral Growth** | K-factor · **PMF Survey** · LTV:CAC | ✅ Referral · Analytics (LTV/CAC บางส่วน) | 🔨 **PMF Survey tool** (40% rule) · K-factor dashboard |
 | **3 · Specialization** | Positioning/UVP · Core competency · **Value chain (SIPOC/QMS)** | ✅ VRIO · SIPOC · Marketing | 🔨 UVP builder เชิงลึก |
 | **4 · Evolution/PLC** | BMC ไดนามิก · **eQMS ปิดวงจร (ISO)** · Automation | ✅ BMC · ISO 9001 · billing-cron | 🔨 **eQMS closed-loop** (PDCA/CAPA อัตโนมัติ) · PLC advisor |
@@ -57,9 +57,10 @@
 > **จุดขายพรีเมียม (UVP):** "ไม่ใช่แค่ AI ช่วยเริ่ม — แต่เป็นระบบที่ทำให้ธุรกิจ *อยู่รอดทุกวิกฤต + โตอย่างมีแบบแผน*" (ตรงกับ positioning ลดความเสี่ยง + scale)
 
 **ช่องว่างที่ควรสร้างก่อน (เรียงตาม impact):**
-1. 🔨 **PMF Survey tool** (ส่วน 2) — วัด 40% rule → บอกว่าพร้อม scale ไหม (เล็ก · ให้ค่าพรีเมียมสูง)
-2. 🔨 **Scenario/Resilience planner** (ส่วน 1) — ต่อยอด CFO/finance ที่มี
-3. 🔨 **eQMS closed-loop** (ส่วน 4) — ต่อยอด ISO 9001 · เปลี่ยน compliance เป็นจุดขาย
+1. ✅ **PMF Survey tool** (ส่วน 2) — วัด 40% rule → พร้อม scale ไหม · **ทำแล้ว** (PR #335)
+2. ✅ **Scenario/Resilience planner** (ส่วน 1) — จำลองวิกฤต→runway+ช่องว่าง ต่อยอด CFO/finance · **ทำแล้ว** (หน้า 'city')
+3. 🔨 **eQMS closed-loop** (ส่วน 4) — ต่อยอด ISO 9001 · เปลี่ยน compliance เป็นจุดขาย (ช่องว่างถัดไป)
+4. 🔨 UVP builder (ส่วน 3) · K-factor dashboard (ส่วน 2 — มี marketplace metrics + viral loop เฟส A เป็นฐานแล้ว)
 
 ---
 
