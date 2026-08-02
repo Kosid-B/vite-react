@@ -1,5 +1,6 @@
 import type { AppData, VrioItem } from '../types';
 import { autoH } from '../utils';
+import UvpBuilder from '../components/UvpBuilder';
 
 interface Props {
   data: AppData;
@@ -129,6 +130,9 @@ export default function VRIO({ data, onUpdate }: Props) {
         อย่าไปแข่งที่จุดนั้น คูเมืองที่ยั่งยืนของเราอยู่ที่ <b>ความลึกของบริบทไทย + คลังข้อมูลผลลัพธ์ที่สะสม + การล็อกเข้า ecosystem ไทย</b>
         ซึ่งลอกเลียนแพงและต้องมีองค์กรในไทยรองรับ
       </div>
+
+      {/* UVP Builder — แปลงความได้เปรียบ (moat) เป็นจุดขายที่สื่อสารได้ (Superorganism เสา 3) */}
+      <UvpBuilder data={data} />
     </div>
   );
 }
