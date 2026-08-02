@@ -51,17 +51,18 @@ export default function CookieConsent() {
 const CC_CSS = `
 .cc-banner{ position:fixed; left:0; right:0; bottom:0; z-index:9999;
   display:flex; align-items:center; gap:16px; flex-wrap:wrap; justify-content:center;
-  padding:14px 20px; background:#0b1220; border-top:1px solid #223; color:#e2e8f0;
-  box-shadow:0 -6px 24px rgba(0,0,0,.4); font-family:"Noto Sans Thai",system-ui,sans-serif; }
-.cc-text{ font-size:13.5px; line-height:1.6; max-width:720px; }
-.cc-text a{ color:#38bdf8; text-decoration:none; }
+  padding:14px 20px; background:rgba(2,6,23,.95); backdrop-filter:blur(12px);
+  border-top:1px solid #1e293b; color:#f8fafc;
+  box-shadow:0 -6px 24px rgba(0,0,0,.45); font-family:'Kanit',system-ui,-apple-system,sans-serif; }
+.cc-text{ font-size:13.5px; line-height:1.6; max-width:720px; color:#cbd5e1; }
+.cc-text a{ color:#22d3ee; text-decoration:none; font-weight:600; }
 .cc-text a:hover{ text-decoration:underline; }
 .cc-actions{ display:flex; gap:10px; flex-wrap:wrap; }
 .cc-btn{ cursor:pointer; border-radius:999px; padding:9px 18px; font-family:inherit;
   font-size:13.5px; font-weight:700; border:1px solid #334155; transition:filter .15s ease,transform .15s ease; }
 .cc-btn:hover{ transform:translateY(-1px); filter:brightness(1.08); }
 .cc-ghost{ background:transparent; color:#cbd5e1; }
-.cc-primary{ background:#06b6d4; border-color:#06b6d4; color:#00212b; }
+.cc-primary{ background:#06b6d4; border-color:#06b6d4; color:#04121a; }
 @media (max-width:560px){ .cc-banner{ flex-direction:column; align-items:stretch; text-align:center; }
   .cc-actions{ justify-content:center; } }
 `;
