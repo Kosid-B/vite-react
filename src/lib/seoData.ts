@@ -282,55 +282,98 @@ export function homeSeo(origin: string): SeoData {
 
 /** หน้า answer-first แบบ static HTML เต็ม (crawlable ไม่ต้องรอ JS) เสิร์ฟที่ /faq — AEO asset
  *  มีเนื้อหา Q&A ที่มองเห็น + FAQPage schema ฝังในตัว + CTA ไป /start */
-export function faqPageHtml(origin: string): string {
-  const title = 'คำถามที่พบบ่อย — CEO AI Thailand';
-  const desc = 'CEO AI Thailand คืออะไร ต่างจากแชตบอตยังไง ราคาเท่าไร เริ่มฟรีได้ไหม — คำตอบตรงประเด็นสำหรับผู้ประกอบการ SME ไทย';
-  const faqBlocks = FAQ_ITEMS.map(f =>
-    `    <section class="qa">\n      <h2>${escapeHtml(f.q)}</h2>\n      <p>${escapeHtml(f.a)}</p>\n    </section>`
-  ).join('\n');
-  const schema = jsonLdScript([
-    faqPageJsonLd(), organizationJsonLd(origin), softwareApplicationJsonLd(origin),
-  ]);
+/* ===== ธีมหลัก (ใช้ร่วมหน้า static /faq /mit24) =====
+ * โหลดฟอนต์ Kanit + พาเลตเดียวกับแอป (bg #020617, cyan #22d3ee, การ์ด #0f172a) — ให้ฟอนต์/สีตรงธีมหลัก
+ * เดิม 2 หน้านี้ไม่ได้โหลด Kanit → ฟอนต์ fallback เป็น system = ดูหลุดธีม */
+const SEO_THEME_CSS = `
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#020617; color:#f8fafc; font-family:'Kanit',system-ui,-apple-system,sans-serif; line-height:1.7; -webkit-font-smoothing:antialiased; }
+  .nav { position:sticky; top:0; z-index:5; background:rgba(2,6,23,.85); backdrop-filter:blur(12px); border-bottom:1px solid #1e293b; }
+  .nav .inner { max-width:820px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; }
+  .nav .brand { color:#22d3ee; font-weight:700; font-size:1.05rem; text-decoration:none; letter-spacing:-.3px; }
+  .nav .home { color:#94a3b8; font-size:.9rem; text-decoration:none; }
+  .glow { position:absolute; top:-140px; left:50%; transform:translateX(-50%); width:600px; height:600px; border-radius:50%; background:radial-gradient(circle, rgba(6,182,212,.14) 0%, transparent 70%); pointer-events:none; }
+  main { max-width:820px; margin:0 auto; padding:48px 20px 72px; position:relative; }
+  h1 { color:#22d3ee; font-size:clamp(1.6rem,4vw,2.2rem); font-weight:700; margin:0 0 12px; line-height:1.25; }
+  .lead { color:#e2e8f0; font-size:1.06rem; margin:0 0 10px; }
+  .sub { color:#94a3b8; margin:0 0 28px; }
+  h2 { font-size:1.3rem; font-weight:700; margin:38px 0 14px; color:#f8fafc; }
+  .qa { background:rgba(15,23,42,.55); border:1px solid #1e293b; border-radius:14px; padding:18px 20px; margin:0 0 14px; }
+  .qa h2 { font-size:1.08rem; margin:0 0 6px; color:#67e8f9; }
+  .qa p { margin:0; color:#cbd5e1; }
+  .phase { background:rgba(15,23,42,.55); border:1px solid #1e293b; border-left:3px solid #06b6d4; border-radius:12px; padding:16px 20px; margin:0 0 14px; }
+  .phase h3 { color:#22d3ee; font-size:1.08rem; margin:0 0 10px; }
+  .phase ol { margin:0; padding-left:20px; color:#cbd5e1; }
+  .phase li { margin:6px 0; }
+  .phase li b { color:#f1f5f9; }
+  .tagline { background:rgba(6,182,212,.08); border:1px solid rgba(6,182,212,.3); border-radius:12px; padding:16px 18px; margin:0 0 20px; color:#e2e8f0; }
+  .tagline b { color:#22d3ee; }
+  .tablewrap { overflow-x:auto; margin:8px 0; }
+  .maptable { width:100%; border-collapse:collapse; font-size:.98rem; background:rgba(15,23,42,.55); border:1px solid #1e293b; border-radius:12px; overflow:hidden; }
+  .maptable th, .maptable td { text-align:left; vertical-align:top; padding:13px 15px; border-bottom:1px solid #1e293b; }
+  .maptable thead th { color:#22d3ee; font-size:.9rem; }
+  .maptable tbody tr:last-child td { border-bottom:0; }
+  .maptable td b { color:#f1f5f9; }
+  .maptable tbody td:last-child { color:#cbd5e1; }
+  .csuite { list-style:none; margin:8px 0; padding:0; display:grid; gap:10px; }
+  .csuite li { background:rgba(15,23,42,.55); border:1px solid #1e293b; border-radius:12px; padding:13px 16px; color:#cbd5e1; }
+  .csuite li b { color:#22d3ee; }
+  .cta { display:inline-block; margin-top:28px; background:#f59e0b; color:#04121a; font-weight:700; padding:15px 32px; border-radius:12px; text-decoration:none; box-shadow:0 0 28px rgba(245,158,11,.35); }
+  footer { margin-top:44px; padding-top:24px; border-top:1px solid #1e293b; color:#8b96a9; font-size:.85rem; }
+  a { color:#22d3ee; }
+`;
+
+/** เปลือกหน้า static ธีมหลัก — head (Kanit + meta/OG/canonical/schema) + nav + glow แล้วฝัง body */
+function seoStaticPage(opts: {
+  origin: string; path: string; title: string; desc: string; schema: string; body: string;
+}): string {
+  const url = opts.origin + opts.path;
   return `<!doctype html>
 <html lang="th">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(title)}</title>
-<meta name="description" content="${escapeHtml(desc)}">
-<link rel="canonical" href="${escapeHtml(origin + '/faq')}">
-<meta property="og:title" content="${escapeHtml(title)}">
-<meta property="og:description" content="${escapeHtml(desc)}">
-<meta property="og:url" content="${escapeHtml(origin + '/faq')}">
-<meta property="og:image" content="${escapeHtml(origin + DEFAULT_OG)}">
+<title>${escapeHtml(opts.title)}</title>
+<meta name="description" content="${escapeHtml(opts.desc)}">
+<link rel="canonical" href="${escapeHtml(url)}">
+<meta property="og:title" content="${escapeHtml(opts.title)}">
+<meta property="og:description" content="${escapeHtml(opts.desc)}">
+<meta property="og:url" content="${escapeHtml(url)}">
+<meta property="og:image" content="${escapeHtml(opts.origin + DEFAULT_OG)}">
 <meta name="robots" content="index,follow">
-${schema}
-<style>
-  :root { color-scheme: dark; }
-  body { margin:0; background:#0f172a; color:#f8fafc; font-family:'Kanit',system-ui,sans-serif; line-height:1.6; }
-  main { max-width:720px; margin:0 auto; padding:40px 20px 64px; }
-  h1 { color:#06b6d4; font-size:1.9rem; margin:0 0 8px; }
-  .lead { color:#94a3b8; margin:0 0 32px; }
-  .qa { border-top:1px solid #1e293b; padding:20px 0; }
-  .qa h2 { font-size:1.15rem; margin:0 0 6px; }
-  .qa p { margin:0; color:#cbd5e1; }
-  .cta { display:inline-block; margin-top:32px; background:#06b6d4; color:#04121a; font-weight:600;
-         padding:14px 28px; border-radius:10px; text-decoration:none; }
-  footer { margin-top:40px; color:#8b96a9; font-size:.85rem; }
-  a { color:#06b6d4; }
-</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
+${opts.schema}
+<style>${SEO_THEME_CSS}</style>
 </head>
 <body>
+<div class="nav"><div class="inner"><a class="brand" href="${escapeHtml(opts.origin + '/')}">CEO AI Thailand</a><a class="home" href="${escapeHtml(opts.origin + '/')}">หน้าหลัก →</a></div></div>
 <main>
-  <h1>CEO AI Thailand — คำถามที่พบบ่อย</h1>
-  <p class="lead">${escapeHtml(desc)}</p>
-${faqBlocks}
-  <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างบริษัท AI ฟรี →</a>
-  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/mit24')}">MIT 24 Steps คืออะไร</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>
+<div class="glow"></div>
+${opts.body}
 </main>
 </body>
 </html>
 `;
+}
+
+export function faqPageHtml(origin: string): string {
+  const title = 'คำถามที่พบบ่อย — CEO AI Thailand';
+  const desc = 'CEO AI Thailand คืออะไร ต่างจากแชตบอตยังไง ราคาเท่าไร เริ่มฟรีได้ไหม — คำตอบตรงประเด็นสำหรับผู้ประกอบการ SME ไทย';
+  const faqBlocks = FAQ_ITEMS.map(f =>
+    `  <section class="qa">\n    <h2>${escapeHtml(f.q)}</h2>\n    <p>${escapeHtml(f.a)}</p>\n  </section>`
+  ).join('\n');
+  const schema = jsonLdScript([
+    faqPageJsonLd(), organizationJsonLd(origin), softwareApplicationJsonLd(origin),
+  ]);
+  const body = `  <h1>CEO AI Thailand — คำถามที่พบบ่อย</h1>
+  <p class="lead">${escapeHtml(desc)}</p>
+${faqBlocks}
+  <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างบริษัท AI ฟรี →</a>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/mit24')}">MIT 24 Steps คืออะไร</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
+  return seoStaticPage({ origin, path: '/faq', title, desc, schema, body });
 }
 
 /** Q&A หลักของบทความ MIT 24 Steps (source of truth เดียว) — reuse โดยหน้า /mit24 + FAQPage schema
@@ -410,56 +453,7 @@ export function mit24PageHtml(origin: string): string {
   const schema = jsonLdScript([
     mit24ArticleJsonLd(origin), mit24FaqJsonLd(), organizationJsonLd(origin),
   ]);
-  return `<!doctype html>
-<html lang="th">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(title)}</title>
-<meta name="description" content="${escapeHtml(desc)}">
-<link rel="canonical" href="${escapeHtml(origin + '/mit24')}">
-<meta property="og:title" content="${escapeHtml(title)}">
-<meta property="og:description" content="${escapeHtml(desc)}">
-<meta property="og:url" content="${escapeHtml(origin + '/mit24')}">
-<meta property="og:image" content="${escapeHtml(origin + DEFAULT_OG)}">
-<meta name="robots" content="index,follow">
-${schema}
-<style>
-  :root { color-scheme: dark; }
-  body { margin:0; background:#0f172a; color:#f8fafc; font-family:'Kanit',system-ui,sans-serif; line-height:1.6; }
-  main { max-width:760px; margin:0 auto; padding:40px 20px 64px; }
-  h1 { color:#06b6d4; font-size:1.9rem; margin:0 0 8px; }
-  .lead { color:#e2e8f0; font-size:1.05rem; margin:0 0 12px; }
-  .sub { color:#94a3b8; margin:0 0 32px; }
-  h2 { font-size:1.25rem; margin:32px 0 10px; }
-  .phase { border-top:1px solid #1e293b; padding:16px 0; }
-  .phase h3 { color:#34d399; font-size:1.1rem; margin:0 0 8px; }
-  .phase ol { margin:0; padding-left:20px; color:#cbd5e1; }
-  .phase li { margin:5px 0; }
-  .phase li b { color:#f1f5f9; }
-  .tagline { background:rgba(6,182,212,.1); border:1px solid rgba(6,182,212,.3); border-radius:12px;
-             padding:16px 18px; margin:0 0 20px; color:#e2e8f0; }
-  .tagline b { color:#22d3ee; }
-  .maptable { width:100%; border-collapse:collapse; margin:8px 0 8px; font-size:.98rem; }
-  .maptable th, .maptable td { text-align:left; vertical-align:top; padding:12px 14px; border-bottom:1px solid #1e293b; }
-  .maptable thead th { color:#34d399; font-size:.9rem; }
-  .maptable td b { color:#f1f5f9; }
-  .maptable tbody td:last-child { color:#cbd5e1; }
-  .csuite { list-style:none; margin:8px 0; padding:0; display:grid; gap:8px; }
-  .csuite li { background:#111c33; border:1px solid #1e293b; border-radius:10px; padding:12px 14px; color:#cbd5e1; }
-  .csuite li b { color:#22d3ee; }
-  .qa { border-top:1px solid #1e293b; padding:18px 0; }
-  .qa h2 { font-size:1.12rem; margin:0 0 6px; }
-  .qa p { margin:0; color:#cbd5e1; }
-  .cta { display:inline-block; margin-top:32px; background:#06b6d4; color:#04121a; font-weight:600;
-         padding:14px 28px; border-radius:10px; text-decoration:none; }
-  footer { margin-top:40px; color:#8b96a9; font-size:.85rem; }
-  a { color:#06b6d4; }
-</style>
-</head>
-<body>
-<main>
-  <h1>MIT 24 Steps คืออะไร ใช้ยังไงใน CEO AI Thailand</h1>
+  const body = `  <h1>MIT 24 Steps คืออะไร ใช้ยังไงใน CEO AI Thailand</h1>
   <p class="lead">${escapeHtml(MIT24_FAQ[0].a)}</p>
   <p class="sub">CEO AI Thailand นำ MIT 24 Steps มาทำเป็น <b>guided journey</b> ที่พาเดินทีละขั้น (โชว์ขั้นถัดไปที่ต้องทำ ไม่ข้ามขั้น) มีทีมผู้บริหาร AI ช่วยวิเคราะห์แต่ละขั้นจากข้อมูลจริง แล้วแปลงผลเป็น Business Model Canvas ให้อัตโนมัติ — พัฒนาโดย B. Training Consultant ที่ปรึกษาธุรกิจ/ระบบมาตรฐานไทยกว่า 20 ปี</p>
 
@@ -469,12 +463,14 @@ ${schema}
 ${phaseBlocks}
 
   <h2>24 ขั้น = 4 คำถามใหญ่ที่ AI ช่วยตอบ</h2>
+  <div class="tablewrap">
   <table class="maptable">
     <thead><tr><th>คำถามหลัก (MIT 24 Steps)</th><th>CEO AI Thailand ทำอะไร</th></tr></thead>
     <tbody>
 ${macroBlocks}
     </tbody>
   </table>
+  </div>
 
   <h2>ทีมผู้บริหาร AI ที่ลงมือทำแต่ละด้าน</h2>
   <p class="sub">“ทีม AI” คือ <b>กลไก</b> ที่ขับ Operating System นี้ — แต่ละบทบาทช่วยงานตามขั้นของ 24 Steps</p>
@@ -490,9 +486,6 @@ ${csuiteBlocks}
   <h2>คำถามที่พบบ่อย</h2>
 ${faqBlocks}
   <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างธุรกิจด้วย 24 ขั้น — ฟรี →</a>
-  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/faq')}">คำถามที่พบบ่อย</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>
-</main>
-</body>
-</html>
-`;
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/faq')}">คำถามที่พบบ่อย</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
+  return seoStaticPage({ origin, path: '/mit24', title, desc, schema, body });
 }
