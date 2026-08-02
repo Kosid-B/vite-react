@@ -47,7 +47,7 @@
 | ส่วนกรอบ | Premium ควรมี | ในระบบตอนนี้ | ช่องว่างพรีเมียม 🔨 |
 |---|---|---|---|
 | **1 · Identity/Resilience** | VRIO เชิงลึก · CFO scenario/cash-flow · Risk | ✅ VRIO · CFO analysis · finance · **Resilience Planner** | ✅ **Resilience Planner** — จำลองวิกฤต→runway+ช่องว่าง (ทำแล้ว ส.ค. 2569) |
-| **2 · Viral Growth** | K-factor · **PMF Survey** · LTV:CAC | ✅ Referral · Analytics (LTV/CAC บางส่วน) | 🔨 **PMF Survey tool** (40% rule) · K-factor dashboard |
+| **2 · Viral Growth** | K-factor · **PMF Survey** · LTV:CAC | ✅ Referral · PMF Survey · Viral Loop A · **K-factor dashboard** | ✅ ครบ (PMF · K-factor · marketplace metrics) |
 | **3 · Specialization** | Positioning/UVP · Core competency · **Value chain (SIPOC/QMS)** | ✅ VRIO · SIPOC · Marketing · **UVP Builder** | ✅ **UVP Builder** — 4 มิติ + moat score (ทำแล้ว · หน้า VRIO) |
 | **4 · Evolution/PLC** | BMC ไดนามิก · **eQMS ปิดวงจร (ISO)** · Automation | ✅ BMC · ISO 9001 · **eQMS closed-loop** | ✅ **eQMS closed-loop** — PDCA/CAPA อัตโนมัติ (ทำแล้ว · หน้า ISO 9001) |
 
@@ -62,7 +62,7 @@
 3. ✅ **eQMS closed-loop** (ส่วน 4) — PDCA/CAPA อัตโนมัติ · เปลี่ยน compliance เป็นจุดขาย · **ทำแล้ว** (หน้า ISO 9001)
 4. ✅ **UVP Builder** (ส่วน 3) — 4 มิติ + moat score · **ทำแล้ว** (หน้า VRIO)
 
-**🎉 ครบ 4/4 เสา มีฟีเจอร์รองรับแล้ว** · เหลือ K-factor dashboard (ส่วน 2 — ต่อยอด marketplace metrics + viral loop เฟส A) เป็น enhancement
+**🎉 ครบ 4/4 เสา + เครื่องมือครบทุกส่วน** (รวม K-factor dashboard · หน้า SaaS Analytics คู่กับ PMF Survey)
 
 ---
 
