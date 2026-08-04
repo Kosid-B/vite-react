@@ -13,6 +13,7 @@ import CityTreasury from '../components/CityTreasury';
 import CfoAnalysis from '../components/CfoAnalysis';
 import ResiliencePlanner from '../components/ResiliencePlanner';
 import ProofCardShare from '../components/ProofCardShare';
+import TestimonialForm from '../components/TestimonialForm';
 import CityRewards from '../components/CityRewards';
 import CityscapeHero from '../components/CityscapeHero';
 
@@ -73,6 +74,9 @@ export default function CompanyCity({ data, onNavigate, onUpdate, wsId = null }:
 
       {/* Proof Card — แชร์ผลงานลง social 1 คลิก (Viral Loop เฟส B) */}
       <ProofCardShare data={data} wsId={wsId} />
+
+      {/* รีวิวจากสมาชิกจริง → แอดมินอนุมัติ → โชว์บน landing (social proof ของแท้) */}
+      <TestimonialForm data={data} wsId={wsId} />
 
       {/* รางวัลเมือง — รับรางวัลจริงจากการเล่นเกม */}
       <CityRewards data={data} onUpdate={onUpdate} />

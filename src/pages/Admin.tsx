@@ -9,6 +9,7 @@ const GTMTab        = lazy(() => import('./AdminTabs/GTMTab'));
 const SEOTab        = lazy(() => import('./AdminTabs/SEOTab'));
 const CaseStudyTab  = lazy(() => import('./AdminTabs/CaseStudyTab'));
 const PaymentsTab   = lazy(() => import('./AdminTabs/PaymentsTab'));
+const TestimonialsTab = lazy(() => import('./AdminTabs/TestimonialsTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
@@ -135,7 +136,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'payments' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'payments' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate' | 'testimonials';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -533,6 +534,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'feedback' ? ' active' : ''}`} onClick={() => setTab('feedback')}>
           📝 Feedback Analysis
+        </button>
+        <button className={`pfa-tab${tab === 'testimonials' ? ' active' : ''}`} onClick={() => setTab('testimonials')}>
+          ⭐ รีวิวสมาชิก
         </button>
         <button className={`pfa-tab${tab === 'skills' ? ' active' : ''}`} onClick={() => setTab('skills')}>
           🛒 Skill Market
@@ -1686,6 +1690,13 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       {tab === 'payments' && (
         <Suspense fallback={<div className="page-loading" />}>
           <PaymentsTab />
+        </Suspense>
+      )}
+
+      {/* ===== TESTIMONIALS MODERATION QUEUE ===== */}
+      {tab === 'testimonials' && (
+        <Suspense fallback={<div className="page-loading" />}>
+          <TestimonialsTab />
         </Suspense>
       )}
 
