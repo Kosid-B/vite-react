@@ -4,6 +4,7 @@ import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
 import InstantPreview from '../components/InstantPreview';
 import { currentChallenger } from '../lib/challengerRotation';
+import { listApprovedTestimonials, aggregateRating, starString, type Testimonial } from '../lib/testimonials';
 
 interface Props {
   onGetStarted: () => void;
@@ -142,6 +143,11 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
     const id = setInterval(tick, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  // รีวิวจริงจากสมาชิก (อนุมัติแล้ว) — ถ้ายังไม่มี ไม่โชว์ section (ไม่สร้าง social proof ปลอม)
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  useEffect(() => { listApprovedTestimonials(12).then(setTestimonials).catch(() => {}); }, []);
+  const agg = aggregateRating(testimonials);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: C.bg, color: C.white, fontFamily: "'Kanit', sans-serif", overflowX: 'hidden' }}>
@@ -293,6 +299,42 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
           ))}
         </div>
       </section>
+
+      {/* ─── รีวิวจากสมาชิกจริง (โชว์เฉพาะที่แอดมินอนุมัติ · ไม่มี = ไม่โชว์ ไม่สร้างของปลอม) ─── */}
+      {testimonials.length > 0 && (
+        <section style={{ padding: '64px 24px' }}>
+          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+            <p style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.cyan5, marginBottom: 10, textAlign: 'center' }}>
+              เสียงจากผู้ใช้จริง
+            </p>
+            <h3 style={{ fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: 700, color: C.white, lineHeight: 1.4, textAlign: 'center', margin: '0 auto 8px' }}>
+              สมาชิกที่ใช้งานจริงพูดถึงเรา
+            </h3>
+            {agg.count > 0 && (
+              <p style={{ textAlign: 'center', color: C.slate4, fontSize: 14.5, margin: '0 0 32px' }}>
+                <span style={{ color: C.amber4, fontSize: 16 }}>{starString(agg.average)}</span>{' '}
+                เฉลี่ย <strong style={{ color: C.white }}>{agg.average}</strong>/5 จากรีวิวจริง {agg.count} รายการ
+              </p>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+              {testimonials.map(t => (
+                <figure key={t.id} style={{ margin: 0, padding: 22, borderRadius: 14, border: `1px solid ${C.border}`, background: C.bg2, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <span style={{ color: C.amber4, fontSize: 15, letterSpacing: 1 }}>{starString(t.rating)}</span>
+                  <blockquote style={{ margin: 0, color: C.white, fontSize: 15, lineHeight: 1.7, flex: 1 }}>“{t.body}”</blockquote>
+                  <figcaption style={{ color: C.slate4, fontSize: 13.5, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+                    <strong style={{ color: C.cyan3 }}>{t.authorName || 'สมาชิก'}</strong>
+                    {t.companyName && <span> · {t.companyName}</span>}
+                    {t.role && <div style={{ color: C.slate5, fontSize: 12.5, marginTop: 2 }}>{t.role}</div>}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+            <p style={{ textAlign: 'center', color: C.slate5, fontSize: 12.5, marginTop: 24 }}>
+              ✅ รีวิวทุกชิ้นมาจากสมาชิกที่ล็อกอินใช้งานจริง และผ่านการตรวจก่อนแสดง
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* ─── Steps ─── */}
       <section style={{ padding: '64px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
