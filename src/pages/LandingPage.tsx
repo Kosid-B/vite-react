@@ -187,14 +187,14 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
           ✦ &nbsp;OFFICIALLY POWERED BY CEO AI THAILAND&nbsp; ✦
         </div>
 
-        <h1 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, lineHeight: 1.15, marginBottom: 24, maxWidth: 800 }}>
-          สร้างและเดินธุรกิจ<br />
-          <span style={{ color: C.cyan4 }}>ด้วยทีมผู้บริหาร AI<br />ที่ทำงานให้ 24 ชม.</span>
+        <h1 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, lineHeight: 1.15, marginBottom: 24, maxWidth: 820 }}>
+          อยากมีธุรกิจของตัวเอง?<br />
+          <span style={{ color: C.cyan4 }}>เริ่มคืนนี้ได้เลย<br />ไม่ต้องเสี่ยงเงินก้อน</span>
         </h1>
 
-        <p style={{ fontSize: 18, color: C.slate4, marginBottom: 48, maxWidth: 600, lineHeight: 1.7 }}>
-          ให้ CEO AI จัดทีม วางแผน หาลูกค้า และเดินธุรกิจให้คุณ<br />
-          มี <strong style={{ color: C.white }}>'ทีม AI'</strong> ทั้งบริษัทได้ตั้งแต่ ฿790/เดือน — คุณสั่ง มันลงมือ คุณคุมทุกการตัดสินใจ
+        <p style={{ fontSize: 18, color: C.slate4, marginBottom: 48, maxWidth: 620, lineHeight: 1.7 }}>
+          ยังไม่รู้จะทำธุรกิจอะไร หรือเริ่มยังไง? ให้ทีม AI ช่วยหาไอเดีย วางแผน หาลูกค้า และพาเริ่มทีละสเต็ป<br />
+          <strong style={{ color: C.white }}>เริ่มฟรี ไม่ต้องลาออก ไม่ต้องจ้างทีม</strong> — คุณสั่ง มันลงมือ คุณคุมทุกการตัดสินใจ
         </p>
 
         <div style={{ position: 'relative', display: 'inline-block' }}>
