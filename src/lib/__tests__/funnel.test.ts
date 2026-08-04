@@ -43,6 +43,19 @@ describe('funnelSummary — ขั้น funnel', () => {
     expect(actStage.dropFromPrev).toBe(50);    // (2-1)/2
   });
 
+  it('seed สด (ยังไม่แตะบริษัท) = ยังไม่ activate — กันตัวเลขหลอก ~100%', () => {
+    // pristine DEFAULT_DATA มีชื่อ/ประเภท/เป้าหมาย/3 เอเจนต์จาก seed แต่ผู้ใช้ยังไม่ได้ปรับอะไร
+    const pristine = base({});
+    const f = funnelSummary([pristine]);
+    expect(f.stages.find(s => s.key === 'activate')!.count).toBe(0);
+    expect(f.activationRate).toBe(0);
+  });
+
+  it('แก้ประเภทธุรกิจ/เป้าหมายจาก seed = นับเป็น activate', () => {
+    const custom = base({ aiCompany: company({ industry: 'ร้านกาแฟเฉพาะทาง' }) });
+    expect(funnelSummary([custom]).stages.find(s => s.key === 'activate')!.count).toBe(1);
+  });
+
   it('list ว่าง → total 0, ทุกขั้น 0, ไม่หาร 0', () => {
     const f = funnelSummary([]);
     expect(f.total).toBe(0);

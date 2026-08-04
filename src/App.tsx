@@ -9,6 +9,7 @@ import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave
 import { resolveWsLoad, localBelongsTo } from './lib/wsSync';
 import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
+import { isRealActivation } from './lib/setupWizard';
 import { track } from './lib/analytics';
 import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTriggers';
 import Auth from './components/Auth';
@@ -327,15 +328,16 @@ export default function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user.id, data.subscription.status, activeWs]);
 
-  // funnel: activation = สร้างทีม AI สำเร็จครั้งแรก (มีเอเจนต์ ≥ 1) — ยิงครั้งเดียว/เบราว์เซอร์ (localStorage guard)
+  // funnel: activation = ผู้ใช้ "ปรับบริษัทให้ต่างจาก demo seed" ครั้งแรก (ชื่อ/ประเภท/เป้าหมาย/ทีม) —
+  // ยิงครั้งเดียว/เบราว์เซอร์ (localStorage guard). ⚠️ ห้ามยิงแค่ agents≥1 — seed มี 3 เอเจนต์ให้แล้ว = จะ activate 100% ทันที (วัดผิด)
   useEffect(() => {
-    if ((data.aiCompany?.agents?.length ?? 0) < 1) return;
+    if (!isRealActivation(data)) return;
     try {
       if (localStorage.getItem('ceo_ai_activation_sent')) return;
       localStorage.setItem('ceo_ai_activation_sent', '1');
       track('activation', { agents: data.aiCompany.agents.length });
     } catch { /* noop */ }
-  }, [data.aiCompany?.agents?.length]);
+  }, [data.aiCompany?.name, data.aiCompany?.industry, data.aiCompany?.goal, data.aiCompany?.agents?.length]);
 
   const showToast = useCallback((msg?: string) => {
     if (msg) setToastMsg(msg);

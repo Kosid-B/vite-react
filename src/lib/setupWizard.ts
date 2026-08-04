@@ -29,6 +29,17 @@ export function goalDone(d: AppData): boolean {
 export function teamDone(d: AppData): boolean {
   return d.aiCompany.agents.length >= 3 && rosterKey(d.aiCompany.agents) !== SEED_ROSTER;
 }
+/** ตั้งชื่อบริษัทเอง (ต่างจาก demo seed) */
+export function nameDone(d: AppData): boolean {
+  const v = d.aiCompany.name?.trim();
+  return !!v && v !== seedCo.name;
+}
+/** activation จริง = ผู้ใช้ "ปรับบริษัทให้ต่างจาก demo seed" อย่างน้อย 1 อย่าง (ชื่อ/ประเภท/เป้าหมาย/ทีม)
+ *  ⚠️ ห้ามวัดแค่ "มีชื่อ/มีเอเจนต์" — seed ใส่ค่าพวกนั้นมาให้แล้ว จะทำให้ทุก ws ดู activated 100% (วัดผิด) */
+export function isRealActivation(d: AppData | null): boolean {
+  if (!d) return false;
+  return nameDone(d) || industryDone(d) || goalDone(d) || teamDone(d);
+}
 
 export type SetupStepId = 'industry' | 'goal' | 'team';
 export type SetupStepKind = 'input-select' | 'input-text' | 'nav';

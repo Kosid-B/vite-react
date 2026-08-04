@@ -1,5 +1,6 @@
 import type { AppData } from '../types';
 import { workspaceOps } from './adminOps';
+import { isRealActivation } from './setupWizard';
 
 /* ===== Activation Funnel + Engagement Segments (ฝั่ง Admin) =====
  * ตอบคำถามจาก GA4: "คนเข้ามาเยอะ (unknown 82%) แต่หลุดตรงไหน ก่อนถึง activation?"
@@ -29,10 +30,9 @@ export interface FunnelSummary {
   activationRate: number;  // % ที่ activate (สร้างบริษัท AI / เปิดร้าน)
 }
 
-/** สร้างบริษัท AI แล้ว = ตั้งชื่อบริษัทแล้ว (จุด "aha" หลักของแอป) */
-function isActivated(d: AppData | null): boolean {
-  return !!d?.aiCompany?.name?.trim();
-}
+/** activate จริง = ปรับบริษัทให้ต่างจาก demo seed (ชื่อ/ประเภท/เป้าหมาย/ทีม)
+ *  ไม่ใช่แค่ "มีชื่อ" — seed มีชื่อ+เอเจนต์ให้แล้ว ถ้าวัดแค่นั้นจะได้ ~100% เสมอ (ตัวเลขหลอก) */
+const isActivated = isRealActivation;
 
 /** ขั้น funnel: สมัคร → เลือกเป้าหมาย → สร้างบริษัท/ร้าน → ลงมือ → มีรายได้ */
 export function funnelSummary(states: (AppData | null)[]): FunnelSummary {
