@@ -225,9 +225,13 @@ describe('schema JSON-LD (GEO/AEO)', () => {
     expect(agg['@type']).toBe('AggregateOffer');
     expect(agg.lowPrice).toBe('0'); // สัญญาณ "เริ่มฟรี" — ไม่ใช่ ฿1,490
     expect(agg.highPrice).toBe('5900');
+    expect(agg.availability).toBe('https://schema.org/InStock');
+    expect(agg.url).toContain('/start');
     const offers = agg.offers as Record<string, unknown>[];
     expect(offers).toHaveLength(4);
     expect(offers.map(o => o.price)).toEqual(['0', '790', '1490', '5900']);
+    // field แนะนำของ Google — ทุก Offer ต้องมี url + availability (เคลียร์ non-critical warning)
+    expect(offers.every(o => typeof o.url === 'string' && o.availability === 'https://schema.org/InStock')).toBe(true);
   });
   it('faqPageJsonLd แปลง FAQ_ITEMS เป็น Question/Answer ครบ', () => {
     const f = faqPageJsonLd() as Record<string, unknown>;

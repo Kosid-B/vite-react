@@ -261,14 +261,16 @@ export function softwareApplicationJsonLd(origin: string): object {
     applicationCategory: 'BusinessApplication', operatingSystem: 'Web',
     description: 'ระบบสร้างธุรกิจด้วย AI — หาลูกค้าที่ใช่ ทดสอบตลาด เปิดร้านขายจริง และวางระบบ SOP/KPI ให้พร้อมเติบโต (กรอบ MIT 24 Steps × ระบบ ISO 20+ ปี)',
     // AggregateOffer.lowPrice = สัญญาณ "ราคาเริ่มต้น" ที่ search/AI หยิบไปโชว์ → ตอกย้ำ "เริ่มที่ ฿0 (ฟรี)" ไม่ใช่ ฿1,490
+    // url + availability = field แนะนำของ Google (เคลียร์ non-critical warning) · ชี้หน้า /start (public landing)
     offers: {
       '@type': 'AggregateOffer',
       lowPrice: '0', highPrice: '5900', priceCurrency: 'THB', offerCount: 4,
+      url: `${origin}/start`, availability: 'https://schema.org/InStock',
       offers: [
-        { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'THB' },
-        { '@type': 'Offer', name: 'Starter', price: '790', priceCurrency: 'THB' },
-        { '@type': 'Offer', name: 'Growth', price: '1490', priceCurrency: 'THB' },
-        { '@type': 'Offer', name: 'Scale', price: '5900', priceCurrency: 'THB' },
+        { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'THB', url: `${origin}/start`, availability: 'https://schema.org/InStock' },
+        { '@type': 'Offer', name: 'Starter', price: '790', priceCurrency: 'THB', url: `${origin}/start`, availability: 'https://schema.org/InStock' },
+        { '@type': 'Offer', name: 'Growth', price: '1490', priceCurrency: 'THB', url: `${origin}/start`, availability: 'https://schema.org/InStock' },
+        { '@type': 'Offer', name: 'Scale', price: '5900', priceCurrency: 'THB', url: `${origin}/start`, availability: 'https://schema.org/InStock' },
       ],
     },
   };
