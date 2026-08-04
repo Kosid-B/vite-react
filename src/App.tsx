@@ -6,7 +6,7 @@ import { DEFAULT_DATA } from './data';
 import { defaultExperiments, recordActiveDay } from './lib/experiments';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
-import { resolveWsLoad, localBelongsTo } from './lib/wsSync';
+import { resolveWsLoad } from './lib/wsSync';
 import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
 import { isRealActivation } from './lib/setupWizard';
@@ -283,12 +283,14 @@ export default function App() {
       if (cancelled) return;
       const local = dataRef.current;
       const merged = cloud ? migrate(cloud) : null;
-      const belongs = localBelongsTo(dataWsRef.current, ws);
+      // แยก "ผูก ws นี้ตรง ๆ" (dataWs===ws) จาก "งาน guest ที่ยังไม่ผูก" (dataWs===null) —
+      // เพื่อไม่ให้งาน guest ทับบัญชีจริงของผู้ใช้ที่กลับมาล็อกอิน แต่ยัง migrate ขึ้น ws ใหม่ที่คลาวด์ว่างได้
       const action = resolveWsLoad({
         hasCloud: !!cloud,
         cloudRev: merged?.rev ?? 0,
         localRev: local.rev ?? 0,
-        localBelongsToThisWs: belongs,
+        localBelongsToThisWs: dataWsRef.current === ws,
+        localIsUnbound: dataWsRef.current === null,
       });
       if (action === 'use-cloud' && merged) {
         setData(merged);
@@ -337,6 +339,7 @@ export default function App() {
       localStorage.setItem('ceo_ai_activation_sent', '1');
       track('activation', { agents: data.aiCompany.agents.length });
     } catch { /* noop */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.aiCompany?.name, data.aiCompany?.industry, data.aiCompany?.goal, data.aiCompany?.agents?.length]);
 
   const showToast = useCallback((msg?: string) => {
@@ -534,9 +537,9 @@ export default function App() {
 
   // First-run: ผู้ใช้ใหม่ (ยังไม่เลือกเป้าหมาย + เพิ่งเข้า) → ถาม "วันนี้อยากทำอะไร?" ก่อน
   const showGoalChooser = data.onboardGoal == null && (data.visitedPages?.length ?? 0) <= 1;
-  // OnboardingTour ไม่ชนกับ GoalChooser: ผู้เลือกเป้าหมายไปที่เครื่องมือเลย (ไม่มีทัวร์) ·
-  // โชว์ทัวร์เฉพาะคน "ดูภาพรวมก่อน" (explore) หรือผู้ใช้เดิม (ทัวร์ self-gate ของมันเองอยู่แล้ว)
-  const showTour = data.onboardGoal === 'explore' || (data.onboardGoal == null && !showGoalChooser);
+  // OnboardingTour: ไม่โชว์ให้คน "ดูภาพรวมก่อน" (explore) — กันเจอ modal ซ้อน (GoalChooser → Tour) ที่ทำให้คนหลุด
+  // เหลือทัวร์เฉพาะผู้ใช้เดิมที่ยังไม่เคยเลือกเป้าหมาย (มาก่อนมี GoalChooser · ทัวร์ self-gate ของมันเองอยู่แล้ว)
+  const showTour = data.onboardGoal == null && !showGoalChooser;
 
   return (
     <div className="app">

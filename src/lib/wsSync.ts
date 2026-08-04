@@ -13,17 +13,19 @@ export function resolveWsLoad(args: {
   hasCloud: boolean;
   cloudRev: number;
   localRev: number;
-  localBelongsToThisWs: boolean;
+  localBelongsToThisWs: boolean;    // local ผูกกับ ws นี้ตรง ๆ (dataWs === ws)
+  localIsUnbound?: boolean;         // local ยังไม่ผูก ws ไหนเลย (dataWs === null = งาน guest/ครั้งแรก) — default false
 }): WsLoadAction {
-  const { hasCloud, cloudRev, localRev, localBelongsToThisWs } = args;
+  const { hasCloud, cloudRev, localRev, localBelongsToThisWs, localIsUnbound = false } = args;
   if (hasCloud) {
-    // rev-guard (กัน cloud เก่าทับ local ใหม่) ใช้ได้เฉพาะเมื่อ local เป็นของ ws นี้จริง
+    // rev-guard (กัน cloud เก่าทับ local ใหม่) ใช้ได้เฉพาะเมื่อ local ผูกกับ ws นี้ "ตรง ๆ"
+    // ⚠️ งาน guest ที่ยังไม่ผูก (unbound) ห้ามทับ cloud จริงของผู้ใช้ที่กลับมาล็อกอิน (กันงาน scratch ทับบัญชีจริง)
     if (localBelongsToThisWs && localRev > cloudRev) return 'keep-local-push';
     return 'use-cloud';
   }
-  // คลาวด์ว่าง
-  if (localBelongsToThisWs) return 'keep-local-push'; // ws เดิม/ครั้งแรก (เช่น งาน guest) → ดันขึ้น
-  return 'init-fresh-push';                            // ws ใหม่ที่ยังไม่มีข้อมูล → เริ่มใหม่ ไม่ปน ws เดิม
+  // คลาวด์ว่าง → เก็บ local ที่เป็นของ ws นี้ หรือ งาน guest ครั้งแรก (migrate ขึ้น) · local ของ ws อื่น → เริ่มใหม่ ไม่ปน
+  if (localBelongsToThisWs || localIsUnbound) return 'keep-local-push';
+  return 'init-fresh-push';
 }
 
 /** local ถือว่าเป็นของ ws นี้เมื่อ: ยังไม่เคยผูกกับ ws ไหน (null = งาน guest/ครั้งแรก) หรือผูกกับ ws เดียวกัน */
