@@ -218,10 +218,14 @@ describe('schema JSON-LD (GEO/AEO)', () => {
     expect(o.url).toBe(ORIGIN);
     expect((o.parentOrganization as Record<string, unknown>).name).toBe('B. Training Consultant');
   });
-  it('softwareApplicationJsonLd มี offers ครบ 4 แพ็ก', () => {
+  it('softwareApplicationJsonLd มี AggregateOffer (lowPrice ฿0) + offers ครบ 4 แพ็ก', () => {
     const s = softwareApplicationJsonLd(ORIGIN) as Record<string, unknown>;
     expect(s['@type']).toBe('SoftwareApplication');
-    const offers = s.offers as Record<string, unknown>[];
+    const agg = s.offers as Record<string, unknown>;
+    expect(agg['@type']).toBe('AggregateOffer');
+    expect(agg.lowPrice).toBe('0'); // สัญญาณ "เริ่มฟรี" — ไม่ใช่ ฿1,490
+    expect(agg.highPrice).toBe('5900');
+    const offers = agg.offers as Record<string, unknown>[];
     expect(offers).toHaveLength(4);
     expect(offers.map(o => o.price)).toEqual(['0', '790', '1490', '5900']);
   });
