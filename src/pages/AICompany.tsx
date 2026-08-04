@@ -42,6 +42,8 @@ import {
   PAY_METHODS, nowTime,
 } from './aicompany/constants';
 import { effectiveOwnedSkills, isBundledByScale } from '../lib/skillAccess';
+import { localPlan } from '../lib/planFallback';
+import { pickTeamTemplate, type TeamTemplate } from '../lib/teamTemplates';
 
 interface Props {
   data: AppData;
@@ -189,44 +191,77 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
     patch({ running: !c.running });
   }
 
-  // เรียก Edge Function ai-plan ให้ CEO วางแผนด้วย Claude จริง
+  // แปลง response (จาก AI หรือ fallback) → tasks/approvals แล้ว patch เข้าบอร์ด
+  function applyPlan(
+    res: { tasks?: { agentRole?: string; title?: string; detail?: string; status?: string }[]; approvals?: { agentRole?: string; title?: string; detail?: string; impact?: string }[] },
+    mode: 'ai' | 'local' | 'fallback',
+  ) {
+    const roleToId = (role: string) =>
+      c.agents.find(a => a.role.toLowerCase() === String(role ?? '').toLowerCase())?.id ?? c.agents[0]?.id ?? '';
+    const ok: TaskStatus[] = ['queued', 'in_progress', 'review', 'done', 'blocked'];
+    const newTasks = (res?.tasks ?? []).map((t, i) => ({
+      id: 'ai-' + Date.now().toString(36) + i,
+      agentId: roleToId(t.agentRole ?? ''),
+      title: String(t.title ?? 'งานจาก AI'),
+      detail: String(t.detail ?? ''),
+      status: (ok.includes(t.status as TaskStatus) ? t.status : 'queued') as TaskStatus,
+    }));
+    const newApprovals = (res?.approvals ?? []).map((a, i) => ({
+      id: 'aiap-' + Date.now().toString(36) + i,
+      agentId: roleToId(a.agentRole ?? ''),
+      title: String(a.title ?? 'ขออนุมัติ'),
+      detail: String(a.detail ?? ''),
+      impact: String(a.impact ?? ''),
+      status: 'pending' as ApprovalStatus,
+    }));
+    // เปิด running เพื่อให้ heartbeat "ลงมือทำ" งานที่เพิ่งมอบหมายจริง — แก้ปัญหา "มอบงานแล้วไม่เห็นผลลัพธ์"
+    const willRun = newTasks.some(t => t.status === 'queued');
+    patch({ tasks: [...newTasks, ...c.tasks], approvals: [...newApprovals, ...c.approvals], running: c.running || willRun });
+    const detail = `${newTasks.length} งาน${newApprovals.length ? ` · ${newApprovals.length} เรื่องรออนุมัติ` : ''}${willRun ? ' · ▶ ทีมเริ่มลงมือแล้ว ผลจะทยอยขึ้นในบอร์ด' : ''}`;
+    setPlanMsg(
+      mode === 'ai' ? `✓ CEO วางแผนเพิ่ม ${detail}`
+        : mode === 'fallback' ? `📋 CEO ร่างแผนเบื้องต้นให้ ${detail} · (ระบบ AI ไม่ว่างชั่วคราว — กดอีกครั้งเพื่อลองใช้ AI เต็มรูปแบบ)`
+          : `📋 CEO ร่างแผนเริ่มต้นให้ ${detail}`,
+    );
+  }
+
+  // ให้ CEO วางแผน: ใช้ ai-plan (Claude) ถ้าได้ · ล่ม/timeout/ออฟไลน์ → fallback แผน rule-based (ไม่โชว์ error เทคนิคให้ผู้ใช้)
   async function runAiPlan() {
-    if (!supabase) return;
     setPlanning(true); setPlanMsg(null);
+    const localArgs = { goal: c.goal, industry: c.industry, agents: c.agents.map(a => ({ role: a.role, mandate: a.mandate })) };
     try {
+      if (!supabase) { applyPlan(localPlan(localArgs), 'local'); return; }
       trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('ai-plan', {
         body: { goal: c.goal, industry: c.industry, agents: c.agents.map(a => ({ role: a.role, mandate: a.mandate })) },
       });
       if (error) throw error;
-      const roleToId = (role: string) =>
-        c.agents.find(a => a.role.toLowerCase() === String(role ?? '').toLowerCase())?.id ?? c.agents[0]?.id ?? '';
-      const ok: TaskStatus[] = ['queued', 'in_progress', 'review', 'done', 'blocked'];
-      const newTasks = (res?.tasks ?? []).map((t: { agentRole?: string; title?: string; detail?: string; status?: string }, i: number) => ({
-        id: 'ai-' + Date.now().toString(36) + i,
-        agentId: roleToId(t.agentRole ?? ''),
-        title: String(t.title ?? 'งานจาก AI'),
-        detail: String(t.detail ?? ''),
-        status: (ok.includes(t.status as TaskStatus) ? t.status : 'queued') as TaskStatus,
-      }));
-      const newApprovals = (res?.approvals ?? []).map((a: { agentRole?: string; title?: string; detail?: string; impact?: string }, i: number) => ({
-        id: 'aiap-' + Date.now().toString(36) + i,
-        agentId: roleToId(a.agentRole ?? ''),
-        title: String(a.title ?? 'ขออนุมัติ'),
-        detail: String(a.detail ?? ''),
-        impact: String(a.impact ?? ''),
-        status: 'pending' as ApprovalStatus,
-      }));
-      // เปิด running เพื่อให้ heartbeat "ลงมือทำ" งานที่เพิ่งมอบหมายจริง (agent-run) → ผลทยอยขึ้นบอร์ด
-      // (heartbeat ข้ามงานที่ต้องอนุมัติก่อน จึงปลอดภัย) — แก้ปัญหา "มอบงานแล้วไม่เห็นผลลัพธ์"
-      const willRun = newTasks.some((t: { status: TaskStatus }) => t.status === 'queued');
-      patch({ tasks: [...newTasks, ...c.tasks], approvals: [...newApprovals, ...c.approvals], running: c.running || willRun });
-      setPlanMsg(`✓ CEO วางแผนเพิ่ม ${newTasks.length} งาน${newApprovals.length ? ` · ${newApprovals.length} เรื่องรออนุมัติ` : ''}${willRun ? ' · ▶ ทีมเริ่มลงมือแล้ว ผลจะทยอยขึ้นในบอร์ด' : ''}`);
+      if (!res?.tasks?.length && !res?.approvals?.length) throw new Error('empty plan');
+      applyPlan(res, 'ai');
     } catch (e) {
-      setPlanMsg('✕ วางแผนไม่สำเร็จ: ' + ((e as Error).message || 'error') + ' — ตรวจว่า deploy ai-plan + ตั้ง ANTHROPIC_API_KEY แล้ว');
+      console.error('[ai-plan] fallback →', (e as Error)?.message || e);
+      applyPlan(localPlan(localArgs), 'fallback');
     } finally {
       setPlanning(false);
     }
+  }
+
+  // ตั้งทีม AI สำเร็จรูปตามประเภทธุรกิจ (rule-based · ทำงานทันที ไม่พึ่ง AI) — ลด friction "สร้างทีมทีละคน"
+  function applyTeamTemplate(tpl: TeamTemplate) {
+    const hasWork = c.tasks.length > 0 || c.approvals.length > 0;
+    if (hasWork && typeof window !== 'undefined'
+      && !window.confirm('แทนที่ทีมปัจจุบันด้วยทีมสำเร็จรูป? งาน/คำขออนุมัติที่ผูกกับเอเจนต์เดิมจะถูกล้าง')) return;
+    const stamp = Date.now().toString(36);
+    const withIds = tpl.roles.map((r, i) => ({ r, id: `a-${stamp}-${i}` }));
+    const ceoId = (withIds.find(x => x.r.lead) ?? withIds[0]).id;
+    const agents: Agent[] = withIds.map(({ r, id }, i) => ({
+      id, role: r.role, name: r.name, avatar: r.avatar,
+      color: AGENT_PALETTE[i % AGENT_PALETTE.length],
+      mandate: r.mandate, model: r.lead ? MODELS[0] : MODELS[1],
+      status: 'idle', reportsTo: r.lead ? null : ceoId,
+    }));
+    patch({ agents, tasks: [], approvals: [] });
+    setPlanMsg(`✓ ตั้งทีม "${tpl.label}" ${agents.length} ตำแหน่งแล้ว — กด "ให้ CEO วางแผน" เพื่อมอบงานต่อได้เลย`);
   }
 
   // ให้ AI Agent ดำเนินงานจริงตามบทบาทหน้าที่ใน org chart
@@ -1363,11 +1398,9 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
             <input type="checkbox" checked={c.autoHire} onChange={e => patch({ autoHire: e.target.checked })} />
             <span>ให้ CEO จ้างเอเจนต์เองได้</span>
           </label>
-          {isSupabaseEnabled && (
-            <button className="ai-plan-btn" onClick={runAiPlan} disabled={planning}>
-              {planning ? 'CEO กำลังคิด…' : '✦ ให้ CEO วางแผนด้วย Claude'}
-            </button>
-          )}
+          <button className="ai-plan-btn" onClick={runAiPlan} disabled={planning}>
+            {planning ? 'CEO กำลังคิด…' : (isSupabaseEnabled ? '✦ ให้ CEO วางแผนด้วย Claude' : '📋 ให้ CEO ร่างแผนเริ่มต้น')}
+          </button>
           {isSupabaseEnabled && !c.missionApproved && (
             <button className="ai-mission-btn" onClick={ceoProposeMission} disabled={proposingMission}>
               {proposingMission ? '⏳ CEO กำลังร่าง Mission…' : '🧭 ให้ CEO ร่าง Mission'}
@@ -1431,6 +1464,10 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       <section className="ai-panel" style={{ marginTop: 16 }}>
         <div className="ai-panel-hd">
           🏢 ผังองค์กร — CEO กำหนดโครงสร้าง
+          <button className="ai-suggest-btn" onClick={() => applyTeamTemplate(pickTeamTemplate(c.industry))}
+            title="ตั้งทีม AI สำเร็จรูปที่เหมาะกับประเภทธุรกิจของคุณ — ใช้ได้ทันที ไม่ต้องต่อเน็ต (เร็วกว่าสร้างทีละคน)">
+            ⚡ ใช้ทีมสำเร็จรูปตามธุรกิจ
+          </button>
           {isSupabaseEnabled && (<>
             <button className="ai-suggest-btn" onClick={ceoSuggestRoles} disabled={suggestingRoles || definingMandates} title="ให้ CEO วิเคราะห์และแนะนำตำแหน่งที่ขาด (ต้องผ่านการ Approve)">
               {suggestingRoles ? '⏳ CEO กำลังวิเคราะห์…' : '🧠 CEO แนะนำตำแหน่ง'}
