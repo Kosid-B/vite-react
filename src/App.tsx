@@ -203,10 +203,10 @@ export default function App() {
   const [seenLanding, setSeenLanding] = useState(() => !!localStorage.getItem('ceo_ai_seen'));
   // Guest mode (ลองก่อนสมัคร) — เข้าแอปด้วย localStorage โดยไม่ต้อง login (ลด friction #1)
   const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1' || entryParam === 'guest');
-  const startGuest = () => { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } setGuestMode(true); };
-  // เข้ามาแบบ guest จาก landing → persist + ล้าง query ให้ URL สะอาด
+  const startGuest = () => { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } track('guest_start', { via: 'button' }); setGuestMode(true); };
+  // เข้ามาแบบ guest จาก landing → persist + ล้าง query ให้ URL สะอาด · วัด funnel: visitor → เริ่ม guest
   useEffect(() => {
-    if (entryParam === 'guest') { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } }
+    if (entryParam === 'guest') { try { localStorage.setItem('ceo_ai_guest', '1'); } catch { /* noop */ } track('guest_start', { via: 'link' }); }
     if (entryParam) { try { window.history.replaceState({}, '', window.location.pathname); } catch { /* noop */ } }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // ออกจากโหมดทดลอง → ล้าง flag แล้วกลับไปหน้า Landing (กันคนติดอยู่ในโหมด guest ถาวร)
