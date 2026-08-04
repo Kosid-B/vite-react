@@ -7,6 +7,7 @@ import ExpertEdge from '../components/ExpertEdge';
 import WeeklyDigest from '../components/WeeklyDigest';
 import SystemOverview from '../components/SystemOverview';
 import AhaMoment from '../components/AhaMoment';
+import FoundingInvite from '../components/FoundingInvite';
 import { ahaProgress } from '../lib/ahaMoment';
 import UpgradeNudge from '../components/UpgradeNudge';
 import EcosystemFlow from '../components/EcosystemFlow';
@@ -379,6 +380,9 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
 
       {/* ===== Aha Moment ใน 5 นาที (activation ผู้ใช้ใหม่) — path เดียวตอน first-run ===== */}
       <AhaMoment data={data} onUpdate={onUpdate} onNavigate={onNavigate} />
+
+      {/* ชวนเพื่อน/แชร์ลิงก์ founding (viral loop) — LINE · แชร์ระบบ · คัดลอก */}
+      <FoundingInvite data={data} wsId={wsId} />
 
       {/* MIT 24-Step nudge — โผล่เมื่อเริ่มเดินแล้วแต่ยังไม่ครบ = มีเหตุผลให้กลับมาทำต่อ (retention) */}
       {journey.started && !journey.complete && journey.current && (
