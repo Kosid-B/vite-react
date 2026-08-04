@@ -198,8 +198,13 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
         </p>
 
         <div style={{ position: 'relative', display: 'inline-block' }}>
+          {/* Guest-first: ปุ่มหลัก = "ลองเลยไม่ต้องสมัคร" (ลด friction ก่อนเห็นคุณค่า) · สมัคร = ปุ่มรอง
+              โหมด local (ไม่มี onTryGuest) → ปุ่มหลักเป็นสมัครเหมือนเดิม */}
           <button
-            onClick={() => { track('landing_cta_click', { cta: 'hero_free_trial' }); onGetStarted(); }}
+            onClick={() => {
+              if (onTryGuest) { track('landing_cta_click', { cta: 'hero_try_guest' }); onTryGuest(); }
+              else { track('landing_cta_click', { cta: 'hero_free_trial' }); onGetStarted(); }
+            }}
             onMouseEnter={() => setCtaHover(true)}
             onMouseLeave={() => setCtaHover(false)}
             style={{
@@ -217,15 +222,17 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
               boxShadow: '0 0 32px rgba(245,158,11,0.45)',
             }}
           >
-            จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 15 วัน
+            {onTryGuest ? '⚡ เริ่มใช้ฟรีทันที — ไม่ต้องสมัคร' : 'จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 15 วัน'}
           </button>
           <div style={{ marginTop: 12, color: C.slate5, fontSize: 13 }}>
-            ไม่ต้องใช้บัตรเครดิต · เริ่มฟรี 15 วัน · ยกเลิกได้ทุกเมื่อ
+            {onTryGuest
+              ? 'ไม่ต้องล็อกอิน · เข้าใช้ทันที · เก็บงานไว้สมัครทีหลังได้'
+              : 'ไม่ต้องใช้บัตรเครดิต · เริ่มฟรี 15 วัน · ยกเลิกได้ทุกเมื่อ'}
           </div>
           {onTryGuest && (
             <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
               <button
-                onClick={() => { track('landing_cta_click', { cta: 'hero_try_guest' }); onTryGuest(); }}
+                onClick={() => { track('landing_cta_click', { cta: 'hero_signup' }); onGetStarted(); }}
                 onMouseEnter={() => setGuestHover(true)}
                 onMouseLeave={() => setGuestHover(false)}
                 style={{
@@ -236,9 +243,9 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
                   cursor: 'pointer', transition: 'all .2s',
                 }}
               >
-                ⚡ ลองเล่นเลยใน 30 วินาที — ไม่ต้องสมัคร ไม่ต้องกรอกบัตร →
+                หรือ สมัคร / เข้าสู่ระบบ — ฟรี 15 วัน ไม่ต้องใช้บัตร →
               </button>
-              <span style={{ color: C.slate5, fontSize: 12.5 }}>ไม่ต้องล็อกอิน · เข้าใช้ทันที · เก็บงานไว้สมัครทีหลังได้</span>
+              <span style={{ color: C.slate5, fontSize: 12.5 }}>อยากเก็บงานถาวร + ปลดล็อกทุกฟีเจอร์ ก็สมัครได้เลย</span>
             </div>
           )}
           <a

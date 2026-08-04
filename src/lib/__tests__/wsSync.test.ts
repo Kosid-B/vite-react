@@ -35,4 +35,12 @@ describe('resolveWsLoad', () => {
   it('🔑 บั๊กหลัก: cloud ว่าง + local เป็นของ ws อื่น → init-fresh-push (เริ่มใหม่ ไม่ปน)', () => {
     expect(resolveWsLoad({ hasCloud: false, cloudRev: 0, localRev: 99, localBelongsToThisWs: false })).toBe('init-fresh-push');
   });
+
+  it('guest สมัครใหม่: cloud ว่าง + งาน guest ยังไม่ผูก ws → keep-local-push (migrate งาน guest ขึ้น)', () => {
+    expect(resolveWsLoad({ hasCloud: false, cloudRev: 0, localRev: 4, localBelongsToThisWs: false, localIsUnbound: true })).toBe('keep-local-push');
+  });
+
+  it('🔑 กันงานหาย: guest → ล็อกอินบัญชีเดิมที่มี cloud อยู่แล้ว (unbound, rev สูง) → use-cloud (ไม่ทับบัญชีจริงด้วยงาน scratch)', () => {
+    expect(resolveWsLoad({ hasCloud: true, cloudRev: 3, localRev: 99, localBelongsToThisWs: false, localIsUnbound: true })).toBe('use-cloud');
+  });
 });
