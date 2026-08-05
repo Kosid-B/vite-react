@@ -26,6 +26,19 @@ function defaultSlug(name: string): string {
   return name.trim().replace(/\s+/g, '-').slice(0, 60) || 'my-business';
 }
 
+/** หัวข้อบอกลำดับขั้น (1,2,3,4) ช่วยคนเปิดร้านครั้งแรกรู้ว่าต้องทำอะไรก่อนหลัง */
+function StepHeader({ n, title, sub }: { n: number; title: string; sub?: string }) {
+  return (
+    <div className="sf-step-hd">
+      <span className="sf-step-num">{n}</span>
+      <span className="sf-step-tx">
+        <b>{title}</b>
+        {sub && <em>{sub}</em>}
+      </span>
+    </div>
+  );
+}
+
 export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props) {
   const c = data.aiCompany;
   const [sf, setSf] = useState<Storefront | null>(null);
@@ -209,6 +222,8 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
         แสดงในสารบัญธุรกิจตามหมวด DBD พร้อมช่องทางติดต่อตรงถึงคุณ (ระบบไม่เก็บค่าคอมมิชชัน)
       </p>
 
+      <StepHeader n={1} title="ให้ AI เปิดร้านให้ — บอกบรรทัดเดียว" sub="หรือข้ามไปกรอกเองในขั้นที่ 2" />
+
       {/* 🤖 PoC "เปิดร้านให้ฉัน" — goal 1 บรรทัด → AI ส่งงานเสร็จ (ฟอร์มพร้อมเผยแพร่) */}
       <div className="openshop-card">
         <div className="openshop-head">
@@ -285,6 +300,8 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
           </button>
         </div>
       )}
+
+      <StepHeader n={2} title="ตรวจ & แก้ข้อมูลร้าน แล้วเขียนจุดขาย" sub="ระบบร่างให้แล้วจากข้อมูลที่กรอกไว้ — แค่ปรับให้ตรง" />
 
       <div className="sf-editor">
         <div className="sf-form">
@@ -372,6 +389,8 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
               <input value={sf.website} onChange={e => patch({ website: e.target.value })} placeholder="www.business.com" /></label>
           </div>
 
+          <StepHeader n={3} title="กดเผยแพร่หน้าร้าน" sub="ร้านจะขึ้นตลาดและถูก Google ค้นเจอ" />
+
           <div className="sf-actions">
             <button className="sf-publish" onClick={() => save(true)} disabled={saving}>
               {saving ? '⏳ กำลังบันทึก…' : '🚀 เผยแพร่หน้าร้าน'}
@@ -382,6 +401,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
         </div>
 
         <div className="sf-side">
+          <StepHeader n={4} title="เอาลิงก์ไปหาลูกค้า" sub="วางใน LINE / Facebook / นามบัตร" />
           <div className="sf-side-hd">🔗 ลิงก์หน้าร้าน</div>
           <div className="plg-ref-row">
             <input className="plg-ref-link" readOnly value={publicUrl} onFocus={e => e.target.select()} />
