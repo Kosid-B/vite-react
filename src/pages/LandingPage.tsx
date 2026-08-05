@@ -6,6 +6,7 @@ import InstantPreview from '../components/InstantPreview';
 import { currentChallenger } from '../lib/challengerRotation';
 import { listApprovedTestimonials, aggregateRating, starString, type Testimonial } from '../lib/testimonials';
 import LandingReviewWidget from '../components/LandingReviewWidget';
+import LeadCapture from '../components/LeadCapture';
 
 interface Props {
   onGetStarted: () => void;
@@ -352,6 +353,9 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
           <LandingReviewWidget onGetStarted={onGetStarted} />
         </div>
       </section>
+
+      {/* ─── Lead capture: ดักคนสนใจที่ยังไม่พร้อมสมัคร (First-party data + PDPA) ─── */}
+      <LeadCapture />
 
       {/* ─── Steps ─── */}
       <section style={{ padding: '64px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
