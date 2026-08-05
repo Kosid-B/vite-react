@@ -41,17 +41,18 @@ const TRUST_PILLARS = [
   { icon: '📤', title: 'ข้อมูลเป็นของคุณ', desc: 'ส่งออก (Export) / ลบข้อมูลได้เองทุกเมื่อ — ไม่ผูกมัด ย้าย/เลิกได้อิสระ' },
 ];
 
+// พูดจากผลลัพธ์ (POD①: หาธุรกิจที่ใช่ + ลดความเสี่ยง) — ทีม AI เป็นกลไกช่วย ไม่ใช่พาดหัว
 const steps = [
-  { n: '01', title: 'ตั้งทีม', desc: 'บอกเป้าหมายธุรกิจ → CEO AI จัดทีมผู้บริหาร (กลยุทธ์ · การตลาด · ขาย · การเงิน)' },
-  { n: '02', title: 'รัน', desc: 'AI เริ่มทำงานให้คุณ 24 ชม. ตั้งแต่วินาทีแรก ไม่มีวันหยุด' },
-  { n: '03', title: 'รับผล', desc: 'แผนธุรกิจ · หน้าร้าน · ดีล B2B — ผลลัพธ์ที่ลงมือทำได้จริง' },
+  { n: '01', title: 'หาธุรกิจที่ใช่', desc: 'บอกสิ่งที่คุณมี → AI ช่วยหากลุ่มลูกค้าและคุณค่าที่ยอมจ่าย (ไม่ต้องเดาเอง)' },
+  { n: '02', title: 'ทดสอบก่อนเสี่ยง', desc: 'validate ตลาด/ราคา แล้วเปิดหน้าร้านขายจริง — ทีมผู้บริหาร AI ลงมือทำให้ 24 ชม.' },
+  { n: '03', title: 'วางระบบให้โต', desc: 'มีลูกค้า/ดีลจริง → วาง SOP · KPI พร้อมขยายเมื่อธุรกิจติด' },
 ];
 
 const stats = [
   { value: '20+ ปี', label: 'ประสบการณ์วางระบบธุรกิจไทย' },
   { value: '500+', label: 'ธุรกิจไทยที่เราให้คำปรึกษา' },
   { value: '24/7', label: 'ทีม AI ทำงานไม่หยุด' },
-  { value: '฿790', label: 'เริ่มมีทีม AI ทั้งบริษัท' },
+  { value: '฿0–1,490', label: 'เริ่มสร้างธุรกิจเองในแอป (ราคาที่ SME เอื้อมถึง)' },
 ];
 
 // ป้ายความน่าเชื่อถือที่ "ตรวจสอบได้จริง" — ไม่ใช่ตัวเลขลอย (เพิ่ม trust แบบซื่อสัตย์)
@@ -62,11 +63,12 @@ const TRUST_MARKERS = [
   { icon: '📤', text: 'ข้อมูลเป็นของคุณ — ส่งออก/ลบได้เองทุกเมื่อ' },
 ];
 
+// พาดหัว = ผลลัพธ์ (benefit) ไม่ใช่ชื่อฟีเจอร์ · ISO = ฟีเจอร์เสริม วางท้าย
 const features = [
-  { icon: '🧠', title: 'ทีมผู้บริหาร AI', desc: 'จัดทีม + วางแผนธุรกิจ (VRIO · 24 Steps MIT · Business Model Canvas)' },
-  { icon: '🏪', title: 'หน้าร้าน + ตลาด B2B', desc: 'เปิดร้านออนไลน์ รับลูกค้าและใบสั่งซื้อ ค้นเจอบน Google' },
-  { icon: '📊', title: 'Dashboard อัจฉริยะ', desc: 'ติดตามความคืบหน้าทุก KPI แบบเรียลไทม์' },
-  { icon: '🛡️', title: 'งานมาตรฐาน ISO/มอก. (ในตัว)', desc: 'ร่างเอกสาร ISO 9001 / TIS / PDPA เมื่อธุรกิจคุณต้องใช้' },
+  { icon: '🧠', title: 'วางแผนที่ผ่านการตรวจสอบ ไม่ใช่เดา', desc: 'ทีมผู้บริหาร AI ช่วยหาลูกค้า+วางแผน (VRIO · 24 Steps MIT · Business Model Canvas)' },
+  { icon: '🏪', title: 'มีลูกค้าจริงตั้งแต่เดือนแรก', desc: 'เปิดหน้าร้าน + ตลาด B2B รับออเดอร์ ค้นเจอบน Google' },
+  { icon: '📊', title: 'รู้ว่าธุรกิจไปถูกทางไหม ทุกวัน', desc: 'Dashboard ติดตาม KPI แบบเรียลไทม์' },
+  { icon: '🛡️', title: 'พร้อมมาตรฐานเมื่อธุรกิจต้องใช้', desc: 'ร่าง ISO 9001 / TIS / PDPA (ฟีเจอร์เสริม)' },
 ];
 
 // ─── เนื้อหาจูงใจเพิ่มเติม ───
@@ -360,9 +362,12 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
       {/* ─── Steps ─── */}
       <section style={{ padding: '64px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 48, color: C.white }}>
+          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12, color: C.white }}>
             เริ่มต้น <span style={{ color: C.cyan4 }}>3 ขั้นตอน</span>
           </h2>
+          <p style={{ textAlign: 'center', color: C.slate4, fontSize: 15, maxWidth: 560, margin: '0 auto 44px', lineHeight: 1.6 }}>
+            ไม่ต้องตั้งค่าซับซ้อน — เริ่มใน 2 นาที ตอบไม่กี่คำถาม แล้วลงลึกทีละขั้นได้เมื่อพร้อม
+          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 32 }}>
             {steps.map(s => (
               <div key={s.n} style={{ borderLeft: `3px solid ${C.cyan5}`, paddingLeft: 24 }}>
@@ -410,6 +415,24 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
                 <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7 }}>{d.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 2 ชั้น: แอปทำเองได้ (เข้าถึงง่าย) · ที่ปรึกษาลึกส่งต่อ B.Training (คลาย correlational: มืออาชีพ↔ถูก) ─── */}
+      <section style={{ padding: '56px 24px' }}>
+        <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          <div style={{ padding: '24px 26px', borderRadius: 16, border: `1px solid ${C.cyan5}`, backgroundColor: C.bg2 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.cyan4, letterSpacing: '0.05em', marginBottom: 8 }}>เริ่มเองในแอป · ฿0–1,490/เดือน</div>
+            <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7, margin: 0 }}>
+              ลงมือสร้างธุรกิจเองทั้งหมดในราคาที่ SME ไทยเอื้อมถึง — เริ่มฟรี ไม่ต้องผูกบัตร ทำเป็นขั้น ๆ ด้วยตัวเอง
+            </p>
+          </div>
+          <div style={{ padding: '24px 26px', borderRadius: 16, border: `1px solid ${C.border2}`, backgroundColor: C.bg3 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.amber4, letterSpacing: '0.05em', marginBottom: 8 }}>อยากได้ที่ปรึกษาลงลึก?</div>
+            <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7, margin: 0 }}>
+              งานที่ต้องมืออาชีพลงมือ (วางระบบ ISO เชิงลึก · ที่ปรึกษาเฉพาะทาง) ส่งต่อผู้เชี่ยวชาญ B. Training 20+ ปี — แยกจากแอป จ่ายเฉพาะเมื่อต้องการ
+            </p>
           </div>
         </div>
       </section>
