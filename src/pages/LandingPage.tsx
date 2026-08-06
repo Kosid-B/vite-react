@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { track } from '../lib/analytics';
 import { pickHeroVariant } from '../lib/heroVariant';
+import { heroAbVariant, HERO_AB_COPY, type HeroAb } from '../lib/heroExperiment';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
 import InstantPreview from '../components/InstantPreview';
@@ -150,6 +151,19 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
     catch { return pickHeroVariant(''); }
   }, []);
   useEffect(() => { track('landing_hero_variant', { seg: hero.seg }); }, [hero.seg]);
+
+  // A/B ทดสอบพาดหัว (เฉพาะ seg 'default' = คนที่ยังไม่ระบุกลุ่ม) — assign คงที่ต่อ browser
+  const heroAb = useMemo<HeroAb | null>(() => {
+    if (hero.seg !== 'default') return null;
+    try {
+      let id = localStorage.getItem('ceo_ai_ab');
+      if (!id) { id = 'ab-' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('ceo_ai_ab', id); }
+      return heroAbVariant(id);
+    } catch { return null; }
+  }, [hero.seg]);
+  useEffect(() => { if (heroAb) track('hero_ab_exposed', { variant: heroAb }); }, [heroAb]);
+  // hero ที่ใช้แสดงจริง — ถ้าอยู่ในกลุ่ม A/B ทับพาดหัว/ประโยคเปิดด้วย copy ของกลุ่มนั้น
+  const heroCopy = heroAb ? { ...hero, ...HERO_AB_COPY[heroAb] } : hero;
   // กดปุ่มหลัก → จำเป้าหมายไว้ให้แอปพาไปหน้าถูก (ข้าม GoalChooser) แล้วเข้าโหมดที่เหมาะ
   const enterWithGoal = () => {
     try {
@@ -158,8 +172,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         localStorage.setItem('ceo_ai_goal_page', hero.page);
       }
     } catch { /* noop */ }
-    if (onTryGuest) { track('landing_cta_click', { cta: 'hero_try_guest', seg: hero.seg }); onTryGuest(); }
-    else { track('landing_cta_click', { cta: 'hero_free_trial', seg: hero.seg }); onGetStarted(); }
+    const ab = heroAb ?? '-';
+    if (onTryGuest) { track('landing_cta_click', { cta: 'hero_try_guest', seg: hero.seg, ab }); onTryGuest(); }
+    else { track('landing_cta_click', { cta: 'hero_free_trial', seg: hero.seg, ab }); onGetStarted(); }
   };
 
   // Challenger headline — สลับ content 2 ครั้ง/วัน ที่เวลาไทย 11:00 และ 20:00 (เช็คทุกนาที)
@@ -225,19 +240,19 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, background: 'radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%)', pointerEvents: 'none', borderRadius: '50%' }} />
 
         <div style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 100, border: `1px solid rgba(6,182,212,0.4)`, background: 'rgba(6,182,212,0.08)', color: C.cyan4, fontSize: 13, fontWeight: 500, marginBottom: 28, letterSpacing: '0.05em' }}>
-          {hero.badge}
+          {heroCopy.badge}
         </div>
 
         <h1 className="lp-hero-h1" style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, lineHeight: 1.15, marginBottom: 24, maxWidth: 820 }}>
-          {hero.h1a}<br />
-          <span style={{ color: C.cyan4 }}>{hero.h1bLines.map((ln, i) => (
-            <span key={i}>{ln}{i < hero.h1bLines.length - 1 && <br />}</span>
+          {heroCopy.h1a}<br />
+          <span style={{ color: C.cyan4 }}>{heroCopy.h1bLines.map((ln, i) => (
+            <span key={i}>{ln}{i < heroCopy.h1bLines.length - 1 && <br />}</span>
           ))}</span>
         </h1>
 
         <p style={{ fontSize: 18, color: C.slate4, marginBottom: 48, maxWidth: 620, lineHeight: 1.7 }}>
-          <strong style={{ color: C.white }}>{hero.subLead}</strong><br />
-          {hero.subRest}
+          <strong style={{ color: C.white }}>{heroCopy.subLead}</strong><br />
+          {heroCopy.subRest}
         </p>
 
         <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -262,7 +277,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
               boxShadow: '0 0 32px rgba(245,158,11,0.45)',
             }}
           >
-            {hero.ctaLabel || (onTryGuest ? '⚡ เริ่มใช้ฟรีทันที — ไม่ต้องสมัคร' : 'จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 15 วัน')}
+            {heroCopy.ctaLabel || (onTryGuest ? '⚡ เริ่มใช้ฟรีทันที — ไม่ต้องสมัคร' : 'จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 15 วัน')}
           </button>
           <div style={{ marginTop: 12, color: C.slate5, fontSize: 13 }}>
             {onTryGuest

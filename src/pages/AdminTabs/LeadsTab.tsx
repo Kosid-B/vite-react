@@ -4,6 +4,7 @@ import {
   listLeads, leadStats, leadsCsv, channelLabel,
   type Lead, type ChannelStat,
 } from '../../lib/platformLead';
+import { livePersonas } from '../../lib/dynamicPersona';
 
 /* Leads Tab — ปิด loop วัดผล: ดูคนสนใจ(lead)ที่ทิ้ง contact ไว้บน landing + มาจากช่องไหน (utm)
  * ตอบ "โฆษณา/คอนเทนต์ช่องไหนได้ lead จริง" → เอาไปตัดสินใจทุ่มงบ (RLS บังคับ is_app_admin ที่ DB) */
@@ -45,6 +46,7 @@ export default function LeadsTab() {
   useEffect(() => { load(); }, []);
 
   const stats = useMemo(() => leadStats(leads, new Date().toISOString().slice(0, 10)), [leads]);
+  const personas = useMemo(() => livePersonas(leads), [leads]);
 
   function downloadCsv() {
     const blob = new Blob([leadsCsv(leads)], { type: 'text/csv;charset=utf-8' });
@@ -100,6 +102,33 @@ export default function LeadsTab() {
         <Bars title="🔗 แหล่ง (utm_source)" stats={stats.bySource} />
         <Bars title="🎯 แคมเปญ (utm_campaign)" stats={stats.byCampaign} />
       </div>
+
+      {/* Dynamic Persona — persona จากลูกค้าจริง (อัปตามพฤติกรรม ไม่ใช่เดาสุ่ม) */}
+      {personas.length > 0 && (
+        <div style={{ display: 'grid', gap: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>🧬 Persona จากลูกค้าจริง (อัปตาม lead ที่เข้ามา)</div>
+          <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+            {personas.map(p => (
+              <div key={p.seg || 'none'} style={{ border: '1px solid var(--sand)', borderRadius: 10, padding: '14px 16px', background: 'var(--cream2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>{p.label}</span>
+                  <span style={{ fontSize: 12, color: 'var(--ink3)', flex: 'none' }}>{p.size} คน · {p.pct}%</span>
+                </div>
+                <div style={{ fontSize: 12, color: '#0891b2', marginTop: 4, fontWeight: 600 }}>{p.painHook}</div>
+                <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 8 }}>
+                  สนใจ: {p.topInterests.length ? p.topInterests.map(i => `${i.text}${i.count > 1 ? ` (${i.count})` : ''}`).join(', ') : '— ยังไม่มีข้อมูล'}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4 }}>
+                  มาจาก: {p.topChannels.map(c => `${c.label} (${c.count})`).join(', ')}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 11.5, color: 'var(--ink3)', margin: 0 }}>
+            สร้างจากข้อมูล lead จริง (seg + สิ่งที่สนใจ + ช่องทาง) — ไม่ใช่ persona สมมติ · ใช้ปรับคอนเทนต์/ข้อเสนอให้ตรงกลุ่มที่มาจริง
+          </p>
+        </div>
+      )}
 
       {/* รายการ lead */}
       <div style={{ display: 'grid', gap: 8 }}>
