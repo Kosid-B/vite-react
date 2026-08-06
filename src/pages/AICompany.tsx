@@ -34,6 +34,7 @@ const CSuiteReports = lazy(() => import('../components/CSuiteReports'));
 const IntakePanel = lazy(() => import('../components/IntakePanel'));
 const CompanyNamer = lazy(() => import('../components/CompanyNamer'));
 const BrandKitPanel = lazy(() => import('../components/BrandKitPanel'));
+const SuccessVideoPanel = lazy(() => import('../components/SuccessVideoPanel'));
 import OcNode from './aicompany/OcNode';
 import {
   STATUS_LABEL, TASK_COLS, AGENT_PALETTE, AVATARS, MODELS, AVAILABLE_SKILLS,
@@ -1459,6 +1460,9 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
 
       {/* ===== รับข้อมูลจากผู้ใช้ → CEO มอบหมายงาน ===== */}
       <Suspense fallback={null}><IntakePanel data={data} onUpdate={onUpdate} /></Suspense>
+
+      {/* ===== วิดีโอสร้างความเชื่อมั่น — สคริปต์ ~30 นาที จากข้อมูลธุรกิจที่กรอก ===== */}
+      <Suspense fallback={null}><SuccessVideoPanel data={data} /></Suspense>
 
       {/* ===== ผังองค์กร ===== */}
       <section className="ai-panel" style={{ marginTop: 16 }}>
