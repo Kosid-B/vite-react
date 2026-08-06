@@ -1,0 +1,112 @@
+// heroVariant.ts — Dynamic landing hero (Dark AI Marketing · Hyper-Personalization ข้อ 6)
+// เลือก "หน้า hero" ให้ตรงกับคนที่เข้ามา (มือใหม่กลัวเจ๊ง / เจ้าของหมดไฟ / คนมีของอยากเปิดร้าน)
+// → ยิงตรงแก่นอารมณ์ + พาเข้า 2 ทางสมัคร: เปิดร้านค้า (storefront) หรือ เริ่มทำธุรกิจ (สมาชิก)
+//
+// จริยธรรม: ไม่มี fake scarcity — ทุก variant พูดถึงฟีเจอร์ที่มีจริง (validate/storefront/ทีม AI)
+// เลือกจาก signal ที่มีอยู่จริง (UTM/referrer) ไม่ track ข้ามเว็บ ไม่เก็บ PII
+//
+// pure + testable: รับ search string (?...) + referrer → คืน variant (ไม่มี side-effect/DOM)
+
+import type { OnboardGoal, PageId } from '../types';
+
+export type HeroSeg = 'default' | 'seller' | 'newbie' | 'owner';
+
+export interface HeroVariant {
+  seg: HeroSeg;
+  badge: string;
+  h1a: string;          // บรรทัดแรก (สีปกติ)
+  h1bLines: string[];   // บรรทัดไฮไลต์ (join ด้วย <br/>)
+  subLead: string;      // ประโยคเปิด (ตัวหนา) — ยิง pain/อารมณ์
+  subRest: string;      // ส่วนต่อ (ปกติ)
+  ctaLabel: string;     // ข้อความปุ่มหลัก
+  /** เป้าหมาย onboarding ที่จะพาไปหลังเข้าแอป (null = ให้ GoalChooser ถามเอง) */
+  goal: OnboardGoal | null;
+  page: PageId | null;
+}
+
+export const HERO_VARIANTS: Record<HeroSeg, HeroVariant> = {
+  default: {
+    seg: 'default',
+    badge: '✦  OFFICIALLY POWERED BY CEO AI THAILAND  ✦',
+    h1a: 'อยากมีธุรกิจของตัวเอง?',
+    h1bLines: ['เริ่มคืนนี้ได้เลย', 'ไม่ต้องเสี่ยงเงินก้อน'],
+    subLead: 'พิมพ์ไอเดีย 1 บรรทัด — ทีม AI ช่วยทดสอบว่ามันไปรอดไหม ก่อนคุณเสียเงินจริง',
+    subRest: 'แล้ววางแผนหาลูกค้าให้ทีละสเต็ป · เริ่มฟรี ไม่ต้องลาออก ไม่ต้องจ้างทีม',
+    ctaLabel: '', // ใช้ label เริ่มต้นของปุ่ม (guest/สมัคร) ตามโหมด
+    goal: null,
+    page: null,
+  },
+  // คนมีของขายอยู่แล้ว → ดันเข้า "เปิดหน้าร้าน" (loss aversion: ลูกค้าหาไม่เจอ)
+  seller: {
+    seg: 'seller',
+    badge: '✦  สำหรับคนที่มีของขายอยู่แล้ว  ✦',
+    h1a: 'ขายของอยู่แล้ว แต่ลูกค้าหาไม่เจอ?',
+    h1bLines: ['เปิดหน้าร้านออนไลน์ฟรี', 'ให้ AI หาลูกค้าให้'],
+    subLead: 'เปิดร้าน + ขึ้นสารบัญธุรกิจใน 5 นาที — ลูกค้าและคู่ค้า B2B ค้นเจอคุณทันที',
+    subRest: 'รับใบขอราคา (RFQ) ปิดดีลจริง · เริ่มฟรี ไม่ต้องใช้บัตรเครดิต',
+    ctaLabel: '🛒 เปิดหน้าร้านฟรีใน 5 นาที',
+    goal: 'sell',
+    page: 'storefront',
+  },
+  // มือใหม่ยังไม่เริ่ม (กลัวเจ๊ง) → ดันเข้า "ทดสอบไอเดีย" (cortisol → dopamine)
+  newbie: {
+    seg: 'newbie',
+    badge: '✦  สำหรับคนอยากเริ่มธุรกิจแรก  ✦',
+    h1a: 'อยากมีธุรกิจ แต่กลัวลงเงินแล้วเจ๊ง?',
+    h1bLines: ['ทดสอบไอเดียก่อน', 'เสียเงินจริง'],
+    subLead: 'พิมพ์ไอเดีย 1 บรรทัด — AI ช่วย validate ว่ามีลูกค้าจ่ายจริงไหม ก่อนคุณลงทุน',
+    subRest: 'ออกแบบโมเดลธุรกิจ (MIT 24 ขั้น) ทีละสเต็ป · เริ่มฟรี ไม่ต้องสมัคร',
+    ctaLabel: '💡 ทดสอบไอเดียธุรกิจฟรี',
+    goal: 'validate',
+    page: 'bmc',
+  },
+  // เจ้าของที่ทำคนเดียว/อยากมีระบบ → ดันเข้า "ทีม AI ทั้งบริษัท" (loss aversion → serotonin)
+  owner: {
+    seg: 'owner',
+    badge: '✦  สำหรับเจ้าของธุรกิจที่อยากโตแบบมีระบบ  ✦',
+    h1a: 'ทำธุรกิจคนเดียวจนไม่มีเวลาโต?',
+    h1bLines: ['ให้ทีม AI ช่วยหาลูกค้า', 'วางระบบให้ธุรกิจโตเอง'],
+    subLead: 'ทีมผู้บริหาร AI ช่วยหาลูกค้า ตั้งราคา วาง SOP/KPI — เหมือนที่ปรึกษาหลักหมื่น เริ่มที่ ฿0',
+    subRest: 'ออกแบบโดยที่ปรึกษา ISO/ธุรกิจจริง 20+ ปี · คุณคุมทุกการตัดสินใจ',
+    ctaLabel: '🏢 ให้ทีม AI เริ่มทำงาน',
+    goal: 'aicompany',
+    page: 'aicompany',
+  },
+};
+
+const hit = (hay: string, needles: string[]) => needles.some((n) => hay.includes(n));
+
+/** ตัดสิน segment จาก signal ที่มีอยู่จริง — ลำดับความชัดเจน: seg > goal > utm keyword > referrer */
+export function segmentFor(search: string, referrer = ''): HeroSeg {
+  let params: URLSearchParams;
+  try { params = new URLSearchParams(search || ''); } catch { return 'default'; }
+  const get = (k: string) => (params.get(k) ?? '').toLowerCase();
+
+  // 1) ระบุตรง ๆ (?seg=seller|newbie|owner) — ใช้ในลิงก์แคมเปญของเราเอง
+  const seg = get('seg');
+  if (seg === 'seller' || seg === 'newbie' || seg === 'owner') return seg;
+
+  // 2) ?goal= (เผื่อสะพานจากเว็บบริษัท)
+  const goal = get('goal');
+  if (hit(goal, ['sell', 'shop', 'store', 'storefront', 'ร้าน'])) return 'seller';
+  if (hit(goal, ['validate', 'idea', 'ไอเดีย'])) return 'newbie';
+  if (hit(goal, ['aicompany', 'business', 'owner', 'company'])) return 'owner';
+
+  // 3) utm keyword (content/campaign/term รวมกัน)
+  const utm = [get('utm_content'), get('utm_campaign'), get('utm_term')].join(' ');
+  if (hit(utm, ['seller', 'shop', 'store', 'ร้าน', 'ขายของ'])) return 'seller';
+  if (hit(utm, ['owner', 'sme', 'scale', 'system', 'ระบบ', 'เจ้าของ'])) return 'owner';
+  if (hit(utm, ['newbie', 'idea', 'start', 'เริ่ม', 'ไอเดีย', 'มือใหม่'])) return 'newbie';
+
+  // 4) referrer/utm_source heuristic (เบา ๆ) — TikTok/IG = มือใหม่วัยเริ่ม · LinkedIn = เจ้าของ/B2B
+  const src = (get('utm_source') + ' ' + (referrer || '').toLowerCase());
+  if (hit(src, ['tiktok', 'instagram', 'ig.'])) return 'newbie';
+  if (hit(src, ['linkedin'])) return 'owner';
+
+  return 'default';
+}
+
+/** คืน HeroVariant สำหรับ search string + referrer ปัจจุบัน */
+export function pickHeroVariant(search: string, referrer = ''): HeroVariant {
+  return HERO_VARIANTS[segmentFor(search, referrer)];
+}

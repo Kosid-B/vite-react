@@ -423,6 +423,20 @@ export default function App() {
     showToast();
   }, [showToast, activeWs]);
 
+  // Dynamic landing → พาไปหน้าที่เลือกไว้ (ข้าม GoalChooser) เมื่อ hero ระบุเป้าหมายมา (เปิดร้าน/ทำธุรกิจ)
+  // อ่าน hint จาก localStorage ที่ LandingPage เขียนตอนกดปุ่ม · ทำครั้งเดียว (ล้าง hint หลังใช้)
+  useEffect(() => {
+    if (!seenLanding && !guestMode) return;         // ยังไม่เข้าแอป
+    if (dataRef.current.onboardGoal != null) return; // เลือกเป้าหมายไปแล้ว — ไม่ทับ
+    let goal: string | null = null, page: string | null = null;
+    try { goal = localStorage.getItem('ceo_ai_goal'); page = localStorage.getItem('ceo_ai_goal_page'); } catch { /* noop */ }
+    if (!goal) return;
+    try { localStorage.removeItem('ceo_ai_goal'); localStorage.removeItem('ceo_ai_goal_page'); } catch { /* noop */ }
+    updateData({ ...dataRef.current, onboardGoal: goal as AppData['onboardGoal'] });
+    if (page) setActivePage(page as PageId);
+    track('landing_goal_routed', { goal, page: page ?? '' });
+  }, [seenLanding, guestMode, updateData]);
+
   // Flush ข้อมูลที่ค้างขึ้นคลาวด์ทันที (ไม่รอ debounce) — เรียกตอนปิด/สลับแท็บ กันข้อมูลรอบสุดท้ายหลุด
   const flushCloud = useCallback(() => {
     if (cloudTimer.current) { clearTimeout(cloudTimer.current); cloudTimer.current = undefined; }

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { track } from '../lib/analytics';
+import { pickHeroVariant } from '../lib/heroVariant';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
 import InstantPreview from '../components/InstantPreview';
@@ -142,6 +143,25 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
   const [navHover, setNavHover] = useState(false);
   const [guestHover, setGuestHover] = useState(false);
 
+  // Dynamic hero (Hyper-Personalization) — เลือก hero ตาม signal ของคนที่เข้ามา (UTM/referrer)
+  // → ยิงตรงแก่นอารมณ์ + ดันเข้า 2 ทาง: เปิดร้าน (seller) / เริ่มธุรกิจ (newbie·owner) · default = ทั่วไป
+  const hero = useMemo(() => {
+    try { return pickHeroVariant(window.location.search, document.referrer); }
+    catch { return pickHeroVariant(''); }
+  }, []);
+  useEffect(() => { track('landing_hero_variant', { seg: hero.seg }); }, [hero.seg]);
+  // กดปุ่มหลัก → จำเป้าหมายไว้ให้แอปพาไปหน้าถูก (ข้าม GoalChooser) แล้วเข้าโหมดที่เหมาะ
+  const enterWithGoal = () => {
+    try {
+      if (hero.goal && hero.page) {
+        localStorage.setItem('ceo_ai_goal', hero.goal);
+        localStorage.setItem('ceo_ai_goal_page', hero.page);
+      }
+    } catch { /* noop */ }
+    if (onTryGuest) { track('landing_cta_click', { cta: 'hero_try_guest', seg: hero.seg }); onTryGuest(); }
+    else { track('landing_cta_click', { cta: 'hero_free_trial', seg: hero.seg }); onGetStarted(); }
+  };
+
   // Challenger headline — สลับ content 2 ครั้ง/วัน ที่เวลาไทย 11:00 และ 20:00 (เช็คทุกนาที)
   const [challenger, setChallenger] = useState(() => currentChallenger(Date.now()));
   useEffect(() => {
@@ -205,27 +225,26 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, background: 'radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%)', pointerEvents: 'none', borderRadius: '50%' }} />
 
         <div style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 100, border: `1px solid rgba(6,182,212,0.4)`, background: 'rgba(6,182,212,0.08)', color: C.cyan4, fontSize: 13, fontWeight: 500, marginBottom: 28, letterSpacing: '0.05em' }}>
-          ✦ &nbsp;OFFICIALLY POWERED BY CEO AI THAILAND&nbsp; ✦
+          {hero.badge}
         </div>
 
         <h1 className="lp-hero-h1" style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, lineHeight: 1.15, marginBottom: 24, maxWidth: 820 }}>
-          อยากมีธุรกิจของตัวเอง?<br />
-          <span style={{ color: C.cyan4 }}>เริ่มคืนนี้ได้เลย<br />ไม่ต้องเสี่ยงเงินก้อน</span>
+          {hero.h1a}<br />
+          <span style={{ color: C.cyan4 }}>{hero.h1bLines.map((ln, i) => (
+            <span key={i}>{ln}{i < hero.h1bLines.length - 1 && <br />}</span>
+          ))}</span>
         </h1>
 
         <p style={{ fontSize: 18, color: C.slate4, marginBottom: 48, maxWidth: 620, lineHeight: 1.7 }}>
-          ยังไม่รู้จะทำธุรกิจอะไร หรือเริ่มยังไง? <strong style={{ color: C.white }}>พิมพ์ไอเดีย 1 บรรทัด — ทีม AI ช่วยทดสอบว่ามันไปรอดไหม ก่อนคุณเสียเงินจริง</strong> แล้ววางแผนหาลูกค้าให้ทีละสเต็ป<br />
-          เริ่มฟรี ไม่ต้องลาออก ไม่ต้องจ้างทีม — คุณสั่ง มันลงมือ คุณคุมทุกการตัดสินใจ
+          <strong style={{ color: C.white }}>{hero.subLead}</strong><br />
+          {hero.subRest}
         </p>
 
         <div style={{ position: 'relative', display: 'inline-block' }}>
           {/* Guest-first: ปุ่มหลัก = "ลองเลยไม่ต้องสมัคร" (ลด friction ก่อนเห็นคุณค่า) · สมัคร = ปุ่มรอง
               โหมด local (ไม่มี onTryGuest) → ปุ่มหลักเป็นสมัครเหมือนเดิม */}
           <button
-            onClick={() => {
-              if (onTryGuest) { track('landing_cta_click', { cta: 'hero_try_guest' }); onTryGuest(); }
-              else { track('landing_cta_click', { cta: 'hero_free_trial' }); onGetStarted(); }
-            }}
+            onClick={enterWithGoal}
             onMouseEnter={() => setCtaHover(true)}
             onMouseLeave={() => setCtaHover(false)}
             style={{
@@ -243,7 +262,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
               boxShadow: '0 0 32px rgba(245,158,11,0.45)',
             }}
           >
-            {onTryGuest ? '⚡ เริ่มใช้ฟรีทันที — ไม่ต้องสมัคร' : 'จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 15 วัน'}
+            {hero.ctaLabel || (onTryGuest ? '⚡ เริ่มใช้ฟรีทันที — ไม่ต้องสมัคร' : 'จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 15 วัน')}
           </button>
           <div style={{ marginTop: 12, color: C.slate5, fontSize: 13 }}>
             {onTryGuest
