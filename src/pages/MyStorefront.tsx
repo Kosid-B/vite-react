@@ -7,6 +7,7 @@ import { openShopPrompt, parseShopDraft, shopDraftLocal } from '../lib/openShop'
 import { sellerAhaProgress } from '../lib/ahaMoment';
 import { trackAiCall } from '../lib/usage';
 import { track } from '../lib/analytics';
+import { lineShareUrl, facebookShareUrl } from '../lib/shareLinks';
 import DBDSelect from '../components/DBDSelect';
 import EditableList from '../components/EditableList';
 import HelpBox from '../components/HelpBox';
@@ -408,6 +409,14 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
             <button className="plg-ref-copy" onClick={() => {
               navigator.clipboard?.writeText(publicUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
             }}>{copied ? '✓ คัดลอกแล้ว' : 'คัดลอก'}</button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+            <a className="plg-ref-copy" style={{ textDecoration: 'none', background: '#06C755', flex: 1, textAlign: 'center' }}
+               href={lineShareUrl(publicUrl)} target="_blank" rel="noreferrer"
+               onClick={() => track('storefront_share', { channel: 'line' })}>💬 แชร์ไป LINE</a>
+            <a className="plg-ref-copy" style={{ textDecoration: 'none', background: '#1877F2', flex: 1, textAlign: 'center' }}
+               href={facebookShareUrl(publicUrl)} target="_blank" rel="noreferrer"
+               onClick={() => track('storefront_share', { channel: 'facebook' })}>f แชร์ไป Facebook</a>
           </div>
           <a className="sf-preview" href={`/b/${encodeURIComponent(sf.slug)}`} target="_blank" rel="noreferrer">
             👁 เปิดดูหน้าร้าน (แท็บใหม่)
