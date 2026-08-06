@@ -137,6 +137,14 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.winStories) parsed.winStories = DEFAULT_DATA.winStories;
   if (!parsed.marketing) parsed.marketing = DEFAULT_DATA.marketing;
   if (!parsed.feedback) parsed.feedback = DEFAULT_DATA.feedback;
+  // ล้าง demo feedback ชุดเดิม (fb1–fb26) ที่เคย seed แล้ว save ค้างในข้อมูลผู้ใช้ — auto ครั้งเดียวตอนโหลด
+  // ปลอดภัย: feedback จริงใช้ id = `fb${Date.now()}` (ตัวเลข 13 หลัก) จึงไม่ match fb1–fb26
+  if (parsed.feedback?.entries?.length) {
+    const isDemoFb = (id: string) => /^fb([1-9]|1[0-9]|2[0-6])$/.test(id);
+    if (parsed.feedback.entries.some((e) => isDemoFb(e.id))) {
+      parsed.feedback.entries = parsed.feedback.entries.filter((e) => !isDemoFb(e.id));
+    }
+  }
   if (!parsed.gtmAuditChecks) parsed.gtmAuditChecks = DEFAULT_DATA.gtmAuditChecks;
   if (!parsed.iso9001) parsed.iso9001 = DEFAULT_DATA.iso9001;
   if (!parsed.sipoc) parsed.sipoc = DEFAULT_DATA.sipoc;
@@ -190,6 +198,7 @@ export default function App() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [landingPreview, setLandingPreview] = useState(false);  // สมาชิกเปิดดูหน้าแนะนำ (เพื่อแชร์/แนะนำต่อ)
   const [navCollapsed, setNavCollapsed] = useState(() => localStorage.getItem('ceo_ai_nav_collapsed') === '1');
   const [showBadge, setShowBadge] = useState(false);
   const toggleNavCollapse = () => setNavCollapsed(v => {
@@ -526,9 +535,24 @@ export default function App() {
 
   // โหมด local (ไม่มี backend): โชว์ landing ครั้งแรกครั้งเดียว แล้วเข้าแอปเลย
   if (!isSupabaseEnabled && !seenLanding) {
+    // local ไม่มี auth → guest กับ signup เข้าแอปเหมือนกัน · ส่ง onTryGuest ด้วยเพื่อให้
+    // ปุ่ม "เริ่มใช้ฟรีทันที — ไม่ต้องสมัคร" โชว์บน preview/local เหมือน production (ไม่ env-gate)
+    const enterApp = () => { localStorage.setItem('ceo_ai_seen', '1'); setSeenLanding(true); };
     return (
       <LandingPage
-        onGetStarted={() => { localStorage.setItem('ceo_ai_seen', '1'); setSeenLanding(true); }}
+        onGetStarted={enterApp}
+        onTryGuest={enterApp}
+      />
+    );
+  }
+
+  // สมาชิกเปิด "ดูหน้าแนะนำ" (แชร์/แนะนำต่อ) → โชว์ Landing พร้อมปุ่มกลับเข้าแอป
+  if (landingPreview) {
+    return (
+      <LandingPage
+        onGetStarted={() => setLandingPreview(false)}
+        onTryGuest={() => setLandingPreview(false)}
+        onExitPreview={() => setLandingPreview(false)}
       />
     );
   }
@@ -589,6 +613,7 @@ export default function App() {
         collapsed={navCollapsed}
         onToggleCollapse={toggleNavCollapse}
         onExitFocus={() => updateData({ ...data, focusDismissed: true })}
+        onViewLanding={() => setLandingPreview(true)}
       />
 
       <main className={`main${navCollapsed ? ' nav-collapsed' : ''}`}>

@@ -367,6 +367,7 @@ body {
   margin-left: 230px;
   flex: 1;
   min-width: 0; /* กัน flexbox overflow — ให้ main หดได้ต่ำกว่า min-content ของลูก (สำคัญบนมือถือ) */
+  overflow-x: clip; /* กันลูกที่กว้างเกิน (URL ยาว/ข้อความไทย/grid) ดัน layout viewport มือถือกว้างเกินจอ → ช่องว่างด้านขวา */
   padding: 36px 40px;
 }
 
@@ -1473,6 +1474,14 @@ input:focus, textarea:focus, select:focus {
 .sf-side-hd { font-size: 14px; font-weight: 700; color: var(--ink); }
 .sf-preview { font-size: 13.5px; font-weight: 600; color: #38bdf8; text-decoration: none; }
 .sf-tip { font-size: 12.5px; color: var(--ink4); line-height: 1.7; border-top: 1px dashed rgba(255,255,255,.12); padding-top: 10px; }
+/* หัวข้อลำดับขั้น (1,2,3,4) นำทางคนเปิดร้านครั้งแรก */
+.sf-step-hd { display: flex; align-items: center; gap: 10px; margin: 24px 0 10px; }
+.sf-step-num { flex: none; width: 26px; height: 26px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; }
+.sf-step-tx { display: flex; flex-direction: column; line-height: 1.35; }
+.sf-step-tx b { font-size: 15px; font-weight: 700; color: var(--ink); }
+.sf-step-tx em { font-style: normal; font-size: 12.5px; color: var(--ink3); margin-top: 1px; }
+.sf-side .sf-step-hd { margin-top: 0; }
+.sf-form, .sf-side { min-width: 0; } /* กัน grid cell ขยายตาม min-content ของลูก (URL/ข้อความยาว) จนล้นจอ */
 @media (max-width: 900px) { .sf-editor { grid-template-columns: 1fr; } .sf-grid2 { grid-template-columns: 1fr; } }
 
 /* Marketplace M2/M3 — Trade (RFQ + Orders) */

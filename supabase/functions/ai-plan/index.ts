@@ -9,6 +9,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModels } from "../_shared/modelRouter.ts";
 import { chatWithFallback } from "../_shared/llm.ts";
 import { enforceAiQuota } from "../_shared/quota.ts";
+import { AI_GUARDRAILS } from "../_shared/aiGuardrails.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 // ai-plan = วางแผน/แตกงานเชิงกลยุทธ์ = งาน 'complex' → คงโมเดลแรง (default = โมเดลเดิม)
@@ -49,7 +50,7 @@ Deno.serve(async (req) => {
     "3) จัดงานแบบ Kanban: สถานะ queued(Todo)/in_progress(Doing)/review(Review)/blocked(ติดสิทธิ์-เครื่องมือ)/done\n" +
     "4) งานที่ต้องใช้เครื่องมือภายนอกให้ระบุ: Brave Search (ค้นข้อมูล), Resend (ส่งอีเมล/รายงาน)\n" +
     "5) เรื่องที่กระทบงบประมาณหรือการจ้างเอเจนต์ใหม่ ให้เสนอเป็น approvals เพื่อรอบอร์ดอนุมัติ\n" +
-    "ตอบเป็นภาษาไทย กระชับ ลงมือทำได้จริง และคืนค่าเป็น JSON เท่านั้น";
+    "ตอบเป็นภาษาไทย กระชับ ลงมือทำได้จริง และคืนค่าเป็น JSON เท่านั้น" + AI_GUARDRAILS;
 
   const userMsg =
     `เป้าหมายหลัก (Mission): ${body.goal}\n` +
