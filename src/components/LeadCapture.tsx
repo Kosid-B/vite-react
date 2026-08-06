@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { submitLead, validateLead, readUtm } from '../lib/platformLead';
+import { segmentFor } from '../lib/heroVariant';
 import { track } from '../lib/analytics';
 
 /* LeadCapture — ดักเก็บ "คนที่ยังไม่พร้อมสมัคร แต่สนใจ" บน landing (First-party data + PDPA consent)
@@ -12,6 +13,7 @@ const C = {
 
 export default function LeadCapture({ onPrivacy }: { onPrivacy?: () => void }) {
   const utm = useMemo(() => readUtm(typeof window !== 'undefined' ? window.location.search : ''), []);
+  const seg = useMemo(() => (typeof window !== 'undefined' ? segmentFor(window.location.search, document.referrer) : 'default'), []);
   const [contact, setContact] = useState('');
   const [name, setName] = useState('');
   const [interest, setInterest] = useState('');
@@ -24,10 +26,10 @@ export default function LeadCapture({ onPrivacy }: { onPrivacy?: () => void }) {
 
   async function submit() {
     setBusy(true); setErr(null);
-    const res = await submitLead({ contact, name, interest, consent }, utm);
+    const res = await submitLead({ contact, name, interest, consent }, utm, seg);
     setBusy(false);
     if (res) { setErr(res); return; }
-    track('lead_submitted', { medium: utm.medium || 'direct' });
+    track('lead_submitted', { medium: utm.medium || 'direct', seg });
     setDone(true);
   }
 
