@@ -8,6 +8,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModel } from "../_shared/modelRouter.ts";
 import { enforceAiQuota } from "../_shared/quota.ts";
+import { AI_GUARDRAILS } from "../_shared/aiGuardrails.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 // ai-assist = คำแนะนำสั้นต่อหน้า = งาน 'simple' → ตั้ง secret MODEL_SIMPLE เพื่อย้ายไปโมเดลถูก (default = โมเดลเดิม)
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
   const system =
     "คุณคือทีม AI Agent ผู้ช่วยภายในแพลตฟอร์ม CEO AI Thailand (สร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย) " +
     "ทำหน้าที่เป็นที่ปรึกษากลยุทธ์/การตลาด/ปฏิบัติการตามหน้าที่ผู้ใช้กำลังทำงานอยู่ " +
-    "ให้คำแนะนำที่ลงมือทำได้จริง กระชับ เป็นภาษาไทย และตอบเป็น JSON เท่านั้น";
+    "ให้คำแนะนำที่ลงมือทำได้จริง กระชับ เป็นภาษาไทย และตอบเป็น JSON เท่านั้น" + AI_GUARDRAILS;
 
   const userMsg =
     `หน้า/ขั้นตอนที่ผู้ใช้กำลังทำงาน: ${body.pageLabel ?? body.page ?? "-"}\n` +
@@ -78,7 +79,7 @@ async function streamAssist(body: Body): Promise<Response> {
   const system =
     "คุณคือทีม AI Agent ผู้ช่วยภายในแพลตฟอร์ม CEO AI Thailand (สร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย) " +
     "ให้คำแนะนำที่ลงมือทำได้จริง กระชับ เป็นภาษาไทย " +
-    "รูปแบบ: สรุป 1-2 ประโยคก่อน แล้วตามด้วยข้อเสนอแนะเป็น bullet ขึ้นต้นด้วย '- ' 3-6 ข้อ (ห้ามตอบเป็น JSON)";
+    "รูปแบบ: สรุป 1-2 ประโยคก่อน แล้วตามด้วยข้อเสนอแนะเป็น bullet ขึ้นต้นด้วย '- ' 3-6 ข้อ (ห้ามตอบเป็น JSON)" + AI_GUARDRAILS;
   const userMsg =
     `หน้า/ขั้นตอน: ${body.pageLabel ?? body.page ?? "-"}\n` +
     `บริบท:\n${body.context ?? "(ไม่มี)"}\n\n` +

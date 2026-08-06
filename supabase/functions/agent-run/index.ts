@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Anthropic from 'npm:@anthropic-ai/sdk@0.26.0';
 import { pickModel } from '../_shared/modelRouter.ts';
 import { enforceAiQuota } from '../_shared/quota.ts';
+import { AI_GUARDRAILS } from '../_shared/aiGuardrails.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -95,7 +96,7 @@ serve(async (req) => {
       webContext ? `คุณมีสิทธิ์เข้าถึงข้อมูลจาก Web Search แบบ real-time — ใช้ข้อมูลนี้เพื่อให้ผลลัพธ์ที่ทันสมัยและแม่นยำ` : '',
       `ตอบเป็นภาษาไทย ให้ผลลัพธ์ที่เป็นรูปธรรม ชัดเจน พร้อมนำไปใช้ได้ทันที`,
       `ไม่ต้องแนะนำตัว ไม่ต้องพูดว่า "ในฐานะ AI" — ลงมือทำงานเลย`,
-    ].filter(Boolean).join('\n');
+    ].filter(Boolean).join('\n') + AI_GUARDRAILS;
 
     const userMsg = [
       `งานที่ได้รับมอบหมาย: ${title}`,
