@@ -5,6 +5,7 @@ import { heroAbVariant, HERO_AB_COPY, type HeroAb } from '../lib/heroExperiment'
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
 import InstantPreview from '../components/InstantPreview';
+import MarketDemandPanel from '../components/MarketDemandPanel';
 import { currentChallenger } from '../lib/challengerRotation';
 import { listApprovedTestimonials, aggregateRating, starString, type Testimonial } from '../lib/testimonials';
 import LandingReviewWidget from '../components/LandingReviewWidget';
@@ -350,6 +351,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           </div>
         </div>
       </section>
+
+      {/* ─── Demand/Supply Board (first-party จริง): พิมพ์ธุรกิจ → เห็นดีมานด์ในระบบ + ROI ─── */}
+      <MarketDemandPanel onGetStarted={onGetStarted} />
 
       {/* ─── Instant Proof (Black Hole: เห็นค่าก่อนสมัคร) ─── */}
       <InstantPreview onGetStarted={onGetStarted} />
