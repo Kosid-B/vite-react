@@ -34,8 +34,9 @@ export function validateLead(input: Partial<LeadInput>): { ok: boolean; error?: 
   return { ok: true };
 }
 
-/** ส่ง lead — คืน null ถ้าสำเร็จ, หรือข้อความ error */
-export async function submitLead(input: LeadInput, utm: Utm): Promise<string | null> {
+/** ส่ง lead — คืน null ถ้าสำเร็จ, หรือข้อความ error
+ *  seg = กลุ่มที่คนนี้เข้ามา (seller/newbie/owner) → ใช้ personalize อีเมล nurture (Dark AI #6) */
+export async function submitLead(input: LeadInput, utm: Utm, seg = ''): Promise<string | null> {
   const v = validateLead(input);
   if (!v.ok) return v.error ?? 'ข้อมูลไม่ครบ';
   if (!isSupabaseEnabled || !supabase) return null; // local mode: ถือว่าผ่าน (ไม่มี backend)
@@ -44,6 +45,7 @@ export async function submitLead(input: LeadInput, utm: Utm): Promise<string | n
     name: (input.name ?? '').trim(),
     interest: (input.interest ?? '').trim(),
     source: utm.source, medium: utm.medium, campaign: utm.campaign,
+    seg: seg === 'default' ? '' : seg,
     consent: true,
   });
   return error ? 'ส่งไม่สำเร็จ ลองใหม่อีกครั้ง' : null;
