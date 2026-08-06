@@ -15,7 +15,7 @@ describe('heroAbVariant', () => {
 
   it('กระจายเป็น 2 กลุ่มจริง (ไม่เทไปข้างเดียวทั้งหมด)', () => {
     let a = 0, b = 0;
-    for (let i = 0; i < 200; i++) (heroAbVariant('user-' + i) === 'A' ? a++ : b++);
+    for (let i = 0; i < 200; i++) { if (heroAbVariant('user-' + i) === 'A') a++; else b++; }
     expect(a).toBeGreaterThan(50);
     expect(b).toBeGreaterThan(50);
   });
