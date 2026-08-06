@@ -367,6 +367,7 @@ body {
   margin-left: 230px;
   flex: 1;
   min-width: 0; /* กัน flexbox overflow — ให้ main หดได้ต่ำกว่า min-content ของลูก (สำคัญบนมือถือ) */
+  overflow-x: clip; /* กันลูกที่กว้างเกิน (URL ยาว/ข้อความไทย/grid) ดัน layout viewport มือถือกว้างเกินจอ → ช่องว่างด้านขวา */
   padding: 36px 40px;
 }
 
@@ -1480,6 +1481,7 @@ input:focus, textarea:focus, select:focus {
 .sf-step-tx b { font-size: 15px; font-weight: 700; color: var(--ink); }
 .sf-step-tx em { font-style: normal; font-size: 12.5px; color: var(--ink3); margin-top: 1px; }
 .sf-side .sf-step-hd { margin-top: 0; }
+.sf-form, .sf-side { min-width: 0; } /* กัน grid cell ขยายตาม min-content ของลูก (URL/ข้อความยาว) จนล้นจอ */
 @media (max-width: 900px) { .sf-editor { grid-template-columns: 1fr; } .sf-grid2 { grid-template-columns: 1fr; } }
 
 /* Marketplace M2/M3 — Trade (RFQ + Orders) */

@@ -52,9 +52,11 @@ const CC_CSS = `
 .cc-banner{ position:fixed; left:0; right:0; bottom:0; z-index:9999;
   display:flex; align-items:center; gap:16px; flex-wrap:wrap; justify-content:center;
   padding:14px 20px; background:rgba(2,6,23,.95); backdrop-filter:blur(12px);
-  border-top:1px solid #1e293b; color:#f8fafc;
+  border-top:1px solid #1e293b; color:#f8fafc; box-sizing:border-box; max-width:100vw;
   box-shadow:0 -6px 24px rgba(0,0,0,.45); font-family:'Kanit',system-ui,-apple-system,sans-serif; }
-.cc-text{ font-size:13.5px; line-height:1.6; max-width:720px; color:#cbd5e1; }
+/* min-width:0 + overflow-wrap:anywhere = ให้ข้อความไทย (ไม่มีเว้นวรรค) ตัดบรรทัดและหดตามจอได้
+   กันบั๊ก: ข้อความยาว → min-content กว้างเกินจอ → ดัน layout ทั้งหน้ากว้างเกิน (ช่องว่างขวาบนมือถือ) */
+.cc-text{ font-size:13.5px; line-height:1.6; max-width:720px; min-width:0; overflow-wrap:anywhere; color:#cbd5e1; }
 .cc-text a{ color:#22d3ee; text-decoration:none; font-weight:600; }
 .cc-text a:hover{ text-decoration:underline; }
 .cc-actions{ display:flex; gap:10px; flex-wrap:wrap; }
