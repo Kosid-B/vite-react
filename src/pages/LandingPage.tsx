@@ -179,10 +179,15 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
         <span style={{ flex: 'none', background: C.amber5, color: '#020617', fontWeight: 800, fontSize: 11, padding: '3px 9px', borderRadius: 999 }}>SME</span>
         <span key={challenger} style={{ color: C.white, fontSize: 14, fontWeight: 600, lineHeight: 1.5, animation: 'lpFadeIn .5s ease' }}>{challenger}</span>
       </div>
-      <style>{`@keyframes lpFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }`}</style>
+      <style>{`@keyframes lpFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+        /* มือถือ: h1 ใหญ่ดันปุ่ม CTA ลงไปชนแถบคุกกี้ (fixed ล่าง) → ลด h1 + ไหลจากบน + เว้นที่ให้แถบคุกกี้ ปุ่มจึงไม่ถูกบัง */
+        @media (max-width: 768px) {
+          .lp-hero { min-height: auto !important; justify-content: flex-start !important; padding-top: 28px !important; padding-bottom: 200px !important; }
+          .lp-hero-h1 { font-size: 30px !important; }
+        }`}</style>
 
       {/* ─── Hero ─── */}
-      <section style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(90vh - 60px)', padding: '80px 24px', textAlign: 'center' }}>
+      <section className="lp-hero" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(90vh - 60px)', padding: '80px 24px', textAlign: 'center' }}>
         {/* Glow */}
         <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, background: 'radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%)', pointerEvents: 'none', borderRadius: '50%' }} />
 
@@ -190,7 +195,7 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
           ✦ &nbsp;OFFICIALLY POWERED BY CEO AI THAILAND&nbsp; ✦
         </div>
 
-        <h1 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, lineHeight: 1.15, marginBottom: 24, maxWidth: 820 }}>
+        <h1 className="lp-hero-h1" style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, lineHeight: 1.15, marginBottom: 24, maxWidth: 820 }}>
           อยากมีธุรกิจของตัวเอง?<br />
           <span style={{ color: C.cyan4 }}>เริ่มคืนนี้ได้เลย<br />ไม่ต้องเสี่ยงเงินก้อน</span>
         </h1>
