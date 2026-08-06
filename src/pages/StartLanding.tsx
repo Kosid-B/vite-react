@@ -189,6 +189,7 @@ export default function StartLanding() {
             </p>
             {/* Payoff chips — ส่งต่อความคาดหวังทันทีใน 3–6 วิ (สแกนเห็นผลลัพธ์ก่อนอ่านยาว) */}
             <div className="start-vchips">
+              <span className="start-vchip">🧪 ทดสอบไอเดียก่อนเสียเงินจริง</span>
               <span className="start-vchip">⚡ เปิดร้านใน 5 นาที</span>
               <span className="start-vchip">🆓 ฟรี 15 วัน ไม่ต้องใช้บัตร</span>
               <span className="start-vchip">🇹🇭 สั่งงานเป็นภาษาไทยธรรมชาติ</span>
