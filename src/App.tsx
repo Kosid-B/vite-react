@@ -526,9 +526,13 @@ export default function App() {
 
   // โหมด local (ไม่มี backend): โชว์ landing ครั้งแรกครั้งเดียว แล้วเข้าแอปเลย
   if (!isSupabaseEnabled && !seenLanding) {
+    // local ไม่มี auth → guest กับ signup เข้าแอปเหมือนกัน · ส่ง onTryGuest ด้วยเพื่อให้
+    // ปุ่ม "เริ่มใช้ฟรีทันที — ไม่ต้องสมัคร" โชว์บน preview/local เหมือน production (ไม่ env-gate)
+    const enterApp = () => { localStorage.setItem('ceo_ai_seen', '1'); setSeenLanding(true); };
     return (
       <LandingPage
-        onGetStarted={() => { localStorage.setItem('ceo_ai_seen', '1'); setSeenLanding(true); }}
+        onGetStarted={enterApp}
+        onTryGuest={enterApp}
       />
     );
   }
