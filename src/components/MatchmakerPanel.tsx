@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { AppData } from '../types';
 import { topMatches, offerKind, kindLabel, type BizProfile, type MatchResult } from '../lib/b2bMatching';
+import { audienceFor } from '../lib/b2cMatching';
 import { track } from '../lib/analytics';
 
 /* MatchmakerPanel — VP หลัก "AI จับคู่ธุรกิจ": หาคู่ค้า/ซัพพลายเออร์/ผู้ซื้อที่เข้าไม่ถึงมาจับคู่ให้
@@ -26,6 +27,7 @@ export default function MatchmakerPanel({ data }: { data: AppData }) {
   })), [data.marketplace?.partners]);
 
   const matches = useMemo(() => topMatches(me, pool), [me, pool]);
+  const audiences = useMemo(() => (me.category ? audienceFor(me.category).slice(0, 3) : []), [me.category]);
   const myKind = offerKind(me.category);
 
   return (
@@ -68,6 +70,26 @@ export default function MatchmakerPanel({ data }: { data: AppData }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {audiences.length > 0 && (
+        <div style={{ marginTop: 18, borderTop: '1px solid var(--border, #1e293b)', paddingTop: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 2 }}>🎯 ลูกค้าที่ "ใช่" สำหรับร้านคุณ</div>
+          <div style={{ fontSize: 12.5, color: 'var(--muted, #94a3b8)', marginBottom: 12 }}>AI จับคู่ร้านคุณกับกลุ่มผู้บริโภคที่เหมาะ + บอกว่าหาเจอที่ไหน</div>
+          <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
+            {audiences.map((a, i) => (
+              <div key={i} style={{ border: '1px solid var(--border, #1e293b)', borderRadius: 10, padding: '12px 14px', background: 'var(--card, rgba(2,6,23,0.4))' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 800 }}>{a.segment}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: '#0891b2', flex: 'none' }}>{a.fit}</span>
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--muted, #94a3b8)', marginTop: 5 }}>💡 {a.why}</div>
+                <div style={{ fontSize: 12, color: 'var(--muted, #94a3b8)', marginTop: 4 }}>📣 หาเจอที่: {a.channels.join(' · ')}</div>
+                <div style={{ fontSize: 12, color: '#15803d', marginTop: 4, fontWeight: 600 }}>มุมข้อความ: {a.angle}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
