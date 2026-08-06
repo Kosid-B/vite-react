@@ -16,6 +16,7 @@ import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
 import SaveWorkPrompt from './components/SaveWorkPrompt';
 import GoalChooser from './components/GoalChooser';
+import AudienceChooser from './components/AudienceChooser';
 import Sidebar from './components/Sidebar';
 import ConversionNudge from './components/ConversionNudge';
 import ShareMilestone from './components/ShareMilestone';
@@ -573,14 +574,20 @@ export default function App() {
 
   const doneCount = data.actions.filter(a => a.done).length;
 
-  // First-run: ผู้ใช้ใหม่ (ยังไม่เลือกเป้าหมาย + เพิ่งเข้า) → ถาม "วันนี้อยากทำอะไร?" ก่อน
-  const showGoalChooser = data.onboardGoal == null && (data.visitedPages?.length ?? 0) <= 1;
+  // First-run ขั้นแรกสุด: "ขายให้ใคร?" (B2B/B2C) ก่อน — กัน Persona สับสน
+  const firstRun = (data.visitedPages?.length ?? 0) <= 1;
+  const showAudienceChooser = data.audienceType == null && firstRun;
+  // ถัดมา: ผู้ใช้ใหม่ (เลือก audience แล้ว ยังไม่เลือกเป้าหมาย) → ถาม "วันนี้อยากทำอะไร?"
+  const showGoalChooser = data.audienceType != null && data.onboardGoal == null && firstRun;
   // OnboardingTour: ไม่โชว์ให้คน "ดูภาพรวมก่อน" (explore) — กันเจอ modal ซ้อน (GoalChooser → Tour) ที่ทำให้คนหลุด
   // เหลือทัวร์เฉพาะผู้ใช้เดิมที่ยังไม่เคยเลือกเป้าหมาย (มาก่อนมี GoalChooser · ทัวร์ self-gate ของมันเองอยู่แล้ว)
   const showTour = data.onboardGoal == null && !showGoalChooser;
 
   return (
     <div className="app">
+      {showAudienceChooser && (
+        <AudienceChooser onPick={(t) => updateData({ ...data, audienceType: t })} />
+      )}
       {showGoalChooser && (
         <GoalChooser
           onPick={(goal, page) => { updateData({ ...data, onboardGoal: goal }); setActivePage(page); }}
