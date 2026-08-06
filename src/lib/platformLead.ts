@@ -61,6 +61,7 @@ export interface Lead {
   source: string;
   medium: string;
   campaign: string;
+  seg: string;       // กลุ่มที่เข้ามา (seller/newbie/owner/'') — ใช้ทำ Dynamic Persona
   at: string;        // YYYY-MM-DD
 }
 
@@ -138,6 +139,7 @@ function mapLead(r: Record<string, unknown>): Lead {
     source: String(r.source ?? ''),
     medium: String(r.medium ?? ''),
     campaign: String(r.campaign ?? ''),
+    seg: String(r.seg ?? ''),
     at: r.created_at ? String(r.created_at).slice(0, 10) : '',
   };
 }
@@ -147,7 +149,7 @@ export async function listLeads(limit = 500): Promise<Lead[]> {
   if (!isSupabaseEnabled || !supabase) return [];
   const { data } = await supabase
     .from('platform_leads')
-    .select('id,contact,name,interest,source,medium,campaign,created_at')
+    .select('id,contact,name,interest,source,medium,campaign,seg,created_at')
     .order('created_at', { ascending: false })
     .limit(limit);
   return (data ?? []).map(mapLead);

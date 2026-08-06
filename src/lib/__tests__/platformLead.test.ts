@@ -3,7 +3,7 @@ import { validateLead, readUtm, channelBreakdown, channelLabel, leadStats, leads
 
 const lead = (o: Partial<Lead>): Lead => ({
   id: o.id ?? 'x', contact: o.contact ?? 'a@b.com', name: o.name ?? '', interest: o.interest ?? '',
-  source: o.source ?? '', medium: o.medium ?? '', campaign: o.campaign ?? '', at: o.at ?? '2026-08-01',
+  source: o.source ?? '', medium: o.medium ?? '', campaign: o.campaign ?? '', seg: o.seg ?? '', at: o.at ?? '2026-08-01',
 });
 
 describe('validateLead', () => {
