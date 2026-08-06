@@ -326,6 +326,31 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         </div>
       </section>
 
+      {/* ─── Matchmaker VP band — ไม่ใช่แค่ "สร้างร้าน" แต่ "จับคู่" ให้ (แก้ pain รอ walk-in) ─── */}
+      <section style={{ padding: '0 24px' }}>
+        <div style={{ maxWidth: 920, margin: '0 auto', borderRadius: 16, border: `1px solid ${C.border}`, background: C.bg2, padding: '22px 24px' }}>
+          <div style={{ textAlign: 'center', fontSize: 'clamp(17px, 2.4vw, 22px)', fontWeight: 800, color: C.white, marginBottom: 4 }}>
+            ไม่ใช่แค่ “สร้างบริษัท AI” — <span style={{ color: C.cyan4 }}>AI หาลูกค้าและคู่ค้ามาจับคู่ให้</span>
+          </div>
+          <div style={{ textAlign: 'center', color: C.slate4, fontSize: 14, marginBottom: 18, lineHeight: 1.6 }}>
+            แก้ pain “ต้องรอลูกค้า walk-in” — ระบบจับคู่ธุรกิจของคุณกับดีมานด์ที่รออยู่จริง
+          </div>
+          <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))' }}>
+            {[
+              ['🛒', 'หาลูกค้าให้', 'จับคู่ร้านกับกลุ่มผู้บริโภคที่ “ใช่” + บอกช่องทางหาเจอ'],
+              ['🤝', 'หาคู่ค้า / ซัพพลายเออร์', 'จับคู่ตาม “ต้องการ ↔ มีให้” พร้อมเหตุผลที่จับคู่'],
+              ['📈', 'เห็นดีมานด์ที่รออยู่', 'ใบขอราคา (RFQ) จริงในระบบ = มีคนกำลังหาสินค้า/บริการ'],
+            ].map(([ic, t, d]) => (
+              <div key={t} style={{ border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', background: C.bg3 }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{ic}</div>
+                <div style={{ fontWeight: 800, color: C.white, fontSize: 15, marginBottom: 4 }}>{t}</div>
+                <div style={{ color: C.slate4, fontSize: 13, lineHeight: 1.55 }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── Instant Proof (Black Hole: เห็นค่าก่อนสมัคร) ─── */}
       <InstantPreview onGetStarted={onGetStarted} />
 
