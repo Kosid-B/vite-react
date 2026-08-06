@@ -8,6 +8,7 @@ import { sellerAhaProgress } from '../lib/ahaMoment';
 import { trackAiCall } from '../lib/usage';
 import { track } from '../lib/analytics';
 import { lineShareUrl, facebookShareUrl } from '../lib/shareLinks';
+import FillHoursPanel from '../components/FillHoursPanel';
 import DBDSelect from '../components/DBDSelect';
 import EditableList from '../components/EditableList';
 import HelpBox from '../components/HelpBox';
@@ -427,6 +428,9 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
           </div>
         </div>
       </div>
+
+      {/* 🕐 เติมชั่วโมงว่าง — หาดีมานด์ประจำ (A) + ดึงคนช่วงว่าง (B) แก้ pain รอ walk-in */}
+      <FillHoursPanel shopName={sf.name} shopText={`${sf.name} ${sf.dbd ?? ''} ${sf.description ?? ''}`} publicUrl={publicUrl} />
 
       {/* 🧪 พิสูจน์ไอเดียก่อนลงทุนสร้าง — วัดจากลูกค้าที่ทิ้งช่องทางติดต่อจริง */}
       <IdeaValidation slug={sf.slug} publicUrl={publicUrl} />
