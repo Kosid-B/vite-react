@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { AppData, PageId } from '../types';
 import { tradeReport, closeTrade, type TradeOpportunity } from '../lib/interCityTrade';
+import MatchmakerPanel from '../components/MatchmakerPanel';
 import { fmtBaht } from '../lib/finance';
 import { PAYMENT } from '../config';
 import { track } from '../lib/analytics';
@@ -31,6 +32,9 @@ export default function InterCityTrade({ data, onUpdate, onNavigate }: {
         <b>CEO</b> จับคู่โอกาสค้าขายระหว่างเมืองของคุณกับธุรกิจอื่นในระบบ · <b>CMO</b> ให้คะแนนและแนะนำดีลที่ควรปิดก่อน —
         บอร์ด (คุณ) ตรวจรายงานแล้วกด “ปิดการค้า” · ทุกดีลที่ปิดจะลงบัญชีการเงินอัตโนมัติ ทำให้เมืองบริษัทของคุณเติบโต
       </p>
+
+      {/* AI Matchmaker — VP หลัก: จับคู่ธุรกิจ↔ธุรกิจ พร้อมเหตุผล (need↔offer) */}
+      <MatchmakerPanel data={data} />
 
       {/* รายงานบอร์ด (auto โดย agent) */}
       <div className="ict-cards">
