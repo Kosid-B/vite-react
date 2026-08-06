@@ -6,6 +6,8 @@ import {
   audienceLabel,
   scriptToPlainText,
   scriptToMarkdown,
+  polishInstruction,
+  applyPolish,
   type BusinessInfo,
 } from '../successVideoScript';
 import type { AppData } from '../../types';
@@ -87,6 +89,35 @@ describe('readinessFor', () => {
   });
   it('มีแค่ชื่อ+ประเภท → ready (เกณฑ์ขั้นต่ำ)', () => {
     expect(readinessFor({ company: 'ร้าน', industry: 'คาเฟ่', goal: '' }).ready).toBe(true);
+  });
+});
+
+describe('polish (AI ขัดเกลาสำนวน)', () => {
+  it('polishInstruction: มี guardrail + จำนวนบทถูกต้อง', () => {
+    const s = buildSuccessVideoScript(B2C);
+    const instr = polishInstruction(s);
+    expect(instr).toMatch(/ห้ามแต่งตัวเลข/);
+    expect(instr).toContain(`${s.chapters.length} ข้อ`);
+    expect(instr).toContain('ขนมมายด์'); // ต้นฉบับถูกแนบไปด้วย
+  });
+  it('applyPolish: จำนวนตรง → แทน narration (คง heading/points เดิม)', () => {
+    const s = buildSuccessVideoScript(B2C);
+    const sugg = s.chapters.map((_, i) => `บทพากย์ขัดเกลา ${i + 1}`);
+    const out = applyPolish(s, sugg);
+    expect(out.chapters[0].narration).toBe('บทพากย์ขัดเกลา 1');
+    expect(out.chapters[0].heading).toBe(s.chapters[0].heading);
+    expect(out.chapters[0].points).toEqual(s.chapters[0].points);
+  });
+  it('applyPolish: จำนวนไม่ตรง → คืนของเดิม (ไม่พัง)', () => {
+    const s = buildSuccessVideoScript(B2C);
+    expect(applyPolish(s, ['สั้นไป'])).toBe(s);
+  });
+  it('applyPolish: ข้อว่าง → คงบทเดิมของช่องนั้น', () => {
+    const s = buildSuccessVideoScript(B2C);
+    const sugg = s.chapters.map((_, i) => (i === 0 ? '' : `ขัดเกลา ${i}`));
+    const out = applyPolish(s, sugg);
+    expect(out.chapters[0].narration).toBe(s.chapters[0].narration);
+    expect(out.chapters[1].narration).toBe('ขัดเกลา 1');
   });
 });
 

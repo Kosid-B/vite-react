@@ -274,6 +274,34 @@ export function buildSuccessVideoScript(info: BusinessInfo): SuccessVideoScript 
   };
 }
 
+/** instruction ให้ ai-assist "ขัดเกลาสำนวน" บทพากย์ให้ลื่น–เป็นธรรมชาติ
+ *  ⚠️ คงข้อเท็จจริง/ชื่อธุรกิจ/disclaimer เดิม · ห้ามแต่งตัวเลขหรือคำสัญญารายได้ */
+export function polishInstruction(s: SuccessVideoScript): string {
+  const body = s.chapters
+    .map(ch => `บทที่ ${ch.no} (${ch.heading}): ${ch.narration}`)
+    .join('\n');
+  return (
+    `ช่วยขัดเกลา "บทพากย์" ของสคริปต์วิดีโอต่อไปนี้ให้ลื่นไหล เป็นธรรมชาติ ฟังแล้วอบอุ่นน่าเชื่อถือ ` +
+    `เหมาะกับการพากย์เสียงภาษาไทย โดย:\n` +
+    `- คงใจความ ข้อเท็จจริง และชื่อธุรกิจเดิมทุกอย่าง\n` +
+    `- ห้ามแต่งตัวเลข สถิติ หรือคำรับประกันรายได้ใด ๆ ที่ไม่มีในต้นฉบับ\n` +
+    `- คงจุดยืนว่านี่คือ "แผน/วิสัยทัศน์ที่ระบบพาไป" ไม่ใช่การการันตี\n` +
+    `- ตอบกลับเป็นบทพากย์ที่ขัดเกลาแล้ว ${s.chapters.length} ข้อ (suggestions) เรียงตามบทที่ 1 ถึง ${s.chapters.length} ข้อละ 1 บท\n\n` +
+    `บทพากย์ต้นฉบับ:\n${body}`
+  );
+}
+
+/** ใช้ผลจาก ai-assist (suggestions รายบท) แทนบทพากย์เดิม — คงโครง/ภาพ/points เดิม
+ *  ปลอดภัย: แทนเฉพาะเมื่อจำนวน suggestions เท่ากับจำนวนบท และข้อความไม่ว่าง */
+export function applyPolish(s: SuccessVideoScript, suggestions: string[]): SuccessVideoScript {
+  if (!Array.isArray(suggestions) || suggestions.length !== s.chapters.length) return s;
+  const chapters = s.chapters.map((ch, i) => {
+    const polished = clean(suggestions[i]);
+    return polished ? { ...ch, narration: polished } : ch;
+  });
+  return { ...s, chapters };
+}
+
 /** แปลงเป็นข้อความล้วน (พากย์/คัดลอก) */
 export function scriptToPlainText(s: SuccessVideoScript): string {
   const lines: string[] = [s.title, '', s.disclaimer, ''];
