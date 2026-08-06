@@ -3,6 +3,7 @@ import type { AppData, PageId, MarketingChannel, MarketingCampaign, MarketingGoa
 import { PageHeader, Badge } from '../ds';
 import BuyingTriggers from '../components/BuyingTriggers';
 import MarketSizingPanel from '../components/MarketSizingPanel';
+import InvisibleInfluencePanel from '../components/InvisibleInfluencePanel';
 import { marketingFromDe24 } from '../lib/marketingStrategy';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { withSkillDirectives } from '../lib/skillDirectives';
@@ -191,6 +192,9 @@ export default function Marketing({ data, onUpdate, onNavigate }: Props) {
       />
 
       <BuyingTriggers data={data} onUpdate={onUpdate} />
+
+      {/* ===== ร่องรอยแบรนด์ต่อกลุ่มพลังเงียบ (Invisible Influence — MI GROUP) ===== */}
+      <InvisibleInfluencePanel data={data} onNavigate={onNavigate} />
 
       {/* ===== วิจัยตลาด + ประเมินขนาดตลาด (CMO นำเสนอ) ===== */}
       <MarketSizingPanel data={data} onUpdate={onUpdate} />
