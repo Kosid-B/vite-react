@@ -29,7 +29,9 @@ const P_SECTIONS: { key: PKey; hd: string; color: string }[] = [
 export default function Personas({ data, onUpdate, onNavigate }: Props) {
   const insight = data.marketInsight;
   const gated = !insight?.savedAt;                       // ยังไม่ยืนยัน research/sizing → ต้องทำก่อน
-  const segments = insight?.mode === 'b2b' ? B2B_SEGMENTS : THAI_SEGMENTS;
+  // B2B/B2C: ใช้ผลวิจัย (insight.mode) ถ้ามี · ไม่มีก็ยึด audienceType ที่เลือกตอน onboarding (กัน Persona สับสน)
+  const isB2b = insight?.mode ? insight.mode === 'b2b' : data.audienceType === 'b2b';
+  const segments = isB2b ? B2B_SEGMENTS : THAI_SEGMENTS;
   // สรุปผล research/sizing → prefill ให้ AI อัตโนมัติ (ข้อ 2: ไม่ต้องวาง text เอง)
   const researchPrefill = insight ? [
     insight.industry ? `อุตสาหกรรม: ${insight.industry}` : '',
@@ -87,7 +89,7 @@ export default function Personas({ data, onUpdate, onNavigate }: Props) {
     }
     setAiBusy(true);
     try {
-      const b2b = insight?.mode === 'b2b';
+      const b2b = isB2b;
       const { data: res, error } = await supabase.functions.invoke('ai-assist', {
         body: {
           page: 'personas', pageLabel: 'Persona',
@@ -194,7 +196,7 @@ export default function Personas({ data, onUpdate, onNavigate }: Props) {
           <button className="pl-cta" onClick={() => setShowNew((v) => !v)}>
             {showNew ? '× ปิด' : '✨ สร้าง Persona จาก Market Research'}
           </button>
-          {insight?.mode === 'b2b' && (
+          {isB2b && (
             <button className="pl-cta pl-cta-alt" onClick={addAllCommittee}>
               👥 เพิ่มครบทั้งคณะตัดสินใจ B2B
             </button>
@@ -204,7 +206,7 @@ export default function Personas({ data, onUpdate, onNavigate }: Props) {
         {msg && <div className="pl-msg">{msg}</div>}
         {showNew && (
           <div className="pl-panel">
-            <div className="pl-seg-hd">1) เลือกกลุ่มเป้าหมาย {insight?.mode === 'b2b' ? '(คณะตัดสินใจ B2B)' : '(จาก Market Research)'}</div>
+            <div className="pl-seg-hd">1) เลือกกลุ่มเป้าหมาย {isB2b ? '(คณะตัดสินใจ B2B)' : '(จาก Market Research)'}</div>
             <div className="pl-segs">
               {segments.map((s) => (
                 <button

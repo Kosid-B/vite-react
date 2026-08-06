@@ -279,6 +279,7 @@ export type SubStatus = 'none' | 'trial' | 'pending_payment' | 'active' | 'past_
 // เป้าหมายเริ่มต้นที่ผู้ใช้เลือกใน GoalChooser (onboarding "เข้าง่าย + ลึกได้")
 // โฟกัสวัตถุประสงค์จริงของ CEO AI Thailand = สร้าง & ทำธุรกิจ (PDPA/ISO = ฟีเจอร์เสริม ไม่ใช่พระเอก)
 export type OnboardGoal = 'aicompany' | 'sell' | 'validate' | 'explore';
+export type AudienceType = 'b2b' | 'b2c';   // ขายให้ธุรกิจ (B2B) หรือ ผู้บริโภคทั่วไป (B2C)
 
 export type InvoiceStatus = 'paid' | 'pending' | 'failed';
 
@@ -580,6 +581,7 @@ export interface AppData {
   appliedPaymentIds?: string[];           // id ของ payment_submissions ที่เปิดใช้งานแพ็กแล้ว (กันเปิดซ้ำ) — PLG: เปิดทันทีที่อัปสลิป
   revokedPaymentIds?: string[];           // id ของสลิปที่แอดมินตรวจย้อนหลังแล้วตีกลับ (สลิปปลอม/ไม่ตรง) → client ถอนแพ็กเอง
   // ===== Onboarding: เลือกเป้าหมาย (เข้าง่าย + ลึกได้) =====
+  audienceType?: AudienceType;            // ขายให้ใคร: B2B/B2C — เลือกตั้งแต่ขั้นแรก กัน Persona สับสน (null = ยังไม่เลือก)
   onboardGoal?: OnboardGoal;              // เป้าหมายที่ผู้ใช้เลือกตอนเริ่ม (null/undefined = ยังไม่เลือก → โชว์ GoalChooser)
   focusDismissed?: boolean;               // ปลดล็อกเมนูทั้งหมดแล้ว (เลิกโหมดโฟกัส) — true = โชว์ nav ครบ
   // CMO วิเคราะห์ตลาด+กลุ่มลูกค้า (Segmentation) รายสัปดาห์ทุกวันศุกร์ (ดึงข้อมูลตลาดจริง)
