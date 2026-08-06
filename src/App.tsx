@@ -190,6 +190,7 @@ export default function App() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [landingPreview, setLandingPreview] = useState(false);  // สมาชิกเปิดดูหน้าแนะนำ (เพื่อแชร์/แนะนำต่อ)
   const [navCollapsed, setNavCollapsed] = useState(() => localStorage.getItem('ceo_ai_nav_collapsed') === '1');
   const [showBadge, setShowBadge] = useState(false);
   const toggleNavCollapse = () => setNavCollapsed(v => {
@@ -537,6 +538,17 @@ export default function App() {
     );
   }
 
+  // สมาชิกเปิด "ดูหน้าแนะนำ" (แชร์/แนะนำต่อ) → โชว์ Landing พร้อมปุ่มกลับเข้าแอป
+  if (landingPreview) {
+    return (
+      <LandingPage
+        onGetStarted={() => setLandingPreview(false)}
+        onTryGuest={() => setLandingPreview(false)}
+        onExitPreview={() => setLandingPreview(false)}
+      />
+    );
+  }
+
   const doneCount = data.actions.filter(a => a.done).length;
 
   // First-run: ผู้ใช้ใหม่ (ยังไม่เลือกเป้าหมาย + เพิ่งเข้า) → ถาม "วันนี้อยากทำอะไร?" ก่อน
@@ -593,6 +605,7 @@ export default function App() {
         collapsed={navCollapsed}
         onToggleCollapse={toggleNavCollapse}
         onExitFocus={() => updateData({ ...data, focusDismissed: true })}
+        onViewLanding={() => setLandingPreview(true)}
       />
 
       <main className={`main${navCollapsed ? ' nav-collapsed' : ''}`}>

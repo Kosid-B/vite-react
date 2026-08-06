@@ -12,6 +12,8 @@ interface Props {
   onGetStarted: () => void;
   /** ลองใช้แอปทันทีโดยไม่ต้องสมัคร (guest mode) — ลด friction #1 */
   onTryGuest?: () => void;
+  /** โหมดพรีวิว: สมาชิกที่ล็อกอินแล้วเปิดดูหน้าแนะนำ (เพื่อแชร์/แนะนำต่อ) → มีปุ่มกลับเข้าแอป */
+  onExitPreview?: () => void;
 }
 
 const C = {
@@ -135,7 +137,7 @@ const plans = [
   },
 ];
 
-export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
+export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }: Props) {
   const [ctaHover, setCtaHover] = useState(false);
   const [navHover, setNavHover] = useState(false);
   const [guestHover, setGuestHover] = useState(false);
@@ -155,6 +157,17 @@ export default function LandingPage({ onGetStarted, onTryGuest }: Props) {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: C.bg, color: C.white, fontFamily: "'Kanit', sans-serif", overflowX: 'hidden' }}>
+
+      {/* ─── โหมดพรีวิว (สมาชิกเปิดดูหน้าแนะนำ) — ปุ่มกลับเข้าแอป ─── */}
+      {onExitPreview && (
+        <div style={{ position: 'sticky', top: 0, zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '10px 16px', background: C.amber5, color: C.dark }}>
+          <span style={{ fontSize: 13.5, fontWeight: 600 }}>👀 กำลังดูหน้าแนะนำ (สำหรับแชร์ให้เพื่อน) — นี่คือหน้าที่คนใหม่จะเห็น</span>
+          <button onClick={onExitPreview}
+            style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: C.dark, color: '#fff', fontFamily: 'inherit', fontWeight: 700, fontSize: 13.5, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            ← กลับเข้าแอป
+          </button>
+        </div>
+      )}
 
       {/* ─── Nav ─── */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${C.border}`, backgroundColor: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(12px)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>

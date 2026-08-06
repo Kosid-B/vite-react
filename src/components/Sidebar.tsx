@@ -27,6 +27,7 @@ interface Props {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
   onExitFocus?: () => void;   // ปลดล็อกเมนูทั้งหมด (เลิกโหมดโฟกัสเป้าหมาย)
+  onViewLanding?: () => void; // สมาชิกเปิดดูหน้าแนะนำ (เพื่อแชร์/แนะนำต่อ)
 }
 
 // โหมดโฟกัส: map เป้าหมาย → หน้าหลัก + หน้าที่เกี่ยวข้อง (ซ่อนเมนูอื่นก่อน เข้าง่าย)
@@ -86,7 +87,7 @@ const TOOL_PAGE_IDS = TOOL_ITEMS.map(t => t.id);
 // หน้าในกลุ่ม "ธุรกิจ & การขาย" (ยุบได้)
 const BIZ_PAGE_IDS: PageId[] = ['market', 'storefront', 'trade', 'team', 'factory', 'analytics'];
 
-export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs, data, collapsed, onToggleCollapse, onExitFocus }: Props) {
+export default function Sidebar({ activePage, onNavigate, doneCount, totalActions, isOpen, onClose, onExport, onImportFile, userEmail, onSignOut, workspaces, activeWs, onSwitchWs, onCreateWs, data, collapsed, onToggleCollapse, onExitFocus, onViewLanding }: Props) {
   const pct = totalActions > 0 ? Math.round((doneCount / totalActions) * 100) : 0;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const locked = (page: PageId) => !!(data && PAGE_MIN_PLAN[page] && !canAccess(data, page));
@@ -523,6 +524,15 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
         />
 
         <AmbientMusic />
+
+        {onViewLanding && (
+          <button className="btn-export" onClick={() => { onViewLanding(); onClose(); }}>
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            ดูหน้าแนะนำ · แชร์ให้เพื่อน
+          </button>
+        )}
 
         {onSignOut && (
           <div className="sidebar-account">
