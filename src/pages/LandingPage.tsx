@@ -214,8 +214,8 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         </h1>
 
         <p style={{ fontSize: 18, color: C.slate4, marginBottom: 48, maxWidth: 620, lineHeight: 1.7 }}>
-          ยังไม่รู้จะทำธุรกิจอะไร หรือเริ่มยังไง? ให้ทีม AI ช่วยหาไอเดีย วางแผน หาลูกค้า และพาเริ่มทีละสเต็ป<br />
-          <strong style={{ color: C.white }}>เริ่มฟรี ไม่ต้องลาออก ไม่ต้องจ้างทีม</strong> — คุณสั่ง มันลงมือ คุณคุมทุกการตัดสินใจ
+          ยังไม่รู้จะทำธุรกิจอะไร หรือเริ่มยังไง? <strong style={{ color: C.white }}>พิมพ์ไอเดีย 1 บรรทัด — ทีม AI ช่วยทดสอบว่ามันไปรอดไหม ก่อนคุณเสียเงินจริง</strong> แล้ววางแผนหาลูกค้าให้ทีละสเต็ป<br />
+          เริ่มฟรี ไม่ต้องลาออก ไม่ต้องจ้างทีม — คุณสั่ง มันลงมือ คุณคุมทุกการตัดสินใจ
         </p>
 
         <div style={{ position: 'relative', display: 'inline-block' }}>
