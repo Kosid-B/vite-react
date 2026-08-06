@@ -137,6 +137,14 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.winStories) parsed.winStories = DEFAULT_DATA.winStories;
   if (!parsed.marketing) parsed.marketing = DEFAULT_DATA.marketing;
   if (!parsed.feedback) parsed.feedback = DEFAULT_DATA.feedback;
+  // ล้าง demo feedback ชุดเดิม (fb1–fb26) ที่เคย seed แล้ว save ค้างในข้อมูลผู้ใช้ — auto ครั้งเดียวตอนโหลด
+  // ปลอดภัย: feedback จริงใช้ id = `fb${Date.now()}` (ตัวเลข 13 หลัก) จึงไม่ match fb1–fb26
+  if (parsed.feedback?.entries?.length) {
+    const isDemoFb = (id: string) => /^fb([1-9]|1[0-9]|2[0-6])$/.test(id);
+    if (parsed.feedback.entries.some((e) => isDemoFb(e.id))) {
+      parsed.feedback.entries = parsed.feedback.entries.filter((e) => !isDemoFb(e.id));
+    }
+  }
   if (!parsed.gtmAuditChecks) parsed.gtmAuditChecks = DEFAULT_DATA.gtmAuditChecks;
   if (!parsed.iso9001) parsed.iso9001 = DEFAULT_DATA.iso9001;
   if (!parsed.sipoc) parsed.sipoc = DEFAULT_DATA.sipoc;
