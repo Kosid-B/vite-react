@@ -11,6 +11,7 @@ const CaseStudyTab  = lazy(() => import('./AdminTabs/CaseStudyTab'));
 const PaymentsTab   = lazy(() => import('./AdminTabs/PaymentsTab'));
 const TestimonialsTab = lazy(() => import('./AdminTabs/TestimonialsTab'));
 const LeadsTab = lazy(() => import('./AdminTabs/LeadsTab'));
+const GrowthDashboard = lazy(() => import('./AdminTabs/GrowthDashboard'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
@@ -137,7 +138,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'payments' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate' | 'testimonials' | 'leads';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'payments' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate' | 'testimonials' | 'leads' | 'growth';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -520,6 +521,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       <div className="pfa-tabs">
         <button className={`pfa-tab${tab === 'dashboard' ? ' active' : ''}`} onClick={() => setTab('dashboard')}>
           📊 Dashboard
+        </button>
+        <button className={`pfa-tab${tab === 'growth' ? ' active' : ''}`} onClick={() => setTab('growth')}>
+          📈 การเติบโต
         </button>
         <button className={`pfa-tab${tab === 'finance' ? ' active' : ''}`} onClick={() => setTab('finance')}>
           📊 วิเคราะห์การเงิน & ราคา
@@ -1708,6 +1712,13 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       {tab === 'leads' && (
         <Suspense fallback={<div className="page-loading" />}>
           <LeadsTab />
+        </Suspense>
+      )}
+
+      {/* ===== GROWTH DASHBOARD (รวม signup + lead + funnel ที่เดียว) ===== */}
+      {tab === 'growth' && (
+        <Suspense fallback={<div className="page-loading" />}>
+          <GrowthDashboard />
         </Suspense>
       )}
 
