@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { AppData } from '../types';
 import { track } from '../lib/analytics';
+import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import {
   businessInfoFromData, readinessFor, buildSuccessVideoScript,
-  scriptToPlainText, scriptToMarkdown,
+  scriptToPlainText, scriptToMarkdown, polishInstruction, applyPolish,
 } from '../lib/successVideoScript';
 
 /* SuccessVideoPanel — เมื่อผู้ใช้กรอกข้อมูลธุรกิจแล้ว สร้าง "สคริปต์วิดีโอ YouTube ~30 นาที"
@@ -16,9 +17,46 @@ export default function SuccessVideoPanel({ data }: { data: AppData }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const [polished, setPolished] = useState<ReturnType<typeof buildSuccessVideoScript> | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
   const info = useMemo(() => businessInfoFromData(data), [data]);
   const ready = useMemo(() => readinessFor(info), [info]);
-  const script = useMemo(() => buildSuccessVideoScript(info), [info]);
+  const base = useMemo(() => buildSuccessVideoScript(info), [info]);
+  // ข้อมูลธุรกิจเปลี่ยน → ยกเลิกฉบับขัดเกลาเดิม (กันเนื้อหาไม่ตรงกัน)
+  const script = polished && polished.title === base.title ? polished : base;
+
+  async function polish() {
+    setNote(null);
+    if (!isSupabaseEnabled || !supabase) {
+      setNote('การขัดเกลาด้วย AI ใช้ได้ในโหมดออนไลน์ (ล็อกอิน) — ตอนนี้แสดงฉบับสร้างอัตโนมัติ ซึ่งพร้อมใช้อยู่แล้ว');
+      track('success_video_polish', { mode: 'local' });
+      return;
+    }
+    setBusy(true);
+    try {
+      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
+        body: { page: 'video_script', pageLabel: 'ขัดเกลาสคริปต์วิดีโอ', instruction: polishInstruction(base) },
+      });
+      if (error) throw error;
+      const suggestions = (res?.suggestions ?? []).map((s: string) => String(s));
+      const out = applyPolish(base, suggestions);
+      if (out === base) {
+        setNote('AI ตอบกลับไม่ครบทุกบท — คงฉบับสร้างอัตโนมัติไว้ (ยังใช้ได้ปกติ)');
+        track('success_video_polish', { mode: 'partial' });
+      } else {
+        setPolished(out);
+        setNote('✨ ขัดเกลาสำนวนโดย AI แล้ว');
+        track('success_video_polish', { mode: 'ai' });
+      }
+    } catch (e) {
+      setNote('AI ไม่ตอบตอนนี้ — แสดงฉบับสร้างอัตโนมัติแทน (' + ((e as Error).message || 'error') + ')');
+      track('success_video_polish', { mode: 'fallback' });
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const copy = async () => {
     try {
@@ -79,7 +117,15 @@ export default function SuccessVideoPanel({ data }: { data: AppData }) {
               style={{ ...btn, background: 'transparent', color: C.cyan, border: `1px solid ${C.cyan}` }}>
               {open ? 'ซ่อนสคริปต์' : `👁️ ดูสคริปต์ (${script.chapters.length} บท)`}
             </button>
+            <button onClick={polish} disabled={busy}
+              style={{ ...btn, background: 'transparent', color: C.amber, border: `1px solid ${C.amber}`, opacity: busy ? 0.6 : 1, cursor: busy ? 'wait' : 'pointer' }}>
+              {busy ? '⏳ กำลังขัดเกลา…' : (polished ? '✨ ขัดเกลาแล้ว' : '✨ ให้ AI ขัดเกลาสำนวน')}
+            </button>
           </div>
+
+          {note && (
+            <div style={{ fontSize: 12, color: polished ? C.green : C.amber, marginBottom: 10 }}>{note}</div>
+          )}
 
           <div style={{ fontSize: 11.5, color: C.slate, marginBottom: open ? 12 : 0, lineHeight: 1.6 }}>
             📌 {script.disclaimer}
