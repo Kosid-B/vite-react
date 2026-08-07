@@ -609,6 +609,7 @@ export interface AppData {
   // Attribution: ช่องทางที่มา + วันสมัคร (first-touch) — ใช้รวมยอดสมัครจริงต่อช่องทางใน Growth Dashboard
   signupSource?: import('./lib/attribution').SignupSource;
   signupAt?: string;  // yyyy-mm-dd (stamp ครั้งเดียวตอน migrate ถ้ายังไม่มี)
+  retentionNudgeSeen?: string; // yyyy-mm-dd วันที่โชว์การ์ด "กลับมาทำต่อ" ล่าสุด (กันโชว์ซ้ำ/วัน)
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */
