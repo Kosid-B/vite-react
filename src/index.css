@@ -29,6 +29,26 @@
   --shadow:    0 4px 12px rgba(0,0,0,.40), 0 1px 3px rgba(0,0,0,.25);
 }
 
+/* ===== ธีม "มินิมอล" (สว่าง) — override token เดิมด้วย data-theme บน <html> ===== */
+:root[data-theme="minimal"] {
+  --cream:    #ffffff;   /* พื้นหลังหลัก */
+  --cream2:   #f6f7f9;   /* พื้นผิว/การ์ด */
+  --cream3:   #eceef2;   /* ยกระดับ/hover */
+  --ink:      #0f172a;   /* ข้อความหลัก */
+  --ink2:     #1e293b;
+  --ink3:     #475569;
+  --ink4:     #6b7280;
+  --sand:     #e2e8f0;   /* เส้นขอบ */
+  --white:    #ffffff;   /* พื้นการ์ด (เดิมเป็นดำ) */
+  --rust-bg:  rgba(6,182,212,0.10);
+  --green-bg: rgba(16,185,129,0.12);
+  --blue-bg:  rgba(59,130,246,0.10);
+  --amber-bg: rgba(245,158,11,0.12);
+  --red-bg:   rgba(239,68,68,0.10);
+  --shadow-sm: 0 1px 2px rgba(15,23,42,.06), 0 1px 1px rgba(15,23,42,.04);
+  --shadow:    0 6px 20px rgba(15,23,42,.08), 0 2px 6px rgba(15,23,42,.05);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
