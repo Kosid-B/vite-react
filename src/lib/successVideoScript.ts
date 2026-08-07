@@ -20,6 +20,9 @@ export interface VideoChapter {
   narration: string;     // บทพากย์หลัก (ไทย)
   points: string[];      // ประเด็นขยายความให้ผู้บรรยายเล่าต่อ (ยืดเวลาให้ถึง ~30 นาที)
   visual: string;        // คิวภาพ
+  lever?: string;        // เลเวอร์จิตวิทยา (AI Dark Marketing เชิงจริยธรรม) ที่บทนี้ใช้
+  flowPrompt?: string;   // prompt สั่ง Google Flow/Veo ทำ B-roll ของบทนี้ (อังกฤษ)
+  screenRec?: string;    // สิ่งที่ให้ "อัดจอระบบจริง" ('' = ใช้ Flow B-roll แทน)
 }
 
 export interface SuccessVideoScript {
@@ -28,6 +31,9 @@ export interface SuccessVideoScript {
   disclaimer: string;
   chapters: VideoChapter[];
   estMinutes: number;    // ประเมินความยาวจากจำนวนตัวอักษร (พูดไทย ~700 อักษร/นาที)
+  darkMarketing: string[];    // หลัก AI Dark Marketing เชิงจริยธรรมที่สคริปต์ใช้ (โปร่งใส)
+  ethics: string[];           // กติกาจริยธรรม (ห้ามแต่งตัวเลข/ไม่การันตี/ตัวอย่างจำลอง ฯลฯ)
+  dataGovernance: string[];   // ธรรมาภิบาลข้อมูล (PDPA · ข้อมูลอยู่ใน workspace · ผู้ใช้ควบคุมได้)
 }
 
 export interface Readiness {
@@ -262,15 +268,54 @@ export function buildSuccessVideoScript(info: BusinessInfo): SuccessVideoScript 
     },
   ];
 
-  const totalChars = chapters.reduce((n, ch) => n + ch.narration.length + ch.points.join('').length, 0);
+  // เสริมชุดผลิต "จบในตัว": เลเวอร์จิตวิทยาเชิงจริยธรรม (AI Dark Marketing) + Flow prompt + คิวอัดจอ
+  // screenRec = สิ่งที่ผู้ใช้อัดจอระบบจริงได้ (Flow ทำ UI จริงไม่ได้) · flow = B-roll อารมณ์ (อังกฤษ)
+  const ENRICH: Record<number, { lever: string; flow: string; rec: string }> = {
+    1: { lever: 'Curiosity Gap + Cortisol (ความตึงเครียดจริง ไม่ขู่เท็จ)', flow: `Cinematic close-up of a tired Thai entrepreneur awake at 2 AM, face lit only by laptop glow, anxious quiet mood, slow push-in, photorealistic`, rec: '' },
+    2: { lever: 'Oxytocin/Belonging (เห็นอกเห็นใจ ไม่ตัดสิน)', flow: `Montage of a small Thai business owner juggling many roles alone, overwhelmed but hopeful, warm handheld, documentary style`, rec: '' },
+    3: { lever: 'Authority/Insight (dopamine จากการเข้าใจ)', flow: `Abstract data-driven visuals of market opportunity, glowing charts forming over a city, clean teal tones, smooth motion`, rec: `อัดจอ: หน้า Market Sizing + VRIO ของ ${C}` },
+    4: { lever: 'Loss Aversion (ซื่อสัตย์: เลี่ยง "ลงเงินก่อนพิสูจน์")', flow: `Split-screen metaphor: one path burning money on unsold products, other path validating first, conceptual clean`, rec: `อัดจอ: หน้า Business Model · MIT24 + Personas` },
+    5: { lever: 'Serotonin/Mastery (ภูมิใจในระบบที่ทำเอง)', flow: `Elegant visualization of a business system: gears, SOP flow, KPI dashboards connecting smoothly, premium minimal`, rec: `อัดจอ: หน้า SIPOC/ISO + CFO analysis` },
+    6: { lever: 'Relief + Dopamine/Progress (โล่งใจ + เห็นความคืบหน้า)', flow: `A team of friendly AI assistant avatars working around a solo founder, supportive warm sci-fi, gentle glow`, rec: `อัดจอ: หน้าบริษัท AI ของ ${C} + เมืองบริษัท` },
+    7: { lever: 'Social Proof (ของจริงเท่านั้น ไม่ปั้นรีวิว)', flow: `Warm scene of customers happily returning to a thriving small Thai business, golden hour, uplifting dolly`, rec: `อัดจอ: หน้า Marketplace/หน้าร้าน + ปุ่มแชร์` },
+    8: { lever: 'Commitment + Honest Numbers (คำนวณจากเลขผู้ใช้เอง)', flow: `Close-up of hands typing numbers into a calculator, results turning positive, focused hopeful, clean product-demo tone`, rec: `อัดจอ: เครื่องคำนวณ ROI บนหน้าแรก (กรอกเลขจริง)` },
+    9: { lever: 'Oxytocin/Aspiration (วาดฝันที่ติดป้าย "แผน")', flow: `Inspiring wide shot of a confident Thai owner in front of a thriving business at sunrise, hopeful rising crane`, rec: '' },
+    10: { lever: 'Low-friction First Step (ชวนก้าวเล็ก ไม่กดดัน)', flow: `Uplifting shot of a hand opening a laptop to a bright welcoming start screen at dawn, fresh optimistic`, rec: '' },
+  };
+  const enriched: VideoChapter[] = chapters.map(ch => {
+    const e = ENRICH[ch.no];
+    return e ? { ...ch, lever: e.lever, flowPrompt: e.flow, screenRec: e.rec } : ch;
+  });
+
+  const totalChars = enriched.reduce((n, ch) => n + ch.narration.length + ch.points.join('').length, 0);
   const estMinutes = Math.max(1, Math.round(totalChars / CHARS_PER_MIN));
 
   return {
     title: `${C} — เส้นทางสู่ความสำเร็จด้วยระบบ AI (ฉบับเต็ม ~30 นาที)`,
     thumbnail: `ซ้าย: เจ้าของ ${C} วันแรก · ขวา: ธุรกิจที่โตเป็นระบบ · ข้อความ: "${C} ทำได้"`,
     disclaimer: 'สคริปต์นี้สร้างจากข้อมูลที่คุณกรอก เป็น “แผน/วิสัยทัศน์ที่ระบบพาไป” เพื่อสร้างกำลังใจและความชัดเจน — ไม่ใช่การรับประกันผลลัพธ์หรือรายได้',
-    chapters,
+    chapters: enriched,
     estMinutes,
+    darkMarketing: [
+      'ใช้ "Curiosity Gap" + open loop เปิดปมให้อยากดูต่อ — แต่เฉลยจริงทุกครั้ง (ไม่ล่อแล้วไม่ให้)',
+      'ใช้ "Loss Aversion" แบบซื่อสัตย์: ชี้ความเสี่ยงจริง (ลงเงินก่อนพิสูจน์ Demand) ไม่ขู่ด้วยเรื่องเท็จ',
+      'Social Proof เฉพาะของจริง (เคส/รีวิวจริงเท่านั้น) — ห้ามปั้นตัวเลข/รีวิวปลอม',
+      'Dopamine/Progress ผ่าน "ความคืบหน้าจากงานจริง" (เมืองบริษัท) ไม่ใช่รางวัลหลอกให้เสพติด',
+      'กระตุ้นอารมณ์ (cortisol/oxytocin) เพื่อ "สื่อสารให้เข้าใจ+ลงมือ" ไม่ใช่บิดเบือนการตัดสินใจ',
+      '❌ ไม่มี fake scarcity · countdown ปลอม · "ที่สุดในโลก" · การันตีรายได้',
+    ],
+    ethics: [
+      'ทุกคำพูดต้องจริงต่อผลิตภัณฑ์ (Full-Knowledge Test: ถ้าลูกค้ารู้ทุกอย่าง ยังพูดแบบนี้ได้ไหม)',
+      'ตัวละคร/ตัวอย่าง = จำลอง ต้องขึ้นข้อความ "ภาพจำลองเพื่อประกอบการอธิบาย"',
+      'ROI/ตัวเลข = ประเมินจากที่ผู้ใช้กรอกเอง ไม่การันตีผลลัพธ์',
+      'ห้ามเลียนแบบบุคคล/แบรนด์จริง หรือใช้เสียง/หน้าคนจริงโดยไม่ยินยอม (รวมถึง AI video)',
+    ],
+    dataGovernance: [
+      'ข้อมูลธุรกิจที่ใช้สร้างสคริปต์อยู่ใน workspace ของผู้ใช้เอง — ไม่แชร์ข้ามเวิร์กสเปซ',
+      'ห้ามนำข้อมูลส่วนบุคคลของลูกค้าจริงมาใส่คลิปโดยไม่ได้รับความยินยอม (PDPA)',
+      'เนื้อหา/ภาพ/เพลง ต้องเป็นของเรา หรือ royalty-free — ไม่ละเมิดลิขสิทธิ์',
+      'ผู้ใช้ควบคุม/แก้ไข/ลบข้อมูลของตนได้ตลอด (สอดคล้อง PDPA)',
+    ],
   };
 }
 
@@ -302,36 +347,58 @@ export function applyPolish(s: SuccessVideoScript, suggestions: string[]): Succe
   return { ...s, chapters };
 }
 
-/** แปลงเป็นข้อความล้วน (พากย์/คัดลอก) */
+function govBlock(s: SuccessVideoScript, h: (t: string) => string): string[] {
+  const out: string[] = [];
+  const sec = (title: string, items: string[]) => {
+    out.push(h(title));
+    for (const it of items) out.push(`- ${it}`);
+    out.push('');
+  };
+  sec('🧠 AI Dark Marketing (เชิงจริยธรรม) ที่สคริปต์ใช้', s.darkMarketing);
+  sec('⚖️ จริยธรรม (Ethics)', s.ethics);
+  sec('🔐 ธรรมาภิบาลข้อมูล (Data Governance · PDPA)', s.dataGovernance);
+  return out;
+}
+
+/** แปลงเป็นข้อความล้วน — ชุดผลิต "จบในตัว" (พากย์ + Flow + อัดจอ + จริยธรรม/governance) */
 export function scriptToPlainText(s: SuccessVideoScript): string {
   const lines: string[] = [s.title, '', s.disclaimer, ''];
   for (const ch of s.chapters) {
     lines.push(`[${ch.time}] บทที่ ${ch.no}: ${ch.heading}`);
+    if (ch.lever) lines.push(`(เลเวอร์: ${ch.lever})`);
     lines.push(ch.visual);
-    lines.push(ch.narration);
+    lines.push(`บทพากย์: ${ch.narration}`);
     if (ch.points.length) {
       lines.push('ขยายความ:');
       for (const p of ch.points) lines.push(`- ${p}`);
     }
+    if (ch.screenRec) lines.push(`🖥️ อัดจอ: ${ch.screenRec}`);
+    if (ch.flowPrompt) lines.push(`🎥 Google Flow prompt: ${ch.flowPrompt}`);
     lines.push('');
   }
+  for (const l of govBlock(s, t => t)) lines.push(l);
   return lines.join('\n');
 }
 
-/** แปลงเป็น Markdown (ดาวน์โหลด/แชร์) */
+/** แปลงเป็น Markdown — ชุดผลิต "จบในตัว" (ดาวน์โหลด/แชร์) */
 export function scriptToMarkdown(s: SuccessVideoScript): string {
   const lines: string[] = [`# ${s.title}`, '', `> ${s.disclaimer}`, '', `**ความยาวประเมิน:** ~${s.estMinutes} นาที`, '', `**ทัมเนล:** ${s.thumbnail}`, ''];
   for (const ch of s.chapters) {
     lines.push(`## บทที่ ${ch.no} · ${ch.time} — ${ch.heading}`);
-    lines.push(`\`${ch.visual}\``);
+    if (ch.lever) lines.push(`**เลเวอร์ (จิตวิทยาเชิงจริยธรรม):** ${ch.lever}`);
     lines.push('');
-    lines.push(ch.narration);
+    lines.push(`**บทพากย์:** ${ch.narration}`);
     if (ch.points.length) {
       lines.push('');
       lines.push('**ขยายความ:**');
       for (const p of ch.points) lines.push(`- ${p}`);
     }
+    if (ch.screenRec) lines.push('', `**🖥️ อัดจอระบบจริง:** ${ch.screenRec}`);
+    lines.push('', `**🎥 Google Flow prompt:** \`${ch.flowPrompt ?? ''}\``);
+    lines.push('', `**คิวภาพ:** \`${ch.visual}\``);
     lines.push('');
   }
+  lines.push('---', '');
+  for (const l of govBlock(s, t => `## ${t}`)) lines.push(l);
   return lines.join('\n');
 }

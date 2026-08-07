@@ -87,8 +87,11 @@ export default function SuccessVideoPanel({ data }: { data: AppData }) {
       <div style={{ fontSize: 'clamp(16px, 2.2vw, 20px)', fontWeight: 800, color: C.white }}>
         🎬 วิดีโอสร้างความเชื่อมั่น — <span style={{ color: C.cyan }}>สคริปต์ ~{script.estMinutes} นาที จากธุรกิจคุณ</span>
       </div>
-      <div style={{ color: C.slate, fontSize: 13, margin: '4px 0 14px', lineHeight: 1.6 }}>
-        ระบบสร้างสคริปต์วิดีโอ YouTube เล่า “เส้นทางที่ {info.company || 'ธุรกิจของคุณ'} จะเดินจนสำเร็จด้วยระบบ” — เอาไปพากย์ AI แล้วอัปได้เลย
+      <div style={{ color: C.slate, fontSize: 13, margin: '4px 0 10px', lineHeight: 1.6 }}>
+        ชุดผลิต “จบในตัว” จากข้อมูลธุรกิจ {info.company || 'ของคุณ'} — บทพากย์ + Google Flow prompt + คิวอัดจอระบบจริง + title/ทัมเนล ตามหลัก <b style={{ color: C.white }}>AI Dark Marketing เชิงจริยธรรม</b>
+      </div>
+      <div style={{ fontSize: 11.5, color: C.slate, marginBottom: 12, lineHeight: 1.6 }}>
+        🔐 ฝัง <b style={{ color: '#a78bfa' }}>จริยธรรม + Data Governance (PDPA)</b> ไว้ในไฟล์: ไม่แต่งตัวเลข · ไม่การันตีรายได้ · ไม่มี fake scarcity · ข้อมูลอยู่ใน workspace คุณเอง
       </div>
 
       {/* Readiness */}
@@ -139,14 +142,27 @@ export default function SuccessVideoPanel({ data }: { data: AppData }) {
                   <div style={{ fontSize: 12, color: C.cyan, fontWeight: 700 }}>บทที่ {ch.no} · {ch.time}</div>
                   <div style={{ fontSize: 14, color: C.white, fontWeight: 700, margin: '2px 0 6px' }}>{ch.heading}</div>
                   <div style={{ fontSize: 11.5, color: C.slate, fontStyle: 'italic', marginBottom: 6 }}>{ch.visual}</div>
+                  {ch.lever && <div style={{ fontSize: 11, color: '#a78bfa', marginBottom: 4 }}>🧠 เลเวอร์: {ch.lever}</div>}
                   <div style={{ fontSize: 13.5, color: '#cbd5e1', lineHeight: 1.7 }}>{ch.narration}</div>
                   {ch.points.length > 0 && (
                     <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: C.slate, fontSize: 12.5, lineHeight: 1.7 }}>
                       {ch.points.map((p, i) => <li key={i}>{p}</li>)}
                     </ul>
                   )}
+                  {ch.screenRec && <div style={{ fontSize: 12, color: C.green, marginTop: 8 }}>🖥️ อัดจอ: {ch.screenRec}</div>}
+                  {ch.flowPrompt && <div style={{ fontSize: 11.5, color: C.amber, marginTop: 4, lineHeight: 1.5 }}>🎥 Flow prompt: <span style={{ color: C.slate }}>{ch.flowPrompt}</span></div>}
                 </div>
               ))}
+
+              {/* Governance footer */}
+              <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', background: C.card }}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#a78bfa', marginBottom: 6 }}>🔐 จริยธรรม + Data Governance (อยู่ในไฟล์ที่คัดลอก/ดาวน์โหลด)</div>
+                <ul style={{ margin: 0, paddingLeft: 18, color: C.slate, fontSize: 12, lineHeight: 1.7 }}>
+                  {script.darkMarketing.slice(0, 2).map((t, i) => <li key={'d' + i}>{t}</li>)}
+                  {script.ethics.slice(0, 1).map((t, i) => <li key={'e' + i}>{t}</li>)}
+                  {script.dataGovernance.slice(0, 1).map((t, i) => <li key={'g' + i}>{t}</li>)}
+                </ul>
+              </div>
             </div>
           )}
         </>

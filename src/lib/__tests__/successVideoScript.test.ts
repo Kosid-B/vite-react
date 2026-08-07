@@ -27,6 +27,35 @@ describe('buildSuccessVideoScript', () => {
     expect(s.disclaimer).toMatch(/ไม่ใช่การรับประกัน/);
   });
 
+  it('ชุดผลิตจบในตัว: ทุกบทมี lever + flowPrompt · บท ROI มี screenRec', () => {
+    const s = buildSuccessVideoScript(B2C);
+    s.chapters.forEach(ch => {
+      expect(ch.lever && ch.lever.length).toBeTruthy();
+      expect(ch.flowPrompt && ch.flowPrompt.length).toBeTruthy();
+    });
+    expect(s.chapters.find(c => c.no === 8)!.screenRec).toMatch(/อัดจอ/);
+    expect(s.chapters.find(c => c.no === 1)!.screenRec).toBe(''); // Hook = Flow B-roll
+  });
+
+  it('มีหมวด dark marketing / ethics / data governance (ไม่ว่าง + มี guardrail)', () => {
+    const s = buildSuccessVideoScript(B2C);
+    expect(s.darkMarketing.length).toBeGreaterThan(0);
+    expect(s.ethics.length).toBeGreaterThan(0);
+    expect(s.dataGovernance.length).toBeGreaterThan(0);
+    expect(s.darkMarketing.join(' ')).toMatch(/fake scarcity|การันตี/);
+    expect(s.dataGovernance.join(' ')).toMatch(/PDPA/);
+  });
+
+  it('scriptToMarkdown/PlainText มี Flow prompt + หมวด governance', () => {
+    const s = buildSuccessVideoScript(B2C);
+    const md = scriptToMarkdown(s);
+    const txt = scriptToPlainText(s);
+    expect(md).toMatch(/Google Flow prompt/);
+    expect(md).toMatch(/Data Governance/);
+    expect(txt).toMatch(/Google Flow prompt/);
+    expect(txt).toMatch(/PDPA/);
+  });
+
   it('personalize: ชื่อธุรกิจ + กลุ่มลูกค้าโผล่ในบท', () => {
     const s = buildSuccessVideoScript(B2C);
     const all = s.chapters.map(c => c.narration + c.points.join(' ')).join(' ');
