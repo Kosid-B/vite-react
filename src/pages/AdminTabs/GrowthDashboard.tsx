@@ -9,6 +9,7 @@ import {
   type GrowthEcoState, type GChannelId, type GChannelEntry, type Health,
 } from '../../lib/growthEconomics';
 import { signupsForWeek, type SignupRecord } from '../../lib/attribution';
+import UtmBuilder from '../../components/UtmBuilder';
 
 /* Growth Dashboard — รวมตัวเลขการเติบโตในแอปที่เดียว: ผู้สมัคร + lead + funnel
  * (คนเข้าดู Landing = GA4 · ในแอปวัดไม่ได้เพราะยังไม่ล็อกอิน) */
@@ -260,6 +261,9 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
           <ChannelBars title="🎯 Lead จากแคมเปญ (campaign)" stats={lstats.byCampaign} />
         </div>
       )}
+
+      {/* UTM Builder — สร้างลิงก์ติด utm ต่อช่องทาง (ให้ 'ติด utm ทุกโพสต์' ทำได้จริง) */}
+      <UtmBuilder />
 
       {/* Unit economics — LTV/CAC/COCA/ROI รายสัปดาห์ (กรอกมือ + เติมยอดสมัครจริง) */}
       {data && onUpdate && <UnitEconomics data={data} onUpdate={onUpdate} real={realSignups} />}
