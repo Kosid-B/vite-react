@@ -9,6 +9,7 @@ import MarketDemandPanel from '../components/MarketDemandPanel';
 import RoiCalculatorPanel from '../components/RoiCalculatorPanel';
 import GainPointsPanel from '../components/GainPointsPanel';
 import HowItWorks30 from '../components/HowItWorks30';
+import TrustBar from '../components/TrustBar';
 import { currentChallenger } from '../lib/challengerRotation';
 import { listApprovedTestimonials, aggregateRating, starString, type Testimonial } from '../lib/testimonials';
 import LandingReviewWidget from '../components/LandingReviewWidget';
@@ -354,6 +355,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           </div>
         </div>
       </section>
+
+      {/* ─── Trust bar (Dark AI Marketing #17 เชิงจริยธรรม) — authority/PDPA/risk-reversal ของจริง ─── */}
+      <TrustBar />
 
       {/* ─── "ระบบทำงานยังไงใน 30 วินาที" (explainer เคลื่อนไหว) — ให้เข้าใจภาพรวมเร็ว ─── */}
       <HowItWorks30 onGetStarted={onGetStarted} />
