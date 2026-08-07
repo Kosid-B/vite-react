@@ -606,6 +606,9 @@ export interface AppData {
   buyingTriggers?: import('./lib/buyingTriggers').BuyingTriggersState;
   // Growth unit economics (admin): LTV/CAC/COCA/ROI รายสัปดาห์ต่อช่องทาง (กรอกมือ) — ดู lib/growthEconomics.ts
   growthEco?: import('./lib/growthEconomics').GrowthEcoState;
+  // Attribution: ช่องทางที่มา + วันสมัคร (first-touch) — ใช้รวมยอดสมัครจริงต่อช่องทางใน Growth Dashboard
+  signupSource?: import('./lib/attribution').SignupSource;
+  signupAt?: string;  // yyyy-mm-dd (stamp ครั้งเดียวตอน migrate ถ้ายังไม่มี)
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */

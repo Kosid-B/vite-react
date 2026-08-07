@@ -8,6 +8,7 @@ import {
   DEFAULT_GROWTH_ECO, weekMetrics, ltvOf, isoWeekTag, healthLabel,
   type GrowthEcoState, type GChannelId, type GChannelEntry, type Health,
 } from '../../lib/growthEconomics';
+import { signupsForWeek, type SignupRecord } from '../../lib/attribution';
 
 /* Growth Dashboard — รวมตัวเลขการเติบโตในแอปที่เดียว: ผู้สมัคร + lead + funnel
  * (คนเข้าดู Landing = GA4 · ในแอปวัดไม่ได้เพราะยังไม่ล็อกอิน) */
@@ -49,9 +50,10 @@ const HEALTH_COLOR: Record<Health, string> = { good: '#16a34a', ok: '#f59e0b', w
 const baht = (n: number | null) => (n == null ? '—' : '฿' + n.toLocaleString('th-TH'));
 
 /** Unit economics รายสัปดาห์: LTV/CAC/COCA/ROI ต่อช่องทาง (กรอกมือ) */
-function UnitEconomics({ data, onUpdate }: { data: AppData; onUpdate: (d: AppData) => void }) {
+function UnitEconomics({ data, onUpdate, real }: { data: AppData; onUpdate: (d: AppData) => void; real?: Record<GChannelId, number> | null }) {
   const eco: GrowthEcoState = data.growthEco ?? DEFAULT_GROWTH_ECO;
   const save = (next: GrowthEcoState) => onUpdate({ ...data, growthEco: next });
+  const realTotal = real ? Object.values(real).reduce((a, b) => a + b, 0) : 0;
 
   // สัปดาห์ปัจจุบัน — สร้างอัตโนมัติถ้ายังไม่มี
   const curTag = isoWeekTag(new Date());
@@ -68,13 +70,36 @@ function UnitEconomics({ data, onUpdate }: { data: AppData; onUpdate: (d: AppDat
     save({ ...eco, weeks });
   };
 
+  // เติมยอดสมัคร "จริง" (จาก signupAt+source) ลงช่อง signups ทุกช่องทางของสัปดาห์นี้
+  const fillReal = () => {
+    if (!real) return;
+    const entries = { ...week.entries };
+    (Object.keys(real) as GChannelId[]).forEach(ch => {
+      const cur = entries[ch] ?? { signups: 0, adCost: 0, otherCost: 0 };
+      entries[ch] = { ...cur, signups: real[ch] };
+    });
+    const nextWeek = { ...week, entries };
+    const weeks = eco.weeks.some(w => w.weekTag === curTag)
+      ? eco.weeks.map(w => (w.weekTag === curTag ? nextWeek : w))
+      : [...eco.weeks, nextWeek];
+    save({ ...eco, weeks });
+  };
+
   const numInput: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '7px 9px', borderRadius: 8, border: '1px solid var(--sand)', background: 'var(--cream)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 13 };
   const th: React.CSSProperties = { textAlign: 'right', fontSize: 11.5, color: 'var(--ink3)', fontWeight: 600, padding: '4px 6px', whiteSpace: 'nowrap' };
   const td: React.CSSProperties = { textAlign: 'right', fontSize: 12.5, color: 'var(--ink)', padding: '4px 6px' };
 
   return (
     <div style={{ border: '1px solid var(--sand)', borderRadius: 12, padding: '16px 18px', background: 'var(--cream2)', display: 'grid', gap: 14 }}>
-      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>💰 Unit Economics รายสัปดาห์ — LTV / CAC / COCA / ROI <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)' }}>· สัปดาห์ {curTag}</span></div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>💰 Unit Economics รายสัปดาห์ — LTV / CAC / COCA / ROI <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)' }}>· สัปดาห์ {curTag}</span></div>
+        {real && (
+          <button onClick={fillReal} title="ดึงยอดสมัครจริงต่อช่องทาง (จาก utm ตอน signup) มาเติมช่อง 'สมัครใหม่'"
+            style={{ background: '#0891b2', color: '#fff', border: 0, borderRadius: 8, padding: '6px 12px', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+            ⤵️ เติมยอดสมัครจริง ({realTotal})
+          </button>
+        )}
+      </div>
 
       {/* Assumptions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
@@ -117,7 +142,10 @@ function UnitEconomics({ data, onUpdate }: { data: AppData; onUpdate: (d: AppDat
             {wm.perChannel.map(c => (
               <tr key={c.channel} style={{ borderTop: '1px solid var(--sand)' }}>
                 <td style={{ ...td, textAlign: 'left', whiteSpace: 'nowrap' }}>{c.icon} {c.label}</td>
-                <td style={{ padding: '3px 4px', width: 74 }}><input type="number" value={week.entries[c.channel]?.signups || ''} onChange={e => setEntry(c.channel, 'signups', +e.target.value)} style={numInput} /></td>
+                <td style={{ padding: '3px 4px', width: 78 }}>
+                  <input type="number" value={week.entries[c.channel]?.signups || ''} onChange={e => setEntry(c.channel, 'signups', +e.target.value)} style={numInput} />
+                  {real && <div style={{ fontSize: 10, color: '#0891b2', textAlign: 'right', marginTop: 1 }}>จริง: {real[c.channel] ?? 0}</div>}
+                </td>
                 <td style={{ padding: '3px 4px', width: 90 }}><input type="number" value={week.entries[c.channel]?.adCost || ''} onChange={e => setEntry(c.channel, 'adCost', +e.target.value)} style={numInput} /></td>
                 <td style={{ padding: '3px 4px', width: 90 }}><input type="number" value={week.entries[c.channel]?.otherCost || ''} onChange={e => setEntry(c.channel, 'otherCost', +e.target.value)} style={numInput} /></td>
                 <td style={td}>{baht(c.cac)}</td>
@@ -154,6 +182,7 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
   const [signups, setSignups] = useState(0);
   const [funnel, setFunnel] = useState<FunnelSummary | null>(null);
   const [lstats, setLstats] = useState<LeadStats | null>(null);
+  const [realSignups, setRealSignups] = useState<Record<GChannelId, number> | null>(null);
 
   async function load() {
     if (!isSupabaseEnabled) return;
@@ -163,6 +192,11 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
       setSignups(rows.length);
       const states = await Promise.all(rows.map(r => wsLoad(r.id).catch(() => null)));
       setFunnel(funnelSummary(states));
+      // ยอดสมัครจริงต่อช่องทาง (สัปดาห์นี้) จาก signupAt + signupSource ของทุกเวิร์กสเปซ
+      const records: SignupRecord[] = states
+        .filter((s): s is AppData => !!s && !!s.signupAt)
+        .map(s => ({ at: s.signupAt!, channel: s.signupSource?.channel ?? 'other' }));
+      setRealSignups(signupsForWeek(records, isoWeekTag(new Date())));
       const leads = await listLeads();
       setLstats(leadStats(leads, new Date().toISOString().slice(0, 10)));
       setMsg(`อัปเดตแล้ว · ${rows.length} เวิร์กสเปซ`);
@@ -227,8 +261,8 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
         </div>
       )}
 
-      {/* Unit economics — LTV/CAC/COCA/ROI รายสัปดาห์ (กรอกมือ) */}
-      {data && onUpdate && <UnitEconomics data={data} onUpdate={onUpdate} />}
+      {/* Unit economics — LTV/CAC/COCA/ROI รายสัปดาห์ (กรอกมือ + เติมยอดสมัครจริง) */}
+      {data && onUpdate && <UnitEconomics data={data} onUpdate={onUpdate} real={realSignups} />}
 
       {/* หมายเหตุ GA4 */}
       <div style={{ border: '1px dashed var(--sand)', borderRadius: 12, padding: '14px 16px', background: 'var(--cream)', fontSize: 12.5, color: 'var(--ink3)', lineHeight: 1.7 }}>
