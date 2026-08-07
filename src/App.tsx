@@ -9,6 +9,7 @@ import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave
 import { resolveWsLoad } from './lib/wsSync';
 import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
+import { rememberSourceOnce, readRememberedSource } from './lib/attribution';
 import { isRealActivation } from './lib/setupWizard';
 import { track } from './lib/analytics';
 import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTriggers';
@@ -175,15 +176,23 @@ function migrate(parsed: AppData): AppData {
   if (!parsed.experiments) parsed.experiments = defaultExperiments();
   if (!parsed.boardRoom) parsed.boardRoom = { decisions: [] };
   if (!parsed.resources) parsed.resources = { items: [], requests: [] };
+  // Attribution: stamp วันสมัคร + ช่องทางที่มา (first-touch) ครั้งเดียวเมื่อยังไม่มี
+  if (!parsed.signupAt) {
+    parsed.signupAt = new Date().toISOString().slice(0, 10);
+    const src = readRememberedSource();
+    if (src) parsed.signupSource = src;
+  }
   return parsed;
 }
 
 function loadData(): AppData {
+  // จำช่องทางที่มา (utm/referrer) ก่อน migrate จะ stamp — first-touch
+  try { rememberSourceOnce(window.location.search, document.referrer); } catch { /* empty */ }
   try {
     const s = localStorage.getItem(STORAGE_KEY);
     if (s) return migrate(JSON.parse(s) as AppData);
   } catch { /* empty */ }
-  return JSON.parse(JSON.stringify(DEFAULT_DATA)) as AppData;
+  return migrate(JSON.parse(JSON.stringify(DEFAULT_DATA)) as AppData);
 }
 
 export default function App() {
