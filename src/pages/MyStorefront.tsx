@@ -8,6 +8,7 @@ import { sellerAhaProgress } from '../lib/ahaMoment';
 import { trackAiCall } from '../lib/usage';
 import { track } from '../lib/analytics';
 import { lineShareUrl, facebookShareUrl } from '../lib/shareLinks';
+import { slugify, slugifyInput } from '../lib/slug';
 import FillHoursPanel from '../components/FillHoursPanel';
 import DBDSelect from '../components/DBDSelect';
 import EditableList from '../components/EditableList';
@@ -25,7 +26,7 @@ interface Props {
 const APP_ORIGIN = 'https://ceoaithailand.org';
 
 function defaultSlug(name: string): string {
-  return name.trim().replace(/\s+/g, '-').slice(0, 60) || 'my-business';
+  return slugify(name);
 }
 
 /** หัวข้อบอกลำดับขั้น (1,2,3,4) ช่วยคนเปิดร้านครั้งแรกรู้ว่าต้องทำอะไรก่อนหลัง */
@@ -166,7 +167,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
     if (!sf.name.trim() || !sf.slug.trim()) { setMsg('⚠️ กรอกชื่อธุรกิจและชื่อลิงก์ก่อน'); return; }
     setSaving(true);
     setMsg(null);
-    const next = { ...sf, published };
+    const next = { ...sf, slug: slugify(sf.slug), published }; // normalize กัน slug เพี้ยน (เช่นวาง URL เต็ม)
     const err = await saveStorefront(wsId, next);
     setSaving(false);
     if (err) { setMsg('⚠️ ' + err); return; }
@@ -313,7 +314,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
           </label>
           <label className="sf-field">
             <span>ชื่อลิงก์ (slug) — {APP_ORIGIN}/b/…</span>
-            <input value={sf.slug} onChange={e => patch({ slug: e.target.value.replace(/[\s/]/g, '-') })} spellCheck={false} />
+            <input value={sf.slug} onChange={e => patch({ slug: slugifyInput(e.target.value) })} spellCheck={false} />
           </label>
           <label className="sf-field">
             <span>หมวดธุรกิจ (DBD) — ใช้จัดกลุ่มในสารบัญ</span>
