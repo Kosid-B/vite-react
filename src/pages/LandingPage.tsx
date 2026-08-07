@@ -8,6 +8,7 @@ import InstantPreview from '../components/InstantPreview';
 import MarketDemandPanel from '../components/MarketDemandPanel';
 import RoiCalculatorPanel from '../components/RoiCalculatorPanel';
 import GainPointsPanel from '../components/GainPointsPanel';
+import HowItWorks30 from '../components/HowItWorks30';
 import { currentChallenger } from '../lib/challengerRotation';
 import { listApprovedTestimonials, aggregateRating, starString, type Testimonial } from '../lib/testimonials';
 import LandingReviewWidget from '../components/LandingReviewWidget';
@@ -353,6 +354,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           </div>
         </div>
       </section>
+
+      {/* ─── "ระบบทำงานยังไงใน 30 วินาที" (explainer เคลื่อนไหว) — ให้เข้าใจภาพรวมเร็ว ─── */}
+      <HowItWorks30 onGetStarted={onGetStarted} />
 
       {/* ─── คุณจะได้อะไร (pain → gain): แก้ปัญหาคนไม่เข้าใจระบบ → ไม่กล้าสมัคร ─── */}
       <GainPointsPanel seg={hero.seg} onGetStarted={onGetStarted} />
