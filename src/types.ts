@@ -604,6 +604,8 @@ export interface AppData {
   resources?: import('./lib/resources').ResourcesState;
   // 3 แรงขับที่ทำให้ลูกค้ายอมจ่าย (ขจัดความทุกข์/สะดวก/อารมณ์) — ดู lib/buyingTriggers.ts
   buyingTriggers?: import('./lib/buyingTriggers').BuyingTriggersState;
+  // Growth unit economics (admin): LTV/CAC/COCA/ROI รายสัปดาห์ต่อช่องทาง (กรอกมือ) — ดู lib/growthEconomics.ts
+  growthEco?: import('./lib/growthEconomics').GrowthEcoState;
 }
 
 /* ===== การเงินธุรกิจ (ขับเมืองบริษัท) ===== */
