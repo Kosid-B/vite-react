@@ -7,6 +7,7 @@ import { streakCount } from '../lib/streak';
 import MfaSetup from './MfaSetup';
 import IsmsBadge from './IsmsBadge';
 import AmbientMusic from './AmbientMusic';
+import ThemeToggle from './ThemeToggle';
 
 interface Props {
   activePage: PageId;
@@ -524,6 +525,8 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
         />
 
         <AmbientMusic />
+
+        <ThemeToggle />
 
         {onViewLanding && (
           <button className="btn-export" onClick={() => { onViewLanding(); onClose(); }}>
