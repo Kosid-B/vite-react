@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { AppData, Deal, DealStatus, MarketPartner } from '../types';
 import { baht } from '../utils';
+import PodOpportunityPanel from '../components/PodOpportunityPanel';
 
 interface Props {
   data: AppData;
@@ -94,6 +95,9 @@ export default function Marketplace({ data, onUpdate }: Props) {
         <div className="mk-stat"><div className="mk-stat-lbl">ดีลใน pipeline</div><div className="mk-stat-num">{baht(pipeline)}</div></div>
         <div className="mk-stat"><div className="mk-stat-lbl">รายได้ที่คาดได้เพิ่ม</div><div className="mk-stat-num">{baht(potential)}</div></div>
       </div>
+
+      {/* POP — สินค้า PoD น่าขาย ให้ตรงกลุ่มเป้าหมาย */}
+      <PodOpportunityPanel data={data} />
 
       <div className="mk-feebar">
         <span>ปรับค่าดำเนินการแพลตฟอร์ม</span>
