@@ -1718,7 +1718,7 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       {/* ===== GROWTH DASHBOARD (รวม signup + lead + funnel ที่เดียว) ===== */}
       {tab === 'growth' && (
         <Suspense fallback={<div className="page-loading" />}>
-          <GrowthDashboard />
+          <GrowthDashboard data={data} onUpdate={onUpdate} />
         </Suspense>
       )}
 

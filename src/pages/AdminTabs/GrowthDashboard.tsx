@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { AppData } from '../../types';
 import { isSupabaseEnabled } from '../../lib/supabase';
 import { adminListWorkspaces, wsLoad } from '../../lib/workspaces';
 import { funnelSummary, type FunnelSummary } from '../../lib/funnel';
 import { listLeads, leadStats, type LeadStats, type ChannelStat } from '../../lib/platformLead';
+import {
+  DEFAULT_GROWTH_ECO, weekMetrics, ltvOf, isoWeekTag, healthLabel,
+  type GrowthEcoState, type GChannelId, type GChannelEntry, type Health,
+} from '../../lib/growthEconomics';
 
 /* Growth Dashboard — รวมตัวเลขการเติบโตในแอปที่เดียว: ผู้สมัคร + lead + funnel
  * (คนเข้าดู Landing = GA4 · ในแอปวัดไม่ได้เพราะยังไม่ล็อกอิน) */
@@ -40,7 +45,110 @@ function ChannelBars({ title, stats }: { title: string; stats: ChannelStat[] }) 
   );
 }
 
-export default function GrowthDashboard() {
+const HEALTH_COLOR: Record<Health, string> = { good: '#16a34a', ok: '#f59e0b', weak: '#dc2626', organic: '#0891b2', na: 'var(--ink3)' };
+const baht = (n: number | null) => (n == null ? '—' : '฿' + n.toLocaleString('th-TH'));
+
+/** Unit economics รายสัปดาห์: LTV/CAC/COCA/ROI ต่อช่องทาง (กรอกมือ) */
+function UnitEconomics({ data, onUpdate }: { data: AppData; onUpdate: (d: AppData) => void }) {
+  const eco: GrowthEcoState = data.growthEco ?? DEFAULT_GROWTH_ECO;
+  const save = (next: GrowthEcoState) => onUpdate({ ...data, growthEco: next });
+
+  // สัปดาห์ปัจจุบัน — สร้างอัตโนมัติถ้ายังไม่มี
+  const curTag = isoWeekTag(new Date());
+  const week = useMemo(() => eco.weeks.find(w => w.weekTag === curTag) ?? { weekTag: curTag, entries: {} }, [eco, curTag]);
+  const wm = useMemo(() => weekMetrics(eco, week), [eco, week]);
+
+  const setAssume = (k: 'arpu' | 'lifetimeMonths' | 'currentMRR', v: number) => save({ ...eco, [k]: Math.max(0, v || 0) });
+  const setEntry = (ch: GChannelId, k: keyof GChannelEntry, v: number) => {
+    const cur: GChannelEntry = week.entries[ch] ?? { signups: 0, adCost: 0, otherCost: 0 };
+    const nextWeek = { ...week, entries: { ...week.entries, [ch]: { ...cur, [k]: Math.max(0, v || 0) } } };
+    const weeks = eco.weeks.some(w => w.weekTag === curTag)
+      ? eco.weeks.map(w => (w.weekTag === curTag ? nextWeek : w))
+      : [...eco.weeks, nextWeek];
+    save({ ...eco, weeks });
+  };
+
+  const numInput: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '7px 9px', borderRadius: 8, border: '1px solid var(--sand)', background: 'var(--cream)', color: 'var(--ink)', fontFamily: 'inherit', fontSize: 13 };
+  const th: React.CSSProperties = { textAlign: 'right', fontSize: 11.5, color: 'var(--ink3)', fontWeight: 600, padding: '4px 6px', whiteSpace: 'nowrap' };
+  const td: React.CSSProperties = { textAlign: 'right', fontSize: 12.5, color: 'var(--ink)', padding: '4px 6px' };
+
+  return (
+    <div style={{ border: '1px solid var(--sand)', borderRadius: 12, padding: '16px 18px', background: 'var(--cream2)', display: 'grid', gap: 14 }}>
+      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>💰 Unit Economics รายสัปดาห์ — LTV / CAC / COCA / ROI <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink3)' }}>· สัปดาห์ {curTag}</span></div>
+
+      {/* Assumptions */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
+        <label style={{ fontSize: 12, color: 'var(--ink3)' }}>ARPU (รายได้/สมาชิก/เดือน ฿)
+          <input type="number" value={eco.arpu || ''} onChange={e => setAssume('arpu', +e.target.value)} style={numInput} /></label>
+        <label style={{ fontSize: 12, color: 'var(--ink3)' }}>อายุเฉลี่ยสมาชิก (เดือน)
+          <input type="number" value={eco.lifetimeMonths || ''} onChange={e => setAssume('lifetimeMonths', +e.target.value)} style={numInput} /></label>
+        <label style={{ fontSize: 12, color: 'var(--ink3)' }}>MRR ตอนนี้ (฿/เดือน)
+          <input type="number" value={eco.currentMRR || ''} onChange={e => setAssume('currentMRR', +e.target.value)} style={numInput} /></label>
+        <div style={{ border: '1px solid var(--sand)', borderRadius: 8, padding: '8px 10px', background: 'var(--cream)' }}>
+          <div style={{ fontSize: 11.5, color: 'var(--ink3)' }}>LTV (คำนวณ)</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#7c3aed' }}>{baht(ltvOf(eco))}</div>
+        </div>
+      </div>
+
+      {/* Ad-spend gate */}
+      <div style={{ border: `1px solid ${wm.adGateOpen ? '#16a34a' : '#f59e0b'}`, borderRadius: 8, padding: '9px 12px', background: 'var(--cream)', fontSize: 12.5, color: 'var(--ink)' }}>
+        {wm.adGateOpen
+          ? '✅ มีรายรับแล้ว (MRR > 0) — พร้อมลงทุนค่าโฆษณาตามแผน · ดู LTV:CAC ≥ 3 ก่อนสเกล'
+          : '⏳ ยังไม่มีรายรับ (MRR = 0) — ตามแผน: โฟกัส organic ก่อน แล้วค่อยลงแอดเมื่อมีรายรับจากสมาชิก'}
+      </div>
+
+      {/* ตารางกรอกต่อช่องทาง */}
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 640 }}>
+          <thead>
+            <tr>
+              <th style={{ ...th, textAlign: 'left' }}>ช่องทาง</th>
+              <th style={th}>สมัครใหม่</th>
+              <th style={th}>ค่าแอด ฿</th>
+              <th style={th}>ต้นทุนอื่น ฿</th>
+              <th style={th}>CAC</th>
+              <th style={th}>COCA</th>
+              <th style={th}>LTV:CAC</th>
+              <th style={th}>ROI%</th>
+              <th style={th}>สถานะ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {wm.perChannel.map(c => (
+              <tr key={c.channel} style={{ borderTop: '1px solid var(--sand)' }}>
+                <td style={{ ...td, textAlign: 'left', whiteSpace: 'nowrap' }}>{c.icon} {c.label}</td>
+                <td style={{ padding: '3px 4px', width: 74 }}><input type="number" value={week.entries[c.channel]?.signups || ''} onChange={e => setEntry(c.channel, 'signups', +e.target.value)} style={numInput} /></td>
+                <td style={{ padding: '3px 4px', width: 90 }}><input type="number" value={week.entries[c.channel]?.adCost || ''} onChange={e => setEntry(c.channel, 'adCost', +e.target.value)} style={numInput} /></td>
+                <td style={{ padding: '3px 4px', width: 90 }}><input type="number" value={week.entries[c.channel]?.otherCost || ''} onChange={e => setEntry(c.channel, 'otherCost', +e.target.value)} style={numInput} /></td>
+                <td style={td}>{baht(c.cac)}</td>
+                <td style={td}>{baht(c.coca)}</td>
+                <td style={{ ...td, fontWeight: 700 }}>{c.ltvCacRatio == null ? '—' : `${c.ltvCacRatio}×`}</td>
+                <td style={{ ...td, color: c.roi != null && c.roi >= 0 ? '#16a34a' : '#dc2626' }}>{c.roi == null ? '—' : `${c.roi}%`}</td>
+                <td style={{ ...td, color: HEALTH_COLOR[c.health], fontSize: 11.5, whiteSpace: 'nowrap' }}>{healthLabel(c.health)}</td>
+              </tr>
+            ))}
+            <tr style={{ borderTop: '2px solid var(--sand)', fontWeight: 800 }}>
+              <td style={{ ...td, textAlign: 'left' }}>รวม</td>
+              <td style={td}>{wm.totals.signups}</td>
+              <td style={td}>{baht(wm.totals.adCost)}</td>
+              <td style={td}>{baht(wm.totals.otherCost)}</td>
+              <td style={td}>{baht(wm.totals.cac)}</td>
+              <td style={td}>{baht(wm.totals.coca)}</td>
+              <td style={td}>{wm.totals.ltvCacRatio == null ? '—' : `${wm.totals.ltvCacRatio}×`}</td>
+              <td style={{ ...td, color: wm.totals.roi != null && wm.totals.roi >= 0 ? '#16a34a' : '#dc2626' }}>{wm.totals.roi == null ? '—' : `${wm.totals.roi}%`}</td>
+              <td style={td} />
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style={{ fontSize: 11.5, color: 'var(--ink3)', lineHeight: 1.7 }}>
+        กรอกทุกสัปดาห์เพื่อวัดผลต่อช่องทาง · CAC = ค่าแอด/สมัคร · COCA = (แอด+อื่นๆ)/สมัคร · LTV:CAC เกณฑ์ดี ≥ 3 · ROI = (LTV−COCA)/COCA · ตัวเลขคำนวณจากที่กรอกเอง ไม่ใช่การรับประกัน
+      </div>
+    </div>
+  );
+}
+
+export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; onUpdate?: (d: AppData) => void } = {}) {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [signups, setSignups] = useState(0);
@@ -118,6 +226,9 @@ export default function GrowthDashboard() {
           <ChannelBars title="🎯 Lead จากแคมเปญ (campaign)" stats={lstats.byCampaign} />
         </div>
       )}
+
+      {/* Unit economics — LTV/CAC/COCA/ROI รายสัปดาห์ (กรอกมือ) */}
+      {data && onUpdate && <UnitEconomics data={data} onUpdate={onUpdate} />}
 
       {/* หมายเหตุ GA4 */}
       <div style={{ border: '1px dashed var(--sand)', borderRadius: 12, padding: '14px 16px', background: 'var(--cream)', fontSize: 12.5, color: 'var(--ink3)', lineHeight: 1.7 }}>
