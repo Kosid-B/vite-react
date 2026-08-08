@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { track } from '../lib/analytics';
 import { pickHeroVariant } from '../lib/heroVariant';
 import { heroAbVariant, HERO_AB_COPY, type HeroAb } from '../lib/heroExperiment';
@@ -15,6 +15,8 @@ import { currentChallenger } from '../lib/challengerRotation';
 import { listApprovedTestimonials, aggregateRating, starString, type Testimonial } from '../lib/testimonials';
 import LandingReviewWidget from '../components/LandingReviewWidget';
 import LeadCapture from '../components/LeadCapture';
+import PersonaBanner from '../components/PersonaBanner';
+import { loadBehavior, derivePersona, persistSignal, type PersonaView } from '../lib/behaviorPersona';
 
 interface Props {
   onGetStarted: () => void;
@@ -175,6 +177,30 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
     try { return layoutAbVariant(getBrowserAbId()); } catch { return 'explain_first'; }
   }, []);
   useEffect(() => { track('layout_ab_exposed', { variant: layoutAb }); }, [layoutAb]);
+
+  // ── Dynamic Persona: เว็บปรับตาม "พฤติกรรมจริง" (Dark AI Marketing #5/#6/#7) ──
+  // นับการมาเยือน + อ่านสัญญาณสะสม (นิรนาม/PDPA) → เลือกข้อความส่วนตัวใต้ hero
+  // persona ตัดสินที่ mount ครั้งเดียว (ไม่เด้งกลางสกรอลล์) — สัญญาณรอบนี้มีผลรอบถัดไป
+  const [persona, setPersona] = useState<PersonaView | null>(null);
+  useEffect(() => {
+    try {
+      const b = loadBehavior(Date.now());
+      const p = derivePersona(b, Date.now());
+      if (p) { setPersona(p); track('persona_banner_shown', { persona: p.id, visits: b.visits }); }
+    } catch { /* noop */ }
+  }, []);
+
+  // เก็บสัญญาณ "เลื่อนถึงส่วนแพ็กเกจ" = intent ราคา (มีผลกับ persona รอบหน้า)
+  const pricingRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const el = pricingRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some(e => e.isIntersecting)) { persistSignal('reachedPricing'); io.disconnect(); }
+    }, { threshold: 0.3 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   // hero ที่ใช้แสดงจริง — ถ้าอยู่ในกลุ่ม A/B ทับพาดหัว/ประโยคเปิดด้วย copy ของกลุ่มนั้น
   const heroCopy = heroAb ? { ...hero, ...HERO_AB_COPY[heroAb] } : hero;
   // กดปุ่มหลัก → จำเป้าหมายไว้ให้แอปพาไปหน้าถูก (ข้าม GoalChooser) แล้วเข้าโหมดที่เหมาะ
@@ -364,6 +390,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         </div>
       </section>
 
+      {/* ─── Dynamic Persona banner — ปรับตามพฤติกรรมจริง (โปร่งใส/ปิดได้/ลบข้อมูลได้) ─── */}
+      {persona && <PersonaBanner persona={persona} onGetStarted={onGetStarted} onClose={() => setPersona(null)} />}
+
       {/* ─── A/B ลำดับบล็อก (layoutAb) — เนื้อหาครบเท่ากันทั้งคู่ ต่างแค่ลำดับ ─── */}
       {/* explainBlock: อธิบายระบบ (TrustBar → วิธีใช้ 30 วิ → สิ่งที่ได้) · proofBlock: ดีมานด์/ROI ของจริง */}
       {(() => {
@@ -380,9 +409,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         const proofBlock = (
           <>
             {/* Demand/Supply Board (first-party จริง): พิมพ์ธุรกิจ → เห็นดีมานด์ในระบบ */}
-            <MarketDemandPanel onGetStarted={onGetStarted} />
+            <MarketDemandPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} />
             {/* ROI อย่างง่าย: กรอกตัวเลข → เทียบค่าสมัคร + บทวิเคราะห์ */}
-            <RoiCalculatorPanel onGetStarted={onGetStarted} />
+            <RoiCalculatorPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedRoi')} />
           </>
         );
         return layoutAb === 'proof_first'
@@ -620,7 +649,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── Pricing ─── */}
-      <section id="pricing" style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+      <section id="pricing" ref={pricingRef} style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12, color: C.white }}>
             แพ็กเกจ <span style={{ color: C.cyan4 }}>สำหรับทุกขนาดธุรกิจ</span>
