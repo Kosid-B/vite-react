@@ -3,16 +3,19 @@ import { latestSnapshot, type SnapshotRow } from '../lib/marketSnapshot';
 import { kindStatFromCounts, statForText, roiEstimate, OPPORTUNITY_LABEL, type KindStat } from '../lib/marketDemandSupply';
 import { type OfferKind } from '../lib/b2bMatching';
 import { track } from '../lib/analytics';
+import { useLandingTheme } from '../lib/landingTheme';
 
 /* MarketDemandPanel — Demand/Supply Board บน Landing (first-party จริง)
  * พิมพ์ธุรกิจ → เห็นว่ามีคน "หา" กี่ราย / "ขาย" กี่ราย ในหมวดนั้น + ROI ง่าย ๆ
  * = หลักฐานว่ามีดีมานด์รออยู่จริง (แก้ pain รอ walk-in) → เหตุผลให้สมัคร */
 
-const C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.5)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', cyan5: '#06b6d4', amber: '#f59e0b', green: '#4ade80', dark: '#020617' };
-const OPP_COLOR: Record<KindStat['opportunity'], string> = { high: C.green, balanced: C.cyan, saturated: C.amber };
+const DARK_C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.5)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', cyan5: '#06b6d4', amber: '#f59e0b', green: '#4ade80', dark: '#020617', onAccent: '#ffffff' };
+const LIGHT_C: typeof DARK_C = { border: '#e2e8f0', panel: '#ffffff', card: '#f1f5f9', white: '#0f172a', slate: '#475569', cyan: '#0891b2', cyan5: '#0e7490', amber: '#f59e0b', green: '#16a34a', dark: '#020617', onAccent: '#ffffff' };
+const OPP_COLOR: Record<KindStat['opportunity'], string> = { high: DARK_C.green, balanced: DARK_C.cyan, saturated: DARK_C.amber };
 const baht = (n: number) => '฿' + n.toLocaleString('th-TH');
 
 export default function MarketDemandPanel({ onGetStarted, onEngage }: { onGetStarted: () => void; onEngage?: () => void }) {
+  const C = useLandingTheme() === 'minimal' ? LIGHT_C : DARK_C;
   const [snap, setSnap] = useState<{ month: string; rows: SnapshotRow[] }>({ month: '', rows: [] });
   const [biz, setBiz] = useState('');
   const [walkin, setWalkin] = useState('');
@@ -35,7 +38,7 @@ export default function MarketDemandPanel({ onGetStarted, onEngage }: { onGetSta
   );
 
   const card: React.CSSProperties = { border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 16px', background: C.card };
-  const input: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 10, border: `1px solid #334155`, background: 'rgba(2,6,23,0.5)', color: C.white, fontFamily: 'inherit', fontSize: 15 };
+  const input: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, color: C.white, fontFamily: 'inherit', fontSize: 15 };
 
   return (
     <section style={{ padding: '20px 24px' }}>

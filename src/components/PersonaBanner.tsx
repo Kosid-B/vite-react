@@ -2,12 +2,14 @@ import { useState } from 'react';
 import type { PersonaView } from '../lib/behaviorPersona';
 import { dismissPersona, clearBehavior } from '../lib/behaviorPersona';
 import { track } from '../lib/analytics';
+import { useLandingTheme } from '../lib/landingTheme';
 
 /* PersonaBanner — แถบส่วนตัวใต้ hero ที่ "ปรับตามพฤติกรรมจริง" ของผู้เข้าชม
  * Dark AI Marketing #5/#6/#7 (Dynamic Persona · Hyper-Personalization · พฤติกรรม>ประชากร)
  * จริยธรรม: โปร่งใส (กดดู "ทำไมเห็นข้อความนี้") · ปิดได้ · ล้างข้อมูลส่วนตัวได้ (PDPA) */
 
-const C = { border: '#334155', panel: 'rgba(6,182,212,0.08)', white: '#fff', slate: '#94a3b8', slate5: '#8b96a9', cyan3: '#67e8f9', cyan4: '#22d3ee', cyan5: '#06b6d4', amber5: '#f59e0b', dark: '#020617' };
+const DARK_C = { border: '#334155', panel: 'rgba(6,182,212,0.08)', white: '#fff', slate: '#94a3b8', slate5: '#8b96a9', cyan3: '#67e8f9', cyan4: '#22d3ee', cyan5: '#06b6d4', amber5: '#f59e0b', dark: '#020617' };
+const LIGHT_C: typeof DARK_C = { border: '#7dd3e8', panel: 'rgba(8,145,178,0.08)', white: '#0f172a', slate: '#475569', slate5: '#64748b', cyan3: '#0e7490', cyan4: '#0891b2', cyan5: '#0e7490', amber5: '#f59e0b', dark: '#020617' };
 
 interface Props {
   persona: PersonaView;
@@ -16,6 +18,7 @@ interface Props {
 }
 
 export default function PersonaBanner({ persona, onGetStarted, onClose }: Props) {
+  const C = useLandingTheme() === 'minimal' ? LIGHT_C : DARK_C;
   const [showReason, setShowReason] = useState(false);
 
   const close = () => { dismissPersona(); track('persona_banner_dismissed', { persona: persona.id }); onClose(); };

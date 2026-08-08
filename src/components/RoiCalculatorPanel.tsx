@@ -4,15 +4,18 @@ import { termLabel } from '../lib/terms';
 import { PLAN_PRICE_NUM } from '../lib/access';
 import { track } from '../lib/analytics';
 import type { PlanId } from '../types';
+import { useLandingTheme } from '../lib/landingTheme';
 
 /* RoiCalculatorPanel — ROI อย่างง่ายบน Landing: กรอกตัวเลขร้าน → เห็นผลตอบแทน + เทียบค่าสมัครแพ็กเรา
  * ตอบ "จ่ายค่าระบบแล้วคุ้มไหม" · คำไทยคู่ EN (ความคุ้มค่า/ROI) · บทวิเคราะห์ rule-based (ซื่อสัตย์) + CTA ให้ AI ลึกในระบบ */
 
-const C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.5)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', green: '#4ade80', red: '#fca5a5', amber: '#f59e0b', dark: '#020617' };
+const DARK_C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.5)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', green: '#4ade80', red: '#fca5a5', amber: '#f59e0b', dark: '#020617' };
+const LIGHT_C: typeof DARK_C = { border: '#e2e8f0', panel: '#ffffff', card: '#f1f5f9', white: '#0f172a', slate: '#475569', cyan: '#0891b2', green: '#16a34a', red: '#dc2626', amber: '#f59e0b', dark: '#020617' };
 const baht = (n: number) => '฿' + Math.round(n).toLocaleString('th-TH');
 const PLANS: { id: PlanId; label: string }[] = [{ id: 'starter', label: 'Starter' }, { id: 'growth', label: 'Growth' }];
 
 export default function RoiCalculatorPanel({ onGetStarted, onEngage }: { onGetStarted: () => void; onEngage?: () => void }) {
+  const C = useLandingTheme() === 'minimal' ? LIGHT_C : DARK_C;
   const [walkin, setWalkin] = useState('20');
   const [ticket, setTicket] = useState('60');
   const [extra, setExtra] = useState('60');
@@ -26,7 +29,7 @@ export default function RoiCalculatorPanel({ onGetStarted, onEngage }: { onGetSt
     [walkin, ticket, extra, plan],
   );
 
-  const input: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 10, border: '1px solid #334155', background: 'rgba(2,6,23,0.5)', color: C.white, fontFamily: 'inherit', fontSize: 15 };
+  const input: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, background: C.card, color: C.white, fontFamily: 'inherit', fontSize: 15 };
   const label: React.CSSProperties = { fontSize: 12.5, color: C.slate, marginBottom: 5, display: 'block' };
   const stat = (t: string, v: string, color: string) => (
     <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', background: C.card, flex: '1 1 130px' }}>
@@ -69,7 +72,7 @@ export default function RoiCalculatorPanel({ onGetStarted, onEngage }: { onGetSt
 
         <div style={{ border: `1px solid ${r.worth ? C.green : C.amber}`, borderRadius: 10, padding: '12px 14px', background: C.card }}>
           <div style={{ fontSize: 12.5, fontWeight: 800, color: r.worth ? C.green : C.amber, marginBottom: 4 }}>🤖 บทวิเคราะห์</div>
-          <div style={{ fontSize: 13.5, color: '#cbd5e1', lineHeight: 1.6 }}>{r.verdict}</div>
+          <div style={{ fontSize: 13.5, color: C.slate, lineHeight: 1.6 }}>{r.verdict}</div>
         </div>
 
         <button onClick={() => { track('roi_cta_click', { worth: r.worth ? 1 : 0, plan }); onGetStarted(); }}

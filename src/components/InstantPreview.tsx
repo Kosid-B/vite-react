@@ -1,21 +1,28 @@
 import { useState } from 'react';
 import { track } from '../lib/analytics';
 import { buildInstantPreview, type InstantPreview as Preview } from '../lib/instantPreview';
+import { useLandingTheme } from '../lib/landingTheme';
 
 interface Props {
   /** พาเข้าสมัคร (ให้ AI ทำจริง) */
   onGetStarted: () => void;
 }
 
-const C = {
+const DARK_C = {
   bg: '#0b1424', bg2: '#0f172a', border: '#1e293b', border2: '#334155',
   white: '#f8fafc', slate: '#94a3b8', faint: '#64748b',
   cyan: '#22d3ee', cyan5: '#06b6d4', amber: '#f59e0b',
+};
+const LIGHT_C: typeof DARK_C = {
+  bg: '#ffffff', bg2: '#f1f5f9', border: '#e2e8f0', border2: '#cbd5e1',
+  white: '#0f172a', slate: '#475569', faint: '#64748b',
+  cyan: '#0891b2', cyan5: '#0e7490', amber: '#f59e0b',
 };
 
 /* Black Hole "Instant Proof" — กรอกชื่อธุรกิจ → เห็นตัวอย่าง แผน/ทีม/หน้าร้าน ก่อน login
  * สร้าง client-side (deterministic · ไม่เรียก AI/ไม่ต้อง auth) — Aha ก่อนสมัคร = ทำลายกำแพง trust */
 export default function InstantPreview({ onGetStarted }: Props) {
+  const C = useLandingTheme() === 'minimal' ? LIGHT_C : DARK_C;
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -76,8 +83,8 @@ export default function InstantPreview({ onGetStarted }: Props) {
         {preview && (
           <div style={{ marginTop: 30, display: 'grid', gap: 16 }}>
             {/* ทีม AI */}
-            <div style={card()}>
-              <div style={cardHd()}>🧑‍💼 ทีมผู้บริหาร AI ของ “{preview.bizName}”</div>
+            <div style={card(C)}>
+              <div style={cardHd(C)}>🧑‍💼 ทีมผู้บริหาร AI ของ “{preview.bizName}”</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 10, marginTop: 12 }}>
                 {preview.team.map(a => (
                   <div key={a.role} style={{ padding: 12, borderRadius: 10, border: `1px solid ${C.border}`, background: C.bg }}>
@@ -88,8 +95,8 @@ export default function InstantPreview({ onGetStarted }: Props) {
               </div>
             </div>
             {/* แผน */}
-            <div style={card()}>
-              <div style={cardHd()}>🎯 แผนเริ่มต้น</div>
+            <div style={card(C)}>
+              <div style={cardHd(C)}>🎯 แผนเริ่มต้น</div>
               <div style={{ marginTop: 10, color: C.white, fontSize: 15, fontWeight: 600 }}>{preview.plan.goal}</div>
               <div style={{ color: C.slate, fontSize: 13.5, margin: '6px 0 12px' }}>กลุ่มเป้าหมาย: {preview.plan.target}</div>
               <ol style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 6 }}>
@@ -99,8 +106,8 @@ export default function InstantPreview({ onGetStarted }: Props) {
               </ol>
             </div>
             {/* หน้าร้าน */}
-            <div style={card()}>
-              <div style={cardHd()}>🏪 หน้าร้าน (ตัวอย่าง)</div>
+            <div style={card(C)}>
+              <div style={cardHd(C)}>🏪 หน้าร้าน (ตัวอย่าง)</div>
               <div style={{ marginTop: 10, padding: 16, borderRadius: 12, border: `1px solid ${C.border2}`, background: 'linear-gradient(135deg,rgba(6,182,212,0.08),rgba(245,158,11,0.06))' }}>
                 <div style={{ fontWeight: 800, color: C.white, fontSize: 18 }}>{preview.storefront.name}</div>
                 <div style={{ color: C.cyan, fontSize: 13.5, margin: '3px 0 8px' }}>{preview.storefront.category}</div>
@@ -125,9 +132,9 @@ export default function InstantPreview({ onGetStarted }: Props) {
   );
 }
 
-function card(): React.CSSProperties {
+function card(C: typeof DARK_C): React.CSSProperties {
   return { padding: 18, borderRadius: 14, border: `1px solid ${C.border}`, background: C.bg2 };
 }
-function cardHd(): React.CSSProperties {
+function cardHd(C: typeof DARK_C): React.CSSProperties {
   return { fontWeight: 700, fontSize: 15, color: C.white };
 }
