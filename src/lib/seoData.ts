@@ -253,9 +253,22 @@ export function organizationJsonLd(origin: string): object {
   };
 }
 
-/** JSON-LD: SoftwareApplication — บอก AI ว่าเป็นซอฟต์แวร์ธุรกิจ + ราคา */
-export function softwareApplicationJsonLd(origin: string): object {
-  return {
+/** ค่าเฉลี่ยรีวิว "จริง" หน้าแรก — inject AggregateRating เฉพาะเมื่อมีรีวิวถึงเกณฑ์ (กันดาวปลอม/ดาวน้อยเกิน) */
+export const MIN_HOME_REVIEWS = 3;
+
+/** สรุปเรตติ้งจากรายการเรตจริง (กรองค่านอกช่วง 1..5) → {average(ปัด 1 ตำแหน่ง), count} · pure/testable */
+export function aggregateFromRatings(ratings: number[]): { average: number; count: number } {
+  const valid = ratings.filter(r => typeof r === 'number' && r >= 1 && r <= 5);
+  const count = valid.length;
+  const average = count ? Math.round((valid.reduce((s, r) => s + r, 0) / count) * 10) / 10 : 0;
+  return { average, count };
+}
+
+export interface ReviewAggregate { average: number; count: number }
+
+/** JSON-LD: SoftwareApplication — บอก AI ว่าเป็นซอฟต์แวร์ธุรกิจ + ราคา (+ ดาวรีวิวจริงถ้าถึงเกณฑ์) */
+export function softwareApplicationJsonLd(origin: string, agg?: ReviewAggregate): object {
+  const app: Record<string, unknown> = {
     '@context': 'https://schema.org', '@type': 'SoftwareApplication',
     name: 'CEO AI Thailand', url: origin,
     applicationCategory: 'BusinessApplication', operatingSystem: 'Web',
@@ -274,6 +287,14 @@ export function softwareApplicationJsonLd(origin: string): object {
       ],
     },
   };
+  // AggregateRating (rich snippet ดาว) — เฉพาะเมื่อมีรีวิว "จริง" ถึงเกณฑ์ (ไม่ปั้นดาวปลอม)
+  if (agg && agg.count >= MIN_HOME_REVIEWS && agg.average >= 1 && agg.average <= 5) {
+    app.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: agg.average, reviewCount: agg.count, bestRating: 5, worstRating: 1,
+    };
+  }
+  return app;
 }
 
 /** JSON-LD: FAQPage — ให้ AI หยิบ Q&A ไปตอบได้ตรง ๆ (จาก FAQ_ITEMS) */
@@ -288,13 +309,13 @@ export function faqPageJsonLd(): object {
 }
 
 /** SEO หน้าแรก (/) — title/desc canonical + schema ครบ (Organization + SoftwareApplication + FAQPage) */
-export function homeSeo(origin: string): SeoData {
+export function homeSeo(origin: string, agg?: ReviewAggregate): SeoData {
   return {
     title: 'CEO AI Thailand — สร้างและเดินธุรกิจด้วยทีมผู้บริหาร AI',
     description: 'แพลตฟอร์มไทยสำหรับผู้ประกอบการ SME: สร้างบริษัท AI อัตโนมัติ เปิดหน้าร้านขายของ และ validate ไอเดียธุรกิจ ในที่เดียว เริ่มฟรี พัฒนาโดย B. Training',
     canonicalUrl: origin + '/',
     imageUrl: origin + DEFAULT_OG,
-    jsonLd: [organizationJsonLd(origin), softwareApplicationJsonLd(origin), faqPageJsonLd()],
+    jsonLd: [organizationJsonLd(origin), softwareApplicationJsonLd(origin, agg), faqPageJsonLd()],
   };
 }
 

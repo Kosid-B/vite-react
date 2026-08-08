@@ -3,6 +3,7 @@ import {
   escapeHtml, jsonLdScript, sectorLabel,
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, llmsTxt,
   homeSeo, faqPageHtml, faqPageJsonLd, organizationJsonLd, softwareApplicationJsonLd, FAQ_ITEMS,
+  aggregateFromRatings, MIN_HOME_REVIEWS,
   mit24PageHtml, mit24FaqJsonLd, mit24ArticleJsonLd, MIT24_FAQ,
   type SeoStorefront,
 } from '../seoData';
@@ -246,6 +247,34 @@ describe('schema JSON-LD (GEO/AEO)', () => {
     expect(seo.canonicalUrl).toBe(ORIGIN + '/');
     expect(seo.jsonLd).toHaveLength(3);
     expect(seo.title).toContain('CEO AI Thailand');
+  });
+
+  it('aggregateFromRatings: เฉลี่ยปัด 1 ตำแหน่ง + กรองค่านอกช่วง 1..5', () => {
+    expect(aggregateFromRatings([5, 4, 5])).toEqual({ average: 4.7, count: 3 });
+    expect(aggregateFromRatings([5, 4, 5, 9, 0, -1])).toEqual({ average: 4.7, count: 3 }); // ตัดค่านอกช่วง
+    expect(aggregateFromRatings([])).toEqual({ average: 0, count: 0 });
+  });
+
+  it('softwareApplicationJsonLd: ไม่ inject ดาว ถ้ารีวิวจริงยังไม่ถึงเกณฑ์ (กันดาวปลอม)', () => {
+    const none = softwareApplicationJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(none.aggregateRating).toBeUndefined();
+    const few = softwareApplicationJsonLd(ORIGIN, { average: 5, count: MIN_HOME_REVIEWS - 1 }) as Record<string, unknown>;
+    expect(few.aggregateRating).toBeUndefined();
+  });
+
+  it('softwareApplicationJsonLd: inject AggregateRating เมื่อรีวิวจริงถึงเกณฑ์', () => {
+    const s = softwareApplicationJsonLd(ORIGIN, { average: 4.8, count: 12 }) as Record<string, unknown>;
+    const ar = s.aggregateRating as Record<string, unknown>;
+    expect(ar['@type']).toBe('AggregateRating');
+    expect(ar.ratingValue).toBe(4.8);
+    expect(ar.reviewCount).toBe(12);
+    expect(ar.bestRating).toBe(5);
+  });
+
+  it('homeSeo ส่งผ่าน aggregate เข้า SoftwareApplication', () => {
+    const seo = homeSeo(ORIGIN, { average: 4.5, count: 8 });
+    const app = seo.jsonLd.find(o => (o as Record<string, unknown>)['@type'] === 'SoftwareApplication') as Record<string, unknown>;
+    expect((app.aggregateRating as Record<string, unknown>).reviewCount).toBe(8);
   });
 });
 

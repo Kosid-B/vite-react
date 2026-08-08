@@ -2,8 +2,8 @@
 
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
-  homeSeo, faqPageHtml, mit24PageHtml,
-  type SeoData, type SeoStorefront,
+  homeSeo, faqPageHtml, mit24PageHtml, aggregateFromRatings,
+  type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
 
 export { CeoAiAgent } from './agent/CeoAiAgent';
@@ -61,6 +61,20 @@ async function listPublished(env: Env): Promise<{ slug: string; name: string; up
   return (rows ?? []).map(r => ({
     slug: r.slug, name: r.name, updatedAt: r.updated_at ? String(r.updated_at).slice(0, 10) : undefined,
   }));
+}
+
+/** ดึงค่าเฉลี่ยรีวิว "จริง" (approved) จาก platform_testimonials — สำหรับ AggregateRating หน้าแรก
+ *  anon key อ่าน approved ได้ตาม RLS (เหมือน client) · error/ไม่มีข้อมูล → null (ไม่ inject ดาว) */
+async function fetchReviewsAggregate(env: Env): Promise<ReviewAggregate | null> {
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return null;
+  const q = `${env.SUPABASE_URL}/rest/v1/platform_testimonials?status=eq.approved&select=rating`;
+  const res = await fetch(q, {
+    headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SUPABASE_ANON_KEY}` },
+  });
+  if (!res.ok) return null;
+  const rows = await res.json() as { rating: number }[];
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+  return aggregateFromRatings(rows.map(r => r.rating));
 }
 
 /** ส่ง shell (index.html) ผ่าน HTMLRewriter — แทน title/meta/canonical/OG + แนบ JSON-LD */
@@ -144,7 +158,10 @@ export default {
 
       // หน้าแรก / → inject schema (Organization + SoftwareApplication + FAQPage) ให้ AI/Google สกัด entity
       if (url.pathname === '/') {
-        try { return injectSeo(await env.ASSETS.fetch(request), homeSeo(origin)); }
+        try {
+          const agg = await fetchReviewsAggregate(env).catch(() => null);
+          return injectSeo(await env.ASSETS.fetch(request), homeSeo(origin, agg ?? undefined));
+        }
         catch { /* fallback → shell เดิม */ }
       }
 
