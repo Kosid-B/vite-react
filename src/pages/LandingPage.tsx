@@ -4,6 +4,7 @@ import { pickHeroVariant } from '../lib/heroVariant';
 import { heroAbVariant, HERO_AB_COPY, type HeroAb } from '../lib/heroExperiment';
 import { layoutAbVariant, getBrowserAbId, type LayoutAb } from '../lib/landingLayoutExperiment';
 import LegalLinks from '../components/LegalLinks';
+import AiTransparency from '../components/AiTransparency';
 import IsmsBadge from '../components/IsmsBadge';
 import InstantPreview from '../components/InstantPreview';
 import MarketDemandPanel from '../components/MarketDemandPanel';
@@ -838,7 +839,8 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         <br />
         <a href="/mit24" style={{ color: C.cyan4, textDecoration: 'none' }}>MIT 24 Steps คืออะไร</a> ·{' '}
         <a href="/faq" style={{ color: C.cyan4, textDecoration: 'none' }}>คำถามที่พบบ่อย</a> ·{' '}
-        <a href="/b" style={{ color: C.cyan4, textDecoration: 'none' }}>สารบัญธุรกิจ</a>
+        <a href="/b" style={{ color: C.cyan4, textDecoration: 'none' }}>สารบัญธุรกิจ</a> ·{' '}
+        <AiTransparency linkStyle={{ color: C.cyan4, textDecoration: 'none' }} />
         <br />
         © 2026 CEO AI Thailand · ceoaithailand.org · B. Training Consultant Co., Ltd.
         <br />

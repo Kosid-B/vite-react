@@ -1439,6 +1439,9 @@ input:focus, textarea:focus, select:focus {
 .pub-cat-name { font-size: 14.5px; font-weight: 600; color: var(--ink); }
 .pub-cat-price { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
 .pub-cat-desc { font-size: 13px; color: var(--ink3); line-height: 1.6; margin-top: 6px; }
+/* 🤖 AI disclaimer (นโยบายคอนเทนต์ AI) */
+.ai-disclaimer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--ink3, #94a3b8); line-height: 1.5; }
+.ai-disclaimer-badge { flex-shrink: 0; font-size: 11px; font-weight: 700; color: #38bdf8; background: rgba(56,189,248,.12); border: 1px solid rgba(56,189,248,.35); border-radius: 999px; padding: 2px 9px; }
 /* ⭐ rating badge + reviews */
 .pub-rating { display: inline-flex; align-items: center; gap: 8px; margin: 4px 0 6px; }
 .pub-rating-stars { color: #fbbf24; font-size: 16px; letter-spacing: 1px; }

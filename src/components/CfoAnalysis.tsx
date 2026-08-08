@@ -5,6 +5,7 @@ import { opsFinanceBridge } from '../lib/opsMetrics';
 import { fmtBaht } from '../lib/finance';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { track } from '../lib/analytics';
+import AiDisclaimer from './AiDisclaimer';
 
 /* ===== CFO AI — วิเคราะห์การเงิน "ธุรกิจตัวเอง" ของ SME จากข้อมูลจริง (d.finance) =====
  * ต่อยอด CityTreasury: อ่านตัวเลขที่ผู้ใช้กรอกเอง → ธงสุขภาพ + คำแนะนำ (rule-based เสมอ)
@@ -122,9 +123,7 @@ export default function CfoAnalysis({ data }: { data: AppData }) {
                   {aiAdvice.map((a, i) => <li key={i}>{a}</li>)}
                 </ol>
               )}
-              <p className="cfo-disclaimer">
-                💡 คำแนะนำจากตัวเลขที่คุณบันทึกเท่านั้น · CFO AI ไม่แต่งตัวเลขเพิ่ม · ไม่ใช่คำแนะนำการลงทุน
-              </p>
+              <AiDisclaimer note="คำแนะนำจากตัวเลขที่คุณบันทึกเท่านั้น · CFO AI ไม่แต่งตัวเลขเพิ่ม · ไม่ใช่คำแนะนำการลงทุน/ภาษี/บัญชี" />
             </div>
           )}
         </>
