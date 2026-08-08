@@ -1,4 +1,6 @@
 import { isSupabaseEnabled, supabase } from './supabase';
+import { coerceItems, type CatalogItem } from './catalog';
+import { CATALOG } from '../config';
 
 /** Marketplace M1 — หน้าร้านสาธารณะต่อบริษัท (ceoaithailand.org/b/<slug>)
  *  Production: ตาราง public.storefronts (อ่านได้สาธารณะรวม anon)
@@ -16,6 +18,7 @@ export interface Storefront {
   vp: string;           // Value Proposition — จุดขายหนึ่งประโยค (AI Agent ช่วยเขียน)
   promo: string;        // ข้อความโฆษณา/โปรโมชัน — แสดงเด่น 📣 บนตลาด
   images: string[];     // รูปสินค้า (URL/dataURL) สูงสุด MAX_SHOP_IMAGES รูป
+  products: CatalogItem[]; // แคตตาล็อกสินค้า/บริการรายชิ้น (SKU) — ไม่จำกัดจำนวนโดยดีไซน์
   description: string;
   services: string[];
   phone: string;
@@ -59,6 +62,7 @@ export function coerceStorefront(s: Partial<Storefront> | null | undefined): Sto
     vp: str(v.vp),
     promo: str(v.promo),
     images: strArr(v.images),
+    products: coerceItems(v.products),
     description: str(v.description),
     services: strArr(v.services),
     phone: str(v.phone),
@@ -80,7 +84,7 @@ function loadLocal(): Storefront | null {
 
 interface Row {
   slug: string; workspace_id?: string; name: string; logo_svg?: string | null; dbd: string; kind?: StorefrontKind;
-  vp?: string; promo?: string; images?: string[]; description: string;
+  vp?: string; promo?: string; images?: string[]; products?: CatalogItem[]; description: string;
   services: string[]; phone: string; line_id: string; email: string; website: string;
   published: boolean; featured_until?: string | null; updated_at?: string;
   rating?: number | null; review_count?: number | null;
@@ -90,7 +94,7 @@ function rowToStorefront(r: Row): Storefront {
   // ผ่าน coerceStorefront เพื่อเติม field ที่ DB คืน null/หาย (name/dbd/description/phone/…) ให้ครบชนิด
   return coerceStorefront({
     slug: r.slug, workspaceId: r.workspace_id, name: r.name, logoSvg: r.logo_svg ?? undefined, dbd: r.dbd,
-    kind: r.kind, vp: r.vp, promo: r.promo, images: r.images, description: r.description,
+    kind: r.kind, vp: r.vp, promo: r.promo, images: r.images, products: r.products, description: r.description,
     services: r.services, phone: r.phone, lineId: r.line_id,
     email: r.email, website: r.website, published: r.published,
     featuredUntil: r.featured_until ?? undefined,
@@ -192,6 +196,8 @@ export async function saveStorefront(wsId: string | null, sf: Storefront): Promi
     const { error } = await supabase.from('storefronts').upsert({
       slug: sf.slug, workspace_id: wsId, name: sf.name, logo_svg: sf.logoSvg ?? null, dbd: sf.dbd, kind: sf.kind,
       vp: sf.vp, promo: sf.promo, images: sf.images,
+      // products เขียนลง Supabase เฉพาะเมื่อ apply migration 0049 แล้ว (CATALOG.live) — กัน error คอลัมน์ไม่มี
+      ...(CATALOG.live ? { products: sf.products } : {}),
       description: sf.description, services: sf.services, phone: sf.phone,
       line_id: sf.lineId, email: sf.email, website: sf.website,
       published: sf.published, updated_at: new Date().toISOString(),

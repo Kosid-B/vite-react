@@ -8,6 +8,7 @@ import { DBD_SECTORS } from '../data/dbd';
 import { applySeo, siteOrigin } from '../lib/seo';
 import { storefrontSeo, directorySeo, directoryItemList, sectorLabel } from '../lib/seoData';
 import { STARTER_LISTINGS } from '../lib/starterStorefronts';
+import { priceLabel } from '../lib/catalog';
 
 /* ===== Marketplace M1 — หน้าสาธารณะ (ไม่ต้องล็อกอิน) =====
  * /b        → สารบัญธุรกิจ จัดกลุ่มตามหมวด DBD
@@ -128,6 +129,23 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
           </div>
         )}
         {sf.description && <p className="pub-desc">{sf.description}</p>}
+
+        {sf.products.length > 0 && (
+          <>
+            <div className="pub-sec-hd">🛍 รายการสินค้า / บริการ</div>
+            <div className="pub-catalog">
+              {sf.products.map(p => (
+                <div key={p.id} className="pub-cat-item">
+                  <div className="pub-cat-top">
+                    <span className="pub-cat-name">{p.name}</span>
+                    <span className="pub-cat-price">{priceLabel(p)}</span>
+                  </div>
+                  {p.desc && <div className="pub-cat-desc">{p.desc}</div>}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {sf.services.length > 0 && (
           <>
