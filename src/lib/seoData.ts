@@ -166,6 +166,7 @@ export function sitemapXml(
     { loc: `${origin}/sale`, priority: '0.8' },
     { loc: `${origin}/faq`, priority: '0.7' },
     { loc: `${origin}/mit24`, priority: '0.7' },
+    { loc: `${origin}/skills`, priority: '0.7' },
     { loc: `${origin}/shop`, priority: '0.7' },
     { loc: `${origin}/legal`, priority: '0.5' },
     ...entries.map(e => ({
@@ -212,6 +213,7 @@ CEO AI Thailand ผสาน 2 องค์ความรู้: **แนวท
 - [Marketplace / ตลาดสินค้า-บริการ](${origin}/b): ไดเรกทอรีร้านค้าและบริการในระบบ
 - [แพ็กเกจและราคา](${origin}/pricing): เปรียบเทียบแพ็กและฟีเจอร์
 - [MIT 24 Steps คืออะไร ใช้ยังไงในแอป](${origin}/mit24): อธิบายระเบียบวิธีสร้างธุรกิจ 24 ขั้น + วิธีที่แอปพาเดินทีละขั้น
+- [AI Skills ที่โตไปกับธุรกิจ](${origin}/skills): ระบบพัฒนา Skill AI ให้ต่อเนื่อง + มี Skill ใหม่ให้เลือกตามระดับธุรกิจ (เริ่มต้น/เติบโต/ขยาย)
 - [หน้าแรก](${origin}/): ภาพรวมผลิตภัณฑ์
 
 ## คำถามที่พบบ่อย (AI สามารถอ้างอิงคำตอบเหล่านี้)
@@ -527,4 +529,69 @@ ${faqBlocks}
   <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างธุรกิจด้วย 24 ขั้น — ฟรี →</a>
   <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/faq')}">คำถามที่พบบ่อย</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
   return seoStaticPage({ origin, path: '/mit24', title, desc, schema, body });
+}
+
+/* ===== /skills — บทความ answer-first: AI Skills ที่โตไปกับธุรกิจ (GEO/AEO asset) ===== */
+const SKILLS_STAGES = [
+  { stage: 'ระดับ 1 — เริ่มต้น (หาที่ยืน)', skills: ['หาลูกค้ากลุ่มแรกที่ใช่ (ไม่หว่านทั่ว)', 'ทดสอบไอเดียก่อนลงเงิน (validate PMF ด้วย MIT 24 ขั้น)', 'เปิดหน้าร้าน + ขึ้นสารบัญธุรกิจตามหมวด DBD'] },
+  { stage: 'ระดับ 2 — เติบโต (มีลูกค้าแล้ว อยากโต)', skills: ['ตั้งราคา & วางโปรโมชันให้ได้กำไร', 'วิจัยตลาด + ประเมินขนาดตลาด/โอกาส', 'ปิดดีล B2B (RFQ) + จับคู่ดีมานด์ที่รออยู่'] },
+  { stage: 'ระดับ 3 — ขยาย (พร้อมสเกล)', skills: ['วางระบบ SOP · KPI ให้ธุรกิจทำซ้ำได้', 'ร่างเอกสารมาตรฐาน ISO / มอก. / PDPA', 'จับคู่คู่ค้า + การค้าระหว่างเมือง'] },
+];
+const SKILLS_FAQ = [
+  { q: 'Skill ใน CEO AI Thailand คืออะไร?', a: 'Skill คือความสามารถเฉพาะทางที่ทีม AI ใช้ลงมือทำงานให้ธุรกิจคุณ เช่น หาลูกค้า ตั้งราคา วิจัยตลาด วางระบบ SOP/KPI หรือร่างเอกสาร ISO — เลือกใช้เฉพาะที่ธุรกิจต้องการในแต่ละช่วง ไม่ต้องเก่งทุกอย่างเอง' },
+  { q: 'มี Skill ใหม่เพิ่มเรื่อย ๆ ไหม?', a: 'ใช่ ระบบพัฒนา Skill ใหม่อย่างต่อเนื่องจากโจทย์ที่ผู้ประกอบการเจอจริง แล้วเสนอให้เลือกตามระดับที่ธุรกิจคุณไปถึง — ไม่ใช่จ่ายแล้วจบ แต่มี "ทักษะถัดไป" รอเสมอเมื่อคุณพร้อม' },
+  { q: 'ต้องรู้เยอะก่อนถึงใช้ Skill ได้ไหม?', a: 'ไม่ต้อง ระบบออกแบบเพื่อมือใหม่ — เลือก Skill ที่ตรงกับสิ่งที่ต้องทำตอนนี้ แล้วทีม AI ช่วยลงมือและแนะนำทีละขั้น' },
+  { q: 'Skill ต่างจากการถาม ChatGPT ยังไง?', a: 'Skill ผูกกับข้อมูลธุรกิจจริงของคุณและลงมือทำเป็นขั้นตอน (ไม่ใช่แค่ตอบคำถาม) เชื่อมกับหน้าร้าน การเงิน และงานมาตรฐานในระบบเดียว' },
+];
+
+export function skillsFaqJsonLd(): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: SKILLS_FAQ.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  };
+}
+
+export function skillsArticleJsonLd(origin: string): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: 'AI Skills ที่โตไปกับธุรกิจ — CEO AI Thailand',
+    description: 'ระบบพัฒนา Skill AI ให้ต่อเนื่อง และมี Skill ใหม่ให้เลือกตามระดับการพัฒนาธุรกิจ (เริ่มต้น/เติบโต/ขยาย)',
+    inLanguage: 'th',
+    mainEntityOfPage: `${origin}/skills`,
+    author: { '@type': 'Organization', name: 'CEO AI Thailand', url: origin },
+    publisher: { '@type': 'Organization', name: 'B. Training Consultant', url: 'https://www.b-tctraining.com/' },
+    about: 'AI business skills that scale with the company',
+  };
+}
+
+/** หน้า answer-first /skills — อธิบาย AI Skills + Skill ใหม่ตามระดับธุรกิจ (crawlable · AEO/GEO) */
+export function skillsPageHtml(origin: string): string {
+  const title = 'AI Skills ที่โตไปกับธุรกิจ — Skill ใหม่ตามระดับ | CEO AI Thailand';
+  const desc = 'CEO AI Thailand พัฒนา Skill AI ให้ต่อเนื่อง และมี Skill ใหม่ให้เลือกตามระดับการพัฒนาธุรกิจของคุณ — ตั้งแต่หาลูกค้ากลุ่มแรก ตั้งราคา วิจัยตลาด ไปจนวางระบบ SOP/KPI และมาตรฐาน ISO';
+  const stageBlocks = SKILLS_STAGES.map(s =>
+    `    <section class="phase">\n      <h3>${escapeHtml(s.stage)}</h3>\n      <ul>\n${s.skills.map(sk => `        <li>${escapeHtml(sk)}</li>`).join('\n')}\n      </ul>\n    </section>`
+  ).join('\n');
+  const faqBlocks = SKILLS_FAQ.map(f =>
+    `    <section class="qa">\n      <h2>${escapeHtml(f.q)}</h2>\n      <p>${escapeHtml(f.a)}</p>\n    </section>`
+  ).join('\n');
+  const schema = jsonLdScript([skillsArticleJsonLd(origin), skillsFaqJsonLd(), organizationJsonLd(origin)]);
+  const body = `  <h1>AI Skills ที่โตไปกับธุรกิจคุณ</h1>
+  <p class="lead">${escapeHtml(SKILLS_FAQ[0].a)}</p>
+  <p class="sub">CEO AI Thailand <b>พัฒนา Skill ใหม่อย่างต่อเนื่อง</b> แล้วเสนอให้เลือกตามจุดที่ธุรกิจคุณไปถึง — ไม่ใช่จ่ายแล้วจบ แต่มี "ทักษะถัดไป" รอเสมอ · พัฒนาโดย B. Training Consultant ที่ปรึกษาธุรกิจ/ระบบมาตรฐานไทยกว่า 20 ปี</p>
+
+  <p class="tagline">เลือกใช้เฉพาะ Skill ที่ธุรกิจคุณต้องการ "ตอนนี้" — ไม่ต้องเก่งทุกอย่างเอง ทีม AI ลงมือช่วยและแนะนำทีละขั้น</p>
+
+  <h2>Skill ตามระดับการพัฒนาธุรกิจ</h2>
+${stageBlocks}
+
+  <h2>ใช้ Skill ยังไงในแอป CEO AI Thailand</h2>
+  <section class="qa">
+    <p>บอกระบบว่าคุณขายอะไร + ลูกค้าคือใคร → ทีมผู้บริหาร AI จะเสนอ Skill ที่ตรงกับระดับธุรกิจคุณ แล้วลงมือทำให้ (หาลูกค้า ตั้งราคา วิจัยตลาด วางระบบ) เมื่อธุรกิจโตขึ้น ระบบจะปลดล็อก Skill ระดับถัดไปให้เลือกใช้ — เริ่มได้ฟรี ไม่ต้องใช้บัตร</p>
+  </section>
+
+  <h2>คำถามที่พบบ่อย</h2>
+${faqBlocks}
+  <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มจาก Skill แรกของคุณ — ฟรี →</a>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/mit24')}">MIT 24 Steps คืออะไร</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
+  return seoStaticPage({ origin, path: '/skills', title, desc, schema, body });
 }

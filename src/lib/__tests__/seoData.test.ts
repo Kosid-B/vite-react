@@ -5,6 +5,7 @@ import {
   homeSeo, faqPageHtml, faqPageJsonLd, organizationJsonLd, softwareApplicationJsonLd, FAQ_ITEMS,
   aggregateFromRatings, MIN_HOME_REVIEWS,
   mit24PageHtml, mit24FaqJsonLd, mit24ArticleJsonLd, MIT24_FAQ,
+  skillsPageHtml, skillsFaqJsonLd, skillsArticleJsonLd,
   type SeoStorefront,
 } from '../seoData';
 
@@ -189,6 +190,36 @@ describe('mit24 (/mit24 answer-first article)', () => {
     expect(a['@type']).toBe('Article');
     expect((a.publisher as Record<string, unknown>).name).toBe('B. Training Consultant');
     expect(a.mainEntityOfPage).toBe(`${ORIGIN}/mit24`);
+  });
+});
+
+describe('skills (/skills answer-first article)', () => {
+  const html = skillsPageHtml(ORIGIN);
+  it('เป็น HTML doc + canonical /skills + robots index', () => {
+    expect(html.startsWith('<!doctype html>')).toBe(true);
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/skills">`);
+    expect(html).toContain('index,follow');
+  });
+  it('สื่อสารแก่นสาร: พัฒนา Skill ต่อเนื่อง + 3 ระดับ + CTA /start', () => {
+    expect(html).toContain('พัฒนา Skill ใหม่');
+    expect(html).toContain('ระดับ 1');
+    expect(html).toContain('ระดับ 3');
+    expect(html).toContain(`${ORIGIN}/start`);
+  });
+  it('ฝัง Article + FAQPage schema', () => {
+    expect(html).toContain('"@type":"Article"');
+    expect(html).toContain('"@type":"FAQPage"');
+  });
+  it('schema helpers: publisher B. Training + mainEntityOfPage /skills', () => {
+    const a = skillsArticleJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(a.mainEntityOfPage).toBe(`${ORIGIN}/skills`);
+    expect((a.publisher as Record<string, unknown>).name).toBe('B. Training Consultant');
+    const f = skillsFaqJsonLd() as Record<string, unknown>;
+    expect(f['@type']).toBe('FAQPage');
+    expect((f.mainEntity as unknown[]).length).toBeGreaterThan(0);
+  });
+  it('sitemap รวม /skills', () => {
+    expect(sitemapXml([], ORIGIN)).toContain(`${ORIGIN}/skills`);
   });
 });
 
