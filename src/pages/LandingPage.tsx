@@ -838,6 +838,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         โทร <a href="tel:08178177773" style={{ color: C.cyan4, textDecoration: 'none', fontWeight: 600 }}>081-7817-7773</a>
         <br />
         <a href="/mit24" style={{ color: C.cyan4, textDecoration: 'none' }}>MIT 24 Steps คืออะไร</a> ·{' '}
+        <a href="/trust" style={{ color: C.cyan4, textDecoration: 'none' }}>T.R.U.S.T. Framework</a> ·{' '}
         <a href="/faq" style={{ color: C.cyan4, textDecoration: 'none' }}>คำถามที่พบบ่อย</a> ·{' '}
         <a href="/b" style={{ color: C.cyan4, textDecoration: 'none' }}>สารบัญธุรกิจ</a> ·{' '}
         <AiTransparency linkStyle={{ color: C.cyan4, textDecoration: 'none' }} />

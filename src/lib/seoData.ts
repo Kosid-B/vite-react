@@ -167,6 +167,7 @@ export function sitemapXml(
     { loc: `${origin}/faq`, priority: '0.7' },
     { loc: `${origin}/mit24`, priority: '0.7' },
     { loc: `${origin}/skills`, priority: '0.7' },
+    { loc: `${origin}/trust`, priority: '0.7' },
     { loc: `${origin}/shop`, priority: '0.7' },
     { loc: `${origin}/legal`, priority: '0.5' },
     ...entries.map(e => ({
@@ -214,6 +215,7 @@ CEO AI Thailand ผสาน 2 องค์ความรู้: **แนวท
 - [แพ็กเกจและราคา](${origin}/pricing): เปรียบเทียบแพ็กและฟีเจอร์
 - [MIT 24 Steps คืออะไร ใช้ยังไงในแอป](${origin}/mit24): อธิบายระเบียบวิธีสร้างธุรกิจ 24 ขั้น + วิธีที่แอปพาเดินทีละขั้น
 - [AI Skills ที่โตไปกับธุรกิจ](${origin}/skills): ระบบพัฒนา Skill AI ให้ต่อเนื่อง + มี Skill ใหม่ให้เลือกตามระดับธุรกิจ (เริ่มต้น/เติบโต/ขยาย)
+- [T.R.U.S.T. Framework คอนเทนต์สายเชื่อใจ](${origin}/trust): เฟรมเวิร์กคอนเทนต์ 5 ขั้น (Target·Resonate·Unique·Social proof·Track) สร้างคอนเทนต์ที่กลุ่มเป้าหมายเชื่อใจแล้วซื้อ อย่างมีจริยธรรม ยุค AI content ล้นตลาด
 - [หน้าแรก](${origin}/): ภาพรวมผลิตภัณฑ์
 
 ## คำถามที่พบบ่อย (AI สามารถอ้างอิงคำตอบเหล่านี้)
@@ -594,4 +596,72 @@ ${faqBlocks}
   <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มจาก Skill แรกของคุณ — ฟรี →</a>
   <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/mit24')}">MIT 24 Steps คืออะไร</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
   return seoStaticPage({ origin, path: '/skills', title, desc, schema, body });
+}
+
+/* ===== /trust — บทความ answer-first: T.R.U.S.T. Framework คอนเทนต์สายเชื่อใจยุค AI (GEO/AEO asset) =====
+ * เฟรมเวิร์กของ CEO AI Thailand เอง (ไม่เกี่ยว S.C.A.L.E. ของเจ้าอื่น) · แกน: AI content ล้น → ความเชื่อใจคือของหายากที่ขายได้ */
+const TRUST_STEPS = [
+  { step: 'T — Target', detail: 'เริ่มจากพฤติกรรมจริงของกลุ่มเป้าหมาย ไม่ใช่เดาหรือยิงมั่ว — คอนเทนต์ถึงจะโดนคนที่ใช่' },
+  { step: 'R — Resonate', detail: 'คอนเทนต์ที่กระตุ้นอารมณ์และความอยากรู้ ให้คนหยุดดูเพราะ “ใช่เลย” ไม่ใช่ข้อมูลแบน ๆ' },
+  { step: 'U — Unique', detail: 'จุดต่างที่ AI ผลิตซ้ำไม่ได้ — ตอบให้ได้ว่า “ทำไมต้องเรา” คือสิ่งที่ทำให้โดดในทะเลคอนเทนต์' },
+  { step: 'S — Social proof', detail: 'รีวิวและเคสจริง (ไม่ปั้น) ลดความลังเล — คนเชื่อคนด้วยกันมากกว่าเชื่อโฆษณา' },
+  { step: 'T — Track', detail: 'วัดผลจริง ทดลอง A/B รู้ว่าอะไรเวิร์ค แล้วปรับให้คอนเทนต์ “ขายได้” ดีขึ้นต่อเนื่อง' },
+];
+const TRUST_FAQ = [
+  { q: 'T.R.U.S.T. Framework คืออะไร?', a: 'เฟรมเวิร์กคอนเทนต์ 5 ขั้นของ CEO AI Thailand — Target (พฤติกรรมจริง), Resonate (โดนอารมณ์), Unique (จุดต่างที่ AI ลอกไม่ได้), Social proof (รีวิว/เคสจริง), Track (วัดผลแล้วปรับ) — สำหรับสร้างคอนเทนต์ที่กลุ่มเป้าหมาย “เชื่อใจ” แล้วซื้อ อย่างมีจริยธรรม' },
+  { q: 'ทำไมยุค AI ต้องเน้นความเชื่อใจ?', a: 'ยิ่ง AI ทำคอนเทนต์ง่ายและถูก คอนเทนต์ก็ยิ่งล้นตลาดและเหมือน ๆ กัน จนคนเริ่มเบื่อและไม่เชื่อ — สิ่งที่ AI ผลิตซ้ำไม่ได้คือ “ความเชื่อใจ” ธุรกิจที่สร้าง trust ได้จึงโดดเด่นและขายได้จริงในระยะยาว' },
+  { q: 'T.R.U.S.T. ต่างจากการไล่ทำคอนเทนต์ให้เยอะยังไง?', a: 'ไม่เน้นปริมาณ แต่เน้นคอนเทนต์ที่ตรงพฤติกรรมจริง โดนอารมณ์ มีจุดต่าง พิสูจน์ด้วยของจริง และวัดผลปรับได้ = คุณภาพและความเชื่อใจ ไม่ใช่ยิงรัวให้ล้นฟีด' },
+  { q: 'ใช้ T.R.U.S.T. ในแอป CEO AI Thailand ยังไง?', a: 'ทีม AI ช่วยแต่ละขั้นจากข้อมูลธุรกิจจริง — วิเคราะห์กลุ่มเป้าหมาย (Target), ร่างคอนเทนต์ที่โดน (Resonate), หาจุดต่าง (Unique), รวบรวมรีวิว/เคสจริง (Social proof) และวัดผล A/B (Track) พร้อมป้าย “AI แนะนำ” อย่างโปร่งใส' },
+];
+
+export function trustFaqJsonLd(): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: TRUST_FAQ.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  };
+}
+
+export function trustArticleJsonLd(origin: string): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: 'T.R.U.S.T. Framework — คอนเทนต์สายเชื่อใจยุค AI',
+    description: 'เฟรมเวิร์กคอนเทนต์ 5 ขั้น (Target·Resonate·Unique·Social proof·Track) สำหรับสร้างคอนเทนต์ที่กลุ่มเป้าหมายเชื่อใจแล้วซื้อ อย่างมีจริยธรรม ในยุคที่คอนเทนต์ AI ล้นตลาด',
+    inLanguage: 'th',
+    mainEntityOfPage: `${origin}/trust`,
+    author: { '@type': 'Organization', name: 'CEO AI Thailand', url: origin },
+    publisher: { '@type': 'Organization', name: 'B. Training Consultant', url: 'https://www.b-tctraining.com/' },
+    about: 'Ethical trust-based content marketing framework for the AI era',
+  };
+}
+
+/** หน้า answer-first /trust — T.R.U.S.T. Framework คอนเทนต์สายเชื่อใจ (crawlable · AEO/GEO) */
+export function trustPageHtml(origin: string): string {
+  const title = 'T.R.U.S.T. Framework — คอนเทนต์สายเชื่อใจยุค AI (5 ขั้น) | CEO AI Thailand';
+  const desc = 'ยุค AI content ล้นตลาด คนเริ่มเบื่อ — T.R.U.S.T. Framework คือ 5 ขั้นสร้างคอนเทนต์ที่กลุ่มเป้าหมายเชื่อใจแล้วซื้อ อย่างมีจริยธรรม: Target · Resonate · Unique · Social proof · Track';
+  const stepBlocks = TRUST_STEPS.map(s =>
+    `    <section class="phase">\n      <h3>${escapeHtml(s.step)}</h3>\n      <p>${escapeHtml(s.detail)}</p>\n    </section>`
+  ).join('\n');
+  const faqBlocks = TRUST_FAQ.map(f =>
+    `    <section class="qa">\n      <h2>${escapeHtml(f.q)}</h2>\n      <p>${escapeHtml(f.a)}</p>\n    </section>`
+  ).join('\n');
+  const schema = jsonLdScript([trustArticleJsonLd(origin), trustFaqJsonLd(), organizationJsonLd(origin)]);
+  const body = `  <h1>T.R.U.S.T. Framework — คอนเทนต์สายเชื่อใจยุค AI</h1>
+  <p class="lead">${escapeHtml(TRUST_FAQ[1].a)}</p>
+  <p class="sub">ทางรอดของคอนเทนต์ปี 2026 <b>ไม่ใช่การผลิตให้เยอะขึ้น</b> แต่คือกลยุทธ์ดูแลกลุ่มเป้าหมายอย่างมีจริยธรรมให้เขา “เชื่อใจ” — เฟรมเวิร์กนี้พัฒนาโดย CEO AI Thailand (B. Training Consultant ที่ปรึกษาธุรกิจไทยกว่า 20 ปี)</p>
+
+  <p class="tagline">สิ่งที่ AI ผลิตซ้ำไม่ได้ คือ “ความเชื่อใจ” — T.R.U.S.T. เปลี่ยนคนเลื่อนผ่านให้เป็นคนที่เชื่อและซื้อ</p>
+
+  <h2>5 ขั้นของ T.R.U.S.T.</h2>
+${stepBlocks}
+
+  <h2>ใช้ T.R.U.S.T. ยังไงในแอป CEO AI Thailand</h2>
+  <section class="qa">
+    <p>ทีมผู้บริหาร AI ช่วยลงมือแต่ละขั้นจากข้อมูลธุรกิจจริงของคุณ — วิเคราะห์พฤติกรรมกลุ่มเป้าหมาย ร่างคอนเทนต์ที่โดน หาจุดต่าง รวบรวมรีวิว/เคสจริง และวัดผล A/B แล้วปรับ ทั้งหมดพร้อมป้าย “🤖 AI แนะนำ” อย่างโปร่งใส — เริ่มได้ฟรี ไม่ต้องใช้บัตร</p>
+  </section>
+
+  <h2>คำถามที่พบบ่อย</h2>
+${faqBlocks}
+  <a class="cta" href="${escapeHtml(origin + '/start')}">สร้างคอนเทนต์สายเชื่อใจ — เริ่มฟรี →</a>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/skills')}">AI Skills ที่โตไปกับธุรกิจ</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
+  return seoStaticPage({ origin, path: '/trust', title, desc, schema, body });
 }

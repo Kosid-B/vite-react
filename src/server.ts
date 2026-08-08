@@ -2,7 +2,7 @@
 
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
-  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, aggregateFromRatings,
+  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, aggregateFromRatings,
   type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
 
@@ -159,6 +159,13 @@ export default {
       // /skills → บทความ answer-first: AI Skills ที่โตไปกับธุรกิจ + Skill ใหม่ตามระดับ (GEO/AEO)
       if (url.pathname === '/skills' || url.pathname === '/skills/') {
         return new Response(skillsPageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // /trust → บทความ answer-first: T.R.U.S.T. Framework คอนเทนต์สายเชื่อใจยุค AI (GEO/AEO)
+      if (url.pathname === '/trust' || url.pathname === '/trust/') {
+        return new Response(trustPageHtml(origin), {
           headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
         });
       }
