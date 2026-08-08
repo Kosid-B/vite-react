@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { track } from '../lib/analytics';
 import { pickHeroVariant } from '../lib/heroVariant';
 import { heroAbVariant, HERO_AB_COPY, type HeroAb } from '../lib/heroExperiment';
+import { layoutAbVariant, getBrowserAbId, type LayoutAb } from '../lib/landingLayoutExperiment';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
 import InstantPreview from '../components/InstantPreview';
@@ -167,6 +168,13 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
     } catch { return null; }
   }, [hero.seg]);
   useEffect(() => { if (heroAb) track('hero_ab_exposed', { variant: heroAb }); }, [heroAb]);
+
+  // A/B ลำดับบล็อก landing — "อธิบายระบบก่อน" vs "โชว์ดีมานด์/ROI ก่อน" (ทดสอบทุก seg)
+  // ตอบ pain "ไม่เข้าใจระบบ → ไม่กล้าสมัคร" · เนื้อหาครบเท่ากันทั้งคู่ ต่างแค่ลำดับ (ซื่อสัตย์)
+  const layoutAb = useMemo<LayoutAb>(() => {
+    try { return layoutAbVariant(getBrowserAbId()); } catch { return 'explain_first'; }
+  }, []);
+  useEffect(() => { track('layout_ab_exposed', { variant: layoutAb }); }, [layoutAb]);
   // hero ที่ใช้แสดงจริง — ถ้าอยู่ในกลุ่ม A/B ทับพาดหัว/ประโยคเปิดด้วย copy ของกลุ่มนั้น
   const heroCopy = heroAb ? { ...hero, ...HERO_AB_COPY[heroAb] } : hero;
   // กดปุ่มหลัก → จำเป้าหมายไว้ให้แอปพาไปหน้าถูก (ข้าม GoalChooser) แล้วเข้าโหมดที่เหมาะ
@@ -178,8 +186,8 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       }
     } catch { /* noop */ }
     const ab = heroAb ?? '-';
-    if (onTryGuest) { track('landing_cta_click', { cta: 'hero_try_guest', seg: hero.seg, ab }); onTryGuest(); }
-    else { track('landing_cta_click', { cta: 'hero_free_trial', seg: hero.seg, ab }); onGetStarted(); }
+    if (onTryGuest) { track('landing_cta_click', { cta: 'hero_try_guest', seg: hero.seg, ab, layout: layoutAb }); onTryGuest(); }
+    else { track('landing_cta_click', { cta: 'hero_free_trial', seg: hero.seg, ab, layout: layoutAb }); onGetStarted(); }
   };
 
   // Challenger headline — สลับ content 2 ครั้ง/วัน ที่เวลาไทย 11:00 และ 20:00 (เช็คทุกนาที)
@@ -292,7 +300,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           {onTryGuest && (
             <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
               <button
-                onClick={() => { track('landing_cta_click', { cta: 'hero_signup' }); onGetStarted(); }}
+                onClick={() => { track('landing_cta_click', { cta: 'hero_signup', layout: layoutAb }); onGetStarted(); }}
                 onMouseEnter={() => setGuestHover(true)}
                 onMouseLeave={() => setGuestHover(false)}
                 style={{
@@ -310,7 +318,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           )}
           <a
             href="/shop"
-            onClick={() => track('landing_cta_click', { cta: 'hero_shop_signup' })}
+            onClick={() => track('landing_cta_click', { cta: 'hero_shop_signup', layout: layoutAb })}
             style={{
               display: 'inline-block',
               marginTop: 20,
@@ -356,20 +364,31 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         </div>
       </section>
 
-      {/* ─── Trust bar (Dark AI Marketing #17 เชิงจริยธรรม) — authority/PDPA/risk-reversal ของจริง ─── */}
-      <TrustBar />
-
-      {/* ─── "ระบบทำงานยังไงใน 30 วินาที" (explainer เคลื่อนไหว) — ให้เข้าใจภาพรวมเร็ว ─── */}
-      <HowItWorks30 onGetStarted={onGetStarted} />
-
-      {/* ─── คุณจะได้อะไร (pain → gain): แก้ปัญหาคนไม่เข้าใจระบบ → ไม่กล้าสมัคร ─── */}
-      <GainPointsPanel seg={hero.seg} onGetStarted={onGetStarted} />
-
-      {/* ─── Demand/Supply Board (first-party จริง): พิมพ์ธุรกิจ → เห็นดีมานด์ในระบบ ─── */}
-      <MarketDemandPanel onGetStarted={onGetStarted} />
-
-      {/* ─── ROI (ความคุ้มค่า) อย่างง่าย: กรอกตัวเลข → เทียบค่าสมัคร + บทวิเคราะห์ ─── */}
-      <RoiCalculatorPanel onGetStarted={onGetStarted} />
+      {/* ─── A/B ลำดับบล็อก (layoutAb) — เนื้อหาครบเท่ากันทั้งคู่ ต่างแค่ลำดับ ─── */}
+      {/* explainBlock: อธิบายระบบ (TrustBar → วิธีใช้ 30 วิ → สิ่งที่ได้) · proofBlock: ดีมานด์/ROI ของจริง */}
+      {(() => {
+        const explainBlock = (
+          <>
+            {/* Trust bar (Dark AI Marketing #17) — authority/PDPA/risk-reversal ของจริง */}
+            <TrustBar />
+            {/* "ระบบทำงานยังไงใน 30 วินาที" (explainer เคลื่อนไหว) — เข้าใจภาพรวมเร็ว */}
+            <HowItWorks30 onGetStarted={onGetStarted} />
+            {/* คุณจะได้อะไร (pain → gain): แก้ "คนไม่เข้าใจระบบ → ไม่กล้าสมัคร" */}
+            <GainPointsPanel seg={hero.seg} onGetStarted={onGetStarted} />
+          </>
+        );
+        const proofBlock = (
+          <>
+            {/* Demand/Supply Board (first-party จริง): พิมพ์ธุรกิจ → เห็นดีมานด์ในระบบ */}
+            <MarketDemandPanel onGetStarted={onGetStarted} />
+            {/* ROI อย่างง่าย: กรอกตัวเลข → เทียบค่าสมัคร + บทวิเคราะห์ */}
+            <RoiCalculatorPanel onGetStarted={onGetStarted} />
+          </>
+        );
+        return layoutAb === 'proof_first'
+          ? <>{proofBlock}{explainBlock}</>
+          : <>{explainBlock}{proofBlock}</>;
+      })()}
 
       {/* ─── Instant Proof (Black Hole: เห็นค่าก่อนสมัคร) ─── */}
       <InstantPreview onGetStarted={onGetStarted} />
