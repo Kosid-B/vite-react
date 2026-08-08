@@ -12,7 +12,7 @@ const C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0
 const OPP_COLOR: Record<KindStat['opportunity'], string> = { high: C.green, balanced: C.cyan, saturated: C.amber };
 const baht = (n: number) => '฿' + n.toLocaleString('th-TH');
 
-export default function MarketDemandPanel({ onGetStarted }: { onGetStarted: () => void }) {
+export default function MarketDemandPanel({ onGetStarted, onEngage }: { onGetStarted: () => void; onEngage?: () => void }) {
   const [snap, setSnap] = useState<{ month: string; rows: SnapshotRow[] }>({ month: '', rows: [] });
   const [biz, setBiz] = useState('');
   const [walkin, setWalkin] = useState('');
@@ -55,7 +55,7 @@ export default function MarketDemandPanel({ onGetStarted }: { onGetStarted: () =
         ) : (
           <>
             <label style={{ display: 'block', color: C.slate, fontSize: 13, marginBottom: 6 }}>ธุรกิจของคุณคืออะไร?</label>
-            <input value={biz} onChange={e => setBiz(e.target.value)} onBlur={() => biz.trim() && track('demand_lookup', { has_match: matched ? 1 : 0 })}
+            <input value={biz} onChange={e => setBiz(e.target.value)} onBlur={() => { if (biz.trim()) { track('demand_lookup', { has_match: matched ? 1 : 0 }); onEngage?.(); } }}
                    placeholder="เช่น ร้านกาแฟ, รับทำบัญชี, ขนส่ง" style={input} />
 
             {biz.trim() && (

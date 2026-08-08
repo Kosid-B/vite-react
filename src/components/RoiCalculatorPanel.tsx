@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { roiCompare } from '../lib/roiCompare';
 import { termLabel } from '../lib/terms';
 import { PLAN_PRICE_NUM } from '../lib/access';
@@ -12,11 +12,14 @@ const C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0
 const baht = (n: number) => '฿' + Math.round(n).toLocaleString('th-TH');
 const PLANS: { id: PlanId; label: string }[] = [{ id: 'starter', label: 'Starter' }, { id: 'growth', label: 'Growth' }];
 
-export default function RoiCalculatorPanel({ onGetStarted }: { onGetStarted: () => void }) {
+export default function RoiCalculatorPanel({ onGetStarted, onEngage }: { onGetStarted: () => void; onEngage?: () => void }) {
   const [walkin, setWalkin] = useState('20');
   const [ticket, setTicket] = useState('60');
   const [extra, setExtra] = useState('60');
   const [plan, setPlan] = useState<PlanId>('growth');
+  // สัญญาณ "กำลังประเมิน ROI" — ยิงครั้งเดียวเมื่อผู้ใช้ปรับตัวเลข (พฤติกรรมจริง → Dynamic Persona)
+  const engaged = useRef(false);
+  const engage = () => { if (!engaged.current) { engaged.current = true; onEngage?.(); } };
 
   const r = useMemo(
     () => roiCompare({ walkinPerDay: Number(walkin), avgTicket: Number(ticket), extraOrdersPerMonth: Number(extra), plan }),
@@ -43,9 +46,9 @@ export default function RoiCalculatorPanel({ onGetStarted }: { onGetStarted: () 
         </div>
 
         <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-          <div><label style={label}>ลูกค้าเดินเข้า/วัน</label><input value={walkin} onChange={e => setWalkin(e.target.value)} inputMode="numeric" style={input} /></div>
-          <div><label style={label}>ยอดเฉลี่ย/บิล (บาท)</label><input value={ticket} onChange={e => setTicket(e.target.value)} inputMode="numeric" style={input} /></div>
-          <div><label style={label}>ออร์เดอร์เพิ่ม/เดือน (คาด)</label><input value={extra} onChange={e => setExtra(e.target.value)} inputMode="numeric" style={input} /></div>
+          <div><label style={label}>ลูกค้าเดินเข้า/วัน</label><input value={walkin} onChange={e => { setWalkin(e.target.value); engage(); }} inputMode="numeric" style={input} /></div>
+          <div><label style={label}>ยอดเฉลี่ย/บิล (บาท)</label><input value={ticket} onChange={e => { setTicket(e.target.value); engage(); }} inputMode="numeric" style={input} /></div>
+          <div><label style={label}>ออร์เดอร์เพิ่ม/เดือน (คาด)</label><input value={extra} onChange={e => { setExtra(e.target.value); engage(); }} inputMode="numeric" style={input} /></div>
         </div>
 
         <div style={{ display: 'flex', gap: 8, margin: '12px 0', alignItems: 'center', flexWrap: 'wrap' }}>
