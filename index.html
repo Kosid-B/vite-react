@@ -55,14 +55,24 @@
           "name": "Growth Plan",
           "price": "1490",
           "priceCurrency": "THB",
-          "billingDuration": "P1M"
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "1490",
+            "priceCurrency": "THB",
+            "referenceQuantity": { "@type": "QuantitativeValue", "value": 1, "unitCode": "MON" }
+          }
         },
         {
           "@type": "Offer",
           "name": "Scale Plan",
           "price": "5900",
           "priceCurrency": "THB",
-          "billingDuration": "P1M"
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "5900",
+            "priceCurrency": "THB",
+            "referenceQuantity": { "@type": "QuantitativeValue", "value": 1, "unitCode": "MON" }
+          }
         }
       ],
       "provider": {
@@ -73,6 +83,28 @@
       },
       "inLanguage": "th",
       "availableLanguage": ["th"]
+    }
+    </script>
+
+    <!-- Structured Data (Organization + Logo) — เปิด "Logo enhancement" ในผลค้นหา Google -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "CEO AI Thailand",
+      "legalName": "B. Training Consultant (Management Engineering and Agriculture) Co., Ltd.",
+      "url": "https://ceoaithailand.org",
+      "logo": "https://ceoaithailand.org/icon-512.png",
+      "image": "https://ceoaithailand.org/og-image.png",
+      "email": "support@b-tctraining.com",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+66817817773",
+        "contactType": "customer support",
+        "areaServed": "TH",
+        "availableLanguage": ["Thai"]
+      },
+      "areaServed": "TH"
     }
     </script>
 
