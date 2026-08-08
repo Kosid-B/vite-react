@@ -4,6 +4,7 @@ import { kindStatFromCounts, statForText, roiEstimate, OPPORTUNITY_LABEL, type K
 import { type OfferKind } from '../lib/b2bMatching';
 import { track } from '../lib/analytics';
 import { useLandingTheme } from '../lib/landingTheme';
+import { rememberBizHint } from '../lib/bizHint';
 
 /* MarketDemandPanel — Demand/Supply Board บน Landing (first-party จริง)
  * พิมพ์ธุรกิจ → เห็นว่ามีคน "หา" กี่ราย / "ขาย" กี่ราย ในหมวดนั้น + ROI ง่าย ๆ
@@ -58,7 +59,7 @@ export default function MarketDemandPanel({ onGetStarted, onEngage }: { onGetSta
         ) : (
           <>
             <label style={{ display: 'block', color: C.slate, fontSize: 13, marginBottom: 6 }}>ธุรกิจของคุณคืออะไร?</label>
-            <input value={biz} onChange={e => setBiz(e.target.value)} onBlur={() => { if (biz.trim()) { track('demand_lookup', { has_match: matched ? 1 : 0 }); onEngage?.(); } }}
+            <input value={biz} onChange={e => setBiz(e.target.value)} onBlur={() => { if (biz.trim()) { track('demand_lookup', { has_match: matched ? 1 : 0 }); onEngage?.(); rememberBizHint(biz); } }}
                    placeholder="เช่น ร้านกาแฟ, รับทำบัญชี, ขนส่ง" style={input} />
 
             {biz.trim() && (

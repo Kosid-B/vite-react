@@ -3,8 +3,9 @@ import type { AppData, PageId } from '../types';
 import {
   INDUSTRY_OPTIONS, GOAL_MIN_LEN, setupProgress,
   pendingInputSteps, teamDone, applyIndustry, applyGoal, initialFieldValue,
-  type SetupStepDef,
+  matchIndustry, type SetupStepDef,
 } from '../lib/setupWizard';
+import { readBizHint } from '../lib/bizHint';
 
 /**
  * Setup Wizard อัจฉริยะ — ต้อนรับผู้ใช้ครั้งแรก **พร้อมตั้งค่าบริษัทให้เสร็จ** (activation)
@@ -55,6 +56,9 @@ export default function OnboardingTour({ data, onNavigate, onUpdate }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // ธุรกิจที่ผู้ใช้พิมพ์บนหน้า Landing → พาต่อเข้ามา prefill ประเภทธุรกิจให้ "ตรงกับที่กรอกไว้"
+  const bizHint = useMemo(() => readBizHint(), []);
+
   if (!open) return null;
 
   const cur = slides[Math.min(step, slides.length - 1)];
@@ -72,14 +76,17 @@ export default function OnboardingTour({ data, onNavigate, onUpdate }: Props) {
     setStep(step + 1);
   }
 
-  function saveSetup(s: SetupStepDef) {
-    const v = draft.trim();
+  function saveSetup(s: SetupStepDef, effectiveValue: string) {
+    const v = effectiveValue.trim();
     if (s.id === 'industry') onUpdate(applyIndustry(data, v));
     else if (s.id === 'goal') onUpdate(applyGoal(data, v));
     advance();
   }
 
-  const stepPrefill = cur.kind === 'setup' ? initialFieldValue(data, cur.step.id) : '';
+  // ค่าเริ่มต้นช่อง industry: ค่าที่บันทึกแล้ว → ถ้ายังไม่มี ใช้หมวดที่ match จากที่พิมพ์บน Landing
+  const stepPrefill = cur.kind === 'setup'
+    ? (initialFieldValue(data, cur.step.id) || (cur.step.id === 'industry' ? matchIndustry(bizHint) : ''))
+    : '';
   const value = touched ? draft : stepPrefill;
   const valid =
     cur.kind === 'setup'
@@ -114,13 +121,20 @@ export default function OnboardingTour({ data, onNavigate, onUpdate }: Props) {
             <div className="onb-body">{cur.step.hint}</div>
             <div className="onb-field">
               {cur.step.id === 'industry' ? (
-                <select
-                  className="onb-select" value={value}
-                  onChange={e => { setTouched(true); setDraft(e.target.value); }}
-                >
-                  <option value="">— เลือกประเภทธุรกิจ —</option>
-                  {INDUSTRY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
+                <>
+                  <select
+                    className="onb-select" value={value}
+                    onChange={e => { setTouched(true); setDraft(e.target.value); }}
+                  >
+                    <option value="">— เลือกประเภทธุรกิจ —</option>
+                    {INDUSTRY_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                  {bizHint && (
+                    <div className="onb-hintnote">
+                      จากที่คุณกรอกไว้: “{bizHint}”{value ? ' — เลือกหมวดให้อัตโนมัติแล้ว (ปรับได้)' : ' — เลือกหมวดที่ใกล้เคียงได้เลย'}
+                    </div>
+                  )}
+                </>
               ) : (
                 <textarea
                   className="onb-textarea" rows={3} value={value}
@@ -155,7 +169,7 @@ export default function OnboardingTour({ data, onNavigate, onUpdate }: Props) {
             <button className="onb-back" onClick={() => { setDraft(''); setTouched(false); setStep(step - 1); }}>ย้อนกลับ</button>
           )}
           {cur.kind === 'setup' ? (
-            <button className="onb-next" disabled={!valid} onClick={() => saveSetup(cur.step)}>บันทึกแล้วไปต่อ →</button>
+            <button className="onb-next" disabled={!valid} onClick={() => saveSetup(cur.step, value)}>บันทึกแล้วไปต่อ →</button>
           ) : cur.kind === 'finish' ? (
             <button className="onb-next" onClick={() => done(true)}>ไปที่ บริษัท AI →</button>
           ) : (

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { track } from '../lib/analytics';
 import { buildInstantPreview, type InstantPreview as Preview } from '../lib/instantPreview';
 import { useLandingTheme } from '../lib/landingTheme';
+import { rememberBizHint } from '../lib/bizHint';
 
 interface Props {
   /** พาเข้าสมัคร (ให้ AI ทำจริง) */
@@ -30,6 +31,7 @@ export default function InstantPreview({ onGetStarted }: Props) {
   function generate() {
     const biz = name.trim();
     if (!biz || busy) return;
+    rememberBizHint(biz); // จำไว้พาต่อเข้าแอป (prefill ประเภทธุรกิจใน Setup Wizard)
     setBusy(true);
     setPreview(null);
     track('instant_preview_generated', { hasName: 1 });
