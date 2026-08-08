@@ -3,18 +3,26 @@ import { supabase, isSupabaseEnabled } from '../lib/supabase';
 import { listWorkspaces } from '../lib/workspaces';
 import { submitTestimonial, validateTestimonial, BODY_MAX } from '../lib/testimonials';
 import { track } from '../lib/analytics';
+import { useLandingTheme } from '../lib/landingTheme';
 
 /* LandingReviewWidget — UI ให้ดาว 1–5 + เขียนรีวิว บนหน้า landing
  * คงหลัก "สมาชิกจริงเท่านั้น": ล็อกอินเป็นสมาชิก → เขียนส่งได้เลย (รออนุมัติ) · ยังไม่ล็อกอิน → ชวนเข้าสู่ระบบก่อน
  * (RLS ที่ DB เป็นด่านจริง — วิดเจ็ตนี้แค่ประสบการณ์ใช้งาน) */
 
-const C = {
+const DARK_C = {
   bg: 'rgba(15,23,42,0.6)', panel: 'rgba(2,6,23,0.5)', border: '#1e293b', border2: '#334155',
   white: '#ffffff', slate: '#94a3b8', slateDim: '#8b96a9', cyan: '#22d3ee', cyan5: '#06b6d4',
   amber: '#fbbf24', star: '#475569', green: '#16a34a',
 };
 
+const LIGHT_C: typeof DARK_C = {
+  bg: '#ffffff', panel: '#f1f5f9', border: '#e2e8f0', border2: '#cbd5e1',
+  white: '#0f172a', slate: '#475569', slateDim: '#64748b', cyan: '#0891b2', cyan5: '#0e7490',
+  amber: '#d97706', star: '#cbd5e1', green: '#16a34a',
+};
+
 export default function LandingReviewWidget({ onGetStarted }: { onGetStarted: () => void }) {
+  const C = useLandingTheme() === 'minimal' ? LIGHT_C : DARK_C;
   const [memberWs, setMemberWs] = useState<string | null | undefined>(undefined); // undefined=loading
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);

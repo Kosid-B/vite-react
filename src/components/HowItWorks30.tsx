@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { HOW_STEPS, STEP_MS, HOW_TOTAL_MS } from '../lib/howItWorks';
 import { track } from '../lib/analytics';
+import { useLandingTheme } from '../lib/landingTheme';
 
 /* HowItWorks30 — explainer เคลื่อนไหว "ระบบทำงานยังไงใน 30 วินาที" บน Landing
  * auto-play + progress bar + วนซ้ำ + กดหยุด/เล่นได้ · ช่วยให้เข้าใจภาพรวมเร็ว (แก้คนไม่กล้าสมัคร) */
 
-const C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.55)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', amber: '#f59e0b', dark: '#020617', track: '#0b1220' };
+const DARK_C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.55)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', amber: '#f59e0b', dark: '#020617', track: '#0b1220' };
+const LIGHT_C: typeof DARK_C = { border: '#e2e8f0', panel: '#ffffff', card: '#f1f5f9', white: '#0f172a', slate: '#475569', cyan: '#0891b2', amber: '#f59e0b', dark: '#020617', track: '#e2e8f0' };
 const TICK = 100; // ms
 const fmt = (ms: number) => `0:${String(Math.floor(ms / 1000)).padStart(2, '0')}`;
 
 export default function HowItWorks30({ onGetStarted }: { onGetStarted: () => void }) {
+  const C = useLandingTheme() === 'minimal' ? LIGHT_C : DARK_C;
   const [idx, setIdx] = useState(0);
   const [elapsed, setElapsed] = useState(0); // ในสเต็ปปัจจุบัน
   const [playing, setPlaying] = useState(true);

@@ -1,13 +1,16 @@
 import { useMemo } from 'react';
 import { gainPointsFor, GAIN_HEADLINE, GAIN_SUB } from '../lib/gainPoints';
 import { track } from '../lib/analytics';
+import { useLandingTheme } from '../lib/landingTheme';
 
 /* GainPointsPanel — สื่อสาร "คุณจะได้อะไร" เป็น pain → gain (แก้ปัญหาคนไม่เข้าใจ→ไม่กล้าสมัคร)
  * วางบนหน้า Landing ก่อนส่วนอื่น · จัดลำดับตามกลุ่ม (seg) ให้เห็นสิ่งที่ตรงใจก่อน */
 
-const C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.5)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', green: '#4ade80', amber: '#f59e0b', dark: '#020617' };
+const DARK_C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.5)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', green: '#4ade80', amber: '#f59e0b', dark: '#020617' };
+const LIGHT_C: typeof DARK_C = { border: '#e2e8f0', panel: '#ffffff', card: '#f1f5f9', white: '#0f172a', slate: '#475569', cyan: '#0891b2', green: '#16a34a', amber: '#f59e0b', dark: '#020617' };
 
 export default function GainPointsPanel({ seg, onGetStarted }: { seg?: string; onGetStarted: () => void }) {
+  const C = useLandingTheme() === 'minimal' ? LIGHT_C : DARK_C;
   const items = useMemo(() => gainPointsFor(seg), [seg]);
 
   return (

@@ -17,6 +17,8 @@ import LandingReviewWidget from '../components/LandingReviewWidget';
 import LeadCapture from '../components/LeadCapture';
 import PersonaBanner from '../components/PersonaBanner';
 import { loadBehavior, derivePersona, persistSignal, type PersonaView } from '../lib/behaviorPersona';
+import { LandingThemeCtx } from '../lib/landingTheme';
+import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
 
 interface Props {
   onGetStarted: () => void;
@@ -26,7 +28,9 @@ interface Props {
   onExitPreview?: () => void;
 }
 
-const C = {
+// ── ธีมเข้ม (ค่าเดิม) / มินิมอลสว่าง — เลือกตาม state ในคอมโพเนนต์ ──
+// onCyan = ตัวอักษรบนปุ่มไซแอน (ขาวทั้งสองธีม) แยกจาก white ที่เป็น "ตัวอักษรหลัก" (สลับเป็นดำในมินิมอล)
+const DARK_C = {
   bg:       '#020617',
   bg2:      'rgba(15,23,42,0.6)',
   bg3:      '#0f172a',
@@ -41,6 +45,26 @@ const C = {
   amber4:   '#fbbf24',
   amber5:   '#f59e0b',
   dark:     '#020617',
+  onCyan:   '#ffffff',
+  navBg:    'rgba(2,6,23,0.85)',
+};
+const LIGHT_C: typeof DARK_C = {
+  bg:       '#f8fafc',
+  bg2:      '#eef2f6',
+  bg3:      '#ffffff',
+  border:   '#e2e8f0',
+  border2:  '#cbd5e1',
+  white:    '#0f172a',   // "ตัวอักษรหลัก" → ดำในมินิมอล
+  slate4:   '#475569',
+  slate5:   '#64748b',
+  cyan3:    '#0e7490',
+  cyan4:    '#0891b2',
+  cyan5:    '#0e7490',   // ปุ่ม/เส้นไซแอน — เข้มพอให้ตัวอักษรขาวอ่านออก
+  amber4:   '#d97706',
+  amber5:   '#f59e0b',
+  dark:     '#020617',   // ตัวอักษรเข้มบนปุ่มแอมเบอร์ / ชิปดำ — คงเดิมทั้งสองธีม
+  onCyan:   '#ffffff',
+  navBg:    'rgba(255,255,255,0.85)',
 };
 
 // 6 ชั้นความน่าเชื่อถือ (จากสไลด์ "ทำไม AI เชื่อถือได้") — พูดเฉพาะฟีเจอร์ที่มีจริง
@@ -152,6 +176,16 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
   const [navHover, setNavHover] = useState(false);
   const [guestHover, setGuestHover] = useState(false);
 
+  // ── ธีมหน้า Landing (เข้ม/มินิมอล) — ผู้ใช้กดเลือกเอง, บันทึกลง localStorage เดียวกับในแอป ──
+  const [theme, setThemeState] = useState<ThemeId>(() => readTheme());
+  const C = theme === 'minimal' ? LIGHT_C : DARK_C;
+  const toggleTheme = () => {
+    const nx = nextTheme(theme);
+    setTheme(nx);            // บันทึก + ตั้ง data-theme บน <html> (ให้ในแอปสลับตามด้วย)
+    setThemeState(nx);
+    track('theme_changed', { theme: nx, where: 'landing' });
+  };
+
   // Dynamic hero (Hyper-Personalization) — เลือก hero ตาม signal ของคนที่เข้ามา (UTM/referrer)
   // → ยิงตรงแก่นอารมณ์ + ดันเข้า 2 ทาง: เปิดร้าน (seller) / เริ่มธุรกิจ (newbie·owner) · default = ทั่วไป
   const hero = useMemo(() => {
@@ -230,6 +264,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
   const agg = aggregateRating(testimonials);
 
   return (
+    <LandingThemeCtx.Provider value={theme}>
     <div style={{ minHeight: '100vh', backgroundColor: C.bg, color: C.white, fontFamily: "'Kanit', sans-serif", overflowX: 'hidden' }}>
 
       {/* ─── โหมดพรีวิว (สมาชิกเปิดดูหน้าแนะนำ) — ปุ่มกลับเข้าแอป ─── */}
@@ -244,12 +279,22 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       )}
 
       {/* ─── Nav ─── */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${C.border}`, backgroundColor: 'rgba(2,6,23,0.85)', backdropFilter: 'blur(12px)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
+      <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${C.border}`, backgroundColor: C.navBg, backdropFilter: 'blur(12px)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
         <span style={{ fontWeight: 700, fontSize: 18, color: C.cyan4, letterSpacing: '-0.5px' }}>
           CEO AI Thailand
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <a href="#pricing" style={{ color: C.slate4, fontSize: 14, textDecoration: 'none', padding: '8px 12px' }}>แพ็กเกจ</a>
+          {/* สลับธีม เข้ม/มินิมอล — ให้ผู้ใช้เลือกโหมดอ่านสบายตา (เคารพความชอบ = ลด friction) */}
+          <button
+            onClick={toggleTheme}
+            title={`สลับเป็นธีม “${themeLabel(nextTheme(theme))}”`}
+            aria-label={`สลับธีม ปัจจุบัน ${themeLabel(theme)}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border2}`, background: 'transparent', color: C.slate4, fontFamily: 'inherit', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all .2s' }}
+          >
+            <span aria-hidden="true">{themeIcon(nextTheme(theme))}</span>
+            <span style={{ display: 'inline' }}>{themeLabel(nextTheme(theme))}</span>
+          </button>
           <button
             onClick={onGetStarted}
             onMouseEnter={() => setNavHover(true)}
@@ -694,7 +739,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
                     borderRadius: 10,
                     border: p.highlight ? 'none' : `1px solid ${C.border2}`,
                     background: p.highlight ? C.cyan5 : 'transparent',
-                    color: p.highlight ? C.white : C.slate4,
+                    color: p.highlight ? C.onCyan : C.slate4,
                     fontFamily: 'inherit',
                     fontWeight: 600,
                     fontSize: 15,
@@ -718,7 +763,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         <p style={{ color: C.slate4, marginBottom: 40, fontSize: 16 }}>ทดลองฟรี 15 วัน ไม่ต้องใช้บัตรเครดิต</p>
         <button
           onClick={onGetStarted}
-          style={{ padding: '16px 48px', borderRadius: 12, border: 'none', background: C.cyan5, color: C.white, fontFamily: 'inherit', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 0 32px rgba(6,182,212,0.4)' }}
+          style={{ padding: '16px 48px', borderRadius: 12, border: 'none', background: C.cyan5, color: C.onCyan, fontFamily: 'inherit', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 0 32px rgba(6,182,212,0.4)' }}
         >
           เริ่มต้นฟรีเลย →
         </button>
@@ -739,5 +784,6 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         <div style={{ marginTop: 16 }}><IsmsBadge /></div>
       </footer>
     </div>
+    </LandingThemeCtx.Provider>
   );
 }
