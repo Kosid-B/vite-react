@@ -3,7 +3,7 @@ import type { AppData, PageId } from '../types';
 import {
   INDUSTRY_OPTIONS, GOAL_MIN_LEN, setupProgress,
   pendingInputSteps, teamDone, applyIndustry, applyGoal, initialFieldValue,
-  matchIndustry, type SetupStepDef,
+  matchIndustry, suggestGoal, type SetupStepDef,
 } from '../lib/setupWizard';
 import { readBizHint } from '../lib/bizHint';
 
@@ -83,9 +83,11 @@ export default function OnboardingTour({ data, onNavigate, onUpdate }: Props) {
     advance();
   }
 
-  // ค่าเริ่มต้นช่อง industry: ค่าที่บันทึกแล้ว → ถ้ายังไม่มี ใช้หมวดที่ match จากที่พิมพ์บน Landing
+  // ค่าเริ่มต้น: ค่าที่บันทึกแล้ว → ถ้ายังไม่มี ดึงจากที่พิมพ์บน Landing (industry=หมวดที่ match, goal=ร่างเป้าหมาย)
   const stepPrefill = cur.kind === 'setup'
-    ? (initialFieldValue(data, cur.step.id) || (cur.step.id === 'industry' ? matchIndustry(bizHint) : ''))
+    ? (initialFieldValue(data, cur.step.id)
+        || (cur.step.id === 'industry' ? matchIndustry(bizHint)
+          : cur.step.id === 'goal' ? suggestGoal(bizHint) : ''))
     : '';
   const value = touched ? draft : stepPrefill;
   const valid =
@@ -136,11 +138,16 @@ export default function OnboardingTour({ data, onNavigate, onUpdate }: Props) {
                   )}
                 </>
               ) : (
-                <textarea
-                  className="onb-textarea" rows={3} value={value}
-                  placeholder="เช่น เพิ่มยอดขายออนไลน์ให้ถึง ฿100,000/เดือน ภายใน 90 วัน"
-                  onChange={e => { setTouched(true); setDraft(e.target.value); }}
-                />
+                <>
+                  <textarea
+                    className="onb-textarea" rows={3} value={value}
+                    placeholder="เช่น เพิ่มยอดขายออนไลน์ให้ถึง ฿100,000/เดือน ภายใน 90 วัน"
+                    onChange={e => { setTouched(true); setDraft(e.target.value); }}
+                  />
+                  {cur.step.id === 'goal' && bizHint && value && (
+                    <div className="onb-hintnote">ร่างเป้าหมายจากธุรกิจของคุณ — ปรับตัวเลข/กรอบเวลาได้เลย</div>
+                  )}
+                </>
               )}
             </div>
           </>

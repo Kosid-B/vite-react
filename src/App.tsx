@@ -10,6 +10,7 @@ import { resolveWsLoad } from './lib/wsSync';
 import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
 import { rememberSourceOnce, readRememberedSource } from './lib/attribution';
+import { readBizHint } from './lib/bizHint';
 import { isRealActivation } from './lib/setupWizard';
 import { track } from './lib/analytics';
 import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTriggers';
@@ -183,6 +184,16 @@ function migrate(parsed: AppData): AppData {
     const src = readRememberedSource();
     if (src) parsed.signupSource = src;
   }
+  // ต่อเนื่อง Landing→แอป: prefill ชื่อบริษัทจากธุรกิจที่พิมพ์บน Landing (ครั้งเดียว, เฉพาะยังเป็นชื่อ seed)
+  try {
+    if (!localStorage.getItem('ceo_ai_biz_named') && parsed.aiCompany.name === DEFAULT_DATA.aiCompany.name) {
+      const hint = readBizHint();
+      if (hint) {
+        parsed.aiCompany = { ...parsed.aiCompany, name: hint };
+        localStorage.setItem('ceo_ai_biz_named', '1');
+      }
+    }
+  } catch { /* noop */ }
   return parsed;
 }
 

@@ -5,7 +5,7 @@ import {
   INDUSTRY_OPTIONS, GOAL_MIN_LEN, SETUP_STEPS,
   industryDone, goalDone, teamDone, setupProgress, firstIncompleteStep,
   pendingInputSteps, isSetupComplete, applyIndustry, applyGoal, initialFieldValue,
-  matchIndustry,
+  matchIndustry, suggestGoal,
 } from '../setupWizard';
 
 /* deep clone กัน mutation ข้ามเทสต์ (SEED เป็น object ที่ import ร่วม) */
@@ -100,6 +100,14 @@ describe('setupWizard — helpers', () => {
     expect(matchIndustry('   ')).toBe('');
     expect(matchIndustry(null)).toBe('');
     expect(matchIndustry('xyzqwerty ไม่มีคำใบ้')).toBe('');
+  });
+
+  it('suggestGoal: ร่างเป้าหมายจากธุรกิจ (มี hint) + ยาวพอผ่านเกณฑ์ · ว่าง→""', () => {
+    const g = suggestGoal('ร้านกาแฟ');
+    expect(g).toContain('ร้านกาแฟ');
+    expect(g.length).toBeGreaterThanOrEqual(GOAL_MIN_LEN);
+    expect(suggestGoal('')).toBe('');
+    expect(suggestGoal(null)).toBe('');
   });
 
   it('initialFieldValue ไม่คืนค่า seed (เริ่มช่องว่างสำหรับผู้ใช้ใหม่)', () => {

@@ -7,6 +7,8 @@ import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
 import InstantPreview from '../components/InstantPreview';
 import MarketDemandPanel from '../components/MarketDemandPanel';
+import MarketSizerPanel from '../components/MarketSizerPanel';
+import PricingCalcPanel from '../components/PricingCalcPanel';
 import RoiCalculatorPanel from '../components/RoiCalculatorPanel';
 import GainPointsPanel from '../components/GainPointsPanel';
 import HowItWorks30 from '../components/HowItWorks30';
@@ -112,6 +114,13 @@ const differentiators = [
   { icon: '🏆', title: 'พัฒนาโดยผู้เชี่ยวชาญ 20+ ปี', desc: 'สร้างโดย B. Training Consultant ผู้วางระบบธุรกิจ/มาตรฐานให้ธุรกิจไทยกว่า 20 ปี — ประสบการณ์จริงถูกใส่ลงในระบบ ไม่ใช่แค่ AI ลอย ๆ' },
   { icon: '🇹🇭', title: 'เข้าใจธุรกิจไทยจริง', desc: 'ตลาด B2B · DBD · PromptPay · ISO/มอก.ภาษาไทย — เข้าใจบริบทและกฎเกณฑ์ของไทย ต่างจาก AI ทั่วไป' },
   { icon: '🧩', title: 'ครบจบในที่เดียว', desc: 'ทีมบริหาร AI + หน้าร้าน/ตลาด B2B + การเงิน + งานมาตรฐาน — ไม่ต้องต่อหลายเครื่องมือให้ยุ่งยาก' },
+];
+
+// Skill AI ที่โตไปกับธุรกิจ — ปลดล็อกตามระดับ (สื่อสาร "ระบบพัฒนา skill ให้ + มี skill ใหม่ตามระดับธุรกิจ")
+const SKILL_STAGES = [
+  { icon: '🌱', stage: 'เริ่มต้น', desc: 'เพิ่งเริ่ม หาที่ยืน', skills: ['หาลูกค้ากลุ่มแรกที่ใช่', 'ทดสอบไอเดียก่อนลงเงิน', 'เปิดหน้าร้าน + ขึ้นสารบัญธุรกิจ'] },
+  { icon: '🚀', stage: 'เติบโต', desc: 'มีลูกค้าแล้ว อยากโต', skills: ['ตั้งราคา & วางโปรโมชัน', 'วิจัยตลาด + ประเมินโอกาส', 'ปิดดีล B2B (RFQ) + จับคู่ดีมานด์'] },
+  { icon: '🏗️', stage: 'ขยาย', desc: 'พร้อมสเกล', skills: ['วางระบบ SOP · KPI', 'ร่าง ISO / มาตรฐาน (มอก./PDPA)', 'จับคู่คู่ค้า + การค้าระหว่างเมือง'] },
 ];
 
 const outcomes = [
@@ -435,6 +444,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         </div>
       </section>
 
+      {/* ─── เครื่องมือประเมินตลาดฟรี (interactive · dopamine) — วางใกล้ hero ให้เห็นทันที ─── */}
+      <MarketSizerPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} />
+
       {/* ─── Dynamic Persona banner — ปรับตามพฤติกรรมจริง (โปร่งใส/ปิดได้/ลบข้อมูลได้) ─── */}
       {persona && <PersonaBanner persona={persona} onGetStarted={onGetStarted} onClose={() => setPersona(null)} />}
 
@@ -455,6 +467,8 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           <>
             {/* Demand/Supply Board (first-party จริง): พิมพ์ธุรกิจ → เห็นดีมานด์ในระบบ */}
             <MarketDemandPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} />
+            {/* ตั้งราคาขาย+กำไร (lead magnet): ต้นทุน+กำไร% → ราคาที่ควรตั้ง */}
+            <PricingCalcPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedRoi')} />
             {/* ROI อย่างง่าย: กรอกตัวเลข → เทียบค่าสมัคร + บทวิเคราะห์ */}
             <RoiCalculatorPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedRoi')} />
           </>
@@ -605,6 +619,54 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
                 <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7 }}>{d.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── AI Skills ที่โตไปกับธุรกิจ — ระบบพัฒนา Skill ให้ + มี Skill ใหม่ตามระดับ ─── */}
+      <section style={{ padding: '80px 24px' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', color: C.cyan4, fontSize: 12.5, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 12 }}>
+            AI Skills ที่โตไปกับคุณ
+          </div>
+          <h2 style={{ textAlign: 'center', fontSize: 'clamp(24px, 3.4vw, 32px)', fontWeight: 700, marginBottom: 12 }}>
+            ทีม AI <span style={{ color: C.cyan4 }}>เก่งขึ้นเรื่อย ๆ</span> — ปลดล็อก Skill ใหม่ตามระดับธุรกิจคุณ
+          </h2>
+          <p style={{ textAlign: 'center', color: C.slate4, fontSize: 16, lineHeight: 1.7, maxWidth: 660, margin: '0 auto 44px' }}>
+            ระบบ<strong style={{ color: C.white }}>พัฒนา Skill ให้ต่อเนื่อง</strong> แล้วเสนอให้เลือกตามจุดที่ธุรกิจคุณไปถึง —
+            ไม่ใช่จ่ายแล้วจบ แต่มี "ทักษะถัดไป" รอเสมอเมื่อคุณพร้อม
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+            {SKILL_STAGES.map((s, i) => (
+              <div key={s.stage} style={{ position: 'relative', padding: '26px 22px', borderRadius: 16, border: `1px solid ${i === 1 ? C.cyan5 : C.border2}`, backgroundColor: i === 1 ? 'rgba(6,182,212,0.06)' : C.bg3 }}>
+                <div style={{ fontSize: 34, marginBottom: 10 }}>{s.icon}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan4, letterSpacing: '0.08em', marginBottom: 2 }}>ระดับ {i + 1}</div>
+                <div style={{ fontWeight: 800, fontSize: 19, color: C.white, marginBottom: 2 }}>{s.stage}</div>
+                <div style={{ color: C.slate5, fontSize: 13, marginBottom: 14 }}>{s.desc}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {s.skills.map(sk => (
+                    <div key={sk} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: C.slate4, lineHeight: 1.5 }}>
+                      <span style={{ color: C.cyan4, fontWeight: 700, flexShrink: 0 }}>✦</span> {sk}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ textAlign: 'center', color: C.slate5, fontSize: 13.5, marginTop: 26, lineHeight: 1.6 }}>
+            มี Skill ใหม่เพิ่มเข้ามาต่อเนื่อง — เลือกใช้เฉพาะที่ธุรกิจคุณต้องการ "ตอนนี้" ไม่ต้องเก่งทุกอย่างเอง
+          </p>
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <button onClick={() => { track('landing_cta_click', { cta: 'skills_section', layout: layoutAb }); onGetStarted(); }}
+              style={{ background: C.amber5, color: C.dark, border: 0, borderRadius: 12, padding: '13px 30px', fontWeight: 800, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
+              เริ่มจาก Skill แรกของคุณ — ฟรี
+            </button>
+            <div style={{ marginTop: 14 }}>
+              <a href="/skills" onClick={() => track('landing_cta_click', { cta: 'skills_learn_more' })}
+                style={{ color: C.cyan4, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
+                อ่านเพิ่ม: AI Skills ที่โตไปกับธุรกิจ →
+              </a>
+            </div>
           </div>
         </div>
       </section>

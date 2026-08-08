@@ -44,6 +44,14 @@ export function matchIndustry(hint: string | null | undefined): string {
   return '';
 }
 
+/** ร่างเป้าหมายเริ่มต้นจากธุรกิจที่พิมพ์บน Landing — เป็น "แบบร่างที่แก้ได้" (ผู้ใช้ปรับตัวเลข/กรอบเวลา)
+ *  ไม่ใช่การกำหนดเป้าให้จริง — แค่ช่วยตั้งต้นให้เขียนต่อง่าย (mirror ตัวอย่างใน placeholder) · '' ถ้าไม่มี hint */
+export function suggestGoal(hint: string | null | undefined): string {
+  const h = (hint ?? '').trim();
+  if (!h) return '';
+  return `เพิ่มยอดขายของ ${h} ให้ถึง ฿100,000/เดือน ภายใน 90 วัน`;
+}
+
 /** ความยาวเป้าหมายขั้นต่ำ กันการกรอกลวก ๆ */
 export const GOAL_MIN_LEN = 8;
 

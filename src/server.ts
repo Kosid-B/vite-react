@@ -2,7 +2,7 @@
 
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
-  homeSeo, faqPageHtml, mit24PageHtml, aggregateFromRatings,
+  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, aggregateFromRatings,
   type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
 
@@ -152,6 +152,13 @@ export default {
       // /mit24 → บทความ answer-first: MIT 24 Steps คืออะไร ใช้ยังไงในแอป + Article/FAQPage schema (GEO/AEO)
       if (url.pathname === '/mit24' || url.pathname === '/mit24/') {
         return new Response(mit24PageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // /skills → บทความ answer-first: AI Skills ที่โตไปกับธุรกิจ + Skill ใหม่ตามระดับ (GEO/AEO)
+      if (url.pathname === '/skills' || url.pathname === '/skills/') {
+        return new Response(skillsPageHtml(origin), {
           headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
         });
       }
