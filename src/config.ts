@@ -90,7 +90,8 @@ export const PAYMENT = {
 //   ปรัชญา: ไม่จำกัดจำนวน SKU (Free/Starter ไม่อั้น → ถูกค้นเจอเยอะ) · เก็บเงินจาก transaction 3% + หลายบริษัท
 //   local mode ใช้งานได้ทันที (เก็บใน localStorage) · flag คุมเฉพาะการเขียน products ลง Supabase (กันพังก่อน migrate)
 export const CATALOG = {
-  live: false,
+  // เปิดใช้แล้ว — migration 0049 (storefronts.products) apply บน prod แล้ว ส.ค. 2569
+  live: true,
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)

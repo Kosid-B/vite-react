@@ -18,6 +18,7 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   roi: { label: 'ROI Calculator', prompts: ['วิเคราะห์ความคุ้มค่า', 'เสนอวิธีลดต้นทุน'], context: d => `avgDeal ${d.roi.avgDealValue}, target ${d.roi.monthlyRevenueTarget}` },
   personas: { label: 'Personas', prompts: ['เสนอ persona ใหม่', 'เพิ่ม insight ให้ persona เดิม'], context: d => `personas: ${d.personas.map(p => p.name).join(', ')}` },
   content: { label: 'Content Plan', prompts: ['เสนอหัวข้อคอนเทนต์เดือนหน้า', 'ไอเดียคอนเทนต์ตาม persona'], context: d => `${d.contentPlan.length} เดือน` },
+  trustcontent: { label: 'คอนเทนต์สายเชื่อใจ (T.R.U.S.T.)', prompts: ['ร่างคอนเทนต์ตาม T.R.U.S.T.', 'ปรับ hook ให้โดนอารมณ์'], context: d => `หัวข้อ: ${d.aiCompany?.name ?? '-'}` },
   actions: { label: 'Priority Actions', prompts: ['จัดลำดับความสำคัญใหม่', 'เสนองานที่ควรทำเพิ่ม'], context: d => `${d.actions.length} actions, เสร็จ ${d.actions.filter(a => a.done).length}` },
   aisearch: { label: 'AI Research', prompts: ['สรุปประเด็นวิจัยที่ควรหา'], context: () => 'หน้าค้นคว้า' },
   bmc: { label: 'Business Model', prompts: ['ตรวจ Business Model Canvas', 'เสนอช่องทางรายได้เพิ่ม'], context: d => `BMC value: ${d.businessModel.bmc.value.slice(0, 3).join(', ')}` },

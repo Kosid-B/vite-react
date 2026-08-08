@@ -42,6 +42,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const JourneyMap = lazy(() => import('./pages/JourneyMap'));
 const Personas = lazy(() => import('./pages/Personas'));
 const ContentPlan = lazy(() => import('./pages/ContentPlan'));
+const TrustContent = lazy(() => import('./pages/TrustContent'));
 const PriorityActions = lazy(() => import('./pages/PriorityActions'));
 const AIResearch = lazy(() => import('./pages/AIResearch'));
 const ConversionFunnel = lazy(() => import('./pages/ConversionFunnel'));
@@ -673,6 +674,7 @@ export default function App() {
         {activePage === 'content' && (
           <ContentPlan data={data} activeMonth={activeMonth} onMonthChange={setActiveMonth} onUpdate={updateData} />
         )}
+        {activePage === 'trustcontent' && <TrustContent data={data} />}
         {activePage === 'actions' && <PriorityActions data={data} onUpdate={updateData} />}
         {activePage === 'aisearch' && (
           canAccess(data, 'aisearch')
