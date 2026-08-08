@@ -5369,6 +5369,24 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   .sale-guarantee { flex-direction:column; gap:10px; }
 }
 
+/* ══ /sale: ธีมมินิมอล (สว่าง) — override เฉพาะ .sale-* (ส่วน .start-* สลับให้แล้ว) ══ */
+:root[data-theme="minimal"] .sale-stack-row { background:#ffffff; border-color:#e2e8f0; }
+:root[data-theme="minimal"] .sale-stack-item { color:#0f172a; }
+:root[data-theme="minimal"] .sale-stack-worth { color:#475569; }
+:root[data-theme="minimal"] .sale-stack-total { color:#334155; background:rgba(22,163,74,.08); border-color:rgba(22,163,74,.35); }
+:root[data-theme="minimal"] .sale-stack-total b { color:#16a34a; }
+:root[data-theme="minimal"] .sale-toggle { background:#eef2f6; border-color:#e2e8f0; }
+:root[data-theme="minimal"] .sale-toggle-btn { color:#475569; }
+:root[data-theme="minimal"] .sale-pricecard { background:#ffffff; }
+:root[data-theme="minimal"] .sale-pricecard-name { color:#0891b2; }
+:root[data-theme="minimal"] .sale-pricecard-price { color:#0f172a; }
+:root[data-theme="minimal"] .sale-pricecard-price span { color:#475569; }
+:root[data-theme="minimal"] .sale-pricecard-sub { color:#475569; }
+:root[data-theme="minimal"] .sale-pricecard-foot { color:#64748b; }
+:root[data-theme="minimal"] .sale-guarantee { background:#ffffff; border-color:#e2e8f0; }
+:root[data-theme="minimal"] .sale-guarantee-title { color:#0f172a; }
+:root[data-theme="minimal"] .sale-guarantee-body { color:#475569; }
+
 /* ── First Revenue Engine: ภารกิจดีลแรกใน 30 วัน (แก้ churn) ── */
 .fd-panel { background:var(--cream3); border:1.5px solid #f59e0b66; border-radius:14px; padding:18px 20px; margin-bottom:18px; }
 .fd-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }

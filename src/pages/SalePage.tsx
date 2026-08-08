@@ -1,6 +1,7 @@
 import '../index.css';
 import { useEffect, useState } from 'react';
 import { track } from '../lib/analytics';
+import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
 import { applySeo, siteOrigin } from '../lib/seo';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
@@ -45,6 +46,13 @@ const FAQS: FaqItem[] = [
 export default function SalePage() {
   const [showSticky, setShowSticky] = useState(false);
   const [annual, setAnnual] = useState(true);
+  const [theme, setThemeState] = useState<ThemeId>(() => readTheme());
+  const toggleTheme = () => {
+    const nx = nextTheme(theme);
+    setTheme(nx);
+    setThemeState(nx);
+    track('theme_changed', { theme: nx, where: 'sale' });
+  };
 
   useEffect(() => {
     const o = siteOrigin();
@@ -91,7 +99,14 @@ export default function SalePage() {
     <div className="start-wrap">
       <header className="start-head">
         <span className="start-brand">🏢 CEO AI Thailand</span>
-        <a className="start-head-cta" href="/">เข้าใช้ระบบ →</a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button type="button" className="start-theme-btn" onClick={toggleTheme}
+            title={`สลับเป็นธีม “${themeLabel(nextTheme(theme))}”`}
+            aria-label={`สลับธีม ปัจจุบัน ${themeLabel(theme)}`}>
+            <span aria-hidden="true">{themeIcon(nextTheme(theme))}</span> {themeLabel(nextTheme(theme))}
+          </button>
+          <a className="start-head-cta" href="/">เข้าใช้ระบบ →</a>
+        </div>
       </header>
 
       {/* Hero */}
