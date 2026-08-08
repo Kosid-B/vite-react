@@ -1,6 +1,7 @@
 import '../index.css';
 import { useEffect, useMemo, useState } from 'react';
 import { track } from '../lib/analytics';
+import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
 import { applySeo, siteOrigin } from '../lib/seo';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
@@ -84,6 +85,14 @@ const ROI_ITEMS = [
 export default function StartLanding() {
   const [copied, setCopied] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
+  // ธีม เข้ม/มินิมอล — data-theme บน <html> ตั้งไว้แล้วจาก main.tsx · ปุ่มนี้ให้สลับเอง (บันทึกร่วมทั้งระบบ)
+  const [theme, setThemeState] = useState<ThemeId>(() => readTheme());
+  const toggleTheme = () => {
+    const nx = nextTheme(theme);
+    setTheme(nx);
+    setThemeState(nx);
+    track('theme_changed', { theme: nx, where: 'start' });
+  };
 
   // เวอร์ชัน hero: ISO/โรงงาน (มาจากสะพานเว็บบริษัท ?ref=btctraining หรือ utm_campaign มี 'iso')
   // → ส่งต่อความคาดหวังตรงกลุ่มที่คลิกมาจากบทความ ISO
@@ -153,7 +162,14 @@ export default function StartLanding() {
     <div className="start-wrap">
       <header className="start-head">
         <span className="start-brand">🏢 CEO AI Thailand</span>
-        <a className="start-head-cta" href="/">เข้าใช้ระบบ →</a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button type="button" className="start-theme-btn" onClick={toggleTheme}
+            title={`สลับเป็นธีม “${themeLabel(nextTheme(theme))}”`}
+            aria-label={`สลับธีม ปัจจุบัน ${themeLabel(theme)}`}>
+            <span aria-hidden="true">{themeIcon(nextTheme(theme))}</span> {themeLabel(nextTheme(theme))}
+          </button>
+          <a className="start-head-cta" href="/">เข้าใช้ระบบ →</a>
+        </div>
       </header>
 
       {/* Hero */}

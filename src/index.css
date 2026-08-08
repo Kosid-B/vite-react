@@ -5278,6 +5278,66 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   .start-sec.reveal { opacity:1; transform:none; transition:none; }
 }
 
+/* ── /start: ปุ่มสลับธีมบน header ── */
+.start-theme-btn { display:inline-flex; align-items:center; gap:6px; font-family:inherit; font-size:14px; font-weight:600; color:#94a3b8; border:1px solid #334155; background:transparent; border-radius:8px; padding:8px 12px; cursor:pointer; transition:all .2s; }
+.start-theme-btn:hover { border-color:#06b6d4; color:#22d3ee; }
+
+/* ══ /start: ธีมมินิมอล (สว่าง) — override เฉพาะพื้น/ตัวอักษร คง accent ให้ contrast ดีบนพื้นสว่าง ══ */
+:root[data-theme="minimal"] .start-wrap { background:#f8fafc; color:#0f172a; }
+:root[data-theme="minimal"] .start-head { border-bottom-color:#e2e8f0; background:rgba(255,255,255,.85); }
+:root[data-theme="minimal"] .start-brand { color:#0891b2; }
+:root[data-theme="minimal"] .start-theme-btn { color:#475569; border-color:#cbd5e1; }
+:root[data-theme="minimal"] .start-theme-btn:hover { border-color:#0891b2; color:#0e7490; }
+:root[data-theme="minimal"] .start-head-cta { color:#0e7490; border-color:#0891b2; }
+:root[data-theme="minimal"] .start-head-cta:hover { background:rgba(8,145,178,.12); }
+:root[data-theme="minimal"] .start-badge { color:#0e7490; border-color:rgba(8,145,178,.4); background:rgba(8,145,178,.08); }
+:root[data-theme="minimal"] .start-h1-hl { color:#0891b2; }
+:root[data-theme="minimal"] .start-sub { color:#475569; }
+:root[data-theme="minimal"] .start-sub b { color:#b45309; }
+:root[data-theme="minimal"] .start-cta-sub { color:#0e7490; }
+:root[data-theme="minimal"] .start-src { color:#64748b; }
+:root[data-theme="minimal"] .start-inline-link { color:#16a34a; }
+:root[data-theme="minimal"] .start-h2 { color:#0f172a; }
+:root[data-theme="minimal"] .start-price-note { color:#475569; }
+:root[data-theme="minimal"] .start-why-sec .start-price-note b { color:#b45309; }
+:root[data-theme="minimal"] .start-step { border-left-color:#0891b2; }
+:root[data-theme="minimal"] .start-step-num { color:#0891b2; }
+:root[data-theme="minimal"] .start-step-title { color:#0e7490; }
+:root[data-theme="minimal"] .start-team-card,
+:root[data-theme="minimal"] .start-core-card,
+:root[data-theme="minimal"] .start-roi-card,
+:root[data-theme="minimal"] .start-plan,
+:root[data-theme="minimal"] .start-fdn-item { background:#ffffff; border-color:#e2e8f0; }
+:root[data-theme="minimal"] .start-team-role,
+:root[data-theme="minimal"] .start-core-name,
+:root[data-theme="minimal"] .start-plan-price { color:#0f172a; }
+:root[data-theme="minimal"] .start-team-desc { color:#475569; }
+:root[data-theme="minimal"] .start-core-tag { color:#16a34a; }
+:root[data-theme="minimal"] .start-fdn-txt,
+:root[data-theme="minimal"] .start-roi-role,
+:root[data-theme="minimal"] .start-roi-punch,
+:root[data-theme="minimal"] .start-timing-body { color:#334155; }
+:root[data-theme="minimal"] .start-roi-market { color:#dc2626; }
+:root[data-theme="minimal"] .start-roi-honest,
+:root[data-theme="minimal"] .start-plan-name,
+:root[data-theme="minimal"] .start-timing-sub { color:#475569; }
+:root[data-theme="minimal"] .start-plan-note { color:#b45309; }
+:root[data-theme="minimal"] .start-cmp th,
+:root[data-theme="minimal"] .start-cmp td { border-bottom-color:#e2e8f0; }
+:root[data-theme="minimal"] .start-cmp thead th { color:#0f172a; background:#eef2f6; }
+:root[data-theme="minimal"] .start-cmp-label { color:#475569; }
+:root[data-theme="minimal"] .start-cmp-them { color:#64748b; }
+:root[data-theme="minimal"] .start-cmp td.start-cmp-us { color:#0f172a; }
+:root[data-theme="minimal"] .start-cmp th.start-cmp-us { color:#16a34a; }
+:root[data-theme="minimal"] .start-cmp .start-cmp-us { background:rgba(22,163,74,.06); border-left-color:rgba(22,163,74,.25); }
+:root[data-theme="minimal"] .start-vchip { color:#0e7490; background:rgba(8,145,178,.08); border-color:rgba(8,145,178,.35); }
+:root[data-theme="minimal"] .start-share-btn { background:#ffffff; border-color:#cbd5e1; color:#0f172a; }
+:root[data-theme="minimal"] .start-foot { color:#64748b; border-top-color:#e2e8f0; }
+:root[data-theme="minimal"] .start-sticky { background:rgba(255,255,255,.94); border-top-color:#e2e8f0; }
+:root[data-theme="minimal"] .start-sticky-txt { color:#334155; }
+:root[data-theme="minimal"] .start-timing-card { background:linear-gradient(135deg,#ecfeff,#e0f2fe); border-color:#7dd3e8; }
+:root[data-theme="minimal"] .start-timing-big { color:#0891b2; }
+
 /* ── /sale: direct-response sale page (ใช้ palette เดียวกับ /start) ── */
 .sale-stack { max-width:760px; margin:22px auto 0; display:flex; flex-direction:column; gap:10px; }
 .sale-stack-row { display:flex; align-items:center; justify-content:space-between; gap:14px; background:#0f172a; border:1px solid #1e293b; border-left:3px solid #22c55e; border-radius:12px; padding:14px 18px; }
