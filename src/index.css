@@ -1432,6 +1432,16 @@ input:focus, textarea:focus, select:focus {
 .pub-desc { font-size: 15px; color: var(--ink2); line-height: 1.8; margin: 0 0 8px; }
 .pub-sec-hd { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink4); margin: 20px 0 8px; }
 .pub-services { margin: 0; padding-left: 20px; }
+/* 🛍 catalog (SKU รายชิ้น) */
+.pub-catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 4px 0; }
+.pub-cat-item { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--card2, rgba(255,255,255,.02)); }
+.pub-cat-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pub-cat-name { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.pub-cat-price { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.pub-cat-desc { font-size: 13px; color: var(--ink3); line-height: 1.6; margin-top: 6px; }
+/* 🤖 AI disclaimer (นโยบายคอนเทนต์ AI) */
+.ai-disclaimer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; font-size: 12px; color: var(--ink3, #94a3b8); line-height: 1.5; }
+.ai-disclaimer-badge { flex-shrink: 0; font-size: 11px; font-weight: 700; color: #38bdf8; background: rgba(56,189,248,.12); border: 1px solid rgba(56,189,248,.35); border-radius: 999px; padding: 2px 9px; }
 /* ⭐ rating badge + reviews */
 .pub-rating { display: inline-flex; align-items: center; gap: 8px; margin: 4px 0 6px; }
 .pub-rating-stars { color: #fbbf24; font-size: 16px; letter-spacing: 1px; }

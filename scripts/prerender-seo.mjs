@@ -3,7 +3,7 @@
  * (เช่น GitHub Pages / Cloudflare Pages) — ใช้ builder ตัวเดียวกับ Worker (single source ไม่ drift)
  * รันด้วย vite-node (รองรับ import .ts) · best-effort: ไม่ทำให้ build ล้ม */
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { llmsTxt, sitemapXml, faqPageHtml, mit24PageHtml, skillsPageHtml } from '../src/lib/seoData.ts';
+import { llmsTxt, sitemapXml, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml } from '../src/lib/seoData.ts';
 
 const ORIGIN = process.env.SITE_ORIGIN || 'https://ceoaithailand.org';
 const OUT = 'dist';
@@ -17,7 +17,9 @@ try {
   writeFileSync(`${OUT}/mit24/index.html`, mit24PageHtml(ORIGIN));
   mkdirSync(`${OUT}/skills`, { recursive: true });
   writeFileSync(`${OUT}/skills/index.html`, skillsPageHtml(ORIGIN));
-  console.log('[prerender-seo] ✓ llms.txt · sitemap.xml · faq/index.html · mit24/index.html · skills/index.html');
+  mkdirSync(`${OUT}/trust`, { recursive: true });
+  writeFileSync(`${OUT}/trust/index.html`, trustPageHtml(ORIGIN));
+  console.log('[prerender-seo] ✓ llms.txt · sitemap.xml · faq/index.html · mit24/index.html · skills/index.html · trust/index.html');
 } catch (e) {
   console.error('[prerender-seo] skipped (non-fatal):', e && e.message);
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AppData, PageId } from '../types';
 import { getMyStorefront, saveStorefront, setFeatured, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
+import CatalogEditor from '../components/CatalogEditor';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { draftVpLocal } from '../lib/firstDeal';
 import { openShopPrompt, parseShopDraft, shopDraftLocal } from '../lib/openShop';
@@ -69,6 +70,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
         vp: '',
         promo: '',
         images: [],
+        products: [],
         description: c.productDesc ?? data.businessModel.bmc.value[0] ?? '',
         services: data.businessModel.bmc.value.slice(0, 3),
         phone: '', lineId: '', email: '', website: '',
@@ -352,6 +354,10 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
               )}
             </div>
             <span className="sf-img-hint">แนบรูปจริงของสินค้า — ร้านที่มีรูปได้รับการติดต่อมากกว่าหลายเท่า</span>
+          </div>
+          <div className="sf-field">
+            <span>🛍 แคตตาล็อกสินค้า/บริการ (รายชิ้น) — ลูกค้าเห็นราคาชัดบนหน้าร้าน</span>
+            <CatalogEditor items={sf.products} onChange={products => patch({ products })} />
           </div>
           <div className="sf-field">
             <span>✨ จุดขาย (Value Proposition) — ประโยคแรกที่ลูกค้าเห็น</span>

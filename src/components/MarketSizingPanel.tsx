@@ -5,6 +5,7 @@ import { withSkillDirectives } from '../lib/skillDirectives';
 import { trackAiCall } from '../lib/usage';
 import { estimateSizing, opportunityScore, cmoResearchPrompt, type OppFactors } from '../lib/marketSizing';
 import { competitorArchetypes, findGap, competitorPrompt, tierLabel } from '../lib/competitorAnalysis';
+import AiDisclaimer from './AiDisclaimer';
 
 /* 📣 วิจัยตลาด + ประเมินขนาดตลาด (TAM/SAM/SOM) — CMO (มณี) รับผิดชอบนำเสนอ
  * ออนไลน์: CMO วิจัยด้วย agent-run + Google Search (Serper) · ออฟไลน์: ประมาณจากสมมติฐาน (แก้ได้) */
@@ -156,6 +157,7 @@ export default function MarketSizingPanel({ data, onUpdate }: { data: AppData; o
         <div className="ms-ai">
           <div className="ms-ai-hd">{cmo?.avatar ?? '📣'} {cmo?.name ?? 'CMO'} นำเสนอผลวิจัยตลาด</div>
           <div className="ms-ai-body">{aiOut}</div>
+          <AiDisclaimer note="ขนาดตลาดและข้อเสนอเป็นค่าประมาณจากสมมติฐาน+การค้นข้อมูล ไม่ใช่ตัวเลขชี้ขาด — ตรวจสอบก่อนตัดสินใจลงทุน" />
         </div>
       )}
 

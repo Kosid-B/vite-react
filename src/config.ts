@@ -84,6 +84,15 @@ export const PAYMENT = {
   slipOkLive: true,
 };
 
+// Product Catalog หลาย SKU บนหน้าร้าน — gate จนกว่าจะ apply migration
+//   เปลี่ยนเป็น true เมื่อ: apply supabase/migrations/0049_storefront_products.sql
+//     (เพิ่มคอลัมน์ products jsonb ในตาราง storefronts) แล้ว deploy
+//   ปรัชญา: ไม่จำกัดจำนวน SKU (Free/Starter ไม่อั้น → ถูกค้นเจอเยอะ) · เก็บเงินจาก transaction 3% + หลายบริษัท
+//   local mode ใช้งานได้ทันที (เก็บใน localStorage) · flag คุมเฉพาะการเขียน products ลง Supabase (กันพังก่อน migrate)
+export const CATALOG = {
+  live: false,
+};
+
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
 export const INTEGRATIONS = {
   // Google Sheets: User เชื่อมบัญชี Google ของตัวเอง → ระบบเขียนรายงานลงชีตของเขา
