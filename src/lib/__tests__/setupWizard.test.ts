@@ -5,6 +5,7 @@ import {
   INDUSTRY_OPTIONS, GOAL_MIN_LEN, SETUP_STEPS,
   industryDone, goalDone, teamDone, setupProgress, firstIncompleteStep,
   pendingInputSteps, isSetupComplete, applyIndustry, applyGoal, initialFieldValue,
+  matchIndustry,
 } from '../setupWizard';
 
 /* deep clone กัน mutation ข้ามเทสต์ (SEED เป็น object ที่ import ร่วม) */
@@ -82,6 +83,23 @@ describe('setupWizard — helpers', () => {
   it('INDUSTRY_OPTIONS ไม่ว่าง + เป็น string ทั้งหมด', () => {
     expect(INDUSTRY_OPTIONS.length).toBeGreaterThan(0);
     expect(INDUSTRY_OPTIONS.every(o => typeof o === 'string' && o.length > 0)).toBe(true);
+  });
+
+  it('matchIndustry: จับคำที่พิมพ์บน Landing → หมวด DBD ที่ตรง (คืน label ใน INDUSTRY_OPTIONS)', () => {
+    const cafe = matchIndustry('ร้านกาแฟเล็ก ๆ');
+    expect(cafe).toBe('ที่พักแรมและบริการด้านอาหาร');
+    expect(INDUSTRY_OPTIONS).toContain(cafe); // preselect ใน select ได้จริง
+    expect(matchIndustry('รับทำบัญชี SME')).toBe('กิจกรรมวิชาชีพ วิทยาศาสตร์ และเทคนิค');
+    expect(matchIndustry('โรงงานผลิตเฟอร์นิเจอร์')).toBe('การผลิต (Manufacturing)');
+    expect(matchIndustry('ร้านขายเสื้อผ้าออนไลน์')).toBe('การขายส่งและขายปลีก การซ่อมยานยนต์');
+    expect(matchIndustry('ฟาร์มเลี้ยงไก่')).toBe('เกษตรกรรม การป่าไม้ และการประมง');
+  });
+
+  it('matchIndustry: ว่าง/ไม่รู้จัก → คืน "" (ไม่เดามั่ว)', () => {
+    expect(matchIndustry('')).toBe('');
+    expect(matchIndustry('   ')).toBe('');
+    expect(matchIndustry(null)).toBe('');
+    expect(matchIndustry('xyzqwerty ไม่มีคำใบ้')).toBe('');
   });
 
   it('initialFieldValue ไม่คืนค่า seed (เริ่มช่องว่างสำหรับผู้ใช้ใหม่)', () => {
