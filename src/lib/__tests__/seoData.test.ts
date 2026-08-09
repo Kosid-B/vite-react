@@ -6,6 +6,7 @@ import {
   aggregateFromRatings, MIN_HOME_REVIEWS,
   mit24PageHtml, mit24FaqJsonLd, mit24ArticleJsonLd, MIT24_FAQ,
   skillsPageHtml, skillsFaqJsonLd, skillsArticleJsonLd,
+  sellPageHtml, sellFaqJsonLd, sellArticleJsonLd,
   type SeoStorefront,
 } from '../seoData';
 
@@ -220,6 +221,44 @@ describe('skills (/skills answer-first article)', () => {
   });
   it('sitemap รวม /skills', () => {
     expect(sitemapXml([], ORIGIN)).toContain(`${ORIGIN}/skills`);
+  });
+});
+
+describe('sell (/sell seller-onboarding answer-first article)', () => {
+  const html = sellPageHtml(ORIGIN);
+  it('เป็น HTML doc + canonical /sell + robots index', () => {
+    expect(html.startsWith('<!doctype html>')).toBe(true);
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/sell">`);
+    expect(html).toContain('index,follow');
+  });
+  it('เจาะคีย์เวิร์ด seller + ราคาจริง + จุดต่าง SEO อัตโนมัติ', () => {
+    expect(html).toContain('เปิดร้านออนไลน์ฟรี');
+    expect(html).toContain('฿19');       // รายวัน (mirror SHOP_PACKAGES)
+    expect(html).toContain('฿290');      // รายเดือน
+    expect(html).toContain('3%');        // ค่าดำเนินการเมื่อขายได้จริง
+    expect(html).toContain('sitemap');   // จุดต่าง: SEO อัตโนมัติ
+  });
+  it('CTA + ขั้นตอนสมัคร ชี้ไปฟอร์ม /shop (grow supply) ไม่ใช่ /start', () => {
+    expect(html).toContain(`${ORIGIN}/shop`);
+    expect(html).toContain(`${ORIGIN}/b`);   // footer ลิงก์ตลาด
+  });
+  it('ฝัง Article + FAQPage schema', () => {
+    expect(html).toContain('"@type":"Article"');
+    expect(html).toContain('"@type":"FAQPage"');
+  });
+  it('schema helpers: publisher B. Training + mainEntityOfPage /sell', () => {
+    const a = sellArticleJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(a.mainEntityOfPage).toBe(`${ORIGIN}/sell`);
+    expect((a.publisher as Record<string, unknown>).name).toBe('B. Training Consultant');
+    const f = sellFaqJsonLd() as Record<string, unknown>;
+    expect(f['@type']).toBe('FAQPage');
+    expect((f.mainEntity as unknown[]).length).toBeGreaterThan(0);
+  });
+  it('sitemap รวม /sell', () => {
+    expect(sitemapXml([], ORIGIN)).toContain(`${ORIGIN}/sell`);
+  });
+  it('llmsTxt รวม /sell (ให้ AI crawler รู้จักหน้าเปิดร้าน)', () => {
+    expect(llmsTxt(ORIGIN)).toContain(`${ORIGIN}/sell`);
   });
 });
 

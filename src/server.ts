@@ -2,7 +2,7 @@
 
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
-  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, aggregateFromRatings,
+  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, aggregateFromRatings,
   type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
 
@@ -166,6 +166,13 @@ export default {
       // /trust → บทความ answer-first: T.R.U.S.T. Framework คอนเทนต์สายเชื่อใจยุค AI (GEO/AEO)
       if (url.pathname === '/trust' || url.pathname === '/trust/') {
         return new Response(trustPageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // /sell → บทความ answer-first "เปิดร้านออนไลน์ฟรี" ดึง seller (content-first marketplace SEO)
+      if (url.pathname === '/sell' || url.pathname === '/sell/') {
+        return new Response(sellPageHtml(origin), {
           headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
         });
       }
