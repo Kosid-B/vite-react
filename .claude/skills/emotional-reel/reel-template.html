@@ -1,0 +1,47 @@
+<title>Emotional Reel — 9:16 frames</title>
+<!--
+  EDIT each .frame's text. Use class "frame dusk" for pain/setup (เย็นเหงา),
+  "frame dawn" for realization/hope (ฟ้าสาง). Put brand only on the LAST frame via <div class="brand">.
+  Keep class names intact (export-reel.mjs screenshots every `.frame` → 1080×1920 PNG).
+  T.R.U.S.T.: real emotion only, no fake numbers/claims, gentle brand tie.
+  Export: node <skill-dir>/export-reel.mjs this.html out-dir
+-->
+<style>
+  :root{ --font:"IBM Plex Sans Thai","Sarabun","Noto Sans Thai",system-ui,sans-serif; }
+  *{box-sizing:border-box;margin:0}
+  body{ background:#0a0a12; font-family:var(--font); padding:20px; display:flex; flex-wrap:wrap; gap:16px; }
+  .frame{ position:relative; width:540px; height:960px; overflow:hidden; border-radius:6px;
+    display:flex; align-items:center; justify-content:center; text-align:center; }
+  .frame.dusk{ background:
+      radial-gradient(120% 70% at 50% 8%, #4b3a63 0%, transparent 55%),
+      linear-gradient(180deg, #3a2f57 0%, #7a3f5a 34%, #c8563b 58%, #e8852f 72%, #f0a233 80%, #2a1a1e 92%, #140d10 100%); }
+  .frame.dawn{ background:
+      radial-gradient(120% 70% at 50% 12%, #ffd98a 0%, transparent 55%),
+      linear-gradient(180deg, #6b5aa0 0%, #d98a6a 30%, #f0a94f 52%, #ffc95e 68%, #ffe08a 80%, #2a1e1a 93%, #140f10 100%); }
+  .frame::before{ content:""; position:absolute; inset:0; opacity:.7; background:
+      radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.5), transparent),
+      radial-gradient(2px 2px at 70% 22%, rgba(255,255,255,.35), transparent),
+      radial-gradient(1.5px 1.5px at 45% 40%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1.5px 1.5px at 82% 46%, rgba(255,255,255,.3), transparent); }
+  .frame::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:22%; background:#0b0a0e;
+    -webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='540' height='210' preserveAspectRatio='none'><path d='M0,210 L0,120 Q30,118 45,95 Q52,70 60,95 Q70,120 95,116 L130,118 Q140,80 150,70 Q160,80 168,118 L230,120 Q245,95 255,60 Q262,40 270,60 Q282,96 300,120 L360,122 L360,100 Q380,98 392,110 L430,112 Q445,90 455,105 L540,118 L540,210 Z' fill='black'/></svg>") bottom/100% 100% no-repeat;
+    mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='540' height='210' preserveAspectRatio='none'><path d='M0,210 L0,120 Q30,118 45,95 Q52,70 60,95 Q70,120 95,116 L130,118 Q140,80 150,70 Q160,80 168,118 L230,120 Q245,95 255,60 Q262,40 270,60 Q282,96 300,120 L360,122 L360,100 Q380,98 392,110 L430,112 Q445,90 455,105 L540,118 L540,210 Z' fill='black'/></svg>") bottom/100% 100% no-repeat; }
+  .txt{ position:relative; z-index:2; color:#fff; font-size:33px; font-weight:600; line-height:1.5;
+    padding:0 46px; text-wrap:balance; text-shadow:0 2px 18px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.6); }
+  .txt .em{ font-weight:800 }
+  .brand{ position:absolute; z-index:2; bottom:64px; left:0; right:0; text-align:center;
+    color:rgba(255,255,255,.82); font-size:15px; letter-spacing:.06em; font-weight:600; text-shadow:0 1px 6px rgba(0,0,0,.6); }
+</style>
+
+<!-- Setup + Pain (dusk) -->
+<div class="frame dusk"><div class="txt">บรรทัดเปิด...<br>(ความจริงที่คนกลุ่มนี้รู้สึก)</div></div>
+<div class="frame dusk"><div class="txt">ความเจ็บปวด<br>ที่เฉพาะเจาะจง</div></div>
+<div class="frame dusk"><div class="txt">รายละเอียดที่ "โดน"</div></div>
+<div class="frame dusk"><div class="txt">ความเจ็บที่ลึกขึ้น</div></div>
+<!-- Open loop (dusk→dawn) -->
+<div class="frame dawn"><div class="txt">จนวันหนึ่ง<br>เริ่มเข้าใจว่า…</div></div>
+<!-- Realization + Hope (dawn) -->
+<div class="frame dawn"><div class="txt">จุดพลิกใจ<br><span class="em">(ปลดปล่อย)</span></div></div>
+<div class="frame dawn"><div class="txt">ความหวังจริง<br>ที่ทำได้</div></div>
+<!-- Soft brand (last frame only) -->
+<div class="frame dawn"><div class="txt"><span class="em">ประโยคจบ</span><br>ที่อยากแชร์</div><div class="brand">ชื่อแบรนด์</div></div>
