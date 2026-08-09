@@ -94,6 +94,14 @@ export const CATALOG = {
   live: true,
 };
 
+// การเข้าสู่ระบบ
+export const AUTH = {
+  // เข้าสู่ระบบด้วยเบอร์โทร (OTP ทาง SMS) — ปิดไว้จนกว่าจะตั้งค่า SMS provider ใน Supabase
+  //   Auth → Providers → Phone (เช่น Twilio/MessageBird) มิฉะนั้นขึ้น "Unsupported phone provider"
+  //   ระหว่างนี้ผู้ใช้เข้าสู่ระบบด้วยอีเมล (Magic Link) ได้ตามปกติ · เปลี่ยนเป็น true เมื่อ SMS พร้อม
+  phoneOtp: false,
+};
+
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
 export const INTEGRATIONS = {
   // Google Sheets: User เชื่อมบัญชี Google ของตัวเอง → ระบบเขียนรายงานลงชีตของเขา
