@@ -7,6 +7,8 @@
    so it can be embedded as a React page inside the SPA.
    ============================================================ */
 
+import { eraByIndex, agentsByIndex, type EraDef, type EraAgents } from './cityEra';
+
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const TW = 66, THh = 33;
 const OX = 560, OY = 250;
@@ -126,6 +128,7 @@ const SEASONS: Record<SeasonName, SeasonDef> = {
 
 /* render-scope state */
 let T: TimeDef, S: SeasonDef, SUN: TimeDef['sun'], FACE: TimeDef['face'], LIT_PROB: number, SNOWY: boolean;
+let ERA: EraDef, ERA_AGENTS: EraAgents;
 let svg: SVGSVGElement;
 let defsId = 0;
 let DEFS: SVGDefsElement;
@@ -250,7 +253,10 @@ function smallShadow(parent: Element, p: Pt, r: number) {
   el('ellipse', { cx: p.x + off.x, cy: p.y + off.y, rx: r, ry: r * 0.45, fill: T.shadow }, parent);
 }
 
-function drawBuilding(parent: Element, b: Bldg) {
+function drawBuilding(parent: Element, b0: Bldg) {
+  // ความสูงตามยุค — ยุคแรกเตี้ย/มินิมอล (เพดาน ERA.maxH), ยุคหลังสูงเสียดฟ้า (hero สูงกว่าเพดานเล็กน้อยเป็นแลนด์มาร์ก)
+  const cap = b0.type === 'hero' ? ERA.maxH * 1.12 : ERA.maxH;
+  const b: Bldg = { ...b0, h: Math.min(b0.h * ERA.floorScale, cap) };
   const col = b.type === 'hero' ? T.hero : T.palette[(b.c ?? 0) % T.palette.length];
   castShadow(parent, b.x, b.y, b.w, b.d, b.h);
   const g = el('g', {}, parent);
@@ -368,11 +374,135 @@ function drawWeather(parent: Element) {
   }
 }
 
-/** Render the whole cityscape into `target`. Deterministic per (time, season). */
-export function renderCityscape(target: SVGSVGElement, timeName: TimeName, seasonName: SeasonName) {
+/* ============================================================ LIVING CITY (agents + eras)
+   ผู้คน/รถ/รถไร้คนขับ/โดรน/humanoid ที่ "เคลื่อนไหว" ผ่าน CSS keyframes (translate ตามเวกเตอร์ถนน)
+   วาดที่จุดเริ่ม (pixel) แล้ว .clv-move เลื่อนไปตาม --dx/--dy · เดินหน้าเป็น deterministic ด้วย rnd */
+
+/** ต้นไม้ริมถนนเพิ่มตามยุค (greenBoost) — เมืองไฮเทคที่ยังกลมกลืนธรรมชาติ */
+function drawStreetTrees(parent: Element, n: number) {
+  for (let i = 0; i < n; i++) {
+    const along = 0.5 + Math.floor(rnd() * (GRID - 1));
+    const onRow = rnd() < 0.5;
+    const p = onRow ? iso(along, ROAD_ROW + (rnd() < 0.5 ? -0.16 : 1.16)) : iso(ROAD_COL + (rnd() < 0.5 ? -0.16 : 1.16), along);
+    smallShadow(parent, p, 6);
+    el('line', { x1: p.x, y1: p.y, x2: p.x, y2: p.y - 10, stroke: vhsl(S.treeDark, T.vegDL), 'stroke-width': 2 }, parent);
+    el('circle', { cx: p.x, cy: p.y - 14, r: 6, fill: vhsl(S.tree, T.vegDL) }, parent);
+    el('circle', { cx: p.x - 3, cy: p.y - 11, r: 4, fill: vhsl(S.treeDark, T.vegDL) }, parent);
+    if (SNOWY) el('circle', { cx: p.x + 1, cy: p.y - 16, r: 3.8, fill: '#f2f7ff', opacity: .95 }, parent);
+  }
+}
+
+/** กลุ่มที่ "เดินทาง" ข้ามเมืองด้วย CSS (translate 0→dx,dy วนไม่จบ · delay ลบ = กระจายตำแหน่งบนเส้นทาง) */
+function travelGroup(parent: Element, dx: number, dy: number, dur: number, phase: number): SVGGElement {
+  return el('g', {
+    class: 'clv-move',
+    style: `--dx:${dx.toFixed(1)}px;--dy:${dy.toFixed(1)}px;--dur:${dur.toFixed(1)}s;animation-delay:${(-phase * dur).toFixed(2)}s`,
+  }, parent) as SVGGElement;
+}
+
+const PERSON_COLORS = ['#e8935a', '#5aa0e8', '#6ac28a', '#d97ab0', '#c56aa0', '#e8c15a', '#8a7de8'];
+function personArt(parent: Element, p: Pt, humanoid: boolean, accent: string) {
+  smallShadow(parent, p, 3);
+  const body = humanoid ? '#cfe6ff' : PERSON_COLORS[Math.floor(rnd() * PERSON_COLORS.length)];
+  if (humanoid) el('circle', { cx: p.x, cy: p.y - 7, r: 5.5, fill: accent, opacity: .16 }, parent);           // glow
+  el('line', { x1: p.x, y1: p.y - 2.5, x2: p.x, y2: p.y - 11, stroke: body, 'stroke-width': 3.4, 'stroke-linecap': 'round' }, parent);
+  el('circle', { cx: p.x, cy: p.y - 13.4, r: 2.5, fill: humanoid ? '#eaf6ff' : '#f0c9a0' }, parent);            // head
+  if (humanoid) {
+    el('line', { x1: p.x, y1: p.y - 15.6, x2: p.x, y2: p.y - 17.4, stroke: accent, 'stroke-width': 1 }, parent); // antenna
+    el('circle', { cx: p.x, cy: p.y - 18, r: 1.2, fill: accent, class: 'clv-blink' }, parent);
+  }
+}
+
+function carArt(parent: Element, p: Pt, angleDeg: number, color: string, selfDriving: boolean, accent: string) {
+  const g = el('g', { transform: `translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})` }, parent);
+  el('ellipse', { cx: 0, cy: 5, rx: 13, ry: 4, fill: T.shadow }, g);
+  el('rect', { x: -12, y: -5, width: 24, height: 10, rx: 5, fill: color }, g);                                   // body
+  el('rect', { x: -5, y: -4, width: 11, height: 8, rx: 3, fill: 'rgba(255,255,255,.55)' }, g);                   // cabin
+  if (T.lamps) { el('circle', { cx: 12, cy: 0, r: 1.8, fill: '#fff3b0' }, g); el('circle', { cx: 12, cy: 0, r: 4, fill: '#fff3b0', opacity: .3 }, g); }
+  if (selfDriving) {
+    el('circle', { cx: 0, cy: -6, r: 2.4, fill: accent, class: 'clv-lidar' }, g);                                // LiDAR dome
+    el('circle', { cx: 0, cy: -6, r: 6.5, fill: accent, opacity: .18, class: 'clv-lidar' }, g);                  // sensor sweep
+    el('rect', { x: -12, y: -5, width: 24, height: 10, rx: 5, fill: 'none', stroke: accent, 'stroke-width': 1, opacity: .5 }, g);
+  }
+}
+
+function droneArt(parent: Element, p: Pt, accent: string) {
+  const g = el('g', { class: 'clv-drone' }, parent);
+  const cone = el('polygon', { points: `${p.x},${p.y + 2} ${p.x - 5},${p.y + 22} ${p.x + 5},${p.y + 22}`, fill: accent, opacity: .12 }, g);
+  cone.setAttribute('opacity', '.12');
+  el('ellipse', { cx: p.x, cy: p.y, rx: 5, ry: 2.4, fill: '#2b3350' }, g);                                       // body
+  for (const dx of [-6, 6]) {
+    el('line', { x1: p.x, y1: p.y - 1, x2: p.x + dx, y2: p.y - 3, stroke: '#4a5578', 'stroke-width': 1.4 }, g);
+    el('circle', { cx: p.x + dx, cy: p.y - 3.4, r: 2.2, fill: accent, opacity: .85 }, g);
+    el('circle', { cx: p.x + dx, cy: p.y - 3.4, r: 4, fill: accent, opacity: .2 }, g);
+  }
+  el('circle', { cx: p.x, cy: p.y + 1.6, r: 1.1, fill: '#ff5b6e', class: 'clv-blink' }, g);
+}
+
+/** สร้าง agent ทั้งหมดของยุค (คน/รถ/รถไร้คนขับ/โดรน/humanoid) ในเลเยอร์บนสุดของพื้น */
+function drawAgents(parent: Element) {
+  const A = ERA_AGENTS, accent = ERA.accent;
+  // เส้นทางถนนหลัก: แถวนอน (ROAD_ROW) 2 เลน + แนวตั้ง (ROAD_COL) 2 เลน
+  type Lane = { s: Pt; dx: number; dy: number; ang: number };
+  const lanes: Lane[] = [];
+  const mk = (a: Pt, b: Pt): Lane => ({ s: a, dx: b.x - a.x, dy: b.y - a.y, ang: Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI });
+  lanes.push(mk(iso(0, ROAD_ROW + 0.32), iso(GRID, ROAD_ROW + 0.32)));
+  lanes.push(mk(iso(GRID, ROAD_ROW + 0.68), iso(0, ROAD_ROW + 0.68)));
+  lanes.push(mk(iso(ROAD_COL + 0.32, GRID), iso(ROAD_COL + 0.32, 0)));
+  lanes.push(mk(iso(ROAD_COL + 0.68, 0), iso(ROAD_COL + 0.68, GRID)));
+  const walks: Lane[] = [
+    mk(iso(0, ROAD_ROW - 0.14), iso(GRID, ROAD_ROW - 0.14)),
+    mk(iso(GRID, ROAD_ROW + 1.14), iso(0, ROAD_ROW + 1.14)),
+    mk(iso(ROAD_COL - 0.14, GRID), iso(ROAD_COL - 0.14, 0)),
+  ];
+  const pick = <X,>(arr: X[]): X => arr[Math.floor(rnd() * arr.length)];
+
+  // รถยนต์ + รถไร้คนขับ (บนเลนถนน)
+  const spawnCar = (self: boolean) => {
+    const L = pick(lanes);
+    const t = travelGroup(parent, L.dx, L.dy, 9 + rnd() * 6, rnd());
+    const col = self ? '#e8f4ff' : pick(['#d95a5a', '#5a86d9', '#5ab887', '#e8b24a', '#8a5ad9', '#e0e0e6']);
+    carArt(t, L.s, L.ang, col, self, accent);
+  };
+  for (let i = 0; i < A.cars; i++) spawnCar(false);
+  for (let i = 0; i < A.selfDriving; i++) spawnCar(true);
+
+  // จักรยาน/มอไซค์ = จุดเล็กวิ่งเร็วบนเลน
+  for (let i = 0; i < A.bikes; i++) {
+    const L = pick(lanes);
+    const t = travelGroup(parent, L.dx, L.dy, 7 + rnd() * 4, rnd());
+    const g = el('g', { transform: `translate(${L.s.x.toFixed(1)},${L.s.y.toFixed(1)}) rotate(${L.ang.toFixed(1)})` }, t);
+    el('ellipse', { cx: 0, cy: 3, rx: 6, ry: 2, fill: T.shadow }, g);
+    el('rect', { x: -6, y: -3, width: 12, height: 5, rx: 2.5, fill: pick(['#d97a3a', '#3aa0d9', '#54c072']) }, g);
+  }
+
+  // คนเดิน + humanoid (บนทางเท้า, เดินช้า + bob)
+  const spawnPerson = (humanoid: boolean) => {
+    const L = pick(walks);
+    const t = travelGroup(parent, L.dx, L.dy, 26 + rnd() * 14, rnd());
+    const bob = el('g', { class: 'clv-walk', style: `animation-delay:${(-rnd() * 0.5).toFixed(2)}s` }, t);
+    personArt(bob, L.s, humanoid, accent);
+  };
+  for (let i = 0; i < A.people; i++) spawnPerson(false);
+  for (let i = 0; i < A.humanoids; i++) spawnPerson(true);
+
+  // โดรน (บินบนฟ้า — เส้นทางแนวทแยงเหนือเมือง + hover)
+  for (let i = 0; i < A.drones; i++) {
+    const y = 70 + rnd() * 150;
+    const left = rnd() < 0.5;
+    const s: Pt = { x: left ? -30 : VIEW_W + 30, y };
+    const dx = left ? VIEW_W + 60 : -(VIEW_W + 60);
+    const t = travelGroup(parent, dx, (rnd() - 0.5) * 60, 16 + rnd() * 10, rnd());
+    droneArt(t, s, accent);
+  }
+}
+
+/** Render the whole cityscape into `target`. Deterministic per (time, season, era). */
+export function renderCityscape(target: SVGSVGElement, timeName: TimeName, seasonName: SeasonName, eraIndex = 4) {
   svg = target;
   rnd = mulberry32(20260705);           // identical city layout for every combo
   T = TIMES[timeName]; S = SEASONS[seasonName];
+  ERA = eraByIndex(eraIndex); ERA_AGENTS = agentsByIndex(eraIndex);
   SUN = T.sun; FACE = T.face; LIT_PROB = T.litProb; SNOWY = S.snowCaps;
 
   svg.innerHTML = '';
@@ -395,9 +525,11 @@ export function renderCityscape(target: SVGSVGElement, timeName: TimeName, seaso
   for (let gx = 0; gx < GRID; gx++) drawRoad(svg, gx, ROAD_ROW, 'row');
   for (let gy = 0; gy < GRID; gy++) if (gy !== ROAD_ROW) drawRoad(svg, ROAD_COL, gy, 'col');
   PARKS.forEach(([px, py]) => drawPark(svg, px, py));
+  if (ERA.greenBoost > 0) drawStreetTrees(svg, ERA.greenBoost * 2);
   drawLamps(svg);
   const sorted = [...BUILDINGS].sort((a, b) => (a.x + a.y + a.w + a.d) - (b.x + b.y + b.w + b.d));
   sorted.forEach(b => drawBuilding(svg, b));
+  drawAgents(el('g', { class: 'clv-agents' }));   // ผู้คน/รถ/รถไร้คนขับ/โดรน/humanoid (บนสุดของพื้น)
   drawWeather(svg);
 }
 
