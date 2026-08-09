@@ -6,6 +6,8 @@ import {
   renderCityscape, detectTime, detectSeason,
   TIME_LABEL, SEASON_LABEL, type TimeName, type SeasonName,
 } from '../lib/cityScape';
+import { ERAS, clampEra } from '../lib/cityEra';
+import { track } from '../lib/analytics';
 
 /* Hero ภาพเมืองบริษัทแบบไอโซเมตริก 3 มิติ — แสง/เงาตามเวลา, อากาศตามฤดู (ภูมิอากาศไทย)
  * ผูก XP/ระดับเมืองกับผลงานจริง (cityStats + COMPANY_LEVELS). ฝังบนสุดของหน้า "เมืองบริษัท". */
@@ -46,9 +48,17 @@ export default function CityscapeHero({ data }: { data: AppData }) {
   const [auto, setAuto] = useState(true);
   const [autoStatus, setAutoStatus] = useState('');
 
+  // ยุคเมืองตาม "ความเจริญจริง" (ระดับบริษัท) — index 0–4 ตรงกับ COMPANY_LEVELS
+  const realEra = clampEra(Math.max(0, COMPANY_LEVELS.findIndex(l => l.rank === s.level.rank)));
+  const [eraView, setEraView] = useState(realEra);
+  useEffect(() => { setEraView(realEra); }, [realEra]);
+  const era = ERAS[eraView];
+  const previewing = eraView !== realEra;
+  const pickEra = (i: number) => { setEraView(i); track('city_era_view', { era: ERAS[i].id, preview: i !== realEra ? 1 : 0 }); };
+
   useEffect(() => {
-    if (svgRef.current) renderCityscape(svgRef.current, time, season);
-  }, [time, season]);
+    if (svgRef.current) renderCityscape(svgRef.current, time, season, eraView);
+  }, [time, season, eraView]);
 
   useEffect(() => {
     if (!auto) { setAutoStatus('ปรับเอง — กด “อัตโนมัติ” เพื่อกลับมาตามเวลาจริง'); return; }
@@ -97,13 +107,26 @@ export default function CityscapeHero({ data }: { data: AppData }) {
                 <button key={b.id} className="clv-tbtn" aria-pressed={season === b.id} onClick={() => pickSeason(b.id)}>{b.label}</button>
               ))}
             </div>
+            <div className="clv-btn-row" role="group" aria-label="เลือกยุคเมือง">
+              {ERAS.map((e, i) => (
+                <button key={e.id} className="clv-tbtn" aria-pressed={eraView === i}
+                  title={i > realEra ? 'พรีวิวยุคอนาคต — ปลดล็อกเมื่อเมืองโตถึงระดับนี้' : e.caption}
+                  onClick={() => pickEra(i)}>{e.icon}{i > realEra ? ' 🔒' : ''}</button>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="clv-city-panel">
+          <div className="clv-era-strip">
+            <span className="clv-era-name">{era.icon} {era.name}</span>
+            <span className="clv-era-cap">{era.caption}</span>
+            <span className="clv-era-new">✨ {era.newThis}</span>
+            {previewing && <button className="clv-era-back" onClick={() => setEraView(realEra)}>พรีวิวยุคอนาคต · กลับปัจจุบัน ↺</button>}
+          </div>
           <div className="clv-city-badge">👑 ระดับปัจจุบัน · {s.tier.label}</div>
           <svg ref={svgRef} className="clv-city" viewBox="0 0 1120 760" role="img"
-            aria-label="เมืองบริษัทแบบสามมิติ แสดงตึกหลากหลายรูปทรง เงาทอดตามช่วงเวลา และสภาพอากาศตามฤดูกาล" />
+            aria-label="เมืองบริษัทแบบสามมิติมีชีวิต — ผู้คน รถยนต์ รถไร้คนขับ โดรน และหุ่นยนต์ AI เคลื่อนไหวตามยุคของเมือง เงาทอดตามช่วงเวลา สภาพอากาศตามฤดูกาล" />
         </div>
 
         <div className="clv-progress-card">
@@ -204,6 +227,26 @@ const CLV_CSS = `
 .clv-cloud{ animation:clv-drift 14s ease-in-out infinite alternate; }
 @keyframes clv-drift{ from{transform:translateX(0)} to{transform:translateX(46px)} }
 
+/* เมืองมีชีวิต — คน/รถ/รถไร้คนขับ/โดรน/humanoid เคลื่อนไหว */
+.clv-move{ animation:clv-travel var(--dur,12s) linear infinite; will-change:transform; }
+@keyframes clv-travel{ to{ transform:translate(var(--dx,0), var(--dy,0)); } }
+.clv-walk{ animation:clv-walkbob .55s ease-in-out infinite; transform-box:fill-box; }
+@keyframes clv-walkbob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-1.8px)} }
+.clv-drone{ animation:clv-hover 2.4s ease-in-out infinite; transform-box:fill-box; }
+@keyframes clv-hover{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+.clv-lidar{ transform-box:fill-box; transform-origin:center; animation:clv-lidarpulse 1.1s ease-in-out infinite; }
+@keyframes clv-lidarpulse{ 0%,100%{opacity:.55} 50%{opacity:1} }
+
+.clv-era-strip{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px;
+  padding:9px 15px; background:color-mix(in srgb, var(--panel) 78%, transparent);
+  border:1px solid var(--panel-border); border-radius:13px; }
+.clv-era-name{ font-weight:800; font-size:15px; color:var(--text); }
+.clv-era-cap{ font-size:13px; color:var(--text-soft); }
+.clv-era-new{ font-size:12px; font-weight:700; color:var(--gold);
+  background:color-mix(in srgb, var(--gold) 14%, transparent); border-radius:999px; padding:4px 11px; }
+.clv-era-back{ margin-left:auto; cursor:pointer; font-family:inherit; font-size:12px; font-weight:600;
+  color:var(--gold); background:transparent; border:1px solid var(--goal-border); border-radius:999px; padding:5px 12px; }
+
 .clv-progress-card{ margin-top:8px; background:color-mix(in srgb, var(--panel) 78%, transparent);
   border:1px solid var(--panel-border); border-radius:16px; padding:18px 22px; backdrop-filter:blur(4px); }
 .clv-progress-top{ display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; margin-bottom:12px; }
@@ -234,7 +277,8 @@ const CLV_CSS = `
   .clv-controls-bar{ gap:12px; }
 }
 @media (prefers-reduced-motion:reduce){
-  .clv-blink,.clv-flicker,.clv-beam-pulse,.clv-city-badge,.clv-drop,.clv-flake,.clv-petal,.clv-cloud{ animation:none; }
+  .clv-blink,.clv-flicker,.clv-beam-pulse,.clv-city-badge,.clv-drop,.clv-flake,.clv-petal,.clv-cloud,
+  .clv-move,.clv-walk,.clv-drone,.clv-lidar{ animation:none; }
   .clv-drop,.clv-flake,.clv-petal{ transform:translateY(320px); }
   .clv-root *{ transition:none !important; }
 }
