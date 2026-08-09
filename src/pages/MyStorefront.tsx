@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AppData, PageId } from '../types';
 import { getMyStorefront, saveStorefront, setFeatured, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
 import { parseGeo, mapsLink, validCoord } from '../lib/geo';
@@ -13,6 +13,7 @@ import { lineShareUrl, facebookShareUrl } from '../lib/shareLinks';
 import { slugify, slugifyInput } from '../lib/slug';
 import FillHoursPanel from '../components/FillHoursPanel';
 import DBDSelect from '../components/DBDSelect';
+import { classifyDbd, storefrontText } from '../lib/dbdClassify';
 import EditableList from '../components/EditableList';
 import HelpBox from '../components/HelpBox';
 import ShopBooster from '../components/ShopBooster';
@@ -53,6 +54,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
   const [copied, setCopied] = useState(false);
   const [vpBusy, setVpBusy] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
+  const [dbdManual, setDbdManual] = useState(false);   // เปิดตัวเลือกหมวดเอง (ปกติระบบจัดให้)
   const [geoInput, setGeoInput] = useState('');   // วางลิงก์ Google Maps / "lat,lng"
   const [geoBusy, setGeoBusy] = useState(false);
   const [justPublished, setJustPublished] = useState(false);
@@ -81,6 +83,13 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
       });
     }).catch(() => setMsg('⚠️ โหลดข้อมูลไม่สำเร็จ')).finally(() => setLoading(false));
   }, [wsId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // จัดหมวด DBD อัตโนมัติจากสิ่งที่ผู้ใช้พิมพ์ (ชื่อ/คำอธิบาย/จุดขาย/สินค้า) — user ไม่ต้องเลือกเอง
+  const dbdText = storefrontText({
+    name: sf?.name, description: sf?.description, vp: sf?.vp,
+    services: sf?.services, products: sf?.products,
+  });
+  const autoDbd = useMemo(() => (dbdText ? classifyDbd(dbdText) : null), [dbdText]);
 
   if (loading || !sf) return <div className="page-loading" />;
 
@@ -345,10 +354,33 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
             <span>ชื่อลิงก์ (slug) — {APP_ORIGIN}/b/…</span>
             <input value={sf.slug} onChange={e => patch({ slug: slugifyInput(e.target.value) })} spellCheck={false} />
           </label>
-          <label className="sf-field">
-            <span>หมวดธุรกิจ (DBD) — ใช้จัดกลุ่มในสารบัญ</span>
-            <DBDSelect className="sf-inp" value={sf.dbd} onChange={v => patch({ dbd: v })} />
-          </label>
+          <div className="sf-field">
+            <span>หมวดธุรกิจ (DBD) — ใช้จัดกลุ่มในสารบัญ · ระบบจัดให้อัตโนมัติ ไม่ต้องเลือกเอง</span>
+            {!dbdManual && sf.dbd ? (
+              // มีหมวดแล้ว (ระบบจัด/เลือกไว้) → โชว์ + ปุ่มเปลี่ยน
+              <div className="dbd-auto">
+                <span>✅ หมวด: <b>{sf.dbd.replace(/^\[[A-S]\]\s*/, '')}</b></span>
+                <button type="button" className="dbd-link" onClick={() => setDbdManual(true)}>เปลี่ยนเอง</button>
+              </div>
+            ) : !dbdManual && autoDbd ? (
+              // ยังไม่มีหมวด แต่ระบบเดาได้ → เสนอให้กดใช้ (หรือเลือกเอง)
+              <div className="dbd-auto">
+                <span>🎯 ระบบจัดให้: <b>{autoDbd.item}</b> <em>(หมวด {autoDbd.code})</em></span>
+                <button type="button" className="dbd-use" onClick={() => patch({ dbd: autoDbd.value })}>✓ ใช้หมวดนี้</button>
+                <button type="button" className="dbd-link" onClick={() => setDbdManual(true)}>เลือกเอง</button>
+              </div>
+            ) : (
+              // จับไม่ได้ หรือผู้ใช้ขอเลือกเอง → dropdown เต็ม
+              <>
+                <DBDSelect className="sf-inp" value={sf.dbd} onChange={v => { patch({ dbd: v }); setDbdManual(false); }} />
+                {autoDbd && !sf.dbd && (
+                  <button type="button" className="dbd-link" onClick={() => { patch({ dbd: autoDbd.value }); setDbdManual(false); }}>
+                    ↩︎ ใช้หมวดที่ระบบแนะนำ ({autoDbd.item})
+                  </button>
+                )}
+              </>
+            )}
+          </div>
           <label className="sf-field">
             <span>ประเภทร้าน — ใช้กรอง 🛍 สินค้า / 🛠 บริการ บนตลาด</span>
             <select className="sf-inp" value={sf.kind} onChange={e => patch({ kind: e.target.value as Storefront['kind'] })}>
