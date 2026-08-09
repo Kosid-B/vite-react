@@ -9,9 +9,20 @@ describe('marketSizerPlain', () => {
     expect(bahtPlain(1_200_000_000)).toBe('฿1.2 พันล้าน');
   });
 
-  it('input ไม่พอ (ไม่มีธุรกิจ/arpu<=0) → ok=false', () => {
+  it('ไม่มีธุรกิจ → ok=false (โชว์ตัวอย่าง)', () => {
     expect(plainSizing({ business: '', arpuPerYear: 3000, scope: 'national' }).ok).toBe(false);
-    expect(plainSizing({ business: 'ร้านกาแฟ', arpuPerYear: 0, scope: 'national' }).ok).toBe(false);
+    expect(plainSizing({ business: '   ', arpuPerYear: 3000, scope: 'national' }).ok).toBe(false);
+  });
+
+  it('กรอกแค่ธุรกิจ (ยังไม่ใส่ราคา) → ได้ตัวเลขทันที ด้วยราคาเริ่มต้น', () => {
+    const r = plainSizing({ business: 'ร้านกาแฟ', arpuPerYear: 0, scope: 'national' });
+    expect(r.ok).toBe(true);
+    expect(r.usingDefaultArpu).toBe(true);
+    expect(r.somValue).toBeGreaterThan(0);
+    expect(r.disclaimer).toContain('ราคาจริง');
+    // ใส่ราคาจริงแล้ว usingDefaultArpu=false
+    const priced = plainSizing({ business: 'ร้านกาแฟ', arpuPerYear: 5000, scope: 'national' });
+    expect(priced.usingDefaultArpu).toBe(false);
   });
 
   it('คืน 3 แถวภาษาบ้าน ๆ (ไม่มีศัพท์ TAM/SAM/SOM) + headline + disclaimer', () => {

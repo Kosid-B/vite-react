@@ -59,7 +59,11 @@ export default function MarketSizerPanel({ onGetStarted, onEngage }: { onGetStar
         {/* ── HERO: ตัวเลขโอกาส นับขึ้น ~3 วิ ── */}
         <div style={{ borderRadius: 14, border: `1px solid ${C.green}`, background: C.heroBg, padding: '16px 18px', textAlign: 'center', marginBottom: 14 }}>
           <div style={{ fontSize: 12.5, color: C.slate, marginBottom: 2 }}>
-            {isExample ? '✨ ตัวอย่าง — โอกาสที่คุณคว้าได้ปีแรก' : '🎯 โอกาสของคุณ — คว้าได้ปีแรก'}
+            {isExample
+              ? '✨ ตัวอย่าง — โอกาสที่คุณคว้าได้ปีแรก'
+              : view.usingDefaultArpu
+                ? '🎯 โอกาสของคุณ (คร่าว ๆ) — ใส่ราคาต่อลูกค้าเพื่อแม่นขึ้น'
+                : '🎯 โอกาสของคุณ — คว้าได้ปีแรก'}
           </div>
           <div style={{ fontSize: 'clamp(30px, 7vw, 46px)', fontWeight: 900, color: C.green, lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>
             {bahtPlain(animatedSom)}
