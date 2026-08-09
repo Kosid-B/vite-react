@@ -53,7 +53,7 @@ export default function CompanyCity({ data, onNavigate, onUpdate, wsId = null }:
       </div>
 
       {/* ===== Hero: ภาพเมือง 3D ไอโซเมตริก (แสง/เงาตามเวลา · อากาศตามฤดู) ผูก XP จริง ===== */}
-      <CityscapeHero data={data} />
+      <CityscapeHero data={data} onNavigate={onNavigate} />
 
       {/* แถบสถิติเมือง */}
       <div className="city-stats">

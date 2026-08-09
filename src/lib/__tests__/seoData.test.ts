@@ -7,6 +7,7 @@ import {
   mit24PageHtml, mit24FaqJsonLd, mit24ArticleJsonLd, MIT24_FAQ,
   skillsPageHtml, skillsFaqJsonLd, skillsArticleJsonLd,
   sellPageHtml, sellFaqJsonLd, sellArticleJsonLd,
+  securityPageHtml, securityArticleJsonLd, securityFaqJsonLd,
   type SeoStorefront,
 } from '../seoData';
 
@@ -272,6 +273,37 @@ describe('sell (/sell seller-onboarding answer-first article)', () => {
   });
   it('llmsTxt รวม /sell (ให้ AI crawler รู้จักหน้าเปิดร้าน)', () => {
     expect(llmsTxt(ORIGIN)).toContain(`${ORIGIN}/sell`);
+  });
+});
+
+describe('security (/security AI-safety answer-first page)', () => {
+  const html = securityPageHtml(ORIGIN);
+  it('เป็น HTML doc + canonical /security + robots index', () => {
+    expect(html.startsWith('<!doctype html>')).toBe(true);
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/security">`);
+    expect(html).toContain('index,follow');
+  });
+  it('สื่อสารเกราะป้องกัน (RLS · allowlist) + ตอบข่าวแฮก + CTA /start', () => {
+    expect(html).toContain('RLS');
+    expect(html).toContain('allowlist');
+    expect(html).toContain('แฮก');
+    expect(html).toContain(`${ORIGIN}/start`);
+  });
+  it('ฝัง Article + FAQPage schema', () => {
+    expect(html).toContain('"@type":"Article"');
+    expect(html).toContain('"@type":"FAQPage"');
+  });
+  it('schema helpers: publisher B. Training + mainEntityOfPage /security', () => {
+    const a = securityArticleJsonLd(ORIGIN) as Record<string, unknown>;
+    expect(a.mainEntityOfPage).toBe(`${ORIGIN}/security`);
+    expect((a.publisher as Record<string, unknown>).name).toBe('B. Training Consultant');
+    const f = securityFaqJsonLd() as Record<string, unknown>;
+    expect(f['@type']).toBe('FAQPage');
+    expect((f.mainEntity as unknown[]).length).toBeGreaterThan(0);
+  });
+  it('sitemap + llmsTxt รวม /security', () => {
+    expect(sitemapXml([], ORIGIN)).toContain(`${ORIGIN}/security`);
+    expect(llmsTxt(ORIGIN)).toContain(`${ORIGIN}/security`);
   });
 });
 

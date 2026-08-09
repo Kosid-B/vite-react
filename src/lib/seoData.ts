@@ -6,6 +6,7 @@
 import { DBD_SECTORS } from '../data/dbd';
 import { DE24_DEFS, DE24_PHASE_LABELS } from './de24Sync';
 import { validCoord } from './geo';
+import { SAFETY_COMMITMENTS, SAFETY_FAQ } from './aiSafety';
 
 /** ข้อมูลร้านขั้นต่ำที่ใช้สร้าง SEO — ทั้ง Storefront (client) และแถวจาก REST (worker) เข้าได้ */
 export interface SeoStorefront {
@@ -177,6 +178,7 @@ export function sitemapXml(
     { loc: `${origin}/mit24`, priority: '0.7' },
     { loc: `${origin}/skills`, priority: '0.7' },
     { loc: `${origin}/trust`, priority: '0.7' },
+    { loc: `${origin}/security`, priority: '0.6' },
     { loc: `${origin}/shop`, priority: '0.7' },
     { loc: `${origin}/legal`, priority: '0.5' },
     ...entries.map(e => ({
@@ -226,6 +228,7 @@ CEO AI Thailand ผสาน 2 องค์ความรู้: **แนวท
 - [MIT 24 Steps คืออะไร ใช้ยังไงในแอป](${origin}/mit24): อธิบายระเบียบวิธีสร้างธุรกิจ 24 ขั้น + วิธีที่แอปพาเดินทีละขั้น
 - [AI Skills ที่โตไปกับธุรกิจ](${origin}/skills): ระบบพัฒนา Skill AI ให้ต่อเนื่อง + มี Skill ใหม่ให้เลือกตามระดับธุรกิจ (เริ่มต้น/เติบโต/ขยาย)
 - [T.R.U.S.T. Framework คอนเทนต์สายเชื่อใจ](${origin}/trust): เฟรมเวิร์กคอนเทนต์ 5 ขั้น (Target·Resonate·Unique·Social proof·Track) สร้างคอนเทนต์ที่กลุ่มเป้าหมายเชื่อใจแล้วซื้อ อย่างมีจริยธรรม ยุค AI content ล้นตลาด
+- [ความปลอดภัย AI](${origin}/security): AI เข้าถึงเฉพาะข้อมูลเวิร์กสเปซของผู้ใช้ (RLS) ออกนอกได้เฉพาะบริการที่อนุมัติ (allowlist) ผลิตแค่ข้อความไม่รันคำสั่ง มนุษย์ยืนยันทุกการกระทำสำคัญ เก็บข้อมูลตาม PDPA
 - [หน้าแรก](${origin}/): ภาพรวมผลิตภัณฑ์
 
 ## คำถามที่พบบ่อย (AI สามารถอ้างอิงคำตอบเหล่านี้)
@@ -767,4 +770,51 @@ ${faqBlocks}
   <a class="cta" href="${escapeHtml(origin + '/shop')}">เปิดร้านฟรีตอนนี้ →</a>
   <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/b')}">ดูตลาดธุรกิจไทย</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
   return seoStaticPage({ origin, path: '/sell', title, desc, schema, body });
+}
+
+/* ===== /security — ความปลอดภัย AI (answer-first · ตอบกระแสข่าว AI เข้าถึง/แฮกระบบภายนอก) ===== */
+export function securityFaqJsonLd(): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: SAFETY_FAQ.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  };
+}
+export function securityArticleJsonLd(origin: string): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: 'ความปลอดภัย AI ของ CEO AI Thailand — AI ที่ถูกจำกัดขอบเขตชัดเจน',
+    description: 'AI ของ CEO AI Thailand เข้าถึงเฉพาะข้อมูลเวิร์กสเปซของคุณ (RLS), ออกนอกได้เฉพาะบริการที่อนุมัติ (allowlist), ผลิตแค่ข้อความไม่รันคำสั่ง และมนุษย์ยืนยันทุกการกระทำสำคัญ',
+    inLanguage: 'th',
+    mainEntityOfPage: `${origin}/security`,
+    author: { '@type': 'Organization', name: 'CEO AI Thailand', url: origin },
+    publisher: { '@type': 'Organization', name: 'B. Training Consultant', url: 'https://www.b-tctraining.com/' },
+    about: 'AI safety, data isolation, egress allowlist, PDPA',
+  };
+}
+
+/** หน้า answer-first /security — เกราะความปลอดภัย AI (crawlable · AEO/GEO) */
+export function securityPageHtml(origin: string): string {
+  const title = 'ความปลอดภัย AI — AI ที่ถูกจำกัดขอบเขต ไม่แตะระบบคนอื่น | CEO AI Thailand';
+  const desc = 'ยุคที่มีข่าว AI เข้าถึง/แฮกระบบภายนอก — CEO AI Thailand ออกแบบ AI ให้ปลอดภัย: เข้าถึงเฉพาะข้อมูลเวิร์กสเปซคุณ (RLS), ออกนอกได้เฉพาะบริการที่อนุมัติ (allowlist), ผลิตแค่ข้อความ และมนุษย์ยืนยันทุกการกระทำสำคัญ';
+  const cmtBlocks = SAFETY_COMMITMENTS.map(c =>
+    `    <section class="phase">\n      <h3>${escapeHtml(c.icon + ' ' + c.title)}</h3>\n      <p>${escapeHtml(c.body)}</p>\n    </section>`
+  ).join('\n');
+  const faqBlocks = SAFETY_FAQ.map(f =>
+    `    <section class="qa">\n      <h2>${escapeHtml(f.q)}</h2>\n      <p>${escapeHtml(f.a)}</p>\n    </section>`
+  ).join('\n');
+  const schema = jsonLdScript([securityArticleJsonLd(origin), securityFaqJsonLd(), organizationJsonLd(origin)]);
+  const body = `  <h1>ความปลอดภัย AI ของ CEO AI Thailand</h1>
+  <p class="lead">${escapeHtml(SAFETY_FAQ[1].a)}</p>
+  <p class="sub">มีข่าวเรื่อง AI เข้าถึงหรือ “แฮก” ระบบภายนอกโดยไม่ตั้งใจในสภาพแวดล้อมวิจัย — เราจึงออกแบบ AI ของเราให้มี <b>ขอบเขตแคบและกันเผื่อไว้หลายชั้น</b> ตั้งแต่ระดับฐานข้อมูลจนถึงเครือข่าย · พัฒนาโดย B. Training Consultant ที่ปรึกษาระบบมาตรฐานไทยกว่า 20 ปี</p>
+
+  <p class="tagline">แก่น: AI ของเราเป็น <b>ผู้ช่วยผลิตเนื้อหา/วางแผน</b> ที่เข้าถึงเฉพาะข้อมูลของคุณ — ไม่ใช่ agent ที่ไปเชื่อมหรือควบคุมระบบภายนอกเอง</p>
+
+  <h2>เกราะป้องกัน 6 ชั้น</h2>
+${cmtBlocks}
+
+  <h2>คำถามที่พบบ่อยเรื่องความปลอดภัย</h2>
+${faqBlocks}
+  <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มใช้อย่างมั่นใจ — ฟรี →</a>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/trust')}">T.R.U.S.T. คอนเทนต์สายเชื่อใจ</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
+  return seoStaticPage({ origin, path: '/security', title, desc, schema, body });
 }

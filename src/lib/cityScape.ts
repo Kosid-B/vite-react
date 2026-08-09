@@ -416,13 +416,42 @@ function personArt(parent: Element, p: Pt, humanoid: boolean, accent: string) {
 function carArt(parent: Element, p: Pt, angleDeg: number, color: string, selfDriving: boolean, accent: string) {
   const g = el('g', { transform: `translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})` }, parent);
   el('ellipse', { cx: 0, cy: 5, rx: 13, ry: 4, fill: T.shadow }, g);
+  if (T.lamps) {  // เส้นแสงท้ายรถ (motion streak) ตอนกลางคืน/เย็น/ไซเบอร์
+    const streak = selfDriving ? accent : '#fff';
+    el('polygon', { points: '-12,-2.6 -34,-1 -34,1 -12,2.6', fill: streak, opacity: .16 }, g);
+  }
   el('rect', { x: -12, y: -5, width: 24, height: 10, rx: 5, fill: color }, g);                                   // body
   el('rect', { x: -5, y: -4, width: 11, height: 8, rx: 3, fill: 'rgba(255,255,255,.55)' }, g);                   // cabin
-  if (T.lamps) { el('circle', { cx: 12, cy: 0, r: 1.8, fill: '#fff3b0' }, g); el('circle', { cx: 12, cy: 0, r: 4, fill: '#fff3b0', opacity: .3 }, g); }
+  if (T.lamps) {
+    el('circle', { cx: 12, cy: 0, r: 1.8, fill: '#fff3b0' }, g); el('circle', { cx: 12, cy: 0, r: 4, fill: '#fff3b0', opacity: .3 }, g);  // headlight
+    el('circle', { cx: -11.5, cy: -3, r: 1.1, fill: '#ff4d4d' }, g); el('circle', { cx: -11.5, cy: 3, r: 1.1, fill: '#ff4d4d' }, g);       // tail lights
+  }
   if (selfDriving) {
     el('circle', { cx: 0, cy: -6, r: 2.4, fill: accent, class: 'clv-lidar' }, g);                                // LiDAR dome
     el('circle', { cx: 0, cy: -6, r: 6.5, fill: accent, opacity: .18, class: 'clv-lidar' }, g);                  // sensor sweep
     el('rect', { x: -12, y: -5, width: 24, height: 10, rx: 5, fill: 'none', stroke: accent, 'stroke-width': 1, opacity: .5 }, g);
+  }
+}
+
+function airTaxiArt(parent: Element, p: Pt, accent: string) {
+  const g = el('g', { class: 'clv-drone' }, parent);
+  el('polygon', { points: `${p.x - 9},${p.y + 3} ${p.x - 15},${p.y + 34} ${p.x + 15},${p.y + 34} ${p.x + 9},${p.y + 3}`, fill: accent, opacity: .1 }, g); // downglow
+  el('rect', { x: p.x - 13, y: p.y - 4.5, width: 26, height: 9, rx: 4.5, fill: '#2f3a5c' }, g);                  // body
+  el('rect', { x: p.x - 7, y: p.y - 3.4, width: 14, height: 6.8, rx: 3, fill: accent, opacity: .85 }, g);        // cabin glow
+  for (const dx of [-15, 15]) {
+    el('line', { x1: p.x + (dx < 0 ? -11 : 11), y1: p.y - 3, x2: p.x + dx, y2: p.y - 7, stroke: '#4a5578', 'stroke-width': 1.5 }, g);
+    el('circle', { cx: p.x + dx, cy: p.y - 7.5, r: 2.6, fill: accent, opacity: .9 }, g);
+    el('circle', { cx: p.x + dx, cy: p.y - 7.5, r: 5.5, fill: accent, opacity: .2 }, g);
+  }
+  el('circle', { cx: p.x, cy: p.y + 2, r: 1.2, fill: '#7bd0ff', class: 'clv-blink' }, g);
+}
+
+/** อนุภาคเรืองแสงลอยในอากาศ — หิ่งห้อยสีทอง (ยุคธรรมชาติ) / data motes สี accent (ยุคนีออน) */
+function drawMotes(parent: Element, n: number, natureEra: boolean, accent: string) {
+  for (let i = 0; i < n; i++) {
+    const x = 80 + rnd() * (VIEW_W - 160), y = 130 + rnd() * 360;
+    const t = travelGroup(parent, (rnd() - 0.5) * 90, (rnd() - 0.5) * 60, 10 + rnd() * 9, rnd());
+    el('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: natureEra ? 1.9 : 1.5, fill: natureEra ? '#ffe08a' : accent, opacity: .72, class: 'clv-flicker' }, t);
   }
 }
 
@@ -456,6 +485,9 @@ function drawAgents(parent: Element) {
     mk(iso(ROAD_COL - 0.14, GRID), iso(ROAD_COL - 0.14, 0)),
   ];
   const pick = <X,>(arr: X[]): X => arr[Math.floor(rnd() * arr.length)];
+
+  // อนุภาคเรืองแสง (วาดก่อน = อยู่ด้านหลัง agent อื่น)
+  if (A.motes > 0) drawMotes(parent, A.motes, ERA.id === 'seed' || ERA.id === 'rise', accent);
 
   // รถยนต์ + รถไร้คนขับ (บนเลนถนน)
   const spawnCar = (self: boolean) => {
@@ -494,6 +526,16 @@ function drawAgents(parent: Element) {
     const dx = left ? VIEW_W + 60 : -(VIEW_W + 60);
     const t = travelGroup(parent, dx, (rnd() - 0.5) * 60, 16 + rnd() * 10, rnd());
     droneArt(t, s, accent);
+  }
+
+  // แท็กซี่บินได้ VTOL (ยุคอนาคต — บินสูงกว่าโดรน ช้ากว่า ใหญ่กว่า)
+  for (let i = 0; i < A.airtaxi; i++) {
+    const y = 44 + rnd() * 90;
+    const left = rnd() < 0.5;
+    const s: Pt = { x: left ? -40 : VIEW_W + 40, y };
+    const dx = left ? VIEW_W + 80 : -(VIEW_W + 80);
+    const t = travelGroup(parent, dx, (rnd() - 0.5) * 40, 22 + rnd() * 12, rnd());
+    airTaxiArt(t, s, accent);
   }
 }
 
