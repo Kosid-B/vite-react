@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { AppData } from '../types';
+import type { AppData, PageId } from '../types';
 import { cityStats } from '../lib/companyCity';
 import { COMPANY_LEVELS } from '../lib/gamification';
 import {
@@ -7,7 +7,10 @@ import {
   TIME_LABEL, SEASON_LABEL, type TimeName, type SeasonName,
 } from '../lib/cityScape';
 import { ERAS, clampEra } from '../lib/cityEra';
+import { guideScript } from '../lib/cityGuide';
+import { sectorLabel } from '../lib/seoData';
 import { track } from '../lib/analytics';
+import CityGuide from './CityGuide';
 
 /* Hero ภาพเมืองบริษัทแบบไอโซเมตริก 3 มิติ — แสง/เงาตามเวลา, อากาศตามฤดู (ภูมิอากาศไทย)
  * ผูก XP/ระดับเมืองกับผลงานจริง (cityStats + COMPANY_LEVELS). ฝังบนสุดของหน้า "เมืองบริษัท". */
@@ -39,7 +42,7 @@ function xpRange(min: number, max: number): string {
   return `${min.toLocaleString('th-TH')}–${max.toLocaleString('th-TH')} XP`;
 }
 
-export default function CityscapeHero({ data }: { data: AppData }) {
+export default function CityscapeHero({ data, onNavigate }: { data: AppData; onNavigate?: (p: PageId) => void }) {
   const s = useMemo(() => cityStats(data), [data]);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -55,6 +58,16 @@ export default function CityscapeHero({ data }: { data: AppData }) {
   const era = ERAS[eraView];
   const previewing = eraView !== realEra;
   const pickEra = (i: number) => { setEraView(i); track('city_era_view', { era: ERAS[i].id, preview: i !== realEra ? 1 : 0 }); };
+
+  // สคริปต์โฮสต์เมือง (Avatar) ต้อนรับคู่ค้า — เนื้อหา matching ตามยุคที่กำลังแสดง + ข้อมูลธุรกิจจริง
+  const c = data.aiCompany;
+  const guide = useMemo(() => guideScript({
+    company: c?.name || '',
+    sectorLabel: sectorLabel(c?.productDbd || c?.industry || ''),
+    offerings: (data.businessModel?.bmc?.value ?? []).filter(Boolean),
+    eraIndex: eraView,
+    tierLabel: s.tier.label,
+  }), [c?.name, c?.productDbd, c?.industry, data.businessModel?.bmc?.value, eraView, s.tier.label]);
 
   useEffect(() => {
     if (svgRef.current) renderCityscape(svgRef.current, time, season, eraView);
@@ -128,6 +141,8 @@ export default function CityscapeHero({ data }: { data: AppData }) {
           <svg ref={svgRef} className="clv-city" viewBox="0 0 1120 760" role="img"
             aria-label="เมืองบริษัทแบบสามมิติมีชีวิต — ผู้คน รถยนต์ รถไร้คนขับ โดรน และหุ่นยนต์ AI เคลื่อนไหวตามยุคของเมือง เงาทอดตามช่วงเวลา สภาพอากาศตามฤดูกาล" />
         </div>
+
+        <CityGuide script={guide} accent={era.accent} onNavigate={onNavigate} />
 
         <div className="clv-progress-card">
           <div className="clv-progress-top">
