@@ -2,7 +2,7 @@
 
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
-  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, aggregateFromRatings,
+  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, aggregateFromRatings,
   type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
 
@@ -22,7 +22,7 @@ interface Env {
 async function fetchStorefront(slug: string, env: Env, origin: string): Promise<SeoStorefront | null> {
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return null;
   const q = `${env.SUPABASE_URL}/rest/v1/storefronts?slug=eq.${encodeURIComponent(slug)}` +
-    `&published=eq.true&select=slug,name,dbd,kind,vp,description,promo,images,phone,rating,review_count,logo_svg&limit=1`;
+    `&published=eq.true&select=slug,name,dbd,kind,vp,description,promo,images,phone,rating,review_count,logo_svg,lat,lng&limit=1`;
   const res = await fetch(q, {
     headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SUPABASE_ANON_KEY}` },
   });
@@ -166,6 +166,13 @@ export default {
       // /trust → บทความ answer-first: T.R.U.S.T. Framework คอนเทนต์สายเชื่อใจยุค AI (GEO/AEO)
       if (url.pathname === '/trust' || url.pathname === '/trust/') {
         return new Response(trustPageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // /sell → บทความ answer-first "เปิดร้านออนไลน์ฟรี" ดึง seller (content-first marketplace SEO)
+      if (url.pathname === '/sell' || url.pathname === '/sell/') {
+        return new Response(sellPageHtml(origin), {
           headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
         });
       }

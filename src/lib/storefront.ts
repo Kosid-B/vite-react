@@ -1,6 +1,7 @@
 import { isSupabaseEnabled, supabase } from './supabase';
 import { coerceItems, type CatalogItem } from './catalog';
-import { CATALOG } from '../config';
+import { validCoord } from './geo';
+import { CATALOG, GEO } from '../config';
 
 /** Marketplace M1 — หน้าร้านสาธารณะต่อบริษัท (ceoaithailand.org/b/<slug>)
  *  Production: ตาราง public.storefronts (อ่านได้สาธารณะรวม anon)
@@ -26,6 +27,8 @@ export interface Storefront {
   email: string;
   website: string;
   published: boolean;
+  lat?: number;           // พิกัดปักหมุดร้าน (ละติจูด) — โชว์ลิงก์ Google Maps + GeoCoordinates SEO
+  lng?: number;           // พิกัดปักหมุดร้าน (ลองจิจูด)
   featuredUntil?: string; // ตำแหน่ง "ร้านแนะนำ" ปักหมุดบน /b (admin ตั้ง — คู่กับประมูลใน /shop)
   updatedAt?: string;
   rating?: number;        // ค่าเฉลี่ยรีวิวจริง 1..5 (คำนวณโดย trigger) — โชว์ ⭐ + AggregateRating SEO
@@ -70,6 +73,8 @@ export function coerceStorefront(s: Partial<Storefront> | null | undefined): Sto
     email: str(v.email),
     website: str(v.website),
     published: !!v.published,
+    lat: validCoord(v.lat, v.lng) ? Number(v.lat) : undefined,
+    lng: validCoord(v.lat, v.lng) ? Number(v.lng) : undefined,
     featuredUntil: v.featuredUntil,
     updatedAt: v.updatedAt,
   };
@@ -86,7 +91,7 @@ interface Row {
   slug: string; workspace_id?: string; name: string; logo_svg?: string | null; dbd: string; kind?: StorefrontKind;
   vp?: string; promo?: string; images?: string[]; products?: CatalogItem[]; description: string;
   services: string[]; phone: string; line_id: string; email: string; website: string;
-  published: boolean; featured_until?: string | null; updated_at?: string;
+  published: boolean; lat?: number | null; lng?: number | null; featured_until?: string | null; updated_at?: string;
   rating?: number | null; review_count?: number | null;
 }
 
@@ -97,6 +102,7 @@ function rowToStorefront(r: Row): Storefront {
     kind: r.kind, vp: r.vp, promo: r.promo, images: r.images, products: r.products, description: r.description,
     services: r.services, phone: r.phone, lineId: r.line_id,
     email: r.email, website: r.website, published: r.published,
+    lat: r.lat ?? undefined, lng: r.lng ?? undefined,
     featuredUntil: r.featured_until ?? undefined,
     updatedAt: r.updated_at?.slice(0, 10),
     rating: r.rating ?? undefined,
@@ -198,6 +204,8 @@ export async function saveStorefront(wsId: string | null, sf: Storefront): Promi
       vp: sf.vp, promo: sf.promo, images: sf.images,
       // products เขียนลง Supabase เฉพาะเมื่อ apply migration 0049 แล้ว (CATALOG.live) — กัน error คอลัมน์ไม่มี
       ...(CATALOG.live ? { products: sf.products } : {}),
+      // lat/lng เขียนเฉพาะเมื่อ apply migration 0050 แล้ว (GEO.live) — กัน error คอลัมน์ไม่มี
+      ...(GEO.live ? { lat: sf.lat ?? null, lng: sf.lng ?? null } : {}),
       description: sf.description, services: sf.services, phone: sf.phone,
       line_id: sf.lineId, email: sf.email, website: sf.website,
       published: sf.published, updated_at: new Date().toISOString(),

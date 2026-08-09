@@ -94,6 +94,14 @@ export const CATALOG = {
   live: true,
 };
 
+// ปักหมุดพิกัดร้าน (lat/lng) บนหน้าร้าน — gate การเขียน lat/lng ลง Supabase จนกว่าจะ apply migration
+//   เปลี่ยนเป็น true เมื่อ apply supabase/migrations/0050_storefront_geo.sql (เพิ่มคอลัมน์ lat/lng) แล้ว
+//   local mode ใช้งานได้ทันที (เก็บใน localStorage) · flag คุมเฉพาะการเขียนลง Supabase (กันพังก่อน migrate)
+export const GEO = {
+  // เปิดใช้แล้ว — migration 0050 (storefronts.lat/lng) apply บน prod แล้ว ส.ค. 2569
+  live: true,
+};
+
 // การเข้าสู่ระบบ
 export const AUTH = {
   // เข้าสู่ระบบด้วยเบอร์โทร (OTP ทาง SMS) — ปิดไว้จนกว่าจะตั้งค่า SMS provider ใน Supabase

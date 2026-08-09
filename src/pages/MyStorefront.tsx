@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AppData, PageId } from '../types';
 import { getMyStorefront, saveStorefront, setFeatured, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
+import { parseGeo, mapsLink, validCoord } from '../lib/geo';
 import CatalogEditor from '../components/CatalogEditor';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { draftVpLocal } from '../lib/firstDeal';
@@ -52,6 +53,8 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
   const [copied, setCopied] = useState(false);
   const [vpBusy, setVpBusy] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
+  const [geoInput, setGeoInput] = useState('');   // วางลิงก์ Google Maps / "lat,lng"
+  const [geoBusy, setGeoBusy] = useState(false);
   const [justPublished, setJustPublished] = useState(false);
   const [goalInput, setGoalInput] = useState('');   // PoC "เปิดร้านให้ฉัน"
   const [shopBusy, setShopBusy] = useState(false);
@@ -93,6 +96,30 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
     if (error || !url) { setMsg('⚠️ อัปโหลดรูปไม่สำเร็จ: ' + (error ?? '')); return; }
     patch({ images: [...sf.images, url] });
     setMsg('📷 เพิ่มรูปแล้ว — อย่าลืมกดเผยแพร่เพื่อบันทึก');
+  }
+
+  /** ปักหมุดจากตำแหน่งปัจจุบัน (ต้องอนุญาต location ในเบราว์เซอร์) */
+  function useCurrentLocation() {
+    if (!navigator.geolocation) { setMsg('⚠️ เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง'); return; }
+    setGeoBusy(true);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setGeoBusy(false);
+        patch({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setMsg('📍 ปักหมุดตำแหน่งปัจจุบันแล้ว — กดเผยแพร่เพื่อบันทึก');
+      },
+      () => { setGeoBusy(false); setMsg('⚠️ ปักหมุดไม่สำเร็จ — อนุญาตการเข้าถึงตำแหน่ง หรือวางลิงก์ Google Maps แทน'); },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
+
+  /** ปักหมุดจากลิงก์ Google Maps หรือ "lat,lng" ที่วาง */
+  function applyPastedGeo() {
+    const p = parseGeo(geoInput);
+    if (!p) { setMsg('⚠️ อ่านพิกัดไม่ได้ — วางลิงก์ Google Maps หรือพิมพ์ "13.736, 100.523"'); return; }
+    patch({ lat: p.lat, lng: p.lng });
+    setGeoInput('');
+    setMsg('📍 ปักหมุดจากลิงก์แล้ว — กดเผยแพร่เพื่อบันทึก');
   }
 
   /** PoC "เปิดร้านให้ฉัน" — goal 1 บรรทัด → AI จัดร้านครบ (ชื่อ/หมวด/คำอธิบาย/บริการ/จุดขาย)
@@ -357,7 +384,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
           </div>
           <div className="sf-field">
             <span>🛍 แคตตาล็อกสินค้า/บริการ (รายชิ้น) — ลูกค้าเห็นราคาชัดบนหน้าร้าน</span>
-            <CatalogEditor items={sf.products} onChange={products => patch({ products })} />
+            <CatalogEditor items={sf.products} onChange={products => patch({ products })} onUpload={f => uploadShopImage(wsId, f)} />
           </div>
           <div className="sf-field">
             <span>✨ จุดขาย (Value Proposition) — ประโยคแรกที่ลูกค้าเห็น</span>
@@ -396,6 +423,28 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
               <input value={sf.email} onChange={e => patch({ email: e.target.value })} placeholder="contact@business.com" /></label>
             <label className="sf-field"><span>เว็บไซต์</span>
               <input value={sf.website} onChange={e => patch({ website: e.target.value })} placeholder="www.business.com" /></label>
+          </div>
+
+          <div className="sf-field">
+            <span>📍 ปักหมุดที่ตั้งร้าน (ไม่บังคับ) — ช่วยให้ลูกค้าหาเจอ + Google รู้ตำแหน่งร้าน</span>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button type="button" className="sf-vp-btn" onClick={useCurrentLocation} disabled={geoBusy}>
+                {geoBusy ? '⏳ กำลังหาตำแหน่ง…' : '📍 ใช้ตำแหน่งปัจจุบัน'}
+              </button>
+              <input style={{ flex: '1 1 220px', minWidth: 180 }} value={geoInput} onChange={e => setGeoInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyPastedGeo(); } }}
+                placeholder='หรือวางลิงก์ Google Maps / "13.736, 100.523"' spellCheck={false} />
+              <button type="button" className="sf-vp-btn" onClick={applyPastedGeo} disabled={!geoInput.trim()}>ปักหมุด</button>
+            </div>
+            {validCoord(sf.lat, sf.lng) ? (
+              <div style={{ fontSize: 12.5, color: 'var(--ink3)', marginTop: 6, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span>✅ ปักหมุดแล้ว: <b style={{ color: 'var(--ink)' }}>{sf.lat!.toFixed(5)}, {sf.lng!.toFixed(5)}</b></span>
+                <a href={mapsLink(sf.lat!, sf.lng!)} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>เปิดใน Google Maps ↗</a>
+                <button type="button" onClick={() => patch({ lat: undefined, lng: undefined })} style={{ border: 0, background: 'transparent', color: 'var(--danger, #dc2626)', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>ล้างหมุด</button>
+              </div>
+            ) : (
+              <span className="sf-img-hint">💡 บนมือถือกด “ใช้ตำแหน่งปัจจุบัน” ตอนอยู่ที่ร้านได้เลย · บนคอมพิวเตอร์วางลิงก์จากแอป Google Maps</span>
+            )}
           </div>
 
           <StepHeader n={3} title="กดเผยแพร่หน้าร้าน" sub="ร้านจะขึ้นตลาดและถูก Google ค้นเจอ" />

@@ -5,6 +5,7 @@
 
 import { DBD_SECTORS } from '../data/dbd';
 import { DE24_DEFS, DE24_PHASE_LABELS } from './de24Sync';
+import { validCoord } from './geo';
 
 /** ข้อมูลร้านขั้นต่ำที่ใช้สร้าง SEO — ทั้ง Storefront (client) และแถวจาก REST (worker) เข้าได้ */
 export interface SeoStorefront {
@@ -20,6 +21,8 @@ export interface SeoStorefront {
   rating?: number;        // ค่าเฉลี่ยรีวิวจริง 1..5 (จาก aggregateRating) — emit schema เฉพาะเมื่อมีจริง
   reviewCount?: number;   // จำนวนรีวิวจริง
   logoUrl?: string;       // URL โลโก้ SVG ของร้าน (worker เสิร์ฟ /b/<slug>/logo.svg) → JSON-LD logo
+  lat?: number;           // พิกัดปักหมุดร้าน → GeoCoordinates (local SEO)
+  lng?: number;
 }
 
 export interface SeoData {
@@ -94,6 +97,11 @@ export function storefrontSeo(sf: SeoStorefront, origin: string): SeoData {
   if (sf.phone) business.telephone = sf.phone;
   if (cat) business.knowsAbout = cat;
   if (sf.logoUrl) business.logo = sf.logoUrl; // โลโก้แบรนด์ (Google ใช้ใน Knowledge Graph)
+  // GeoCoordinates — เมื่อร้านปักหมุดพิกัดจริง (local SEO: Google รู้ตำแหน่งร้าน)
+  if (validCoord(sf.lat, sf.lng)) {
+    business.geo = { '@type': 'GeoCoordinates', latitude: sf.lat, longitude: sf.lng };
+    business.hasMap = `https://www.google.com/maps?q=${sf.lat},${sf.lng}`;
+  }
   // AggregateRating (rich snippet ดาวใน Google) — เฉพาะเมื่อมีรีวิว "จริง" เท่านั้น (ไม่ปั้นดาวปลอม)
   if (typeof sf.rating === 'number' && sf.rating >= 1 && sf.rating <= 5 && (sf.reviewCount ?? 0) >= 1) {
     business.aggregateRating = {
@@ -163,6 +171,7 @@ export function sitemapXml(
     { loc: origin, priority: '1.0' },
     { loc: `${origin}/b`, priority: '0.9' },
     { loc: `${origin}/start`, priority: '0.8' },
+    { loc: `${origin}/sell`, priority: '0.8' },
     { loc: `${origin}/sale`, priority: '0.8' },
     { loc: `${origin}/faq`, priority: '0.7' },
     { loc: `${origin}/mit24`, priority: '0.7' },
@@ -212,6 +221,7 @@ CEO AI Thailand ผสาน 2 องค์ความรู้: **แนวท
 ## หน้าเว็บสำคัญ
 - [เริ่มต้นใช้งาน / Landing](${origin}/start): แนะนำวิธีสร้างบริษัท AI และเริ่มธุรกิจใน 3 ขั้น
 - [Marketplace / ตลาดสินค้า-บริการ](${origin}/b): ไดเรกทอรีร้านค้าและบริการในระบบ
+- [เปิดร้านออนไลน์ฟรี (สำหรับคนขาย)](${origin}/sell): วิธีเปิดร้านขายสินค้า/บริการฟรีบนตลาดธุรกิจไทย ไม่มีค่ารายเดือน จ่าย 3% เมื่อขายได้จริง ทุกร้านได้ SEO อัตโนมัติ
 - [แพ็กเกจและราคา](${origin}/pricing): เปรียบเทียบแพ็กและฟีเจอร์
 - [MIT 24 Steps คืออะไร ใช้ยังไงในแอป](${origin}/mit24): อธิบายระเบียบวิธีสร้างธุรกิจ 24 ขั้น + วิธีที่แอปพาเดินทีละขั้น
 - [AI Skills ที่โตไปกับธุรกิจ](${origin}/skills): ระบบพัฒนา Skill AI ให้ต่อเนื่อง + มี Skill ใหม่ให้เลือกตามระดับธุรกิจ (เริ่มต้น/เติบโต/ขยาย)
@@ -664,4 +674,97 @@ ${faqBlocks}
   <a class="cta" href="${escapeHtml(origin + '/start')}">สร้างคอนเทนต์สายเชื่อใจ — เริ่มฟรี →</a>
   <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/skills')}">AI Skills ที่โตไปกับธุรกิจ</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
   return seoStaticPage({ origin, path: '/trust', title, desc, schema, body });
+}
+
+/* ===== /sell — บทความ answer-first "เปิดร้านออนไลน์ฟรี" ดึง seller (content-first marketplace SEO) =====
+ * marketplace ยังไม่มีร้าน → คอขวดคือ "supply" ไม่ใช่ SEO ของหน้าร้าน · หน้านี้เจาะคีย์เวิร์ดฝั่งคนขาย
+ * (เปิดร้านออนไลน์ฟรี/ฝากขายสินค้า) แล้วแปลงเป็นใบสมัคร /shop = โต supply + เป็น asset ที่ rank ได้
+ * จุดต่างจริง (verify แล้วในโค้ด): ทุกร้าน published ได้ storefrontSeo (LocalBusiness+Breadcrumb) + เข้า sitemap อัตโนมัติ
+ * ⚠️ ราคา/เงื่อนไข mirror จาก src/lib/shopApply.ts (SHOP_PACKAGES) — seoData ต้อง worker-safe จึงไม่ import (กัน drift ด้วยเทสต์) */
+const SELL_BENEFITS = [
+  { h: '🆓 เริ่มฟรี ไม่มีค่ารายเดือน', p: 'แพ็กฟรีลงขายได้ 3 สินค้า ขึ้นสารบัญตลาดทันที — คิดค่าดำเนินการ 3% เฉพาะเมื่อขายได้จริง (ไม่ขาย = ไม่จ่าย) เริ่มขายก่อน จ่ายเมื่อมีรายได้' },
+  { h: '🔎 ร้านคุณขึ้น Google ได้เอง', p: 'ทุกร้านที่เผยแพร่จะได้หน้าร้านที่ระบบทำ SEO ให้อัตโนมัติ (ข้อมูลธุรกิจ + โครงสร้าง schema LocalBusiness) และถูกใส่ใน sitemap.xml เอง — Google เก็บร้านคุณได้โดยที่คุณไม่ต้องรู้เรื่อง SEO เลย' },
+  { h: '💸 ราคาโปร่งใส ผูกสั้น-ยาวได้', p: 'อยากให้ร้านเด่นค่อยเลือกแพ็ก: รายวัน ฿19 (ถูกกว่าค่าเช่าแผงตลาดนัด) · รายเดือน ฿290 (≈฿9.7/วัน) · รายปี ฿2,900 (จ่าย 10 เดือน ใช้ 12) — ไม่มีสัญญาผูกมัด' },
+  { h: '⚡ สมัครง่าย ไม่ต้องล็อกอิน', p: 'กรอกฟอร์มสั้น ๆ (ชื่อร้าน หมวด สินค้า เบอร์/LINE) ทีมงานติดต่อกลับภายใน 24 ชม. เปิดขายได้ในไม่กี่นาที รองรับทั้งขายปลีกและงาน B2B (RFQ)' },
+];
+const SELL_FAQ = [
+  { q: 'เปิดร้านบน CEO AI Thailand ฟรีจริงไหม?', a: 'ฟรีจริง — แพ็กฟรีลงขายได้ 3 สินค้า ขึ้นสารบัญตลาด ไม่มีค่ารายเดือน คิดค่าดำเนินการเพียง 3% เฉพาะเมื่อขายได้จริง (ไม่ขาย = ไม่จ่าย) เหมาะกับคนที่อยากทดลองตลาดก่อนลงทุน' },
+  { q: 'ร้านของฉันจะขึ้น Google ไหม ต้องทำ SEO เองไหม?', a: 'ไม่ต้องทำเอง — ทุกร้านที่เผยแพร่จะได้หน้าร้านที่ระบบสร้าง SEO ให้อัตโนมัติ (title/คำอธิบาย + โครงสร้างข้อมูล LocalBusiness ที่ Google เข้าใจ) และถูกเพิ่มเข้า sitemap.xml ให้เอง ทำให้ Google ค้นพบและเก็บร้านคุณได้เองโดยคุณไม่ต้องมีความรู้ด้านเทคนิค' },
+  { q: 'ต้องจ่ายรายเดือนไหม?', a: 'ไม่บังคับ เริ่มฟรีได้เลย เมื่ออยากให้ร้านเด่นขึ้นค่อยเลือกแพ็กตามงบ: รายวัน ฿19 · รายสัปดาห์ ฿99 · รายเดือน ฿290 · รายปี ฿2,900 — เลือกผูกสั้นหรือยาวก็ได้ ไม่มีสัญญาบังคับ' },
+  { q: 'ขายอะไรได้บ้าง?', a: 'ขายได้ทั้งสินค้าและบริการของธุรกิจไทย จัดหมวดตามมาตรฐาน DBD เพื่อให้ลูกค้าค้นเจอง่าย และรองรับงานจัดซื้อแบบ B2B (RFQ) สำหรับร้านที่รับงานองค์กร' },
+  { q: 'เริ่มเปิดร้านยังไง?', a: 'ไปที่หน้าสมัคร /shop กรอกชื่อร้าน หมวดหมู่ สินค้าที่ขาย และเบอร์/LINE (ไม่ต้องล็อกอิน) ทีมงานจะติดต่อกลับภายใน 24 ชม. เพื่อช่วยเปิดร้านให้พร้อมขาย' },
+];
+
+export function sellFaqJsonLd(): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: SELL_FAQ.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  };
+}
+
+export function sellArticleJsonLd(origin: string): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: 'เปิดร้านออนไลน์ฟรีบนตลาดธุรกิจไทย — ให้ Google เจอร้านคุณเอง',
+    description: 'วิธีเปิดร้านขายสินค้า/บริการฟรีบนตลาดธุรกิจไทย CEO AI Thailand — ไม่มีค่ารายเดือน จ่าย 3% เมื่อขายได้จริง และทุกร้านได้หน้าร้านที่ระบบทำ SEO ให้ Google เก็บเองอัตโนมัติ',
+    inLanguage: 'th',
+    mainEntityOfPage: `${origin}/sell`,
+    author: { '@type': 'Organization', name: 'CEO AI Thailand', url: origin },
+    publisher: { '@type': 'Organization', name: 'B. Training Consultant', url: 'https://www.b-tctraining.com/' },
+    about: 'Sell online free on a Thai business marketplace with automatic SEO',
+  };
+}
+
+/** หน้า answer-first /sell — เปิดร้านออนไลน์ฟรี (ดึง seller · content-first marketplace SEO · crawlable AEO/GEO) */
+export function sellPageHtml(origin: string): string {
+  const title = 'เปิดร้านออนไลน์ฟรี บนตลาดธุรกิจไทย — ให้ Google เจอร้านคุณเอง | CEO AI Thailand';
+  const desc = 'เปิดร้านขายสินค้า/บริการฟรีบนตลาดธุรกิจไทย CEO AI Thailand — ลงขายได้เลยไม่มีค่ารายเดือน จ่าย 3% เมื่อขายได้จริง และทุกร้านได้หน้าร้านที่ระบบทำ SEO ให้ Google เก็บเองอัตโนมัติ';
+  const benefitBlocks = SELL_BENEFITS.map(b =>
+    `    <section class="phase">\n      <h3>${escapeHtml(b.h)}</h3>\n      <p>${escapeHtml(b.p)}</p>\n    </section>`
+  ).join('\n');
+  const faqBlocks = SELL_FAQ.map(f =>
+    `    <section class="qa">\n      <h2>${escapeHtml(f.q)}</h2>\n      <p>${escapeHtml(f.a)}</p>\n    </section>`
+  ).join('\n');
+  const planRows = [
+    ['ฟรี', '฿0 ตลอดชีพ', 'ลงขาย 3 สินค้า · ขึ้นสารบัญตลาด · คิด 3% เมื่อขายได้จริง'],
+    ['รายวัน', '฿19/วัน', 'ลงขายไม่จำกัด 1 วัน — เหมาะกับของสด อีเวนต์ ทดลองตลาด'],
+    ['รายสัปดาห์', '฿99/สัปดาห์', 'ลงขายไม่จำกัด 7 วัน + ป้ายร้านแนะนำประจำสัปดาห์ในหมวดคุณ'],
+    ['รายเดือน', '฿290/เดือน (≈฿9.7/วัน)', 'ทุกอย่างในรายสัปดาห์ + สถิติผู้เข้าชม + AI ช่วยเขียนคำอธิบายสินค้า'],
+    ['รายปี', '฿2,900/ปี (ฟรี 2 เดือน)', 'จ่าย 10 เดือน ใช้ 12 + โลโก้ร้านบนหน้ารวมตลาดตลอดปี'],
+  ].map(([n, price, d]) =>
+    `        <tr><td><b>${escapeHtml(n)}</b></td><td>${escapeHtml(price)}</td><td>${escapeHtml(d)}</td></tr>`
+  ).join('\n');
+  const schema = jsonLdScript([sellArticleJsonLd(origin), sellFaqJsonLd(), organizationJsonLd(origin)]);
+  const body = `  <h1>เปิดร้านออนไลน์ฟรี บนตลาดธุรกิจไทย</h1>
+  <p class="lead">${escapeHtml(SELL_FAQ[0].a)}</p>
+  <p class="sub">CEO AI Thailand คือตลาดสินค้า-บริการของธุรกิจไทย ที่ให้คุณ <b>เปิดร้านฟรี ขายได้เลย</b> โดยไม่ต้องมีเว็บของตัวเอง — พัฒนาโดย B. Training Consultant ที่ปรึกษาธุรกิจ/ระบบมาตรฐานไทยกว่า 20 ปี</p>
+
+  <p class="tagline">จุดต่างที่คนขายชอบสุด: <b>ทุกร้านได้ SEO อัตโนมัติ</b> — ระบบสร้างหน้าร้านที่ Google เข้าใจ (โครงสร้างข้อมูล LocalBusiness) และใส่เข้า sitemap ให้เอง คุณแค่ลงสินค้า ที่เหลือระบบจัดการให้</p>
+
+  <h2>ทำไมต้องเปิดร้านที่นี่</h2>
+${benefitBlocks}
+
+  <h2>แพ็กเกจ & ราคา (โปร่งใส เลือกตามงบ)</h2>
+  <div class="tablewrap">
+  <table class="maptable">
+    <thead><tr><th>แพ็ก</th><th>ราคา</th><th>ได้อะไร</th></tr></thead>
+    <tbody>
+${planRows}
+    </tbody>
+  </table>
+  </div>
+  <p class="sub">อยากได้ตำแหน่ง “ร้านแนะนำหน้าแรก” ? มีระบบประมูลแบบโปร่งใส (English Auction รายสัปดาห์) — ราคาเริ่มเบา ๆ บิดสูงสุดชนะ</p>
+
+  <h2>เริ่มเปิดร้านใน 3 ขั้น</h2>
+  <section class="qa">
+    <p><b>1.</b> กรอกฟอร์มสมัครที่หน้า <a href="${escapeHtml(origin + '/shop')}">/shop</a> (ชื่อร้าน · หมวด · สินค้า · เบอร์/LINE) — ไม่ต้องล็อกอิน<br>
+    <b>2.</b> ทีมงานติดต่อกลับภายใน 24 ชม. ช่วยจัดหน้าร้านให้พร้อมขาย<br>
+    <b>3.</b> ร้านขึ้นสารบัญตลาด + ระบบทำ SEO ให้อัตโนมัติ — เริ่มรับลูกค้าได้เลย</p>
+  </section>
+
+  <h2>คำถามที่พบบ่อย</h2>
+${faqBlocks}
+  <a class="cta" href="${escapeHtml(origin + '/shop')}">เปิดร้านฟรีตอนนี้ →</a>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/b')}">ดูตลาดธุรกิจไทย</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
+  return seoStaticPage({ origin, path: '/sell', title, desc, schema, body });
 }

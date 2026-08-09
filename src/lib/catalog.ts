@@ -8,6 +8,7 @@ export interface CatalogItem {
   price: number;      // บาท · 0 = "สอบถามราคา"
   unit?: string;      // ต่อ ชิ้น/ชม./เดือน/งาน
   desc?: string;      // รายละเอียดสั้น
+  image?: string;     // รูปสินค้า (URL จาก Supabase Storage / dataURL ใน local mode)
 }
 
 /** ⚠️ ไม่มีเพดานจำนวน SKU โดยดีไซน์ (ห้ามใส่ MAX_SKU) — ดูหมายเหตุปรัชญาราคาด้านบน */
@@ -32,7 +33,8 @@ export function coerceItems(v: unknown): CatalogItem[] {
     .map((x) => {
       const o = (x ?? {}) as Record<string, unknown>;
       const id = str(o.id) || makeItemId();
-      return { id, name: str(o.name), price: num(o.price), unit: str(o.unit), desc: str(o.desc) } as CatalogItem;
+      const image = str(o.image);
+      return { id, name: str(o.name), price: num(o.price), unit: str(o.unit), desc: str(o.desc), image: image || undefined } as CatalogItem;
     })
     .filter((i) => i.name.length > 0);
 }
