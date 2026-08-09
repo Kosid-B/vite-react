@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { plainSizing, bahtPlain, type SizerScope } from '../lib/marketSizerPlain';
+import { opportunityScore, type OppFactors } from '../lib/marketSizing';
+import { competitorArchetypes, findGap, tierLabel } from '../lib/competitorAnalysis';
 import { rememberBizHint } from '../lib/bizHint';
 import { track } from '../lib/analytics';
 import { useLandingTheme } from '../lib/landingTheme';
@@ -14,18 +16,29 @@ const LIGHT_C: typeof DARK_C = { border: '#e2e8f0', panel: '#ffffff', card: '#f1
 
 const EXAMPLE = { business: 'ร้านกาแฟ', arpuPerYear: 3000, scope: 'national' as SizerScope };
 const COUNT_MS = 2800; // นับขึ้นถึงตัวเลขคาดการณ์ ~3 วินาที
+const FACTORS: { key: keyof OppFactors; label: string }[] = [
+  { key: 'size', label: 'ขนาดตลาด' },
+  { key: 'growth', label: 'การเติบโต' },
+  { key: 'competition', label: 'คู่แข่งรุนแรง' },
+  { key: 'barrier', label: 'เข้าตลาดยาก' },
+  { key: 'differentiation', label: 'จุดต่างของเรา' },
+];
 
 export default function MarketSizerPanel({ onGetStarted, onEngage }: { onGetStarted: () => void; onEngage?: () => void }) {
   const C = useLandingTheme() === 'minimal' ? LIGHT_C : DARK_C;
   const [business, setBusiness] = useState('');
   const [arpu, setArpu] = useState('');
   const [scope, setScope] = useState<SizerScope>('national');
+  const [factors, setFactors] = useState<OppFactors>({ size: 3, growth: 3, competition: 3, barrier: 3, differentiation: 3 });
   const [grow, setGrow] = useState(false); // จุดสตาร์ทให้กราฟโต 0→เต็ม (หลัง mount)
   const engaged = useRef(false);
   const engage = () => { if (!engaged.current) { engaged.current = true; onEngage?.(); } };
 
   const real = useMemo(() => plainSizing({ business, arpuPerYear: Number(arpu), scope }), [business, arpu, scope]);
   const isExample = !real.ok;
+  const opp = useMemo(() => opportunityScore(factors), [factors]);
+  const archetypes = useMemo(() => competitorArchetypes(business), [business]);
+  const gap = useMemo(() => findGap({ differentiator: business.trim() }), [business]);
   const view = real.ok ? real : plainSizing(EXAMPLE);
 
   const animatedSom = useCountUp(view.somValue, COUNT_MS);
@@ -59,7 +72,11 @@ export default function MarketSizerPanel({ onGetStarted, onEngage }: { onGetStar
         {/* ── HERO: ตัวเลขโอกาส นับขึ้น ~3 วิ ── */}
         <div style={{ borderRadius: 14, border: `1px solid ${C.green}`, background: C.heroBg, padding: '16px 18px', textAlign: 'center', marginBottom: 14 }}>
           <div style={{ fontSize: 12.5, color: C.slate, marginBottom: 2 }}>
-            {isExample ? '✨ ตัวอย่าง — โอกาสที่คุณคว้าได้ปีแรก' : '🎯 โอกาสของคุณ — คว้าได้ปีแรก'}
+            {isExample
+              ? '✨ ตัวอย่าง — โอกาสที่คุณคว้าได้ปีแรก'
+              : view.usingDefaultArpu
+                ? '🎯 โอกาสของคุณ (คร่าว ๆ) — ใส่ราคาต่อลูกค้าเพื่อแม่นขึ้น'
+                : '🎯 โอกาสของคุณ — คว้าได้ปีแรก'}
           </div>
           <div style={{ fontSize: 'clamp(30px, 7vw, 46px)', fontWeight: 900, color: C.green, lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>
             {bahtPlain(animatedSom)}
@@ -103,6 +120,46 @@ export default function MarketSizerPanel({ onGetStarted, onEngage }: { onGetStar
             </button>
           ))}
         </div>
+
+        {/* ── โอกาสเชิงลึก (โผล่เมื่อกรอกธุรกิจ) — คะแนนโอกาส + คู่แข่ง + ช่องว่าง (rule-based ฟรี) ── */}
+        {real.ok && (
+          <div style={{ marginTop: 2, marginBottom: 14, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: C.white }}>🧭 คะแนนโอกาสตลาด</span>
+              <span style={{ fontSize: 13.5, fontWeight: 800, color: opp.score >= 4 ? C.green : opp.score >= 3 ? C.amber : '#f87171' }}>{opp.score}/5 · {opp.label}</span>
+            </div>
+            <div style={{ display: 'grid', gap: 6, margin: '10px 0' }}>
+              {FACTORS.map(f => (
+                <label key={f.key} style={{ display: 'grid', gridTemplateColumns: '108px 1fr 16px', alignItems: 'center', gap: 9, fontSize: 12, color: C.slate }}>
+                  <span>{f.label}</span>
+                  <input type="range" min={1} max={5} value={factors[f.key]} style={{ accentColor: C.cyan, width: '100%' }}
+                    onChange={e => { const v = Number(e.target.value); setFactors(p => ({ ...p, [f.key]: v })); engage(); }} />
+                  <span style={{ textAlign: 'right', color: C.white, fontWeight: 700 }}>{factors[f.key]}</span>
+                </label>
+              ))}
+            </div>
+            <div style={{ fontSize: 12.5, color: C.slate, marginBottom: 14 }}>💡 {opp.verdict}</div>
+
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: C.white, marginBottom: 8 }}>⚔️ คู่แข่งที่ต้องรู้ + ช่องว่างตลาด</div>
+            <div style={{ display: 'grid', gap: 7 }}>
+              {archetypes.map(a => (
+                <div key={a.name} style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: '9px 11px', background: C.card }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: C.white }}>{a.name}</span>
+                    <span style={{ fontSize: 11, color: C.cyan, whiteSpace: 'nowrap' }}>{tierLabel(a.tier)}</span>
+                  </div>
+                  <div style={{ fontSize: 11.5, color: C.slate, marginTop: 3 }}>💪 {a.strengths}</div>
+                  <div style={{ fontSize: 11.5, color: C.slate }}>🕳 {a.weaknesses}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 9, borderRadius: 10, border: `1px solid ${C.green}`, background: C.heroBg, padding: '9px 11px' }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: C.green }}>💡 ช่องว่างที่ยังเปิดอยู่</div>
+              <div style={{ fontSize: 12, color: C.white, marginTop: 2 }}>{gap.gap}</div>
+              <div style={{ fontSize: 11.5, color: C.slate, marginTop: 3 }}>ควรทำ: {gap.moveHint}</div>
+            </div>
+          </div>
+        )}
 
         {/* ── ทริกเกอร์สมัคร: โผล่/เต้นเมื่อแอนิเมชันตัวเลขจบ ── */}
         {revealed && (

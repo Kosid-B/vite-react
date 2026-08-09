@@ -7,6 +7,7 @@ import { estimateSizing } from './marketSizing';
 
 const TH_SME_BASE = 3_200_000;         // SME ไทย ~3.2M (OSMEP)
 const LOCAL_BASE = Math.round(TH_SME_BASE / 77); // เฉลี่ยต่อจังหวัด ~41,600 (หยาบ — บอกผู้ใช้ว่าประเมิน)
+export const DEFAULT_ARPU = 3000;      // ราคาต่อลูกค้า/ปี เริ่มต้น — ใช้เมื่อผู้ใช้ยังไม่กรอก (ปรับได้)
 
 export type SizerScope = 'national' | 'local';
 
@@ -25,6 +26,7 @@ export interface SizerRow {
 
 export interface PlainSizing {
   ok: boolean;
+  usingDefaultArpu: boolean; // true = ยังไม่กรอกราคาต่อลูกค้า → ใช้ค่าเริ่มต้น (บอกให้ผู้ใช้ปรับ)
   rows: SizerRow[];
   headline: string;       // สรุปให้ "อยากทำต่อ"
   disclaimer: string;
@@ -47,10 +49,13 @@ const numPlain = (n: number): string => Math.max(0, Math.round(n)).toLocaleStrin
 
 /** ประเมินขนาดตลาดแล้วแปลงเป็นภาษาง่าย — ok=false ถ้า input ไม่พอ */
 export function plainSizing(inp: SizerInput): PlainSizing {
-  const arpu = Number(inp.arpuPerYear);
-  if (!inp.business.trim() || !(arpu > 0)) {
-    return { ok: false, rows: [], headline: '', disclaimer: '', tamValue: 0, samValue: 0, somValue: 0, somCustomers: 0 };
+  // กรอกแค่ "ธุรกิจ" ก็ได้ตัวเลขทันที (ใช้ราคาต่อลูกค้าเริ่มต้น) — ใส่ราคาจริงแล้วแม่นขึ้น
+  if (!inp.business.trim()) {
+    return { ok: false, usingDefaultArpu: false, rows: [], headline: '', disclaimer: '', tamValue: 0, samValue: 0, somValue: 0, somCustomers: 0 };
   }
+  const typed = Number(inp.arpuPerYear);
+  const usingDefaultArpu = !(typed > 0);
+  const arpu = usingDefaultArpu ? DEFAULT_ARPU : typed;
   const businessBase = inp.scope === 'local' ? LOCAL_BASE : TH_SME_BASE;
   const r = estimateSizing({ annualRevenuePerCustomer: arpu, businessBase });
 
@@ -79,9 +84,12 @@ export function plainSizing(inp: SizerInput): PlainSizing {
 
   return {
     ok: true,
+    usingDefaultArpu,
     rows,
     headline,
-    disclaimer: 'ตัวเลขนี้เป็นการประเมินคร่าว ๆ จากที่คุณกรอก + สมมติฐานมาตรฐาน (SME ไทย ~3.2M) — สมัครแล้วให้ AI วิจัยตัวเลขจริงจาก Google ให้เจาะลึกกว่านี้',
+    disclaimer: usingDefaultArpu
+      ? `ประเมินจากราคาต่อลูกค้าเริ่มต้น (~${bahtPlain(DEFAULT_ARPU)}/ปี) — ใส่ราคาจริงของคุณในช่องด้านล่างเพื่อให้แม่นขึ้น · อิงสมมติฐาน SME ไทย ~3.2M`
+      : 'ตัวเลขนี้เป็นการประเมินคร่าว ๆ จากที่คุณกรอก + สมมติฐานมาตรฐาน (SME ไทย ~3.2M) — สมัครแล้วให้ AI วิจัยตัวเลขจริงจาก Google ให้เจาะลึกกว่านี้',
     tamValue: r.tam,
     samValue: r.sam,
     somValue: r.som,
