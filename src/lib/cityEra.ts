@@ -10,6 +10,8 @@ export interface EraAgents {
   selfDriving: number; // รถยนต์ไร้คนขับ (มี LiDAR)
   drones: number;      // โดรน (บินบนฟ้า)
   humanoids: number;   // หุ่นยนต์ AI humanoid (เดินร่วมกับคน)
+  airtaxi: number;     // แท็กซี่บินได้ VTOL (ยุคอนาคต)
+  motes: number;       // อนุภาคเรืองแสง (หิ่งห้อยยุคธรรมชาติ / data motes ยุคนีออน)
 }
 
 export interface EraDef {
@@ -59,11 +61,11 @@ export const ERAS: EraDef[] = [
 ];
 
 const AGENTS: EraAgents[] = [
-  { people: 6, bikes: 3, cars: 1, selfDriving: 0, drones: 0, humanoids: 0 },
-  { people: 9, bikes: 4, cars: 4, selfDriving: 0, drones: 0, humanoids: 0 },
-  { people: 11, bikes: 4, cars: 6, selfDriving: 0, drones: 2, humanoids: 0 },
-  { people: 10, bikes: 2, cars: 3, selfDriving: 6, drones: 5, humanoids: 1 },
-  { people: 8, bikes: 1, cars: 1, selfDriving: 7, drones: 7, humanoids: 5 },
+  { people: 8, bikes: 3, cars: 1, selfDriving: 0, drones: 0, humanoids: 0, airtaxi: 0, motes: 6 },
+  { people: 11, bikes: 5, cars: 5, selfDriving: 0, drones: 0, humanoids: 0, airtaxi: 0, motes: 4 },
+  { people: 12, bikes: 5, cars: 7, selfDriving: 0, drones: 3, humanoids: 0, airtaxi: 1, motes: 3 },
+  { people: 11, bikes: 3, cars: 3, selfDriving: 7, drones: 6, humanoids: 2, airtaxi: 2, motes: 5 },
+  { people: 9, bikes: 1, cars: 1, selfDriving: 8, drones: 8, humanoids: 6, airtaxi: 3, motes: 8 },
 ];
 
 export const ERA_COUNT = ERAS.length;
