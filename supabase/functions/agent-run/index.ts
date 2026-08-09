@@ -3,6 +3,7 @@ import Anthropic from 'npm:@anthropic-ai/sdk@0.26.0';
 import { pickModel } from '../_shared/modelRouter.ts';
 import { enforceAiQuota } from '../_shared/quota.ts';
 import { AI_GUARDRAILS } from '../_shared/aiGuardrails.ts';
+import { guardedFetch } from '../_shared/egressGuard.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +21,8 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 
 async function serperSearch(query: string, count = 5): Promise<string> {
   if (!SERPER_KEY) return '';
-  const r = await fetch('https://google.serper.dev/search', {
+  // guardedFetch = บังคับ allowlist (defense-in-depth) — ออกได้เฉพาะ host ที่อนุมัติ
+  const r = await guardedFetch('https://google.serper.dev/search', {
     method: 'POST',
     headers: {
       'X-API-KEY': SERPER_KEY,

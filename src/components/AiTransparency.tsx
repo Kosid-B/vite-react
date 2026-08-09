@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { useLandingTheme } from '../lib/landingTheme';
 import { track } from '../lib/analytics';
+import { SAFETY_COMMITMENTS, SAFETY_TAGLINE } from '../lib/aiSafety';
 
 /* AiTransparency — ปุ่ม "🤖 ความโปร่งใส AI" ที่ footer หน้า Landing → modal คำมั่น 6 ข้อ
  * modal ฝั่ง client (ไม่พาออกจากหน้า = ไม่เสีย conversion · ไม่โหลดเพจใหม่ = ไม่กระทบ performance)
@@ -88,6 +89,23 @@ export default function AiTransparency({ linkStyle }: { linkStyle?: CSSPropertie
                 </li>
               ))}
             </ul>
+
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${panel.border}` }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: panel.head }}>🔒 ความปลอดภัย AI</div>
+              <div style={{ fontSize: 12.5, color: panel.sub, margin: '4px 0 12px', lineHeight: 1.5 }}>{SAFETY_TAGLINE}</div>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {SAFETY_COMMITMENTS.slice(0, 4).map((c, i) => (
+                  <li key={i} style={{ display: 'flex', gap: 11, alignItems: 'flex-start', fontSize: 13.5, color: panel.text, lineHeight: 1.5 }}>
+                    <span aria-hidden="true" style={{ fontSize: 16, flexShrink: 0 }}>{c.icon}</span>
+                    <span><b style={{ color: panel.head }}>{c.title}</b> — {c.body}</span>
+                  </li>
+                ))}
+              </ul>
+              <a href="/security" onClick={() => track('ai_safety_link')}
+                style={{ display: 'inline-block', marginTop: 12, fontSize: 13, fontWeight: 700, color: '#22d3ee', textDecoration: 'none' }}>
+                อ่านนโยบายความปลอดภัยเต็ม + คำถามที่พบบ่อย →
+              </a>
+            </div>
 
             <div style={{ marginTop: 18, fontSize: 12, color: panel.sub, lineHeight: 1.6 }}>
               สอดคล้อง PDPA · ทุกการทดลอง A/B แบบยินยอมก่อน (opt-in) ·

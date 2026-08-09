@@ -2,7 +2,7 @@
 
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
-  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, aggregateFromRatings,
+  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml, aggregateFromRatings,
   type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
 
@@ -173,6 +173,13 @@ export default {
       // /sell → บทความ answer-first "เปิดร้านออนไลน์ฟรี" ดึง seller (content-first marketplace SEO)
       if (url.pathname === '/sell' || url.pathname === '/sell/') {
         return new Response(sellPageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      // /security → ความปลอดภัย AI (answer-first · ตอบกระแสข่าว AI เข้าถึงระบบภายนอก)
+      if (url.pathname === '/security' || url.pathname === '/security/') {
+        return new Response(securityPageHtml(origin), {
           headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
         });
       }
