@@ -183,6 +183,8 @@ const plans = [
 
 export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }: Props) {
   const [ctaHover, setCtaHover] = useState(false);
+  const [showSticky, setShowSticky] = useState(false);   // sticky CTA มือถือ (โผล่หลังเลื่อนพ้น hero)
+  const [stickyClosed, setStickyClosed] = useState(false);
   const [navHover, setNavHover] = useState(false);
   const [guestHover, setGuestHover] = useState(false);
 
@@ -271,6 +273,15 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
   // รีวิวจริงจากสมาชิก (อนุมัติแล้ว) — ถ้ายังไม่มี ไม่โชว์ section (ไม่สร้าง social proof ปลอม)
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   useEffect(() => { listApprovedTestimonials(12).then(setTestimonials).catch(() => {}); }, []);
+
+  // sticky CTA มือถือ: โผล่เมื่อเลื่อนพ้น hero + คุกกี้แบนเนอร์ปิดแล้ว (กันซ้อนแถบคุกกี้ fixed bottom)
+  useEffect(() => {
+    const consented = () => { try { return !!localStorage.getItem('ceo_ai_cookie_consent'); } catch { return true; } };
+    const onScroll = () => setShowSticky(window.scrollY > 680 && consented());
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   const agg = aggregateRating(testimonials);
 
   return (
@@ -344,9 +355,13 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           ))}</span>
         </h1>
 
-        <p style={{ fontSize: 18, color: C.slate4, marginBottom: 48, maxWidth: 620, lineHeight: 1.7 }}>
+        <p style={{ fontSize: 18, color: C.slate4, marginBottom: 16, maxWidth: 620, lineHeight: 1.7 }}>
           <strong style={{ color: C.white }}>{heroCopy.subLead}</strong><br />
           {heroCopy.subRest}
+        </p>
+        {/* loss aversion (ซื่อสัตย์ — ไม่ขู่ปลอม): ต้นทุนของการยังไม่เริ่ม */}
+        <p style={{ fontSize: 14.5, color: C.slate5, marginBottom: 40, maxWidth: 560, lineHeight: 1.6 }}>
+          ⏳ ทุกวันที่ยังทำเองทุกอย่าง คือเวลาที่เอาไปโตธุรกิจได้...ที่หายไปเรื่อย ๆ
         </p>
 
         <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -397,26 +412,16 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
               <span style={{ color: C.slate5, fontSize: 12.5 }}>อยากเก็บงานถาวร + ปลดล็อกทุกฟีเจอร์ ก็สมัครได้เลย</span>
             </div>
           )}
-          <a
-            href="/shop"
-            onClick={() => track('landing_cta_click', { cta: 'hero_shop_signup', layout: layoutAb })}
-            style={{
-              display: 'inline-block',
-              marginTop: 20,
-              padding: '13px 32px',
-              borderRadius: 12,
-              border: `1px solid ${C.cyan5}`,
-              background: 'rgba(6,182,212,0.08)',
-              color: C.cyan4,
-              fontFamily: 'inherit',
-              fontWeight: 600,
-              fontSize: 16,
-              textDecoration: 'none',
-              transition: 'all .2s',
-            }}
-          >
-            🏪 สมัครร้านตลาดฝากขายสินค้า — เริ่มฟรี · รายวันแค่ ฿19
-          </a>
+          {/* ทางเลือกรอง (ร้านฝากขาย) — ลดจากปุ่มเด่นเป็นลิงก์ subtle เพื่อโฟกัส CTA หลัก (ลด decision paralysis) */}
+          <div style={{ marginTop: 22 }}>
+            <a
+              href="/shop"
+              onClick={() => track('landing_cta_click', { cta: 'hero_shop_signup', layout: layoutAb })}
+              style={{ color: C.slate5, fontSize: 13.5, textDecoration: 'none', borderBottom: `1px dashed ${C.border}`, paddingBottom: 1 }}
+            >
+              หรือแค่อยากเปิดร้านฝากขายสินค้า? 🏪 เริ่มฟรี · รายวัน ฿19
+            </a>
+          </div>
         </div>
       </section>
 
@@ -848,6 +853,20 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         <LegalLinks linkStyle={{ color: C.slate5, textDecoration: 'none' }} />
         <div style={{ marginTop: 16 }}><IsmsBadge /></div>
       </footer>
+
+      {/* ─── Sticky CTA (มือถือ) — recapture ตอนเลื่อน · ปิดได้ · gate ด้วย consent กันซ้อนแถบคุกกี้ ─── */}
+      {showSticky && !stickyClosed && (
+        <>
+          <style>{`@media(min-width:768px){.lp-sticky-cta{display:none!important}}`}</style>
+          <div className="lp-sticky-cta" style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 45, display: 'flex', gap: 8, alignItems: 'center', padding: '10px 12px', background: C.navBg, borderTop: `1px solid ${C.border}`, backdropFilter: 'blur(12px)' }}>
+            <button onClick={() => { track('landing_cta_click', { cta: 'sticky_mobile', layout: layoutAb }); enterWithGoal(); }}
+              style={{ flex: 1, padding: '13px 16px', borderRadius: 10, border: 'none', background: C.amber5, color: C.dark, fontFamily: 'inherit', fontWeight: 800, fontSize: 15.5, cursor: 'pointer', boxShadow: '0 0 20px rgba(245,158,11,0.4)' }}>
+              {onTryGuest ? '⚡ เริ่มใช้ฟรี — ไม่ต้องสมัคร' : 'เริ่มฟรี 15 วัน'}
+            </button>
+            <button onClick={() => setStickyClosed(true)} aria-label="ปิด" style={{ flex: 'none', width: 38, height: 44, borderRadius: 10, border: `1px solid ${C.border}`, background: 'transparent', color: C.slate5, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>✕</button>
+          </div>
+        </>
+      )}
     </div>
     </LandingThemeCtx.Provider>
   );
