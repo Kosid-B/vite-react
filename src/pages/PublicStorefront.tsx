@@ -9,6 +9,7 @@ import { applySeo, siteOrigin } from '../lib/seo';
 import { storefrontSeo, directorySeo, directoryItemList, sectorLabel } from '../lib/seoData';
 import { STARTER_LISTINGS } from '../lib/starterStorefronts';
 import { priceLabel } from '../lib/catalog';
+import { validCoord, mapsLink } from '../lib/geo';
 
 /* ===== Marketplace M1 — หน้าสาธารณะ (ไม่ต้องล็อกอิน) =====
  * /b        → สารบัญธุรกิจ จัดกลุ่มตามหมวด DBD
@@ -136,11 +137,14 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
             <div className="pub-catalog">
               {sf.products.map(p => (
                 <div key={p.id} className="pub-cat-item">
-                  <div className="pub-cat-top">
-                    <span className="pub-cat-name">{p.name}</span>
-                    <span className="pub-cat-price">{priceLabel(p)}</span>
+                  {p.image && <img className="pub-cat-img" src={p.image} alt={p.name} loading="lazy" />}
+                  <div className="pub-cat-body">
+                    <div className="pub-cat-top">
+                      <span className="pub-cat-name">{p.name}</span>
+                      <span className="pub-cat-price">{priceLabel(p)}</span>
+                    </div>
+                    {p.desc && <div className="pub-cat-desc">{p.desc}</div>}
                   </div>
-                  {p.desc && <div className="pub-cat-desc">{p.desc}</div>}
                 </div>
               ))}
             </div>
@@ -240,7 +244,8 @@ export function PublicStorefrontPage({ slug }: { slug: string }) {
           {sf.lineId && <a className="pub-contact" href={`https://line.me/ti/p/~${encodeURIComponent(sf.lineId)}`} target="_blank" rel="noreferrer">💬 LINE: {sf.lineId}</a>}
           {sf.email && <a className="pub-contact" href={`mailto:${sf.email}`}>📧 {sf.email}</a>}
           {sf.website && <a className="pub-contact" href={sf.website.startsWith('http') ? sf.website : 'https://' + sf.website} target="_blank" rel="noreferrer">🌐 เว็บไซต์</a>}
-          {!sf.phone && !sf.lineId && !sf.email && !sf.website && <span className="pub-muted">ยังไม่ระบุช่องทางติดต่อ</span>}
+          {validCoord(sf.lat, sf.lng) && <a className="pub-contact" href={mapsLink(sf.lat!, sf.lng!)} target="_blank" rel="noreferrer">📍 แผนที่ร้าน (Google Maps)</a>}
+          {!sf.phone && !sf.lineId && !sf.email && !sf.website && !validCoord(sf.lat, sf.lng) && <span className="pub-muted">ยังไม่ระบุช่องทางติดต่อ</span>}
         </div>
         <a className="pub-rfq" href={`/?rfq=${encodeURIComponent(sf.slug)}`}>
           📨 เป็นธุรกิจในระบบ? ขอใบเสนอราคา (RFQ) จากร้านนี้ →

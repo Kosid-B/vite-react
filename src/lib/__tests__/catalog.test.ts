@@ -32,6 +32,17 @@ describe('catalog', () => {
     expect(coerceItems('nope')).toEqual([]);
   });
 
+  it('coerceItems: เก็บ image ถ้ามี · ว่าง → undefined (ไม่รก jsonb)', () => {
+    const items = coerceItems([
+      { id: '1', name: 'A', image: 'https://cdn.x/p.jpg' },
+      { id: '2', name: 'B', image: '' },
+      { id: '3', name: 'C' },
+    ]);
+    expect(items[0].image).toBe('https://cdn.x/p.jpg');
+    expect(items[1].image).toBeUndefined();
+    expect(items[2].image).toBeUndefined();
+  });
+
   it('catalogSummary: นับ + ช่วงราคา (เฉพาะที่ตั้งราคา)', () => {
     const s = catalogSummary([mk('1', 'A', 60), mk('2', 'B', 0), mk('3', 'C', 200)]);
     expect(s.count).toBe(3);

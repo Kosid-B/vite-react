@@ -22,7 +22,7 @@ interface Env {
 async function fetchStorefront(slug: string, env: Env, origin: string): Promise<SeoStorefront | null> {
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return null;
   const q = `${env.SUPABASE_URL}/rest/v1/storefronts?slug=eq.${encodeURIComponent(slug)}` +
-    `&published=eq.true&select=slug,name,dbd,kind,vp,description,promo,images,phone,rating,review_count,logo_svg&limit=1`;
+    `&published=eq.true&select=slug,name,dbd,kind,vp,description,promo,images,phone,rating,review_count,logo_svg,lat,lng&limit=1`;
   const res = await fetch(q, {
     headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: `Bearer ${env.SUPABASE_ANON_KEY}` },
   });

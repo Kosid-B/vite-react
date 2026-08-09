@@ -5,6 +5,7 @@
 
 import { DBD_SECTORS } from '../data/dbd';
 import { DE24_DEFS, DE24_PHASE_LABELS } from './de24Sync';
+import { validCoord } from './geo';
 
 /** ข้อมูลร้านขั้นต่ำที่ใช้สร้าง SEO — ทั้ง Storefront (client) และแถวจาก REST (worker) เข้าได้ */
 export interface SeoStorefront {
@@ -20,6 +21,8 @@ export interface SeoStorefront {
   rating?: number;        // ค่าเฉลี่ยรีวิวจริง 1..5 (จาก aggregateRating) — emit schema เฉพาะเมื่อมีจริง
   reviewCount?: number;   // จำนวนรีวิวจริง
   logoUrl?: string;       // URL โลโก้ SVG ของร้าน (worker เสิร์ฟ /b/<slug>/logo.svg) → JSON-LD logo
+  lat?: number;           // พิกัดปักหมุดร้าน → GeoCoordinates (local SEO)
+  lng?: number;
 }
 
 export interface SeoData {
@@ -94,6 +97,11 @@ export function storefrontSeo(sf: SeoStorefront, origin: string): SeoData {
   if (sf.phone) business.telephone = sf.phone;
   if (cat) business.knowsAbout = cat;
   if (sf.logoUrl) business.logo = sf.logoUrl; // โลโก้แบรนด์ (Google ใช้ใน Knowledge Graph)
+  // GeoCoordinates — เมื่อร้านปักหมุดพิกัดจริง (local SEO: Google รู้ตำแหน่งร้าน)
+  if (validCoord(sf.lat, sf.lng)) {
+    business.geo = { '@type': 'GeoCoordinates', latitude: sf.lat, longitude: sf.lng };
+    business.hasMap = `https://www.google.com/maps?q=${sf.lat},${sf.lng}`;
+  }
   // AggregateRating (rich snippet ดาวใน Google) — เฉพาะเมื่อมีรีวิว "จริง" เท่านั้น (ไม่ปั้นดาวปลอม)
   if (typeof sf.rating === 'number' && sf.rating >= 1 && sf.rating <= 5 && (sf.reviewCount ?? 0) >= 1) {
     business.aggregateRating = {

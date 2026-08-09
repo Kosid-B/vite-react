@@ -1434,7 +1434,9 @@ input:focus, textarea:focus, select:focus {
 .pub-services { margin: 0; padding-left: 20px; }
 /* 🛍 catalog (SKU รายชิ้น) */
 .pub-catalog { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 4px 0; }
-.pub-cat-item { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--card2, rgba(255,255,255,.02)); }
+.pub-cat-item { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--card2, rgba(255,255,255,.02)); overflow: hidden; }
+.pub-cat-img { display: block; width: calc(100% + 28px); margin: -12px -14px 10px; height: 150px; object-fit: cover; }
+.pub-cat-body { display: block; }
 .pub-cat-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .pub-cat-name { font-size: 14.5px; font-weight: 600; color: var(--ink); }
 .pub-cat-price { font-size: 14px; font-weight: 700; color: var(--accent); white-space: nowrap; }

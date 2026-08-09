@@ -111,6 +111,19 @@ describe('storefrontSeo', () => {
     expect((withLogo.jsonLd[0] as { logo?: string }).logo).toBe(`${ORIGIN}/b/x/logo.svg`);
     expect((seo.jsonLd[0] as { logo?: string }).logo).toBeUndefined();
   });
+  it('มีพิกัดจริง → emit GeoCoordinates + hasMap · ไม่มี → ไม่ emit', () => {
+    const geo = storefrontSeo({ ...SF, lat: 13.7563, lng: 100.5018 }, ORIGIN);
+    const b = geo.jsonLd[0] as { geo?: { '@type': string; latitude: number; longitude: number }; hasMap?: string };
+    expect(b.geo?.['@type']).toBe('GeoCoordinates');
+    expect(b.geo?.latitude).toBe(13.7563);
+    expect(b.geo?.longitude).toBe(100.5018);
+    expect(b.hasMap).toContain('13.7563,100.5018');
+    // ไม่มีพิกัด → ไม่ emit
+    expect((seo.jsonLd[0] as { geo?: unknown }).geo).toBeUndefined();
+    // พิกัด (0,0) = null island → ไม่ emit
+    const zero = storefrontSeo({ ...SF, lat: 0, lng: 0 }, ORIGIN);
+    expect((zero.jsonLd[0] as { geo?: unknown }).geo).toBeUndefined();
+  });
 });
 
 describe('directorySeo + directoryItemList', () => {
