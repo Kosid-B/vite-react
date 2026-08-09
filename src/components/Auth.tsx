@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { BRAND, COMPANY } from '../config';
+import { BRAND, COMPANY, AUTH } from '../config';
 import { track } from '../lib/analytics';
 import LegalLinks from './LegalLinks';
 import { pickNudgeVariant, buildNudge } from '../lib/authNudge';
@@ -21,6 +21,8 @@ function thaiAuthError(raw: string): string | null {
     return 'ยังไม่ได้ยืนยันอีเมล — เช็กกล่องจดหมาย/Spam หรือกด Magic Link ด้านล่าง';
   if (m.includes('email rate limit') || m.includes('rate limit'))
     return 'ขออีเมลถี่เกินไป รอสักครู่แล้วลองใหม่อีกครั้งครับ';
+  if (m.includes('unsupported phone provider') || m.includes('sms'))
+    return 'ระบบ SMS ยังไม่พร้อมตอนนี้ — เข้าสู่ระบบด้วยอีเมล (แท็บ ✉️ อีเมล) ได้เลยครับ';
   return null;
 }
 
@@ -198,13 +200,15 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
           </>
         )}
 
-        {/* สลับวิธีเข้าสู่ระบบ: อีเมล / เบอร์โทร */}
-        <div className="auth-method">
-          <button type="button" className={method === 'email' ? 'active' : ''}
-            onClick={() => { setMethod('email'); setMsg(null); }}>✉️ อีเมล</button>
-          <button type="button" className={method === 'phone' ? 'active' : ''}
-            onClick={() => { setMethod('phone'); setMsg(null); setOtpSent(false); }}>📱 เบอร์โทร</button>
-        </div>
+        {/* สลับวิธีเข้าสู่ระบบ: อีเมล / เบอร์โทร (เบอร์โทรโชว์เมื่อ SMS provider พร้อมเท่านั้น) */}
+        {AUTH.phoneOtp && (
+          <div className="auth-method">
+            <button type="button" className={method === 'email' ? 'active' : ''}
+              onClick={() => { setMethod('email'); setMsg(null); }}>✉️ อีเมล</button>
+            <button type="button" className={method === 'phone' ? 'active' : ''}
+              onClick={() => { setMethod('phone'); setMsg(null); setOtpSent(false); }}>📱 เบอร์โทร</button>
+          </div>
+        )}
 
         {method === 'email' ? (
           <>
