@@ -330,18 +330,26 @@ export function faqPageJsonLd(): object {
 const HOME_TITLE = 'CEO AI Thailand — สร้างและเดินธุรกิจด้วยทีมผู้บริหาร AI';
 const HOME_DESC = 'แพลตฟอร์มไทยสำหรับผู้ประกอบการ SME: สร้างบริษัท AI อัตโนมัติ เปิดหน้าร้านขายของ และ validate ไอเดียธุรกิจ ในที่เดียว เริ่มฟรี พัฒนาโดย B. Training';
 
+/** OG image ต่อแคมเปญ (1200×630 ใน public/og/) — seg ที่มีรูปเฉพาะ · seg อื่น = รูปกลาง */
+const SEG_OG: Partial<Record<HeroSeg, string>> = {
+  palm: '/og/palm.png',
+  food: '/og/food.png',
+};
+
 /** หน้าแรก / — รองรับ ?seg= ให้ OG/preview "ฝั่ง server" ตรงกับแคมเปญ (message-match ไม่พึ่ง JS)
- *  ดึง copy จาก HERO_VARIANTS = source of truth เดียวกับ hero ที่ client สลับ · canonical คง / เสมอ (กัน duplicate) */
+ *  ดึง copy จาก HERO_VARIANTS = source of truth เดียวกับ hero ที่ client สลับ · canonical คง / เสมอ (กัน duplicate)
+ *  รูป preview เลือกตาม seg (SEG_OG) ถ้ามี · ไม่มี → รูปกลาง (DEFAULT_OG) */
 export function homeSeo(origin: string, agg?: ReviewAggregate, seg?: string): SeoData {
   const hv = seg ? HERO_VARIANTS[seg as HeroSeg] : undefined;
   const useHv = hv && hv.seg !== 'default';
   const title = useHv ? `${hv.h1a} ${hv.h1bLines.join(' ')} | CEO AI Thailand` : HOME_TITLE;
   const description = useHv ? `${hv.subLead} ${hv.subRest}` : HOME_DESC;
+  const ogPath = (useHv && SEG_OG[hv.seg]) || DEFAULT_OG;
   return {
     title,
     description,
     canonicalUrl: origin + '/',
-    imageUrl: origin + DEFAULT_OG,
+    imageUrl: origin + ogPath,
     jsonLd: [organizationJsonLd(origin), softwareApplicationJsonLd(origin, agg), faqPageJsonLd()],
   };
 }
