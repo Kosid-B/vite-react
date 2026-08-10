@@ -7,6 +7,7 @@ import { DBD_SECTORS } from '../data/dbd';
 import { DE24_DEFS, DE24_PHASE_LABELS } from './de24Sync';
 import { validCoord } from './geo';
 import { SAFETY_COMMITMENTS, SAFETY_FAQ } from './aiSafety';
+import { HERO_VARIANTS, type HeroSeg } from './heroVariant';
 
 /** ข้อมูลร้านขั้นต่ำที่ใช้สร้าง SEO — ทั้ง Storefront (client) และแถวจาก REST (worker) เข้าได้ */
 export interface SeoStorefront {
@@ -326,10 +327,19 @@ export function faqPageJsonLd(): object {
 }
 
 /** SEO หน้าแรก (/) — title/desc canonical + schema ครบ (Organization + SoftwareApplication + FAQPage) */
-export function homeSeo(origin: string, agg?: ReviewAggregate): SeoData {
+const HOME_TITLE = 'CEO AI Thailand — สร้างและเดินธุรกิจด้วยทีมผู้บริหาร AI';
+const HOME_DESC = 'แพลตฟอร์มไทยสำหรับผู้ประกอบการ SME: สร้างบริษัท AI อัตโนมัติ เปิดหน้าร้านขายของ และ validate ไอเดียธุรกิจ ในที่เดียว เริ่มฟรี พัฒนาโดย B. Training';
+
+/** หน้าแรก / — รองรับ ?seg= ให้ OG/preview "ฝั่ง server" ตรงกับแคมเปญ (message-match ไม่พึ่ง JS)
+ *  ดึง copy จาก HERO_VARIANTS = source of truth เดียวกับ hero ที่ client สลับ · canonical คง / เสมอ (กัน duplicate) */
+export function homeSeo(origin: string, agg?: ReviewAggregate, seg?: string): SeoData {
+  const hv = seg ? HERO_VARIANTS[seg as HeroSeg] : undefined;
+  const useHv = hv && hv.seg !== 'default';
+  const title = useHv ? `${hv.h1a} ${hv.h1bLines.join(' ')} | CEO AI Thailand` : HOME_TITLE;
+  const description = useHv ? `${hv.subLead} ${hv.subRest}` : HOME_DESC;
   return {
-    title: 'CEO AI Thailand — สร้างและเดินธุรกิจด้วยทีมผู้บริหาร AI',
-    description: 'แพลตฟอร์มไทยสำหรับผู้ประกอบการ SME: สร้างบริษัท AI อัตโนมัติ เปิดหน้าร้านขายของ และ validate ไอเดียธุรกิจ ในที่เดียว เริ่มฟรี พัฒนาโดย B. Training',
+    title,
+    description,
     canonicalUrl: origin + '/',
     imageUrl: origin + DEFAULT_OG,
     jsonLd: [organizationJsonLd(origin), softwareApplicationJsonLd(origin, agg), faqPageJsonLd()],
