@@ -29,6 +29,7 @@ const PRIORITY: Record<string, string[]> = {
   seller: ['customers', 'roi', 'start', 'team'],
   newbie: ['validate', 'start', 'guide', 'team'],
   owner: ['team', 'decide', 'customers', 'progress'],
+  palm: ['validate', 'roi', 'customers', 'start'],
   default: ['validate', 'team', 'customers', 'start'],
 };
 

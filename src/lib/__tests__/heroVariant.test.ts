@@ -11,6 +11,7 @@ describe('segmentFor', () => {
     expect(segmentFor('?seg=seller')).toBe('seller');
     expect(segmentFor('?seg=newbie')).toBe('newbie');
     expect(segmentFor('?seg=owner')).toBe('owner');
+    expect(segmentFor('?seg=palm')).toBe('palm');
     // seg ไม่รู้จัก → ตกไปดู signal อื่น (ไม่มี) → default
     expect(segmentFor('?seg=bogus')).toBe('default');
   });
@@ -25,6 +26,8 @@ describe('segmentFor', () => {
     expect(segmentFor('?utm_campaign=sprint_shop')).toBe('seller');
     expect(segmentFor('?utm_content=sme_owner')).toBe('owner');
     expect(segmentFor('?utm_campaign=newbie_idea')).toBe('newbie');
+    expect(segmentFor('?utm_campaign=palm_drama')).toBe('palm');
+    expect(segmentFor('?utm_content=ไบโอดีเซล')).toBe('palm');
   });
 
   it('referrer/utm_source heuristic', () => {
@@ -50,6 +53,14 @@ describe('pickHeroVariant', () => {
     expect(v.h1a.length).toBeGreaterThan(0);
     expect(v.h1bLines.length).toBeGreaterThan(0);
     expect(v.ctaLabel).toContain('เปิดหน้าร้าน');
+  });
+
+  it('palm variant พาไป validate (bmc) + ข้อความปาล์ม', () => {
+    const v = pickHeroVariant('?seg=palm');
+    expect(v.seg).toBe('palm');
+    expect(v.goal).toBe('validate');
+    expect(v.page).toBe('bmc');
+    expect(v.ctaLabel).toContain('ปาล์ม');
   });
 
   it('default variant ไม่บังคับ goal (ให้ GoalChooser ถาม)', () => {
