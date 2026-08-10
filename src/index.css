@@ -64,8 +64,13 @@ body {
 .app { display: flex; min-height: 100vh; }
 
 .sidebar {
+  /* Sidebar เป็นโทนมืด "เสมอ" ไม่ว่าหน้าจะเป็นธีมมินิมอล(สว่าง)หรือมืด —
+     ล็อก token ในสโคปนี้ กันตัวอักษร/พื้นขาว (ออกแบบสำหรับพื้นมืด) หายบนพื้นสว่าง (bug ธีมมินิมอล) */
+  --cream:  #020617; --cream2: #0f172a; --cream3: #1e293b;
+  --ink:    #f8fafc; --ink2:   #e2e8f0; --ink3:   #aab6c8; --ink4: #8592a6;
+  --sand:   #334155; --white:  #0f172a;
   width: 230px;
-  background: var(--cream2);
+  background: #0f172a;
   display: flex;
   flex-direction: column;
   position: fixed;
