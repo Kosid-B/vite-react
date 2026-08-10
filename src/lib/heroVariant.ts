@@ -9,7 +9,7 @@
 
 import type { OnboardGoal, PageId } from '../types';
 
-export type HeroSeg = 'default' | 'seller' | 'newbie' | 'owner';
+export type HeroSeg = 'default' | 'seller' | 'newbie' | 'owner' | 'palm';
 
 export interface HeroVariant {
   seg: HeroSeg;
@@ -72,6 +72,20 @@ export const HERO_VARIANTS: Record<HeroSeg, HeroVariant> = {
     goal: 'aicompany',
     page: 'aicompany',
   },
+  // แคมเปญปาล์ม/เกษตรแปรรูป (message-match กับรีล/คารูเซล) → "วิกฤต = โอกาสสองด้าน"
+  // ยิงคนในซัพพลายเชนปาล์ม: ชาวสวน/โรงสกัด (อยากกระจายความเสี่ยง+แปรรูป) และ SME แปรรูป (คว้าวัตถุดิบถูก)
+  // → พาไป validate ไอเดียก่อนลงทุน (honest: ต้องมีดีมานด์จริง ไม่ใช่เห็นของถูกแล้วรีบผลิต)
+  palm: {
+    seg: 'palm',
+    badge: '✦  สำหรับคนในซัพพลายเชนปาล์ม & เกษตรแปรรูป  ✦',
+    h1a: 'ปาล์มราคาผันผวน = วิกฤตของบางคน',
+    h1bLines: ['แต่คือจังหวะทองของคุณ', 'ถ้าอ่านซัพพลายเชนออก'],
+    subLead: 'เงินไม่ได้หาย มันย้ายที่ — ทีม AI ช่วยหาว่าคุณอยู่ฝั่งไหน แล้วต่อยอดให้ถูกจังหวะ',
+    subRest: 'ทดสอบไอเดียแปรรูปก่อนลงทุน (MIT 24 ขั้น) · CFO คำนวณกำไรจริง · เปิดร้านหาลูกค้า B2B — เริ่มฟรี',
+    ctaLabel: '🌴 หาโอกาสจากซัพพลายเชนปาล์ม',
+    goal: 'validate',
+    page: 'bmc',
+  },
 };
 
 const hit = (hay: string, needles: string[]) => needles.some((n) => hay.includes(n));
@@ -82,9 +96,9 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
   try { params = new URLSearchParams(search || ''); } catch { return 'default'; }
   const get = (k: string) => (params.get(k) ?? '').toLowerCase();
 
-  // 1) ระบุตรง ๆ (?seg=seller|newbie|owner) — ใช้ในลิงก์แคมเปญของเราเอง
+  // 1) ระบุตรง ๆ (?seg=seller|newbie|owner|palm) — ใช้ในลิงก์แคมเปญของเราเอง
   const seg = get('seg');
-  if (seg === 'seller' || seg === 'newbie' || seg === 'owner') return seg;
+  if (seg === 'seller' || seg === 'newbie' || seg === 'owner' || seg === 'palm') return seg;
 
   // 2) ?goal= (เผื่อสะพานจากเว็บบริษัท)
   const goal = get('goal');
@@ -94,6 +108,7 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
 
   // 3) utm keyword (content/campaign/term รวมกัน)
   const utm = [get('utm_content'), get('utm_campaign'), get('utm_term')].join(' ');
+  if (hit(utm, ['palm', 'ปาล์ม', 'biodiesel', 'ไบโอดีเซล', 'เกษตรแปรรูป'])) return 'palm';
   if (hit(utm, ['seller', 'shop', 'store', 'ร้าน', 'ขายของ'])) return 'seller';
   if (hit(utm, ['owner', 'sme', 'scale', 'system', 'ระบบ', 'เจ้าของ'])) return 'owner';
   if (hit(utm, ['newbie', 'idea', 'start', 'เริ่ม', 'ไอเดีย', 'มือใหม่'])) return 'newbie';
