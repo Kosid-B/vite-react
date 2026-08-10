@@ -402,6 +402,14 @@ describe('schema JSON-LD (GEO/AEO)', () => {
     // canonical คง / เสมอ (กัน duplicate content) + schema ครบ
     expect(palm.canonicalUrl).toBe(ORIGIN + '/');
     expect(palm.jsonLd).toHaveLength(3);
+    // รูป OG preview ต่างตามแคมเปญ
+    expect(palm.imageUrl).toBe(ORIGIN + '/og/palm.png');
+    expect(food.imageUrl).toBe(ORIGIN + '/og/food.png');
+  });
+
+  it('homeSeo seg ไม่มีรูปเฉพาะ → ใช้ OG กลาง', () => {
+    expect(homeSeo(ORIGIN, undefined, 'seller').imageUrl).toBe(ORIGIN + '/og-image.png');
+    expect(homeSeo(ORIGIN).imageUrl).toBe(ORIGIN + '/og-image.png');
   });
 
   it('homeSeo seg ไม่รู้จัก / default → ใช้ title กลาง', () => {
