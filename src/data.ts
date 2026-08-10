@@ -1,4 +1,5 @@
 import type { AppData } from './types';
+import { DATA_DRIVEN_AGENT } from './lib/dataDrivenAgent';
 
 export const DEFAULT_DATA: AppData = {
   stages: [
@@ -441,12 +442,15 @@ export const DEFAULT_DATA: AppData = {
         mandate: 'วางแผนการตลาด คอนเทนต์ และแคมเปญหาลูกค้าใหม่ผ่านช่องทางออนไลน์',
         model: 'claude-sonnet-4-6', status: 'idle', reportsTo: 'a-ceo',
       },
+      // ผู้บริหารสายข้อมูล/มาตรฐาน (Data-Driven Agent) — ตัดสินใจด้วยข้อมูล ISO/TIS + Supabase + Lean
+      DATA_DRIVEN_AGENT,
     ],
     tasks: [
       { id: 't1', agentId: 'a-cmo', title: 'ร่างแคมเปญเปิดตัวสินค้าใหม่บน Facebook', detail: 'กำหนดกลุ่มเป้าหมาย งบ และข้อความโฆษณา 3 เวอร์ชัน', status: 'in_progress' },
       { id: 't2', agentId: 'a-cto', title: 'วิเคราะห์คู่แข่ง 5 รายด้วย Web Search', detail: 'ดึงราคาและรีวิวคู่แข่ง 5 ราย ผ่าน Serper.dev (Google Search)', status: 'queued', useWebSearch: true },
       { id: 't4', agentId: 'a-cmo', title: 'ตรวจร่างอีเมลนิวส์เลตเตอร์ก่อนส่ง', detail: 'รอบอร์ด/CEO รีวิวก่อนยิงจริง', status: 'review' },
       { id: 't3', agentId: 'a-ceo', title: 'สรุปแผนรายสัปดาห์เสนอบอร์ด', detail: 'รวมความคืบหน้าและของบอนุมัติ', status: 'done' },
+      { id: 't5', agentId: 'a-cdo', title: 'ออกแบบโครงสร้างข้อมูล + ตรวจมาตรฐานสำหรับโมดูลใหม่', detail: 'อ้างอิง TIS/ISO → เสนอ schema (ตาราง/RLS) บน Supabase + Kanban งาน แบบ Actionable', status: 'queued' },
     ],
     approvals: [
       { id: 'ap1', agentId: 'a-cmo', title: 'อนุมัติงบยิงแอด Facebook ฿15,000', detail: 'แคมเปญเปิดตัวสินค้าใหม่ คาดได้ลูกค้า ~120 ราย', impact: 'งบ ฿15,000', status: 'pending' },
