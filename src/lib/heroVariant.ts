@@ -9,7 +9,7 @@
 
 import type { OnboardGoal, PageId } from '../types';
 
-export type HeroSeg = 'default' | 'seller' | 'newbie' | 'owner' | 'palm';
+export type HeroSeg = 'default' | 'seller' | 'newbie' | 'owner' | 'palm' | 'food';
 
 export interface HeroVariant {
   seg: HeroSeg;
@@ -86,6 +86,20 @@ export const HERO_VARIANTS: Record<HeroSeg, HeroVariant> = {
     goal: 'validate',
     page: 'bmc',
   },
+  // แคมเปญแม่ค้าอาหาร/ร้านตามสั่ง/อาหารถุง (message-match กับคอนเทนต์ค่าครองชีพ-ต้นทุนอาหาร)
+  // pain จริง: ขายดีแต่ไม่เหลือเงิน เพราะไม่รู้ต้นทุนต่อจาน/ถุง + ยุคของแพงลูกค้าเทียบราคา
+  // → พาไปทีม AI (CFO คำนวณต้นทุน-กำไร) แทนการเดาราคา
+  food: {
+    seg: 'food',
+    badge: '✦  สำหรับแม่ค้าอาหาร ร้านตามสั่ง & อาหารถุง  ✦',
+    h1a: 'ขายอาหารทุกวัน แต่สิ้นเดือนไม่เหลือเงิน?',
+    h1bLines: ['ให้ CFO AI คำนวณต้นทุนจริง', 'ตั้งราคาที่มีกำไร'],
+    subLead: 'ยุคของแพง ลูกค้าเทียบราคาทุกบาท — รู้ต้นทุนต่อจาน/ต่อถุงจริง ๆ ก่อนตั้งราคา จะได้ไม่ขายแทบฟรี',
+    subRest: 'CFO AI ช่วยคิดต้นทุน+กำไร · เปิดหน้าร้านรับออเดอร์ · หาลูกค้าประจำ/ออฟฟิศ (B2B) — เริ่มฟรี',
+    ctaLabel: '🍲 คำนวณต้นทุน + ตั้งราคาให้มีกำไร',
+    goal: 'aicompany',
+    page: 'aicompany',
+  },
 };
 
 const hit = (hay: string, needles: string[]) => needles.some((n) => hay.includes(n));
@@ -98,7 +112,7 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
 
   // 1) ระบุตรง ๆ (?seg=seller|newbie|owner|palm) — ใช้ในลิงก์แคมเปญของเราเอง
   const seg = get('seg');
-  if (seg === 'seller' || seg === 'newbie' || seg === 'owner' || seg === 'palm') return seg;
+  if (seg === 'seller' || seg === 'newbie' || seg === 'owner' || seg === 'palm' || seg === 'food') return seg;
 
   // 2) ?goal= (เผื่อสะพานจากเว็บบริษัท)
   const goal = get('goal');
@@ -109,6 +123,7 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
   // 3) utm keyword (content/campaign/term รวมกัน)
   const utm = [get('utm_content'), get('utm_campaign'), get('utm_term')].join(' ');
   if (hit(utm, ['palm', 'ปาล์ม', 'biodiesel', 'ไบโอดีเซล', 'เกษตรแปรรูป'])) return 'palm';
+  if (hit(utm, ['food', 'อาหาร', 'แกงถุง', 'ตามสั่ง', 'แม่ค้า', 'ต้นทุนอาหาร'])) return 'food';
   if (hit(utm, ['seller', 'shop', 'store', 'ร้าน', 'ขายของ'])) return 'seller';
   if (hit(utm, ['owner', 'sme', 'scale', 'system', 'ระบบ', 'เจ้าของ'])) return 'owner';
   if (hit(utm, ['newbie', 'idea', 'start', 'เริ่ม', 'ไอเดีย', 'มือใหม่'])) return 'newbie';

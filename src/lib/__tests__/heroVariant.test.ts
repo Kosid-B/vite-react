@@ -12,6 +12,7 @@ describe('segmentFor', () => {
     expect(segmentFor('?seg=newbie')).toBe('newbie');
     expect(segmentFor('?seg=owner')).toBe('owner');
     expect(segmentFor('?seg=palm')).toBe('palm');
+    expect(segmentFor('?seg=food')).toBe('food');
     // seg ไม่รู้จัก → ตกไปดู signal อื่น (ไม่มี) → default
     expect(segmentFor('?seg=bogus')).toBe('default');
   });
@@ -28,6 +29,8 @@ describe('segmentFor', () => {
     expect(segmentFor('?utm_campaign=newbie_idea')).toBe('newbie');
     expect(segmentFor('?utm_campaign=palm_drama')).toBe('palm');
     expect(segmentFor('?utm_content=ไบโอดีเซล')).toBe('palm');
+    expect(segmentFor('?utm_campaign=food_cost')).toBe('food');
+    expect(segmentFor('?utm_content=แม่ค้าแกงถุง')).toBe('food');
   });
 
   it('referrer/utm_source heuristic', () => {
@@ -61,6 +64,14 @@ describe('pickHeroVariant', () => {
     expect(v.goal).toBe('validate');
     expect(v.page).toBe('bmc');
     expect(v.ctaLabel).toContain('ปาล์ม');
+  });
+
+  it('food variant พาไปทีม AI (aicompany) + ข้อความต้นทุน', () => {
+    const v = pickHeroVariant('?seg=food');
+    expect(v.seg).toBe('food');
+    expect(v.goal).toBe('aicompany');
+    expect(v.page).toBe('aicompany');
+    expect(v.ctaLabel).toContain('ต้นทุน');
   });
 
   it('default variant ไม่บังคับ goal (ให้ GoalChooser ถาม)', () => {
