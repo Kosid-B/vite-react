@@ -188,7 +188,9 @@ export default {
       if (url.pathname === '/') {
         try {
           const agg = await fetchReviewsAggregate(env).catch(() => null);
-          return injectSeo(await env.ASSETS.fetch(request), homeSeo(origin, agg ?? undefined));
+          // ?seg= (แคมเปญ palm/food/…) → inject OG/preview ตรงกลุ่มฝั่ง server ไม่พึ่ง JS
+          const seg = url.searchParams.get('seg') ?? undefined;
+          return injectSeo(await env.ASSETS.fetch(request), homeSeo(origin, agg ?? undefined, seg));
         }
         catch { /* fallback → shell เดิม */ }
       }

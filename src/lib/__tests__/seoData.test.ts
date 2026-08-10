@@ -391,6 +391,23 @@ describe('schema JSON-LD (GEO/AEO)', () => {
     const app = seo.jsonLd.find(o => (o as Record<string, unknown>)['@type'] === 'SoftwareApplication') as Record<string, unknown>;
     expect((app.aggregateRating as Record<string, unknown>).reviewCount).toBe(8);
   });
+
+  it('homeSeo ?seg= → OG/preview ตรงแคมเปญฝั่ง server (message-match)', () => {
+    const palm = homeSeo(ORIGIN, undefined, 'palm');
+    expect(palm.title).toContain('ปาล์ม');
+    expect(palm.title).toContain('ซัพพลายเชน'); // มาจาก h1bLines
+    expect(palm.description).toContain('แปรรูป'); // มาจาก subLead+subRest
+    const food = homeSeo(ORIGIN, undefined, 'food');
+    expect(food.title).toContain('อาหาร');
+    // canonical คง / เสมอ (กัน duplicate content) + schema ครบ
+    expect(palm.canonicalUrl).toBe(ORIGIN + '/');
+    expect(palm.jsonLd).toHaveLength(3);
+  });
+
+  it('homeSeo seg ไม่รู้จัก / default → ใช้ title กลาง', () => {
+    expect(homeSeo(ORIGIN, undefined, 'bogus').title).toBe(homeSeo(ORIGIN).title);
+    expect(homeSeo(ORIGIN, undefined, 'default').title).toBe(homeSeo(ORIGIN).title);
+  });
 });
 
 describe('faqPageHtml (/faq static page)', () => {
