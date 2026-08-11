@@ -133,6 +133,7 @@ body {
   padding: 28px 24px 20px;
   border-bottom: 1px solid rgba(255,255,255,.08);
   position: relative;
+  flex-shrink: 0; /* กัน flex บีบ brand จนเนื้อหา (sub/badge) ล้นทับ nav เมื่อ sidebar สูงเกินจอ/peek */
 }
 .sidebar-close { display: none; position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border: none; background: rgba(255,255,255,.12); color: #fff; border-radius: 6px; cursor: pointer; font-size: 18px; align-items: center; justify-content: center; line-height: 1; transition: background .15s; }
 .sidebar-close:hover { background: rgba(255,255,255,.22); }
