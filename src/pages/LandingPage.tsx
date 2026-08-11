@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { track } from '../lib/analytics';
 import { pickHeroVariant } from '../lib/heroVariant';
 import { useLandingTrace } from '../hooks/useLandingTrace';
+import { markLandingCta, markLandingSignup } from '../lib/landingFunnel';
 import { heroAbVariant, HERO_AB_COPY, type HeroAb } from '../lib/heroExperiment';
 import { layoutAbVariant, getBrowserAbId, type LayoutAb } from '../lib/landingLayoutExperiment';
 import LegalLinks from '../components/LegalLinks';
@@ -189,9 +190,6 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
   const [navHover, setNavHover] = useState(false);
   const [guestHover, setGuestHover] = useState(false);
 
-  // วัดความลึกของความสนใจ (scroll/dwell/exit-depth/rage) — PDPA-safe · ตอบ "คนค้างตรงไหน ไม่สมัคร"
-  useLandingTrace();
-
   // ── ธีมหน้า Landing (เข้ม/มินิมอล) — ผู้ใช้กดเลือกเอง, บันทึกลง localStorage เดียวกับในแอป ──
   const [theme, setThemeState] = useState<ThemeId>(() => readTheme());
   const C = theme === 'minimal' ? LIGHT_C : DARK_C;
@@ -209,6 +207,10 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
     catch { return pickHeroVariant(''); }
   }, []);
   useEffect(() => { track('landing_hero_variant', { seg: hero.seg }); }, [hero.seg]);
+
+  // วัดความลึกของความสนใจ (scroll depth + dwell + exit + rage) — PDPA-safe · first-party funnel
+  // ตอบ "คนค้างตรงไหน · หยุดดูนานไหม · ไม่กดสมัคร" ทั้งใน GA และแผงแอดมิน (ผูก seg เพื่อแยกตามแคมเปญ)
+  useLandingTrace(hero.seg);
 
   // A/B ทดสอบพาดหัว (เฉพาะ seg 'default' = คนที่ยังไม่ระบุกลุ่ม) — assign คงที่ต่อ browser
   const heroAb = useMemo<HeroAb | null>(() => {
@@ -262,8 +264,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       }
     } catch { /* noop */ }
     const ab = heroAb ?? '-';
+    markLandingCta(); // funnel: กด CTA หลัก
     if (onTryGuest) { track('landing_cta_click', { cta: 'hero_try_guest', seg: hero.seg, ab, layout: layoutAb }); onTryGuest(); }
-    else { track('landing_cta_click', { cta: 'hero_free_trial', seg: hero.seg, ab, layout: layoutAb }); onGetStarted(); }
+    else { markLandingSignup(); track('landing_cta_click', { cta: 'hero_free_trial', seg: hero.seg, ab, layout: layoutAb }); onGetStarted(); }
   };
 
   // Challenger headline — สลับ content 2 ครั้ง/วัน ที่เวลาไทย 11:00 และ 20:00 (เช็คทุกนาที)
@@ -321,7 +324,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
             <span style={{ display: 'inline' }}>{themeLabel(nextTheme(theme))}</span>
           </button>
           <button
-            onClick={onGetStarted}
+            onClick={() => { markLandingSignup(); onGetStarted(); }}
             onMouseEnter={() => setNavHover(true)}
             onMouseLeave={() => setNavHover(false)}
             style={{ padding: '8px 20px', borderRadius: 8, border: `1px solid ${C.cyan5}`, background: navHover ? 'rgba(6,182,212,0.15)' : 'transparent', color: C.cyan4, fontFamily: 'inherit', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all .2s' }}
@@ -400,7 +403,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           {onTryGuest && (
             <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
               <button
-                onClick={() => { track('landing_cta_click', { cta: 'hero_signup', layout: layoutAb }); onGetStarted(); }}
+                onClick={() => { markLandingSignup(); track('landing_cta_click', { cta: 'hero_signup', layout: layoutAb }); onGetStarted(); }}
                 onMouseEnter={() => setGuestHover(true)}
                 onMouseLeave={() => setGuestHover(false)}
                 style={{
@@ -420,7 +423,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           <div style={{ marginTop: 22 }}>
             <a
               href="/shop"
-              onClick={() => track('landing_cta_click', { cta: 'hero_shop_signup', layout: layoutAb })}
+              onClick={() => { markLandingCta(); track('landing_cta_click', { cta: 'hero_shop_signup', layout: layoutAb }); }}
               style={{ color: C.slate5, fontSize: 13.5, textDecoration: 'none', borderBottom: `1px dashed ${C.border}`, paddingBottom: 1 }}
             >
               หรือแค่อยากเปิดร้านฝากขายสินค้า? 🏪 เริ่มฟรี · รายวัน ฿19
