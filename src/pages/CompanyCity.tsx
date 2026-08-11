@@ -11,6 +11,7 @@ import { streakCount } from '../lib/streak';
 import { track } from '../lib/analytics';
 import CityTreasury from '../components/CityTreasury';
 import CfoAnalysis from '../components/CfoAnalysis';
+import LeakFinder from '../components/LeakFinder';
 import ResiliencePlanner from '../components/ResiliencePlanner';
 import ProofCardShare from '../components/ProofCardShare';
 import TestimonialForm from '../components/TestimonialForm';
@@ -68,6 +69,7 @@ export default function CompanyCity({ data, onNavigate, onUpdate, wsId = null }:
 
       {/* CFO AI — วิเคราะห์สุขภาพการเงินจากตัวเลขจริงในคลังเมือง */}
       <CfoAnalysis data={data} />
+      <LeakFinder />
 
       {/* Resilience Planner — จำลองวิกฤต (Superorganism เสา 1: อยู่รอดทุกวิกฤต) */}
       <ResiliencePlanner data={data} />
