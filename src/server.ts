@@ -103,6 +103,16 @@ export default {
     const url = new URL(request.url);
     const origin = env.SITE_ORIGIN || url.origin;
 
+    // Route /api/guest-ask → guest ลอง AI จริงก่อนสมัคร (DO เดียวร่วมกัน 'guest-pool' + cap ต่อ IP/วัน)
+    // แก้ pain "คิดว่าต้องสมัครถึงใช้ AI ได้" — ให้เห็นค่าจริงก่อน แล้วค่อยชวนสมัคร
+    if (url.pathname === '/api/guest-ask' && request.method === 'POST') {
+      const id = env.CeoAiAgent.idFromName('guest-pool');
+      const stub = env.CeoAiAgent.get(id);
+      const headers = new Headers(request.headers);
+      headers.set('x-guest-ask', '1');                       // DO เช็ค flag นี้ → เข้า guest quota path
+      return stub.fetch(new Request(request, { headers }));  // คง body + cf-connecting-ip เดิม
+    }
+
     // Route /api/agent/CeoAiAgent/<agentId> → Durable Object แยกต่อ workspace (R8)
     if (url.pathname.startsWith('/api/agent/')) {
       const seg = url.pathname.split('/')[4] ?? '';           // /api/agent/CeoAiAgent/<id>
