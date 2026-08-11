@@ -290,9 +290,14 @@ public.ai_topup           — Top-up packs: credits AI เพิ่มต่อ 
 
 ### Marketing connectors / analytics sinks
 ```
-Amplitude (product analytics: funnel/retention/behavioral) — src/lib/amplitude.ts ส่ง event ชุดเดียวกับ GA
-  ผ่าน track() (analytics.ts) เข้า HTTP API v2 · gate ด้วย VITE_AMPLITUDE_KEY (public client-side key เหมือน GA id
-  — ไม่มีคีย์ = no-op) · device_id นิรนามฝั่ง client (localStorage) ไม่เก็บ PII · ตั้งคีย์ผ่าน GitHub Secret/wrangler var
+Amplitude (product analytics: funnel/retention/cohort + Session Replay) — src/lib/amplitude.ts
+  ส่ง event ชุดเดียวกับ GA ผ่าน track() (analytics.ts) เข้า Amplitude Browser SDK + plugin-session-replay-browser
+  (อัดเมาส์/คลิก/สโครล ดูว่าคนค้าง/ลังเลตรงไหน) · SDK โหลดแบบ dynamic import = ไม่บวมบันเดิลหลักเมื่อไม่มีคีย์
+  gate ด้วย VITE_AMPLITUDE_KEY (public client key เหมือน GA id — ไม่มี = inert สนิท) · Session Replay mask
+  ระดับ 'medium' = ปิดบังทุก input (อีเมล/ชื่อ/เบอร์) อัตโนมัติ (PDPA) · sampleRate ปรับผ่าน VITE_AMPLITUDE_REPLAY_SR
+  (default 1) · identifyAmplitudeUser(uid) ผูกตอน login / resetAmplitudeUser() ตอน logout (App.tsx) ·
+  tab_open ยิงตอนสลับหน้า (feature funnel) · ควร gate ด้วย consent เหมือน GA/Pixel ที่จุดเรียก track()
+  ⚠️ deps เพิ่ม nanoid override ^3.3.17 (rrweb ดึง nanoid <3.3.17 = high vuln → CI dependency-audit fail ถ้าไม่ override)
 HubSpot (CRM + marketing automation) — supabase/functions/hubspot-sync (cron pattern เดียวกับ lead-nurture)
   upsert lead อีเมล→contact · standard properties เท่านั้น (custom ceo_ai_* uncomment เมื่อสร้าง property แล้ว)
   Secret: HUBSPOT_TOKEN (Private App · crm.objects.contacts.write) + CRON_SECRET · deploy: supabase functions deploy hubspot-sync --no-verify-jwt

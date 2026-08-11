@@ -1,22 +1,19 @@
 import { describe, it, expect } from 'vitest';
-import { buildAmplitudePayload } from '../amplitude';
+import { replaySampleRate } from '../amplitude';
 
-describe('buildAmplitudePayload', () => {
-  it('ประกอบ body ตามสเปก HTTP API v2', () => {
-    const body = buildAmplitudePayload('KEY123', 'dev-abc', 'landing_cta_click', { seg: 'food', pct: 50 }, 1_700_000_000_000);
-    expect(body.api_key).toBe('KEY123');
-    expect(body.events).toHaveLength(1);
-    expect(body.events[0]).toMatchObject({
-      event_type: 'landing_cta_click',
-      device_id: 'dev-abc',
-      time: 1_700_000_000_000,
-      platform: 'Web',
-      event_properties: { seg: 'food', pct: 50 },
-    });
+describe('replaySampleRate', () => {
+  it('ค่าปกติ 0..1 ผ่านตรง', () => {
+    expect(replaySampleRate('1')).toBe(1);
+    expect(replaySampleRate('0')).toBe(0);
+    expect(replaySampleRate('0.3')).toBe(0.3);
   });
-
-  it('event_properties ว่างได้ (ไม่พัง)', () => {
-    const body = buildAmplitudePayload('K', 'd', 'landing_dwell', {}, 1);
-    expect(body.events[0].event_properties).toEqual({});
+  it('ไม่มีค่า/พาร์สไม่ได้ → 1 (อัดทุกเซสชัน)', () => {
+    expect(replaySampleRate(undefined)).toBe(1);
+    expect(replaySampleRate('abc')).toBe(1);
+    expect(replaySampleRate('')).toBe(1);
+  });
+  it('clamp เกินช่วง', () => {
+    expect(replaySampleRate('2')).toBe(1);
+    expect(replaySampleRate('-0.5')).toBe(0);
   });
 });

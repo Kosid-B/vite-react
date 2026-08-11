@@ -13,6 +13,7 @@ import { rememberSourceOnce, readRememberedSource } from './lib/attribution';
 import { readBizHint } from './lib/bizHint';
 import { isRealActivation } from './lib/setupWizard';
 import { track } from './lib/analytics';
+import { identifyAmplitudeUser, resetAmplitudeUser } from './lib/amplitude';
 import { detectEmotionalMoment, type EmotionalMoment } from './lib/emotionalTriggers';
 import Auth from './components/Auth';
 import LandingPage from './pages/LandingPage';
@@ -298,6 +299,16 @@ export default function App() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user.id]);
+
+  // Amplitude: ผูก event กับผู้ใช้ (uuid นิรนาม) ตอน login → retention/cohort รายคน · ล้างตอน logout
+  useEffect(() => {
+    const uid = session?.user.id;
+    if (uid) identifyAmplitudeUser(uid);
+    else resetAmplitudeUser();
+  }, [session?.user.id]);
+
+  // product funnel: ยิง tab_open ทุกครั้งที่เปลี่ยนหน้า (ดูว่าฟีเจอร์ไหนถูกเปิด/ทิ้งกลางทาง)
+  useEffect(() => { track('tab_open', { page: activePage }); }, [activePage]);
 
   // โหลดข้อมูลของเวิร์กสเปซที่เลือก — จัดการ race สลับ ws ไม่ให้ข้อมูลข้ามกัน
   useEffect(() => {
