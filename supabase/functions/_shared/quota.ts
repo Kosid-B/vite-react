@@ -64,3 +64,64 @@ export async function enforceAiQuota(req: Request, clientId?: string): Promise<R
     return null; // fail-open เสมอ
   }
 }
+
+// ── โมเดล token (0052) — บังคับด้วย token จริง แทนจำนวน call ──────────────────────
+//   ship dark: ทำงานเฉพาะเมื่อ ENFORCE_AI_TOKENS=true (คู่ขนาน ENFORCE_AI_QUOTA)
+//   คู่: (1) enforceAiTokens() ตรวจก่อนเรียก Claude  (2) recordAiTokens() บันทึก token จริงหลังตอบ
+
+function supaFor(req: Request) {
+  const url = Deno.env.get("SUPABASE_URL");
+  const anon = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!url || !anon) return null;
+  const authHeader = req.headers.get("Authorization") ?? "";
+  return createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
+}
+
+function guestKeyFor(req: Request, clientId?: string): string | null {
+  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
+  return clientId || ip || null;
+}
+
+/** ตรวจโควตา token ก่อนเรียก Claude — คืน 429 ถ้า token ที่ใช้ไปแล้ว >= เพดาน · null = อนุญาต/fail-open */
+export async function enforceAiTokens(req: Request, clientId?: string): Promise<Response | null> {
+  if (Deno.env.get("ENFORCE_AI_TOKENS") !== "true") return null;
+  try {
+    const supa = supaFor(req);
+    if (!supa) return null; // env ไม่ครบ → fail-open
+    const { data, error } = await supa.rpc("check_ai_tokens", { p_client_id: guestKeyFor(req, clientId) });
+    if (error) { console.error("[quota] check_ai_tokens error (fail-open):", error.message); return null; }
+    if (data && data.allowed === false) {
+      const isGuest = data.plan === "guest";
+      return new Response(
+        JSON.stringify({
+          error: "token_quota_exceeded",
+          plan: data.plan, used: data.used, quota: data.quota,
+          message: isGuest
+            ? "คุณใช้ AI ครบโควตา token ฟรีของวันนี้แล้ว — สมัคร/เข้าสู่ระบบเพื่อใช้ต่อ"
+            : "ใช้ token AI ครบเดือนนี้แล้ว — ซื้อ token เพิ่ม หรือรอรอบเดือนถัดไป",
+        }),
+        { status: 429, headers: { ...cors, "content-type": "application/json" } },
+      );
+    }
+    return null;
+  } catch (e) {
+    console.error("[quota] enforceAiTokens threw (fail-open):", String(e));
+    return null;
+  }
+}
+
+/** บันทึก token จริงที่ใช้ (in+out) หลัง Claude ตอบ — fire-and-forget, ไม่มีวันโยน error ออก */
+export async function recordAiTokens(req: Request, inTok: number, outTok: number, clientId?: string): Promise<void> {
+  if (Deno.env.get("ENFORCE_AI_TOKENS") !== "true") return;
+  try {
+    const supa = supaFor(req);
+    if (!supa) return;
+    const p_in = Math.max(0, Math.round(inTok || 0));
+    const p_out = Math.max(0, Math.round(outTok || 0));
+    if (p_in + p_out === 0) return;
+    const { error } = await supa.rpc("record_ai_tokens", { p_in, p_out, p_client_id: guestKeyFor(req, clientId) });
+    if (error) console.error("[quota] record_ai_tokens error (ignored):", error.message);
+  } catch (e) {
+    console.error("[quota] recordAiTokens threw (ignored):", String(e));
+  }
+}

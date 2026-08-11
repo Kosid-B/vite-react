@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AppData, PlanId, Invoice, SubStatus } from '../types';
 import { promptPayPayload, promptPayQrUrl, baht } from '../utils';
-import { BRAND, COMPANY, PAYMENT } from '../config';
-import { getAiUsage, PLAN_AI_CALLS, fetchServerUsage, type ServerUsage } from '../lib/usage';
+import { BRAND, COMPANY, PAYMENT, TOKENS } from '../config';
+import { getAiUsage, PLAN_AI_CALLS, fetchServerUsage, type ServerUsage, fetchServerTokens, type ServerTokens } from '../lib/usage';
 import { TOPUP_PACKS, pricePerCall, type TopupPack } from '../lib/topup';
+import { TOKEN_PACKS, pricePerMillionThb, type TokenPack } from '../lib/tokenEconomics';
 import { GRACE_DAYS, annualPrice } from '../lib/access';
 import { foundingEffectivePlan } from '../lib/founding';
 import { grantWelcomeKit } from '../lib/welcomeKit';
@@ -13,7 +14,7 @@ import FoundingBanner from '../components/FoundingBanner';
 import { PLAN_COST as COST, BLENDED_CALL_THB } from '../lib/planCost';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { submitPaymentSlip, listMyPayments, verifySlip, slipReasonText, submitTopupRequest,
-  submitTopupSlip, verifyTopupSlip } from '../lib/payments';
+  submitTopupSlip, verifyTopupSlip, submitTokenTopupRequest } from '../lib/payments';
 import { track } from '../lib/analytics';
 import ExpertEdge from '../components/ExpertEdge';
 
@@ -133,6 +134,12 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
   // usage: ใช้ค่าจริงจาก server (นับต่อ workspace + รวม top-up) ถ้าออนไลน์ · fallback localStorage
   const [srvUsage, setSrvUsage] = useState<ServerUsage | null>(null);
   useEffect(() => { fetchServerUsage().then(setSrvUsage); }, []);
+  // token meter (โมเดลใหม่) — โหลดเฉพาะเมื่อ TOKENS.live (ไม่งั้นมิเตอร์ยังเป็น "จำนวน call" ตามที่ server บังคับจริง)
+  const [srvTokens, setSrvTokens] = useState<ServerTokens | null>(null);
+  useEffect(() => { if (TOKENS.live) fetchServerTokens().then(setSrvTokens); }, []);
+  const tokUsed = srvTokens?.used ?? 0;
+  const tokQuota = srvTokens?.quota ?? 0;
+  const tokPct = tokQuota > 0 ? Math.min(100, Math.round((tokUsed / tokQuota) * 100)) : 0;
   const aiUsed = srvUsage ? srvUsage.used : getAiUsage().count;
   // โควตา: Founding Member ที่จ่าย Starter → ใช้โควตาระดับ Growth (700)
   const aiQuota = srvUsage ? srvUsage.quota : PLAN_AI_CALLS[foundingEffectivePlan(data.subscription.plan, data.foundingMember, new Date())];
@@ -174,6 +181,16 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     setTopupBusy(false);
     if (res.ok) { setTopupSent(true); setTopupResult(`✅ เปิด +${topupPack.calls.toLocaleString()} AI calls แล้ว!`); }
     else setTopupResult('❌ ' + slipReasonText(res.reason) + ' — หรือกด "แจ้งว่าโอนแล้ว" ให้ทีมงานเปิดให้');
+  }
+  // ── ซื้อ token เพิ่ม (โมเดลใหม่ TOKENS.live) — แจ้งโอน → admin เปิด token ให้ (จำนวน = server-side) ──
+  const [tokPack, setTokPack] = useState<TokenPack | null>(null);
+  const [tokSent, setTokSent] = useState(false);
+  async function notifyTokenTopup() {
+    if (!wsId || !tokPack) return;
+    setTopupBusy(true);
+    const err = await submitTokenTopupRequest(wsId, { id: tokPack.id, tokens: tokPack.tokens, price: tokPack.priceThb });
+    setTopupBusy(false);
+    if (!err) { setTokSent(true); track('token_topup_requested', { pack: tokPack.id }); }
   }
   const [payBusy, setPayBusy] = useState(false);
   const [payErr, setPayErr] = useState<string | null>(null);
@@ -498,12 +515,14 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
         <div className="plg-card">
           <div className="plg-hd">⚡ การใช้งาน AI เดือนนี้</div>
           <div className="plg-bar">
-            <div className="plg-fill" style={{ width: aiPct + '%', background: aiPct >= 80 ? '#f59e0b' : '#38bdf8' }} />
+            <div className="plg-fill" style={{ width: (TOKENS.live ? tokPct : aiPct) + '%', background: (TOKENS.live ? tokPct : aiPct) >= 80 ? '#f59e0b' : '#38bdf8' }} />
           </div>
           <div className="plg-txt">
-            {aiUsed.toLocaleString()} / {aiQuota.toLocaleString()} AI calls ({aiPct}%)
+            {TOKENS.live
+              ? `${tokUsed.toLocaleString()} / ${tokQuota.toLocaleString()} tokens (${tokPct}%)`
+              : `${aiUsed.toLocaleString()} / ${aiQuota.toLocaleString()} AI calls (${aiPct}%)`}
           </div>
-          {aiPct >= 80 && sub.plan !== 'scale' && (
+          {(TOKENS.live ? tokPct : aiPct) >= 80 && sub.plan !== 'scale' && (
             <div className="plg-nudge">
               🚀 ใกล้เต็มโควตาแล้ว — อัปเกรดเป็น {sub.plan === 'growth' ? 'Scale (5,000 calls/เดือน)' : 'Growth (700 calls/เดือน)'}
               <button className="plg-nudge-btn" onClick={() => choosePlan(sub.plan === 'growth' ? 'scale' : 'growth')}>
@@ -512,7 +531,49 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
             </div>
           )}
 
-          {/* Top-up: ซื้อ AI calls เพิ่มเป็นครั้ง (ไม่ต้องอัปแพ็กถาวร) — credits ใช้ได้เฉพาะเดือนนี้ */}
+          {/* Top-up (โมเดลใหม่): ซื้อ token เพิ่ม — แจ้งโอน แล้วทีมงานเปิด token ให้ (จำนวน token = server-side) */}
+          {TOKENS.live ? (
+          <div className="topup-box">
+            <div className="topup-hd">➕ ซื้อ Token เพิ่ม (Top-up)</div>
+            <div className="topup-sub">ใช้ token ไม่พอเดือนนี้? เติมได้เลย — token เพิ่มเข้าโควตาเดือนนี้ทันทีหลังทีมงานยืนยันการโอน</div>
+            <div className="topup-packs">
+              {TOKEN_PACKS.map(p => (
+                <button
+                  key={p.id}
+                  className={`topup-pack${tokPack?.id === p.id ? ' active' : ''}${p.best ? ' best' : ''}`}
+                  onClick={() => { setTokPack(tokPack?.id === p.id ? null : p); setTokSent(false); }}
+                >
+                  {p.best && <span className="topup-best">คุ้มสุด</span>}
+                  <span className="topup-calls">{p.label}</span>
+                  <span className="topup-price">{baht(p.priceThb)}</span>
+                  <span className="topup-per">เฉลี่ย ฿{pricePerMillionThb(p).toLocaleString()}/1M</span>
+                </button>
+              ))}
+            </div>
+            {tokPack && (
+              <div className="topup-pay">
+                {PAYMENT.promptpayLive ? (
+                  <>
+                    <div className="topup-pay-hd">สแกนจ่าย {baht(tokPack.priceThb)} ผ่าน PromptPay</div>
+                    <img className="topup-qr" src={promptPayQrUrl(PAYMENT.promptpayId, tokPack.priceThb)} alt="PromptPay QR" width={160} height={160} />
+                  </>
+                ) : (
+                  <div className="topup-pay-hd">โอน {baht(tokPack.priceThb)} → {PAYMENT.promptpayId} (PromptPay)</div>
+                )}
+                {tokSent ? (
+                  <div className="topup-sent">✅ ส่งคำขอแล้ว — ทีมงานเปิด token ให้ (ปกติ &lt; 1 ชม.)</div>
+                ) : (
+                  <>
+                    <div className="topup-pay-note" style={{ marginTop: 6 }}>โอนแล้วแจ้งให้ทีมงานเปิด token ให้:</div>
+                    <button className="topup-notify" disabled={!wsId || topupBusy} onClick={notifyTokenTopup}>
+                      ✅ แจ้งว่าโอนแล้ว (เข้าคิว)
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+          ) : (
           <div className="topup-box">
             <div className="topup-hd">➕ ซื้อ AI เพิ่มเป็นครั้ง (Top-up)</div>
             <div className="topup-sub">ไม่อยากอัปแพ็กถาวร? เติมเฉพาะเดือนนี้ได้ — จ่ายครั้งเดียว credits เพิ่มทันทีหลังยืนยัน</div>
@@ -564,6 +625,7 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
               </div>
             )}
           </div>
+          )}
         </div>
         <div className="plg-card">
           <div className="plg-hd">🎁 ชวนเพื่อนใช้ {BRAND.product}</div>

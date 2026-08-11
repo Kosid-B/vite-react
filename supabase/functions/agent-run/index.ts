@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Anthropic from 'npm:@anthropic-ai/sdk@0.26.0';
 import { pickModel } from '../_shared/modelRouter.ts';
-import { enforceAiQuota } from '../_shared/quota.ts';
+import { enforceAiQuota, enforceAiTokens, recordAiTokens } from '../_shared/quota.ts';
 import { AI_GUARDRAILS } from '../_shared/aiGuardrails.ts';
 import { guardedFetch } from '../_shared/egressGuard.ts';
 
@@ -64,6 +64,8 @@ serve(async (req) => {
     // บังคับโควตา AI ฝั่ง server (flag-gated + fail-open) — agent-run = งานหนักสุด
     const blocked = await enforceAiQuota(req, clientId);
     if (blocked) return blocked;
+    const tokBlocked = await enforceAiTokens(req, clientId);
+    if (tokBlocked) return tokBlocked;
 
     // ─── Brave Search (ถ้าเปิดใช้และมี API key) ──────────────────────────
     let webContext = '';
@@ -117,6 +119,8 @@ serve(async (req) => {
     });
 
     const output = (response.content[0] as { text: string }).text;
+    // บันทึก token จริง (flag-gated) — ไม่บล็อกการตอบ
+    await recordAiTokens(req, response.usage?.input_tokens ?? 0, response.usage?.output_tokens ?? 0, clientId);
     const webSearchUsed = useWebSearch && !!webContext;
 
     return new Response(JSON.stringify({ output, webSearchUsed }), {

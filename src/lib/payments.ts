@@ -154,9 +154,10 @@ export async function grantAiTopup(workspaceId: string, credits: number): Promis
   return error ? error.message : null;
 }
 
-/* ── Top-up requests: คิวในแอป (user แจ้งโอน → admin กดเปิด credits) ── */
+/* ── Top-up requests: คิวในแอป (user แจ้งโอน → admin กดเปิด credits/tokens) ── */
 export interface TopupRequest {
   id: string; workspaceId: string; packId: string; credits: number; price: number;
+  tokens?: number; // แพ็ก token (0053) — call pack จะเป็น undefined
   status: string; createdAt: string;
 }
 
@@ -169,6 +170,22 @@ export async function submitTopupRequest(wsId: string, pack: { id: string; calls
   return error ? error.message : null;
 }
 
+/** user: แจ้งคำขอ "ซื้อ token เพิ่ม" (แพ็ก token) → เข้าคิว pending (admin เปิดให้ · จำนวน token = server-side) */
+export async function submitTokenTopupRequest(wsId: string, pack: { id: string; tokens: number; price: number }): Promise<string | null> {
+  if (!isSupabaseEnabled || !supabase) return 'ใช้ได้เฉพาะโหมดออนไลน์';
+  const { error } = await supabase.from('ai_topup_request').insert({
+    workspace_id: wsId, pack_id: pack.id, tokens: pack.tokens, price: pack.price,
+  });
+  return error ? error.message : null;
+}
+
+/** admin: อนุมัติคำขอ token top-up → เปิด token + ปิดคำขอ (atomic ผ่าน rpc · จำนวนจาก pack_id) */
+export async function approveTokenTopupRequest(id: string): Promise<string | null> {
+  if (!isSupabaseEnabled || !supabase) return 'ใช้ได้เฉพาะโหมดออนไลน์';
+  const { error } = await supabase.rpc('approve_token_topup_request', { p_id: id });
+  return error ? error.message : null;
+}
+
 /** admin: รายการคำขอ top-up ที่รอเปิด */
 export async function listPendingTopups(): Promise<TopupRequest[]> {
   if (!isSupabaseEnabled || !supabase) return [];
@@ -176,7 +193,9 @@ export async function listPendingTopups(): Promise<TopupRequest[]> {
     .eq('status', 'pending').order('created_at', { ascending: true });
   return (data ?? []).map((r: Record<string, unknown>) => ({
     id: String(r.id), workspaceId: String(r.workspace_id), packId: String(r.pack_id),
-    credits: Number(r.credits), price: Number(r.price), status: String(r.status), createdAt: String(r.created_at),
+    credits: Number(r.credits ?? 0), price: Number(r.price),
+    tokens: r.tokens != null ? Number(r.tokens) : undefined,
+    status: String(r.status), createdAt: String(r.created_at),
   }));
 }
 

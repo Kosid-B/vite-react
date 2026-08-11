@@ -7,7 +7,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModel } from "../_shared/modelRouter.ts";
-import { enforceAiQuota } from "../_shared/quota.ts";
+import { enforceAiQuota, enforceAiTokens, recordAiTokens } from "../_shared/quota.ts";
 import { AI_GUARDRAILS } from "../_shared/aiGuardrails.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
@@ -34,9 +34,11 @@ Deno.serve(async (req) => {
   // บังคับโควตา AI ฝั่ง server (flag-gated + fail-open) — ก่อนยิง Claude ทั้ง path ปกติ + stream
   const blocked = await enforceAiQuota(req, body.clientId);
   if (blocked) return blocked;
+  const tokBlocked = await enforceAiTokens(req, body.clientId);
+  if (tokBlocked) return tokBlocked;
 
   // (ข) ถ้าขอ stream → คืน SSE ให้ข้อความทยอยขึ้น
-  if (body.stream) return streamAssist(body);
+  if (body.stream) return streamAssist(req, body);
 
   const system =
     "คุณคือทีม AI Agent ผู้ช่วยภายในแพลตฟอร์ม CEO AI Thailand (สร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย) " +
@@ -68,6 +70,8 @@ Deno.serve(async (req) => {
   if (!r.ok) return json({ error: "anthropic_error", detail: await r.text() }, 502);
 
   const data = await r.json();
+  // บันทึก token จริง (flag-gated) — ไม่บล็อกการตอบ
+  await recordAiTokens(req, data?.usage?.input_tokens ?? 0, data?.usage?.output_tokens ?? 0, body.clientId);
   const text = (data?.content?.[0]?.text ?? "").trim();
   const parsed = extractJson(text);
   if (!parsed) return json({ summary: text, suggestions: [] }, 200);
@@ -75,7 +79,7 @@ Deno.serve(async (req) => {
 });
 
 // (ข) streaming ผ่าน Anthropic stream API → รีเลย์เป็น SSE ให้ client
-async function streamAssist(body: Body): Promise<Response> {
+async function streamAssist(req: Request, body: Body): Promise<Response> {
   const system =
     "คุณคือทีม AI Agent ผู้ช่วยภายในแพลตฟอร์ม CEO AI Thailand (สร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย) " +
     "ให้คำแนะนำที่ลงมือทำได้จริง กระชับ เป็นภาษาไทย " +
@@ -111,6 +115,7 @@ async function streamAssist(body: Body): Promise<Response> {
       const dec = new TextDecoder();
       const reader = upstream.body!.getReader();
       let buf = "";
+      let inTok = 0, outTok = 0; // เก็บ token จริงจาก stream events → บันทึกตอนจบ
       try {
         for (;;) {
           const { value, done } = await reader.read();
@@ -127,6 +132,10 @@ async function streamAssist(body: Body): Promise<Response> {
               const ev = JSON.parse(p);
               if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta" && ev.delta.text) {
                 controller.enqueue(enc.encode(`data: ${JSON.stringify({ text: ev.delta.text })}\n\n`));
+              } else if (ev.type === "message_start" && ev.message?.usage?.input_tokens != null) {
+                inTok = ev.message.usage.input_tokens;
+              } else if (ev.type === "message_delta" && ev.usage?.output_tokens != null) {
+                outTok = ev.usage.output_tokens; // ยอดสะสม output ล่าสุด
               }
             } catch { /* ignore keepalive */ }
           }
@@ -135,6 +144,7 @@ async function streamAssist(body: Body): Promise<Response> {
       } catch (e) {
         controller.enqueue(enc.encode(`data: ${JSON.stringify({ error: String(e) })}\n\n`));
       } finally {
+        await recordAiTokens(req, inTok, outTok, body.clientId); // บันทึก token จริง (flag-gated)
         controller.close();
       }
     },

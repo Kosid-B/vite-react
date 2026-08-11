@@ -8,7 +8,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModels } from "../_shared/modelRouter.ts";
 import { chatWithFallback } from "../_shared/llm.ts";
-import { enforceAiQuota } from "../_shared/quota.ts";
+import { enforceAiQuota, enforceAiTokens, recordAiTokens } from "../_shared/quota.ts";
 import { AI_GUARDRAILS } from "../_shared/aiGuardrails.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
@@ -35,6 +35,8 @@ Deno.serve(async (req) => {
 
   const blocked = await enforceAiQuota(req, body.clientId); // flag-gated + fail-open
   if (blocked) return blocked;
+  const tokBlocked = await enforceAiTokens(req, body.clientId);
+  if (tokBlocked) return tokBlocked;
 
   const roles = (body.agents ?? []).map((a) => `- ${a.role}: ${a.mandate ?? ""}`).join("\n") || "- CEO\n- CTO\n- CMO";
 
@@ -67,8 +69,11 @@ Deno.serve(async (req) => {
 
   // maxTokens สูงพอสำหรับ output ภาษาไทย (Thai token-dense) — กัน JSON ถูกตัดกลางคัน = parse_failed
   // ภาษาไทยกินโทเคนมากต่อคำ · tasks 3-6 + detail + approvals ที่ 1500 เดิม → ล้นบ่อย → JSON ไม่ครบ
+  // สะสม token จริงข้ามความพยายามทุกครั้ง (call แรก + retry) → บันทึกทีเดียวตอนจบ
+  let usedIn = 0, usedOut = 0;
   async function callPlan(user: string, maxTokens: number): Promise<string> {
     const res = await chatWithFallback(models, { system, user, maxTokens, cacheSystem: true });
+    if (res.usage) { usedIn += res.usage.inputTokens; usedOut += res.usage.outputTokens; }
     return res.text;
   }
 
@@ -95,6 +100,9 @@ Deno.serve(async (req) => {
       console.error("[ai-plan] llm_error on retry:", String(e));
     }
   }
+
+  // บันทึก token จริง (flag-gated) — นับแม้ parse_failed เพราะ token ถูกใช้ไปแล้ว
+  await recordAiTokens(req, usedIn, usedOut, body.clientId);
 
   if (!parsed) {
     console.error("[ai-plan] parse_failed after retry. raw:", text);

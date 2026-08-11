@@ -25,6 +25,20 @@ export const PLAN_AI_CALLS: Record<PlanId, number> = {
   scale: 5000,   // ต่อเดือน
 };
 
+/* ── โมเดล token (0052) — มิเตอร์เป็น "token" แทน "จำนวน call" (source of truth = tokenEconomics.ts) ── */
+export interface ServerTokens { used: number; quota: number; plan: string; topup?: number }
+
+/** ดึงมิเตอร์ token จริงฝั่ง server (get_ai_tokens) — null ถ้า offline/ยังไม่พร้อม */
+export async function fetchServerTokens(): Promise<ServerTokens | null> {
+  if (!isSupabaseEnabled || !supabase) return null;
+  try {
+    const { data, error } = await supabase.rpc('get_ai_tokens');
+    if (error || !data) return null;
+    const d = data as { used?: number; quota?: number; plan?: string; topup?: number };
+    return { used: d.used ?? 0, quota: d.quota ?? 0, plan: d.plan ?? 'free', topup: d.topup ?? 0 };
+  } catch { return null; }
+}
+
 const LS_KEY = 'ceo_ai_usage';
 
 interface Usage { month: string; count: number }
