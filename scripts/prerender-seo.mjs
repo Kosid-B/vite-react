@@ -3,7 +3,8 @@
  * (เช่น GitHub Pages / Cloudflare Pages) — ใช้ builder ตัวเดียวกับ Worker (single source ไม่ drift)
  * รันด้วย vite-node (รองรับ import .ts) · best-effort: ไม่ทำให้ build ล้ม */
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { llmsTxt, sitemapXml, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml } from '../src/lib/seoData.ts';
+import { llmsTxt, sitemapXml, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml, blogIndexHtml, blogPostHtml } from '../src/lib/seoData.ts';
+import { BLOG_POSTS } from '../src/lib/blogData.ts';
 
 const ORIGIN = process.env.SITE_ORIGIN || 'https://ceoaithailand.org';
 const OUT = 'dist';
@@ -23,7 +24,14 @@ try {
   writeFileSync(`${OUT}/sell/index.html`, sellPageHtml(ORIGIN));
   mkdirSync(`${OUT}/security`, { recursive: true });
   writeFileSync(`${OUT}/security/index.html`, securityPageHtml(ORIGIN));
-  console.log('[prerender-seo] ✓ llms.txt · sitemap.xml · faq · mit24 · skills · trust · sell · security');
+  // Blog: หน้า index + หน้าบทความรายตัว (server-render static = Google index ได้โดยไม่รอ JS)
+  mkdirSync(`${OUT}/blog`, { recursive: true });
+  writeFileSync(`${OUT}/blog/index.html`, blogIndexHtml(ORIGIN));
+  for (const p of BLOG_POSTS) {
+    mkdirSync(`${OUT}/blog/${p.slug}`, { recursive: true });
+    writeFileSync(`${OUT}/blog/${p.slug}/index.html`, blogPostHtml(ORIGIN, p.slug));
+  }
+  console.log(`[prerender-seo] ✓ llms.txt · sitemap.xml · faq · mit24 · skills · trust · sell · security · blog (${BLOG_POSTS.length} posts)`);
 } catch (e) {
   console.error('[prerender-seo] skipped (non-fatal):', e && e.message);
 }

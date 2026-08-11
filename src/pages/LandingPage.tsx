@@ -102,6 +102,7 @@ const TRUST_MARKERS = [
   { icon: '🏢', text: 'บริษัทจดทะเบียนจริง — B. Training Consultant Co., Ltd.' },
   { icon: '📞', text: 'โทรคุยกับคนจริงได้ 081-7817-7773' },
   { icon: '🎫', text: 'ทดลองฟรี 15 วัน ไม่ต้องผูกบัตร · ยกเลิกได้ทุกเมื่อ' },
+  { icon: '💯', text: 'จ่ายแล้วไม่พอใจใน 7 วัน คืนเงินเต็มจำนวน — ไม่มีเงื่อนไขซับซ้อน' },
   { icon: '📤', text: 'ข้อมูลเป็นของคุณ — ส่งออก/ลบได้เองทุกเมื่อ' },
 ];
 
@@ -846,6 +847,10 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         >
           เริ่มต้นฟรีเลย →
         </button>
+        {/* risk-reversal: การรับประกันคืนเงิน 7 วัน (ลดความกลัวจ่ายแล้วไม่คุ้ม) */}
+        <p style={{ color: C.slate5, marginTop: 20, fontSize: 14 }}>
+          💯 <strong style={{ color: C.white }}>รับประกันความพอใจ:</strong> จ่ายแล้วไม่พอใจ แจ้งภายใน 7 วัน คืนเงินเต็มจำนวน
+        </p>
       </section>
 
       {/* ─── Footer ─── */}
@@ -856,6 +861,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         <a href="/mit24" style={{ color: C.cyan4, textDecoration: 'none' }}>MIT 24 Steps คืออะไร</a> ·{' '}
         <a href="/trust" style={{ color: C.cyan4, textDecoration: 'none' }}>T.R.U.S.T. Framework</a> ·{' '}
         <a href="/faq" style={{ color: C.cyan4, textDecoration: 'none' }}>คำถามที่พบบ่อย</a> ·{' '}
+        <a href="/blog" style={{ color: C.cyan4, textDecoration: 'none' }}>บทความ SME</a> ·{' '}
         <a href="/b" style={{ color: C.cyan4, textDecoration: 'none' }}>สารบัญธุรกิจ</a> ·{' '}
         <AiTransparency linkStyle={{ color: C.cyan4, textDecoration: 'none' }} />
         <br />

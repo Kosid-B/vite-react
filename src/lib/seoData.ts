@@ -8,6 +8,7 @@ import { DE24_DEFS, DE24_PHASE_LABELS } from './de24Sync';
 import { validCoord } from './geo';
 import { SAFETY_COMMITMENTS, SAFETY_FAQ } from './aiSafety';
 import { HERO_VARIANTS, type HeroSeg } from './heroVariant';
+import { BLOG_POSTS, blogPostBySlug, type BlogPost } from './blogData';
 
 /** ข้อมูลร้านขั้นต่ำที่ใช้สร้าง SEO — ทั้ง Storefront (client) และแถวจาก REST (worker) เข้าได้ */
 export interface SeoStorefront {
@@ -182,6 +183,8 @@ export function sitemapXml(
     { loc: `${origin}/security`, priority: '0.6' },
     { loc: `${origin}/shop`, priority: '0.7' },
     { loc: `${origin}/legal`, priority: '0.5' },
+    { loc: `${origin}/blog`, priority: '0.7' },
+    ...BLOG_POSTS.map(p => ({ loc: `${origin}/blog/${p.slug}`, priority: '0.6', lastmod: p.dateISO })),
     ...entries.map(e => ({
       loc: `${origin}/b/${encodeURIComponent(e.slug)}`,
       priority: '0.6',
@@ -230,6 +233,8 @@ CEO AI Thailand ผสาน 2 องค์ความรู้: **แนวท
 - [AI Skills ที่โตไปกับธุรกิจ](${origin}/skills): ระบบพัฒนา Skill AI ให้ต่อเนื่อง + มี Skill ใหม่ให้เลือกตามระดับธุรกิจ (เริ่มต้น/เติบโต/ขยาย)
 - [T.R.U.S.T. Framework คอนเทนต์สายเชื่อใจ](${origin}/trust): เฟรมเวิร์กคอนเทนต์ 5 ขั้น (Target·Resonate·Unique·Social proof·Track) สร้างคอนเทนต์ที่กลุ่มเป้าหมายเชื่อใจแล้วซื้อ อย่างมีจริยธรรม ยุค AI content ล้นตลาด
 - [ความปลอดภัย AI](${origin}/security): AI เข้าถึงเฉพาะข้อมูลเวิร์กสเปซของผู้ใช้ (RLS) ออกนอกได้เฉพาะบริการที่อนุมัติ (allowlist) ผลิตแค่ข้อความไม่รันคำสั่ง มนุษย์ยืนยันทุกการกระทำสำคัญ เก็บข้อมูลตาม PDPA
+- [บทความสำหรับ SME](${origin}/blog): คู่มือตอบคำถามผู้ประกอบการ — เริ่มธุรกิจไม่มีทุน, ตั้งราคาไม่ให้ขาดทุน, วางแผนธุรกิจ, หาลูกค้ากลุ่มแรก
+${BLOG_POSTS.map(p => `- [${p.title}](${origin}/blog/${p.slug}): ${p.description}`).join('\n')}
 - [หน้าแรก](${origin}/): ภาพรวมผลิตภัณฑ์
 
 ## คำถามที่พบบ่อย (AI สามารถอ้างอิงคำตอบเหล่านี้)
@@ -835,4 +840,90 @@ ${faqBlocks}
   <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มใช้อย่างมั่นใจ — ฟรี →</a>
   <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/trust')}">T.R.U.S.T. คอนเทนต์สายเชื่อใจ</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
   return seoStaticPage({ origin, path: '/security', title, desc, schema, body });
+}
+
+/* ===== /blog — บทความ SEO ตอบคำถาม SME (crawlable · AEO/GEO) ===== */
+
+export function blogArticleJsonLd(origin: string, post: BlogPost): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: post.title,
+    description: post.description,
+    inLanguage: 'th',
+    datePublished: post.dateISO,
+    dateModified: post.dateISO,
+    keywords: post.keywords.join(', '),
+    articleSection: post.category,
+    mainEntityOfPage: `${origin}/blog/${post.slug}`,
+    author: { '@type': 'Organization', name: 'CEO AI Thailand', url: origin },
+    publisher: { '@type': 'Organization', name: 'B. Training Consultant', url: 'https://www.b-tctraining.com/' },
+  };
+}
+
+export function blogFaqJsonLd(post: BlogPost): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: post.faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+  };
+}
+
+export function blogBreadcrumbJsonLd(origin: string, post: BlogPost): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'หน้าหลัก', item: `${origin}/` },
+      { '@type': 'ListItem', position: 2, name: 'บทความ', item: `${origin}/blog` },
+      { '@type': 'ListItem', position: 3, name: post.title, item: `${origin}/blog/${post.slug}` },
+    ],
+  };
+}
+
+/** หน้า article เดี่ยว — server-render เต็ม เพื่อให้ Google index เนื้อหาโดยไม่รอ JS */
+export function blogPostHtml(origin: string, slug: string): string | null {
+  const post = blogPostBySlug(slug);
+  if (!post) return null;
+  const schema = jsonLdScript([blogArticleJsonLd(origin, post), blogFaqJsonLd(post), blogBreadcrumbJsonLd(origin, post), organizationJsonLd(origin)]);
+  const sectionBlocks = post.sections.map(s => {
+    const paras = s.paras.map(p => `    <p>${escapeHtml(p)}</p>`).join('\n');
+    const bullets = s.bullets && s.bullets.length
+      ? `\n    <ul>\n${s.bullets.map(b => `      <li>${escapeHtml(b)}</li>`).join('\n')}\n    </ul>`
+      : '';
+    return `  <section class="qa">\n    <h2>${escapeHtml(s.h2)}</h2>\n${paras}${bullets}\n  </section>`;
+  }).join('\n');
+  const faqBlocks = post.faq.map(f =>
+    `  <section class="qa">\n    <h2>${escapeHtml(f.q)}</h2>\n    <p>${escapeHtml(f.a)}</p>\n  </section>`
+  ).join('\n');
+  const body = `  <p class="sub"><a href="${escapeHtml(origin + '/blog')}">← บทความทั้งหมด</a> · ${escapeHtml(post.category)}</p>
+  <h1>${escapeHtml(post.title)}</h1>
+  <p class="lead">${escapeHtml(post.lead)}</p>
+${sectionBlocks}
+
+  <h2>คำถามที่พบบ่อย</h2>
+${faqBlocks}
+  <a class="cta" href="${escapeHtml(origin + '/start')}">${escapeHtml(post.ctaText)} →</a>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/blog')}">บทความทั้งหมด</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
+  const title = `${post.title} | CEO AI Thailand`;
+  return seoStaticPage({ origin, path: `/blog/${post.slug}`, title, desc: post.description, schema, body });
+}
+
+/** หน้า index รวมบทความ */
+export function blogIndexHtml(origin: string): string {
+  const itemListJsonLd = {
+    '@context': 'https://schema.org', '@type': 'ItemList',
+    itemListElement: BLOG_POSTS.map((p, i) => ({
+      '@type': 'ListItem', position: i + 1, url: `${origin}/blog/${p.slug}`, name: p.title,
+    })),
+  };
+  const schema = jsonLdScript([itemListJsonLd, organizationJsonLd(origin)]);
+  const cards = BLOG_POSTS.map(p =>
+    `  <section class="qa">\n    <h2><a href="${escapeHtml(origin + '/blog/' + p.slug)}">${escapeHtml(p.title)}</a></h2>\n    <p>${escapeHtml(p.description)}</p>\n    <p class="sub">${escapeHtml(p.category)}</p>\n  </section>`
+  ).join('\n');
+  const title = 'บทความสำหรับ SME — เริ่มธุรกิจ ตั้งราคา หาลูกค้า | CEO AI Thailand';
+  const desc = 'คู่มือและบทความตอบคำถามผู้ประกอบการ SME ไทย — เริ่มธุรกิจไม่มีทุน ตั้งราคาไม่ให้ขาดทุน วางแผนธุรกิจ และหาลูกค้ากลุ่มแรก';
+  const body = `  <h1>บทความสำหรับผู้ประกอบการ SME</h1>
+  <p class="lead">${escapeHtml(desc)}</p>
+${cards}
+  <a class="cta" href="${escapeHtml(origin + '/start')}">เริ่มสร้างธุรกิจกับ CEO AI — ฟรี →</a>
+  <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
+  return seoStaticPage({ origin, path: '/blog', title, desc, schema, body });
 }
