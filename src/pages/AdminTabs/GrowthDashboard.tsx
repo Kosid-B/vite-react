@@ -9,6 +9,9 @@ import {
   type GrowthEcoState, type GChannelId, type GChannelEntry, type Health,
 } from '../../lib/growthEconomics';
 import { signupsForWeek, type SignupRecord } from '../../lib/attribution';
+import {
+  loadLandingFunnel, landingFunnelSteps, biggestLeak, dwellLabel, type LandingAgg,
+} from '../../lib/landingFunnel';
 import UtmBuilder from '../../components/UtmBuilder';
 
 /* Growth Dashboard — รวมตัวเลขการเติบโตในแอปที่เดียว: ผู้สมัคร + lead + funnel
@@ -184,6 +187,7 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
   const [funnel, setFunnel] = useState<FunnelSummary | null>(null);
   const [lstats, setLstats] = useState<LeadStats | null>(null);
   const [realSignups, setRealSignups] = useState<Record<GChannelId, number> | null>(null);
+  const [landing, setLanding] = useState<LandingAgg | null>(null);
 
   async function load() {
     if (!isSupabaseEnabled) return;
@@ -200,6 +204,7 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
       setRealSignups(signupsForWeek(records, isoWeekTag(new Date())));
       const leads = await listLeads();
       setLstats(leadStats(leads, new Date().toISOString().slice(0, 10)));
+      setLanding(await loadLandingFunnel(30)); // first-party landing funnel (30 วัน)
       setMsg(`อัปเดตแล้ว · ${rows.length} เวิร์กสเปซ`);
     } catch (e) {
       setMsg('โหลดไม่สำเร็จ: ' + (e instanceof Error ? e.message : String(e)));
@@ -226,8 +231,90 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
         <Kpi label="👥 ผู้สมัคร (เวิร์กสเปซ)" value={signups} sub="นับจริงในระบบ" />
         <Kpi label="🧲 Lead ทั้งหมด" value={lstats?.total ?? '—'} sub={lstats ? `+${lstats.last7} ใน 7 วัน` : undefined} color="#0891b2" />
         <Kpi label="🚦 Activation" value={funnel ? `${funnel.activationRate}%` : '—'} sub="สร้างบริษัท/เปิดร้าน" color="#16a34a" />
-        <Kpi label="📊 คนเข้า Landing" value="GA4" sub="ดูใน Google Analytics" color="var(--ink3)" />
+        <Kpi
+          label="📊 คนเข้า Landing (30 วัน)"
+          value={landing ? landing.total : '—'}
+          sub={landing ? `หยุดดูเฉลี่ย ${dwellLabel(landing.avg_dwell)} · เลื่อน ${landing.avg_scroll}%` : 'first-party (นิรนาม)'}
+          color="#7c3aed"
+        />
       </div>
+
+      {/* Landing Funnel (first-party · PDPA-safe) — ตอบ "คนเข้าแล้วค้างตรงไหน ไม่กดสมัคร" */}
+      {landing && landing.total > 0 ? (() => {
+        const steps = landingFunnelSteps(landing);
+        const leak = biggestLeak(steps);
+        const bouncePct = landing.total > 0 ? Math.round((landing.bounce / landing.total) * 100) : 0;
+        const refLabel: Record<string, string> = { direct: '🔗 พิมพ์ตรง/บุ๊กมาร์ก', social: '📱 โซเชียล', search: '🔍 ค้นหา (Google)', other: '🌐 เว็บอื่น' };
+        const refRows = Object.entries(landing.by_ref).sort((a, b) => b[1] - a[1]);
+        const refMax = Math.max(1, ...refRows.map(([, c]) => c));
+        return (
+          <div style={{ border: '1px solid var(--sand)', borderRadius: 12, padding: '16px 18px', background: 'var(--cream2)', display: 'grid', gap: 14 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--ink)' }}>
+              🕳️ Landing Funnel — คนเข้าดูจริง {landing.total} คน (นิรนาม · ไม่เก็บ PII)
+            </div>
+
+            {/* รูรั่วใหญ่สุด — ชี้จุดต้องแก้ก่อน */}
+            {leak && (
+              <div style={{ border: '1px solid #f59e0b', borderRadius: 10, padding: '10px 14px', background: 'rgba(245,158,11,0.10)', fontSize: 13, color: 'var(--ink)', lineHeight: 1.6 }}>
+                🚨 <b>รูรั่วใหญ่สุด:</b> หลุด <b style={{ color: '#dc2626' }}>{leak.dropPct}%</b> ระหว่าง “{leak.from}” → “{leak.to}” — โฟกัสแก้จุดนี้ก่อน
+              </div>
+            )}
+
+            {/* 4 ขั้น funnel + drop-off */}
+            <div style={{ display: 'grid', gap: 10 }}>
+              {steps.map((s, i) => (
+                <div key={s.key}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, marginBottom: 3 }}>
+                    <span style={{ color: 'var(--ink)' }}>{i + 1}. {s.label}</span>
+                    <span style={{ color: 'var(--ink3)' }}>{s.count} · {s.pct}%</span>
+                  </div>
+                  <div style={{ height: 12, borderRadius: 5, background: 'var(--cream)', overflow: 'hidden' }}>
+                    <div style={{ width: `${s.pct}%`, height: '100%', background: i === steps.length - 1 ? '#16a34a' : '#7c3aed', borderRadius: 5 }} />
+                  </div>
+                  {i > 0 && s.dropFromPrev > 0 && (
+                    <div style={{ fontSize: 11.5, color: '#dc2626', marginTop: 2 }}>↓ หลุด {s.dropFromPrev}% จากขั้นก่อน</div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* พฤติกรรมการดู + ที่มา */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+              <div style={{ border: '1px solid var(--sand)', borderRadius: 10, padding: '10px 14px', background: 'var(--cream)' }}>
+                <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 6, fontWeight: 700 }}>⏱️ พฤติกรรมการดู</div>
+                <div style={{ fontSize: 12.5, color: 'var(--ink)', lineHeight: 1.9 }}>
+                  หยุดดูเฉลี่ย <b>{dwellLabel(landing.avg_dwell)}</b><br />
+                  เลื่อนลึกเฉลี่ย <b>{landing.avg_scroll}%</b><br />
+                  เด้งออกเร็ว (bounce) <b style={{ color: bouncePct >= 40 ? '#dc2626' : 'var(--ink)' }}>{landing.bounce} · {bouncePct}%</b>
+                  <span style={{ color: 'var(--ink3)', fontSize: 11 }}> (&lt;10 วิ + เลื่อน&lt;25%)</span>
+                </div>
+              </div>
+              <div style={{ border: '1px solid var(--sand)', borderRadius: 10, padding: '10px 14px', background: 'var(--cream)' }}>
+                <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 6, fontWeight: 700 }}>🌐 คนมาจากไหน</div>
+                <div style={{ display: 'grid', gap: 6 }}>
+                  {refRows.length === 0 && <span style={{ fontSize: 12, color: 'var(--ink3)' }}>ยังไม่มีข้อมูล</span>}
+                  {refRows.map(([k, c]) => (
+                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 130, fontSize: 11.5, color: 'var(--ink)', flex: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{refLabel[k] ?? k}</span>
+                      <div style={{ flex: 1, height: 12, borderRadius: 4, background: 'var(--cream2)', overflow: 'hidden' }}>
+                        <div style={{ width: `${(c / refMax) * 100}%`, height: '100%', background: '#0891b2', borderRadius: 4 }} />
+                      </div>
+                      <span style={{ width: 34, textAlign: 'right', fontSize: 11.5, color: 'var(--ink3)', flex: 'none' }}>{c}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--ink3)', lineHeight: 1.7 }}>
+              🔒 นิรนาม 100% — id สุ่มฝั่งเบราว์เซอร์ · ไม่เก็บชื่อ/อีเมล/ตำแหน่ง cursor · 1 แถว/ผู้เข้าชม (นับซ้ำไม่ได้) · ช่วง 30 วันล่าสุด
+            </div>
+          </div>
+        );
+      })() : (
+        <div style={{ border: '1px dashed var(--sand)', borderRadius: 12, padding: '14px 16px', background: 'var(--cream)', fontSize: 12.5, color: 'var(--ink3)', lineHeight: 1.7 }}>
+          🕳️ <b style={{ color: 'var(--ink)' }}>Landing Funnel</b> — ยังไม่มีข้อมูลผู้เข้าชม (จะเริ่มเก็บเมื่อมีคนเปิดหน้า Landing สาธารณะหลัง deploy) · วัด scroll depth + dwell แบบนิรนาม
+        </div>
+      )}
 
       {/* Funnel */}
       {funnel && funnel.total > 0 && (
@@ -270,9 +357,10 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
 
       {/* หมายเหตุ GA4 */}
       <div style={{ border: '1px dashed var(--sand)', borderRadius: 12, padding: '14px 16px', background: 'var(--cream)', fontSize: 12.5, color: 'var(--ink3)', lineHeight: 1.7 }}>
-        📊 <b style={{ color: 'var(--ink)' }}>คนเข้าดู Landing page</b> วัดในแอปไม่ได้ (คนดูยังไม่ล็อกอิน) — ดูใน{' '}
+        📊 <b style={{ color: 'var(--ink)' }}>คนเข้าดู Landing page</b> ตอนนี้วัดในแอปได้แล้ว (แผง Landing Funnel ด้านบน — first-party นิรนาม) ·
+        อยากดูละเอียดต่อช่องทาง/หน้า ดูเสริมใน{' '}
         <a href="https://analytics.google.com" target="_blank" rel="noreferrer" style={{ color: '#0891b2', fontWeight: 600 }}>Google Analytics</a>{' '}
-        (property <b>{GA4_ID}</b>): Reports → Pages (page_view) · Acquisition → Traffic (utm) · นับเฉพาะคนที่กด “ยอมรับคุกกี้” (PDPA)
+        (property <b>{GA4_ID}</b>): Reports → Pages (page_view) · Acquisition → Traffic (utm)
         <br />
         🔒 ตัวเลขในหน้านี้มาจากระบบจริง (RLS is_app_admin) · <b style={{ color: 'var(--ink)' }}>ผู้สมัคร</b> = แม่นเป๊ะ · loop: โพสต์(ใส่ utm) → รีเฟรช → ดูช่องไหนได้ lead/สมัคร
       </div>
