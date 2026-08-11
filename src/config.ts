@@ -110,6 +110,13 @@ export const AUTH = {
   phoneOtp: false,
 };
 
+// ช่องทางชุมชน/โซเชียล — โชว์บนหน้า Landing เฉพาะเมื่อใส่ URL (เว้นว่าง = ซ่อน)
+//   ⚠️ เว้นว่างไว้จนกว่าจะสร้างกลุ่มจริง (LINE OpenChat / กลุ่ม Facebook) แล้วค่อยวางลิงก์
+export const SOCIAL = {
+  lineCommunityUrl: '',      // ลิงก์เชิญเข้า LINE OpenChat / LINE OA community (เช่น https://line.me/ti/g2/...)
+  facebookGroupUrl: '',      // ลิงก์กลุ่ม Facebook (ถ้ามี)
+};
+
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
 export const INTEGRATIONS = {
   // Google Sheets: User เชื่อมบัญชี Google ของตัวเอง → ระบบเขียนรายงานลงชีตของเขา

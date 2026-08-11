@@ -22,6 +22,8 @@ import LandingReviewWidget from '../components/LandingReviewWidget';
 import LeadCapture from '../components/LeadCapture';
 import PersonaBanner from '../components/PersonaBanner';
 import ValueCompare from '../components/ValueCompare';
+import ValueTimeline from '../components/ValueTimeline';
+import CommunityJoin from '../components/CommunityJoin';
 import { loadBehavior, derivePersona, persistSignal, type PersonaView } from '../lib/behaviorPersona';
 import { LandingThemeCtx } from '../lib/landingTheme';
 import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
@@ -641,6 +643,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       {/* ─── เทียบชัด: ทำเอง vs จ้างคน vs CEO AI (ลดความลังเล — Dark AI Marketing #2/#16) ─── */}
       <ValueCompare onGetStarted={onGetStarted} />
 
+      {/* ─── เส้นทางเห็นผล วันที่ 1/3/7/15 (time-to-value จับต้องได้ — บทวิเคราะห์ item #3) ─── */}
+      <ValueTimeline onGetStarted={onGetStarted} />
+
       {/* ─── AI Skills ที่โตไปกับธุรกิจ — ระบบพัฒนา Skill ให้ + มี Skill ใหม่ตามระดับ ─── */}
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
@@ -852,6 +857,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           💯 <strong style={{ color: C.white }}>รับประกันความพอใจ:</strong> จ่ายแล้วไม่พอใจ แจ้งภายใน 7 วัน คืนเงินเต็มจำนวน
         </p>
       </section>
+
+      {/* ─── ชุมชน LINE/Facebook (โชว์เมื่อมี URL จริงใน config — บทวิเคราะห์ item #5) ─── */}
+      <CommunityJoin />
 
       {/* ─── Footer ─── */}
       <footer style={{ borderTop: `1px solid ${C.border}`, padding: '24px', textAlign: 'center', color: C.slate5, fontSize: 13, lineHeight: 1.9 }}>
