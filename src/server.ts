@@ -3,6 +3,7 @@
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
   homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml, aggregateFromRatings,
+  blogIndexHtml, blogPostHtml,
   type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
 
@@ -182,6 +183,24 @@ export default {
         return new Response(securityPageHtml(origin), {
           headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
         });
+      }
+
+      // /blog → index รวมบทความ SME (answer-first · ดึง traffic คนที่กำลังหาทางแก้ปัญหา)
+      if (url.pathname === '/blog' || url.pathname === '/blog/') {
+        return new Response(blogIndexHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+      // /blog/<slug> → บทความเดี่ยว (server-render เต็ม = Google index ได้โดยไม่รอ JS)
+      const blogM = url.pathname.match(/^\/blog\/([^/]+)\/?$/);
+      if (blogM) {
+        const html = blogPostHtml(origin, decodeURIComponent(blogM[1]));
+        if (html) {
+          return new Response(html, {
+            headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+          });
+        }
+        // slug ไม่พบ → ปล่อยผ่านไป SPA (ASSETS) ตามปกติ
       }
 
       // หน้าแรก / → inject schema (Organization + SoftwareApplication + FAQPage) ให้ AI/Google สกัด entity
