@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { track } from '../lib/analytics';
 import { pickHeroVariant } from '../lib/heroVariant';
+import { useLandingTrace } from '../hooks/useLandingTrace';
 import { heroAbVariant, HERO_AB_COPY, type HeroAb } from '../lib/heroExperiment';
 import { layoutAbVariant, getBrowserAbId, type LayoutAb } from '../lib/landingLayoutExperiment';
 import LegalLinks from '../components/LegalLinks';
@@ -187,6 +188,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
   const [stickyClosed, setStickyClosed] = useState(false);
   const [navHover, setNavHover] = useState(false);
   const [guestHover, setGuestHover] = useState(false);
+
+  // วัดความลึกของความสนใจ (scroll/dwell/exit-depth/rage) — PDPA-safe · ตอบ "คนค้างตรงไหน ไม่สมัคร"
+  useLandingTrace();
 
   // ── ธีมหน้า Landing (เข้ม/มินิมอล) — ผู้ใช้กดเลือกเอง, บันทึกลง localStorage เดียวกับในแอป ──
   const [theme, setThemeState] = useState<ThemeId>(() => readTheme());
