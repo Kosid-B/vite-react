@@ -48,6 +48,25 @@ GA4                 : G-CHJ99RY1Q1 (ใส่ใน index.html แล้ว)
 - **Production mode** (มี `VITE_SUPABASE_URL`): ต้อง login, sync ขึ้น Supabase, plan บังคับใช้
 - **ห้ามสร้าง `.env` ใน repo** — ตั้งผ่าน GitHub Secrets เท่านั้น
 
+## ⚠️ Lessons Learned — Layout/UX gotchas (กันพลาดซ้ำ)
+```
+GOTCHA #1 — .guest-bar กลายเป็น "แถบฟ้าเต็มความสูง" ดันเนื้อหาไปขวา (บั๊กเสียเวลา debug นาน ก.ค. 2569)
+  • .app { display:flex } (row) · .guest-bar เป็นลูกตรงของ .app (App.tsx ~623) พื้นหลัง gradient teal
+    ถ้าไม่กำหนดความกว้าง → กลายเป็น flex column เต็มความสูง (align-items:stretch) ดัน .main ไปขวา
+  • แก้: .app { flex-wrap:wrap } + .guest-bar { flex:0 0 100%; width:100% }  (index.css)
+  • ⚠️ .guest-bar โผล่ "เฉพาะ production guest mode" (isSupabaseEnabled && !session && guestMode)
+    → LOCAL DEV ไม่ render (ไม่มี Supabase) = reproduce ตรง ๆ ไม่ได้!
+    วิธี debug: Playwright inject <div class="guest-bar"> เข้า .app แล้ววัด box (ดู scratchpad/verify.mjs)
+
+บทเรียนกระบวนการ (สำคัญกว่าตัวบั๊ก):
+  1. UI ที่เป็น "prod/guest-only" reproduce ใน local ไม่ได้ — ต้อง inject element จำลอง ก่อนสรุปสาเหตุ
+  2. อย่าโทษ "การแก้ล่าสุดของตัวเอง" โดยไม่ reproduce ให้เห็นก่อน — ครั้งนี้เดาผิดว่าเป็น max-width
+     ของตัวเอง (revert ไปก็ไม่หาย) ทั้งที่ตัวจริงคือ .guest-bar flex column
+  3. เจอบั๊ก layout: ตรวจ "ลูกตรงของ flex container" ทุกตัวว่ามีความกว้างชัดเจนไหม (โดยเฉพาะ banner/overlay
+     ที่ควรเต็มแถวแต่ไม่ได้กำหนด flex-basis) — align-items:stretch ทำให้มันสูงเต็ม container
+  4. ผู้ใช้บอก "มือถือปกติ + เมื่อวานปกติ" = เบาะแสทองว่าเป็น state-specific (guest vs login) ไม่ใช่ทุกคน
+```
+
 ## Key Source Files
 ```
 src/App.tsx                    — root component, routing state, auto-trial logic
