@@ -395,12 +395,6 @@ body {
   overflow-x: clip; /* กันลูกที่กว้างเกิน (URL ยาว/ข้อความไทย/grid) ดัน layout viewport มือถือกว้างเกินจอ → ช่องว่างด้านขวา */
   padding: 36px 40px;
 }
-/* จอกว้าง: จำกัดความกว้างเนื้อหา + จัดกึ่งกลาง (กันยืดเกินอ่านยากบนจอใหญ่ · ยกเว้น footer ให้เต็ม)
-   บนจอปกติ/มือถือ ลูกกว้างน้อยกว่า max อยู่แล้ว = ไม่เปลี่ยนอะไร */
-.main > *:not(.app-footer) {
-  max-width: 1400px;
-  margin-inline: auto;
-}
 
 .page-loading { min-height: 60vh; }
 .page-header { margin-bottom: 28px; }
