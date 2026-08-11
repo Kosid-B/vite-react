@@ -65,6 +65,15 @@ GOTCHA #1 — .guest-bar กลายเป็น "แถบฟ้าเต็�
   3. เจอบั๊ก layout: ตรวจ "ลูกตรงของ flex container" ทุกตัวว่ามีความกว้างชัดเจนไหม (โดยเฉพาะ banner/overlay
      ที่ควรเต็มแถวแต่ไม่ได้กำหนด flex-basis) — align-items:stretch ทำให้มันสูงเต็ม container
   4. ผู้ใช้บอก "มือถือปกติ + เมื่อวานปกติ" = เบาะแสทองว่าเป็น state-specific (guest vs login) ไม่ใช่ทุกคน
+
+GOTCHA #2 — ข้อความ header sidebar "ซ้อนทับกัน" (collapsed:hover peek / จอเตี้ย)
+  • .sidebar = flex column, position:fixed height 100vh · .sidebar-brand เดิม flex-shrink:1 (default)
+    เมื่อเนื้อหา sidebar สูงเกินจอ → flex บีบ .sidebar-brand (มี min-height:52px ของ state ยุบ)
+    เหลือ 52px แต่ content (sub/badge) ล้นออกมาทับ .nav-section ด้านล่าง
+  • แก้: .sidebar-brand { flex-shrink:0 } → brand ไม่ถูกบีบ · sidebar เลื่อน (overflow-y:auto) แทน
+  • บทเรียน: flex item ที่ "ต้องคงความสูงตาม content" (header/brand) ให้ flex-shrink:0 เสมอ
+    โดยเฉพาะใน flex-column ที่ parent สูงจำกัด — ไม่งั้นถูกบีบจน content ล้นทับตัวถัดไป
+  • reproduce: force .sidebar.collapsed + page.hover (ต้องลบ .onb-overlay/.goal-overlay ก่อน hover) — scratchpad/sb2.mjs
 ```
 
 ## Key Source Files
