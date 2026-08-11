@@ -5895,6 +5895,39 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .leak-cta { font-size:13px; color:var(--ink2); background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.28); border-radius:9px; padding:9px 12px; margin-top:10px; line-height:1.55; }
 .leak-disc { font-size:11.5px; color:var(--ink3); line-height:1.55; margin-top:10px; }
 
+/* ---- Your Edge (Moat Meter · ความได้เปรียบของคุณ) ---- */
+.edge { background:var(--white); border:1px solid var(--sand); border-radius:14px; padding:14px 16px; margin-bottom:16px; }
+.edge-hd { margin-bottom:12px; }
+.edge-title { font-size:16px; font-weight:800; }
+.edge-sub { font-size:12px; color:var(--ink3); display:block; margin-top:3px; line-height:1.5; }
+.edge-score { display:flex; align-items:center; gap:16px; margin-bottom:14px; }
+.edge-ring { position:relative; width:92px; height:92px; flex:none; border-radius:50%;
+  background:conic-gradient(#38bdf8 calc(var(--pct)*1%), var(--sand) 0);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.edge-ring::after { content:""; position:absolute; inset:9px; border-radius:50%; background:var(--white); }
+.edge-ring-num { position:relative; z-index:1; font-size:30px; font-weight:800; color:var(--ink); line-height:1; }
+.edge-ring-lbl { position:relative; z-index:1; font-size:11px; color:var(--ink3); }
+.edge-tier-name { font-size:16px; font-weight:800; color:var(--ink); }
+.edge-tier-msg { font-size:13px; color:var(--ink2); line-height:1.55; margin-top:4px; }
+.edge-assets { display:flex; flex-direction:column; gap:7px; margin-bottom:12px; }
+.edge-asset { display:flex; align-items:flex-start; gap:9px; border:1px solid var(--sand); border-radius:10px; padding:9px 12px; background:var(--cream); opacity:.7; }
+.edge-asset.on { opacity:1; border-color:rgba(56,189,248,.35); background:rgba(56,189,248,.06); }
+.edge-asset-ic { flex:none; }
+.edge-asset-body { flex:1; min-width:0; }
+.edge-asset-top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+.edge-asset-label { font-size:13.5px; font-weight:700; color:var(--ink); }
+.edge-asset-count { font-size:15px; font-weight:800; color:#38bdf8; font-variant-numeric:tabular-nums; }
+.edge-asset-note { font-size:12px; color:var(--ink3); line-height:1.5; margin-top:2px; }
+.edge-switch { font-size:13px; color:var(--ink); background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.35); border-radius:9px; padding:10px 12px; line-height:1.55; }
+.edge-next { font-size:13px; color:var(--ink2); margin-top:8px; line-height:1.55; }
+.edge-vs { margin-top:14px; border-top:1px solid var(--sand); padding-top:12px; }
+.edge-vs-hd { font-size:13.5px; font-weight:800; text-align:center; margin-bottom:10px; }
+.edge-vs-hd span { color:var(--ink3); font-weight:600; margin:0 6px; }
+.edge-vs-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:7px; }
+.edge-vs-them { font-size:12.5px; color:var(--ink3); background:var(--cream); border:1px solid var(--sand); border-radius:8px; padding:8px 10px; line-height:1.45; }
+.edge-vs-us { font-size:12.5px; font-weight:600; color:var(--ink); background:rgba(34,197,94,.08); border:1px solid rgba(34,197,94,.3); border-radius:8px; padding:8px 10px; line-height:1.45; }
+@media (max-width:560px){ .edge-vs-row { grid-template-columns:1fr; gap:5px; } }
+
 /* ---- รางวัลเมือง ---- */
 .rw-panel { background:var(--white); border:1px solid var(--sand); border-radius:14px; padding:14px 16px; margin-bottom:16px; }
 .rw-hd { font-size:16px; font-weight:800; margin-bottom:12px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
