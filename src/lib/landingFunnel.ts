@@ -5,6 +5,7 @@
  * ไฟล์นี้แยก 2 ส่วน: (1) ตรรกะ pure (จำแนก referrer + คำนวณ step/leak) ให้ test ได้
  *                    (2) beacon ส่ง RPC track_landing (upsert monotonic) — no-op ในโหมด local */
 import { supabase, isSupabaseEnabled } from './supabase';
+import { landingVariant, type LandingVariant } from './landingAb';
 
 // ── (1) ตรรกะ pure ───────────────────────────────────────────────────────────
 
@@ -40,6 +41,7 @@ export interface LandingAgg {
   bounce: number;    // เข้ามาแล้วเด้งออก (<10 วิ และเลื่อน <25%)
   by_seg: Record<string, number>;
   by_ref: Record<string, number>;
+  by_ab: Record<string, { total: number; signup: number; cta: number }>; // A/B: show/control/unset
 }
 
 export interface FunnelStep {
@@ -99,6 +101,7 @@ interface FunnelState {
   dwell: number;
   cta: boolean;
   signup: boolean;
+  ab: LandingVariant;   // กลุ่ม A/B (holdout 2 ส่วนใหม่)
 }
 let state: FunnelState | null = null;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -126,13 +129,20 @@ function getSession(): string {
 /** เริ่มเซสชัน funnel — เรียกครั้งเดียวตอน Landing mount (ส่ง view beacon) */
 export function initLandingFunnel(seg: string, referrer: string, origin: string): void {
   if (typeof window === 'undefined') return;
+  const session = getSession();
   state = {
-    session: getSession(),
+    session,
     seg: seg || 'default',
     ref: refKind(referrer, origin),
     scroll: 0, dwell: 0, cta: false, signup: false,
+    ab: landingVariant(session),
   };
   flush(); // นับ "เข้าดู" ทันที
+}
+
+/** กลุ่ม A/B ของผู้เยี่ยมชมคนนี้ (deterministic จาก session) — ให้ LandingPage ตัดสินใจแสดง 2 ส่วนใหม่ */
+export function currentLandingVariant(): LandingVariant {
+  return landingVariant(getSession());
 }
 
 export function markLandingScroll(pct: number): void {
@@ -172,6 +182,7 @@ export function flush(force = false): void {
       p_cta: state.cta,
       p_signup: state.signup,
       p_dwell: state.dwell,
+      p_ab: state.ab,
     })
     .then(() => {}, () => {}); // เงียบเสมอ — tracking ต้องไม่ทำหน้าเว็บพัง
 }
@@ -202,5 +213,6 @@ export async function loadLandingFunnel(days = 30): Promise<LandingAgg | null> {
     bounce: d.bounce ?? 0,
     by_seg: d.by_seg ?? {},
     by_ref: d.by_ref ?? {},
+    by_ab: d.by_ab ?? {},
   };
 }
