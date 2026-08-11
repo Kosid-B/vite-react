@@ -107,7 +107,8 @@ supabase/migrations/           — 0001–0028 (สถานะ apply จริ�
 public/CNAME                   — custom domain (ceoaithailand.org)
 .github/workflows/deploy.yml   — GitHub Pages auto-deploy (legacy — production = Cloudflare Workers)
 wrangler.jsonc                 — Cloudflare Workers config (production) + vars SEO (SUPABASE_URL/ANON_KEY/SITE_ORIGIN — public)
-src/server.ts                  — Worker: /api/agent DO + SEO ฝั่ง server (/b/<slug>, /b, /sitemap.xml)
+src/server.ts                  — Worker: /api/agent DO + /api/guest-ask (guest ลอง AI จริงไม่ต้องสมัคร) + SEO ฝั่ง server (/b/<slug>, /b, /blog, /sitemap.xml)
+src/agent/CeoAiAgent.ts        — DO: AI ที่ปรึกษา (haiku) · guestAsk() = แก้ pain "คิดว่าต้องสมัครถึงใช้ AI" ให้ guest ลอง AI จริงก่อน cap 3/IP/วัน + เพดานรวม 400/วัน (fail-closed กันงบบาน · จองโควตาก่อนเรียก · ไม่เก็บประวัติข้าม guest) · client: lib/guestAi.ts + components/GuestAiTry.tsx บน Landing
 src/lib/seoData.ts             — pure SEO builders (title/meta/canonical/JSON-LD/sitemap) ใช้ร่วม worker+client
 src/lib/seo.ts                 — client applySeo() (idempotent) เรียกในหน้า public
 src/lib/ambientAudio.ts        — เพลงบรรเลงโปรซีเจอรัล (Web Audio API ไม่มีไฟล์/ลิขสิทธิ์) ปรับโทนตามเวลาจริง (reuse detectTime) · opt-in ปิดเป็นค่าเริ่มต้น · ปุ่ม components/AmbientMusic.tsx ใน sidebar footer
