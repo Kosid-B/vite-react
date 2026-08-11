@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { listPendingPayments, listApprovedPayments, reviewPayment, grantAiTopup,
-  listPendingTopups, approveTopupRequest, rejectTopupRequest,
+  listPendingTopups, approveTopupRequest, approveTokenTopupRequest, rejectTopupRequest,
   type PaymentSubmission, type TopupRequest } from '../../lib/payments';
 import { TOPUP_PACKS } from '../../lib/topup';
 
@@ -28,12 +28,15 @@ export default function PaymentsTab() {
   }
   useEffect(() => { load(); }, []);
 
-  async function decideTopup(id: string, approve: boolean) {
-    setTuReqBusy(id); setMsg(null);
-    const err = approve ? await approveTopupRequest(id) : await rejectTopupRequest(id);
+  async function decideTopup(t: TopupRequest, approve: boolean) {
+    setTuReqBusy(t.id); setMsg(null);
+    const isToken = t.tokens != null;
+    const err = approve
+      ? (isToken ? await approveTokenTopupRequest(t.id) : await approveTopupRequest(t.id))
+      : await rejectTopupRequest(t.id);
     setTuReqBusy(null);
     if (err) { setMsg('⚠️ ' + err); return; }
-    setMsg(approve ? '✅ เปิด credits + ปิดคำขอแล้ว' : '🚫 ตีกลับคำขอ top-up แล้ว');
+    setMsg(approve ? (isToken ? '✅ เปิด token + ปิดคำขอแล้ว' : '✅ เปิด credits + ปิดคำขอแล้ว') : '🚫 ตีกลับคำขอ top-up แล้ว');
     load();
   }
 
@@ -75,14 +78,14 @@ export default function PaymentsTab() {
             {topups.map(t => (
               <div key={t.id} className="topup-q-row">
                 <div className="topup-q-info">
-                  <b>+{t.credits.toLocaleString()} calls</b> · {t.price.toLocaleString()} ฿
+                  <b>{t.tokens != null ? `+${t.tokens.toLocaleString()} tokens` : `+${t.credits.toLocaleString()} calls`}</b> · {t.price.toLocaleString()} ฿
                   <span className="topup-q-meta">ws {t.workspaceId.slice(0, 8)}… · {t.createdAt.slice(0, 10)}</span>
                 </div>
                 <div className="topup-q-actions">
-                  <button className="topup-q-ok" disabled={tuReqBusy === t.id} onClick={() => decideTopup(t.id, true)}>
-                    {tuReqBusy === t.id ? '…' : '✅ เปิด credits'}
+                  <button className="topup-q-ok" disabled={tuReqBusy === t.id} onClick={() => decideTopup(t, true)}>
+                    {tuReqBusy === t.id ? '…' : (t.tokens != null ? '✅ เปิด token' : '✅ เปิด credits')}
                   </button>
-                  <button className="topup-q-no" disabled={tuReqBusy === t.id} onClick={() => decideTopup(t.id, false)}>🚫</button>
+                  <button className="topup-q-no" disabled={tuReqBusy === t.id} onClick={() => decideTopup(t, false)}>🚫</button>
                 </div>
               </div>
             ))}

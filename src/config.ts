@@ -110,6 +110,15 @@ export const AUTH = {
   phoneOtp: false,
 };
 
+// โมเดลโควตา AI แบบ "token" (0052) — มิเตอร์ + ซื้อ token เพิ่ม ในหน้า Billing
+//   ต้องเปิดพร้อมกับฝั่ง server: supabase secrets set ENFORCE_AI_TOKENS=true แล้ว redeploy
+//     ฟังก์ชัน ai-assist / ai-plan / agent-run (ไม่งั้น client โชว์ token แต่ server ยังบังคับเป็น call)
+//   false (ตอนนี้): มิเตอร์/ท็อปอัปยังเป็น "จำนวน call" (ระบบเดิม) · guest daily-free token = live อยู่แล้ว (แยกส่วน)
+//   เพดาน/ราคา token = src/lib/tokenEconomics.ts (margin ≥30% ทุกแพ็ก)
+export const TOKENS = {
+  live: false,
+};
+
 // ช่องทางชุมชน/โซเชียล — โชว์บนหน้า Landing เฉพาะเมื่อใส่ URL (เว้นว่าง = ซ่อน)
 //   ⚠️ เว้นว่างไว้จนกว่าจะสร้างกลุ่มจริง (LINE OpenChat / กลุ่ม Facebook) แล้วค่อยวางลิงก์
 export const SOCIAL = {

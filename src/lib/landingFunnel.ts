@@ -176,6 +176,16 @@ export function flush(force = false): void {
     .then(() => {}, () => {}); // เงียบเสมอ — tracking ต้องไม่ทำหน้าเว็บพัง
 }
 
+/** สัญญาณ engagement สด ของผู้เยี่ยมชมคนนี้ (dwell/scroll/CTA) — ให้ token ฟรีตามความตั้งใจ
+ *  ใช้กับ tokenEconomics.engagementTier() เพื่อจัดโควตา token ฟรี "คนดูนาน = ได้มากกว่า" */
+export function currentEngagement(): { dwellSec: number; scrollPct: number; reachedCta: boolean } {
+  return {
+    dwellSec: state?.dwell ?? 0,
+    scrollPct: state?.scroll ?? 0,
+    reachedCta: !!(state?.cta || state?.signup),
+  };
+}
+
 /** ดึงสรุป funnel (admin เท่านั้น — RPC เช็ค is_app_admin เอง) */
 export async function loadLandingFunnel(days = 30): Promise<LandingAgg | null> {
   if (!isSupabaseEnabled || !supabase) return null;

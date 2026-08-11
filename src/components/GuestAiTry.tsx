@@ -83,7 +83,7 @@ export default function GuestAiTry({ onGetStarted }: { onGetStarted: () => void 
             )}
             <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
               <span style={{ color: C.sub, fontSize: 12.5 }}>
-                {res.capped ? '🎉 ครบโควตาฟรีวันนี้แล้ว' : (typeof res.guestRemaining === 'number' ? `เหลือลองฟรีอีก ${res.guestRemaining} ครั้งวันนี้` : 'ลองฟรีต่อได้')}
+                {res.capped ? '🎉 ครบโควตาฟรีวันนี้แล้ว' : (typeof res.guestTokensLeft === 'number' ? `เหลือโควตาฟรีอีก ~${res.guestTokensLeft.toLocaleString()} tokens วันนี้` : 'ลองฟรีต่อได้')}
               </span>
               <button onClick={() => { track('guest_ai_signup_click', {}); onGetStarted(); }} style={btn}>
                 สมัครฟรีเพื่อให้ทีม AI ทำงานต่อ →
