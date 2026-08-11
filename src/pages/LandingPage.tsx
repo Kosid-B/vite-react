@@ -21,6 +21,7 @@ import { listApprovedTestimonials, aggregateRating, starString, type Testimonial
 import LandingReviewWidget from '../components/LandingReviewWidget';
 import LeadCapture from '../components/LeadCapture';
 import PersonaBanner from '../components/PersonaBanner';
+import ValueCompare from '../components/ValueCompare';
 import { loadBehavior, derivePersona, persistSignal, type PersonaView } from '../lib/behaviorPersona';
 import { LandingThemeCtx } from '../lib/landingTheme';
 import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
@@ -635,6 +636,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           </div>
         </div>
       </section>
+
+      {/* ─── เทียบชัด: ทำเอง vs จ้างคน vs CEO AI (ลดความลังเล — Dark AI Marketing #2/#16) ─── */}
+      <ValueCompare onGetStarted={onGetStarted} />
 
       {/* ─── AI Skills ที่โตไปกับธุรกิจ — ระบบพัฒนา Skill ให้ + มี Skill ใหม่ตามระดับ ─── */}
       <section style={{ padding: '80px 24px' }}>
