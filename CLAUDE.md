@@ -272,6 +272,7 @@ public.skill_auctions     — ประมูล skill แบบ English Auction
 public.skill_bids         — บิดประมูล โปร่งใสเห็นกันหมด (0012)
 public.workspace_integrations — credential ของ integration ที่ User เชื่อมเอง (LINE/Sheets) RLS per-workspace, revoke anon; ไม่อยู่ใน workspace_state (กัน secret รั่ว) (0020)
 public.ai_usage           — ตัวนับ AI calls ต่อ (bucket=ws/user/guest-IP, เดือน) บังคับ quota ฝั่ง server (0035) · RLS ปิดหมด เข้าผ่าน rpc bump_ai_usage/get_ai_usage (SECURITY DEFINER) · guest cap 25/เดือน/IP · flag ENFORCE_AI_QUOTA (default off, fail-open) wire ใน ai-assist/ai-plan/agent-run ผ่าน _shared/quota.ts · plan อ่านจาก workspace_plan mirror (trigger sync เฉพาะ role=service_role กัน spoof)
+public.landing_funnel     — first-party visitor funnel (PDPA-safe · 0051): 1 แถว/ผู้เข้าชม (session uuid สุ่มฝั่ง client) เก็บ seg/ref_kind/max_scroll/max_dwell/reached_cta/reached_signup · RLS ปิด เข้าผ่าน rpc track_landing (anon, upsert monotonic) / landing_funnel_agg (admin-guarded) · ไม่เก็บ PII/cursor path · แสดงในแผง GrowthDashboard "Landing Funnel" (lib/landingFunnel.ts)
 public.ai_topup           — Top-up packs: credits AI เพิ่มต่อ workspace/เดือน (0036) · rpc grant_ai_topup (admin/service_role เท่านั้น) · bump/get_ai_usage รวม credits เข้า quota · แพ็ก src/lib/topup.ts (+500฿490/+1000฿990/+3000฿2900 · margin>20% แม้ worst-case) · UI: Billing (ซื้อ PromptPay) + PaymentsTab (admin เปิด credits)
 ```
 
@@ -285,6 +286,19 @@ public.ai_topup           — Top-up packs: credits AI เพิ่มต่อ 
 | billing-cron | ❌ | ต่ออายุ/downgrade อัตโนมัติ (deployed prod v30) |
 | verify-slip | ✅ | ตรวจสลิปกับธนาคารจริงผ่าน SlipOK → เปิดแพ็ก server-side (deployed prod · LIVE) |
 | promptpay-webhook | ❌ | รับ webhook จาก payment gateway |
+| hubspot-sync | ❌ | ซิงก์ platform_leads → HubSpot CRM (contacts upsert by email · cron · code-ready ยังไม่ deploy — รอ HUBSPOT_TOKEN) |
+
+### Marketing connectors / analytics sinks
+```
+Amplitude (product analytics: funnel/retention/behavioral) — src/lib/amplitude.ts ส่ง event ชุดเดียวกับ GA
+  ผ่าน track() (analytics.ts) เข้า HTTP API v2 · gate ด้วย VITE_AMPLITUDE_KEY (public client-side key เหมือน GA id
+  — ไม่มีคีย์ = no-op) · device_id นิรนามฝั่ง client (localStorage) ไม่เก็บ PII · ตั้งคีย์ผ่าน GitHub Secret/wrangler var
+HubSpot (CRM + marketing automation) — supabase/functions/hubspot-sync (cron pattern เดียวกับ lead-nurture)
+  upsert lead อีเมล→contact · standard properties เท่านั้น (custom ceo_ai_* uncomment เมื่อสร้าง property แล้ว)
+  Secret: HUBSPOT_TOKEN (Private App · crm.objects.contacts.write) + CRON_SECRET · deploy: supabase functions deploy hubspot-sync --no-verify-jwt
+Connectors ที่ org ต่อไว้ (ผ่าน claude.ai) ใช้ผ่าน MCP: Figma/Miro/Stripe/GCal/GDrive/Gmail/Cloudflare (พร้อม)
+  · Amplitude/HubSpot/Notion/Slack (ต่อแล้วแต่ต้องเปิด enabledInChat ก่อนผมเรียกได้)
+```
 
 ### agent-run — Serper.dev Integration
 ```typescript

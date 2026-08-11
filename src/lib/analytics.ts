@@ -9,6 +9,8 @@
  *  Cross-sell: booster_hired / agent_match_run (ตลาด → บริษัท AI)
  */
 
+import { sendAmplitude } from './amplitude';
+
 declare global {
   interface Window { gtag?: (...args: unknown[]) => void }
 }
@@ -33,5 +35,6 @@ export function track(event: string, params: Record<string, string | number> = {
       }
     }
     window.gtag?.('event', event, safe);
+    sendAmplitude(event, safe); // ส่งชุดเดียวกันเข้า Amplitude (no-op ถ้าไม่ตั้ง VITE_AMPLITUDE_KEY)
   } catch { /* ห้ามทำ UX พัง เพราะ analytics */ }
 }
