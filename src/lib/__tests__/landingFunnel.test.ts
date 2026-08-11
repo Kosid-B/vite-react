@@ -33,7 +33,7 @@ describe('refKind', () => {
 });
 
 const AGG = (o: Partial<LandingAgg>): LandingAgg => ({
-  total: 0, engaged: 0, cta: 0, signup: 0, avg_scroll: 0, avg_dwell: 0, bounce: 0, by_seg: {}, by_ref: {}, ...o,
+  total: 0, engaged: 0, cta: 0, signup: 0, avg_scroll: 0, avg_dwell: 0, bounce: 0, by_seg: {}, by_ref: {}, by_ab: {}, ...o,
 });
 
 describe('landingFunnelSteps', () => {

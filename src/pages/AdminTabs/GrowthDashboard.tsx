@@ -12,6 +12,7 @@ import { signupsForWeek, type SignupRecord } from '../../lib/attribution';
 import {
   loadLandingFunnel, landingFunnelSteps, biggestLeak, dwellLabel, type LandingAgg,
 } from '../../lib/landingFunnel';
+import { landingAbStats, landingAbVerdict } from '../../lib/landingAb';
 import UtmBuilder from '../../components/UtmBuilder';
 
 /* Growth Dashboard — รวมตัวเลขการเติบโตในแอปที่เดียว: ผู้สมัคร + lead + funnel
@@ -305,6 +306,37 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
                 </div>
               </div>
             </div>
+            {/* A/B holdout: 2 ส่วนใหม่ (ลอง AI จริง + จัดการความกลัว AI) ช่วย signup จริงไหม */}
+            {(() => {
+              const ab = landingAbStats(landing.by_ab);
+              const shown = ab.filter(s => s.variant === 'show' || s.variant === 'control');
+              if (shown.length === 0) return null;
+              const verdict = landingAbVerdict(landing.by_ab);
+              const vLabel: Record<string, string> = { show: 'เห็น 2 ส่วนใหม่', control: 'ไม่เห็น (control)', unset: 'ก่อนเริ่มทดลอง' };
+              return (
+                <div style={{ border: '1px solid #7c3aed', borderRadius: 10, padding: '12px 14px', background: 'rgba(124,58,237,0.07)', display: 'grid', gap: 10 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--ink)' }}>
+                    🧪 A/B — 2 ส่วนใหม่ช่วยสมัครจริงไหม? (ลอง AI จริง + จัดการความกลัว AI)
+                  </div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {ab.filter(s => s.variant !== 'unset').map(s => (
+                      <div key={s.variant} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5 }}>
+                        <span style={{ width: 120, flex: 'none', color: 'var(--ink)', fontWeight: s.variant === 'show' ? 800 : 600 }}>{vLabel[s.variant] ?? s.variant}</span>
+                        <div style={{ flex: 1, height: 14, borderRadius: 5, background: 'var(--cream)', overflow: 'hidden' }}>
+                          <div style={{ width: `${Math.min(100, s.signupRate * 4)}%`, height: '100%', background: s.variant === 'show' ? '#16a34a' : '#94a3b8', borderRadius: 5 }} />
+                        </div>
+                        <span style={{ width: 96, textAlign: 'right', flex: 'none', color: 'var(--ink3)' }}>
+                          signup {s.signupRate}% <span style={{ fontSize: 10.5 }}>({s.signup}/{s.total})</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 12, color: verdict.ready ? (verdict.winner === 'show' ? '#16a34a' : verdict.winner === 'control' ? '#dc2626' : 'var(--ink)') : 'var(--ink3)', lineHeight: 1.6, fontWeight: verdict.ready ? 700 : 400 }}>
+                    {verdict.ready ? '📊 ' : '⏳ '}{verdict.message}
+                  </div>
+                </div>
+              );
+            })()}
             <div style={{ fontSize: 11.5, color: 'var(--ink3)', lineHeight: 1.7 }}>
               🔒 นิรนาม 100% — id สุ่มฝั่งเบราว์เซอร์ · ไม่เก็บชื่อ/อีเมล/ตำแหน่ง cursor · 1 แถว/ผู้เข้าชม (นับซ้ำไม่ได้) · ช่วง 30 วันล่าสุด
             </div>

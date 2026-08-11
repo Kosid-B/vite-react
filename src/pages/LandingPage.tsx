@@ -26,6 +26,8 @@ import ValueTimeline from '../components/ValueTimeline';
 import CommunityJoin from '../components/CommunityJoin';
 import GuestAiTry from '../components/GuestAiTry';
 import WhyTrustAi from '../components/WhyTrustAi';
+import { currentLandingVariant } from '../lib/landingFunnel';
+import { showNewSections } from '../lib/landingAb';
 import { loadBehavior, derivePersona, persistSignal, type PersonaView } from '../lib/behaviorPersona';
 import { LandingThemeCtx } from '../lib/landingTheme';
 import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
@@ -191,6 +193,8 @@ const plans = [
 
 export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }: Props) {
   const [ctaHover, setCtaHover] = useState(false);
+  // A/B holdout: กลุ่ม 'show' เห็น 2 ส่วนใหม่ (ลอง AI จริง + จัดการความกลัว AI) · 'control' ไม่เห็น → วัดผล conversion
+  const abShowNew = useMemo(() => showNewSections(currentLandingVariant()), []);
   const [showSticky, setShowSticky] = useState(false);   // sticky CTA มือถือ (โผล่หลังเลื่อนพ้น hero)
   const [stickyClosed, setStickyClosed] = useState(false);
   const [navHover, setNavHover] = useState(false);
@@ -463,11 +467,15 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         </div>
       </section>
 
-      {/* ─── ลองใช้ AI จริงทันที (ไม่ต้องสมัคร) — แก้ pain "คิดว่าต้องสมัครถึงใช้ AI ได้" (PLG aha) ─── */}
-      <GuestAiTry onGetStarted={onGetStarted} />
-
-      {/* ─── objection handling: จัดการความกลัว AI (ใช้ไม่เป็น/ถูกต้องไหม/ไม่เคยใช้) ─── */}
-      <WhyTrustAi onGetStarted={onGetStarted} />
+      {/* ─── A/B holdout: 2 ส่วนใหม่แสดงเฉพาะกลุ่ม 'show' (control ไม่เห็น) เพื่อวัดผล conversion จริง ─── */}
+      {abShowNew && (
+        <>
+          {/* ลองใช้ AI จริงทันที (ไม่ต้องสมัคร) — แก้ pain "คิดว่าต้องสมัครถึงใช้ AI ได้" (PLG aha) */}
+          <GuestAiTry onGetStarted={onGetStarted} />
+          {/* objection handling: จัดการความกลัว AI (ใช้ไม่เป็น/ถูกต้องไหม/ไม่เคยใช้) */}
+          <WhyTrustAi onGetStarted={onGetStarted} />
+        </>
+      )}
 
       {/* ─── เครื่องมือประเมินตลาดฟรี (interactive · dopamine) — วางใกล้ hero ให้เห็นทันที ─── */}
       <MarketSizerPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} />
