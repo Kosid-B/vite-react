@@ -25,6 +25,7 @@ import ValueCompare from '../components/ValueCompare';
 import ValueTimeline from '../components/ValueTimeline';
 import CommunityJoin from '../components/CommunityJoin';
 import GuestAiTry from '../components/GuestAiTry';
+import WhyTrustAi from '../components/WhyTrustAi';
 import { loadBehavior, derivePersona, persistSignal, type PersonaView } from '../lib/behaviorPersona';
 import { LandingThemeCtx } from '../lib/landingTheme';
 import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
@@ -464,6 +465,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
 
       {/* ─── ลองใช้ AI จริงทันที (ไม่ต้องสมัคร) — แก้ pain "คิดว่าต้องสมัครถึงใช้ AI ได้" (PLG aha) ─── */}
       <GuestAiTry onGetStarted={onGetStarted} />
+
+      {/* ─── objection handling: จัดการความกลัว AI (ใช้ไม่เป็น/ถูกต้องไหม/ไม่เคยใช้) ─── */}
+      <WhyTrustAi onGetStarted={onGetStarted} />
 
       {/* ─── เครื่องมือประเมินตลาดฟรี (interactive · dopamine) — วางใกล้ hero ให้เห็นทันที ─── */}
       <MarketSizerPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} />
