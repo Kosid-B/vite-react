@@ -432,6 +432,13 @@ function seoStaticPage(opts: {
 <link rel="preload" href="/fonts/kanit-thai-700.woff2" as="font" type="font/woff2" crossorigin>
 ${opts.schema}
 <style>${SEO_THEME_CSS}</style>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','G-CHJ99RY1Q1',{linker:{domains:['b-tctraining.com','ceoaithailand.org']}});
+(function(){function l(){var s=document.createElement('script');s.async=1;s.src='https://www.googletagmanager.com/gtag/js?id=G-CHJ99RY1Q1';document.head.appendChild(s);}
+if('requestIdleCallback' in window)requestIdleCallback(l,{timeout:4000});else setTimeout(l,3000);})();
+</script>
 </head>
 <body>
 <div class="nav"><div class="inner"><a class="brand" href="${escapeHtml(opts.origin + '/')}">CEO AI Thailand</a><a class="home" href="${escapeHtml(opts.origin + '/')}">หน้าหลัก →</a></div></div>
