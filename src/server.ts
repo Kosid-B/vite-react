@@ -7,6 +7,8 @@ import {
   type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
 
+import { resolveShortLink, shortLinkTarget } from './lib/shortLinks';
+
 export { CeoAiAgent } from './agent/CeoAiAgent';
 
 interface Env {
@@ -136,6 +138,12 @@ export default {
 
     // ===== SEO ฝั่ง server (marketplace) — เฉพาะ GET =====
     if (request.method === 'GET') {
+      // ลิงก์สั้นสำหรับโซเชียล — คนที่เห็น Story/TikTok "พิมพ์ตาม" ไม่ได้กด
+      // จึงต้องสั้นพอที่จะจำและพิมพ์ถูกจากการเห็นครั้งเดียว
+      // ติด utm ให้เองเพื่อวัดผลได้โดยที่ผู้ใช้ไม่ต้องพิมพ์ query string
+      const short = resolveShortLink(url.pathname);
+      if (short) return Response.redirect(shortLinkTarget(short, origin), 302);
+
       // sitemap.xml แบบ dynamic จากตาราง storefronts (override public/sitemap.xml)
       // ⚠️ ต้องคืน XML "เสมอ" — ห้าม fall through ไป ASSETS (index.html) เพราะ Google จะเห็นเป็น HTML แล้ว reject
       if (url.pathname === '/sitemap.xml') {

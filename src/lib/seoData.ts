@@ -365,6 +365,13 @@ export function homeSeo(origin: string, agg?: ReviewAggregate, seg?: string): Se
  * โหลดฟอนต์ Kanit + พาเลตเดียวกับแอป (bg #020617, cyan #22d3ee, การ์ด #0f172a) — ให้ฟอนต์/สีตรงธีมหลัก
  * เดิม 2 หน้านี้ไม่ได้โหลด Kanit → ฟอนต์ fallback เป็น system = ดูหลุดธีม */
 const SEO_THEME_CSS = `
+@font-face{font-family:'Kanit';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/kanit-thai-400.woff2') format('woff2');unicode-range:U+0E01-0E5B,U+200C-200D,U+25CC;}
+@font-face{font-family:'Kanit';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/kanit-latin-400.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215;}
+@font-face{font-family:'Kanit';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/kanit-thai-600.woff2') format('woff2');unicode-range:U+0E01-0E5B,U+200C-200D,U+25CC;}
+@font-face{font-family:'Kanit';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/kanit-latin-600.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215;}
+@font-face{font-family:'Kanit';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/kanit-thai-700.woff2') format('woff2');unicode-range:U+0E01-0E5B,U+200C-200D,U+25CC;}
+@font-face{font-family:'Kanit';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/kanit-latin-700.woff2') format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215;}
+
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body { margin:0; background:#020617; color:#f8fafc; font-family:'Kanit',system-ui,-apple-system,sans-serif; line-height:1.7; -webkit-font-smoothing:antialiased; }
@@ -421,9 +428,8 @@ function seoStaticPage(opts: {
 <meta property="og:url" content="${escapeHtml(url)}">
 <meta property="og:image" content="${escapeHtml(opts.origin + DEFAULT_OG)}">
 <meta name="robots" content="index,follow">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/kanit-thai-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/kanit-thai-700.woff2" as="font" type="font/woff2" crossorigin>
 ${opts.schema}
 <style>${SEO_THEME_CSS}</style>
 </head>
