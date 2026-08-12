@@ -22,6 +22,52 @@
 
 ---
 
+## 🏷️ ต่อท้าย `?s=` เพื่อบอกว่ามาจากแพลตฟอร์มไหน
+
+**URL ในภาพ** ใช้ตัวสั้นเปล่า ๆ (ให้คนพิมพ์ตาม) · **URL ในแคปชัน/คำอธิบาย** ต่อท้ายด้วย `?s=`
+ไม่ต่อก็ยังใช้ได้ แค่จะรวมเป็นก้อน `social` แยกไม่ออกว่ามาจากที่ไหน
+
+| ต่อท้าย | แพลตฟอร์ม | ตัวอย่างเต็ม |
+|---|---|---|
+| `?s=yt` | YouTube Shorts | `ceoaithailand.org/price?s=yt` |
+| `?s=ytv` | YouTube คลิปยาว | `ceoaithailand.org/price?s=ytv` |
+| `?s=tt` | TikTok (ไบโอ) | `ceoaithailand.org/sms?s=tt` |
+| `?s=fb` | Facebook feed | `ceoaithailand.org/sms?s=fb` |
+| `?s=ig` | Instagram Story | `ceoaithailand.org/tun?s=ig` |
+| `?s=line` | LINE / กลุ่มไลน์ | `ceoaithailand.org/customer?s=line` |
+| `?s=li` | LinkedIn | `ceoaithailand.org/plan?s=li` |
+| `?s=qr` | QR ในนามบัตร/เอกสาร | `ceoaithailand.org/ai?s=qr` |
+
+**แยกคลิปย่อยในเรื่องเดียวกัน** เติม `&c=` เข้าไป — ใช้ตอนทำ A/B (เวอร์ชัน A vs B)
+```
+ceoaithailand.org/price?s=yt&c=1a
+ceoaithailand.org/price?s=yt&c=1b
+```
+
+> ค่าที่ไม่รู้จักจะตกกลับเป็น `social/organic` เอง — พิมพ์ผิดไม่พัง แค่เสียการแยกที่มา
+
+---
+
+## ▶️ YouTube Shorts — ลิงก์อยู่ใน "คำอธิบาย" เท่านั้น
+
+**ช่องชื่อ = ใส่ hook ไม่ใช่ลิงก์** · ลิงก์ในช่องชื่อกดไม่ได้และกินที่ hook ทิ้ง
+
+| คลิปเรื่อง | วางในคำอธิบาย |
+|---|---|
+| ต้นทุนต่อจาน | `https://ceoaithailand.org/price?s=yt&c=1a` |
+| 3 ข้อผิดพลาดคนเริ่มธุรกิจ | `https://ceoaithailand.org/tun?s=yt&c=2a` |
+| ทำธุรกิจคนเดียว | `https://ceoaithailand.org/plan?s=yt&c=3a` |
+| ไม่ต้องเก่ง AI | `https://ceoaithailand.org/ai?s=yt&c=4a` |
+| ลูกค้า 10 คนแรก | `https://ceoaithailand.org/customer?s=yt&c=5a` |
+| SMS ปลอม | `https://ceoaithailand.org/sms?s=yt&c=6a` |
+
+เวอร์ชัน B เปลี่ยน `c=1a` เป็น `c=1b` — ที่เหลือเหมือนเดิม
+
+> **ลิงก์เดียวใช้ทุกคลิปไม่ได้** — คนดูเรื่องต้นทุนแล้วกดไปเจอเรื่องอื่น = ปิดทิ้ง
+> ที่ใช้ลิงก์เดียวได้จริงคือ **ลิงก์ในโปรไฟล์ช่อง** → ใส่ `ceoaithailand.org/ai?s=yt`
+
+---
+
 ## 📘 Facebook feed — วางท้ายแคปชัน
 
 พิมพ์ URL เป็นข้อความ Facebook จะทำให้กดได้เอง
