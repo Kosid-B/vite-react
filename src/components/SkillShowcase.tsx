@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   SKILL_STAGES, BIZ_LABEL, PLAN_LABEL, catalogSummary, skillsForStage, skillsForBiz,
-  priceOf, consultantEquivOf, bundleQuote,
+  priceOf, consultantEquivOf, bundleQuote, creditFor,
   TOTAL_SKILL_COUNT, FREE_SKILL_COUNT, SIGNATURE_COUNT,
   type SkillStage, type SkillBiz,
 } from '../lib/skillCatalog';
@@ -97,6 +97,7 @@ export default function SkillShowcase({ onGetStarted }: { onGetStarted: () => vo
             </div>
             <h3>{s.id.replace(/-/g, ' ')}</h3>
             <p>{s.desc}</p>
+            {creditFor(s) && <p className="ss-credit">{creditFor(s)}</p>}
             {s.origin === 'signature' && (
               <div className="ss-price">
                 <strong>{baht(priceOf(s))}</strong>

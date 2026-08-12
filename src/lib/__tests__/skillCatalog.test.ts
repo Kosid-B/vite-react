@@ -5,6 +5,7 @@ import {
   catalogSummary, recommendSkills, FREE_SKILL_COUNT, TOTAL_SKILL_COUNT,
   signatureSkills, standardSkills, priceOf, consultantEquivOf, ownsSkill,
   bundleDiscount, bundleQuote, CONSULTANT_EQUIV, SIGNATURE_TOTAL_PRICE, SIGNATURE_COUNT,
+  creditFor, OWN_AUTHORS,
 } from '../skillCatalog';
 
 describe('skillCatalog — ความถูกต้องของข้อมูล', () => {
@@ -93,6 +94,35 @@ describe('skillCatalog — การคิดเงิน 2 ทาง', () => {
     for (const s of signatureSkills()) {
       expect(priceOf(s)).toBeLessThan(consultantEquivOf(s));
     }
+  });
+});
+
+describe('skillCatalog — สิทธิ์ในผลงาน (กันขายงานคนอื่น)', () => {
+  it('ทักษะที่ขายรายตัวได้ ต้องเป็นผลงานของเราเท่านั้น', () => {
+    for (const s of signatureSkills()) {
+      if (s.author) {
+        expect(OWN_AUTHORS as readonly string[]).toContain(s.author);
+      }
+    }
+  });
+
+  it('ผลงานผู้อื่นห้ามถูกตั้งราคาขายรายตัว', () => {
+    const others = SKILL_CATALOG.filter(
+      (s) => s.author && !(OWN_AUTHORS as readonly string[]).includes(s.author),
+    );
+    expect(others.length).toBeGreaterThan(0); // มีจริงในระบบ
+    for (const s of others) {
+      expect(s.origin).toBe('standard');
+      expect(s.price).toBeUndefined();
+    }
+  });
+
+  it('ผลงานผู้อื่นต้องมีข้อความเครดิต · ของเราเองไม่ต้องเครดิตตัวเอง', () => {
+    const other = SKILL_CATALOG.find((s) => s.author && !(OWN_AUTHORS as readonly string[]).includes(s.author))!;
+    expect(creditFor(other)).toContain(other.author!);
+    const mine = signatureSkills().find((s) => s.author)!;
+    expect(creditFor(mine)).toBeNull();
+    expect(creditFor({ ...other, author: undefined })).toBeNull();
   });
 });
 
