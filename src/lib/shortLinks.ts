@@ -31,6 +31,31 @@ export const SHORT_LINKS: Record<string, ShortLink> = {
   '/ai':       { path: '/start',                          campaign: 'try_ai' },
 };
 
+/** แหล่งที่มาต่อแพลตฟอร์ม — ต่อท้ายลิงก์สั้นด้วย `?s=<คีย์>` เช่น `/price?s=yt`
+ *
+ *  ทำไมต้องมี: เดิม shortLinkTarget เขียน utm_source=social ทับเสมอ
+ *    → ในรายงานแยกไม่ออกว่าคนมาจาก YouTube, TikTok หรือ Facebook (รวมเป็นก้อนเดียว)
+ *  ตอนนี้ลิงก์สั้นตัวเดียวใช้ได้ทุกแพลตฟอร์ม แค่เปลี่ยนตัวย่อท้าย = แยกที่มาได้จริง */
+export const SOURCE_PRESETS: Record<string, { source: string; medium: string }> = {
+  yt:   { source: 'youtube',   medium: 'shorts' },
+  ytv:  { source: 'youtube',   medium: 'video' },
+  tt:   { source: 'tiktok',    medium: 'bio' },
+  fb:   { source: 'facebook',  medium: 'social' },
+  ig:   { source: 'instagram', medium: 'story' },
+  line: { source: 'line',      medium: 'message' },
+  li:   { source: 'linkedin',  medium: 'social' },
+  qr:   { source: 'offline',   medium: 'qr' },
+};
+
+const DEFAULT_SOURCE = { source: 'social', medium: 'organic' };
+
+/** ยอมเฉพาะ a-z 0-9 - _ ยาวไม่เกิน 32 — กันค่าขยะ/อักขระแปลกหลุดเข้ารายงาน */
+function cleanTag(v: string | null): string | null {
+  if (!v) return null;
+  const s = v.trim().toLowerCase().slice(0, 32);
+  return /^[a-z0-9_-]+$/.test(s) ? s : null;
+}
+
 /** หาลิงก์สั้นจาก pathname ที่มาจาก URL จริง
  *  รองรับ: percent-encoding (path ไทยถูก encode เสมอ), ตัวพิมพ์ใหญ่, slash ท้าย
  *  คืน null ถ้าไม่ใช่ลิงก์สั้น (ให้ router เดินต่อไปทางปกติ) */
@@ -42,11 +67,29 @@ export function resolveShortLink(pathname: string): ShortLink | null {
   return SHORT_LINKS[p] ?? null;
 }
 
-/** ประกอบ URL ปลายทางพร้อม utm — ให้ Worker redirect ไปตรง ๆ */
-export function shortLinkTarget(link: ShortLink, origin: string): string {
+/** ประกอบ URL ปลายทางพร้อม utm — ให้ Worker redirect ไปตรง ๆ
+ *
+ *  @param search query string ที่ติดมากับลิงก์สั้น (เช่น `?s=yt&c=1a`) — ใส่ url.search ได้เลย
+ *
+ *  ลำดับความสำคัญของ utm_source/medium:
+ *    1. utm_source / utm_medium ที่ผู้ใช้ติดมาเอง (เขียนเต็ม ๆ ก็ยังใช้ได้)
+ *    2. `s=<คีย์>` จาก SOURCE_PRESETS  ← ทางที่แนะนำ (สั้น จำง่าย)
+ *    3. ค่าเริ่มต้น social / organic
+ *  `c=<ตัวย่อ>` (หรือ utm_content) = แยกคลิป/ชิ้นงานย่อยในแคมเปญเดียวกัน เช่น `c=1a` */
+export function shortLinkTarget(link: ShortLink, origin: string, search = ''): string {
   const to = new URL(link.path, origin);
-  to.searchParams.set('utm_source', 'social');
-  to.searchParams.set('utm_medium', 'organic');
-  to.searchParams.set('utm_campaign', link.campaign);
+
+  let q: URLSearchParams;
+  try { q = new URLSearchParams(search); } catch { q = new URLSearchParams(); }
+
+  const preset = SOURCE_PRESETS[cleanTag(q.get('s')) ?? ''] ?? DEFAULT_SOURCE;
+  const source = cleanTag(q.get('utm_source')) ?? preset.source;
+  const medium = cleanTag(q.get('utm_medium')) ?? preset.medium;
+  const content = cleanTag(q.get('c')) ?? cleanTag(q.get('utm_content'));
+
+  to.searchParams.set('utm_source', source);
+  to.searchParams.set('utm_medium', medium);
+  to.searchParams.set('utm_campaign', cleanTag(q.get('utm_campaign')) ?? link.campaign);
+  if (content) to.searchParams.set('utm_content', content);
   return to.toString();
 }

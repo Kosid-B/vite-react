@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SHORT_LINKS, resolveShortLink, shortLinkTarget } from '../shortLinks';
+import { SHORT_LINKS, SOURCE_PRESETS, resolveShortLink, shortLinkTarget } from '../shortLinks';
 import { BLOG_POSTS } from '../blogData';
 
 const ORIGIN = 'https://ceoaithailand.org';
@@ -77,6 +77,49 @@ describe('shortLinks — ติด utm ให้อัตโนมัติ', ()
   it('คอนเทนต์คนละชิ้นได้ campaign คนละค่า (แยกผลได้)', () => {
     const c = new Set(Object.values(SHORT_LINKS).map((l) => l.campaign));
     expect(c.size).toBeGreaterThanOrEqual(5);
+  });
+
+  it('`?s=yt` แยกที่มาเป็น youtube/shorts (ไม่ใช่ social/organic ก้อนเดียว)', () => {
+    const u = new URL(shortLinkTarget(SHORT_LINKS['/price'], ORIGIN, '?s=yt'));
+    expect(u.searchParams.get('utm_source')).toBe('youtube');
+    expect(u.searchParams.get('utm_medium')).toBe('shorts');
+    expect(u.searchParams.get('utm_campaign')).toBe('pricing'); // campaign ยังตามคอนเทนต์
+  });
+
+  it('ทุก preset ให้ source/medium ไม่ซ้ำกับค่าเริ่มต้น', () => {
+    for (const [key, p] of Object.entries(SOURCE_PRESETS)) {
+      const u = new URL(shortLinkTarget(SHORT_LINKS['/ai'], ORIGIN, `?s=${key}`));
+      expect(u.searchParams.get('utm_source')).toBe(p.source);
+      expect(u.searchParams.get('utm_medium')).toBe(p.medium);
+    }
+  });
+
+  it('`c=` แยกคลิปย่อยในแคมเปญเดียวกันได้', () => {
+    const u = new URL(shortLinkTarget(SHORT_LINKS['/price'], ORIGIN, '?s=yt&c=1a'));
+    expect(u.searchParams.get('utm_content')).toBe('1a');
+  });
+
+  it('utm ที่เขียนเต็มมาเอง ไม่ถูกเขียนทับ (เดิมโดนทับทุกครั้ง)', () => {
+    const u = new URL(
+      shortLinkTarget(SHORT_LINKS['/sms'], ORIGIN, '?utm_source=newsletter&utm_medium=email'),
+    );
+    expect(u.searchParams.get('utm_source')).toBe('newsletter');
+    expect(u.searchParams.get('utm_medium')).toBe('email');
+  });
+
+  it('ค่าขยะ/อักขระแปลก ตกกลับไปค่าเริ่มต้น ไม่หลุดเข้ารายงาน', () => {
+    for (const bad of ['?s=ไม่มีจริง', '?s=<script>', '?utm_source=a b c', '?s=' + 'x'.repeat(80)]) {
+      const u = new URL(shortLinkTarget(SHORT_LINKS['/ai'], ORIGIN, bad));
+      expect(u.searchParams.get('utm_source')).toBe('social');
+      expect(u.searchParams.get('utm_medium')).toBe('organic');
+    }
+  });
+
+  it('query แปลก ๆ ไม่ทำให้ล้ม และไม่พาออกนอกเว็บเรา', () => {
+    for (const q of ['', '?', '?s', '?%', '?s=yt&s=tt']) {
+      expect(() => shortLinkTarget(SHORT_LINKS['/ai'], ORIGIN, q)).not.toThrow();
+      expect(shortLinkTarget(SHORT_LINKS['/ai'], ORIGIN, q).startsWith(ORIGIN + '/')).toBe(true);
+    }
   });
 
   it('ไทยกับอังกฤษของเรื่องเดียวกัน ชี้ปลายทาง+campaign เดียวกัน', () => {

@@ -142,7 +142,8 @@ export default {
       // จึงต้องสั้นพอที่จะจำและพิมพ์ถูกจากการเห็นครั้งเดียว
       // ติด utm ให้เองเพื่อวัดผลได้โดยที่ผู้ใช้ไม่ต้องพิมพ์ query string
       const short = resolveShortLink(url.pathname);
-      if (short) return Response.redirect(shortLinkTarget(short, origin), 302);
+      // `?s=yt` ฯลฯ = บอกว่ามาจากแพลตฟอร์มไหน → แยกที่มาในรายงานได้ (ดู SOURCE_PRESETS)
+      if (short) return Response.redirect(shortLinkTarget(short, origin, url.search), 302);
 
       // sitemap.xml แบบ dynamic จากตาราง storefronts (override public/sitemap.xml)
       // ⚠️ ต้องคืน XML "เสมอ" — ห้าม fall through ไป ASSETS (index.html) เพราะ Google จะเห็นเป็น HTML แล้ว reject
