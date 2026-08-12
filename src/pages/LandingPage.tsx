@@ -28,6 +28,7 @@ import GuestAiTry from '../components/GuestAiTry';
 import WhyTrustAi from '../components/WhyTrustAi';
 import { currentLandingVariant } from '../lib/landingFunnel';
 import { showNewSections } from '../lib/landingAb';
+import SkillShowcase from '../components/SkillShowcase';
 import { loadBehavior, derivePersona, persistSignal, type PersonaView } from '../lib/behaviorPersona';
 import { LandingThemeCtx } from '../lib/landingTheme';
 import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
@@ -494,6 +495,8 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
             <HowItWorks30 onGetStarted={onGetStarted} />
             {/* คุณจะได้อะไร (pain → gain): แก้ "คนไม่เข้าใจระบบ → ไม่กล้าสมัคร" */}
             <GainPointsPanel seg={hero.seg} onGetStarted={onGetStarted} />
+            {/* สารบัญทักษะที่ปรึกษา: มีอะไรบ้าง · เหมาะกับธุรกิจไหน · ขั้นตอนไหน · ราคาเท่าไร */}
+            <SkillShowcase onGetStarted={onGetStarted} />
           </>
         );
         const proofBlock = (
