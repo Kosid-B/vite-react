@@ -73,6 +73,7 @@ export const PLAN_LABEL: Record<PlanId, string> = {
 };
 
 export const SKILL_CATALOG: SkillEntry[] = [
+  { id: 'social-creative-linking', stage: 'launch', biz: 'all', origin: 'signature', minPlan: 'free', valueTier: 2, price: 1500, author: 'ceo-ai-thailand', desc: 'ออกแบบครีเอทีฟโซเชียลให้คนกดเข้าเว็บได้จริง — แก้ปัญหาปุ่มในภาพกดไม่ได้ทุกแพลตฟอร์ม ด้วยลิงก์สั้นที่จำได้จากการเห็นครั้งเดียว + วางลิงก์ให้ถูกกลไกแต่ละแพลตฟอร์ม + ติด UTM อัตโนมัติเพื่อวัดว่าคอนเทนต์ชิ้นไหนพาคนมา' },
   { id: 'ab-test-plan', stage: 'launch', biz: 'all', origin: 'standard', minPlan: 'starter', author: 'matthewhitcham', desc: 'Designs A/B test plans with hypothesis, variants, sample size calculations, success metrics, and statistical significance criteria. Use when optimizing conversions or UX.' },
   { id: 'ai-content-policy', stage: 'launch', biz: 'all', origin: 'standard', minPlan: 'starter', author: 'matthewhitcham', desc: 'Creates AI-generated content policies with disclosure requirements, quality standards, and review processes. Use when standardizing how your business produces AI-assisted content.' },
   { id: 'analytics-setup-guide', stage: 'launch', biz: 'all', origin: 'standard', minPlan: 'starter', author: 'matthewhitcham', desc: 'Plans web analytics implementation with event tracking, goals, conversion setup, and dashboard configuration. Use when setting up Google Analytics or similar tools from scratch.' },
