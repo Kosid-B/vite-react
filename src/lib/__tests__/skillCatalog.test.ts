@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
-  SKILL_CATALOG, SKILL_STAGES, BIZ_LABEL, TIER_LABEL,
+  SKILL_CATALOG, SKILL_STAGES, BIZ_LABEL, PLAN_LABEL,
   skillsForStage, skillsForBiz, skillsForPlan, canUseSkill,
   catalogSummary, recommendSkills, FREE_SKILL_COUNT, TOTAL_SKILL_COUNT,
+  signatureSkills, standardSkills, priceOf, consultantEquivOf, ownsSkill,
+  bundleDiscount, bundleQuote, CONSULTANT_EQUIV, SIGNATURE_TOTAL_PRICE, SIGNATURE_COUNT,
+  creditFor, OWN_AUTHORS,
 } from '../skillCatalog';
 
 describe('skillCatalog — ความถูกต้องของข้อมูล', () => {
@@ -16,7 +19,7 @@ describe('skillCatalog — ความถูกต้องของข้อ�
     for (const s of SKILL_CATALOG) {
       expect(stages.has(s.stage)).toBe(true);
       expect(BIZ_LABEL[s.biz]).toBeTruthy();
-      expect(TIER_LABEL[s.tier]).toBeTruthy();
+      expect(PLAN_LABEL[s.minPlan]).toBeTruthy();
       expect(s.desc.length).toBeGreaterThan(10);
     }
   });
@@ -37,34 +40,118 @@ describe('skillCatalog — ความถูกต้องของข้อ�
   });
 });
 
-describe('skillCatalog — สิทธิ์ตามแพ็ก (การคิดเงิน)', () => {
-  it('แพ็กสูงกว่าใช้ได้มากกว่าเสมอ (ไม่มีสิทธิ์ถอยหลัง)', () => {
-    const free = skillsForPlan('free').length;
-    const starter = skillsForPlan('starter').length;
-    const growth = skillsForPlan('growth').length;
-    const scale = skillsForPlan('scale').length;
-    expect(free).toBeLessThan(starter);
-    expect(starter).toBeLessThan(growth);
-    expect(growth).toBeLessThan(scale);
-    expect(scale).toBe(TOTAL_SKILL_COUNT); // Scale ได้ครบทุกตัว
+describe('skillCatalog — การคิดเงิน 2 ทาง', () => {
+  it('แยก signature (ซื้อขาด) กับ standard (รวมในแพ็ก) ครบ ไม่มีตัวคาบเกี่ยว', () => {
+    const sig = signatureSkills(), std = standardSkills();
+    expect(sig.length + std.length).toBe(TOTAL_SKILL_COUNT);
+    expect(sig.length).toBeGreaterThan(20);
+    for (const s of sig) {
+      expect(s.price).toBeGreaterThan(0);
+      expect([1, 2, 3]).toContain(s.valueTier);
+    }
+    for (const s of std) expect(s.price).toBeUndefined();
+  });
+
+  it('signature ต้องซื้อก่อนถึงใช้ได้ — แพ็กสูงแค่ไหนก็ไม่ปลดให้', () => {
+    const sig = signatureSkills()[0];
+    expect(canUseSkill('scale', sig)).toBe(false);       // จ่าย ฿5,900/เดือน ก็ยังไม่ได้
+    expect(canUseSkill('free', sig, [sig.id])).toBe(true); // ซื้อแล้วใช้ได้แม้อยู่แพ็กฟรี
+  });
+
+  it('ซื้อขาดแล้วเป็นเจ้าของถาวร — ลดแพ็กลงก็ยังใช้ได้', () => {
+    const sig = signatureSkills()[0];
+    expect(canUseSkill('scale', sig, [sig.id])).toBe(true);
+    expect(canUseSkill('free', sig, [sig.id])).toBe(true); // ลดจาก scale → free ยังใช้ได้
+  });
+
+  it('skillsForPlan รวมทั้งที่แพ็กปลดให้ และที่ซื้อขาดไว้', () => {
+    const sig = signatureSkills()[0];
+    const base = skillsForPlan('free');
+    expect(base.some((s) => s.id === sig.id)).toBe(false);
+    const withBought = skillsForPlan('free', [sig.id]);
+    expect(withBought.length).toBe(base.length + 1);
+    expect(withBought.some((s) => s.id === sig.id)).toBe(true);
+    expect(ownsSkill([sig.id], sig.id)).toBe(true);
+    expect(ownsSkill([], sig.id)).toBe(false);
+  });
+
+  it('standard ยังปลดตามแพ็กเหมือนเดิม', () => {
+    const paid = standardSkills().find((s) => s.minPlan === 'growth')!;
+    expect(canUseSkill('starter', paid)).toBe(false);
+    expect(canUseSkill('growth', paid)).toBe(true);
   });
 
   it('มีทักษะฟรีพอให้พิสูจน์คุณค่าก่อนจ่าย', () => {
     expect(FREE_SKILL_COUNT).toBeGreaterThanOrEqual(10);
-    expect(skillsForPlan('free').length).toBe(FREE_SKILL_COUNT);
   });
 
-  it('canUseSkill ตรงตามลำดับแพ็ก', () => {
-    const paid = SKILL_CATALOG.find((s) => s.tier === 'growth')!;
-    expect(canUseSkill('free', paid)).toBe(false);
-    expect(canUseSkill('starter', paid)).toBe(false);
-    expect(canUseSkill('growth', paid)).toBe(true);
-    expect(canUseSkill('scale', paid)).toBe(true);
+  it('ราคารวมคลัง signature สมเหตุสมผล และแต่ละ tier ราคาไม่ถอยหลัง', () => {
+    expect(SIGNATURE_TOTAL_PRICE).toBeGreaterThan(20_000);
+    expect(SIGNATURE_COUNT).toBe(signatureSkills().length);
+    expect(CONSULTANT_EQUIV[1]).toBeLessThan(CONSULTANT_EQUIV[2]);
+    expect(CONSULTANT_EQUIV[2]).toBeLessThan(CONSULTANT_EQUIV[3]);
+    // ราคาขายต้องถูกกว่าการจ้างที่ปรึกษาเสมอ (ไม่งั้นไม่มีเหตุผลให้ซื้อ)
+    for (const s of signatureSkills()) {
+      expect(priceOf(s)).toBeLessThan(consultantEquivOf(s));
+    }
+  });
+});
+
+describe('skillCatalog — สิทธิ์ในผลงาน (กันขายงานคนอื่น)', () => {
+  it('ทักษะที่ขายรายตัวได้ ต้องเป็นผลงานของเราเท่านั้น', () => {
+    for (const s of signatureSkills()) {
+      if (s.author) {
+        expect(OWN_AUTHORS as readonly string[]).toContain(s.author);
+      }
+    }
   });
 
-  it('ทักษะฟรีใช้ได้ทุกแพ็กรวมทั้ง free', () => {
-    for (const s of SKILL_CATALOG.filter((x) => x.tier === 'free')) {
-      expect(canUseSkill('free', s)).toBe(true);
+  it('ผลงานผู้อื่นห้ามถูกตั้งราคาขายรายตัว', () => {
+    const others = SKILL_CATALOG.filter(
+      (s) => s.author && !(OWN_AUTHORS as readonly string[]).includes(s.author),
+    );
+    expect(others.length).toBeGreaterThan(0); // มีจริงในระบบ
+    for (const s of others) {
+      expect(s.origin).toBe('standard');
+      expect(s.price).toBeUndefined();
+    }
+  });
+
+  it('ผลงานผู้อื่นต้องมีข้อความเครดิต · ของเราเองไม่ต้องเครดิตตัวเอง', () => {
+    const other = SKILL_CATALOG.find((s) => s.author && !(OWN_AUTHORS as readonly string[]).includes(s.author))!;
+    expect(creditFor(other)).toContain(other.author!);
+    const mine = signatureSkills().find((s) => s.author)!;
+    expect(creditFor(mine)).toBeNull();
+    expect(creditFor({ ...other, author: undefined })).toBeNull();
+  });
+});
+
+describe('skillCatalog — ซื้อยกชุด', () => {
+  it('ยิ่งซื้อหลายตัวยิ่งลด และไม่เกิน 25%', () => {
+    expect(bundleDiscount(1)).toBe(0);
+    expect(bundleDiscount(2)).toBe(0.10);
+    expect(bundleDiscount(4)).toBe(0.18);
+    expect(bundleDiscount(6)).toBe(0.25);
+    expect(bundleDiscount(100)).toBe(0.25);
+  });
+
+  it('ใบเสนอราคายกชุดคำนวณถูก และไม่คิดเงินตัวที่ซื้อไปแล้วซ้ำ', () => {
+    const q = bundleQuote('validate');
+    expect(q.items.length).toBeGreaterThan(0);
+    expect(q.price).toBe(Math.round(q.listPrice * (1 - q.discount)));
+    expect(q.saved).toBe(q.listPrice - q.price);
+    expect(q.price).toBeLessThanOrEqual(q.listPrice);
+
+    const ownedAll = q.items.map((s) => s.id);
+    const q2 = bundleQuote('validate', ownedAll);
+    expect(q2.items).toHaveLength(0);
+    expect(q2.price).toBe(0);
+  });
+
+  it('ยกชุดต้องถูกกว่าซื้อทีละตัวเสมอ (เมื่อมี ≥2 ตัว)', () => {
+    for (const st of SKILL_STAGES) {
+      const q = bundleQuote(st.id);
+      if (q.items.length >= 2) expect(q.price).toBeLessThan(q.listPrice);
     }
   });
 });
@@ -129,5 +216,6 @@ describe('skillCatalog — สรุปสำหรับ Landing', () => {
     expect(sum).toHaveLength(5);
     expect(sum.reduce((a, b) => a + b.total, 0)).toBe(TOTAL_SKILL_COUNT);
     expect(sum.reduce((a, b) => a + b.free, 0)).toBe(FREE_SKILL_COUNT);
+    expect(sum.reduce((a, b) => a + b.signature, 0)).toBe(SIGNATURE_COUNT);
   });
 });
