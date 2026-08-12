@@ -1,9 +1,12 @@
 import { isSupabaseEnabled, supabase } from './supabase';
+import { feeFor, PLATFORM_FEE_RATE } from './marketplaceFees';
 
-/** Marketplace M2 (RFQ) + M3 (Orders + ค่าดำเนินการ 3%)
- *  Production: ตาราง rfqs / orders · Local mode: localStorage (demo) */
+/** Marketplace M2 (RFQ) + M3 (Orders + ค่าดำเนินการ)
+ *  Production: ตาราง rfqs / orders · Local mode: localStorage (demo)
+ *  โครงสร้างค่าธรรมเนียม = src/lib/marketplaceFees.ts (source of truth เดียว)
+ *  สถานะปัจจุบัน: ยังไม่เก็บ (ฟรี 0% ช่วงสร้างซัพพลาย) — เปิดเก็บด้วย FEE.live */
 
-export const PLATFORM_FEE_RATE = 0.03;
+export { PLATFORM_FEE_RATE };
 
 export type RfqStatus = 'open' | 'quoted' | 'accepted' | 'declined' | 'closed';
 export type OrderStatus = 'pending_payment' | 'paid' | 'delivered' | 'completed' | 'cancelled';
@@ -146,9 +149,9 @@ export async function answerRfq(id: string, status: 'quoted' | 'declined', quote
 
 /* ---------- M3: Orders ---------- */
 
-/** ผู้ซื้อรับใบเสนอราคา → สร้างออเดอร์ (ค่าดำเนินการ 3%) */
+/** ผู้ซื้อรับใบเสนอราคา → สร้างออเดอร์ (ค่าดำเนินการตาม marketplaceFees · ตอนนี้ฟรี 0%) */
 export async function acceptQuote(rfq: Rfq, sellerWs: string): Promise<string> {
-  const fee = Math.round(rfq.quoteAmount * PLATFORM_FEE_RATE);
+  const fee = feeFor(rfq.quoteAmount).fee;
   if (isSupabaseEnabled && supabase) {
     const { error: e1 } = await supabase.from('orders').insert({
       rfq_id: rfq.id, buyer_ws: rfq.buyerWs, seller_ws: sellerWs,

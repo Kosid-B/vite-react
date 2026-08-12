@@ -4,9 +4,10 @@ import { listStorefronts, getMyStorefront, type Storefront } from '../lib/storef
 import {
   createRfq, listMyRfqs, listIncomingRfqs, answerRfq, acceptQuote,
   listOpenRfqs, claimOpenRfq,
-  listOrders, updateOrderStatus, PLATFORM_FEE_RATE, LOCAL_WS,
+  listOrders, updateOrderStatus, LOCAL_WS,
   type Rfq, type Order, type OrderStatus,
 } from '../lib/trade';
+import { FEE, feeExplainTh } from '../lib/marketplaceFees';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
 import { DBD_SECTORS } from '../data/dbd';
 import MarketAgent from '../components/MarketAgent';
@@ -190,7 +191,7 @@ export default function Trade({ data, wsId }: Props) {
     const sellerWs = store?.workspaceId ?? LOCAL_WS;
     const err = await acceptQuote(r, sellerWs);
     if (err) { setMsg('⚠️ ' + err); return; }
-    setMsg(`✅ รับใบเสนอราคาแล้ว — สร้างออเดอร์ ${baht(r.quoteAmount)} (ค่าดำเนินการ platform 3% = ${baht(Math.round(r.quoteAmount * PLATFORM_FEE_RATE))})`);
+    setMsg(`✅ รับใบเสนอราคาแล้ว — สร้างออเดอร์ ${baht(r.quoteAmount)} · ${feeExplainTh(r.quoteAmount)}`);
     reload();
   }
 
@@ -235,7 +236,9 @@ export default function Trade({ data, wsId }: Props) {
         <div className="page-title">ซื้อขาย B2B · RFQ</div>
         <div className="page-meta">
           <span className="meta-chip">Marketplace M2/M3</span>
-          <span className="meta-chip">ค่าดำเนินการ 3% เมื่อปิดดีลผ่านระบบ</span>
+          <span className="meta-chip" style={{ borderColor: 'var(--green)', color: 'var(--green)' }}>
+            {FEE.live ? 'ค่าดำเนินการตามขั้นมูลค่าดีล' : 'ฟรี 0% ช่วงเปิดตลาด (ปกติ 3%)'}
+          </span>
         </div>
       </div>
       <p className="sipoc-intro">
@@ -511,7 +514,7 @@ export default function Trade({ data, wsId }: Props) {
         {orders.length > 0 && (
           <table className="trade-orders">
             <thead>
-              <tr><th>รายการ</th><th>บทบาท</th><th>มูลค่า</th><th>ค่าดำเนินการ 3%</th><th>ผู้ขายรับสุทธิ</th><th>สถานะ</th></tr>
+              <tr><th>รายการ</th><th>บทบาท</th><th>มูลค่า</th><th>{FEE.live ? 'ค่าดำเนินการ' : 'ค่าดำเนินการ (ฟรี)'}</th><th>ผู้ขายรับสุทธิ</th><th>สถานะ</th></tr>
             </thead>
             <tbody>
               {orders.map(o => (
