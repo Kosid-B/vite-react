@@ -40,9 +40,10 @@ export function useLandingTrace(seg = 'default', enabled = true): void {
     const fireExit = () => {
       if (exited) return;
       exited = true;
+      measure(); // วัด scroll ครั้งสุดท้ายก่อนส่ง — กันกรณีเลื่อนแล้วปิดทันทีก่อน debounce ทำงาน
       track('landing_exit_depth', { pct: maxPct });
       markLandingDwell(Math.round((Date.now() - startedAt) / 1000)); // เวลารวมบนหน้า
-      flush(true); // ปิดท้าย: ส่ง snapshot สุดท้าย (scroll ลึกสุด + dwell)
+      flush(true, true); // ปิดท้าย: ส่งแบบ keepalive (ไม่งั้นเบราว์เซอร์ยกเลิกคำขอตอนปิดหน้า)
     };
     const onVisibility = () => { if (document.visibilityState === 'hidden') fireExit(); };
 

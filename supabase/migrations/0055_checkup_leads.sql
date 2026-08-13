@@ -86,3 +86,33 @@ end;
 $$;
 revoke all on function public.checkup_leads_list(int) from public;
 grant execute on function public.checkup_leads_list(int) to authenticated;
+
+-- ── 0056 (ต่อท้าย): สถานะการส่งอีเมล ─────────────────────────────────────────
+-- ส่งรายงานแบบ cron ไม่ใช่ส่งทันทีตอนกรอก — ถ้าส่งใน request เดียวกัน ผู้ใช้ต้องรอ Resend
+-- และถ้า Resend ล่ม ผู้ใช้จะเห็น error ทั้งที่เขาทำส่วนของเขาครบแล้ว
+alter table public.checkup_leads add column if not exists sent_at timestamptz;
+create index if not exists idx_checkup_leads_unsent on public.checkup_leads (created_at) where sent_at is null;
+
+drop function if exists public.checkup_leads_list(int);
+create function public.checkup_leads_list(p_limit int default 200)
+returns table (
+  id uuid, email text, company text, pct smallint, band text, source text,
+  created_at timestamptz, sent_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_app_admin() then
+    raise exception 'forbidden';
+  end if;
+  return query
+    select l.id, l.email, l.company, l.pct, l.band, l.source, l.created_at, l.sent_at
+    from public.checkup_leads l
+    order by l.created_at desc
+    limit greatest(1, least(1000, coalesce(p_limit, 200)));
+end;
+$$;
+revoke all on function public.checkup_leads_list(int) from public;
+grant execute on function public.checkup_leads_list(int) to authenticated;

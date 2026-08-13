@@ -167,24 +167,49 @@ function scheduleFlush(): void {
   flushTimer = setTimeout(() => { flushTimer = null; flush(); }, 900);
 }
 
-/** ส่ง snapshot สะสมปัจจุบันผ่าน RPC (upsert monotonic ฝั่ง DB) — no-op ในโหมด local */
-export function flush(force = false): void {
+/** ส่ง snapshot สะสมปัจจุบันผ่าน RPC (upsert monotonic ฝั่ง DB) — no-op ในโหมด local
+ *
+ *  ⚠️ ตอนออกจากหน้า (pagehide/visibilitychange) ต้องใช้ keepalive เท่านั้น
+ *  บั๊กที่เจอจริง (ส.ค. 2569): ใช้ fetch ธรรมดาส่งตอนออกจากหน้า → เบราว์เซอร์ยกเลิกคำขอ
+ *    ผลคือ max_dwell ที่บันทึกได้เกือบทั้งหมดเป็น 0 หรือ 10 พอดี (= ค่าจากตัวจับเวลาที่ยิงตอนหน้ายังเปิดอยู่)
+ *    ส่วนค่าจริงตอนออก และ max_scroll ที่ส่งไปพร้อมกัน หายทั้งคู่
+ *    → ตัวเลข "คนไม่เลื่อนเลย" ที่เห็นในรายงาน ส่วนหนึ่งจึงเป็นข้อมูลที่ส่งไม่ถึง ไม่ใช่พฤติกรรมจริง
+ *  หมายเหตุ: ใช้ sendBeacon ไม่ได้ เพราะตั้ง header apikey/Authorization ไม่ได้ */
+export function flush(force = false, leaving = false): void {
   if (!state || !isSupabaseEnabled || !supabase) return;
   const sig = `${state.scroll}|${state.dwell}|${state.cta}|${state.signup}`;
   if (!force && sig === lastSent) return;
   lastSent = sig;
-  supabase
-    .rpc('track_landing', {
-      p_session: state.session,
-      p_seg: state.seg,
-      p_ref: state.ref,
-      p_scroll: state.scroll,
-      p_cta: state.cta,
-      p_signup: state.signup,
-      p_dwell: state.dwell,
-      p_ab: state.ab,
-    })
-    .then(() => {}, () => {}); // เงียบเสมอ — tracking ต้องไม่ทำหน้าเว็บพัง
+
+  const body = {
+    p_session: state.session,
+    p_seg: state.seg,
+    p_ref: state.ref,
+    p_scroll: state.scroll,
+    p_cta: state.cta,
+    p_signup: state.signup,
+    p_dwell: state.dwell,
+    p_ab: state.ab,
+  };
+
+  if (leaving) {
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (url && key) {
+      try {
+        // keepalive = คำขออยู่รอดหลังหน้าถูกปิด (จำกัด 64KB — payload นี้ไม่กี่ร้อยไบต์)
+        void fetch(`${url}/rest/v1/rpc/track_landing`, {
+          method: 'POST',
+          keepalive: true,
+          headers: { apikey: key, Authorization: `Bearer ${key}`, 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        }).catch(() => {});
+        return;
+      } catch { /* ตกไปใช้ทางปกติด้านล่าง */ }
+    }
+  }
+
+  supabase.rpc('track_landing', body).then(() => {}, () => {}); // เงียบเสมอ — tracking ต้องไม่ทำหน้าเว็บพัง
 }
 
 /** สัญญาณ engagement สด ของผู้เยี่ยมชมคนนี้ (dwell/scroll/CTA) — ให้ token ฟรีตามความตั้งใจ

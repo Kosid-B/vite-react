@@ -11,6 +11,7 @@ const CaseStudyTab  = lazy(() => import('./AdminTabs/CaseStudyTab'));
 const PaymentsTab   = lazy(() => import('./AdminTabs/PaymentsTab'));
 const TestimonialsTab = lazy(() => import('./AdminTabs/TestimonialsTab'));
 const LeadsTab = lazy(() => import('./AdminTabs/LeadsTab'));
+const CheckupLeadsTab = lazy(() => import('./AdminTabs/CheckupLeadsTab'));
 const GrowthDashboard = lazy(() => import('./AdminTabs/GrowthDashboard'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
@@ -138,7 +139,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'payments' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate' | 'testimonials' | 'leads' | 'growth';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'payments' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate' | 'testimonials' | 'leads' | 'checkup' | 'growth';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -545,6 +546,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'leads' ? ' active' : ''}`} onClick={() => setTab('leads')}>
           🧲 Leads & UTM
+        </button>
+        <button className={`pfa-tab${tab === 'checkup' ? ' active' : ''}`} onClick={() => setTab('checkup')}>
+          🩺 ลีดตรวจสุขภาพ
         </button>
         <button className={`pfa-tab${tab === 'skills' ? ' active' : ''}`} onClick={() => setTab('skills')}>
           🛒 Skill Market
@@ -1712,6 +1716,13 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       {tab === 'leads' && (
         <Suspense fallback={<div className="page-loading" />}>
           <LeadsTab />
+        </Suspense>
+      )}
+
+      {/* ===== ลีดจากแบบตรวจสุขภาพระบบ (/checkup) — เรียงตามความน่าติดต่อ ===== */}
+      {tab === 'checkup' && (
+        <Suspense fallback={<div className="page-loading" />}>
+          <CheckupLeadsTab />
         </Suspense>
       )}
 
