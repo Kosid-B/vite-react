@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { CHECKUP_QUESTIONS, CHECKUP_DISCLAIMER, assessCheckup, type CheckupChoice } from '../checkup';
+import {
+  CHECKUP_QUESTIONS, CHECKUP_DISCLAIMER, assessCheckup, MATURITY_CHOICES,
+  fullCheckupQuestions, assessFullCheckup, type CheckupChoice,
+} from '../checkup';
+import { STANDARDS, STANDARD_ORDER } from '../isoStandards';
 import { ISO_CLAUSE_GUIDE } from '../isoGapAssessment';
 import { LADDER, ISO_ONLY_CLAUSES, isoClausesCoveredByDe24, headStartFromDe24, ladderForClause } from '../growthLadder';
 import { DE24_DEFS } from '../de24Sync';
@@ -146,5 +150,90 @@ describe('growthLadder — สะพาน MIT 24 ↔ ISO ↔ GRI', () => {
     expect(ladderForClause('4.3')?.shared).toBe('scope');
     expect(ladderForClause('6.1')?.shared).toBe('risks');
     expect(ladderForClause('9.2')).toBeUndefined(); // ตรวจติดตามภายใน ไม่มีคู่ใน MIT
+  });
+});
+
+describe('checkup โหมดเต็ม — ครบทุกข้อกำหนด แยกมาตรฐาน', () => {
+  it('ทุกมาตรฐานสร้างคำถามได้ครบเท่าจำนวนข้อกำหนดจริง', () => {
+    for (const std of STANDARD_ORDER) {
+      const qs = fullCheckupQuestions(std);
+      expect(qs.length).toBe(STANDARDS[std].clauses.length);
+      expect(qs.length).toBeGreaterThan(15);
+    }
+  });
+
+  it('ทุกคำถามมีสิ่งที่ต้องทำ หลักฐานที่ผู้ตรวจมองหา และหัวข้อหมวด', () => {
+    for (const std of STANDARD_ORDER) {
+      for (const q of fullCheckupQuestions(std)) {
+        expect(q.q.length).toBeGreaterThan(5);
+        expect(q.keyDoc.length).toBeGreaterThan(2);
+        expect(q.sectionTitle.length).toBeGreaterThan(2);
+        expect(['1', '2', '3']).toContain(String(q.priority));
+      }
+    }
+  });
+
+  it('ตอบดีสุดทุกข้อ = เต็ม 100% · ไม่มีช่องว่าง · ไม่มีข้อที่ทำให้ตก', () => {
+    for (const std of STANDARD_ORDER) {
+      const qs = fullCheckupQuestions(std);
+      const a = Object.fromEntries(qs.map((q) => [q.id, 3 as CheckupChoice]));
+      const r = assessFullCheckup(std, a);
+      expect(r.pct).toBe(100);
+      expect(r.band).toBe('ready');
+      expect(r.gaps).toHaveLength(0);
+      expect(r.blockers).toHaveLength(0);
+      expect(r.missingMandatory).toBe(0);
+    }
+  });
+
+  it('ไม่ตอบเลย = 0% · ทุกข้อเป็นช่องว่าง · คะแนนหมวดครบทุกหมวด', () => {
+    const r = assessFullCheckup('iso9001', {});
+    expect(r.pct).toBe(0);
+    expect(r.gaps.length).toBe(fullCheckupQuestions('iso9001').length);
+    expect(r.sections.length).toBeGreaterThanOrEqual(7); // ข้อ 4-10
+    for (const s of r.sections) expect(s.max).toBeGreaterThan(0);
+  });
+
+  it('ข้อที่ผู้ตรวจเช็คแน่และเป็นเอกสารบังคับ ถูกจัดให้เร่งด่วนที่สุด', () => {
+    const qs = fullCheckupQuestions('iso9001');
+    const a = Object.fromEntries(qs.map((q) => [q.id, 3 as CheckupChoice]));
+    const p1mand = qs.find((q) => q.priority === 1 && q.mandatory)!;
+    const p3 = qs.find((q) => q.priority === 3)!;
+    a[p1mand.id] = 0; a[p3.id] = 0;
+    const r = assessFullCheckup('iso9001', a);
+    expect(r.gaps[0].id).toBe(p1mand.id);
+    expect(r.blockers.map((b) => b.id)).toContain(p1mand.id);
+    expect(r.blockers.map((b) => b.id)).not.toContain(p3.id);
+  });
+
+  it('คะแนนรายหมวดรวมกันแล้วเท่าคะแนนรวม (ไม่มีข้อตกหล่น)', () => {
+    const qs = fullCheckupQuestions('iso22301');
+    const a = Object.fromEntries(qs.map((q, i) => [q.id, (i % 4) as CheckupChoice]));
+    const r = assessFullCheckup('iso22301', a);
+    expect(r.sections.reduce((s, x) => s + x.score, 0)).toBe(r.score);
+    expect(r.sections.reduce((s, x) => s + x.max, 0)).toBe(r.maxScore);
+  });
+
+  it('แต่ละมาตรฐานคืนรหัสของตัวเอง ไม่ปนกัน', () => {
+    for (const std of STANDARD_ORDER) {
+      expect(assessFullCheckup(std, {}).standardCode).toBe(STANDARDS[std].code);
+    }
+  });
+
+  it('สเกลวุฒิภาวะมี 4 ระดับ และไล่จากยังไม่ทำ → ใช้จริง', () => {
+    expect(MATURITY_CHOICES).toHaveLength(4);
+    expect(MATURITY_CHOICES[0]).toMatch(/ยังไม่ได้ทำ/);
+    expect(MATURITY_CHOICES[3]).toMatch(/ใช้จริง/);
+  });
+
+  it('ยิ่งขาดมาก ยิ่งใช้เวลามาก และ lo ≤ hi เสมอทุกมาตรฐาน', () => {
+    for (const std of STANDARD_ORDER) {
+      const qs = fullCheckupQuestions(std);
+      const worst = assessFullCheckup(std, {});
+      const best = assessFullCheckup(std, Object.fromEntries(qs.map((q) => [q.id, 3 as CheckupChoice])));
+      expect(worst.effortDays[0]).toBeLessThanOrEqual(worst.effortDays[1]);
+      expect(best.effortDays[0]).toBeLessThanOrEqual(best.effortDays[1]);
+      expect(worst.effortDays[1]).toBeGreaterThan(best.effortDays[1]);
+    }
   });
 });

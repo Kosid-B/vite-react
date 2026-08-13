@@ -201,6 +201,144 @@ export function assessCheckup(answers: Readonly<Record<string, CheckupChoice>>):
   };
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+ * โหมดเต็ม — ครบทุกข้อกำหนด แยกตามมาตรฐาน (9001 / 14001 / 45001 / 22301)
+ *
+ * โหมดเร็ว 12 ข้อ = ประตูหน้าบ้าน (ใครก็ทำได้ใน 3 นาที)
+ * โหมดเต็ม = สิ่งที่ใช้แทนการตรวจสุขภาพจริงได้ — ลูกค้ากรอกเองก่อน
+ *   ที่ปรึกษาเข้าไปตรวจยืนยันแทนที่จะเริ่มจากศูนย์ → งาน 3 วันเหลือ 1–2 วัน
+ *
+ * คำถามสร้างจากคู่มือรายข้อที่มีอยู่แล้ว (isoStandards + isoGapAssessment)
+ * ใช้สเกลวุฒิภาวะ 4 ระดับชุดเดียวกันทุกข้อ — ตรงกับวิธีที่การตรวจ gap ทำจริง
+ * และซื่อสัตย์กว่าการแต่งคำถามเฉพาะข้อขึ้นมาเองโดยไม่มีที่มา
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+import { STANDARDS, type StandardId } from './isoStandards';
+
+/** สเกลวุฒิภาวะ 4 ระดับ ใช้ได้กับทุกข้อกำหนด */
+export const MATURITY_CHOICES: [string, string, string, string] = [
+  'ยังไม่ได้ทำ',
+  'ทำอยู่ แต่ไม่ได้เขียนไว้เป็นเอกสาร',
+  'มีเอกสาร แต่ไม่ได้ใช้จริงหรือไม่ทันสมัย',
+  'มีเอกสารและใช้จริง ทบทวนสม่ำเสมอ',
+];
+
+export interface FullCheckupQuestion {
+  id: string;          // = clause id เช่น '4.1'
+  section: string;     // '4'..'10'
+  sectionTitle: string;
+  title: string;       // ชื่อข้อกำหนด
+  q: string;           // สิ่งที่ต้องทำ (จาก guide.action)
+  keyDoc: string;      // หลักฐานที่ผู้ตรวจมองหา
+  priority: 1 | 2 | 3;
+  mandatory: boolean;
+}
+
+/** สร้างชุดคำถามครบทุกข้อของมาตรฐานที่เลือก */
+export function fullCheckupQuestions(std: StandardId): FullCheckupQuestion[] {
+  const def = STANDARDS[std];
+  const sectionTitle = new Map(def.groups.map((g) => [g.section, g.title]));
+  return def.clauses.map((c) => {
+    const section = c.id.split('.')[0];
+    return {
+      id: c.id,
+      section,
+      sectionTitle: sectionTitle.get(section) ?? `ข้อ ${section}`,
+      title: c.title,
+      q: c.guide.action,
+      keyDoc: c.guide.keyDoc,
+      priority: c.guide.priority,
+      mandatory: c.guide.mandatoryDoc === true,
+    };
+  });
+}
+
+export interface FullSectionScore {
+  section: string;
+  title: string;
+  score: number;
+  max: number;
+  pct: number;
+  gaps: number;
+}
+
+export interface FullCheckupResult {
+  standard: StandardId;
+  standardCode: string;
+  score: number;
+  maxScore: number;
+  pct: number;
+  band: CheckupBand;
+  bandLabel: string;
+  summary: string;
+  sections: FullSectionScore[];
+  /** ทุกข้อที่ยังไม่เต็ม เรียงตามความเร่งด่วน */
+  gaps: (FullCheckupQuestion & { score: CheckupChoice; weight: number })[];
+  missingMandatory: number;
+  /** ข้อที่ผู้ตรวจเช็คแน่ (priority 1) และยังไม่พร้อม — คือรายการที่ทำให้ตกจริง */
+  blockers: FullCheckupQuestion[];
+  effortDays: [number, number];
+}
+
+/** ประเมินโหมดเต็ม — คีย์คือ clause id */
+export function assessFullCheckup(
+  std: StandardId,
+  answers: Readonly<Record<string, CheckupChoice>>,
+): FullCheckupResult {
+  const qs = fullCheckupQuestions(std);
+  const bySection = new Map<string, { title: string; score: number; max: number; gaps: number }>();
+  const gaps: FullCheckupResult['gaps'] = [];
+  let score = 0;
+
+  for (const q of qs) {
+    const raw = answers[q.id];
+    const s = (raw === 0 || raw === 1 || raw === 2 || raw === 3 ? raw : 0) as CheckupChoice;
+    score += s;
+
+    const sec = bySection.get(q.section) ?? { title: q.sectionTitle, score: 0, max: 0, gaps: 0 };
+    sec.score += s;
+    sec.max += 3;
+    if (s < 3) sec.gaps += 1;
+    bySection.set(q.section, sec);
+
+    if (s < 3) {
+      // ยิ่งคะแนนต่ำ · ยิ่งลำดับความสำคัญสูง · ยิ่งเป็นเอกสารบังคับ → ยิ่งเร่งด่วน
+      const weight = (3 - s) * (4 - q.priority) * (q.mandatory ? 2 : 1);
+      gaps.push({ ...q, score: s, weight });
+    }
+  }
+
+  gaps.sort((a, b) => b.weight - a.weight || a.id.localeCompare(b.id, undefined, { numeric: true }));
+
+  const maxScore = qs.length * 3;
+  const pct = maxScore === 0 ? 0 : Math.round((score / maxScore) * 100);
+  const band = bandOf(pct);
+  const missingMandatory = qs.filter((q) => q.mandatory && ((answers[q.id] ?? 0) as number) <= 1).length;
+  const blockers = qs.filter((q) => q.priority === 1 && ((answers[q.id] ?? 0) as number) <= 1);
+
+  const base = gaps.reduce((sum, g) => sum + (3 - g.score) * (g.priority === 1 ? 0.4 : 0.2), 0);
+  const lo = Math.max(3, Math.round(base + missingMandatory * 0.5));
+  const hi = Math.max(lo + 3, Math.round(base * 1.8 + missingMandatory));
+
+  const sections: FullSectionScore[] = [...bySection.entries()]
+    .sort((a, b) => Number(a[0]) - Number(b[0]))
+    .map(([section, v]) => ({
+      section, title: v.title, score: v.score, max: v.max,
+      pct: v.max === 0 ? 0 : Math.round((v.score / v.max) * 100),
+      gaps: v.gaps,
+    }));
+
+  return {
+    standard: std,
+    standardCode: STANDARDS[std].code,
+    score, maxScore, pct, band,
+    bandLabel: BAND_LABEL[band],
+    summary: BAND_SUMMARY[band],
+    sections, gaps, missingMandatory, blockers,
+    effortDays: [lo, hi],
+  };
+}
+
 /** ข้อความกำกับผลลัพธ์ — ต้องแสดงทุกครั้ง ห้ามตัดออก
  *  เหตุผล: การคัดกรอง 12 ข้อไม่ใช่การตรวจประเมิน การปล่อยให้เข้าใจผิดคือความเสี่ยงจริง */
 export const CHECKUP_DISCLAIMER =

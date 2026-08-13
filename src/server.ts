@@ -146,7 +146,7 @@ export default {
             p_pct: Number(body.pct) || 0,
             p_band: String(body.band ?? '').slice(0, 16) || null,
             p_answers: body.answers ?? {},
-            p_source: url.searchParams.get('utm_source')?.slice(0, 32) ?? null,
+            p_source: (String(body.standard ?? '') || url.searchParams.get('utm_source') || '').slice(0, 32) || null,
           }),
         });
         if (!r.ok) console.error('[checkup-lead]', r.status, (await r.text()).slice(0, 300));
