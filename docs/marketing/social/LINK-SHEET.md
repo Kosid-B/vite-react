@@ -23,6 +23,90 @@
 
 ---
 
+## 📋 URL เต็มทุกตัว — ก๊อปวางได้ทันที ไม่ต้องประกอบเอง
+
+> เขียนแบบย่อ (`/tun?s=fb`) ห้ามใช้ในการส่งมอบ — ต้องเป็น URL เต็มที่วางแล้วใช้ได้เลย
+
+### 📱 SMS ปลอม (ถึง 30 ส.ค. 69)
+```
+Facebook   https://ceoaithailand.org/sms?s=fb
+LINE       https://ceoaithailand.org/sms?s=line
+LinkedIn   https://ceoaithailand.org/sms?s=li
+TikTok     https://ceoaithailand.org/sms?s=tt
+Instagram  https://ceoaithailand.org/sms?s=ig
+Shorts     https://ceoaithailand.org/sms?s=yt&c=6a
+ในภาพ/คลิป ceoaithailand.org/sms
+```
+
+### 💰 ตั้งราคาไม่ขาดทุน
+```
+Facebook   https://ceoaithailand.org/price?s=fb&c=evgB
+LINE       https://ceoaithailand.org/price?s=line&c=evgB
+LinkedIn   https://ceoaithailand.org/price?s=li&c=evgB
+TikTok     https://ceoaithailand.org/price?s=tt
+Instagram  https://ceoaithailand.org/price?s=ig
+Shorts     https://ceoaithailand.org/price?s=yt&c=1a
+ในภาพ/คลิป ceoaithailand.org/price
+```
+
+### 🌱 เริ่มธุรกิจไม่มีทุน
+```
+Facebook   https://ceoaithailand.org/tun?s=fb&c=evgA
+LINE       https://ceoaithailand.org/tun?s=line&c=evgA
+LinkedIn   https://ceoaithailand.org/tun?s=li&c=evgA
+TikTok     https://ceoaithailand.org/tun?s=tt
+Instagram  https://ceoaithailand.org/tun?s=ig
+Shorts     https://ceoaithailand.org/tun?s=yt&c=2a
+ในภาพ/คลิป ceoaithailand.org/tun
+```
+*(ชุดข่าวงานหายาก เวอร์ชันจบใหม่ ใช้ `&c=job26a` แทน `&c=evgA`)*
+
+### 🎯 หาลูกค้า 10 คนแรก
+```
+Facebook   https://ceoaithailand.org/customer?s=fb
+LINE       https://ceoaithailand.org/customer?s=line
+LinkedIn   https://ceoaithailand.org/customer?s=li
+TikTok     https://ceoaithailand.org/customer?s=tt
+Instagram  https://ceoaithailand.org/customer?s=ig
+Shorts     https://ceoaithailand.org/customer?s=yt&c=5a
+ในภาพ/คลิป ceoaithailand.org/customer
+```
+
+### 📝 แผนธุรกิจ / ทำคนเดียว
+```
+Facebook   https://ceoaithailand.org/plan?s=fb
+LINE       https://ceoaithailand.org/plan?s=line
+LinkedIn   https://ceoaithailand.org/plan?s=li
+TikTok     https://ceoaithailand.org/plan?s=tt
+Instagram  https://ceoaithailand.org/plan?s=ig
+Shorts     https://ceoaithailand.org/plan?s=yt&c=3a
+ในภาพ/คลิป ceoaithailand.org/plan
+```
+
+### 🤖 ลอง AI ฟรี / วางระบบ SOP
+```
+Facebook   https://ceoaithailand.org/ai?s=fb&c=job26b
+LINE       https://ceoaithailand.org/ai?s=line&c=job26b
+LinkedIn   https://ceoaithailand.org/ai?s=li&c=job26b
+TikTok     https://ceoaithailand.org/ai?s=tt
+Instagram  https://ceoaithailand.org/ai?s=ig
+Shorts     https://ceoaithailand.org/ai?s=yt&c=4a
+ในภาพ/คลิป ceoaithailand.org/ai
+```
+
+### 💻 ราคาคอมขึ้นยุค AI
+```
+Facebook   https://ceoaithailand.org/pc?s=fb
+LINE       https://ceoaithailand.org/pc?s=line
+LinkedIn   https://ceoaithailand.org/pc?s=li
+TikTok     https://ceoaithailand.org/pc?s=tt
+Instagram  https://ceoaithailand.org/pc?s=ig
+Shorts     https://ceoaithailand.org/pc?s=yt&c=7a
+ในภาพ/คลิป ceoaithailand.org/pc
+```
+
+---
+
 ## 🏷️ ต่อท้าย `?s=` เพื่อบอกว่ามาจากแพลตฟอร์มไหน
 
 **URL ในภาพ** ใช้ตัวสั้นเปล่า ๆ (ให้คนพิมพ์ตาม) · **URL ในแคปชัน/คำอธิบาย** ต่อท้ายด้วย `?s=`
