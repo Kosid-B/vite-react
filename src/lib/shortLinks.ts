@@ -30,6 +30,8 @@ export const SHORT_LINKS: Record<string, ShortLink> = {
   '/แผน':      { path: '/blog/business-plan-fast',        campaign: 'business_plan' },
   '/pc':       { path: '/blog/ai-era-hardware-cost',      campaign: 'hardware_cost' },
   '/คอม':      { path: '/blog/ai-era-hardware-cost',      campaign: 'hardware_cost' },
+  '/aifind':   { path: '/blog/why-ai-doesnt-recommend-you', campaign: 'ai_discovery' },
+  '/ค้นเจอ':    { path: '/blog/why-ai-doesnt-recommend-you', campaign: 'ai_discovery' },
   '/ai':       { path: '/start',                          campaign: 'try_ai' },
 };
 
