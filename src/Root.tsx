@@ -14,6 +14,7 @@ if (typeof window !== 'undefined') captureRefFromUrl();
 const App = lazy(() => import('./App'));
 const MarketingLanding = lazy(() => import('./pages/MarketingLanding'));
 const StartLanding = lazy(() => import('./pages/StartLanding'));
+const Checkup = lazy(() => import('./pages/Checkup'));
 const SalePage = lazy(() => import('./pages/SalePage'));
 const ShopSignup = lazy(() => import('./pages/ShopSignup'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
@@ -51,6 +52,7 @@ function pick() {
     return slug ? <PublicStorefrontPage slug={slug} /> : <PublicDirectoryPage />;
   }
   if (p === '/start' || p === '/start/') return <StartLanding />;
+  if (p === '/checkup' || p === '/checkup/') return <Checkup />;
   if (p === '/sale' || p === '/sale/') return <SalePage />;
   if (['/pricing', '/product', '/plans'].some(x => p === x || p === x + '/')) return <PublicPricing />;
   if (p === '/shop' || p === '/shop/') return <ShopSignup />;

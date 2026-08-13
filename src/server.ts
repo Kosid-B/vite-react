@@ -124,6 +124,38 @@ export default {
       return stub.fetch(request);
     }
 
+    // Route /api/checkup-lead → ผู้ทำแบบตรวจสุขภาพขอรายงานเต็ม (หน้า /checkup สาธารณะ)
+    // เขียนผ่าน rpc submit_checkup_lead (security definer) — ตาราง checkup_leads ปิด RLS ไว้
+    // ตั้งใจตอบ 200 แม้บันทึกไม่สำเร็จ: ผู้ใช้ทำส่วนของเขาครบแล้ว ไม่ควรเห็น error จากฝั่งเรา
+    if (url.pathname === '/api/checkup-lead' && request.method === 'POST') {
+      if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return Response.json({ ok: false }, { status: 503 });
+      try {
+        const body = (await request.json()) as Record<string, unknown>;
+        const email = String(body.email ?? '').trim().slice(0, 254);
+        if (!email.includes('@')) return Response.json({ ok: false }, { status: 400 });
+        const r = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/submit_checkup_lead`, {
+          method: 'POST',
+          headers: {
+            apikey: env.SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            p_email: email,
+            p_company: String(body.company ?? '').slice(0, 120) || null,
+            p_pct: Number(body.pct) || 0,
+            p_band: String(body.band ?? '').slice(0, 16) || null,
+            p_answers: body.answers ?? {},
+            p_source: url.searchParams.get('utm_source')?.slice(0, 32) ?? null,
+          }),
+        });
+        if (!r.ok) console.error('[checkup-lead]', r.status, (await r.text()).slice(0, 300));
+      } catch (e) {
+        console.error('[checkup-lead]', String(e).slice(0, 300));
+      }
+      return Response.json({ ok: true });
+    }
+
     // Health check
     if (url.pathname === '/api/health') {
       return Response.json({ ok: true, ts: Date.now() });
