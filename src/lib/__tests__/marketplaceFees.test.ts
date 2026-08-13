@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   FEE, FEE_TIERS, PLATFORM_FEE_RATE, tierFor, feeFor, feeExplainTh, feeProjection, PLAN_FEE_DISCOUNT,
+  feeHeadlineTh,
 } from '../marketplaceFees';
+import { sellPageHtml } from '../seoData';
 
 describe('marketplaceFees — สถานะปัจจุบัน: ยังไม่เก็บ (0%)', () => {
   it('FEE.live = false → ไม่เก็บจริง ผู้ขายได้เต็ม', () => {
@@ -90,5 +92,31 @@ describe('marketplaceFees — ประเมินรายได้', () => {
     const p = feeProjection(-5, -100);
     expect(p.gmv).toBe(0);
     expect(p.effectiveRate).toBe(0);
+  });
+});
+
+describe('feeHeadlineTh — ข้อความค่าดำเนินการบนหน้าการตลาด (source of truth เดียว)', () => {
+  it('ตอน FEE.live=false ต้องบอกว่ายังไม่เก็บ ไม่ใช่บอกว่า "จ่าย 3%"', () => {
+    expect(FEE.live).toBe(false); // ถ้าเปลี่ยนค่านี้ เทสต์ล่างต้องถูกทบทวนด้วย
+    for (const style of ['short', 'full'] as const) {
+      const t = feeHeadlineTh(style);
+      expect(t).toContain('ยังไม่คิดค่าดำเนินการ');
+      expect(t).toContain('3%');       // ยังบอกอัตราปกติไว้ (โปร่งใส ไม่ใช่ปกปิด)
+      expect(t).not.toMatch(/^จ่าย|^คิดค่าดำเนินการ 3%/);
+    }
+  });
+
+  it('ห้ามมีคำว่า "เท่านั้น" ต่อท้ายอัตรา — ทำให้เข้าใจว่าไม่มีค่าใช้จ่ายอื่น (มีค่าแพ็กด้วย)', () => {
+    for (const style of ['short', 'full'] as const) {
+      expect(feeHeadlineTh(style)).not.toContain('เท่านั้น');
+    }
+  });
+
+  it('หน้า /sell (SEO ฝั่ง server) ใช้ข้อความเดียวกับ source of truth', () => {
+    const html = sellPageHtml('https://x.test');
+    expect(html).toContain('ยังไม่คิดค่าดำเนินการ');
+    // ต้องไม่หลงเหลือข้อความเดิมที่สัญญาว่าเก็บ 3% ทั้งที่ระบบเก็บ 0
+    expect(html).not.toContain('จ่าย 3% เมื่อขายได้จริง');
+    expect(html).not.toContain('คิดค่าดำเนินการเพียง 3% เฉพาะเมื่อขายได้จริง');
   });
 });
