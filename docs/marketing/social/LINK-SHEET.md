@@ -118,6 +118,19 @@ Shorts     https://ceoaithailand.org/palm?s=yt&c=8a
 ```
 *(ชุดโพสต์เต็มพร้อมสคริปต์คลิป → [READY-TO-POST-PALM.md](READY-TO-POST-PALM.md))*
 
+### 🛡️ หนี้สหรัฐ / เตรียมพร้อมดีกว่าเดาถูก
+```
+Facebook   https://ceoaithailand.org/ready?s=fb
+LINE       https://ceoaithailand.org/ready?s=line
+LinkedIn   https://ceoaithailand.org/ready?s=li
+TikTok     https://ceoaithailand.org/ready?s=tt
+Instagram  https://ceoaithailand.org/ready?s=ig
+Shorts     https://ceoaithailand.org/ready?s=yt&c=9a
+ในภาพ/คลิป ceoaithailand.org/ready
+```
+*(ชุดโพสต์เต็ม + จุดที่ห้ามเขียน → [READY-TO-POST-DEBT.md](READY-TO-POST-DEBT.md))*
+⚠️ **ห้ามทำนายราคาทอง/ค่าเงินในชุดนี้เด็ดขาด** — เราไม่ใช่ที่ปรึกษาการลงทุน
+
 ---
 
 ## 🏷️ ต่อท้าย `?s=` เพื่อบอกว่ามาจากแพลตฟอร์มไหน
@@ -221,6 +234,7 @@ ceoaithailand.org/price?s=yt&c=1b
 | SMS ปลอม | `https://ceoaithailand.org/sms?s=yt&c=6a` |
 | ราคาคอมขึ้นยุค AI | `https://ceoaithailand.org/pc?s=yt&c=7a` |
 | ราคาปาล์มตก | `https://ceoaithailand.org/palm?s=yt&c=8a` |
+| หนี้สหรัฐ / เตรียมพร้อม | `https://ceoaithailand.org/ready?s=yt&c=9a` |
 
 เวอร์ชัน B เปลี่ยน `c=1a` เป็น `c=1b` — ที่เหลือเหมือนเดิม
 

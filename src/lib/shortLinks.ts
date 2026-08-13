@@ -36,6 +36,8 @@ export const SHORT_LINKS: Record<string, ShortLink> = {
   '/ปาล์ม':    { path: '/blog/palm-price-what-you-control', campaign: 'palm_price' },
   '/system':   { path: '/blog/ai-system-not-assistant',   campaign: 'ai_system' },
   '/ระบบ':     { path: '/blog/ai-system-not-assistant',   campaign: 'ai_system' },
+  '/ready':    { path: '/blog/prepare-dont-predict',      campaign: 'resilience' },
+  '/พร้อม':    { path: '/blog/prepare-dont-predict',      campaign: 'resilience' },
   '/check':    { path: '/checkup',                        campaign: 'checkup' },
   '/ตรวจ':     { path: '/checkup',                        campaign: 'checkup' },
   '/ai':       { path: '/start',                          campaign: 'try_ai' },
