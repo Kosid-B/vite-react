@@ -14,6 +14,7 @@
 | `02-story-pricing` · `07-feed4x5-pricing` | `ceoaithailand.org/ราคา` | ตั้งราคาไม่ขาดทุน |
 | `04-story-firstcustomers` · `09-feed4x5-firstcustomers` | `ceoaithailand.org/ลูกค้า` | หาลูกค้า 10 คนแรก |
 | `03-story-noskill-ai` | `ceoaithailand.org/ai` | ลอง AI ฟรี (หน้า /start) |
+| *(ราคาอุปกรณ์ขึ้นยุค AI)* | `ceoaithailand.org/pc` | ราคาคอมขึ้น 10–20% · คิดต้นทุนใหม่ |
 
 **ทุกลิงก์มีเวอร์ชันอังกฤษด้วย** (เผื่อคนเปิดคีย์บอร์ดอังกฤษอยู่):
 `/sms` = `/ซิม` · `/tun` = `/ทุน` · `/price` = `/ราคา` · `/customer` = `/ลูกค้า` · `/plan` = `/แผน`
@@ -58,7 +59,7 @@ ceoaithailand.org/price?s=yt&c=1b
 | ช่วง | เรื่องที่โพสต์ | ไบโอ TikTok | ไบโอ Instagram |
 |---|---|---|---|
 | **12–30 ส.ค. 69** | SMS ปลอม ⏰ *มีเส้นตาย* | `https://ceoaithailand.org/sms?s=tt` | `…/sms?s=ig` |
-| 31 ส.ค.–14 ก.ย. | ต้นทุน / ตั้งราคา | `…/price?s=tt` | `…/price?s=ig` |
+| 31 ส.ค.–14 ก.ย. | ต้นทุน / ตั้งราคา · ราคาอุปกรณ์ขึ้น | `…/price?s=tt` หรือ `…/pc?s=tt` | `…/price?s=ig` |
 | 15–28 ก.ย. | หาลูกค้า 10 คนแรก | `…/customer?s=tt` | `…/customer?s=ig` |
 | 29 ก.ย.–12 ต.ค. | เริ่มธุรกิจไม่มีทุน | `…/tun?s=tt` | `…/tun?s=ig` |
 | 13–26 ต.ค. | แผนธุรกิจ / ทำคนเดียว | `…/plan?s=tt` | `…/plan?s=ig` |

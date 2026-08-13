@@ -28,6 +28,8 @@ export const SHORT_LINKS: Record<string, ShortLink> = {
   '/ลูกค้า':    { path: '/blog/first-customers-no-ads',    campaign: 'first_customers' },
   '/plan':     { path: '/blog/business-plan-fast',        campaign: 'business_plan' },
   '/แผน':      { path: '/blog/business-plan-fast',        campaign: 'business_plan' },
+  '/pc':       { path: '/blog/ai-era-hardware-cost',      campaign: 'hardware_cost' },
+  '/คอม':      { path: '/blog/ai-era-hardware-cost',      campaign: 'hardware_cost' },
   '/ai':       { path: '/start',                          campaign: 'try_ai' },
 };
 
