@@ -232,7 +232,20 @@ export default function Checkup() {
                       {q.priority === 1 && <span style={{ fontSize: 12, color: C.amber }}>ผู้ตรวจเช็คแน่</span>}
                     </div>
                     <div style={{ color: C.dim, fontSize: 15, lineHeight: 1.65, marginBottom: 6 }}>{q.q}</div>
-                    <div style={{ color: C.dim, fontSize: 13, marginBottom: 12 }}>หลักฐานที่มองหา: {q.keyDoc}</div>
+                    <div style={{ color: C.dim, fontSize: 13, marginBottom: q.annexA ? 10 : 12 }}>หลักฐานที่มองหา: {q.keyDoc}</div>
+                    {q.annexA && (
+                      <details style={{ marginBottom: 12 }}>
+                        <summary style={{ cursor: 'pointer', color: C.cyan, fontSize: 13, listStyle: 'none' }}>
+                          📖 แนวตีความตามภาคผนวก (Annex A)
+                        </summary>
+                        <div style={{ color: C.dim, fontSize: 13.5, lineHeight: 1.7, marginTop: 8, paddingLeft: 12, borderLeft: `2px solid ${C.line}` }}>
+                          {q.annexA}
+                          <div style={{ fontSize: 12, marginTop: 8, opacity: 0.75 }}>
+                            Annex A เป็น <b>แนวทางการใช้</b> ไม่ใช่ข้อกำหนด — ไม่นำมาคิดคะแนนและออก NC โดยตรงไม่ได้
+                          </div>
+                        </div>
+                      </details>
+                    )}
                     <div style={{ display: 'grid', gap: 7 }}>
                       {MATURITY_CHOICES.map((c, i) => {
                         const on = fullAnswers[q.id] === i;

@@ -213,7 +213,7 @@ export function assessCheckup(answers: Readonly<Record<string, CheckupChoice>>):
  * และซื่อสัตย์กว่าการแต่งคำถามเฉพาะข้อขึ้นมาเองโดยไม่มีที่มา
  * ══════════════════════════════════════════════════════════════════════════ */
 
-import { STANDARDS, type StandardId } from './isoStandards';
+import { STANDARDS, annexAOf, type StandardId } from './isoStandards';
 
 /** สเกลวุฒิภาวะ 4 ระดับ ใช้ได้กับทุกข้อกำหนด */
 export const MATURITY_CHOICES: [string, string, string, string] = [
@@ -232,6 +232,9 @@ export interface FullCheckupQuestion {
   keyDoc: string;      // หลักฐานที่ผู้ตรวจมองหา
   priority: 1 | 2 | 3;
   mandatory: boolean;
+  /** แนวตีความจากภาคผนวกท้ายเล่ม (Annex A) — เป็น "แนวทาง" ไม่ใช่ข้อกำหนด
+   *  ไม่นำมาคิดคะแนน ใช้ช่วยผู้ตอบตีความว่าข้อนั้นต้องการอะไรจริง ๆ */
+  annexA?: string;
 }
 
 /** สร้างชุดคำถามครบทุกข้อของมาตรฐานที่เลือก */
@@ -249,6 +252,7 @@ export function fullCheckupQuestions(std: StandardId): FullCheckupQuestion[] {
       keyDoc: c.guide.keyDoc,
       priority: c.guide.priority,
       mandatory: c.guide.mandatoryDoc === true,
+      annexA: annexAOf(std, c.id),
     };
   });
 }
