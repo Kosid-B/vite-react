@@ -119,6 +119,16 @@ Shorts     https://ceoaithailand.org/palm?s=yt&c=8a
 ```
 *(ชุดโพสต์เต็มพร้อมสคริปต์คลิป → [READY-TO-POST-PALM.md](READY-TO-POST-PALM.md))*
 
+### 🏭 ISO / โรงงาน — กลุ่มที่จ่ายหลักแสน *(ชุดเต็ม: [READY-TO-POST-ISO-FACTORY.md](READY-TO-POST-ISO-FACTORY.md))*
+```
+Facebook   https://ceoaithailand.org/check?s=fb&c=iso14026
+LinkedIn   https://ceoaithailand.org/check?s=li&c=iso14026
+LINE       https://ceoaithailand.org/check?s=line&c=iso14026
+ในภาพ/คลิป ceoaithailand.org/check
+```
+tag ต่อคลิป: `iso14026` · `paperonly` · `keyperson` · `lostdeal` · `iso9026` · `whyiso`
+⚠️ ชุดนี้วัดด้วย **จำนวนลีด** ไม่ใช่ยอดวิว — คลิป 800 วิวที่ได้ลีด 1 ราย ชนะคลิป 14,500 วิวที่ได้ 0
+
 ### 🛡️ หนี้สหรัฐ / เตรียมพร้อมดีกว่าเดาถูก
 ```
 Facebook   https://ceoaithailand.org/ready?s=fb
