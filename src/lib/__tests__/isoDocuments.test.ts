@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   documentRegister, registerStats, docTypeOf, draftPrompt,
-  DOC_SKELETON, DOC_TYPE_LABEL, type DocType,
+  DOC_SKELETON, DOC_TYPE_LABEL, leanSet, leanCoverage, type DocType,
 } from '../isoDocuments';
 import { STANDARD_ORDER, STANDARDS } from '../isoStandards';
 
@@ -123,5 +123,66 @@ describe('draftPrompt — ข้อบังคับกันแต่งข้
     const p = draftPrompt('iso9001', documentRegister('iso9001')[0]);
     expect(p).toContain('ยังไม่ระบุ');
     expect(p).toContain('เว้นวงเล็บเหลี่ยม');
+  });
+});
+
+describe('ชุดเอกสารกระชับ (Lean Set) — จุดต่างที่ต้องพิสูจน์ได้', () => {
+  const withLean = STANDARD_ORDER.filter((s) => leanSet(s));
+
+  it('มาตรฐานที่ทำชุดกระชับแล้ว ต้องครอบคลุมข้อกำหนดครบทุกข้อ', () => {
+    expect(withLean.length).toBeGreaterThan(0);
+    for (const std of withLean) {
+      const cov = leanCoverage(std)!;
+      // ข้อนี้คือหัวใจ — ถ้าจัดกลุ่มแล้วมีข้อหลุด ชุดนี้ใช้ขายไม่ได้
+      expect(cov.missing, `${std}: ข้อที่ไม่มีเอกสารรับผิดชอบ`).toEqual([]);
+      expect(cov.covered).toBe(cov.totalClauses);
+    }
+  });
+
+  it('ไม่มีข้อกำหนดที่ถูกอ้างซ้ำหลายฉบับ — ความรับผิดชอบต้องชัด', () => {
+    for (const std of withLean) {
+      expect(leanCoverage(std)!.duplicated, `${std}: ข้อที่ซ้ำ`).toEqual([]);
+    }
+  });
+
+  it('clause ที่ชุดกระชับอ้าง ต้องมีอยู่จริงในมาตรฐาน', () => {
+    for (const std of withLean) {
+      const ids = new Set(STANDARDS[std].clauses.map((c) => c.id));
+      for (const d of leanSet(std)!) {
+        for (const cid of d.clauses) expect(ids.has(cid), `${std}: อ้างข้อ ${cid} ที่ไม่มีอยู่`).toBe(true);
+      }
+    }
+  });
+
+  it('ต้องน้อยกว่าการทำแยกทีละข้ออย่างมีนัย (≥50%)', () => {
+    for (const std of withLean) {
+      const cov = leanCoverage(std)!;
+      expect(cov.leanCount).toBeLessThan(cov.naiveCount);
+      expect(cov.reductionPct, `${std} ลดได้แค่ ${cov.reductionPct}%`).toBeGreaterThanOrEqual(50);
+    }
+  });
+
+  it('ทุกฉบับต้องมีเหตุผลการจัดกลุ่ม — ใช้อธิบายผู้ตรวจได้', () => {
+    for (const std of withLean) {
+      for (const d of leanSet(std)!) {
+        expect(d.why.length, `${std}/${d.name} ไม่มีเหตุผล`).toBeGreaterThan(20);
+        expect(d.clauses.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('ชื่อเอกสารในชุดกระชับต้องไม่ซ้ำกัน', () => {
+    for (const std of withLean) {
+      const names = leanSet(std)!.map((d) => d.name);
+      expect(new Set(names).size).toBe(names.length);
+    }
+  });
+
+  it('มาตรฐานที่ยังไม่ได้ทำชุดกระชับ ต้องคืน undefined ไม่ใช่ค่าว่าง', () => {
+    for (const std of STANDARD_ORDER) {
+      const s = leanSet(std);
+      if (s === undefined) expect(leanCoverage(std)).toBeUndefined();
+      else expect(s.length).toBeGreaterThan(0);
+    }
   });
 });
