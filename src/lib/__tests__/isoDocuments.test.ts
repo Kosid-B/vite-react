@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   documentRegister, registerStats, docTypeOf, draftPrompt,
-  DOC_SKELETON, DOC_TYPE_LABEL, leanSet, leanCoverage, AUDIT_THREAD, type DocType,
+  DOC_SKELETON, DOC_TYPE_LABEL, leanSet, leanCoverage, AUDIT_THREAD,
+  CONTEXT_LAYERS, ownerDocOf, docsToBuild, type DocType,
 } from '../isoDocuments';
 import { STANDARD_ORDER, STANDARDS } from '../isoStandards';
 
@@ -229,5 +230,44 @@ describe('AUDIT_THREAD — สายโซ่ที่ผู้ตรวจไ�
     }
     expect(AUDIT_THREAD[0].clauses).toContain('4.1');
     expect(AUDIT_THREAD[AUDIT_THREAD.length - 1].clauses).toContain('10.2');
+  });
+});
+
+describe('ต่อเข้าแบบตรวจสุขภาพ — เปลี่ยนคะแนนเป็นแผนทำเอกสาร', () => {
+  it('ทุกข้อกำหนดต้องรู้ว่าไปอยู่เอกสารฉบับไหน', () => {
+    for (const std of STANDARD_ORDER.filter((s) => leanSet(s))) {
+      for (const c of STANDARDS[std].clauses) {
+        expect(ownerDocOf(std, c.id), `${std}: ข้อ ${c.id} ไม่รู้ว่าอยู่เอกสารไหน`).toBeTruthy();
+      }
+    }
+  });
+
+  it('docsToBuild เรียงเอกสารที่ปลดล็อกได้หลายข้อขึ้นก่อน', () => {
+    const weak = ['4.1', '4.2', '4.3', '5.2'];
+    const plan = docsToBuild('iso14001', weak);
+    expect(plan.length).toBeGreaterThan(0);
+    expect(plan[0].fixes.length).toBeGreaterThanOrEqual(plan[plan.length - 1].fixes.length);
+    // บริบทองค์กรถือ 4.1-4.3 จึงต้องมาก่อนนโยบายที่ถือข้อเดียว
+    expect(plan[0].doc.name).toBe('บริบทองค์กร');
+    expect(plan[0].fixes).toEqual(['4.1', '4.2', '4.3']);
+  });
+
+  it('ไม่มีข้อที่ขาด → ไม่มีเอกสารต้องทำ', () => {
+    expect(docsToBuild('iso9001', [])).toEqual([]);
+  });
+
+  it('มาตรฐานที่ยังไม่มีชุดกระชับ คืนรายการว่าง ไม่ throw', () => {
+    expect(docsToBuild('iso45001', ['4.1'])).toEqual([]);
+    expect(ownerDocOf('iso45001', '4.1')).toBeUndefined();
+  });
+
+  it('CONTEXT_LAYERS มีครบ 5 ชั้นและเรียงจาก BMC ไปหาข้อกำหนด ISO', () => {
+    expect(CONTEXT_LAYERS).toHaveLength(5);
+    expect(CONTEXT_LAYERS[0].layer).toContain('BMC');
+    expect(CONTEXT_LAYERS[CONTEXT_LAYERS.length - 1].layer).toContain('ISO');
+    for (const l of CONTEXT_LAYERS) {
+      expect(l.what.length).toBeGreaterThan(10);
+      expect(l.answers.length).toBeGreaterThan(10);
+    }
   });
 });
