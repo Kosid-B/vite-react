@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   documentRegister, registerStats, docTypeOf, draftPrompt,
-  DOC_SKELETON, DOC_TYPE_LABEL, leanSet, leanCoverage, type DocType,
+  DOC_SKELETON, DOC_TYPE_LABEL, leanSet, leanCoverage, AUDIT_THREAD, type DocType,
 } from '../isoDocuments';
 import { STANDARD_ORDER, STANDARDS } from '../isoStandards';
 
@@ -184,5 +184,50 @@ describe('ชุดเอกสารกระชับ (Lean Set) — จุด
       if (s === undefined) expect(leanCoverage(std)).toBeUndefined();
       else expect(s.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('AUDIT_THREAD — สายโซ่ที่ผู้ตรวจไล่จริง ต้องไม่ขาด', () => {
+  it('ทุกมาตรฐานที่มีชุดกระชับ ต้องมีเอกสารที่ร้อยสายโซ่ครบทั้งเส้น', () => {
+    const threadClauses = AUDIT_THREAD.flatMap((s) => s.clauses);
+    for (const std of STANDARD_ORDER.filter((s) => leanSet(s))) {
+      const docs = leanSet(std)!;
+      // หาเอกสารที่ถือข้อกลางของเส้น (6.1) — ฉบับนั้นต้องครอบคลุมเส้นทั้งหมด
+      const owner = docs.find((d) => d.clauses.includes('6.1'));
+      expect(owner, `${std}: ไม่มีเอกสารที่ถือข้อ 6.1`).toBeTruthy();
+      const reach = new Set([...owner!.clauses, ...(owner!.tracesFrom ?? [])]);
+      for (const c of threadClauses) {
+        expect(reach.has(c), `${std}: สายโซ่ขาดที่ข้อ ${c} — เอกสาร "${owner!.name}" ไม่ได้ถือหรืออ้างถึง`).toBe(true);
+      }
+    }
+  });
+
+  it('ข้อต้นทางของเส้น (4.1/4.2) ต้องมีเจ้าของจริงในชุด ไม่ใช่แค่ถูกอ้าง', () => {
+    for (const std of STANDARD_ORDER.filter((s) => leanSet(s))) {
+      const docs = leanSet(std)!;
+      for (const c of ['4.1', '4.2']) {
+        expect(docs.some((d) => d.clauses.includes(c)), `${std}: ข้อ ${c} ไม่มีเจ้าของ`).toBe(true);
+      }
+    }
+  });
+
+  it('tracesFrom ต้องไม่ทับกับ clauses ของฉบับเดียวกัน — อ้างถึง ≠ เป็นเจ้าของ', () => {
+    for (const std of STANDARD_ORDER.filter((s) => leanSet(s))) {
+      for (const d of leanSet(std)!) {
+        for (const t of d.tracesFrom ?? []) {
+          expect(d.clauses.includes(t), `${std}/${d.name}: ${t} อยู่ทั้งสองที่`).toBe(false);
+        }
+      }
+    }
+  });
+
+  it('ทุกขั้นของสายโซ่มีคำอธิบาย และเรียงจากบริบทไปหาการปรับปรุง', () => {
+    expect(AUDIT_THREAD.length).toBeGreaterThanOrEqual(5);
+    for (const s of AUDIT_THREAD) {
+      expect(s.step.length).toBeGreaterThan(10);
+      expect(s.clauses.length).toBeGreaterThan(0);
+    }
+    expect(AUDIT_THREAD[0].clauses).toContain('4.1');
+    expect(AUDIT_THREAD[AUDIT_THREAD.length - 1].clauses).toContain('10.2');
   });
 });
