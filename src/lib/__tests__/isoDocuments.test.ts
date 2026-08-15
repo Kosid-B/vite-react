@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   documentRegister, registerStats, docTypeOf, draftPrompt,
   DOC_SKELETON, DOC_TYPE_LABEL, leanSet, leanCoverage, AUDIT_THREAD,
-  CONTEXT_LAYERS, ownerDocOf, docsToBuild, type DocType,
+  CONTEXT_LAYERS, ownerDocOf, docsToBuild, threadClausesOf, type DocType,
 } from '../isoDocuments';
 import { STANDARD_ORDER, STANDARDS } from '../isoStandards';
 
@@ -190,8 +190,9 @@ describe('ชุดเอกสารกระชับ (Lean Set) — จุด
 
 describe('AUDIT_THREAD — สายโซ่ที่ผู้ตรวจไล่จริง ต้องไม่ขาด', () => {
   it('ทุกมาตรฐานที่มีชุดกระชับ ต้องมีเอกสารที่ร้อยสายโซ่ครบทั้งเส้น', () => {
-    const threadClauses = AUDIT_THREAD.flatMap((s) => s.clauses);
     for (const std of STANDARD_ORDER.filter((s) => leanSet(s))) {
+      // เลขข้อหมวด 10 ต่างกันตามมาตรฐาน จึงต้องถามจากแหล่งความจริงเดียวกัน ไม่ใช่ hardcode
+      const threadClauses = threadClausesOf(std);
       const docs = leanSet(std)!;
       // หาเอกสารที่ถือข้อกลางของเส้น (6.1) — ฉบับนั้นต้องครอบคลุมเส้นทั้งหมด
       const owner = docs.find((d) => d.clauses.includes('6.1'));
@@ -256,9 +257,22 @@ describe('ต่อเข้าแบบตรวจสุขภาพ — เ�
     expect(docsToBuild('iso9001', [])).toEqual([]);
   });
 
-  it('มาตรฐานที่ยังไม่มีชุดกระชับ คืนรายการว่าง ไม่ throw', () => {
-    expect(docsToBuild('iso45001', ['4.1'])).toEqual([]);
-    expect(ownerDocOf('iso45001', '4.1')).toBeUndefined();
+  it('45001 รวม 5.4 (การมีส่วนร่วม) ไว้กับ HIRA ในแผนเฝ้าระวัง', () => {
+    // ผู้ตรวจถามหาหลักฐานว่าพนักงานร่วมชี้บ่งอันตรายจริง ไม่ใช่ จป. ทำคนเดียว
+    const owner = ownerDocOf('iso45001', '5.4');
+    expect(owner).toBeTruthy();
+    expect(owner!.clauses).toContain('6.1');
+  });
+
+  it('22301 ใช้ 10.1 เป็นการแก้ไข และ 10.2 เป็นการปรับปรุงต่อเนื่อง (ต่างจากมาตรฐานอื่น)', () => {
+    expect(threadClausesOf('iso22301')).toContain('10.1');
+    expect(threadClausesOf('iso22301')).not.toContain('10.2');
+    expect(ownerDocOf('iso22301', '10.2')!.name).toContain('ปรับปรุงอย่างต่อเนื่อง');
+    // มาตรฐานอื่นตรงข้าม — 10.2 อยู่ในเส้น ส่วน 10.3 เป็นการปรับปรุงต่อเนื่อง
+    for (const std of ['iso9001', 'iso14001', 'iso45001'] as const) {
+      expect(threadClausesOf(std)).toContain('10.2');
+      expect(ownerDocOf(std, '10.3')!.name).toContain('ปรับปรุงอย่างต่อเนื่อง');
+    }
   });
 
   it('CONTEXT_LAYERS มีครบ 5 ชั้นและเรียงจาก BMC ไปหาข้อกำหนด ISO', () => {
