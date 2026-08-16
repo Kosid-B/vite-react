@@ -27,6 +27,7 @@ import CommunityJoin from '../components/CommunityJoin';
 import GuestAiTry from '../components/GuestAiTry';
 import ProductQuickCheck from '../components/ProductQuickCheck';
 import TrialRoadmap from '../components/TrialRoadmap';
+import WhyNotChatGpt from '../components/WhyNotChatGpt';
 import WhyTrustAi from '../components/WhyTrustAi';
 import { currentLandingVariant } from '../lib/landingFunnel';
 import { showNewSections } from '../lib/landingAb';
@@ -478,6 +479,10 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       {/* ─── 15 วันฟรีจะเกิดอะไรขึ้น — ตอบข้อกังวลจริง "เสียเวลาแล้วไม่ได้อะไร" ───
            วางต่อจากประตูหน้าทันที: เห็นตัวเลขของตัวเองแล้ว → เห็นว่าเดินต่อยังไง → ค่อยกดเริ่ม */}
       <TrialRoadmap onGetStarted={onGetStarted} />
+
+      {/* ─── "ก็ถาม ChatGPT เอาก็ได้" — คู่แข่งตัวจริง ต้องตอบก่อนที่เขาจะคิดเอง ───
+           เจ้าของชี้เอง 16 ส.ค. 2569 ว่ากลุ่มเป้าหมายแยกไม่ออกระหว่างระบบเรากับแชต */}
+      <WhyNotChatGpt onGetStarted={onGetStarted} />
 
       {/* ─── A/B holdout: 2 ส่วนใหม่แสดงเฉพาะกลุ่ม 'show' (control ไม่เห็น) เพื่อวัดผล conversion จริง ─── */}
       {abShowNew && (

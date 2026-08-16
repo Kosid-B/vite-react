@@ -83,3 +83,42 @@ export async function adminGetSkillStats(): Promise<{ events: SkillPurchaseEvent
   }
   return { events: loadLocal(), adoption: [] };
 }
+
+/* ── แยก "รายได้จริง" ออกจาก "การเปิดให้ฟรีโดยแอดมิน" ──────────────────
+ *
+ * ⚠️ มีอยู่เพราะเคยเกือบอ่านผิด (docs/LESSONS-LEDGER.md):
+ *   ตรวจ production 16 ส.ค. 2569 พบ skill_purchases 146 รายการ รวม ฿239,290
+ *   แต่ทั้งหมดเป็น pay_method = 'admin-free' ของผู้ซื้อคนเดียว (บัญชีแอดมินเอง)
+ *   → เงินจริงที่เข้ามา = ฿0
+ *   ถ้าแดชบอร์ดรวม price ทุกแถวเป็น "ยอดขาย" ตัวเลขนั้นจะโกหกเราเอง
+ *   และตัวเลขที่โกหกตัวเองอันตรายกว่าไม่มีตัวเลขเลย
+ * ─────────────────────────────────────────────────────────────────────── */
+
+/** วิธีจ่ายที่ "ไม่ใช่เงินจริง" — เปิดให้ใช้โดยแอดมิน/ของแถม ไม่ควรนับเป็นรายได้ */
+export const NON_REVENUE_PAY_METHODS = ['admin-free', 'free', 'gift', 'trial'] as const;
+
+export function isRealPayment(payMethod: string): boolean {
+  return !NON_REVENUE_PAY_METHODS.includes(
+    (payMethod || '').trim().toLowerCase() as (typeof NON_REVENUE_PAY_METHODS)[number],
+  );
+}
+
+export interface RevenueSplit {
+  /** เงินที่เข้ามาจริง (บาท) */
+  real: number;
+  /** มูลค่าที่แอดมินเปิดให้ฟรี — ดูเป็นข้อมูลได้ แต่ห้ามเรียกว่ารายได้ */
+  comped: number;
+  realCount: number;
+  compedCount: number;
+}
+
+/** แยกยอดขายจริงออกจากยอดที่เปิดให้ฟรี — ใช้แทนการ reduce price ตรง ๆ */
+export function revenueSplit(events: readonly SkillPurchaseEvent[]): RevenueSplit {
+  const out: RevenueSplit = { real: 0, comped: 0, realCount: 0, compedCount: 0 };
+  for (const e of events) {
+    const amt = Number(e.price) || 0;
+    if (isRealPayment(e.payMethod)) { out.real += amt; out.realCount += 1; }
+    else { out.comped += amt; out.compedCount += 1; }
+  }
+  return out;
+}

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   TRIAL_ROADMAP, TRIAL_TAKEAWAYS, TRIAL_DAYS, ACTOR_LABEL,
   nextStep, roadmapProgress, totalEffortLabel, ISO_EARLY_NOTE,
+  CHATGPT_HEADLINE, CHATGPT_SUB, CHATGPT_CLOSING, CHATGPT_DIFFS,
 } from '../trialRoadmap';
 import { PAGE_MIN_PLAN } from '../access';
 
@@ -104,5 +105,44 @@ describe('ISO ตั้งแต่ปีแรก — กฎภาษาสำ�
     expect(all).not.toContain('รับรองได้แน่นอน');
     expect(all).not.toContain('การันตี');
     expect(ISO_EARLY_NOTE.body).toContain('ไม่ต้องเริ่มใหม่');
+  });
+});
+
+describe('ทำไมไม่ใช้ ChatGPT เอา — ต้องต่างเชิงโครงสร้าง ไม่ใช่โจมตีคู่แข่ง', () => {
+  const all = [
+    CHATGPT_HEADLINE, CHATGPT_SUB, CHATGPT_CLOSING,
+    ...CHATGPT_DIFFS.flatMap((d) => [d.need, d.chat, d.ours]),
+  ].join(' | ');
+
+  it('ไม่มีคำดูถูกคู่แข่ง — ผู้ใช้รู้ว่า ChatGPT เก่ง ถ้าโจมตีจะเสียความน่าเชื่อถือ', () => {
+    for (const bad of ['ห่วย', 'แย่', 'โง่', 'ใช้ไม่ได้', 'ไร้ประโยชน์', 'หลอกลวง']) {
+      expect(all, `มีคำว่า "${bad}"`).not.toContain(bad);
+    }
+  });
+
+  it('ยอมรับตรง ๆ ว่า ChatGPT เก่งกว่าในบางเรื่อง (ความน่าเชื่อถือมาจากความซื่อสัตย์)', () => {
+    expect(CHATGPT_DIFFS[0].chat).toContain('ดีมาก');
+    expect(CHATGPT_CLOSING).toContain('ไม่ได้มาแทน');
+  });
+
+  it('ทุกข้อบอกทั้งฝั่งเขาและฝั่งเรา ไม่มีข้อไหนเว้นว่าง', () => {
+    for (const d of CHATGPT_DIFFS) {
+      expect(d.need.length, d.need).toBeGreaterThan(5);
+      expect(d.chat.length, d.need).toBeGreaterThan(5);
+      expect(d.ours.length, d.need).toBeGreaterThan(5);
+    }
+  });
+
+  it('อ้างเฉพาะฟีเจอร์ที่มีจริงในระบบแล้ว', () => {
+    const ours = CHATGPT_DIFFS.map((d) => d.ours).join(' ');
+    // ทั้งสามอย่างนี้มีจริง: ทะเบียนกระบวนการ (process) · ส่งออก CSV/JSON · การเถียงกลับเรื่องตัววัด
+    expect(ours).toContain('ตัววัด');
+    expect(ours).toContain('CSV/JSON');
+    expect(ours).toContain('ข้อกำหนด');
+  });
+
+  it('พาดหัวคมพอที่จะจำได้ และไม่ยาวเกินบรรทัดเดียว', () => {
+    expect(CHATGPT_HEADLINE.length).toBeLessThan(70);
+    expect(CHATGPT_HEADLINE).toContain('ChatGPT');
   });
 });
