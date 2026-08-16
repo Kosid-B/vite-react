@@ -194,11 +194,18 @@ export interface ExpVariantStat {
   pulseAvg: number;        // /3
   good: number; meh: number; bad: number;
 }
+/** ต่อกลุ่มต้องมีคนเห็นกี่คน ถึงจะประกาศผู้ชนะได้
+ *  ค่าเดียวกับ experimentPlan.MIN_PER_ARM และ landingAb.MIN_SAMPLE_PER_ARM — ทั้งระบบใช้เกณฑ์เดียวกัน */
+export const MIN_EXPOSED_PER_VARIANT = 30;
+
 export interface ExpReport {
   experiment: string;
   question: string;
   variants: ExpVariantStat[];
-  winner?: string;         // variant id ที่ activationRate สูงกว่า (ถ้าต่างกันชัด)
+  /** variant id ที่ชนะ — มีค่าเฉพาะเมื่อผ่านเกณฑ์จำนวนคนแล้วเท่านั้น */
+  winner?: string;
+  /** เหตุผลว่าทำไมยังไม่มีผู้ชนะ (หรือทำไมถึงประกาศได้) — ต้องแสดงให้แอดมินเห็นเสมอ */
+  verdict?: string;
 }
 export interface ExperimentsAggregate {
   total: number;           // workspace ทั้งหมดที่พิจารณา
@@ -260,11 +267,31 @@ export function aggregateExperiments(states: (ExperimentsState | undefined | nul
         good: row.good, meh: row.meh, bad: row.bad,
       } as ExpVariantStat;
     });
-    // ผู้ชนะ = activationRate สูงกว่า และมี exposed ทั้งคู่ ≥ 1 (กัน noise ตอนข้อมูลน้อย)
+    /* ผู้ชนะ — ต้องผ่านเกณฑ์จำนวนคนก่อน
+     *
+     * ⚠️ เดิมเช็คแค่ exposed >= 1 พร้อมคอมเมนต์ว่า "กัน noise ตอนข้อมูลน้อย"
+     *    ซึ่งไม่จริงเลย: เห็นฝั่งละ 1 คน แล้วฝั่งหนึ่งกดต่อ = ประกาศผู้ชนะ 100% ต่อ 0%
+     *    (ตรวจเจอด้วย skill experiment-reality-check 16 ส.ค. 2569 — ตอนนั้นคนเปิดใช้ Pulse จริง = 0 คน)
+     *    การประกาศผู้ชนะผิดอันตรายกว่าไม่ประกาศ เพราะมันถูกเอาไปตัดสินใจจริง */
     let winner: string | undefined;
-    const ranked = [...variants].filter(v => v.exposed > 0).sort((a, b) => b.activationRate - a.activationRate);
-    if (ranked.length >= 2 && ranked[0].activationRate > ranked[1].activationRate) winner = ranked[0].variant;
-    return { experiment: exp.id, question: exp.question, variants, winner };
+    let verdict: string;
+    const eligible = [...variants].sort((a, b) => b.activationRate - a.activationRate);
+    const smallest = Math.min(...eligible.map(v => v.exposed));
+    const totalActivated = eligible.reduce((n, v) => n + v.activated, 0);
+
+    if (eligible.length < 2) {
+      verdict = 'ยังมีตัวเลือกเดียว — เทียบไม่ได้';
+    } else if (smallest < MIN_EXPOSED_PER_VARIANT) {
+      verdict = `กลุ่มเล็กสุดมีคนเห็น ${smallest} คน (ต้องการ ${MIN_EXPOSED_PER_VARIANT} ต่อกลุ่ม) — ยังสรุปผู้ชนะไม่ได้`;
+    } else if (totalActivated < MIN_EXPOSED_PER_VARIANT) {
+      verdict = `มีคนกดทำต่อรวม ${totalActivated} ครั้ง — น้อยเกินกว่าจะเทียบกลุ่มได้`;
+    } else if (eligible[0].activationRate <= eligible[1].activationRate) {
+      verdict = 'สองกลุ่มยังเท่ากัน';
+    } else {
+      winner = eligible[0].variant;
+      verdict = 'จำนวนคนพอเทียบได้แล้ว';
+    }
+    return { experiment: exp.id, question: exp.question, variants, winner, verdict };
   });
 
   return { total, optIn, pulseN, pulseAvg: pulseN ? pulseSum / pulseN : 0, reports };

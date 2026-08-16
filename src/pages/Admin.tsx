@@ -2428,7 +2428,12 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
                             );
                           })}
                         </div>
-                        {!rep.winner && <div className="exp-note">ข้อมูลยังไม่พอชี้ผู้ชนะ — ต้องมีผู้เข้าร่วมมากขึ้นทั้งสองกลุ่ม</div>}
+                        {!rep.winner && (
+                          <div className="exp-note">
+                            {/* บอกเหตุผลเจาะจง ไม่ใช่ข้อความกลาง ๆ — แอดมินต้องรู้ว่าต้องรออะไรอีกเท่าไร */}
+                            {rep.verdict ?? 'ข้อมูลยังไม่พอชี้ผู้ชนะ — ต้องมีผู้เข้าร่วมมากขึ้นทั้งสองกลุ่ม'}
+                          </div>
+                        )}
                       </div>
                     ))}
                     <div className="exp-note">วัดจากผู้ที่ยินยอมเท่านั้น · ไม่ระบุตัวตน · เทียบเฉพาะ proxy ของความอยากใช้งานต่อ (activation + ความรู้สึก) แบบซื่อสัตย์</div>

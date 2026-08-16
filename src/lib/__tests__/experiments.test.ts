@@ -97,7 +97,11 @@ describe('aggregateExperiments — รวมผลข้ามผู้ใช้
     expect(a.pulseAvg).toBeCloseTo(3);
     expect(b.activationRate).toBe(0);
     expect(b.pulseAvg).toBeCloseTo(1);
-    expect(rep.winner).toBe(vA.id); // A activation สูงกว่า → ชนะ
+    // ⚠️ แก้ 16 ส.ค. 2569: เดิมเทสต์นี้ยืนยันว่า vA "ชนะ" จากกลุ่มตัวอย่างฝั่งละ 2 คน
+    //    ซึ่งเป็นการเขียนเทสต์ล็อกพฤติกรรมที่ผิดไว้ — 2 คนต่อกลุ่มสรุปอะไรไม่ได้
+    //    ตอนนี้ต้องผ่านเกณฑ์ MIN_EXPOSED_PER_VARIANT ก่อน (ดู skill experiment-reality-check)
+    expect(rep.winner).toBeUndefined();
+    expect(rep.verdict).toContain('ยังสรุปผู้ชนะไม่ได้');
   });
 
   it('ไม่มีผู้เข้าร่วม → optIn 0, ไม่มีผู้ชนะ', () => {
