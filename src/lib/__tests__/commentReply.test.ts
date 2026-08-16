@@ -8,6 +8,8 @@ import {
 import { SHORT_LINKS, SOURCE_PRESETS } from '../shortLinks';
 import { BLOG_POSTS } from '../blogData';
 import { priceScenario } from '../pricingAnalysis';
+import { startHeroFor } from '../startHero';
+import { segmentFor } from '../heroVariant';
 
 describe('อ่านตัวเลขจากคอมเมนต์ที่คนพิมพ์จริง', () => {
   it.each([
@@ -260,7 +262,7 @@ describe('YouTube Shorts — ลิงก์กดได้จริง จึ�
   it('คำบรรยายและคอมเมนต์ปักหมุดใช้ลิงก์เต็ม + ติด ?s=yt (กดได้ทันที)', () => {
     for (const t of VIDEO_TOPICS) {
       for (const text of [youtubeDescription(t), youtubePinnedComment(t)]) {
-        expect(text, t.topic).toContain(`https://ceoaithailand.org${t.shortLink}?s=yt`);
+        expect(text, t.topic).toContain(`https://ceoaithailand.org${t.shortLink}?s=yt&seg=${t.seg}`);
       }
     }
   });
@@ -287,5 +289,20 @@ describe('YouTube Shorts — ลิงก์กดได้จริง จึ�
       expect(all, bad).not.toContain(bad);
     }
     expect(all).toContain('ไม่ต้องสมัคร');
+  });
+});
+
+describe('คลิปต้องพา seg ไปด้วย (Dynamic PLG) — คนดูคลิปต้นทุน ต้องเจอหน้าที่พูดเรื่องต้นทุน', () => {
+  it('ทุกหัวข้อคลิปมี seg และ /start มีพาดหัวของ seg นั้นจริง', () => {
+    for (const t of VIDEO_TOPICS) {
+      expect(t.seg, t.topic).toBeTruthy();
+      expect(startHeroFor(t.seg), `คลิป "${t.topic}" ส่ง seg=${t.seg} แต่ปลายทางไม่มีพาดหัวของ seg นี้`).toBeTruthy();
+    }
+  });
+
+  it('seg ที่ส่งไป segmentFor อ่านออกจริง', () => {
+    for (const t of VIDEO_TOPICS) {
+      expect(segmentFor(`?seg=${t.seg}`), t.topic).toBe(t.seg);
+    }
   });
 });

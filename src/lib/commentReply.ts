@@ -19,6 +19,7 @@
 
 import { priceScenario } from './pricingAnalysis';
 import type { ProductInput } from './productQuickCheck';
+import type { HeroSeg } from './heroVariant';
 
 /* ── อ่านตัวเลขจากคอมเมนต์ที่คนพิมพ์กันจริง ───────────────────────────── */
 
@@ -196,21 +197,24 @@ export interface VideoTopic {
   shortLink: string;
   /** สิ่งที่คนดูจะได้เมื่อกด */
   gives: string;
+  /** segment ของหน้าปลายทาง — กฎ Dynamic PLG: คนดูคลิปเรื่องต้นทุนต้องเจอหน้าที่พูดเรื่องต้นทุน
+   *  ไม่ใช่หน้ากลาง ๆ (ดู skill dynamic-plg · เคยพลาดแบบเดียวกันกับ CTA ท้ายบทความ) */
+  seg: HeroSeg;
 }
 
 /** หัวข้อคลิปที่มีบทความรองรับจริง — เรียงตามที่วัดได้ว่ามีคนดูจริงบน YouTube 28 วัน */
 export const VIDEO_TOPICS: VideoTopic[] = [
-  { topic: 'ต้นทุน/ตั้งราคา', shortLink: '/ราคา', gives: 'ตารางจุดคุ้มทุนเมื่อขึ้น/ลดราคา + เครื่องคำนวณของคุณเอง' },
-  { topic: 'เริ่มธุรกิจไม่มีทุน', shortLink: '/ทุน', gives: 'วิธีเริ่มธุรกิจโดยไม่ต้องลงเงินก้อน' },
-  { topic: 'หาลูกค้า', shortLink: '/ลูกค้า', gives: 'หาลูกค้า 10 คนแรกโดยไม่ยิงแอด' },
-  { topic: 'สวนปาล์ม/ราคาผลผลิต', shortLink: '/ปาล์ม', gives: 'สิ่งที่คุมได้เมื่อราคาผลผลิตคุมไม่ได้' },
+  { topic: 'ต้นทุน/ตั้งราคา', shortLink: '/ราคา', gives: 'ตารางจุดคุ้มทุนเมื่อขึ้น/ลดราคา + เครื่องคำนวณของคุณเอง', seg: 'seller' },
+  { topic: 'เริ่มธุรกิจไม่มีทุน', shortLink: '/ทุน', gives: 'วิธีเริ่มธุรกิจโดยไม่ต้องลงเงินก้อน', seg: 'newbie' },
+  { topic: 'หาลูกค้า', shortLink: '/ลูกค้า', gives: 'หาลูกค้า 10 คนแรกโดยไม่ยิงแอด', seg: 'seller' },
+  { topic: 'สวนปาล์ม/ราคาผลผลิต', shortLink: '/ปาล์ม', gives: 'สิ่งที่คุมได้เมื่อราคาผลผลิตคุมไม่ได้', seg: 'palm' },
 ];
 
 /** คำบรรยายใต้คลิป YouTube — ลิงก์กดได้ วางบรรทัดแรกเพราะคนเห็นแค่ 1-2 บรรทัดก่อนกด "เพิ่มเติม" */
 export function youtubeDescription(t: VideoTopic, origin = 'https://ceoaithailand.org'): string {
   return [
     `${t.gives} — อ่านฟรี ไม่ต้องสมัคร`,
-    `${origin}${t.shortLink}?s=yt`,
+    `${origin}${t.shortLink}?s=yt&seg=${t.seg}`,
     '',
     'เครื่องมือและบทความทั้งหมดใช้ได้ฟรี ไม่ต้องใส่บัตรเครดิต',
   ].join('\n');
@@ -218,5 +222,5 @@ export function youtubeDescription(t: VideoTopic, origin = 'https://ceoaithailan
 
 /** คอมเมนต์ปักหมุด YouTube — สั้นกว่าคำบรรยาย เพราะคนอ่านผ่าน ๆ */
 export function youtubePinnedComment(t: VideoTopic, origin = 'https://ceoaithailand.org'): string {
-  return `${t.gives} 👉 ${origin}${t.shortLink}?s=yt (ฟรี ไม่ต้องสมัคร)`;
+  return `${t.gives} 👉 ${origin}${t.shortLink}?s=yt&seg=${t.seg} (ฟรี ไม่ต้องสมัคร)`;
 }
