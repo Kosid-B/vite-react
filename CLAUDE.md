@@ -108,6 +108,13 @@ src/pages/BoardRoom.tsx        — หน้า 'boardroom' ห้องบอ�
 src/pages/Resources.tsx        — หน้า 'resources' บริหารทรัพยากร: รายการ+จำนวน · C-Level ดูแล/ขอเพิ่ม-ลด · CEO/บอร์ดอนุมัติ · AI จัดสรร (agent-run จริง + fallback heuristic)
 src/lib/cfoAnalysis.ts         — CFO AI วิเคราะห์การเงิน "ธุรกิจตัวเอง" ของ SME จากตัวเลขจริง (d.finance): cfoMetrics(recurring/breakEvenGap/topExpense) + cfoFlags(ธงสุขภาพ) + cfoLocalAdvice(fallback offline) + cfoPrompt(ai-assist · ห้ามแต่งตัวเลข) · pure/tested · แสดงใน components/CfoAnalysis.tsx ใต้คลังเมือง (CompanyCity) — ต่อยอด cfoReport.ts (KPI report) เป็นชั้นให้คำแนะนำเชิงลงมือ
 src/lib/resources.ts           — Resource/Request types + templates + applyApproval + parseAiAllocations (pure, tested)
+src/lib/commentReply.ts        — ตอบคอมเมนต์เฟซบุ๊กด้วยตัวเลขจริงของผู้คอมเมนต์ (กลไก "จบในแพลตฟอร์ม")
+                                 parseNumbers (รับ "50/30" · "ขาย 1,500 ทุน 900" · เลขไทย ๕๐/๓๐) → buildReply
+                                 ⚠️ ช่อง 'comment' ห้ามมีลิงก์ (FB กดการมองเห็น) · ลิงก์อยู่ในช่อง 'dm' เท่านั้น
+                                 คำนวณจาก pricingAnalysis ตัวเดียวกับหน้าเว็บ → ตัวเลขตรงกันเสมอ
+                                 KEYWORD_OFFERS = โพสต์แบบ "คอมเมนต์คำเดียว" (ราคา/ทุน/ลูกค้า/ระบบ) ผูก SHORT_LINKS จริง
+                                 UI: pages/AdminTabs/CommentReplyTab.tsx (แท็บ 💬 ตอบคอมเมนต์)
+                                 ชุดโพสต์พร้อมใช้: docs/marketing/social/FB-LEAD-MAGNET-PACK.md
 src/lib/productQuickCheck.ts   — "ตรวจสินค้าเร็ว" ประตูหน้าบน Landing: กรอกราคา/ต้นทุน → กำไร/จุดคุ้มทุนทันที
                                  ⚠️ ไม่เรียก AI โดยตั้งใจ (เร็ว ฟรี และแต่งตัวเลขไม่ได้) · AI = เฟส 2
                                  กันตัวเลขไม่มีแหล่งด้วย type: Insight มีแค่ calc(ต้องมี from)/question(ต้องมี why)/action

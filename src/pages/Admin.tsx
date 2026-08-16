@@ -13,6 +13,7 @@ const TestimonialsTab = lazy(() => import('./AdminTabs/TestimonialsTab'));
 const LeadsTab = lazy(() => import('./AdminTabs/LeadsTab'));
 const CheckupLeadsTab = lazy(() => import('./AdminTabs/CheckupLeadsTab'));
 const GrowthDashboard = lazy(() => import('./AdminTabs/GrowthDashboard'));
+const CommentReplyTab = lazy(() => import('./AdminTabs/CommentReplyTab'));
 import { isSupabaseEnabled } from '../lib/supabase';
 import { adminListWorkspaces, wsLoad, wsSave, type AdminWorkspace } from '../lib/workspaces';
 import { workspaceOps, opsTotals, opsCsv, opsTsv, fmtBaht, type OpsRow } from '../lib/adminOps';
@@ -139,7 +140,7 @@ interface Props {
   data: AppData;
   onUpdate: (data: AppData) => void;
 }
-type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'payments' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate' | 'testimonials' | 'leads' | 'checkup' | 'growth';
+type Tab = 'dashboard' | 'finance' | 'workspaces' | 'winstories' | 'casestudies' | 'feedback' | 'pricing' | 'payments' | 'skills' | 'auction' | 'shopapps' | 'salesforce' | 'cxpersona' | 'seo' | 'forecast' | 'proposal' | 'gtm' | 'activate' | 'testimonials' | 'leads' | 'checkup' | 'growth' | 'reply';
 
 export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
   const admin = isAdminEmail(currentUserEmail);
@@ -525,6 +526,9 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
         </button>
         <button className={`pfa-tab${tab === 'growth' ? ' active' : ''}`} onClick={() => setTab('growth')}>
           📈 การเติบโต
+        </button>
+        <button className={`pfa-tab${tab === 'reply' ? ' active' : ''}`} onClick={() => setTab('reply')}>
+          💬 ตอบคอมเมนต์
         </button>
         <button className={`pfa-tab${tab === 'finance' ? ' active' : ''}`} onClick={() => setTab('finance')}>
           📊 วิเคราะห์การเงิน & ราคา
@@ -1730,6 +1734,13 @@ export default function Admin({ currentUserEmail, data, onUpdate }: Props) {
       {tab === 'growth' && (
         <Suspense fallback={<div className="page-loading" />}>
           <GrowthDashboard data={data} onUpdate={onUpdate} />
+        </Suspense>
+      )}
+
+      {/* ===== ตอบคอมเมนต์เฟซบุ๊กด้วยตัวเลขจริงของเขา ===== */}
+      {tab === 'reply' && (
+        <Suspense fallback={<div className="page-loading" />}>
+          <CommentReplyTab />
         </Suspense>
       )}
 
