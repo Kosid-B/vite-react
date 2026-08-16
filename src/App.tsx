@@ -58,6 +58,7 @@ const Team = lazy(() => import('./pages/Team'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Marketing = lazy(() => import('./pages/Marketing'));
 const ISO9001 = lazy(() => import('./pages/ISO9001'));
+const ProcessRegisterPage = lazy(() => import('./pages/ProcessRegister'));
 const CaseStudies = lazy(() => import('./pages/CaseStudies'));
 const Factory = lazy(() => import('./pages/Factory'));
 const Analytics = lazy(() => import('./pages/Analytics'));
@@ -105,6 +106,7 @@ const PAGE_FLOW: { id: PageId; label: string }[] = [
   { id: 'analytics', label: 'SaaS Analytics' },
   { id: 'admin', label: 'ผู้ดูแลระบบ' },
   { id: 'iso9001', label: 'ISO 9001:2015 QMS' },
+  { id: 'process', label: 'ทะเบียนกระบวนการ + ตัววัด' },
   { id: 'privacy', label: 'ตัวช่วย PDPA' },
   { id: 'compliance', label: 'AI ตรวจเอกสาร ISO/มอก.' },
   { id: 'knowledge', label: 'คลังความรู้ ISO/PDPA' },
@@ -725,6 +727,11 @@ export default function App() {
           canAccess(data, 'iso9001')
             ? <ISO9001 data={data} onUpdate={updateData} onNavigate={setActivePage} />
             : <UpgradeWall page="iso9001" data={data} onNavigate={setActivePage} />
+        )}
+        {activePage === 'process' && (
+          canAccess(data, 'process')
+            ? <ProcessRegisterPage data={data} onUpdate={updateData} onNavigate={setActivePage} />
+            : <UpgradeWall page="process" data={data} onNavigate={setActivePage} />
         )}
         {activePage === 'privacy' && (
           canAccess(data, 'privacy')

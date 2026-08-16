@@ -46,6 +46,16 @@ const PAGE_INFO: Record<PageId, { label: string; prompts: string[]; context: (d:
   privacy: { label: 'ตัวช่วย PDPA', prompts: ['ข้อมูลส่วนบุคคลอะไรที่ธุรกิจแบบนี้มักต้องเก็บ', 'วัตถุประสงค์การใช้ข้อมูลควรระบุอะไรบ้าง', 'ต้องเตรียมอะไรให้พร้อมตาม PDPA'], context: () => 'ผู้ใช้กำลังร่างประกาศความเป็นส่วนตัว/SOP ตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA)' },
   compliance: { label: 'AI ตรวจเอกสาร ISO/มอก.', prompts: ['ISO 9001 ข้อ 9 การประเมินสมรรถนะ ต้องมีเอกสารอะไร', 'ปฏิบัติการแก้ไข (corrective action) ที่ดีต้องมีอะไรบ้าง', 'เตรียมตัวก่อน internal audit ต้องทำอะไร'], context: () => 'ผู้ใช้กำลังตรวจเอกสารเทียบข้อกำหนดมาตรฐาน ISO/มอก. เพื่อหา gap ก่อน audit' },
   knowledge: { label: 'คลังความรู้ ISO/PDPA', prompts: ['สรุปข้อกำหนด ISO 9001 ข้อ 4-10', 'สิทธิของเจ้าของข้อมูลตาม PDPA มีอะไรบ้าง', 'ฐานทางกฎหมายในการเก็บข้อมูลส่วนบุคคล'], context: () => 'ผู้ใช้กำลังค้นหา/ถาม-ตอบข้อกำหนด ISO 9001 / PDPA / มอก. จากคลังความรู้' },
+  process: {
+    label: 'ทะเบียนกระบวนการ + ตัววัด',
+    prompts: ['ตัววัดนี้ควรมาจากความเสี่ยงข้อไหน', 'กระบวนการนี้ควรวัดอะไรถึงจะตอบข้อ 9.1 ได้', 'ยังขาดกระบวนการอะไรที่ข้อกำหนดยังไม่มีเจ้าของ'],
+    context: (d) => {
+      const r = d.processRegister;
+      if (!r) return 'ผู้ใช้กำลังจะเริ่มทะเบียนกระบวนการ ยังไม่มีข้อมูล';
+      const ms = r.processes.flatMap((p) => p.metrics);
+      return `มาตรฐาน ${r.standard} · ${r.processes.length} กระบวนการ · ตัววัด ${ms.length} ตัว (ระบุที่มาแล้ว ${ms.filter((m) => m.whyFrom?.trim()).length})`;
+    },
+  },
 };
 
 export default function AiAssist({ activePage, data }: Props) {

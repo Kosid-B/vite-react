@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
   registerIssues, registerHealth, registerCsv, registerJson,
-  emptyRegister, looksLikePerson,
+  emptyRegister, looksLikePerson, seedProcesses, PROCESS_TEMPLATES,
   type ProcessRegisterData, type ProcessRow,
 } from '../processRegister';
-import { STANDARDS } from '../isoStandards';
+import { STANDARDS, type StandardId } from '../isoStandards';
+
+const ALL_STD = Object.keys(STANDARDS) as StandardId[];
 
 const proc = (over: Partial<ProcessRow> = {}): ProcessRow => ({
   id: 'p1', name: 'รับคำสั่งซื้อ', owner: 'ผู้จัดการฝ่ายขาย',
@@ -18,7 +20,8 @@ const full = (rows: ProcessRow[]): ProcessRegisterData => ({ standard: 'iso9001'
 
 describe('looksLikePerson — เตือนเมื่อใส่ชื่อคนแทนตำแหน่ง', () => {
   it('คำที่มีตำแหน่งอยู่ = ไม่ใช่ชื่อคน', () => {
-    for (const s of ['ผู้จัดการฝ่ายผลิต', 'หัวหน้าแผนก QA', 'จป.วิชาชีพ', 'QMR', 'Production Manager']) {
+    // "ผู้บริหารสูงสุด"/"คณะกรรมการ" = คำที่ตัวมาตรฐานใช้เอง ต้องไม่ถูกเตือน
+    for (const s of ['ผู้จัดการฝ่ายผลิต', 'หัวหน้าแผนก QA', 'จป.วิชาชีพ', 'QMR', 'Production Manager', 'ผู้บริหารสูงสุด', 'คณะทำงาน BCM']) {
       expect(looksLikePerson(s), s).toBe(false);
     }
   });
@@ -128,5 +131,49 @@ describe('ส่งออก — ลูกค้าต้องถือข้�
   it('ทะเบียนเปล่าส่งออกได้ ไม่ throw', () => {
     expect(() => registerCsv(emptyRegister('iso14001'))).not.toThrow();
     expect(registerCsv(emptyRegister('iso14001')).split('\n')).toHaveLength(1);
+  });
+});
+
+describe('โครงตั้งต้น — ต้องครบทุกข้อกำหนดและไม่ซ้ำ', () => {
+  it.each(ALL_STD)('%s: ทุกข้อกำหนดมีกระบวนการรับผิดชอบ ครบและไม่ซ้ำ', (std) => {
+    const claimed = PROCESS_TEMPLATES[std].flatMap((t) => t.clauses);
+    const ids = STANDARDS[std].clauses.map((c) => c.id);
+    // ไม่มีข้อไหนตกหล่น
+    expect(ids.filter((id) => !claimed.includes(id))).toEqual([]);
+    // ไม่มีข้อไหนถูกอ้างสองที่ (สองกระบวนการรับผิดชอบข้อเดียวกัน = ไม่มีใครรับจริง)
+    expect(claimed.filter((c, i) => claimed.indexOf(c) !== i)).toEqual([]);
+    // ไม่มีข้อที่มาตรฐานนี้ไม่มี
+    expect(claimed.filter((c) => !ids.includes(c))).toEqual([]);
+  });
+
+  it.each(ALL_STD)('%s: ผู้รับผิดชอบเป็นตำแหน่ง ไม่ใช่ชื่อคน', (std) => {
+    for (const t of PROCESS_TEMPLATES[std]) {
+      expect(looksLikePerson(t.owner), `${t.name} → ${t.owner}`).toBe(false);
+    }
+  });
+
+  it.each(ALL_STD)('%s: กดเริ่มแล้วเหลือแต่ blocker เรื่องตัววัด — ส่วนที่เจ้าของธุรกิจเท่านั้นตอบได้', (std) => {
+    const data: ProcessRegisterData = { standard: std, processes: seedProcesses(std, (i) => `p${i}`) };
+    const issues = registerIssues(data);
+    const blockers = issues.filter((i) => i.level === 'blocker');
+    // ต้องไม่มี blocker เรื่อง "ข้อกำหนดไม่มีเจ้าของ" หรือ "ไม่มีผู้รับผิดชอบ" เหลืออยู่
+    expect(blockers.every((b) => b.what.includes('ยังไม่มีตัววัด'))).toBe(true);
+    expect(blockers).toHaveLength(PROCESS_TEMPLATES[std].length);
+  });
+
+  it('โครงตั้งต้นไม่เติมตัววัดและช่อง "มาจากอะไร" ให้ (ตั้งใจ — ไม่ใช่ KPI สำเร็จรูป)', () => {
+    for (const std of ALL_STD) {
+      const rows = seedProcesses(std, (i) => `p${i}`);
+      expect(rows.every((r) => r.metrics.length === 0)).toBe(true);
+    }
+  });
+
+  it('id ไม่ซ้ำกัน และแก้ทะเบียนแล้วไม่กระทบโครงต้นฉบับ', () => {
+    const rows = seedProcesses('iso9001', (i) => `p${i}`);
+    expect(new Set(rows.map((r) => r.id)).size).toBe(rows.length);
+    rows[0].clauses.push('9.9');
+    rows[0].docs.push('เอกสารมั่ว');
+    expect(PROCESS_TEMPLATES.iso9001[0].clauses).not.toContain('9.9');
+    expect(PROCESS_TEMPLATES.iso9001[0].docs).not.toContain('เอกสารมั่ว');
   });
 });

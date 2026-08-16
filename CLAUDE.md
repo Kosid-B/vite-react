@@ -96,6 +96,13 @@ src/pages/BoardRoom.tsx        — หน้า 'boardroom' ห้องบอ�
 src/pages/Resources.tsx        — หน้า 'resources' บริหารทรัพยากร: รายการ+จำนวน · C-Level ดูแล/ขอเพิ่ม-ลด · CEO/บอร์ดอนุมัติ · AI จัดสรร (agent-run จริง + fallback heuristic)
 src/lib/cfoAnalysis.ts         — CFO AI วิเคราะห์การเงิน "ธุรกิจตัวเอง" ของ SME จากตัวเลขจริง (d.finance): cfoMetrics(recurring/breakEvenGap/topExpense) + cfoFlags(ธงสุขภาพ) + cfoLocalAdvice(fallback offline) + cfoPrompt(ai-assist · ห้ามแต่งตัวเลข) · pure/tested · แสดงใน components/CfoAnalysis.tsx ใต้คลังเมือง (CompanyCity) — ต่อยอด cfoReport.ts (KPI report) เป็นชั้นให้คำแนะนำเชิงลงมือ
 src/lib/resources.ts           — Resource/Request types + templates + applyApproval + parseAiAllocations (pure, tested)
+src/lib/processRegister.ts     — ทะเบียนกระบวนการ+ตัววัด (ขั้นที่ 1 ของ "SaaS แทนเอกสาร ISO" — docs/product/SAAS-AS-THE-SYSTEM.md)
+                                 registerIssues/registerHealth บังคับสายโซ่: ตัววัดทุกตัวต้องมี whyFrom (มาจากความเสี่ยง/คุณค่าอะไร)
+                                 ไม่งั้น blocker ที่ข้อ 9.1 · PROCESS_TEMPLATES + seedProcesses() วางโครงครอบคลุมข้อกำหนดครบทุกข้อ
+                                 แต่ "ไม่เติมตัววัดให้โดยตั้งใจ" (KPI สำเร็จรูป = ตอบผู้ตรวจไม่ได้) · CSV/JSON export (ลูกค้าถือข้อมูลเอง)
+                                 pure/tested (30 เทสต์ · มีเทสต์ยืนยันว่าโครงตั้งต้นครอบคลุมทุกข้อและไม่ซ้ำ ทั้ง 4 มาตรฐาน)
+src/pages/ProcessRegister.tsx  — หน้า 'process' ทะเบียนกระบวนการ (free · nav ใต้ มาตรฐาน ISO) — แก้ inline + ชิปเลือกข้อกำหนด
+                                 (ข้อที่กระบวนการอื่นถือแล้วจะจาง) + แถบสุขภาพ + รายการ "สิ่งที่ผู้ตรวจจะเจอ"
 src/lib/resourceBridge.ts      — คำขอก้อนใหญ่→ห้องบอร์ด(+XP) + ทรัพยากรอนุมัติ→รายจ่าย finance อัตโนมัติ (pure, tested)
 src/pages/CityLevelUp.tsx      — หน้า 'citylevelup' เมือง 3 มิติ Level Up (ใช้ lib/cityScape.ts)
 src/lib/cityScape.ts           — เอนจินวาดเมืองไอโซเมตริก SVG + auto-detect เวลา/ฤดู (framework-agnostic)
@@ -235,7 +242,8 @@ Google Sheets ของ User (เชื่อมบัญชีเอง) = Phas
 `Dashboard`, `บริษัท AI`, `ห้องบอร์ด`, `ทรัพยากร`, `เมืองบริษัท`, `เมือง · Level Up`, `Pulse & A/B`, `การค้าระหว่างเมือง`,
 `Marketplace`, `หน้าร้านของฉัน`, `ซื้อขาย B2B (RFQ)`,
 `ทีม / สมาชิก`, `โรงงานอัจฉริยะ`, `แพ็กเกจ & ชำระเงิน`, `SaaS Analytics`,
-`ผู้ดูแลระบบ` (admin email เท่านั้น), `ISO 9001:2015 QMS`, `AI Research`, `Case Studies`
+`ผู้ดูแลระบบ` (admin email เท่านั้น), `ISO 9001:2015 QMS`, `ทะเบียนกระบวนการ + ตัววัด`, `AI Research`, `Case Studies`
+⚠️ กลุ่ม "มาตรฐาน ISO" ซ่อนในโหมดมือใหม่ (Sidebar `ADVANCED_PAGES` มี `iso9001`) — เห็นเมื่อ `ceo_ai_beginner='0'`
 
 เครื่องมือ (sub-menu ใต้ `บริษัท AI`): `Journey Map`, `Conversion Funnel`, `ROI Calculator`,
 `Personas`, `Content Plan`, `Priority Actions`, `Business Model · MIT24`, `Product Roadmap`,
