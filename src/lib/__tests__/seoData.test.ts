@@ -8,8 +8,10 @@ import {
   skillsPageHtml, skillsFaqJsonLd, skillsArticleJsonLd,
   sellPageHtml, sellFaqJsonLd, sellArticleJsonLd,
   securityPageHtml, securityArticleJsonLd, securityFaqJsonLd,
+  clientPageSeo, CLIENT_SEO_PAGES,
   type SeoStorefront,
 } from '../seoData';
+import { readFileSync } from 'node:fs';
 
 /**
  * SEO builders เป็น source of truth เดียวของทั้ง Worker (server.ts) และ client (seo.ts)
@@ -458,5 +460,56 @@ describe('faqPageHtml (/faq static page)', () => {
     expect(html).toContain('"@type":"FAQPage"');
     expect(html).toContain(`${ORIGIN}/start`);
     expect(html).toContain(`${ORIGIN}/faq`);
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+ * ยามเฝ้า sitemap — ทุก URL ที่เชิญ Google มา ต้องมี HTML ของตัวเองฝั่งเซิร์ฟเวอร์
+ *
+ * เคยพลาดจริง 16 ส.ค. 2569 (Search Console บอกเอง):
+ *   /start /sale /shop /legal อยู่ใน sitemap แต่ไม่มีทั้ง static HTML และตัวจัดการใน worker
+ *   → เสิร์ฟ index.html ก้อนเดียวกันหมด = title ซ้ำกับหน้าแรกเป๊ะ
+ *   → Google ขึ้น "พบแล้ว - ยังไม่ได้จัดทำดัชนี" และไม่เคย crawl เลยสักครั้ง
+ * ══════════════════════════════════════════════════════════════════════ */
+describe('sitemap ต้องไม่เชิญ Google มาที่หน้าที่ไม่มี HTML ของตัวเอง', () => {
+  const ORIGIN2 = 'https://ceoaithailand.org';
+  const server = readFileSync('src/server.ts', 'utf8');
+  const locs = [...sitemapXml([], ORIGIN2).matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+  const paths = locs.map(l => l.replace(ORIGIN2, '') || '/');
+
+  /** worker เสิร์ฟ HTML เฉพาะของหน้านี้เองไหม (static page หรือ inject SEO) */
+  const servedByWorker = (p: string) =>
+    p === '/' ||
+    p.startsWith('/blog') ||
+    server.includes(`url.pathname === '${p}'`);
+
+  it('ทุก path ใน sitemap มี HTML เฉพาะของตัวเอง (ไม่ใช่ shell ก้อนเดียวกับหน้าแรก)', () => {
+    const orphans = paths.filter(p => !servedByWorker(p) && !clientPageSeo(p, ORIGIN2));
+    expect(orphans, `path เหล่านี้อยู่ใน sitemap แต่ไม่มี HTML ของตัวเอง: ${orphans.join(', ')}`)
+      .toEqual([]);
+  });
+
+  it('ทุกหน้าในตาราง client มี title/description ไม่ซ้ำกันและไม่ซ้ำหน้าแรก', () => {
+    const home = homeSeo(ORIGIN2);
+    const titles = new Set<string>();
+    for (const [p, page] of Object.entries(CLIENT_SEO_PAGES)) {
+      expect(page.title, `${p} ใช้ title เดียวกับหน้าแรก`).not.toBe(home.title);
+      expect(page.description, `${p} ใช้ description เดียวกับหน้าแรก`).not.toBe(home.description);
+      expect(titles.has(page.title), `${p} title ซ้ำกับหน้าอื่น`).toBe(false);
+      titles.add(page.title);
+      // ยาวพอให้ Google ไม่ตัดทิ้ง และสั้นพอไม่โดนตัดกลางคัน
+      expect(page.description.length, `${p} description สั้นไป`).toBeGreaterThan(70);
+    }
+  });
+
+  it('worker เรียก clientPageSeo จริง (ตารางมีแล้วแต่ลืมต่อสาย = ไม่มีผลอะไรเลย)', () => {
+    expect(server).toContain('clientPageSeo(url.pathname, origin)');
+    expect(server).toContain('injectSeo(await env.ASSETS.fetch(request), pageSeo)');
+  });
+
+  it('canonical ชี้หน้าตัวเอง และ trailing slash ให้ผลเดียวกัน', () => {
+    expect(clientPageSeo('/start', ORIGIN2)?.canonicalUrl).toBe(`${ORIGIN2}/start`);
+    expect(clientPageSeo('/start/', ORIGIN2)?.canonicalUrl).toBe(`${ORIGIN2}/start`);
+    expect(clientPageSeo('/ไม่มีหน้านี้', ORIGIN2)).toBeNull();
   });
 });

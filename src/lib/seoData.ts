@@ -380,6 +380,61 @@ export function homeSeo(origin: string, agg?: ReviewAggregate, seg?: string): Se
   };
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+ * SEO ของหน้าที่เรนเดอร์ฝั่ง client (React) แต่อยู่ใน sitemap
+ *
+ * เคยพลาดจริง (16 ส.ค. 2569 — Search Console บอกเอง):
+ *   sitemap เชิญ Google มาที่ /start /sale /shop /legal
+ *   แต่ 4 หน้านี้ไม่มีทั้ง static HTML และตัวจัดการฝั่ง worker
+ *   → ทุกหน้าเสิร์ฟ index.html ก้อนเดียวกัน = title/description ซ้ำกับหน้าแรกเป๊ะ
+ *   → Google ขึ้นสถานะ "พบแล้ว - ยังไม่ได้จัดทำดัชนี" และ **ไม่เคย crawl เลยสักครั้ง**
+ *      (เว็บใหม่ + หน้าซ้ำ = ไม่คุ้มที่จะใช้โควตา crawl)
+ *
+ * แก้: worker แทรก title/description/canonical/JSON-LD ให้หน้าเหล่านี้ก่อนส่ง shell
+ * (ใช้ injectSeo ตัวเดียวกับ / และ /b/<slug>) — ไม่ต้องเขียนหน้า static ซ้ำทั้งหน้า
+ *
+ * ⚠️ กติกาที่มีเทสต์บังคับ: ทุก URL ใน sitemap ต้องมี HTML เฉพาะของตัวเองฝั่งเซิร์ฟเวอร์
+ *    ไม่ static ก็ต้องอยู่ในตารางนี้ — ไม่งั้นห้ามใส่ใน sitemap
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/** path (ไม่มี trailing slash) → SEO ของหน้านั้น · ครอบคลุมหน้า React สาธารณะที่อยู่ใน sitemap */
+export const CLIENT_SEO_PAGES: Record<string, { title: string; description: string }> = {
+  '/start': {
+    title: 'เริ่มธุรกิจของตัวเองพร้อมทีม AI — ฟรี ไม่ต้องใช้บัตร | CEO AI Thailand',
+    description:
+      'อยากเริ่มธุรกิจแต่ไม่รู้จะเริ่มตรงไหน? เล่าไอเดียให้ทีม AI ร่างแผนธุรกิจ เปิดหน้าร้าน และหาลูกค้ากลุ่มแรกให้ — ทดลองฟรี 15 วัน ไม่ต้องใช้บัตรเครดิต',
+  },
+  '/sale': {
+    title: 'แพ็กเกจและราคา — จ้างทีมผู้บริหาร AI เดือนละเท่าไร | CEO AI Thailand',
+    description:
+      'เทียบราคาทุกแพ็กเกจของ CEO AI Thailand พร้อมสิ่งที่ได้จริงในแต่ละแพ็ก จ่ายรายปีใช้ 12 เดือนจ่าย 10 — ดูก่อนตัดสินใจ ไม่ต้องล็อกอิน',
+  },
+  '/shop': {
+    title: 'เปิดหน้าร้านออนไลน์ฟรี — กรอกฟอร์มเดียว ไม่ต้องล็อกอิน | CEO AI Thailand',
+    description:
+      'เปิดหน้าร้านออนไลน์ฟรีในไม่กี่นาที กรอกชื่อร้าน หมวดธุรกิจ สินค้า และช่องทางติดต่อ ระบบสร้างหน้าร้านและขึ้นสารบัญธุรกิจให้ทันที',
+  },
+  '/legal': {
+    title: 'ข้อกำหนด นโยบายความเป็นส่วนตัว และข้อมูลบริษัท | CEO AI Thailand',
+    description:
+      'ข้อกำหนดการใช้งาน นโยบายความเป็นส่วนตัว (PDPA) นโยบายคุกกี้ นโยบายการคืนเงิน และข้อมูลนิติบุคคลของผู้ให้บริการ CEO AI Thailand',
+  },
+};
+
+/** คืน SeoData ของหน้า React สาธารณะ — คืน null ถ้า path นั้นไม่ได้อยู่ในตาราง */
+export function clientPageSeo(pathname: string, origin: string): SeoData | null {
+  const p = pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  const page = CLIENT_SEO_PAGES[p];
+  if (!page) return null;
+  return {
+    title: page.title,
+    description: page.description,
+    canonicalUrl: origin + p,
+    imageUrl: origin + DEFAULT_OG,
+    jsonLd: [organizationJsonLd(origin)],
+  };
+}
+
 /** หน้า answer-first แบบ static HTML เต็ม (crawlable ไม่ต้องรอ JS) เสิร์ฟที่ /faq — AEO asset
  *  มีเนื้อหา Q&A ที่มองเห็น + FAQPage schema ฝังในตัว + CTA ไป /start */
 /* ===== ธีมหลัก (ใช้ร่วมหน้า static /faq /mit24) =====

@@ -3,7 +3,7 @@
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt, escapeHtml,
   homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml, aggregateFromRatings,
-  blogIndexHtml, blogPostHtml,
+  blogIndexHtml, blogPostHtml, clientPageSeo,
   type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
 
@@ -326,6 +326,12 @@ async function handle(request: Request, env: Env): Promise<Response> {
           return injectSeo(await env.ASSETS.fetch(request), seo);
         } catch { /* fallback → shell เดิม */ }
       }
+
+      // หน้า React สาธารณะที่อยู่ใน sitemap (/start /sale /shop /legal)
+      // ต้องมี title/description/canonical ของตัวเอง ไม่งั้น Google เห็นเป็นหน้าซ้ำกับหน้าแรก
+      // แล้วขึ้น "พบแล้ว - ยังไม่ได้จัดทำดัชนี" โดยไม่ crawl เลย (เจอจริงใน Search Console 16 ส.ค. 2569)
+      const pageSeo = clientPageSeo(url.pathname, origin);
+      if (pageSeo) return injectSeo(await env.ASSETS.fetch(request), pageSeo);
     }
 
     // Serve static SPA assets
