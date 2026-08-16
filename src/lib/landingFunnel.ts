@@ -210,6 +210,12 @@ export function initLandingFunnel(seg: string, referrer: string, origin: string)
   flush(); // นับ "เข้าดู" ทันที
 }
 
+/** id เซสชันนิรนามของผู้เยี่ยมชมคนนี้ — ใช้ join ข้อมูล first-party ข้ามตาราง
+ *  (quickcheck_submissions ใช้ id เดียวกับ landing_funnel เพื่อดูได้ว่า "คนที่กรอกฟอร์ม เลื่อน/สมัครไหม") */
+export function currentFunnelSession(): string {
+  return getSession();
+}
+
 /** กลุ่ม A/B ของผู้เยี่ยมชมคนนี้ (deterministic จาก session) — ให้ LandingPage ตัดสินใจแสดง 2 ส่วนใหม่ */
 export function currentLandingVariant(): LandingVariant {
   return landingVariant(getSession());

@@ -5,9 +5,11 @@ import { rememberBizHint } from '../lib/bizHint';
 import { BIZ_LABEL, type SkillBiz } from '../lib/skillCatalog';
 import {
   quickCheck, verdictOf, verdictText, verdictIsPositive, headlineInsights, topicInsights,
-  QUICK_TOPICS, saveQuickDraft,
+  QUICK_TOPICS, saveQuickDraft, quickTrackPayload,
   type ProductInput, type TopicId, type Insight,
 } from '../lib/productQuickCheck';
+import { currentFunnelSession } from '../lib/landingFunnel';
+import { supabase, isSupabaseEnabled } from '../lib/supabase';
 
 /* ProductQuickCheck — ประตูหน้าของระบบ: กรอกตัวเลขสินค้า → เห็นคำตอบทันที → ค่อยสมัคร
  *
@@ -35,6 +37,15 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
   const [shown, setShown] = useState(false);
   const [topics, setTopics] = useState<TopicId[]>([]);
 
+  /** ส่งขึ้นแผงแอดมิน (นิรนาม · ไม่มีชื่อสินค้า) — เงียบเสมอ ห้ามทำหน้าเว็บพัง */
+  function report(nextTopics: readonly TopicId[], cta: boolean) {
+    if (!isSupabaseEnabled || !supabase) return;   // local/preview → ข้าม
+    try {
+      const payload = quickTrackPayload(currentFunnelSession(), input, nextTopics, cta);
+      supabase.rpc('track_quickcheck', payload).then(() => {}, () => {});
+    } catch { /* noop */ }
+  }
+
   const num = (s: string) => { const n = Number(s.replace(/,/g, '')); return Number.isFinite(n) ? n : 0; };
   const input: ProductInput = useMemo(() => ({
     biz, name: name.trim() || undefined,
@@ -53,12 +64,16 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
     if (name.trim()) rememberBizHint(name.trim());   // ต่อยอดกลไกเดิม: พาชื่อธุรกิจเข้าแอป
     // เก็บเฉพาะ field ที่เป็นตัวเลือก/ตัวเลข — ชื่อสินค้าอยู่ใน localStorage ของเครื่องเขาเท่านั้น
     track('quickcheck_submitted', { biz, verdict: verdictOf(quickCheck(input)) });
+    report(topics, false);
   }
 
   function toggleTopic(id: TopicId) {
     setTopics((prev) => {
       const next = prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id];
-      if (!prev.includes(id)) track('quickcheck_topic_opened', { topic: id, biz }); // ← ข้อมูลว่าคนกังวลเรื่องอะไร
+      if (!prev.includes(id)) {
+        track('quickcheck_topic_opened', { topic: id, biz }); // ← ข้อมูลว่าคนกังวลเรื่องอะไร
+        report(next, false);
+      }
       return next;
     });
   }
@@ -67,6 +82,7 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
   function saveAndSignup() {
     saveQuickDraft({ input, topics, at: new Date().toISOString().slice(0, 10) });
     track('quickcheck_signup_click', { biz, topics: topics.join(',') || 'none' });
+    report(topics, true);
     onGetStarted();
   }
 

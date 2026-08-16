@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   quickCheck, verdictOf, verdictText, verdictIsPositive, headlineInsights, topicInsights,
-  QUICK_TOPICS, topicById, parseQuickDraft, draftToFinance, DRAFT_MAX_AGE_DAYS,
+  QUICK_TOPICS, topicById, parseQuickDraft, draftToFinance, DRAFT_MAX_AGE_DAYS, quickTrackPayload,
+  topConcerns, concernsTrustworthy, MIN_CONCERN_SAMPLE, type QuickAgg,
   type ProductInput, type TopicId, type QuickDraft,
 } from '../productQuickCheck';
 import { SKILL_CATALOG } from '../skillCatalog';
@@ -228,5 +229,74 @@ describe('คำตัดสินรวม — กำไรสุทธิต�
     for (const v of ['loss', 'netLoss', 'thin', 'unknown'] as const) {
       expect(verdictIsPositive(v), v).toBe(false);
     }
+  });
+});
+
+describe('ส่งขึ้นแผงแอดมิน — ห้ามให้ชื่อสินค้าหลุดไปกับข้อมูลสถิติ', () => {
+  const SESSION = '11111111-1111-4111-8111-111111111111';
+
+  it('payload ไม่มีชื่อสินค้าเลย แม้ผู้ใช้กรอกมา', () => {
+    const input = P({ name: 'ร้านลุงสมชาย ซอยอารีย์ โทร 0812345678' });
+    const payload = quickTrackPayload(SESSION, input, ['profit'], false);
+    const json = JSON.stringify(payload);
+    expect(json).not.toContain('สมชาย');
+    expect(json).not.toContain('0812345678');
+    expect(Object.keys(payload).sort()).toEqual([
+      'p_biz', 'p_cost', 'p_cta', 'p_fixed', 'p_price', 'p_session', 'p_topics', 'p_units', 'p_verdict',
+    ]);
+  });
+
+  it('ส่งเฉพาะ field ที่เป็น dropdown/ตัวเลข/หัวข้อ และ verdict ตรงกับที่คำนวณ', () => {
+    const input = P({ price: 50, cost: 30, unitsPerMonth: 1000, fixedCostPerMonth: 30_000 });
+    const payload = quickTrackPayload(SESSION, input, ['pricing', 'risk'], true);
+    expect(payload.p_biz).toBe('food');
+    expect(payload.p_price).toBe(50);
+    expect(payload.p_units).toBe(1000);
+    expect(payload.p_verdict).toBe('netLoss');
+    expect(payload.p_topics).toEqual(['pricing', 'risk']);
+    expect(payload.p_cta).toBe(true);
+  });
+
+  it('ช่องที่ไม่ได้กรอก ส่งเป็น null ไม่ใช่ 0 (0 กับ "ไม่รู้" คนละความหมาย)', () => {
+    const payload = quickTrackPayload(SESSION, P(), [], false);
+    expect(payload.p_units).toBeNull();
+    expect(payload.p_fixed).toBeNull();
+  });
+
+  it('คัดลอกรายการหัวข้อ ไม่ผูกกับ state เดิม', () => {
+    const topics: TopicId[] = ['profit'];
+    const payload = quickTrackPayload(SESSION, P(), topics, false);
+    topics.push('risk');
+    expect(payload.p_topics).toEqual(['profit']);
+  });
+});
+
+describe('สรุปในแผงแอดมิน — อย่าอ่านผลจากตัวอย่างเล็กเกินไป', () => {
+  const agg = (o: Partial<QuickAgg> = {}): QuickAgg => ({
+    total: 0, with_topic: 0, cta: 0, median_price: 0, median_cost: 0, median_margin_pct: 0,
+    by_biz: {}, by_verdict: {}, by_topic: {}, ...o,
+  });
+
+  it('จัดอันดับหัวข้อจากมากไปน้อย พร้อม % และป้ายภาษาไทย', () => {
+    const r = topConcerns(agg({ by_topic: { profit: 10, risk: 30, pricing: 10 } }));
+    expect(r[0].id).toBe('risk');
+    expect(r[0].pct).toBe(60);
+    expect(r[0].label).toBe('ความเสี่ยง & ระบบ');
+    expect(r.map((x) => x.id)).toEqual(['risk', 'profit', 'pricing']);
+  });
+
+  it('ยังไม่มีข้อมูล → รายการว่าง ไม่ NaN', () => {
+    expect(topConcerns(null)).toEqual([]);
+    expect(topConcerns(agg())).toEqual([]);
+  });
+
+  it('หัวข้อที่ไม่รู้จัก (เวอร์ชันเก่า) ยังแสดงได้ ไม่ crash', () => {
+    expect(topConcerns(agg({ by_topic: { ของเก่า: 5 } }))[0].label).toBe('ของเก่า');
+  });
+
+  it(`คนกดหัวข้อน้อยกว่า ${MIN_CONCERN_SAMPLE} → ยังเชื่ออันดับไม่ได้`, () => {
+    expect(concernsTrustworthy(agg({ with_topic: MIN_CONCERN_SAMPLE - 1 }))).toBe(false);
+    expect(concernsTrustworthy(agg({ with_topic: MIN_CONCERN_SAMPLE }))).toBe(true);
+    expect(concernsTrustworthy(null)).toBe(false);
   });
 });

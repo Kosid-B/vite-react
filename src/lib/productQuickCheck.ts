@@ -21,6 +21,7 @@
 
 import type { SkillBiz } from './skillCatalog';
 import { pricingInsights } from './pricingAnalysis';
+import { supabase, isSupabaseEnabled } from './supabase';
 
 /* ── ข้อมูลที่ผู้ใช้กรอก ─────────────────────────────────────────────────── */
 
@@ -324,6 +325,41 @@ export function topicInsights(topic: TopicId, input: ProductInput, r: QuickResul
   return out;
 }
 
+/* ── ส่งขึ้นระบบ admin (first-party · ไม่มี PII) ────────────────────────
+ * ⚠️ ส่งเฉพาะ field ที่เป็น dropdown/ตัวเลข — **ห้ามส่งชื่อสินค้า** ที่ผู้ใช้พิมพ์เอง
+ *    เพราะเป็น free text ที่อาจมีชื่อร้าน/ชื่อคน (ดูเหตุผลเต็มใน migration 0056)
+ * เงียบเสมอ: การเก็บสถิติต้องไม่ทำให้หน้าเว็บพัง
+ * ─────────────────────────────────────────────────────────────────────── */
+
+export interface QuickTrackPayload {
+  p_session: string;
+  p_biz: string;
+  p_price: number;
+  p_cost: number;
+  p_units: number | null;
+  p_fixed: number | null;
+  p_verdict: QuickVerdict;
+  p_topics: TopicId[];
+  p_cta: boolean;
+}
+
+/** สร้าง payload สำหรับ RPC track_quickcheck — แยกออกมาให้ทดสอบได้ว่าไม่มีชื่อสินค้าหลุดไป */
+export function quickTrackPayload(
+  session: string, input: ProductInput, topics: readonly TopicId[], cta: boolean,
+): QuickTrackPayload {
+  return {
+    p_session: session,
+    p_biz: input.biz,
+    p_price: Number(input.price) || 0,
+    p_cost: Number(input.cost) || 0,
+    p_units: input.unitsPerMonth ?? null,
+    p_fixed: input.fixedCostPerMonth ?? null,
+    p_verdict: verdictOf(quickCheck(input)),
+    p_topics: [...topics],
+    p_cta: cta,
+  };
+}
+
 /* ── ยกข้อมูลเข้าแอปตอนสมัคร — "ไม่ต้องกรอกซ้ำ" ────────────────────────
  * เก็บใน localStorage ของเครื่องผู้ใช้เท่านั้น (มีชื่อสินค้าที่ผู้ใช้พิมพ์เอง = ไม่ควรขึ้น DB)
  * ต่อยอดจาก bizHint.ts ที่เดิมยกไปแค่ "ชื่อธุรกิจ"
@@ -400,4 +436,60 @@ export function draftToFinance(
     rows.push({ id: `qd-fix-${at}`, kind: 'expense', label: 'ค่าใช้จ่ายคงที่ (จากที่กรอกบนหน้าแรก)', amount: round2(input.fixedCostPerMonth), date: at });
   }
   return rows;
+}
+
+/* ── อ่านสรุปในแผงแอดมิน ───────────────────────────────────────────────── */
+
+export interface QuickAgg {
+  total: number;
+  with_topic: number;
+  cta: number;
+  median_price: number;
+  median_cost: number;
+  median_margin_pct: number;
+  by_biz: Record<string, number>;
+  by_verdict: Record<string, number>;
+  /** ⭐ ตัวที่สำคัญที่สุด — หัวข้อไหนถูกกดมากสุด = เจ้าของธุรกิจกังวลเรื่องอะไรจริง */
+  by_topic: Record<string, number>;
+}
+
+/** ดึงสรุปจาก RPC (admin เท่านั้น — RPC เช็ค is_app_admin() เอง) */
+export async function loadQuickAgg(days = 30): Promise<QuickAgg | null> {
+  if (!isSupabaseEnabled || !supabase) return null;
+  const { data, error } = await supabase.rpc('quickcheck_agg', { p_days: days });
+  if (error || !data) return null;
+  const d = data as Partial<QuickAgg>;
+  return {
+    total: d.total ?? 0,
+    with_topic: d.with_topic ?? 0,
+    cta: d.cta ?? 0,
+    median_price: Number(d.median_price ?? 0),
+    median_cost: Number(d.median_cost ?? 0),
+    median_margin_pct: d.median_margin_pct ?? 0,
+    by_biz: d.by_biz ?? {},
+    by_verdict: d.by_verdict ?? {},
+    by_topic: d.by_topic ?? {},
+  };
+}
+
+/** จัดอันดับหัวข้อที่คนกดมากสุด (pure — แยกออกมาให้ทดสอบได้) */
+export function topConcerns(agg: QuickAgg | null): { id: string; label: string; count: number; pct: number }[] {
+  const by = agg?.by_topic ?? {};
+  const total = Object.values(by).reduce((s, n) => s + n, 0);
+  return Object.entries(by)
+    .map(([id, count]) => ({
+      id,
+      label: QUICK_TOPICS.find((t) => t.id === id)?.label ?? id,
+      count,
+      pct: total > 0 ? Math.round((count / total) * 100) : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
+/** จำนวนขั้นต่ำก่อนที่อันดับหัวข้อจะเชื่อได้ — ต่ำกว่านี้คือเสียงรบกวน
+ *  (บทเรียนเดียวกับ landingFunnel.MIN_SAMPLE — เคย "อ่านผลจาก 60 คน" แล้วสรุปผิดมาแล้ว) */
+export const MIN_CONCERN_SAMPLE = 30;
+
+export function concernsTrustworthy(agg: QuickAgg | null): boolean {
+  return (agg?.with_topic ?? 0) >= MIN_CONCERN_SAMPLE;
 }
