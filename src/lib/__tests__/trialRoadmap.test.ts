@@ -1,0 +1,81 @@
+import { describe, it, expect } from 'vitest';
+import {
+  TRIAL_ROADMAP, TRIAL_TAKEAWAYS, TRIAL_DAYS, ACTOR_LABEL,
+  nextStep, roadmapProgress, totalEffortLabel,
+} from '../trialRoadmap';
+import { PAGE_MIN_PLAN } from '../access';
+
+/** หน้าที่ระบบมีจริง — อ้างอิงจาก PAGE_FLOW ใน App.tsx (คัดเฉพาะที่ roadmap ใช้) */
+const REAL_PAGES = [
+  'dashboard', 'city', 'personas', 'bmc', 'storefront', 'process',
+  'aicompany', 'marketing', 'billing', 'factory',
+];
+
+describe('แผน 15 วัน — ห้ามสัญญาสิ่งที่ระบบยังไม่มี', () => {
+  it('ทุกขั้นชี้ไปหน้าที่มีอยู่จริง', () => {
+    for (const s of TRIAL_ROADMAP) {
+      expect(REAL_PAGES, `${s.title} → ${s.page}`).toContain(s.page);
+    }
+  });
+
+  it('ไม่มีขั้นไหนชี้ไปหน้าที่ต้องจ่ายเงินก่อนถึงจะเข้าได้', () => {
+    // ทดลองใช้ = แพ็ก trial (rank เท่า scale) แต่ขั้นที่ "ฟรีจริง" ต้องเข้าได้แม้หมดทดลอง
+    // อย่างน้อยขั้นแรกต้องไม่ล็อก — ไม่งั้นคำสัญญาบนหน้าแรกเป็นโมฆะทันทีที่หมดวัน
+    expect(PAGE_MIN_PLAN[TRIAL_ROADMAP[0].page]).toBeUndefined();
+  });
+
+  it('ทุกขั้นบอกว่าได้อะไรกลับไป และเป็นของที่จับต้องได้', () => {
+    for (const s of TRIAL_ROADMAP) {
+      expect(s.outcome.length, s.title).toBeGreaterThan(20);
+      expect(s.effort, s.title).toBeTruthy();
+      expect(s.days, s.title).toBeTruthy();
+    }
+  });
+
+  it('ทุกขั้นบอกว่าใครทำ — คนต้องรู้ว่าต้องลงแรงเองแค่ไหน', () => {
+    for (const s of TRIAL_ROADMAP) {
+      expect(Object.keys(ACTOR_LABEL), s.title).toContain(s.actor);
+    }
+  });
+
+  it('มีทั้งขั้นที่ผู้ใช้กรอกเอง และขั้นที่ AI ช่วย (ไม่ใช่ AI ทำให้หมดจนดูไม่จริง)', () => {
+    const actors = new Set(TRIAL_ROADMAP.map((s) => s.actor));
+    expect(actors.has('you')).toBe(true);
+    expect(actors.has('both') || actors.has('ai')).toBe(true);
+  });
+
+  it('id ไม่ซ้ำ และครอบคลุมครบ 15 วัน', () => {
+    expect(new Set(TRIAL_ROADMAP.map((s) => s.id)).size).toBe(TRIAL_ROADMAP.length);
+    expect(TRIAL_DAYS).toBe(15);
+    expect(TRIAL_ROADMAP[TRIAL_ROADMAP.length - 1].days).toContain("15");
+  });
+
+  it('ของที่ถือกลับบ้านได้ ต้องมีจริงและบอกชัด', () => {
+    expect(TRIAL_TAKEAWAYS.length).toBeGreaterThanOrEqual(3);
+    expect(TRIAL_TAKEAWAYS.some((t) => t.includes('ส่งออก'))).toBe(true);
+    expect(totalEffortLabel()).toContain('ชั่วโมง');
+  });
+});
+
+describe('พาเดินต่อในแอป', () => {
+  it('ยังไม่เคยเข้าหน้าไหน → ขั้นแรกสุด', () => {
+    expect(nextStep([])?.id).toBe(TRIAL_ROADMAP[0].id);
+    expect(roadmapProgress([])).toBe(0);
+  });
+
+  it('เดินไปบางขั้นแล้ว → ชี้ขั้นที่ยังไม่ทำ', () => {
+    const visited = [TRIAL_ROADMAP[0].page, TRIAL_ROADMAP[1].page];
+    expect(nextStep(visited)?.id).toBe(TRIAL_ROADMAP[2].id);
+    expect(roadmapProgress(visited)).toBe(40);
+  });
+
+  it('ครบทุกขั้น → ไม่มีขั้นถัดไป และความคืบหน้า 100%', () => {
+    const all = TRIAL_ROADMAP.map((s) => s.page);
+    expect(nextStep(all)).toBeNull();
+    expect(roadmapProgress(all)).toBe(100);
+  });
+
+  it('หน้าที่ไม่เกี่ยวกับ roadmap ไม่นับเป็นความคืบหน้า', () => {
+    expect(roadmapProgress(['billing', 'admin', 'cases'])).toBe(0);
+  });
+});

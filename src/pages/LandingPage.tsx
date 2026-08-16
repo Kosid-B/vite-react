@@ -26,6 +26,7 @@ import ValueTimeline from '../components/ValueTimeline';
 import CommunityJoin from '../components/CommunityJoin';
 import GuestAiTry from '../components/GuestAiTry';
 import ProductQuickCheck from '../components/ProductQuickCheck';
+import TrialRoadmap from '../components/TrialRoadmap';
 import WhyTrustAi from '../components/WhyTrustAi';
 import { currentLandingVariant } from '../lib/landingFunnel';
 import { showNewSections } from '../lib/landingAb';
@@ -405,12 +406,12 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
               boxShadow: '0 0 32px rgba(245,158,11,0.45)',
             }}
           >
-            {heroCopy.ctaLabel || (onTryGuest ? '⚡ เริ่มใช้ฟรีทันที — ไม่ต้องสมัคร' : 'จ้าง AI พนักงานตัวแรกของคุณ — ฟรี 15 วัน')}
+            {heroCopy.ctaLabel || (onTryGuest ? '⚡ ลองเลย — ไม่ต้องกรอกอะไรสักช่อง' : 'เริ่มสร้างธุรกิจของผม — ฟรี 15 วัน →')}
           </button>
           <div style={{ marginTop: 12, color: C.slate5, fontSize: 13 }}>
             {onTryGuest
-              ? 'ไม่ต้องล็อกอิน · เข้าใช้ทันที · เก็บงานไว้สมัครทีหลังได้'
-              : 'ไม่ต้องใช้บัตรเครดิต · เริ่มฟรี 15 วัน · ยกเลิกได้ทุกเมื่อ'}
+              ? 'ไม่ต้องล็อกอิน · ใช้ได้ทันที · เก็บงานที่ทำไว้ทีหลังได้'
+              : 'ไม่ต้องใช้บัตรเครดิต · กรอกแค่ชื่อกับอีเมล · ใช้งานได้ทันที ไม่ต้องรออนุมัติ'}
           </div>
           {onTryGuest && (
             <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
@@ -426,9 +427,9 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
                   cursor: 'pointer', transition: 'all .2s',
                 }}
               >
-                หรือ สมัคร / เข้าสู่ระบบ — ฟรี 15 วัน ไม่ต้องใช้บัตร →
+                หรือ เปิดพื้นที่ทำงานของผม — ฟรี 15 วัน ไม่ต้องใช้บัตร →
               </button>
-              <span style={{ color: C.slate5, fontSize: 12.5 }}>อยากเก็บงานถาวร + ปลดล็อกทุกฟีเจอร์ ก็สมัครได้เลย</span>
+              <span style={{ color: C.slate5, fontSize: 12.5 }}>กรอกแค่ชื่อกับอีเมล · งานที่ทำไว้จะถูกเก็บให้ · ยกเลิกเมื่อไหร่ก็ได้</span>
             </div>
           )}
           {/* ทางเลือกรอง (ร้านฝากขาย) — ลดจากปุ่มเด่นเป็นลิงก์ subtle เพื่อโฟกัส CTA หลัก (ลด decision paralysis) */}
@@ -473,6 +474,10 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
            วางสูงที่สุดโดยตั้งใจ — ข้อมูลจริง 11–15 ส.ค. 2569 บอกว่าผู้เข้าชมจากโซเชียล 28 คน
            มี max_scroll = 0 ทั้ง 28 คน · อะไรที่อยู่ล่าง fold เท่ากับไม่มี */}
       <ProductQuickCheck onGetStarted={onGetStarted} />
+
+      {/* ─── 15 วันฟรีจะเกิดอะไรขึ้น — ตอบข้อกังวลจริง "เสียเวลาแล้วไม่ได้อะไร" ───
+           วางต่อจากประตูหน้าทันที: เห็นตัวเลขของตัวเองแล้ว → เห็นว่าเดินต่อยังไง → ค่อยกดเริ่ม */}
+      <TrialRoadmap onGetStarted={onGetStarted} />
 
       {/* ─── A/B holdout: 2 ส่วนใหม่แสดงเฉพาะกลุ่ม 'show' (control ไม่เห็น) เพื่อวัดผล conversion จริง ─── */}
       {abShowNew && (
