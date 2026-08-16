@@ -30,8 +30,10 @@ export const CATEGORY_SEG: Record<string, HeroSeg> = {
   'เกษตรและแปรรูป': 'palm',
 };
 
-/** seg ที่ใช้เมื่อยังไม่รู้จักหมวดนั้น — 'newbie' เพราะกลุ่มเป้าหมายรอบนี้คือคนกำลังเริ่มธุรกิจ */
-export const FALLBACK_SEG: HeroSeg = 'newbie';
+/** seg ที่ใช้เมื่อยังไม่รู้จักหมวดนั้น
+ *  เปลี่ยนจาก 'newbie' → 'seller' 16 ส.ค. 2569 ตามผู้ชมที่วัดได้จริง
+ *  (YouTube คลิป 942 วิว: อายุ 18-24 = 0.0% · 45 ปีขึ้นไป = 58.1% → ส่วนใหญ่มีธุรกิจอยู่แล้ว) */
+export const FALLBACK_SEG: HeroSeg = 'seller';
 
 export function segForCategory(category: string): HeroSeg {
   return CATEGORY_SEG[category] ?? FALLBACK_SEG;

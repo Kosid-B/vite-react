@@ -24,9 +24,18 @@ describe('/start เปลี่ยนพาดหัวตามคนที่
     expect(screen.getByText(/อยากเริ่มธุรกิจ แต่ไม่รู้จะเริ่มตรงไหน/)).toBeTruthy();
   });
 
-  it('ไม่มี seg → คงพาดหัวเดิมที่ตรวจแล้ว (fallback ปลอดภัย)', () => {
+  it('ไม่มี seg → พาดหัวค่าตั้งต้นพูดกับเจ้าของธุรกิจที่ขายอยู่แล้ว (ตามผู้ชมที่วัดได้จริง)', () => {
     render(<StartLanding />);
-    expect(screen.getByText(/ไม่มีใครจ้าง ไม่ได้แปลว่าไปต่อไม่ได้/)).toBeTruthy();
+    expect(screen.getByText(/ขายได้ทุกวัน แต่สิ้นเดือนเงินไม่เหลือ/)).toBeTruthy();
+    // ข้อความเดิมพูดกับคนจบใหม่/คนหางาน ซึ่งผู้ชมจริงอายุ 18-24 = 0.0%
+    expect(screen.queryByText(/ไม่มีใครจ้าง/)).toBeNull();
+    expect(screen.queryByText(/คนจบใหม่/)).toBeNull();
+  });
+
+  it('ไม่ตัดคนเพิ่งเริ่มทิ้ง — seg=newbie ยังได้พาดหัวของตัวเอง', () => {
+    go('?seg=newbie');
+    render(<StartLanding />);
+    expect(screen.getByText(/อยากเริ่มธุรกิจ แต่ไม่รู้จะเริ่มตรงไหน/)).toBeTruthy();
   });
 
   it('สะพานจากเว็บบริษัท (ref=btctraining) ชนะ seg เสมอ — คนละกลุ่มกัน', () => {

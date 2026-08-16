@@ -48,10 +48,12 @@ describe('บริบทต้องเดินทางไปกับผู�
     expect(segForCategory('หมวดที่ไม่มีจริง')).toBe(FALLBACK_SEG);
   });
 
-  it('ทุก seg ในตารางเป็น seg ที่ระบบรู้จัก และไม่มี default (default = คงพาดหัวเดิม)', () => {
+  it('ทุก seg ในตารางเป็น seg ที่ระบบรู้จัก และมีค่าตั้งต้นเสมอ', () => {
     for (const seg of Object.keys(CATEGORY_SEG)) expect(HERO_VARIANTS[CATEGORY_SEG[seg]]).toBeTruthy();
-    for (const seg of Object.keys(START_HEROES)) expect(seg).not.toBe('default');
-    expect(startHeroFor('default')).toBeNull();
+    // เปลี่ยน 16 ส.ค. 2569: 'default' ต้องมีพาดหัวของตัวเอง เพราะคนที่เราไม่รู้ที่มา
+    // ต้องเจอข้อความที่ตรงกับผู้ชมส่วนใหญ่จริง (เจ้าของธุรกิจ 35-65) ไม่ใช่ข้อความกลาง ๆ
+    expect(startHeroFor('default'), 'ไม่มีพาดหัวค่าตั้งต้น = คนที่ไม่รู้ที่มาจะไม่เห็นอะไรเลย').toBeTruthy();
+    expect(startHeroFor('default')!.h1).not.toContain('ไม่มีใครจ้าง');
   });
 
   it('blogCtaHref เข้ารหัส query ถูกต้อง', () => {
