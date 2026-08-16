@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import {
   parseNumbers, buildReply, replySwapped, REPLY_NEED_NUMBERS,
-  KEYWORD_OFFERS, FOCUS_OFFERS, dmForKeyword,
+  KEYWORD_OFFERS, FOCUS_OFFERS, dmForKeyword, tiktokPinnedComment,
 } from '../commentReply';
-import { SHORT_LINKS } from '../shortLinks';
+import { SHORT_LINKS, SOURCE_PRESETS } from '../shortLinks';
 import { BLOG_POSTS } from '../blogData';
 import { priceScenario } from '../pricingAnalysis';
 
@@ -211,5 +211,40 @@ describe('จุลภาค — เคยพลาดจริง (1,500 อ่
 
   it('จุลภาคที่ใช้คั่นค่า (มีช่องว่างตาม) ยังแยกได้ถูก', () => {
     expect(parseNumbers('50, 30')).toMatchObject({ price: 50, cost: 30 });
+  });
+});
+
+describe('TikTok — คอมเมนต์คือทางเดียวที่ข้ามเพดาน "ต้องเข้าโปรไฟล์ก่อน"', () => {
+  /* วัดได้จริง 16 ส.ค. 2569: คลิปได้ 15,900 วิว แต่เข้าโปรไฟล์แค่ 11 คน
+   * ลิงก์อยู่ในไบโอเท่านั้น → เพดานคนกดลิงก์ = 11 ไม่ว่าคลิปจะดังแค่ไหน */
+
+  it('คอมเมนต์ปักหมุดต้องมีลิงก์ที่ "พิมพ์ตามได้" ไม่ใช่ลิงก์ยาว', () => {
+    for (const o of FOCUS_OFFERS) {
+      const t = tiktokPinnedComment(o);
+      expect(t, o.keyword).toContain(`ceoaithailand.org${o.shortLink}`);
+      expect(t, `${o.keyword} มี https:// ทำให้พิมพ์ตามยากขึ้นโดยไม่จำเป็น`).not.toContain('https://');
+      expect(t.length, `${o.keyword} ยาวเกินกว่าจะอ่านจบใน 2 วินาที`).toBeLessThan(140);
+      expect(t).toContain('ไม่ต้องสมัคร');
+    }
+  });
+
+  it('ลิงก์ในคอมเมนต์ปักหมุดต้องมีอยู่จริงใน SHORT_LINKS', () => {
+    for (const o of FOCUS_OFFERS) expect(SHORT_LINKS[o.shortLink], o.keyword).toBeTruthy();
+  });
+
+  it('คำตอบช่อง tiktok ให้ลิงก์แบบพิมพ์ตาม (ต่างจาก FB คอมเมนต์ที่ห้ามมีลิงก์เลย)', () => {
+    const p = parseNumbers('50/30')!;
+    const tt = buildReply(p, { channel: 'tiktok' });
+    expect(tt).toContain('ceoaithailand.org/ราคา');
+    expect(tt).not.toContain('https://');
+    // FB คอมเมนต์ยังห้ามมีลิงก์เหมือนเดิม — กฎคนละแพลตฟอร์มต้องไม่ปนกัน
+    expect(buildReply(p, { channel: 'comment' })).not.toContain('ceoaithailand.org');
+  });
+
+  it('มีแหล่งที่มาแยก "คอมเมนต์" ออกจาก "ไบโอ" ไม่งั้นพิสูจน์ไม่ได้ว่ากลไกใหม่ได้ผล', () => {
+    expect(SOURCE_PRESETS.ttc, 'ไม่มี ttc = แยกคอมเมนต์ออกจากไบโอไม่ได้').toBeTruthy();
+    expect(SOURCE_PRESETS.ttc.medium).toBe('comment');
+    expect(SOURCE_PRESETS.tt.medium).toBe('bio');
+    expect(SOURCE_PRESETS.ttc.source).toBe(SOURCE_PRESETS.tt.source);
   });
 });

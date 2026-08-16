@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   parseNumbers, buildReply, REPLY_NEED_NUMBERS, KEYWORD_OFFERS, dmForKeyword,
+  tiktokPinnedComment,
   type ReplyChannel,
 } from '../../lib/commentReply';
 import { shortLinkTarget, SHORT_LINKS } from '../../lib/shortLinks';
@@ -85,7 +86,7 @@ export default function CommentReplyTab() {
         </label>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {(['comment', 'dm'] as ReplyChannel[]).map((c) => (
+          {(['comment', 'dm', 'tiktok'] as ReplyChannel[]).map((c) => (
             <button
               key={c}
               onClick={() => setChannel(c)}
@@ -96,7 +97,9 @@ export default function CommentReplyTab() {
                 color: channel === c ? '#0e7490' : 'var(--ink)', fontWeight: channel === c ? 700 : 400,
               }}
             >
-              {c === 'comment' ? '💬 ตอบในคอมเมนต์ (ไม่มีลิงก์)' : '📨 ตอบในแชท (มีลิงก์)'}
+              {c === 'comment' ? '💬 FB คอมเมนต์ (ไม่มีลิงก์)'
+                : c === 'dm' ? '📨 FB แชท (มีลิงก์)'
+                : '🎵 TikTok คอมเมนต์ (ลิงก์พิมพ์ตาม)'}
             </button>
           ))}
         </div>
@@ -112,6 +115,23 @@ export default function CommentReplyTab() {
           text={reply}
           hint={parsed ? undefined : 'ต้องมีตัวเลขอย่างน้อย 2 ตัว ระบบถึงจะคำนวณให้ — ห้ามเดาแทนเขา'}
         />
+      </div>
+
+      {/* TikTok — คอมเมนต์ปักหมุด (ข้ามคอขวด "ต้องเข้าโปรไฟล์ก่อนถึงกดลิงก์ได้") */}
+      <div style={{ border: '1px solid var(--sand)', borderRadius: 12, padding: 14, background: 'var(--cream2)', display: 'grid', gap: 10 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
+          🎵 คอมเมนต์ปักหมุดใต้คลิป TikTok
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 1.7 }}>
+          วัดได้จริง 16 ส.ค. 2569: คลิปหนึ่งได้ <b>15,900 วิว</b> แต่เข้าโปรไฟล์แค่ <b>11 คน</b><br />
+          ลิงก์อยู่ในไบโอเท่านั้น = เพดานคนกดลิงก์คือ 11 ไม่ว่าคลิปจะดังแค่ไหน<br />
+          <b>คอมเมนต์ปักหมุดอยู่ใต้คลิปเลย ทุกคนที่ดูเห็นได้</b> — ลิงก์กดไม่ได้แต่พิมพ์ตามได้
+        </div>
+        <div style={{ display: 'grid', gap: 10 }}>
+          {KEYWORD_OFFERS.filter((o) => o.focus).map((o) => (
+            <CopyBox key={o.keyword} label={`คลิปเรื่อง${o.keyword}`} text={tiktokPinnedComment(o)} />
+          ))}
+        </div>
       </div>
 
       {/* โพสต์แบบคอมเมนต์คำเดียว → ทักกลับพร้อมลิงก์ */}

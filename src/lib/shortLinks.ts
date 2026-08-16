@@ -52,6 +52,10 @@ export const SOURCE_PRESETS: Record<string, { source: string; medium: string }> 
   yt:   { source: 'youtube',   medium: 'shorts' },
   ytv:  { source: 'youtube',   medium: 'video' },
   tt:   { source: 'tiktok',    medium: 'bio' },
+  // แยก "คอมเมนต์" ออกจาก "ไบโอ" เพราะเป็นคนละเส้นทางกันคนละโลก
+  // ไบโอ: ต้องเข้าโปรไฟล์ก่อน → วัดจริง 16 ส.ค. 2569 = 15,900 วิว เข้าโปรไฟล์แค่ 11 คน (เพดานอยู่ที่ 11)
+  // คอมเมนต์: เห็นใต้คลิปเลย ไม่ต้องเข้าโปรไฟล์ → ไม่มีเพดานนั้น
+  ttc:  { source: 'tiktok',    medium: 'comment' },
   fb:   { source: 'facebook',  medium: 'social' },
   ig:   { source: 'instagram', medium: 'story' },
   line: { source: 'line',      medium: 'message' },
