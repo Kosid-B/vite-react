@@ -1,7 +1,7 @@
 import { useLandingTheme } from '../lib/landingTheme';
 import { track } from '../lib/analytics';
 import {
-  TRIAL_ROADMAP, TRIAL_TAKEAWAYS, TRIAL_DAYS, ACTOR_LABEL, totalEffortLabel,
+  TRIAL_ROADMAP, TRIAL_TAKEAWAYS, TRIAL_DAYS, ACTOR_LABEL, totalEffortLabel, ISO_EARLY_NOTE,
 } from '../lib/trialRoadmap';
 
 /* TrialRoadmap — "15 วันนี้จะเกิดอะไรขึ้นกับคุณบ้าง"
@@ -89,6 +89,21 @@ export default function TrialRoadmap({ onGetStarted }: { onGetStarted: () => voi
           </div>
           <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.7 }}>
             เราไม่ล็อกข้อมูลของคุณไว้เป็นตัวประกัน — ส่งออกได้ตลอดเวลาตั้งแต่วันแรก
+          </div>
+        </div>
+
+        {/* ISO ตั้งแต่ปีแรก — วางหลังจากเห็นว่าได้อะไรกลับไปแล้ว ไม่ใช่ขึ้นต้นด้วยคำว่า ISO
+            (หลักการเต็ม: .claude/skills/iso-from-day-one/SKILL.md) */}
+        <div style={{ border: `1px solid ${C.cyan}`, borderRadius: 14, padding: '16px 18px', marginTop: 12, background: light ? '#ecfeff' : '#083344' }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: C.ink, marginBottom: 6 }}>
+            {ISO_EARLY_NOTE.lead}
+          </div>
+          <div style={{ fontSize: 13.5, color: C.sub, lineHeight: 1.75, marginBottom: 10 }}>
+            {ISO_EARLY_NOTE.body}
+          </div>
+          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 10, fontSize: 13, lineHeight: 1.75 }}>
+            <div style={{ color: C.sub }}>❌ {ISO_EARLY_NOTE.myth}</div>
+            <div style={{ color: C.ink, marginTop: 2 }}>✅ {ISO_EARLY_NOTE.truth}</div>
           </div>
         </div>
 

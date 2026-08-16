@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   TRIAL_ROADMAP, TRIAL_TAKEAWAYS, TRIAL_DAYS, ACTOR_LABEL,
-  nextStep, roadmapProgress, totalEffortLabel,
+  nextStep, roadmapProgress, totalEffortLabel, ISO_EARLY_NOTE,
 } from '../trialRoadmap';
 import { PAGE_MIN_PLAN } from '../access';
 
@@ -77,5 +77,32 @@ describe('พาเดินต่อในแอป', () => {
 
   it('หน้าที่ไม่เกี่ยวกับ roadmap ไม่นับเป็นความคืบหน้า', () => {
     expect(roadmapProgress(['billing', 'admin', 'cases'])).toBe(0);
+  });
+});
+
+describe('ISO ตั้งแต่ปีแรก — กฎภาษาสำหรับคนเริ่มธุรกิจ', () => {
+  it('ห้ามขึ้นต้นด้วยคำว่า ISO (คนเพิ่งเริ่มได้ยินแล้วปิดทันที)', () => {
+    expect(ISO_EARLY_NOTE.lead.startsWith('ISO')).toBe(false);
+    expect(ISO_EARLY_NOTE.myth.startsWith('ISO')).toBe(false);
+    // ประโยคเปิดต้องพูดถึงสิ่งที่เขาเพิ่งทำ ไม่ใช่ชื่อมาตรฐาน
+    expect(ISO_EARLY_NOTE.lead).not.toContain('ISO');
+  });
+
+  it('แก้ความเชื่อผิดตรง ๆ ว่าไม่ต้องรอให้บริษัทโต', () => {
+    expect(ISO_EARLY_NOTE.myth).toContain('รอให้บริษัทโต');
+    expect(ISO_EARLY_NOTE.truth).toContain('ปีแรก');
+    expect(ISO_EARLY_NOTE.truth).toContain('ยิ่งรอยิ่งแพง');
+  });
+
+  it('ไม่ระบุจำนวนเดือนขั้นต่ำตายตัว (ขึ้นกับหน่วยรับรองแต่ละเจ้า)', () => {
+    const all = Object.values(ISO_EARLY_NOTE).join(' ');
+    expect(all).not.toMatch(/\d+\s*เดือน/);
+  });
+
+  it('ไม่สัญญาว่าได้ใบรับรองแน่นอน — พูดแค่ว่าไม่ต้องเริ่มใหม่', () => {
+    const all = Object.values(ISO_EARLY_NOTE).join(' ');
+    expect(all).not.toContain('รับรองได้แน่นอน');
+    expect(all).not.toContain('การันตี');
+    expect(ISO_EARLY_NOTE.body).toContain('ไม่ต้องเริ่มใหม่');
   });
 });
