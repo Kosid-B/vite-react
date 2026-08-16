@@ -278,7 +278,8 @@ export function PublicDirectoryPage() {
 
   // SEO: CollectionPage + ItemList จากร้านที่โหลดมา
   useEffect(() => {
-    const seo = directorySeo(siteOrigin());
+    // ส่งจำนวนร้านเฉพาะเมื่อโหลดเสร็จแล้ว (null = ยังไม่รู้ → อย่าเดาแทน server)
+    const seo = directorySeo(siteOrigin(), list ? list.length : undefined);
     if (list && list.length) seo.jsonLd.push(directoryItemList(list, siteOrigin()));
     applySeo(seo);
   }, [list]);

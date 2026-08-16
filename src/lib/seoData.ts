@@ -35,6 +35,9 @@ export interface SeoData {
   canonicalUrl: string;
   imageUrl: string;
   jsonLd: object[];
+  /** ค่า meta robots — ใส่เฉพาะเมื่อต้องต่างจาก index,follow ที่ตั้งไว้ใน index.html
+   *  ใช้กับหน้าที่ "ยังไม่มีเนื้อหาพอให้จัดอันดับ" (thin page) เช่น /b ตอนยังไม่มีร้าน */
+  robots?: string;
 }
 
 const DEFAULT_OG = '/og-image.png';
@@ -130,8 +133,16 @@ export function storefrontSeo(sf: SeoStorefront, origin: string): SeoData {
   return { title, description, canonicalUrl, imageUrl, jsonLd: [business, breadcrumb] };
 }
 
-/** SEO หน้าตลาด /b — CollectionPage (ItemList แนบภายหลังด้วย directoryItemList) */
-export function directorySeo(origin: string): SeoData {
+/** จำนวนร้านขั้นต่ำที่หน้าตลาดถึงจะ "มีของให้จัดอันดับ"
+ *
+ *  ทำไมต้องมี: หน้า category ที่มีแต่กริดว่าง ๆ คือ thin page — Google เจอครั้งแรกแล้วประเมินว่า
+ *  ไม่มีคุณค่า จะกู้อันดับคืนยากกว่าไม่ให้เจอตั้งแต่แรก (anti-pattern มาตรฐานของ marketplace SEO)
+ *  ตรวจ 16 ส.ค. 2569: ร้านในระบบจริง = 0 → หน้านี้ยังไม่ควรถูก index */
+export const MIN_STOREFRONTS_TO_INDEX = 5;
+
+/** SEO หน้าตลาด /b — CollectionPage (ItemList แนบภายหลังด้วย directoryItemList)
+ *  @param storeCount จำนวนร้านที่เผยแพร่จริง — ต่ำกว่าเกณฑ์จะสั่ง noindex เพื่อกันโดนตีเป็น thin page */
+export function directorySeo(origin: string, storeCount?: number): SeoData {
   const title = 'ตลาดสินค้า & บริการธุรกิจไทย | CEO AI Thailand';
   const description =
     'ค้นหาสินค้าและบริการจากธุรกิจไทยที่ขับเคลื่อนด้วยทีม AI — เลือกตามหมวดหมู่ DBD ' +
@@ -146,7 +157,13 @@ export function directorySeo(origin: string): SeoData {
     url: canonicalUrl,
     inLanguage: 'th',
   }];
-  return { title, description, canonicalUrl, imageUrl, jsonLd };
+  // ยังไม่รู้จำนวน (storeCount = undefined) → ปล่อยตามค่าเริ่มต้นของหน้า ไม่เดาแทน
+  const thin = storeCount !== undefined && storeCount < MIN_STOREFRONTS_TO_INDEX;
+  return {
+    title, description, canonicalUrl, imageUrl, jsonLd,
+    // follow ไว้เสมอ — ให้ crawler เดินลิงก์ไปหน้าร้านแต่ละร้านได้ แค่ไม่เก็บหน้าสารบัญที่ยังว่าง
+    ...(thin ? { robots: 'noindex,follow' } : {}),
+  };
 }
 
 /** ItemList JSON-LD ของร้านที่เผยแพร่ (สูงสุด 50) — แนบเข้า jsonLd ของ directorySeo */
@@ -171,9 +188,12 @@ export function sitemapXml(
   entries: { slug: string; updatedAt?: string }[],
   origin: string,
 ): string {
+  // หน้าตลาดที่ยังไม่มีร้านพอ = thin page — ไม่ควรเชิญ Google มาดูตั้งแต่แรก
+  // (เกณฑ์เดียวกับ directorySeo ที่สั่ง noindex เพื่อให้ sitemap กับ meta ไม่ขัดกันเอง)
+  const listMarket = entries.length >= MIN_STOREFRONTS_TO_INDEX;
   const urls: { loc: string; priority: string; lastmod?: string }[] = [
     { loc: origin, priority: '1.0' },
-    { loc: `${origin}/b`, priority: '0.9' },
+    ...(listMarket ? [{ loc: `${origin}/b`, priority: '0.9' }] : []),
     { loc: `${origin}/start`, priority: '0.8' },
     { loc: `${origin}/sell`, priority: '0.8' },
     { loc: `${origin}/sale`, priority: '0.8' },

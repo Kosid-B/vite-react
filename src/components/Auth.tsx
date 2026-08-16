@@ -214,8 +214,17 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
           <>
             <div className="auth-tabs">
               <button className={mode === 'signin' ? 'active' : ''} onClick={() => { setMode('signin'); setMsg(null); }}>เข้าสู่ระบบ</button>
-              <button className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setMsg(null); }}>สมัครสมาชิก</button>
+              <button className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setMsg(null); }}>เปิดพื้นที่ทำงาน</button>
             </div>
+
+            {/* บอกก่อนว่าต้องกรอกอะไรบ้าง — คนกดเข้ามาแล้วเจอฟอร์มโดยไม่รู้ว่ายาวแค่ไหน จะกดปิด
+                (จุดร่วงที่สองจากผลวัดจริง: กดปุ่มแล้วไม่สมัคร) */}
+            {mode === 'signup' && (
+              <div className="auth-expect">
+                กรอกแค่ <b>อีเมล + รหัสผ่าน</b> 2 ช่องเท่านั้น · ใช้งานได้ทันที ไม่ต้องรออนุมัติ<br />
+                ไม่ต้องใช้บัตรเครดิต · ฟรี 15 วัน · ยกเลิกเมื่อไหร่ก็ได้
+              </div>
+            )}
 
             <form onSubmit={submit} className="auth-form">
               <label>อีเมล
@@ -228,7 +237,7 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
               {msg && <div className={`auth-msg ${msg.type}`}>{msg.text}</div>}
 
               <button type="submit" className="auth-submit" disabled={busy}>
-                {busy ? 'กำลังดำเนินการ…' : mode === 'signup' ? 'สมัครสมาชิก' : 'เข้าสู่ระบบ'}
+                {busy ? 'กำลังดำเนินการ…' : mode === 'signup' ? 'เริ่มใช้งานเลย — ฟรี 15 วัน' : 'เข้าสู่ระบบ'}
               </button>
             </form>
 

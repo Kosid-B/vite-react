@@ -1,7 +1,7 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import {
-  storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt,
+  storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt, escapeHtml,
   homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml, aggregateFromRatings,
   blogIndexHtml, blogPostHtml,
   type SeoData, type SeoStorefront, type ReviewAggregate,
@@ -19,6 +19,8 @@ interface Env {
   SUPABASE_URL?: string;
   SUPABASE_ANON_KEY?: string;
   SITE_ORIGIN?: string;
+  /** โทเคนยืนยันความเป็นเจ้าของใน Google Search Console (ค่า public — ใส่ใน vars ได้ ไม่ใช่ secret) */
+  GOOGLE_SITE_VERIFICATION?: string;
 }
 
 /** อ่านแถวหน้าร้าน (เฉพาะที่เผยแพร่) ผ่าน Supabase REST — คืน null ถ้าไม่มี/พลาด (fallback shell) */
@@ -96,12 +98,40 @@ function injectSeo(shell: Response, seo: SeoData): Response {
     .on('meta[name="twitter:description"]', setContent(seo.description))
     .on('meta[name="twitter:image"]', setContent(seo.imageUrl))
     .on('link[rel="canonical"]', { element(el) { el.setAttribute('href', seo.canonicalUrl); } })
+    // index.html มี <meta name="robots" content="index,follow"> อยู่แล้ว — เขียนทับเมื่อหน้านั้นสั่งเป็นอย่างอื่น
+    // (เช่น /b ที่ยังไม่มีร้านพอ → noindex,follow กันโดนตีเป็น thin page)
+    .on('meta[name="robots"]', { element(el) { if (seo.robots) el.setAttribute('content', seo.robots); } })
     .on('head', { element(el) { el.append(jsonLdScript(seo.jsonLd), { html: true }); } })
     .transform(shell);
 }
 
+/** แทรก <meta name="google-site-verification"> ให้ทุกหน้า HTML เมื่อมีค่าใน env
+ *
+ *  ทำไมทำผ่าน env ไม่ hardcode: โทเคนผูกกับบัญชี Search Console ไม่ใช่โค้ด
+ *  ตั้งค่าแล้ว deploy ใหม่ได้เลยโดยไม่ต้องแก้ไฟล์ (ดู docs/marketing/SEARCH-CONSOLE-SETUP.md)
+ *  ไม่มีค่า = ไม่แทรกอะไร (คืน response เดิม ไม่เสียค่า transform) */
+function injectVerification(res: Response, token?: string): Response {
+  if (!token) return res;
+  // แตะเฉพาะ HTML — sitemap.xml, llms.txt, logo.svg และ API ต้องผ่านไปตามเดิม
+  if (!(res.headers.get('content-type') ?? '').includes('text/html')) return res;
+  return new HTMLRewriter()
+    .on('head', {
+      element(el) {
+        el.append(`<meta name="google-site-verification" content="${escapeHtml(token)}">`, { html: true });
+      },
+    })
+    .transform(res);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    // จุดเดียวที่แทรกโทเคนยืนยัน Search Console — ครอบทุกเส้นทางที่คืน HTML โดยไม่ต้องแก้ทีละที่
+    return injectVerification(await handle(request, env), env.GOOGLE_SITE_VERIFICATION);
+  },
+} satisfies ExportedHandler<Env>;
+
+async function handle(request: Request, env: Env): Promise<Response> {
+  {
     const url = new URL(request.url);
     const origin = env.SITE_ORIGIN || url.origin;
 
@@ -289,8 +319,10 @@ export default {
       // /b (สารบัญตลาด) → CollectionPage + ItemList
       if (url.pathname === '/b' || url.pathname === '/b/') {
         try {
-          const seo = directorySeo(origin);
-          seo.jsonLd.push(directoryItemList(await listPublished(env), origin));
+          const stores = await listPublished(env);
+          // ส่งจำนวนร้านจริงเข้าไป → ยังไม่ถึงเกณฑ์จะได้ noindex,follow (กัน thin page)
+          const seo = directorySeo(origin, stores.length);
+          seo.jsonLd.push(directoryItemList(stores, origin));
           return injectSeo(await env.ASSETS.fetch(request), seo);
         } catch { /* fallback → shell เดิม */ }
       }
@@ -298,5 +330,5 @@ export default {
 
     // Serve static SPA assets
     return env.ASSETS.fetch(request);
-  },
-} satisfies ExportedHandler<Env>;
+  }
+}

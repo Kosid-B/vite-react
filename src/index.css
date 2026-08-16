@@ -2287,6 +2287,10 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .auth-form label { font-size: 13px; font-weight: 600; color: var(--ink2); display: flex; flex-direction: column; gap: 6px; }
 .auth-form input { padding: 11px 12px; font-size: 15px; font-family: inherit; border: 1px solid var(--sand); border-radius: var(--r); background: var(--cream); color: var(--ink); outline: none; }
 .auth-form input:focus { border-color: var(--rust); box-shadow: 0 0 0 3px rgba(6,182,212,.18); }
+/* บอกล่วงหน้าว่าต้องกรอกอะไรบ้าง — ลดการกดปิดเพราะกลัวฟอร์มยาว */
+.auth-expect { font-size: 12.8px; line-height: 1.7; color: var(--ink3); background: var(--cream2);
+  border: 1px solid var(--sand); border-radius: var(--r); padding: 10px 12px; margin-bottom: 12px; }
+.auth-expect b { color: var(--ink); }
 .auth-msg { font-size: 13.5px; padding: 10px 12px; border-radius: var(--r); line-height: 1.5; }
 .auth-msg.err { background: var(--rust-bg); color: var(--rust); border: 1px solid rgba(239,68,68,.25); }
 .auth-msg.ok { background: var(--green-bg); color: var(--green); border: 1px solid rgba(16,185,129,.25); }

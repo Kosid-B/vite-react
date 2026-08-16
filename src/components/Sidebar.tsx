@@ -415,6 +415,13 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           ISO 9001:2015 QMS
           {locked('iso9001') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
         </button>
+        <button className={`nav-item ${activePage === 'process' ? 'active' : ''}${locked('process') ? ' nav-locked' : ''}`} onClick={() => onNavigate('process')}>
+          <svg className="nav-ico" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.8">
+            <path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+          </svg>
+          ทะเบียนกระบวนการ + ตัววัด
+          {locked('process') ? <span className="nav-lock">🔒</span> : <span className="nav-dot" />}
+        </button>
       </div>
       )}
 

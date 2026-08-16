@@ -10,9 +10,14 @@ import {
 } from '../../lib/growthEconomics';
 import { signupsForWeek, type SignupRecord } from '../../lib/attribution';
 import {
-  loadLandingFunnel, landingFunnelSteps, biggestLeak, dwellLabel, type LandingAgg,
+  loadLandingFunnel, landingFunnelSteps, biggestLeak, funnelCaveats, dwellLabel, type LandingAgg,
 } from '../../lib/landingFunnel';
 import { landingAbStats, landingAbVerdict } from '../../lib/landingAb';
+import {
+  loadQuickAgg, topConcerns, concernsTrustworthy, MIN_CONCERN_SAMPLE,
+  verdictText, type QuickAgg, type QuickVerdict,
+} from '../../lib/productQuickCheck';
+import { BIZ_LABEL, type SkillBiz } from '../../lib/skillCatalog';
 import UtmBuilder from '../../components/UtmBuilder';
 
 /* Growth Dashboard — รวมตัวเลขการเติบโตในแอปที่เดียว: ผู้สมัคร + lead + funnel
@@ -189,6 +194,7 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
   const [lstats, setLstats] = useState<LeadStats | null>(null);
   const [realSignups, setRealSignups] = useState<Record<GChannelId, number> | null>(null);
   const [landing, setLanding] = useState<LandingAgg | null>(null);
+  const [quick, setQuick] = useState<QuickAgg | null>(null);
 
   async function load() {
     if (!isSupabaseEnabled) return;
@@ -206,6 +212,7 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
       const leads = await listLeads();
       setLstats(leadStats(leads, new Date().toISOString().slice(0, 10)));
       setLanding(await loadLandingFunnel(30)); // first-party landing funnel (30 วัน)
+      setQuick(await loadQuickAgg(30));        // ใครกรอก "ตรวจสินค้าเร็ว" · กังวลเรื่องอะไร
       setMsg(`อัปเดตแล้ว · ${rows.length} เวิร์กสเปซ`);
     } catch (e) {
       setMsg('โหลดไม่สำเร็จ: ' + (e instanceof Error ? e.message : String(e)));
@@ -240,10 +247,92 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
         />
       </div>
 
+      {/* ── ใครกรอก "ตรวจสินค้าเร็ว" · เขากังวลเรื่องอะไร (first-party · ไม่มี PII) ──
+           แผงนี้ตอบคำถามที่เราเดามาตลอดว่า "กลุ่มเป้าหมายจริงคือใคร" ด้วยข้อมูลของเราเอง
+           แทนการอ้างสัดส่วนประชากรจากสื่อ (ดู docs/marketing/GEN-XYZ-TARGET.md) */}
+      {quick && quick.total > 0 && (() => {
+        const concerns = topConcerns(quick);
+        const trusted = concernsTrustworthy(quick);
+        const bizRows = Object.entries(quick.by_biz).sort((a, b) => b[1] - a[1]);
+        const bizMax = Math.max(1, ...bizRows.map(([, c]) => c));
+        return (
+          <div style={{ border: '1px solid var(--sand)', borderRadius: 12, padding: '16px 18px', background: 'var(--cream2)', display: 'grid', gap: 14 }}>
+            <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--ink)' }}>
+              🧮 ตรวจสินค้าเร็ว — {quick.total} คนกรอก · {quick.with_topic} คนกดดูหัวข้อ · {quick.cta} คนกดเปิดพื้นที่ทำงาน
+            </div>
+
+            {!trusted && (
+              <div style={{ border: '1px solid #f59e0b', borderRadius: 10, padding: '10px 14px', background: 'rgba(245,158,11,0.10)', fontSize: 12.5, lineHeight: 1.6 }}>
+                ⚠️ <b>ยังสรุปอันดับความกังวลไม่ได้</b> — มีคนกดหัวข้อเพียง {quick.with_topic} คน (ต้องการอย่างน้อย {MIN_CONCERN_SAMPLE})
+                · ตัวเลขด้านล่างดูได้ แต่ยังใช้ตัดสินใจเปลี่ยนกลยุทธ์ไม่ได้
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+              {/* หัวข้อที่คนกด = สิ่งที่เจ้าของธุรกิจกังวลจริง */}
+              <div style={{ border: '1px solid var(--sand)', borderRadius: 10, padding: '10px 14px', background: 'var(--cream)' }}>
+                <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 8, fontWeight: 700 }}>⭐ เขากังวลเรื่องอะไร</div>
+                {concerns.length === 0 && <span style={{ fontSize: 12, color: 'var(--ink3)' }}>ยังไม่มีใครกดหัวข้อ</span>}
+                <div style={{ display: 'grid', gap: 6 }}>
+                  {concerns.map((c) => (
+                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 120, fontSize: 11.5, color: 'var(--ink)', flex: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.label}</span>
+                      <div style={{ flex: 1, height: 12, borderRadius: 4, background: 'var(--cream2)', overflow: 'hidden' }}>
+                        <div style={{ width: `${c.pct}%`, height: '100%', background: '#7c3aed', borderRadius: 4 }} />
+                      </div>
+                      <span style={{ width: 52, textAlign: 'right', fontSize: 11.5, color: 'var(--ink3)', flex: 'none' }}>{c.count} · {c.pct}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ธุรกิจแบบไหนเข้ามา */}
+              <div style={{ border: '1px solid var(--sand)', borderRadius: 10, padding: '10px 14px', background: 'var(--cream)' }}>
+                <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 8, fontWeight: 700 }}>🏪 ธุรกิจแบบไหนเข้ามา</div>
+                <div style={{ display: 'grid', gap: 6 }}>
+                  {bizRows.map(([k, c]) => (
+                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 120, fontSize: 11.5, color: 'var(--ink)', flex: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {BIZ_LABEL[k as SkillBiz] ?? k}
+                      </span>
+                      <div style={{ flex: 1, height: 12, borderRadius: 4, background: 'var(--cream2)', overflow: 'hidden' }}>
+                        <div style={{ width: `${(c / bizMax) * 100}%`, height: '100%', background: '#0891b2', borderRadius: 4 }} />
+                      </div>
+                      <span style={{ width: 34, textAlign: 'right', fontSize: 11.5, color: 'var(--ink3)', flex: 'none' }}>{c}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* สภาพธุรกิจที่เข้ามา — ใช้ค่ากลาง ไม่ใช่ค่าเฉลี่ย (กันเคสสุดโต่งลาก) */}
+              <div style={{ border: '1px solid var(--sand)', borderRadius: 10, padding: '10px 14px', background: 'var(--cream)' }}>
+                <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 6, fontWeight: 700 }}>📊 สภาพธุรกิจที่เข้ามา (ค่ากลาง)</div>
+                <div style={{ fontSize: 12.5, color: 'var(--ink)', lineHeight: 1.9 }}>
+                  ราคาขาย <b>฿{quick.median_price.toLocaleString('th-TH')}</b> · ต้นทุน <b>฿{quick.median_cost.toLocaleString('th-TH')}</b><br />
+                  กำไรต่อหน่วย <b>{quick.median_margin_pct}%</b>
+                </div>
+                <div style={{ marginTop: 8, display: 'grid', gap: 4 }}>
+                  {Object.entries(quick.by_verdict).sort((a, b) => b[1] - a[1]).map(([v, c]) => (
+                    <div key={v} style={{ fontSize: 11.5, color: 'var(--ink3)' }}>
+                      {verdictText(v as QuickVerdict)} — <b style={{ color: 'var(--ink)' }}>{c}</b>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 11, color: 'var(--ink3)', lineHeight: 1.7 }}>
+              เก็บเฉพาะประเภทธุรกิจ ตัวเลข และหัวข้อที่กด · <b>ไม่เก็บชื่อสินค้าที่ผู้ใช้พิมพ์</b> (อยู่ในเครื่องเขาเท่านั้น) · นิรนาม 100%
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Landing Funnel (first-party · PDPA-safe) — ตอบ "คนเข้าแล้วค้างตรงไหน ไม่กดสมัคร" */}
       {landing && landing.total > 0 ? (() => {
         const steps = landingFunnelSteps(landing);
-        const leak = biggestLeak(steps);
+        const caveats = funnelCaveats(landing, steps);
+        const leak = biggestLeak(steps, landing); // null เมื่อข้อมูลยังเชื่อไม่ได้
         const bouncePct = landing.total > 0 ? Math.round((landing.bounce / landing.total) * 100) : 0;
         const refLabel: Record<string, string> = { direct: '🔗 พิมพ์ตรง/บุ๊กมาร์ก', social: '📱 โซเชียล', search: '🔍 ค้นหา (Google)', other: '🌐 เว็บอื่น' };
         const refRows = Object.entries(landing.by_ref).sort((a, b) => b[1] - a[1]);
@@ -254,7 +343,28 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
               🕳️ Landing Funnel — คนเข้าดูจริง {landing.total} คน (นิรนาม · ไม่เก็บ PII)
             </div>
 
-            {/* รูรั่วใหญ่สุด — ชี้จุดต้องแก้ก่อน */}
+            {/* ข้อควรระวังก่อนเชื่อตัวเลข — ต้องอยู่เหนือกรวย ไม่งั้นคนอ่าน % ไปแล้ว */}
+            {caveats.length > 0 && (
+              <div style={{ display: 'grid', gap: 8 }}>
+                {caveats.map((c, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      border: `1px solid ${c.level === 'blocker' ? '#dc2626' : '#f59e0b'}`,
+                      borderRadius: 10,
+                      padding: '10px 14px',
+                      background: c.level === 'blocker' ? 'rgba(220,38,38,0.08)' : 'rgba(245,158,11,0.10)',
+                      fontSize: 12.5, color: 'var(--ink)', lineHeight: 1.6,
+                    }}
+                  >
+                    {c.level === 'blocker' ? '⛔ ' : '⚠️ '}
+                    <b>{c.level === 'blocker' ? 'ยังใช้ตัดสินใจไม่ได้:' : 'ข้อจำกัด:'}</b> {c.text}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* รูรั่วใหญ่สุด — ชี้จุดต้องแก้ก่อน (ซ่อนเมื่อข้อมูลเชื่อไม่ได้) */}
             {leak && (
               <div style={{ border: '1px solid #f59e0b', borderRadius: 10, padding: '10px 14px', background: 'rgba(245,158,11,0.10)', fontSize: 13, color: 'var(--ink)', lineHeight: 1.6 }}>
                 🚨 <b>รูรั่วใหญ่สุด:</b> หลุด <b style={{ color: '#dc2626' }}>{leak.dropPct}%</b> ระหว่าง “{leak.from}” → “{leak.to}” — โฟกัสแก้จุดนี้ก่อน

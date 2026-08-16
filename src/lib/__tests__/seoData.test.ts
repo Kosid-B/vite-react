@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   escapeHtml, jsonLdScript, sectorLabel,
-  storefrontSeo, directorySeo, directoryItemList, sitemapXml, llmsTxt,
+  storefrontSeo, directorySeo, directoryItemList, sitemapXml, llmsTxt, MIN_STOREFRONTS_TO_INDEX,
   homeSeo, faqPageHtml, faqPageJsonLd, organizationJsonLd, softwareApplicationJsonLd, FAQ_ITEMS,
   aggregateFromRatings, MIN_HOME_REVIEWS,
   mit24PageHtml, mit24FaqJsonLd, mit24ArticleJsonLd, MIT24_FAQ,
@@ -133,6 +133,19 @@ describe('directorySeo + directoryItemList', () => {
     expect((d.jsonLd[0] as { '@type': string })['@type']).toBe('CollectionPage');
     expect(d.canonicalUrl).toBe(`${ORIGIN}/b`);
   });
+
+  // กัน thin page: หน้าสารบัญที่ยังไม่มีร้านพอ ห้ามเชิญ Google มาเก็บ
+  it('ไม่รู้จำนวนร้าน (undefined) → ไม่สั่ง robots (ปล่อยค่าเดิมของหน้า)', () => {
+    expect(directorySeo(ORIGIN).robots).toBeUndefined();
+  });
+  it(`ร้านน้อยกว่า ${MIN_STOREFRONTS_TO_INDEX} → noindex,follow`, () => {
+    expect(directorySeo(ORIGIN, 0).robots).toBe('noindex,follow');
+    expect(directorySeo(ORIGIN, MIN_STOREFRONTS_TO_INDEX - 1).robots).toBe('noindex,follow');
+  });
+  it(`ร้านถึงเกณฑ์ (${MIN_STOREFRONTS_TO_INDEX}) → ไม่สั่ง noindex แล้ว`, () => {
+    expect(directorySeo(ORIGIN, MIN_STOREFRONTS_TO_INDEX).robots).toBeUndefined();
+    expect(directorySeo(ORIGIN, 99).robots).toBeUndefined();
+  });
   it('ItemList จำกัดสูงสุด 50 รายการ + position เรียง 1..n', () => {
     const many = Array.from({ length: 80 }, (_, i) => ({ slug: `s${i}`, name: `ร้าน ${i}` }));
     const list = directoryItemList(many, ORIGIN) as { itemListElement: { position: number; url: string }[] };
@@ -153,7 +166,6 @@ describe('sitemapXml', () => {
   });
   it('มี public routes หลัก + หน้าร้านทุกร้าน', () => {
     expect(xml).toContain(`<loc>${ORIGIN}</loc>`);
-    expect(xml).toContain(`<loc>${ORIGIN}/b</loc>`);
     expect(xml).toContain(`<loc>${ORIGIN}/start</loc>`);
     expect(xml).toContain(`${ORIGIN}/b/${encodeURIComponent('ร้าน-a')}`);
     expect(xml).toContain('<lastmod>2026-07-01</lastmod>');
@@ -165,6 +177,24 @@ describe('sitemapXml', () => {
   });
   it('มี /mit24 (บทความ answer-first) ใน sitemap', () => {
     expect(xml).toContain(`<loc>${ORIGIN}/mit24</loc>`);
+  });
+
+  // sitemap กับ meta robots ต้องพูดตรงกัน — ไม่งั้นเชิญ Google มาดูหน้าที่สั่ง noindex เอง
+  it(`ร้านน้อยกว่า ${MIN_STOREFRONTS_TO_INDEX} → ไม่ลิสต์ /b ใน sitemap`, () => {
+    for (const n of [0, 1, MIN_STOREFRONTS_TO_INDEX - 1]) {
+      const few = sitemapXml(Array.from({ length: n }, (_, i) => ({ slug: `s${i}` })), ORIGIN);
+      expect(few, `n=${n}`).not.toContain(`<loc>${ORIGIN}/b</loc>`);
+      expect(few, `n=${n}`).toContain(`<loc>${ORIGIN}</loc>`); // หน้าอื่นยังอยู่ครบ
+    }
+  });
+  it(`ร้านถึงเกณฑ์ → ลิสต์ /b ตามปกติ`, () => {
+    const many = sitemapXml(Array.from({ length: MIN_STOREFRONTS_TO_INDEX }, (_, i) => ({ slug: `s${i}` })), ORIGIN);
+    expect(many).toContain(`<loc>${ORIGIN}/b</loc>`);
+  });
+  it('หน้าร้านรายร้านยังอยู่ใน sitemap เสมอ แม้สารบัญจะถูกกันไว้', () => {
+    const one = sitemapXml([{ slug: 'shop-b' }], ORIGIN);
+    expect(one).not.toContain(`<loc>${ORIGIN}/b</loc>`);
+    expect(one).toContain(`<loc>${ORIGIN}/b/shop-b</loc>`);
   });
 });
 

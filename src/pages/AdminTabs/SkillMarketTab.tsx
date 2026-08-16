@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SKILL_CATALOG, CATEGORY_META, TIER_META, type SkillCategory, type SkillTier } from '../../data/skillCatalog';
 import { listAdminSkills, createAdminSkill, setAdminSkillActive, deleteAdminSkill, type AdminSkill } from '../../lib/adminSkills';
-import { adminGetSkillStats, type SkillPurchaseEvent, type SkillAdoption } from '../../lib/skillStats';
+import { adminGetSkillStats, revenueSplit, isRealPayment, type SkillPurchaseEvent, type SkillAdoption } from '../../lib/skillStats';
 import { XP_PER_TIER } from '../../lib/gamification';
 
 const DEFAULT_PRICE: Record<SkillTier, number> = { 1: 500, 2: 1200, 3: 2000 };
@@ -36,11 +36,13 @@ export default function SkillMarketTab() {
     SKILL_CATALOG.find(s => s.id === id)?.name ?? skills.find(s => s.id === id)?.name ?? id;
 
   // สรุปสถิติเพื่อการตลาด
-  const totalRevenue = events.reduce((s, e) => s + e.price, 0);
+  // ⚠️ ห้ามรวม price ทุกแถวเป็น "ยอดขาย" — แถวที่ pay_method='admin-free' คือของที่เปิดให้ฟรี
+  //    (ตรวจ prod 16 ส.ค. 2569: 146 รายการ ฿239,290 เป็น admin-free ทั้งหมด = เงินจริง ฿0)
+  const rev = revenueSplit(events);
   const bySkill = Object.values(events.reduce((acc, e) => {
     if (!acc[e.skillId]) acc[e.skillId] = { skillId: e.skillId, name: e.skillName, purchases: 0, revenue: 0 };
     acc[e.skillId].purchases += 1;
-    acc[e.skillId].revenue += e.price;
+    if (isRealPayment(e.payMethod)) acc[e.skillId].revenue += Number(e.price) || 0;
     return acc;
   }, {} as Record<string, { skillId: string; name: string; purchases: number; revenue: number }>))
     .sort((a, b) => b.purchases - a.purchases);
@@ -113,8 +115,17 @@ export default function SkillMarketTab() {
             <div className="adm-stat-lbl">ยอดซื้อทั้งหมด (ครั้ง)</div>
           </div>
           <div className="adm-stat-card">
-            <div className="adm-stat-num">฿{totalRevenue.toLocaleString()}</div>
-            <div className="adm-stat-lbl">มูลค่ารวม</div>
+            <div className="adm-stat-num" style={{ color: rev.real > 0 ? undefined : 'var(--ink3)' }}>
+              ฿{rev.real.toLocaleString()}
+            </div>
+            <div className="adm-stat-lbl">
+              รายได้จริง ({rev.realCount} ครั้ง)
+              {rev.compedCount > 0 && (
+                <span style={{ display: 'block', fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>
+                  + เปิดให้ฟรีโดยแอดมิน {rev.compedCount} ครั้ง (มูลค่า ฿{rev.comped.toLocaleString()} — ไม่ใช่รายได้)
+                </span>
+              )}
+            </div>
           </div>
           <div className="adm-stat-card">
             <div className="adm-stat-num">{bySkill[0] ? bySkill[0].name : '—'}</div>

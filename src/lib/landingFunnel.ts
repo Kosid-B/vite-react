@@ -69,8 +69,78 @@ export function landingFunnelSteps(agg: LandingAgg | null): FunnelStep[] {
   });
 }
 
-/** ขั้นที่ "รูรั่วใหญ่สุด" (drop มากสุดหลังขั้นแรก) → ชี้จุดที่ต้องแก้ก่อน */
-export function biggestLeak(steps: FunnelStep[]): { from: string; to: string; dropPct: number } | null {
+/* ══════════════════════════════════════════════════════════════════════
+ * ข้อควรระวังก่อนเชื่อตัวเลขในกรวย — เพิ่มหลังเจอเคสจริง 15 ส.ค. 2569
+ *
+ * เคสที่เกิด: รายงานบอกว่า "หลุด 98% ที่ hero → ต้องรีบแก้ Hero"
+ *   แต่พอไล่ข้อมูลดิบพบว่า
+ *     • ผู้เข้าชมจาก social 28 คน มี max_scroll = 0 ทั้ง 28 คน (ไม่มีใครเลื่อนแม้แต่พิกเซลเดียว)
+ *     • คนกด CTA (4) มากกว่าคนที่ "เลื่อนผ่าน hero" (1) — เป็นไปไม่ได้ถ้าเป็นกรวยจริง
+ *       เพราะปุ่ม CTA อยู่เหนือ fold กดได้โดยไม่ต้องเลื่อน
+ *     • ผู้สมัคร 1 คนมี dwell 1,209 วินาที (20 นาที) = การทดสอบภายใน
+ *
+ *   ถ้าเชื่อตัวเลขแล้วรีบแก้ Hero = แก้สิ่งที่ไม่ได้พัง โดยใช้ข้อมูลที่ไม่ใช่คน
+ *
+ * ฟังก์ชันนี้จึงเตือนก่อนที่ใครจะเอาเปอร์เซ็นต์ไปตัดสินใจ
+ * ══════════════════════════════════════════════════════════════════════ */
+
+export interface FunnelCaveat {
+  /** blocker = ห้ามใช้ตัวเลขนี้ตัดสินใจ · warn = ใช้ได้แต่ต้องรู้ข้อจำกัด */
+  level: 'blocker' | 'warn';
+  text: string;
+}
+
+/** จำนวนผู้เข้าชมขั้นต่ำที่พอจะสรุปอะไรได้ — ต่ำกว่านี้ทุกเปอร์เซ็นต์คือสัญญาณรบกวน */
+export const MIN_SAMPLE = 100;
+
+export function funnelCaveats(agg: LandingAgg | null, steps: readonly FunnelStep[]): FunnelCaveat[] {
+  const out: FunnelCaveat[] = [];
+  const total = agg?.total ?? 0;
+  if (total === 0) return out;
+
+  if (total < MIN_SAMPLE) {
+    out.push({
+      level: 'blocker',
+      text: `ผู้เข้าชมเพียง ${total} คน (ต่ำกว่า ${MIN_SAMPLE}) — เปอร์เซ็นต์ทุกตัวยังเป็นสัญญาณรบกวน คนเดียวขยับได้หลายเปอร์เซ็นต์ ยังใช้ตัดสินใจแก้หน้าเว็บไม่ได้`,
+    });
+  }
+
+  // ขั้นหลังมากกว่าขั้นก่อน = ขั้นตอนไม่ได้เรียงต่อกันจริง → drop% ไม่มีความหมาย
+  for (let i = 1; i < steps.length; i++) {
+    if (steps[i].count > steps[i - 1].count) {
+      out.push({
+        level: 'blocker',
+        text: `"${steps[i].label}" (${steps[i].count}) มากกว่า "${steps[i - 1].label}" (${steps[i - 1].count}) — สองขั้นนี้ไม่ได้เรียงต่อกันจริง (ปุ่ม CTA กดได้โดยไม่ต้องเลื่อน) ตัวเลข "หลุด %" ของขั้นนี้จึงไม่มีความหมาย`,
+      });
+    }
+  }
+
+  // อยู่นานแต่ไม่เลื่อนเลย = ลายนิ้วมือของบอท/ตัวดึงพรีวิว ไม่ใช่คนอ่านแล้วไม่สนใจ
+  const sc = agg?.avg_scroll ?? 0;
+  const dw = agg?.avg_dwell ?? 0;
+  if (sc < 5 && dw > 20) {
+    out.push({
+      level: 'warn',
+      text: `เลื่อนเฉลี่ยเพียง ${sc}% แต่อยู่นานเฉลี่ย ${Math.round(dw)} วินาที — รูปแบบนี้มักเป็นบอทหรือตัวดึงลิงก์พรีวิว ไม่ใช่คนที่อ่านแล้วไม่สนใจ ควรแยกออกก่อนสรุป`,
+    });
+  }
+
+  return out;
+}
+
+/** ใช้ตัวเลขในกรวยตัดสินใจได้ไหม — false เมื่อมี caveat ระดับ blocker */
+export function funnelTrustworthy(agg: LandingAgg | null, steps: readonly FunnelStep[]): boolean {
+  return funnelCaveats(agg, steps).every((c) => c.level !== 'blocker');
+}
+
+/** ขั้นที่ "รูรั่วใหญ่สุด" (drop มากสุดหลังขั้นแรก) → ชี้จุดที่ต้องแก้ก่อน
+ *  ⚠️ คืน null เมื่อข้อมูลยังเชื่อไม่ได้ — ชี้จุดที่ต้องแก้จากข้อมูลที่ไม่ใช่คน
+ *     อันตรายกว่าไม่ชี้เลย เพราะทำให้ไปแก้สิ่งที่ไม่ได้พัง */
+export function biggestLeak(
+  steps: FunnelStep[],
+  agg?: LandingAgg | null,
+): { from: string; to: string; dropPct: number } | null {
+  if (agg !== undefined && !funnelTrustworthy(agg, steps)) return null;
   let worst: { from: string; to: string; dropPct: number } | null = null;
   for (let i = 1; i < steps.length; i++) {
     if (!worst || steps[i].dropFromPrev > worst.dropPct) {
@@ -138,6 +208,12 @@ export function initLandingFunnel(seg: string, referrer: string, origin: string)
     ab: landingVariant(session),
   };
   flush(); // นับ "เข้าดู" ทันที
+}
+
+/** id เซสชันนิรนามของผู้เยี่ยมชมคนนี้ — ใช้ join ข้อมูล first-party ข้ามตาราง
+ *  (quickcheck_submissions ใช้ id เดียวกับ landing_funnel เพื่อดูได้ว่า "คนที่กรอกฟอร์ม เลื่อน/สมัครไหม") */
+export function currentFunnelSession(): string {
+  return getSession();
 }
 
 /** กลุ่ม A/B ของผู้เยี่ยมชมคนนี้ (deterministic จาก session) — ให้ LandingPage ตัดสินใจแสดง 2 ส่วนใหม่ */

@@ -4,6 +4,18 @@
 Thai SaaS app "บริษัท AI อัตโนมัติ" — Vite + React SPA, no router (navigation = React state).
 Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supabase backend.
 
+🔧 **วิธีทำงานที่บังคับใช้ — skill `growth-mindset`** (อ่านก่อนส่งมอบทุกครั้ง)
+ผิดแล้วต้องเหลือ **กลไก** ไม่ใช่คำขอโทษ · พยายามพิสูจน์ว่าตัวเองผิดก่อนส่ง โดยเฉพาะตอนกำลังจะเห็นด้วย
+ตรวจว่าเครื่องมือทำงานจริงก่อนเชื่อผล (เช่น `tsc --noEmit` ที่รากเป็น no-op — ต้องใช้ `tsc -p tsconfig.app.json`)
+เช็คกับหลักการโปรเจกต์ก่อนสามัญสำนึกตลาด · พูด "ยังทำไม่ได้เพราะขาด X" ไม่ใช่ "ทำไม่ได้"
+บันทึกความผิดพลาด→กลไก: [docs/LESSONS-LEDGER.md](docs/LESSONS-LEDGER.md) — **เพิ่มแถวทุกครั้งที่พลาด พร้อมกลไกจริง**
+
+🔑 **หลักการก่อตั้งที่ห้ามลืม — ISO ทำได้ตั้งแต่ปีแรก** (skill `iso-from-day-one`)
+ISO ไม่ใช่ใบเซอร์ของบริษัทใหญ่ แต่คือวิธีสร้างธุรกิจให้ทำซ้ำได้+ขยายได้ → ธุรกิจปีแรกคือจังหวะที่ถูกที่สุด
+ด่านคือ **"ความไว้ใจของเจ้าของ" ไม่ใช่ "ความพร้อมของธุรกิจ"** · ยิ่งรอยิ่งแพงเพราะต้อง retrofit
+⚠️ ห้ามเขียนกลยุทธ์/คอนเทนต์ว่า "รอให้ธุรกิจโตก่อนค่อยทำ ISO" — ขัดจุดยืนโปรเจกต์ (พลาดมาแล้ว 16 ส.ค. 2569)
+⚠️ ห้ามขึ้นต้นคอนเทนต์ด้วยคำว่า ISO กับคนเพิ่งเริ่มธุรกิจ — ใช้บันไดความไว้ใจ 5 ขั้นก่อน
+
 **Positioning (ยืนยัน ก.ค. 2569): "AI Business Operating System"** — ระบบสร้างธุรกิจด้วย AI ตั้งแต่ต้นน้ำ ให้โตอย่างเป็นระบบ+พร้อมขยาย
 ผสาน 2 เสา: **MIT 24 Steps** (หา PMF/ลูกค้า/คุณค่า) × **ระบบบริหาร/ISO 20+ ปี B.TC** (SOP/KPI/Risk/scalability).
 สารหลัก **ไม่ใช่** "จ้างทีม AI ทั้งบริษัท" — "ทีม AI" = กลไกสนับสนุน · คุณค่าหลัก = ลดความเสี่ยงเริ่มธุรกิจ + ฐานลูกค้าแข็งแรง + scale.
@@ -96,6 +108,41 @@ src/pages/BoardRoom.tsx        — หน้า 'boardroom' ห้องบอ�
 src/pages/Resources.tsx        — หน้า 'resources' บริหารทรัพยากร: รายการ+จำนวน · C-Level ดูแล/ขอเพิ่ม-ลด · CEO/บอร์ดอนุมัติ · AI จัดสรร (agent-run จริง + fallback heuristic)
 src/lib/cfoAnalysis.ts         — CFO AI วิเคราะห์การเงิน "ธุรกิจตัวเอง" ของ SME จากตัวเลขจริง (d.finance): cfoMetrics(recurring/breakEvenGap/topExpense) + cfoFlags(ธงสุขภาพ) + cfoLocalAdvice(fallback offline) + cfoPrompt(ai-assist · ห้ามแต่งตัวเลข) · pure/tested · แสดงใน components/CfoAnalysis.tsx ใต้คลังเมือง (CompanyCity) — ต่อยอด cfoReport.ts (KPI report) เป็นชั้นให้คำแนะนำเชิงลงมือ
 src/lib/resources.ts           — Resource/Request types + templates + applyApproval + parseAiAllocations (pure, tested)
+src/lib/commentReply.ts        — ตอบคอมเมนต์เฟซบุ๊กด้วยตัวเลขจริงของผู้คอมเมนต์ (กลไก "จบในแพลตฟอร์ม")
+                                 parseNumbers (รับ "50/30" · "ขาย 1,500 ทุน 900" · เลขไทย ๕๐/๓๐) → buildReply
+                                 ⚠️ ช่อง 'comment' ห้ามมีลิงก์ (FB กดการมองเห็น) · ลิงก์อยู่ในช่อง 'dm' เท่านั้น
+                                 คำนวณจาก pricingAnalysis ตัวเดียวกับหน้าเว็บ → ตัวเลขตรงกันเสมอ
+                                 KEYWORD_OFFERS = โพสต์แบบ "คอมเมนต์คำเดียว" (ราคา/ทุน/ลูกค้า/ระบบ) ผูก SHORT_LINKS จริง
+                                 UI: pages/AdminTabs/CommentReplyTab.tsx (แท็บ 💬 ตอบคอมเมนต์)
+                                 ชุดโพสต์พร้อมใช้: docs/marketing/social/FB-LEAD-MAGNET-PACK.md
+src/lib/productQuickCheck.ts   — "ตรวจสินค้าเร็ว" ประตูหน้าบน Landing: กรอกราคา/ต้นทุน → กำไร/จุดคุ้มทุนทันที
+                                 ⚠️ ไม่เรียก AI โดยตั้งใจ (เร็ว ฟรี และแต่งตัวเลขไม่ได้) · AI = เฟส 2
+                                 กันตัวเลขไม่มีแหล่งด้วย type: Insight มีแค่ calc(ต้องมี from)/question(ต้องมี why)/action
+                                 — ไม่มีชนิด 'fact' ให้ใส่สถิติตลาดได้เลย · เทสต์มี banned-words guard
+                                 verdictOf: กำไรสุทธิมาก่อนกำไรต่อหน่วยเสมอ (netLoss) กัน "ป้ายเขียวทั้งที่ขาดทุน"
+                                 saveQuickDraft/readQuickDraft → App.migrate ยกเข้า finance = "ไม่ต้องกรอกซ้ำ"
+                                 (ต่อยอด bizHint.ts · ร่างเก่า >30 วันทิ้ง · ชื่อสินค้าอยู่ localStorage ไม่ขึ้น DB)
+                                 components/ProductQuickCheck.tsx วางสูงสุดบน Landing (นอก A/B holdout)
+                                 GA4: quickcheck_submitted / quickcheck_topic_opened (← รู้ว่าคนกังวลเรื่องอะไร) / quickcheck_signup_click
+src/lib/pricingAnalysis.ts     — วิเคราะห์ราคา (ติดตั้งจาก skill `pricing-analysis` เข้าเป็นโค้ดจริง)
+                                 แกน: จุดคุ้มทุนเมื่อเปลี่ยนราคา y = 1 − m/m′ (m = กำไรต่อหน่วย)
+                                 ⇒ "ขึ้นราคา 10% เสียลูกค้าได้กี่ %" และ "ลดราคา 10% ต้องขายเพิ่มกี่ %"
+                                 เป็นเลขคณิตแน่นอน ไม่ต้องมีข้อมูลตลาด · + costPlusSignal (จับ anti-pattern
+                                 ตั้งราคาจากต้นทุน) + positionOf (ต้องมีราคาคู่แข่ง ≥2 เจ้าที่ผู้ใช้กรอกเอง)
+                                 ใช้ Insight type เดียวกับ productQuickCheck → พ่นราคาตลาดที่ไม่มีแหล่งไม่ได้
+                                 หัวข้อ "ตั้งราคา" บน Landing เรียกโมดูลนี้ทั้งก้อน (pure/tested 19 เทสต์)
+src/lib/trialRoadmap.ts        — แผน 15 วันที่ผู้ใช้ได้ของจริงกลับไป (ใช้ทั้งบน Landing เป็นคำสัญญา
+                                 และในแอปเป็นความคืบหน้า: nextStep/roadmapProgress) · เทสต์บังคับว่าทุกขั้น
+                                 ชี้หน้าที่มีอยู่จริง ห้ามสัญญาสิ่งที่ยังไม่ได้สร้าง · components/TrialRoadmap.tsx
+src/lib/processRegister.ts     — ทะเบียนกระบวนการ+ตัววัด (ขั้นที่ 1 ของ "SaaS แทนเอกสาร ISO" — docs/product/SAAS-AS-THE-SYSTEM.md)
+                                 registerIssues/registerHealth บังคับสายโซ่: ตัววัดทุกตัวต้องมี whyFrom (มาจากความเสี่ยง/คุณค่าอะไร)
+                                 ไม่งั้น blocker ที่ข้อ 9.1 · PROCESS_TEMPLATES + seedProcesses() วางโครงครอบคลุมข้อกำหนดครบทุกข้อ
+                                 แต่ "ไม่เติมตัววัดให้โดยตั้งใจ" (KPI สำเร็จรูป = ตอบผู้ตรวจไม่ได้) · CSV/JSON export (ลูกค้าถือข้อมูลเอง)
+                                 pure/tested (30 เทสต์ · มีเทสต์ยืนยันว่าโครงตั้งต้นครอบคลุมทุกข้อและไม่ซ้ำ ทั้ง 4 มาตรฐาน)
+src/pages/ProcessRegister.tsx  — หน้า 'process' ทะเบียนกระบวนการ (free · nav ใต้ มาตรฐาน ISO) — แก้ inline + ชิปเลือกข้อกำหนด
+                                 (ข้อที่กระบวนการอื่นถือแล้วจะจาง) + แถบสุขภาพ + รายการ "สิ่งที่ผู้ตรวจจะเจอ"
+                                 · demoRegister() = "อาฮ่า 10 วินาที" โหมดพรีวิว (ไม่บันทึกลง AppData · save() ปิดตายตอน demo)
+                                   จงใจใส่ตัววัดที่ไม่มี whyFrom 1 ตัว ให้เห็นระบบจับได้สด ๆ
 src/lib/resourceBridge.ts      — คำขอก้อนใหญ่→ห้องบอร์ด(+XP) + ทรัพยากรอนุมัติ→รายจ่าย finance อัตโนมัติ (pure, tested)
 src/pages/CityLevelUp.tsx      — หน้า 'citylevelup' เมือง 3 มิติ Level Up (ใช้ lib/cityScape.ts)
 src/lib/cityScape.ts           — เอนจินวาดเมืองไอโซเมตริก SVG + auto-detect เวลา/ฤดู (framework-agnostic)
@@ -162,7 +209,10 @@ Worker (src/server.ts) intercept GET /b/<slug>, /b, /sitemap.xml ก่อน fa
 title/meta/canonical/OG + JSON-LD (LocalBusiness/BreadcrumbList/ItemList) ลง index.html
 = Google index ได้โดยไม่รอ JS. client (src/lib/seo.ts applySeo) inject ซ้ำฝั่ง browser ให้ parity.
 seoData.ts = source of truth เดียว (escape กัน XSS). Deploy: merge → Cloudflare auto-deploy (ไม่ต้อง manual).
-งานคนหลัง merge: ส่ง sitemap.xml เข้า Google Search Console + Rich Results Test 1 หน้าร้าน.
+⚠️ กัน thin page: MIN_STOREFRONTS_TO_INDEX=5 — ร้านน้อยกว่านี้ /b จะ noindex,follow + ไม่ถูกลิสต์ใน sitemap
+   (ทั้ง server + client applySeo ต้องพูดตรงกัน · ตรวจ 16 ส.ค. 2569: ร้านจริง = 0)
+🔴 งานคนที่ยังค้าง (สาเหตุอันดับ 1 ที่ search traffic = 0): ยืนยัน Google Search Console + ส่ง sitemap.xml
+   ตั้งค่า GOOGLE_SITE_VERIFICATION ใน Cloudflare vars → ขั้นตอนเต็มที่ docs/marketing/SEARCH-CONSOLE-SETUP.md
 ```
 
 ## Plan / Access Control
@@ -235,7 +285,8 @@ Google Sheets ของ User (เชื่อมบัญชีเอง) = Phas
 `Dashboard`, `บริษัท AI`, `ห้องบอร์ด`, `ทรัพยากร`, `เมืองบริษัท`, `เมือง · Level Up`, `Pulse & A/B`, `การค้าระหว่างเมือง`,
 `Marketplace`, `หน้าร้านของฉัน`, `ซื้อขาย B2B (RFQ)`,
 `ทีม / สมาชิก`, `โรงงานอัจฉริยะ`, `แพ็กเกจ & ชำระเงิน`, `SaaS Analytics`,
-`ผู้ดูแลระบบ` (admin email เท่านั้น), `ISO 9001:2015 QMS`, `AI Research`, `Case Studies`
+`ผู้ดูแลระบบ` (admin email เท่านั้น), `ISO 9001:2015 QMS`, `ทะเบียนกระบวนการ + ตัววัด`, `AI Research`, `Case Studies`
+⚠️ กลุ่ม "มาตรฐาน ISO" ซ่อนในโหมดมือใหม่ (Sidebar `ADVANCED_PAGES` มี `iso9001`) — เห็นเมื่อ `ceo_ai_beginner='0'`
 
 เครื่องมือ (sub-menu ใต้ `บริษัท AI`): `Journey Map`, `Conversion Funnel`, `ROI Calculator`,
 `Personas`, `Content Plan`, `Priority Actions`, `Business Model · MIT24`, `Product Roadmap`,
@@ -274,6 +325,12 @@ public.skill_auctions     — ประมูล skill แบบ English Auction
 public.skill_bids         — บิดประมูล โปร่งใสเห็นกันหมด (0012)
 public.workspace_integrations — credential ของ integration ที่ User เชื่อมเอง (LINE/Sheets) RLS per-workspace, revoke anon; ไม่อยู่ใน workspace_state (กัน secret รั่ว) (0020)
 public.ai_usage           — ตัวนับ AI calls ต่อ (bucket=ws/user/guest-IP, เดือน) บังคับ quota ฝั่ง server (0035) · RLS ปิดหมด เข้าผ่าน rpc bump_ai_usage/get_ai_usage (SECURITY DEFINER) · guest cap 25/เดือน/IP · flag ENFORCE_AI_QUOTA (default off, fail-open) wire ใน ai-assist/ai-plan/agent-run ผ่าน _shared/quota.ts · plan อ่านจาก workspace_plan mirror (trigger sync เฉพาะ role=service_role กัน spoof)
+public.quickcheck_submissions (0056) — เก็บสิ่งที่ผู้เยี่ยมชมกรอกใน "ตรวจสินค้าเร็ว" บน Landing (first-party · ไม่มี PII)
+  เก็บ: biz(dropdown)/price/cost/units/fixed_cost/verdict/topics[]/reached_cta · ❌ ไม่เก็บชื่อสินค้าที่ผู้ใช้พิมพ์
+  (free text อาจมีชื่อร้าน/เบอร์ — อยู่ localStorage เครื่องผู้ใช้เพื่อยกเข้าแอปตอนสมัครเท่านั้น · มีเทสต์บังคับ)
+  RLS ปิด + revoke grant anon/authenticated · เข้าผ่าน rpc track_quickcheck (anon) / quickcheck_agg (admin-guarded)
+  session = เดียวกับ landing_funnel (join ได้) · แผงในหน้า admin: GrowthDashboard "ตรวจสินค้าเร็ว"
+  ⭐ by_topic = ตอบว่าเจ้าของธุรกิจกังวลเรื่องอะไรจริง (ต้อง >=30 คนกดหัวข้อถึงเชื่ออันดับได้)
 public.landing_funnel     — first-party visitor funnel (PDPA-safe · 0051): 1 แถว/ผู้เข้าชม (session uuid สุ่มฝั่ง client) เก็บ seg/ref_kind/max_scroll/max_dwell/reached_cta/reached_signup · RLS ปิด เข้าผ่าน rpc track_landing (anon, upsert monotonic) / landing_funnel_agg (admin-guarded) · ไม่เก็บ PII/cursor path · แสดงในแผง GrowthDashboard "Landing Funnel" (lib/landingFunnel.ts) · A/B holdout (0054): คอลัมน์ ab (show/control) assign deterministic ฝั่ง client จาก session (lib/landingAb.ts) → วัดว่า "2 ส่วนใหม่ (GuestAiTry+WhyTrustAi) ช่วย signup จริงไหม" · agg คืน by_ab (total/signup/cta ต่อกลุ่ม) → landingAbVerdict แสดงใน GrowthDashboard · LandingPage gate 2 ส่วนด้วย showNewSections(currentLandingVariant())
 public.ai_token_quota (0052) — โมเดลโควตา AI แบบ "token" (แทน "จำนวน call") ship dark ผ่าน secret ENFORCE_AI_TOKENS=true (คู่ ENFORCE_AI_QUOTA) · ai_usage.tokens + ai_topup.tokens (คอลัมน์เพิ่ม) · rpc check_ai_tokens (gate ก่อนเรียก · authed รายเดือน) + record_ai_tokens (บันทึก in+out จริงหลังตอบ) + get_ai_tokens (มิเตอร์ UI) + grant_ai_topup_tokens (admin/service) · เพดาน ai_token_quota_for: scale 12M/growth 3M/starter 1.5M/free-trial 400K · guest daily-free token = Cloudflare DO (CeoAiAgent) แยก ต่อ IP/วัน tier ตาม engagement (FREE_DAILY_TOKENS cold 20K/warm 40K/hot 70K) · edge functions (ai-assist/ai-plan/agent-run) wire ผ่าน _shared/quota.ts (enforceAiTokens+recordAiTokens · fail-open) · client มิเตอร์/ซื้อ token gate ด้วย config.ts TOKENS.live (ต้องเปิดพร้อม secret ฝั่ง server) · เพดาน/ราคา = src/lib/tokenEconomics.ts (margin ≥30%)
 public.ai_topup_request (0053) — คิว top-up รองรับแพ็ก token (คอลัมน์ tokens + credits nullable) · rpc topup_tokens_for_pack (จำนวน server-side จาก pack_id) + approve_token_topup_request (admin เปิด token) · Billing (ซื้อ PromptPay+แจ้งโอน) + PaymentsTab (admin เปิด token)

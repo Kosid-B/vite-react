@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  refKind, landingFunnelSteps, biggestLeak, dwellLabel, type LandingAgg,
+  refKind, landingFunnelSteps, biggestLeak, dwellLabel,
+  funnelCaveats, funnelTrustworthy, MIN_SAMPLE, type LandingAgg,
 } from '../landingFunnel';
 
 const ORIGIN = 'https://ceoaithailand.org';
@@ -61,6 +62,59 @@ describe('biggestLeak', () => {
   it('ไม่มีการหลุด (ทุกคนผ่านหมด) → null', () => {
     const s = landingFunnelSteps(AGG({ total: 10, engaged: 10, cta: 10, signup: 10 }));
     expect(biggestLeak(s)).toBeNull();
+  });
+  it('ส่ง agg มาด้วยแล้วข้อมูลเชื่อไม่ได้ → null (ไม่ชี้จุดแก้จากสัญญาณรบกวน)', () => {
+    const agg = AGG({ total: 60, engaged: 1, cta: 4, signup: 1 }); // เคสจริง 15 ส.ค. 2569
+    expect(biggestLeak(landingFunnelSteps(agg), agg)).toBeNull();
+  });
+  it('ข้อมูลเชื่อได้ → ยังชี้จุดแก้ตามปกติ', () => {
+    const agg = AGG({ total: 400, engaged: 240, cta: 48, signup: 12, avg_scroll: 45, avg_dwell: 30 });
+    expect(biggestLeak(landingFunnelSteps(agg), agg)?.dropPct).toBe(80);
+  });
+});
+
+describe('funnelCaveats — กันเอาตัวเลขที่เชื่อไม่ได้ไปตัดสินใจ', () => {
+  it('ยังไม่มีผู้เข้าชม → ไม่ต้องเตือนอะไร', () => {
+    expect(funnelCaveats(AGG({ total: 0 }), landingFunnelSteps(null))).toEqual([]);
+  });
+
+  it(`ผู้เข้าชมน้อยกว่า ${MIN_SAMPLE} → blocker`, () => {
+    const agg = AGG({ total: MIN_SAMPLE - 1, engaged: 40, cta: 10, signup: 2, avg_scroll: 40, avg_dwell: 30 });
+    const c = funnelCaveats(agg, landingFunnelSteps(agg));
+    expect(c.filter((x) => x.level === 'blocker')).toHaveLength(1);
+    expect(c[0].text).toContain(String(MIN_SAMPLE - 1));
+    expect(funnelTrustworthy(agg, landingFunnelSteps(agg))).toBe(false);
+  });
+
+  it(`ผู้เข้าชมถึง ${MIN_SAMPLE} และกรวยเรียงปกติ → ไม่มี blocker`, () => {
+    const agg = AGG({ total: MIN_SAMPLE, engaged: 50, cta: 12, signup: 3, avg_scroll: 40, avg_dwell: 30 });
+    expect(funnelCaveats(agg, landingFunnelSteps(agg))).toEqual([]);
+    expect(funnelTrustworthy(agg, landingFunnelSteps(agg))).toBe(true);
+  });
+
+  it('ขั้นหลังมากกว่าขั้นก่อน (CTA > เลื่อนผ่าน hero) → blocker เพราะไม่ใช่กรวยจริง', () => {
+    const agg = AGG({ total: 500, engaged: 10, cta: 40, signup: 5, avg_scroll: 30, avg_dwell: 25 });
+    const c = funnelCaveats(agg, landingFunnelSteps(agg));
+    const blockers = c.filter((x) => x.level === 'blocker');
+    expect(blockers).toHaveLength(1);
+    expect(blockers[0].text).toContain('ไม่ได้เรียงต่อกันจริง');
+    expect(funnelTrustworthy(agg, landingFunnelSteps(agg))).toBe(false);
+  });
+
+  it('เลื่อนน้อยมากแต่อยู่นาน = ลายนิ้วมือบอท → warn (ยังใช้ตัวเลขต่อได้)', () => {
+    const agg = AGG({ total: 500, engaged: 100, cta: 20, signup: 4, avg_scroll: 2, avg_dwell: 41 });
+    const c = funnelCaveats(agg, landingFunnelSteps(agg));
+    expect(c).toHaveLength(1);
+    expect(c[0].level).toBe('warn');
+    expect(funnelTrustworthy(agg, landingFunnelSteps(agg))).toBe(true);
+  });
+
+  it('เคสจริง 15 ส.ค. 2569 (60 คน · CTA 4 > engaged 1) → เตือนทั้งกลุ่มเล็กและกรวยกลับด้าน', () => {
+    const agg = AGG({ total: 60, engaged: 1, cta: 4, signup: 1, avg_scroll: 3, avg_dwell: 41 });
+    const c = funnelCaveats(agg, landingFunnelSteps(agg));
+    expect(c.filter((x) => x.level === 'blocker').length).toBeGreaterThanOrEqual(2);
+    expect(c.some((x) => x.level === 'warn')).toBe(true);
+    expect(funnelTrustworthy(agg, landingFunnelSteps(agg))).toBe(false);
   });
 });
 
