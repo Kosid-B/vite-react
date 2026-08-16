@@ -50,6 +50,9 @@ export const SHORT_LINKS: Record<string, ShortLink> = {
  *  ตอนนี้ลิงก์สั้นตัวเดียวใช้ได้ทุกแพลตฟอร์ม แค่เปลี่ยนตัวย่อท้าย = แยกที่มาได้จริง */
 export const SOURCE_PRESETS: Record<string, { source: string; medium: string }> = {
   yt:   { source: 'youtube',   medium: 'shorts' },
+  // แยก "คอมเมนต์ปักหมุด" ออกจากคำบรรยาย/ไบโอ — เห็นของจริง 16 ส.ค. 2569 ว่าคอมเมนต์ที่ปักไว้
+  // ติด utm_campaign=bio ทั้งที่ไม่ใช่ไบโอ → รายงานจะโยนคนกลุ่มนี้ไปปนกับช่องทางอื่น
+  ytc:  { source: 'youtube',   medium: 'comment' },
   ytv:  { source: 'youtube',   medium: 'video' },
   tt:   { source: 'tiktok',    medium: 'bio' },
   // แยก "คอมเมนต์" ออกจาก "ไบโอ" เพราะเป็นคนละเส้นทางกันคนละโลก

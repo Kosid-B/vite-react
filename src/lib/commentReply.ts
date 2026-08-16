@@ -222,5 +222,6 @@ export function youtubeDescription(t: VideoTopic, origin = 'https://ceoaithailan
 
 /** คอมเมนต์ปักหมุด YouTube — สั้นกว่าคำบรรยาย เพราะคนอ่านผ่าน ๆ */
 export function youtubePinnedComment(t: VideoTopic, origin = 'https://ceoaithailand.org'): string {
-  return `${t.gives} 👉 ${origin}${t.shortLink}?s=yt&seg=${t.seg} (ฟรี ไม่ต้องสมัคร)`;
+  // s=ytc (ไม่ใช่ yt) — คอมเมนต์ปักหมุดเป็นคนละช่องทางกับคำบรรยาย ต้องแยกวัดได้
+  return `${t.gives} 👉 ${origin}${t.shortLink}?s=ytc&seg=${t.seg} (ฟรี ไม่ต้องสมัคร)`;
 }

@@ -259,11 +259,23 @@ describe('YouTube Shorts — ลิงก์กดได้จริง จึ�
     }
   });
 
-  it('คำบรรยายและคอมเมนต์ปักหมุดใช้ลิงก์เต็ม + ติด ?s=yt (กดได้ทันที)', () => {
+  it('คำบรรยาย = s=yt · คอมเมนต์ปักหมุด = s=ytc — แยกช่องทางได้ (ของเดิมติด campaign=bio ทั้งที่เป็นคอมเมนต์)', () => {
     for (const t of VIDEO_TOPICS) {
-      for (const text of [youtubeDescription(t), youtubePinnedComment(t)]) {
-        expect(text, t.topic).toContain(`https://ceoaithailand.org${t.shortLink}?s=yt&seg=${t.seg}`);
-      }
+      expect(youtubeDescription(t), t.topic)
+        .toContain(`https://ceoaithailand.org${t.shortLink}?s=yt&seg=${t.seg}`);
+      expect(youtubePinnedComment(t), t.topic)
+        .toContain(`https://ceoaithailand.org${t.shortLink}?s=ytc&seg=${t.seg}`);
+    }
+    expect(SOURCE_PRESETS.ytc.medium).toBe('comment');
+    expect(SOURCE_PRESETS.yt.medium).toBe('shorts');
+    expect(SOURCE_PRESETS.ytc.source).toBe(SOURCE_PRESETS.yt.source);
+  });
+
+  it('คอมเมนต์ปักหมุดต้องบอกสิ่งที่ได้ "ก่อน" ลิงก์ — ลิงก์เปล่าไม่มีเหตุผลให้กด', () => {
+    for (const t of VIDEO_TOPICS) {
+      const c = youtubePinnedComment(t);
+      expect(c.indexOf('https://'), `${t.topic} ขึ้นต้นด้วยลิงก์`).toBeGreaterThan(20);
+      expect(c.startsWith(t.gives.slice(0, 10)), t.topic).toBe(true);
     }
   });
 
