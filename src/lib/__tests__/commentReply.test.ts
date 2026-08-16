@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   parseNumbers, buildReply, replySwapped, REPLY_NEED_NUMBERS,
-  KEYWORD_OFFERS, dmForKeyword,
+  KEYWORD_OFFERS, FOCUS_OFFERS, dmForKeyword,
 } from '../commentReply';
 import { SHORT_LINKS } from '../shortLinks';
 
@@ -120,6 +121,43 @@ describe('โพสต์แบบคอมเมนต์คำเดียว 
       expect(dm.length, o.keyword).toBeLessThan(260);
       expect(dm).not.toContain('฿');       // ไม่พูดเรื่องราคาแพ็กในข้อความแรก
       expect(dm).not.toContain('สมัครเลย');
+    }
+  });
+});
+
+describe('โฟกัสกลุ่มเป้าหมาย — Gen X/Y/Z + SME ที่กำลังเริ่ม/ทำธุรกิจ', () => {
+  /* ทำไมต้องมีเทสต์: ถ้าโพสต์คำที่พูดกับคนละกลุ่มพร้อมกัน จะอ่านผลไม่ออกว่าคำไหนดึงใครมา
+   * (บทเรียนเดียวกับที่เคยสรุปผิดจากกลุ่มตัวอย่างเล็ก — LESSONS-LEDGER ข้อ 1)
+   * ธง focus จึงต้องตรงกับเอกสารที่ User ใช้โพสต์จริงเสมอ */
+  const PACK = 'docs/marketing/social/FB-LEAD-MAGNET-PACK.md';
+  const pack = readFileSync(PACK, 'utf8');
+
+  it('รอบนี้โฟกัส 3 คำ: ราคา · ทุน · ลูกค้า (ระบบ = คนละจังหวะ เก็บรอบถัดไป)', () => {
+    expect(FOCUS_OFFERS.map((o) => o.keyword)).toEqual(['ราคา', 'ทุน', 'ลูกค้า']);
+    expect(KEYWORD_OFFERS.find((o) => o.keyword === 'ระบบ')?.focus).toBe(false);
+  });
+
+  it('ทุกคำที่โฟกัส มีโพสต์จริงในชุดที่ใช้โพสต์', () => {
+    for (const o of FOCUS_OFFERS) {
+      expect(pack, `ไม่มีโพสต์สำหรับคำว่า "${o.keyword}"`)
+        .toContain(`พิมพ์คำว่า "${o.keyword}" ในคอมเมนต์`);
+    }
+  });
+
+  it('คำที่ยังไม่โฟกัส ต้องอยู่ใต้หัวข้อ "เก็บไว้รอบถัดไป" ไม่ปนในลำดับโพสต์สัปดาห์แรก', () => {
+    const later = pack.indexOf('## 🕓 เก็บไว้รอบถัดไป');
+    expect(later, 'ไม่พบหัวข้อเก็บไว้รอบถัดไป').toBeGreaterThan(0);
+    const schedule = pack.slice(pack.indexOf('## ลำดับการโพสต์ที่แนะนำ'), later);
+    for (const o of KEYWORD_OFFERS.filter((x) => !x.focus)) {
+      expect(pack.indexOf(`พิมพ์คำว่า "${o.keyword}" ในคอมเมนต์`), o.keyword).toBeGreaterThan(later);
+      expect(schedule, `${o.keyword} ยังอยู่ในตารางโพสต์สัปดาห์แรก`)
+        .not.toContain(`โพสต์ C (\`${o.keyword}\`)`);
+    }
+  });
+
+  it('เอกสารต้องไม่บอกให้ "รอให้ธุรกิจโตก่อน" (ขัดหลัก iso-from-day-one)', () => {
+    for (const bad of ['รอให้ธุรกิจโตก่อน', 'ค่อยทำ ISO ตอนโต', 'ธุรกิจเล็กยังไม่ต้อง']) {
+      expect(pack, `มีคำว่า "${bad}"`).not.toContain(bad);
     }
   });
 });

@@ -123,10 +123,25 @@ export default function CommentReplyTab() {
           ทุกลิงก์ติด <code>?s=fb</code> แล้ว — ในแผง Landing Funnel จะแยกได้ว่าคนกลุ่มนี้มาจากเฟซบุ๊ก
         </div>
         <div style={{ display: 'grid', gap: 10 }}>
-          {KEYWORD_OFFERS.map((o) => (
+          {KEYWORD_OFFERS.filter((o) => o.focus).map((o) => (
             <CopyBox key={o.keyword} label={`พิมพ์ว่า “${o.keyword}” → ${o.gives}`} text={dmForKeyword(o)} />
           ))}
         </div>
+
+        <details>
+          <summary style={{ cursor: 'pointer', fontSize: 12.5, fontWeight: 700, color: 'var(--ink3)' }}>
+            🕓 เก็บไว้รอบถัดไป (ยังไม่โพสต์รอบนี้)
+          </summary>
+          <div style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 1.7, margin: '8px 0' }}>
+            รอบนี้โฟกัสคนที่ <b>กำลังเริ่ม/กำลังทำธุรกิจ</b> (Gen X/Y/Z + SME) — คำด้านล่างตอบคนที่ธุรกิจเดินแล้วและเริ่มเจอคอขวด
+            คนละจังหวะกัน · โพสต์พร้อมกันหมดแล้วจะแยกไม่ออกว่าคำไหนได้ผล
+          </div>
+          <div style={{ display: 'grid', gap: 10 }}>
+            {KEYWORD_OFFERS.filter((o) => !o.focus).map((o) => (
+              <CopyBox key={o.keyword} label={`พิมพ์ว่า “${o.keyword}” → ${o.gives}`} text={dmForKeyword(o)} />
+            ))}
+          </div>
+        </details>
       </div>
     </div>
   );

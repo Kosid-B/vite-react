@@ -130,14 +130,24 @@ export interface KeywordOffer {
   gives: string;
   /** ลิงก์สั้นที่จะส่งให้ในแชท (ต้องมีใน SHORT_LINKS จริง) */
   shortLink: string;
+  /** true = โฟกัสรอบนี้ (Gen X/Y/Z + SME ที่กำลังเริ่ม/ทำธุรกิจ)
+   *  false = ของดีแต่คนละจังหวะ เก็บไว้รอบถัดไป ไม่ใช่ทิ้ง
+   *  เหตุผลที่ต้องมีธงนี้: โพสต์พร้อมกันหมด = ไม่รู้ว่าคำไหนได้ผล
+   *  (บทเรียนเดียวกับที่เคยสรุปผิดจากกลุ่มตัวอย่างเล็ก — LESSONS-LEDGER ข้อ 1) */
+  focus: boolean;
 }
 
 export const KEYWORD_OFFERS: KeywordOffer[] = [
-  { keyword: 'ราคา', gives: 'ตารางจุดคุ้มทุนเมื่อขึ้น/ลดราคา + เครื่องคำนวณของคุณเอง', shortLink: '/ราคา' },
-  { keyword: 'ทุน', gives: 'วิธีเริ่มธุรกิจโดยไม่ต้องลงเงินก้อน', shortLink: '/ทุน' },
-  { keyword: 'ลูกค้า', gives: 'หาลูกค้า 10 คนแรกโดยไม่ยิงแอด', shortLink: '/ลูกค้า' },
-  { keyword: 'ระบบ', gives: 'วางระบบให้โตแล้วไม่พัง (ฐานเดียวกับที่ใช้ยื่น ISO)', shortLink: '/ระบบ' },
+  { keyword: 'ราคา', gives: 'ตารางจุดคุ้มทุนเมื่อขึ้น/ลดราคา + เครื่องคำนวณของคุณเอง', shortLink: '/ราคา', focus: true },
+  { keyword: 'ทุน', gives: 'วิธีเริ่มธุรกิจโดยไม่ต้องลงเงินก้อน', shortLink: '/ทุน', focus: true },
+  { keyword: 'ลูกค้า', gives: 'หาลูกค้า 10 คนแรกโดยไม่ยิงแอด', shortLink: '/ลูกค้า', focus: true },
+  // 'ระบบ' ตอบคนที่ธุรกิจเดินแล้วและเริ่มเจอคอขวด — ยังไม่ใช่คนที่ "กำลังจะเริ่ม"
+  // จึงรอรอบถัดไป (ไม่ใช่เพราะไม่ดี แต่เพราะคัดผิดกลุ่มแล้ววัดผลไม่ได้)
+  { keyword: 'ระบบ', gives: 'วางระบบให้โตแล้วไม่พัง (ฐานเดียวกับที่ใช้ยื่น ISO)', shortLink: '/ระบบ', focus: false },
 ];
+
+/** คำที่ใช้โพสต์ในรอบนี้เท่านั้น */
+export const FOCUS_OFFERS = KEYWORD_OFFERS.filter((o) => o.focus);
 
 /** ข้อความที่ส่งในแชทเมื่อเขาพิมพ์คำนั้นมา — สั้น ให้ของ ไม่ขาย */
 export function dmForKeyword(o: KeywordOffer, origin = 'https://ceoaithailand.org'): string {

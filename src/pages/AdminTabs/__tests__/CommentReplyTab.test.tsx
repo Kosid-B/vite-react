@@ -45,4 +45,16 @@ describe('แท็บตอบคอมเมนต์ — เรนเดอ�
     }
     expect(screen.getAllByText(/\?s=fb/).length).toBeGreaterThanOrEqual(4);
   });
+
+  it('คำที่ยังไม่โฟกัสถูกพับเก็บ ไม่ปนกับคำที่โพสต์รอบนี้', () => {
+    render(<CommentReplyTab />);
+    // 'ระบบ' ต้องอยู่ใน <details> ที่พับไว้ ส่วน 3 คำแรกต้องไม่อยู่
+    const later = screen.getByText(/เก็บไว้รอบถัดไป/).closest('details');
+    expect(later).toBeTruthy();
+    expect(later!.textContent).toContain('พิมพ์ว่า “ระบบ”');
+    for (const kw of ['ราคา', 'ทุน', 'ลูกค้า']) {
+      expect(later!.textContent, kw).not.toContain(`พิมพ์ว่า “${kw}”`);
+    }
+    expect(later!.open).toBe(false);
+  });
 });
