@@ -52,6 +52,7 @@ export const SECTION_LABEL: Record<string, string> = {
   trust: 'ความปลอดภัยและการควบคุม',
   pricing: 'แพ็กเกจและราคา',
   final_cta: 'ปุ่มปิดท้าย',
+  returning: 'ทักกลับคนที่เคยกรอก',
 };
 
 export function sectionLabel(key: string): string {

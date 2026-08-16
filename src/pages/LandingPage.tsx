@@ -26,10 +26,13 @@ import ValueTimeline from '../components/ValueTimeline';
 import CommunityJoin from '../components/CommunityJoin';
 import GuestAiTry from '../components/GuestAiTry';
 import ProductQuickCheck from '../components/ProductQuickCheck';
+import ReturningGreeting from '../components/ReturningGreeting';
 import TrialRoadmap from '../components/TrialRoadmap';
 import WhyNotChatGpt from '../components/WhyNotChatGpt';
 import WhyTrustAi from '../components/WhyTrustAi';
 import { currentLandingVariant } from '../lib/landingFunnel';
+import type { LandingVariant } from '../lib/landingAb';
+import { frozenVariantOf } from '../lib/experimentPlan';
 import { showNewSections } from '../lib/landingAb';
 import SkillShowcase from '../components/SkillShowcase';
 import { loadBehavior, derivePersona, persistSignal, type PersonaView } from '../lib/behaviorPersona';
@@ -198,7 +201,11 @@ const plans = [
 export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }: Props) {
   const [ctaHover, setCtaHover] = useState(false);
   // A/B holdout: กลุ่ม 'show' เห็น 2 ส่วนใหม่ (ลอง AI จริง + จัดการความกลัว AI) · 'control' ไม่เห็น → วัดผล conversion
-  const abShowNew = useMemo(() => showNewSections(currentLandingVariant()), []);
+  const abShowNew = useMemo(() => {
+    const frozen = frozenVariantOf('new_sections_v1');
+    if (frozen) return showNewSections(frozen as LandingVariant);
+    return showNewSections(currentLandingVariant());
+  }, []);
   const [showSticky, setShowSticky] = useState(false);   // sticky CTA มือถือ (โผล่หลังเลื่อนพ้น hero)
   const [stickyClosed, setStickyClosed] = useState(false);
   const [navHover, setNavHover] = useState(false);
@@ -239,6 +246,10 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
   // A/B ลำดับบล็อก landing — "อธิบายระบบก่อน" vs "โชว์ดีมานด์/ROI ก่อน" (ทดสอบทุก seg)
   // ตอบ pain "ไม่เข้าใจระบบ → ไม่กล้าสมัคร" · เนื้อหาครบเท่ากันทั้งคู่ ต่างแค่ลำดับ (ซื่อสัตย์)
   const layoutAb = useMemo<LayoutAb>(() => {
+    // เคารพแผนการทดลอง: ชุดที่ถูกหยุดต้องใช้ค่าตั้งต้นคงที่ ไม่สุ่มต่อ
+    // (หยุดเพราะทดสอบของใต้ครึ่งหน้า ซึ่งคนเลื่อนถึงแค่ 1 ใน 60 — ดู experimentPlan.ts)
+    const frozen = frozenVariantOf('layout');
+    if (frozen === 'explain_first' || frozen === 'proof_first') return frozen;
     try { return layoutAbVariant(getBrowserAbId()); } catch { return 'explain_first'; }
   }, []);
   useEffect(() => { track('layout_ab_exposed', { variant: layoutAb }); }, [layoutAb]);
@@ -477,6 +488,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       {/* ─── ประตูหน้า: กรอกตัวเลขสินค้า → เห็นกำไรจริงทันที (ไม่เรียก AI · ไม่ต้องสมัคร) ───
            วางสูงที่สุดโดยตั้งใจ — ข้อมูลจริง 11–15 ส.ค. 2569 บอกว่าผู้เข้าชมจากโซเชียล 28 คน
            มี max_scroll = 0 ทั้ง 28 คน · อะไรที่อยู่ล่าง fold เท่ากับไม่มี */}
+      <ReturningGreeting onGetStarted={onGetStarted} />
       <div data-sec="quickcheck"><ProductQuickCheck onGetStarted={onGetStarted} /></div>
 
       {/* ─── 15 วันฟรีจะเกิดอะไรขึ้น — ตอบข้อกังวลจริง "เสียเวลาแล้วไม่ได้อะไร" ───
