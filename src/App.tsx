@@ -37,6 +37,7 @@ import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
 import { isLineCallback, handleLineCallback } from './lib/lineLogin';
 import { isAdminEmail, INTEGRATIONS } from './config';
 import { readPendingHandoff, applyPendingHandoff } from './lib/handoffClient';
+import { readQuickDraft, draftToFinance, clearQuickDraft } from './lib/productQuickCheck';
 import LegalLinks from './components/LegalLinks';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -75,6 +76,8 @@ const ComplianceCheck = lazy(() => import('./pages/ComplianceCheck'));
 const Knowledge = lazy(() => import('./pages/Knowledge'));
 
 const STORAGE_KEY = 'cjux2';
+/** ยกตัวเลขจาก "ตรวจสินค้าเร็ว" บนหน้าแรกเข้าแอปแล้วหรือยัง (ทำครั้งเดียวต่อเครื่อง) */
+const QUICK_APPLIED_KEY = 'ceo_ai_quick_applied';
 
 // ลำดับหน้า (ตาม sidebar) สำหรับปุ่ม ย้อนกลับ / หน้าถัดไป ท้ายทุกหน้า
 const PAGE_FLOW: { id: PageId; label: string }[] = [
@@ -195,6 +198,23 @@ function migrate(parsed: AppData): AppData {
       if (hint) {
         parsed.aiCompany = { ...parsed.aiCompany, name: hint };
         localStorage.setItem('ceo_ai_biz_named', '1');
+      }
+    }
+  } catch { /* noop */ }
+
+  // ต่อเนื่อง Landing→แอป (2): ยกตัวเลขที่กรอกใน "ตรวจสินค้าเร็ว" เข้ามาเป็นรายรับ-รายจ่ายตั้งต้น
+  // = คำสัญญาบนหน้าแรกที่ว่า "ไม่ต้องกรอกซ้ำ" · ทำครั้งเดียวแล้วลบร่างทิ้ง
+  try {
+    if (!localStorage.getItem(QUICK_APPLIED_KEY)) {
+      const draft = readQuickDraft();
+      const rows = draft ? draftToFinance(draft) : [];
+      if (rows.length) {
+        const existing = parsed.finance ?? [];
+        // กันซ้ำด้วย id (ผู้ใช้อาจเคยกรอกแล้วสมัครใหม่บนเครื่องเดิม)
+        const seen = new Set(existing.map((e) => e.id));
+        parsed.finance = [...existing, ...rows.filter((r) => !seen.has(r.id))];
+        localStorage.setItem(QUICK_APPLIED_KEY, '1');
+        clearQuickDraft();
       }
     }
   } catch { /* noop */ }

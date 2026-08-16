@@ -96,6 +96,15 @@ src/pages/BoardRoom.tsx        — หน้า 'boardroom' ห้องบอ�
 src/pages/Resources.tsx        — หน้า 'resources' บริหารทรัพยากร: รายการ+จำนวน · C-Level ดูแล/ขอเพิ่ม-ลด · CEO/บอร์ดอนุมัติ · AI จัดสรร (agent-run จริง + fallback heuristic)
 src/lib/cfoAnalysis.ts         — CFO AI วิเคราะห์การเงิน "ธุรกิจตัวเอง" ของ SME จากตัวเลขจริง (d.finance): cfoMetrics(recurring/breakEvenGap/topExpense) + cfoFlags(ธงสุขภาพ) + cfoLocalAdvice(fallback offline) + cfoPrompt(ai-assist · ห้ามแต่งตัวเลข) · pure/tested · แสดงใน components/CfoAnalysis.tsx ใต้คลังเมือง (CompanyCity) — ต่อยอด cfoReport.ts (KPI report) เป็นชั้นให้คำแนะนำเชิงลงมือ
 src/lib/resources.ts           — Resource/Request types + templates + applyApproval + parseAiAllocations (pure, tested)
+src/lib/productQuickCheck.ts   — "ตรวจสินค้าเร็ว" ประตูหน้าบน Landing: กรอกราคา/ต้นทุน → กำไร/จุดคุ้มทุนทันที
+                                 ⚠️ ไม่เรียก AI โดยตั้งใจ (เร็ว ฟรี และแต่งตัวเลขไม่ได้) · AI = เฟส 2
+                                 กันตัวเลขไม่มีแหล่งด้วย type: Insight มีแค่ calc(ต้องมี from)/question(ต้องมี why)/action
+                                 — ไม่มีชนิด 'fact' ให้ใส่สถิติตลาดได้เลย · เทสต์มี banned-words guard
+                                 verdictOf: กำไรสุทธิมาก่อนกำไรต่อหน่วยเสมอ (netLoss) กัน "ป้ายเขียวทั้งที่ขาดทุน"
+                                 saveQuickDraft/readQuickDraft → App.migrate ยกเข้า finance = "ไม่ต้องกรอกซ้ำ"
+                                 (ต่อยอด bizHint.ts · ร่างเก่า >30 วันทิ้ง · ชื่อสินค้าอยู่ localStorage ไม่ขึ้น DB)
+                                 components/ProductQuickCheck.tsx วางสูงสุดบน Landing (นอก A/B holdout)
+                                 GA4: quickcheck_submitted / quickcheck_topic_opened (← รู้ว่าคนกังวลเรื่องอะไร) / quickcheck_signup_click
 src/lib/processRegister.ts     — ทะเบียนกระบวนการ+ตัววัด (ขั้นที่ 1 ของ "SaaS แทนเอกสาร ISO" — docs/product/SAAS-AS-THE-SYSTEM.md)
                                  registerIssues/registerHealth บังคับสายโซ่: ตัววัดทุกตัวต้องมี whyFrom (มาจากความเสี่ยง/คุณค่าอะไร)
                                  ไม่งั้น blocker ที่ข้อ 9.1 · PROCESS_TEMPLATES + seedProcesses() วางโครงครอบคลุมข้อกำหนดครบทุกข้อ

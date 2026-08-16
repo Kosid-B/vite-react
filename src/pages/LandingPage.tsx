@@ -25,6 +25,7 @@ import ValueCompare from '../components/ValueCompare';
 import ValueTimeline from '../components/ValueTimeline';
 import CommunityJoin from '../components/CommunityJoin';
 import GuestAiTry from '../components/GuestAiTry';
+import ProductQuickCheck from '../components/ProductQuickCheck';
 import WhyTrustAi from '../components/WhyTrustAi';
 import { currentLandingVariant } from '../lib/landingFunnel';
 import { showNewSections } from '../lib/landingAb';
@@ -467,6 +468,11 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           </div>
         </div>
       </section>
+
+      {/* ─── ประตูหน้า: กรอกตัวเลขสินค้า → เห็นกำไรจริงทันที (ไม่เรียก AI · ไม่ต้องสมัคร) ───
+           วางสูงที่สุดโดยตั้งใจ — ข้อมูลจริง 11–15 ส.ค. 2569 บอกว่าผู้เข้าชมจากโซเชียล 28 คน
+           มี max_scroll = 0 ทั้ง 28 คน · อะไรที่อยู่ล่าง fold เท่ากับไม่มี */}
+      <ProductQuickCheck onGetStarted={onGetStarted} />
 
       {/* ─── A/B holdout: 2 ส่วนใหม่แสดงเฉพาะกลุ่ม 'show' (control ไม่เห็น) เพื่อวัดผล conversion จริง ─── */}
       {abShowNew && (
