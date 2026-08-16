@@ -60,6 +60,10 @@ export const SOURCE_PRESETS: Record<string, { source: string; medium: string }> 
   // คอมเมนต์: เห็นใต้คลิปเลย ไม่ต้องเข้าโปรไฟล์ → ไม่มีเพดานนั้น
   ttc:  { source: 'tiktok',    medium: 'comment' },
   fb:   { source: 'facebook',  medium: 'social' },
+  // แยก "คอมเมนต์ปักหมุด" ออกจาก "ทักแชท" — ชุดโพสต์เดิมห้ามลิงก์ในคอมเมนต์
+  // แต่กฎนั้นเราเขียนเองโดยไม่มีหลักฐาน (ที่มีหลักฐานคือโพสต์ที่มีลิงก์โดนลดการมองเห็น)
+  // แยกที่มาไว้ → เดือนหน้าตอบได้ด้วยตัวเลขว่าคอมเมนต์ปักหมุดชนะหรือแพ้การทักแชท
+  fbc:  { source: 'facebook',  medium: 'comment' },
   ig:   { source: 'instagram', medium: 'story' },
   line: { source: 'line',      medium: 'message' },
   li:   { source: 'linkedin',  medium: 'social' },

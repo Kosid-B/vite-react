@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   parseNumbers, buildReply, REPLY_NEED_NUMBERS, KEYWORD_OFFERS, dmForKeyword,
-  tiktokPinnedComment, VIDEO_TOPICS, youtubeDescription, youtubePinnedComment,
+  tiktokPinnedComment, facebookPinnedComment, VIDEO_TOPICS, youtubeDescription, youtubePinnedComment,
   type ReplyChannel,
 } from '../../lib/commentReply';
 import { shortLinkTarget, SHORT_LINKS } from '../../lib/shortLinks';
@@ -115,6 +115,23 @@ export default function CommentReplyTab() {
           text={reply}
           hint={parsed ? undefined : 'ต้องมีตัวเลขอย่างน้อย 2 ตัว ระบบถึงจะคำนวณให้ — ห้ามเดาแทนเขา'}
         />
+      </div>
+
+      {/* Facebook — คอมเมนต์ปักหมุด (ทางเลือกที่ต้องวัด) */}
+      <div style={{ border: '1px solid var(--sand)', borderRadius: 12, padding: 14, background: 'var(--cream2)', display: 'grid', gap: 10 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
+          📌 Facebook — คอมเมนต์ปักหมุดใต้โพสต์
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 1.7 }}>
+          ⚠️ ชุดโพสต์เดิมห้ามลิงก์ในคอมเมนต์ <b>แต่กฎนั้นเราเขียนเองโดยไม่มีหลักฐาน</b><br />
+          ที่มีหลักฐานคือ “โพสต์ที่มีลิงก์” โดนลดการมองเห็น — ส่วนคอมเมนต์ไม่เคยพิสูจน์<br />
+          ติด <code>?s=fbc</code> แยกจากการทักแชท (<code>?s=fb</code>) → เดือนหน้าอ่านผลได้ว่าทางไหนดีกว่า
+        </div>
+        <div style={{ display: 'grid', gap: 10 }}>
+          {KEYWORD_OFFERS.filter((o) => o.focus).map((o) => (
+            <CopyBox key={o.keyword} label={`โพสต์เรื่อง${o.keyword}`} text={facebookPinnedComment(o)} />
+          ))}
+        </div>
       </div>
 
       {/* TikTok — คอมเมนต์ปักหมุด (ข้ามคอขวด "ต้องเข้าโปรไฟล์ก่อนถึงกดลิงก์ได้") */}

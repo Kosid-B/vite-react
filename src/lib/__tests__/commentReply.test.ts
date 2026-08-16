@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import {
   parseNumbers, buildReply, replySwapped, REPLY_NEED_NUMBERS,
   KEYWORD_OFFERS, FOCUS_OFFERS, dmForKeyword, tiktokPinnedComment,
-  VIDEO_TOPICS, youtubeDescription, youtubePinnedComment,
+  VIDEO_TOPICS, youtubeDescription, youtubePinnedComment, facebookPinnedComment,
 } from '../commentReply';
 import { SHORT_LINKS, SOURCE_PRESETS } from '../shortLinks';
 import { BLOG_POSTS } from '../blogData';
@@ -316,5 +316,34 @@ describe('คลิปต้องพา seg ไปด้วย (Dynamic PLG) �
     for (const t of VIDEO_TOPICS) {
       expect(segmentFor(`?seg=${t.seg}`), t.topic).toBe(t.seg);
     }
+  });
+});
+
+describe('Facebook คอมเมนต์ปักหมุด — ต้องแยกวัดจากการทักแชท', () => {
+  it('ใช้ s=fbc แยกจาก s=fb (ทักแชท) ไม่งั้นเทียบสองวิธีไม่ได้', () => {
+    for (const o of FOCUS_OFFERS) {
+      expect(facebookPinnedComment(o), o.keyword)
+        .toContain(`https://ceoaithailand.org${o.shortLink}?s=fbc`);
+      expect(dmForKeyword(o), o.keyword).toContain('?s=fb');
+      expect(dmForKeyword(o), `${o.keyword} ทักแชทต้องไม่ใช้ fbc`).not.toContain('?s=fbc');
+    }
+    expect(SOURCE_PRESETS.fbc.medium).toBe('comment');
+    expect(SOURCE_PRESETS.fb.medium).toBe('social');
+    expect(SOURCE_PRESETS.fbc.source).toBe(SOURCE_PRESETS.fb.source);
+  });
+
+  it('บอกสิ่งที่ได้ก่อนลิงก์ และไม่สัญญาผลลัพธ์', () => {
+    for (const o of FOCUS_OFFERS) {
+      const c = facebookPinnedComment(o);
+      expect(c.indexOf('https://'), `${o.keyword} ขึ้นต้นด้วยลิงก์`).toBeGreaterThan(20);
+      expect(c).toContain('ไม่ต้องสมัคร');
+      for (const bad of ['การันตี', 'รับรองว่า', 'ยอดขายเพิ่มแน่นอน']) {
+        expect(c, bad).not.toContain(bad);
+      }
+    }
+  });
+
+  it('คำตอบในคอมเมนต์ (ตอบตัวเลขให้เขา) ยังห้ามมีลิงก์เหมือนเดิม — คนละเรื่องกับคอมเมนต์ปักหมุด', () => {
+    expect(buildReply(parseNumbers('50/30')!, { channel: 'comment' })).not.toContain('http');
   });
 });
