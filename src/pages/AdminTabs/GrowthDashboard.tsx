@@ -10,7 +10,7 @@ import {
 } from '../../lib/growthEconomics';
 import { signupsForWeek, type SignupRecord } from '../../lib/attribution';
 import {
-  loadLandingFunnel, landingFunnelSteps, biggestLeak, dwellLabel, type LandingAgg,
+  loadLandingFunnel, landingFunnelSteps, biggestLeak, funnelCaveats, dwellLabel, type LandingAgg,
 } from '../../lib/landingFunnel';
 import { landingAbStats, landingAbVerdict } from '../../lib/landingAb';
 import UtmBuilder from '../../components/UtmBuilder';
@@ -243,7 +243,8 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
       {/* Landing Funnel (first-party · PDPA-safe) — ตอบ "คนเข้าแล้วค้างตรงไหน ไม่กดสมัคร" */}
       {landing && landing.total > 0 ? (() => {
         const steps = landingFunnelSteps(landing);
-        const leak = biggestLeak(steps);
+        const caveats = funnelCaveats(landing, steps);
+        const leak = biggestLeak(steps, landing); // null เมื่อข้อมูลยังเชื่อไม่ได้
         const bouncePct = landing.total > 0 ? Math.round((landing.bounce / landing.total) * 100) : 0;
         const refLabel: Record<string, string> = { direct: '🔗 พิมพ์ตรง/บุ๊กมาร์ก', social: '📱 โซเชียล', search: '🔍 ค้นหา (Google)', other: '🌐 เว็บอื่น' };
         const refRows = Object.entries(landing.by_ref).sort((a, b) => b[1] - a[1]);
@@ -254,7 +255,28 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
               🕳️ Landing Funnel — คนเข้าดูจริง {landing.total} คน (นิรนาม · ไม่เก็บ PII)
             </div>
 
-            {/* รูรั่วใหญ่สุด — ชี้จุดต้องแก้ก่อน */}
+            {/* ข้อควรระวังก่อนเชื่อตัวเลข — ต้องอยู่เหนือกรวย ไม่งั้นคนอ่าน % ไปแล้ว */}
+            {caveats.length > 0 && (
+              <div style={{ display: 'grid', gap: 8 }}>
+                {caveats.map((c, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      border: `1px solid ${c.level === 'blocker' ? '#dc2626' : '#f59e0b'}`,
+                      borderRadius: 10,
+                      padding: '10px 14px',
+                      background: c.level === 'blocker' ? 'rgba(220,38,38,0.08)' : 'rgba(245,158,11,0.10)',
+                      fontSize: 12.5, color: 'var(--ink)', lineHeight: 1.6,
+                    }}
+                  >
+                    {c.level === 'blocker' ? '⛔ ' : '⚠️ '}
+                    <b>{c.level === 'blocker' ? 'ยังใช้ตัดสินใจไม่ได้:' : 'ข้อจำกัด:'}</b> {c.text}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* รูรั่วใหญ่สุด — ชี้จุดต้องแก้ก่อน (ซ่อนเมื่อข้อมูลเชื่อไม่ได้) */}
             {leak && (
               <div style={{ border: '1px solid #f59e0b', borderRadius: 10, padding: '10px 14px', background: 'rgba(245,158,11,0.10)', fontSize: 13, color: 'var(--ink)', lineHeight: 1.6 }}>
                 🚨 <b>รูรั่วใหญ่สุด:</b> หลุด <b style={{ color: '#dc2626' }}>{leak.dropPct}%</b> ระหว่าง “{leak.from}” → “{leak.to}” — โฟกัสแก้จุดนี้ก่อน
