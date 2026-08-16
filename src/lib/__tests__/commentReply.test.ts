@@ -5,6 +5,8 @@ import {
   KEYWORD_OFFERS, FOCUS_OFFERS, dmForKeyword,
 } from '../commentReply';
 import { SHORT_LINKS } from '../shortLinks';
+import { BLOG_POSTS } from '../blogData';
+import { priceScenario } from '../pricingAnalysis';
 
 describe('อ่านตัวเลขจากคอมเมนต์ที่คนพิมพ์จริง', () => {
   it.each([
@@ -158,6 +160,45 @@ describe('โฟกัสกลุ่มเป้าหมาย — Gen X/Y/Z +
   it('เอกสารต้องไม่บอกให้ "รอให้ธุรกิจโตก่อน" (ขัดหลัก iso-from-day-one)', () => {
     for (const bad of ['รอให้ธุรกิจโตก่อน', 'ค่อยทำ ISO ตอนโต', 'ธุรกิจเล็กยังไม่ต้อง']) {
       expect(pack, `มีคำว่า "${bad}"`).not.toContain(bad);
+    }
+  });
+});
+
+describe('สัญญาในโพสต์ ต้องมีอยู่จริงในบทความปลายทาง', () => {
+  /* เคยพลาดจริง (16 ส.ค. 2569): โพสต์คำว่า "ราคา" สัญญา 3 ข้อ
+   *   — ขึ้นราคาเสียลูกค้าได้กี่ % / ลดราคาต้องขายเพิ่มเท่าไหร่ / ตั้งราคาจากคุณค่า
+   * แต่บทความ pricing-no-loss มีแค่ข้อสุดท้าย → คนกดเข้ามาแล้วไม่เจอสิ่งที่สัญญา
+   * เทสต์นี้ผูก "คำสัญญาในชุดโพสต์" เข้ากับ "เนื้อหาบทความจริง" ให้ drift ไม่เงียบ */
+  const post = BLOG_POSTS.find((p) => p.slug === 'pricing-no-loss')!;
+  const body = [post.lead, ...post.sections.flatMap((s) => [s.h2, ...s.paras, ...(s.bullets ?? [])]),
+    ...post.faq.flatMap((f) => [f.q, f.a])].join('\n');
+
+  it('บทความราคาต้องตอบทั้งขึ้นราคาและลดราคา ไม่ใช่แค่สูตรต้นทุน', () => {
+    expect(body).toContain('เสียลูกค้าได้');
+    expect(body).toContain('ต้องขายเพิ่ม');
+  });
+
+  it('ตัวเลขตัวอย่างในบทความ ตรงกับที่โมดูลคำนวณจริง (ห้ามเขียนเลขด้วยมือ)', () => {
+    const input = { biz: 'all' as const, price: 50, cost: 30 };
+    const up = priceScenario(input, 10);
+    const down = priceScenario(input, -10);
+    // ตัวเลขที่พิมพ์ไว้ในบทความต้องเป็นตัวเดียวกับที่ระบบตอบในคอมเมนต์/หน้าเว็บ
+    expect(body).toContain(`${up.breakEvenVolumePct}%`);
+    expect(body).toContain(`${Math.abs(down.breakEvenVolumePct!)}%`);
+    expect(buildReply(parseNumbers('50/30')!, { channel: 'comment' }))
+      .toContain(`${up.breakEvenVolumePct}%`);
+  });
+
+  it('บทความปลายทางทั้ง 3 คำ พูดกับคนที่กำลังเริ่ม/ทำธุรกิจ ไม่ใช่องค์กรที่ระบบเดินแล้ว', () => {
+    for (const o of FOCUS_OFFERS) {
+      const slug = SHORT_LINKS[o.shortLink].path.replace('/blog/', '');
+      const p = BLOG_POSTS.find((b) => b.slug === slug);
+      expect(p, `${o.keyword} → ไม่พบบทความ ${slug}`).toBeTruthy();
+      // ห้ามใช้ศัพท์มาตรฐาน/ข้อกำหนดในบทความประตูหน้า (ตกลงกับ User 16 ส.ค. 2569)
+      const text = [p!.title, p!.lead, ...p!.sections.map((s) => s.h2)].join(' ');
+      for (const jargon of ['ข้อกำหนด', 'ISO 9001', 'มาตรฐานสากล', 'ผู้ตรวจประเมิน']) {
+        expect(text, `${slug} มีศัพท์ "${jargon}" ในหัวข้อ`).not.toContain(jargon);
+      }
     }
   });
 });
