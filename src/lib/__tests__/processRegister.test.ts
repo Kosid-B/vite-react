@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   registerIssues, registerHealth, registerCsv, registerJson,
-  emptyRegister, looksLikePerson, seedProcesses, PROCESS_TEMPLATES,
+  emptyRegister, looksLikePerson, seedProcesses, PROCESS_TEMPLATES, demoRegister,
   type ProcessRegisterData, type ProcessRow,
 } from '../processRegister';
 import { STANDARDS, type StandardId } from '../isoStandards';
@@ -175,5 +175,49 @@ describe('โครงตั้งต้น — ต้องครบทุก�
     rows[0].docs.push('เอกสารมั่ว');
     expect(PROCESS_TEMPLATES.iso9001[0].clauses).not.toContain('9.9');
     expect(PROCESS_TEMPLATES.iso9001[0].docs).not.toContain('เอกสารมั่ว');
+  });
+});
+
+describe('ตัวอย่าง 10 วินาที — ต้องสอนได้จริงในหน้าจอเดียว', () => {
+  const demo = demoRegister();
+
+  it('มีตัววัดที่ "ดี" ให้ดูเป็นแบบ — ระบุที่มาชัดเจน', () => {
+    const withWhy = demo.processes.flatMap((p) => p.metrics).filter((m) => m.whyFrom?.trim());
+    expect(withWhy.length).toBeGreaterThanOrEqual(3);
+    // ที่มาต้องเป็นประโยคที่อธิบายได้จริง ไม่ใช่คำเดียวลอย ๆ
+    expect(withWhy.every((m) => (m.whyFrom ?? '').length > 20)).toBe(true);
+  });
+
+  it('จงใจมีตัววัดที่ตอบไม่ได้ 1 ตัว — ให้ผู้ใช้เห็นระบบทำงานสด ๆ', () => {
+    const blockers = registerIssues(demo).filter((i) => i.level === 'blocker');
+    const noWhy = blockers.filter((i) => i.what.includes('มาจากความเสี่ยงหรือคุณค่าอะไร'));
+    expect(noWhy).toHaveLength(1);
+    expect(noWhy[0].what).toContain('ยอดผลิตรวมต่อเดือน'); // ตัววัดปริมาณล้วน = ตัวอย่างคลาสสิกของ KPI ที่ตอบไม่ได้
+  });
+
+  it('ทุกกระบวนการมีผู้รับผิดชอบเป็นตำแหน่ง และมีตัววัดอย่างน้อยหนึ่งตัว', () => {
+    for (const p of demo.processes) {
+      expect(p.owner, p.name).toBeTruthy();
+      expect(looksLikePerson(p.owner ?? ''), p.name).toBe(false);
+      expect(p.metrics.length, p.name).toBeGreaterThan(0);
+      expect(p.docs.length, p.name).toBeGreaterThan(0);
+    }
+  });
+
+  it('อ้างเฉพาะข้อกำหนดที่มีจริงใน ISO 9001', () => {
+    const ids = STANDARDS.iso9001.clauses.map((c) => c.id);
+    for (const p of demo.processes) {
+      expect(p.clauses.filter((c) => !ids.includes(c)), p.name).toEqual([]);
+    }
+  });
+
+  it('เรียกซ้ำได้ค่าใหม่ทุกครั้ง — แก้ตัวอย่างแล้วไม่รั่วไปครั้งถัดไป', () => {
+    const a = demoRegister();
+    a.processes[0].metrics[0].whyFrom = 'แก้ทิ้ง';
+    expect(demoRegister().processes[0].metrics[0].whyFrom).not.toBe('แก้ทิ้ง');
+  });
+
+  it('ตัวอย่างยังไม่ผ่านเกณฑ์พร้อมตรวจ — ห้ามให้ความรู้สึกว่า "กดปุ่มเดียวก็เสร็จ"', () => {
+    expect(registerHealth(demo).ready).toBe(false);
   });
 });

@@ -38,7 +38,10 @@
     // production Supabase = waigsnxhrlwtiotspaim (ย้ายจาก rsjbqmnvocvtveelselj — ก.ค. 2569)
     "SUPABASE_URL": "https://waigsnxhrlwtiotspaim.supabase.co",
     "SUPABASE_ANON_KEY": "sb_publishable_Tf6Q7Mq6I2OLtfXot-EWJA_FESohA9E",
-    "SITE_ORIGIN": "https://ceoaithailand.org"
+    "SITE_ORIGIN": "https://ceoaithailand.org",
+    // โทเคนยืนยันความเป็นเจ้าของเว็บใน Google Search Console (ค่า public ไม่ใช่ secret)
+    // ว่าง = ไม่แทรก meta ใด ๆ · วิธีเอาค่ามาใส่: docs/marketing/SEARCH-CONSOLE-SETUP.md
+    "GOOGLE_SITE_VERIFICATION": ""
   },
   "observability": {
     "enabled": true,

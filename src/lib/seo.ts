@@ -40,6 +40,10 @@ export function applySeo(seo: SeoData): void {
   setMeta('name', 'twitter:description', seo.description);
   setMeta('name', 'twitter:image', seo.imageUrl);
 
+  // robots: แตะเฉพาะเมื่อหน้านั้นระบุมา — ถ้าไม่ระบุ ต้องปล่อยค่าที่ server inject ไว้
+  // (เขียนทับด้วย index,follow ตอนยังโหลดข้อมูลไม่เสร็จ = ลบ noindex ของ server ทิ้งโดยไม่ตั้งใจ)
+  if (seo.robots) setMeta('name', 'robots', seo.robots);
+
   if (seo.jsonLd.length) {
     let ld = document.getElementById('ld-json-dynamic') as HTMLScriptElement | null;
     if (!ld) {

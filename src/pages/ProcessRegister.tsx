@@ -10,7 +10,7 @@ import type { AppData, PageId } from '../types';
 import { track } from '../lib/analytics';
 import { STANDARDS, type StandardId } from '../lib/isoStandards';
 import {
-  registerIssues, registerHealth, registerCsv, registerJson, emptyRegister, seedProcesses,
+  registerIssues, registerHealth, registerCsv, registerJson, emptyRegister, seedProcesses, demoRegister,
   type ProcessRegisterData, type ProcessRow, type MetricRow,
 } from '../lib/processRegister';
 
@@ -31,17 +31,26 @@ function download(name: string, body: string, type: string) {
 }
 
 export default function ProcessRegister({ data, onUpdate, onNavigate }: Props) {
-  const reg: ProcessRegisterData = useMemo(
+  /** โหมดพรีวิวตัวอย่าง — แสดงทะเบียนที่กรอกเสร็จแล้วเพื่อให้เห็นคุณค่าใน 10 วินาที
+   *  ไม่บันทึกลง AppData เด็ดขาด: ตัวอย่างที่ปนกับข้อมูลจริง = หลักฐานปลอมในระบบที่ใช้ยื่นตรวจ */
+  const [demo, setDemo] = useState(false);
+  const saved: ProcessRegisterData = useMemo(
     () => data.processRegister ?? emptyRegister('iso9001'),
     [data.processRegister],
   );
+  const demoData = useMemo(() => demoRegister(), []);
+  const reg: ProcessRegisterData = demo ? demoData : saved;
   const std = STANDARDS[reg.standard];
   const issues = useMemo(() => registerIssues(reg), [reg]);
   const health = useMemo(() => registerHealth(reg), [reg]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
-  const save = (next: ProcessRegisterData) => onUpdate({ ...data, processRegister: next });
+  /** ประตูเดียวที่เขียนข้อมูล — ปิดตายในโหมดตัวอย่าง กันข้อมูลสาธิตปนกับของจริงทุกทาง */
+  const save = (next: ProcessRegisterData) => {
+    if (demo) { setMsg('นี่คือตัวอย่าง แก้ไม่ได้ — กด “เริ่มทะเบียนของผมเอง” ก่อน แล้วค่อยกรอกงานจริงของคุณ'); return; }
+    onUpdate({ ...data, processRegister: next });
+  };
   const setProcesses = (rows: ProcessRow[]) => save({ ...reg, processes: rows });
   const patch = (id: string, p: Partial<ProcessRow>) =>
     setProcesses(reg.processes.map((r) => (r.id === id ? { ...r, ...p, updatedAt: new Date().toISOString() } : r)));
@@ -104,6 +113,25 @@ export default function ProcessRegister({ data, onUpdate, onNavigate }: Props) {
         </p>
       </div>
 
+      {/* ── แถบโหมดตัวอย่าง — ต้องเห็นชัดตลอดเวลาว่านี่ไม่ใช่ข้อมูลจริงของผู้ใช้ ── */}
+      {demo && (
+        <div style={{
+          border: '1px solid #0891b2', borderRadius: 10, padding: '10px 14px', marginBottom: 12,
+          background: 'rgba(8,145,178,0.10)', fontSize: 13, lineHeight: 1.7,
+          display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center',
+        }}>
+          <span style={{ flex: 1, minWidth: 260 }}>
+            👀 <b>กำลังดูตัวอย่าง</b> (โรงงานอาหารสมมติ) — ยังไม่ได้บันทึกอะไรทั้งนั้น แก้ไม่ได้<br />
+            <span style={{ color: 'var(--ink3)', fontSize: 12 }}>
+              ลองดู “ยอดผลิตรวมต่อเดือน” ในกระบวนการที่ 2 — ระบบจับได้ว่าตัวนี้ตอบผู้ตรวจไม่ได้
+            </span>
+          </span>
+          <button className="pn-btn pn-btn-primary" onClick={() => { setDemo(false); setMsg(null); }}>
+            ✍️ เริ่มทะเบียนของผมเอง
+          </button>
+        </div>
+      )}
+
       {/* ── แถบสุขภาพทะเบียน ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, marginBottom: 14 }}>
         {[
@@ -148,6 +176,10 @@ export default function ProcessRegister({ data, onUpdate, onNavigate }: Props) {
         <button className="pn-btn" onClick={seed} title="วางโครงกระบวนการที่ครอบคลุมข้อกำหนดครบทุกข้อ">🧱 เริ่มจากโครงตั้งต้น</button>
         <button className="pn-btn" onClick={() => download(`ทะเบียนกระบวนการ-${reg.standard}-${stamp}.csv`, '﻿' + registerCsv(reg), 'text/csv;charset=utf-8')} disabled={reg.processes.length === 0}>⬇️ CSV</button>
         <button className="pn-btn" onClick={() => download(`ทะเบียนกระบวนการ-${reg.standard}-${stamp}.json`, registerJson(reg, new Date().toISOString()), 'application/json')} disabled={reg.processes.length === 0}>⬇️ JSON</button>
+        {!demo && (
+          <button className="pn-btn" onClick={() => { setDemo(true); setMsg(null); track('process_demo_viewed', {}); }}
+            title="ดูทะเบียนที่กรอกเสร็จแล้ว — ไม่กระทบข้อมูลของคุณ">🎯 ดูตัวอย่าง</button>
+        )}
         <button className="pn-btn" onClick={() => onNavigate('iso9001')} title="ดูข้อกำหนดเต็มและประเมินช่องว่าง">📋 หน้าประเมิน ISO</button>
       </div>
       {msg && <div className="pn-warn" style={{ marginBottom: 12 }}>{msg}</div>}
@@ -175,15 +207,27 @@ export default function ProcessRegister({ data, onUpdate, onNavigate }: Props) {
 
       {/* ── รายการกระบวนการ ── */}
       {reg.processes.length === 0 ? (
+        /* หน้าว่าง = ต้องทำการบ้านก่อนถึงจะเห็นค่า → คนที่ยังไม่เชื่อเราจะไม่ทำ
+           จึงให้ "ดูตัวอย่างที่กรอกเสร็จแล้ว" เป็นทางเลือกแรก ไม่ใช่การกรอก */
         <div className="pn-empty" style={{ border: '1px dashed var(--sand)', borderRadius: 12, padding: '28px 20px', textAlign: 'center' }}>
-          <div style={{ marginBottom: 10, lineHeight: 1.8 }}>
-            ยังไม่มีกระบวนการในทะเบียน<br />
-            <span style={{ fontSize: 12.5, color: 'var(--ink3)' }}>
-              เริ่มจากโครงตั้งต้นได้ — เราวางชื่อกระบวนการ ผู้รับผิดชอบ และข้อกำหนดที่แต่ละอันรับผิดชอบให้ครบ<br />
-              แต่ <b>ไม่เติมตัววัดให้</b> เพราะตัววัดที่ไม่ได้มาจากงานจริงของคุณ คือตัวที่ตอบผู้ตรวจไม่ได้
-            </span>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>
+            ผู้ตรวจจะถามว่า “ทำไมถึงวัดตัวนี้” — ตอบได้ไหม?
           </div>
-          <button className="pn-btn pn-btn-primary" onClick={seed}>🧱 เริ่มจากโครงตั้งต้น ({STANDARDS[reg.standard].code})</button>
+          <div style={{ marginBottom: 14, lineHeight: 1.8, fontSize: 12.5, color: 'var(--ink3)', maxWidth: 560, margin: '0 auto 14px' }}>
+            หน้านี้จับตัววัดที่ตอบไม่ได้ให้ก่อนวันตรวจ · ดูตัวอย่างจริงก่อนได้ ไม่ต้องกรอกอะไรเลย
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button className="pn-btn pn-btn-primary" onClick={() => {
+              setDemo(true); setMsg(null); track('process_demo_viewed', {});
+            }}>
+              🎯 ดูตัวอย่างที่กรอกเสร็จแล้ว — เห็นผลใน 10 วินาที
+            </button>
+            <button className="pn-btn" onClick={seed}>🧱 เริ่มจากโครงตั้งต้น ({STANDARDS[reg.standard].code})</button>
+          </div>
+          <div style={{ marginTop: 12, fontSize: 11.5, color: 'var(--ink3)', maxWidth: 560, margin: '12px auto 0', lineHeight: 1.7 }}>
+            โครงตั้งต้นวางชื่อกระบวนการ ผู้รับผิดชอบ และข้อกำหนดให้ครบทุกข้อ
+            แต่ <b>ไม่เติมตัววัดให้</b> — ตัววัดที่ไม่ได้มาจากงานจริงของคุณ คือตัวที่ตอบผู้ตรวจไม่ได้
+          </div>
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 10 }}>

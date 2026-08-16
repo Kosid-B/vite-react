@@ -103,6 +103,8 @@ src/lib/processRegister.ts     — ทะเบียนกระบวนกา
                                  pure/tested (30 เทสต์ · มีเทสต์ยืนยันว่าโครงตั้งต้นครอบคลุมทุกข้อและไม่ซ้ำ ทั้ง 4 มาตรฐาน)
 src/pages/ProcessRegister.tsx  — หน้า 'process' ทะเบียนกระบวนการ (free · nav ใต้ มาตรฐาน ISO) — แก้ inline + ชิปเลือกข้อกำหนด
                                  (ข้อที่กระบวนการอื่นถือแล้วจะจาง) + แถบสุขภาพ + รายการ "สิ่งที่ผู้ตรวจจะเจอ"
+                                 · demoRegister() = "อาฮ่า 10 วินาที" โหมดพรีวิว (ไม่บันทึกลง AppData · save() ปิดตายตอน demo)
+                                   จงใจใส่ตัววัดที่ไม่มี whyFrom 1 ตัว ให้เห็นระบบจับได้สด ๆ
 src/lib/resourceBridge.ts      — คำขอก้อนใหญ่→ห้องบอร์ด(+XP) + ทรัพยากรอนุมัติ→รายจ่าย finance อัตโนมัติ (pure, tested)
 src/pages/CityLevelUp.tsx      — หน้า 'citylevelup' เมือง 3 มิติ Level Up (ใช้ lib/cityScape.ts)
 src/lib/cityScape.ts           — เอนจินวาดเมืองไอโซเมตริก SVG + auto-detect เวลา/ฤดู (framework-agnostic)
@@ -169,7 +171,10 @@ Worker (src/server.ts) intercept GET /b/<slug>, /b, /sitemap.xml ก่อน fa
 title/meta/canonical/OG + JSON-LD (LocalBusiness/BreadcrumbList/ItemList) ลง index.html
 = Google index ได้โดยไม่รอ JS. client (src/lib/seo.ts applySeo) inject ซ้ำฝั่ง browser ให้ parity.
 seoData.ts = source of truth เดียว (escape กัน XSS). Deploy: merge → Cloudflare auto-deploy (ไม่ต้อง manual).
-งานคนหลัง merge: ส่ง sitemap.xml เข้า Google Search Console + Rich Results Test 1 หน้าร้าน.
+⚠️ กัน thin page: MIN_STOREFRONTS_TO_INDEX=5 — ร้านน้อยกว่านี้ /b จะ noindex,follow + ไม่ถูกลิสต์ใน sitemap
+   (ทั้ง server + client applySeo ต้องพูดตรงกัน · ตรวจ 16 ส.ค. 2569: ร้านจริง = 0)
+🔴 งานคนที่ยังค้าง (สาเหตุอันดับ 1 ที่ search traffic = 0): ยืนยัน Google Search Console + ส่ง sitemap.xml
+   ตั้งค่า GOOGLE_SITE_VERIFICATION ใน Cloudflare vars → ขั้นตอนเต็มที่ docs/marketing/SEARCH-CONSOLE-SETUP.md
 ```
 
 ## Plan / Access Control
