@@ -8,6 +8,7 @@ import { DE24_DEFS, DE24_PHASE_LABELS } from './de24Sync';
 import { validCoord } from './geo';
 import { SAFETY_COMMITMENTS, SAFETY_FAQ } from './aiSafety';
 import { HERO_VARIANTS, type HeroSeg } from './heroVariant';
+import { blogCtaHref } from './ctaContext';
 import { BLOG_POSTS, blogPostBySlug, type BlogPost } from './blogData';
 import { feeHeadlineTh } from './marketplaceFees';
 
@@ -989,7 +990,7 @@ ${sectionBlocks}
 
   <h2>คำถามที่พบบ่อย</h2>
 ${faqBlocks}
-  <a class="cta" href="${escapeHtml(origin + '/start')}">${escapeHtml(post.ctaText)} →</a>
+  <a class="cta" href="${escapeHtml(blogCtaHref(origin, post.slug, post.category))}">${escapeHtml(post.ctaText)} →</a>
   <footer>หนึ่งในผลิตภัณฑ์ของ B. Training Consultant · <a href="${escapeHtml(origin + '/blog')}">บทความทั้งหมด</a> · <a href="${escapeHtml(origin + '/')}">ceoaithailand.org</a></footer>`;
   const title = `${post.title} | CEO AI Thailand`;
   return seoStaticPage({ origin, path: `/blog/${post.slug}`, title, desc: post.description, schema, body });

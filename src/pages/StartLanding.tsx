@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { track } from '../lib/analytics';
 import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
 import { applySeo, siteOrigin } from '../lib/seo';
+import { segmentFor } from '../lib/heroVariant';
+import { startHeroFor } from '../lib/startHero';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
 import FaqAccordion, { type FaqItem } from '../components/FaqAccordion';
@@ -102,7 +104,15 @@ export default function StartLanding() {
     return p.get('ref') === 'btctraining' || (p.get('utm_campaign') || '').toLowerCase().includes('iso');
   }, []);
 
-  useEffect(() => { track('start_variant', { variant: isIso ? 'iso' : 'default' }); }, [isIso]);
+  // Dynamic PLG: หน้านี้ต้องพูดกับ "คนคนนี้" ไม่ใช่พูดกับทุกคนเหมือนกันหมด
+  // seg มาจากลิงก์ที่พาเขามา (CTA ท้ายบทความติด ?seg= ให้ตามหมวดของบทความนั้น)
+  // ISO ยังชนะทุกอย่างเพราะเป็นสะพานจากเว็บบริษัท = คนละกลุ่มกันชัดเจน
+  const seg = useMemo(() => segmentFor(window.location.search, document.referrer), []);
+  const segHero = isIso ? null : startHeroFor(seg);
+
+  useEffect(() => {
+    track('start_variant', { variant: isIso ? 'iso' : (segHero ? seg : 'default'), seg });
+  }, [isIso, seg, segHero]);
 
   const compareRows = isIso ? COMPARE_ISO : COMPARE_BIZ;
 
@@ -191,6 +201,22 @@ export default function StartLanding() {
               <span className="start-vchip">⚡ ประเมินเสร็จใน 5 นาที</span>
               <span className="start-vchip">🆓 เริ่มฟรี ไม่ต้องใช้บัตร</span>
               <span className="start-vchip">🏭 ตรงกลุ่มโรงงาน EEC</span>
+            </div>
+          </>
+        ) : segHero ? (
+          <>
+            <div className="start-badge">{segHero.badge}</div>
+            <h1 className="start-h1">
+              {segHero.h1}<br />
+              <span className="start-h1-hl">{segHero.h1hl}</span>
+            </h1>
+            <p className="start-sub">
+              {segHero.sub.map((line, i) => (
+                <span key={line}>{line}{i < segHero.sub.length - 1 && <br />}</span>
+              ))}
+            </p>
+            <div className="start-vchips">
+              {segHero.chips.map(c => <span className="start-vchip" key={c}>{c}</span>)}
             </div>
           </>
         ) : (
