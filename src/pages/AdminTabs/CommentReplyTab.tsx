@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   parseNumbers, buildReply, REPLY_NEED_NUMBERS, KEYWORD_OFFERS, dmForKeyword,
-  tiktokPinnedComment,
+  tiktokPinnedComment, VIDEO_TOPICS, youtubeDescription, youtubePinnedComment,
   type ReplyChannel,
 } from '../../lib/commentReply';
 import { shortLinkTarget, SHORT_LINKS } from '../../lib/shortLinks';
@@ -130,6 +130,25 @@ export default function CommentReplyTab() {
         <div style={{ display: 'grid', gap: 10 }}>
           {KEYWORD_OFFERS.filter((o) => o.focus).map((o) => (
             <CopyBox key={o.keyword} label={`คลิปเรื่อง${o.keyword}`} text={tiktokPinnedComment(o)} />
+          ))}
+        </div>
+      </div>
+
+      {/* YouTube Shorts — ลิงก์กดได้จริง ต่างจาก TikTok */}
+      <div style={{ border: '1px solid var(--sand)', borderRadius: 12, padding: 14, background: 'var(--cream2)', display: 'grid', gap: 10 }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
+          ▶️ YouTube Shorts — คำบรรยาย + คอมเมนต์ปักหมุด
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 1.7 }}>
+          <b>ลิงก์ที่นี่กดได้ทันที</b> ต่างจาก TikTok ที่ต้องเข้าโปรไฟล์ก่อน<br />
+          คลิปเดียวกันลง YouTube จึงส่งคนมาเว็บได้จริง — ติด <code>?s=yt</code> ให้แล้ว แยกที่มาได้
+        </div>
+        <div style={{ display: 'grid', gap: 10 }}>
+          {VIDEO_TOPICS.map((t) => (
+            <div key={t.shortLink} style={{ display: 'grid', gap: 6 }}>
+              <CopyBox label={`คลิป: ${t.topic} — คำบรรยาย`} text={youtubeDescription(t)} />
+              <CopyBox label={`คลิป: ${t.topic} — คอมเมนต์ปักหมุด`} text={youtubePinnedComment(t)} />
+            </div>
           ))}
         </div>
       </div>

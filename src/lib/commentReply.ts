@@ -177,3 +177,46 @@ export function dmForKeyword(o: KeywordOffer, origin = 'https://ceoaithailand.or
 export function tiktokPinnedComment(o: KeywordOffer, origin = 'ceoaithailand.org'): string {
   return `${o.gives} — พิมพ์ตามได้เลยครับ ${origin}${o.shortLink} (อ่านฟรี ไม่ต้องสมัคร)`;
 }
+
+/* ── YouTube Shorts: ลิงก์กดได้จริง (ต่างจาก TikTok) ────────────────────
+ *
+ * ความต่างเชิงโครงสร้างที่ตัดสินว่าควรลงแรงที่ไหน (ตรวจ 16 ส.ค. 2569):
+ *   TikTok  — ลิงก์ในคอมเมนต์/คำบรรยาย "กดไม่ได้" ต้องเข้าโปรไฟล์ไปกดในไบโอเท่านั้น
+ *             วัดจริง: 15,900 วิว → เข้าโปรไฟล์ 11 คน = เพดานคนกดลิงก์ 11 คน
+ *   YouTube — ลิงก์ในคำบรรยายและคอมเมนต์ปักหมุด **กดได้ทันที** ไม่ต้องออกจากคลิป
+ *             → คลิปเดียวกัน ลงที่นี่ส่งคนมาเว็บได้จริง
+ *
+ * จึงต้องใช้ลิงก์เต็มพร้อม ?s=yt (ไม่ใช่ลิงก์ให้พิมพ์ตามแบบ TikTok)
+ */
+
+export interface VideoTopic {
+  /** คำที่ใช้เรียกหัวข้อ — ตรงกับเนื้อคลิป */
+  topic: string;
+  /** ลิงก์สั้นปลายทาง (ต้องมีจริงใน SHORT_LINKS) */
+  shortLink: string;
+  /** สิ่งที่คนดูจะได้เมื่อกด */
+  gives: string;
+}
+
+/** หัวข้อคลิปที่มีบทความรองรับจริง — เรียงตามที่วัดได้ว่ามีคนดูจริงบน YouTube 28 วัน */
+export const VIDEO_TOPICS: VideoTopic[] = [
+  { topic: 'ต้นทุน/ตั้งราคา', shortLink: '/ราคา', gives: 'ตารางจุดคุ้มทุนเมื่อขึ้น/ลดราคา + เครื่องคำนวณของคุณเอง' },
+  { topic: 'เริ่มธุรกิจไม่มีทุน', shortLink: '/ทุน', gives: 'วิธีเริ่มธุรกิจโดยไม่ต้องลงเงินก้อน' },
+  { topic: 'หาลูกค้า', shortLink: '/ลูกค้า', gives: 'หาลูกค้า 10 คนแรกโดยไม่ยิงแอด' },
+  { topic: 'สวนปาล์ม/ราคาผลผลิต', shortLink: '/ปาล์ม', gives: 'สิ่งที่คุมได้เมื่อราคาผลผลิตคุมไม่ได้' },
+];
+
+/** คำบรรยายใต้คลิป YouTube — ลิงก์กดได้ วางบรรทัดแรกเพราะคนเห็นแค่ 1-2 บรรทัดก่อนกด "เพิ่มเติม" */
+export function youtubeDescription(t: VideoTopic, origin = 'https://ceoaithailand.org'): string {
+  return [
+    `${t.gives} — อ่านฟรี ไม่ต้องสมัคร`,
+    `${origin}${t.shortLink}?s=yt`,
+    '',
+    'เครื่องมือและบทความทั้งหมดใช้ได้ฟรี ไม่ต้องใส่บัตรเครดิต',
+  ].join('\n');
+}
+
+/** คอมเมนต์ปักหมุด YouTube — สั้นกว่าคำบรรยาย เพราะคนอ่านผ่าน ๆ */
+export function youtubePinnedComment(t: VideoTopic, origin = 'https://ceoaithailand.org'): string {
+  return `${t.gives} 👉 ${origin}${t.shortLink}?s=yt (ฟรี ไม่ต้องสมัคร)`;
+}

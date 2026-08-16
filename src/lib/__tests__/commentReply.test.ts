@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import {
   parseNumbers, buildReply, replySwapped, REPLY_NEED_NUMBERS,
   KEYWORD_OFFERS, FOCUS_OFFERS, dmForKeyword, tiktokPinnedComment,
+  VIDEO_TOPICS, youtubeDescription, youtubePinnedComment,
 } from '../commentReply';
 import { SHORT_LINKS, SOURCE_PRESETS } from '../shortLinks';
 import { BLOG_POSTS } from '../blogData';
@@ -246,5 +247,45 @@ describe('TikTok — คอมเมนต์คือทางเดียว�
     expect(SOURCE_PRESETS.ttc.medium).toBe('comment');
     expect(SOURCE_PRESETS.tt.medium).toBe('bio');
     expect(SOURCE_PRESETS.ttc.source).toBe(SOURCE_PRESETS.tt.source);
+  });
+});
+
+describe('YouTube Shorts — ลิงก์กดได้จริง จึงต้องใช้คนละแบบกับ TikTok', () => {
+  it('ทุกหัวข้อคลิปมีบทความรองรับจริง', () => {
+    for (const t of VIDEO_TOPICS) {
+      expect(SHORT_LINKS[t.shortLink], t.topic).toBeTruthy();
+    }
+  });
+
+  it('คำบรรยายและคอมเมนต์ปักหมุดใช้ลิงก์เต็ม + ติด ?s=yt (กดได้ทันที)', () => {
+    for (const t of VIDEO_TOPICS) {
+      for (const text of [youtubeDescription(t), youtubePinnedComment(t)]) {
+        expect(text, t.topic).toContain(`https://ceoaithailand.org${t.shortLink}?s=yt`);
+      }
+    }
+  });
+
+  it('YouTube ใช้ลิงก์กดได้ · TikTok ใช้ลิงก์พิมพ์ตาม — ห้ามสลับกัน', () => {
+    const yt = youtubePinnedComment(VIDEO_TOPICS[0]);
+    const tt = tiktokPinnedComment(FOCUS_OFFERS[0]);
+    expect(yt).toContain('https://');       // YouTube กดได้ ใส่ลิงก์เต็มคุ้ม
+    expect(tt).not.toContain('https://');   // TikTok กดไม่ได้ ใส่ไปก็แค่ยาวขึ้น
+    expect(yt).toContain('?s=yt');
+  });
+
+  it('บรรทัดแรกของคำบรรยายต้องบอกสิ่งที่ได้ ไม่ใช่ขึ้นต้นด้วยลิงก์', () => {
+    for (const t of VIDEO_TOPICS) {
+      const first = youtubeDescription(t).split('\n')[0];
+      expect(first, t.topic).not.toContain('http');
+      expect(first.length, `${t.topic} บรรทัดแรกยาวเกินกว่าจะเห็นก่อนกด "เพิ่มเติม"`).toBeLessThan(110);
+    }
+  });
+
+  it('ไม่สัญญาผลลัพธ์ และย้ำว่าฟรี/ไม่ต้องสมัคร', () => {
+    const all = VIDEO_TOPICS.flatMap(t => [youtubeDescription(t), youtubePinnedComment(t)]).join(' ');
+    for (const bad of ['การันตี', 'รับรองว่า', 'รวยแน่', 'ยอดขายเพิ่มแน่นอน']) {
+      expect(all, bad).not.toContain(bad);
+    }
+    expect(all).toContain('ไม่ต้องสมัคร');
   });
 });
