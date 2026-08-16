@@ -224,7 +224,6 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
 
   // วัดความลึกของความสนใจ (scroll depth + dwell + exit + rage) — PDPA-safe · first-party funnel
   // ตอบ "คนค้างตรงไหน · หยุดดูนานไหม · ไม่กดสมัคร" ทั้งใน GA และแผงแอดมิน (ผูก seg เพื่อแยกตามแคมเปญ)
-  useLandingTrace(hero.seg);
 
   // A/B ทดสอบพาดหัว (เฉพาะ seg 'default' = คนที่ยังไม่ระบุกลุ่ม) — assign คงที่ต่อ browser
   const heroAb = useMemo<HeroAb | null>(() => {
@@ -243,6 +242,10 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
     try { return layoutAbVariant(getBrowserAbId()); } catch { return 'explain_first'; }
   }, []);
   useEffect(() => { track('layout_ab_exposed', { variant: layoutAb }); }, [layoutAb]);
+
+  // วางไว้หลัง heroAb/layoutAb ประกาศแล้ว — ผูกกลุ่ม A/B ทุกตัวเข้าฐานข้อมูลเรา
+  // (เดิม hero/layout ส่งเข้า GA อย่างเดียว แอดมินในระบบอ่านผลไม่ได้เลย)
+  useLandingTrace(hero.seg, true, heroAb ?? undefined, layoutAb);
 
   // ── Dynamic Persona: เว็บปรับตาม "พฤติกรรมจริง" (Dark AI Marketing #5/#6/#7) ──
   // นับการมาเยือน + อ่านสัญญาณสะสม (นิรนาม/PDPA) → เลือกข้อความส่วนตัวใต้ hero
@@ -361,7 +364,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         }`}</style>
 
       {/* ─── Hero ─── */}
-      <section className="lp-hero" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(90vh - 60px)', padding: '80px 24px', textAlign: 'center' }}>
+      <section data-sec="hero" className="lp-hero" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(90vh - 60px)', padding: '80px 24px', textAlign: 'center' }}>
         {/* Glow */}
         <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, background: 'radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%)', pointerEvents: 'none', borderRadius: '50%' }} />
 
@@ -447,7 +450,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── Matchmaker VP band — ไม่ใช่แค่ "สร้างร้าน" แต่ "จับคู่" ให้ (แก้ pain รอ walk-in) ─── */}
-      <section style={{ padding: '0 24px' }}>
+      <section data-sec="positioning" style={{ padding: '0 24px' }}>
         <div style={{ maxWidth: 920, margin: '0 auto', borderRadius: 16, border: `1px solid ${C.border}`, background: C.bg2, padding: '22px 24px' }}>
           <div style={{ textAlign: 'center', fontSize: 'clamp(17px, 2.4vw, 22px)', fontWeight: 800, color: C.white, marginBottom: 4 }}>
             ไม่ใช่แค่ “สร้างบริษัท AI” — <span style={{ color: C.cyan4 }}>AI หาลูกค้าและคู่ค้ามาจับคู่ให้</span>
@@ -474,21 +477,21 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       {/* ─── ประตูหน้า: กรอกตัวเลขสินค้า → เห็นกำไรจริงทันที (ไม่เรียก AI · ไม่ต้องสมัคร) ───
            วางสูงที่สุดโดยตั้งใจ — ข้อมูลจริง 11–15 ส.ค. 2569 บอกว่าผู้เข้าชมจากโซเชียล 28 คน
            มี max_scroll = 0 ทั้ง 28 คน · อะไรที่อยู่ล่าง fold เท่ากับไม่มี */}
-      <ProductQuickCheck onGetStarted={onGetStarted} />
+      <div data-sec="quickcheck"><ProductQuickCheck onGetStarted={onGetStarted} /></div>
 
       {/* ─── 15 วันฟรีจะเกิดอะไรขึ้น — ตอบข้อกังวลจริง "เสียเวลาแล้วไม่ได้อะไร" ───
            วางต่อจากประตูหน้าทันที: เห็นตัวเลขของตัวเองแล้ว → เห็นว่าเดินต่อยังไง → ค่อยกดเริ่ม */}
-      <TrialRoadmap onGetStarted={onGetStarted} />
+      <div data-sec="roadmap"><TrialRoadmap onGetStarted={onGetStarted} /></div>
 
       {/* ─── "ก็ถาม ChatGPT เอาก็ได้" — คู่แข่งตัวจริง ต้องตอบก่อนที่เขาจะคิดเอง ───
            เจ้าของชี้เอง 16 ส.ค. 2569 ว่ากลุ่มเป้าหมายแยกไม่ออกระหว่างระบบเรากับแชต */}
-      <WhyNotChatGpt onGetStarted={onGetStarted} />
+      <div data-sec="why_not_chatgpt"><WhyNotChatGpt onGetStarted={onGetStarted} /></div>
 
       {/* ─── A/B holdout: 2 ส่วนใหม่แสดงเฉพาะกลุ่ม 'show' (control ไม่เห็น) เพื่อวัดผล conversion จริง ─── */}
       {abShowNew && (
         <>
           {/* ลองใช้ AI จริงทันที (ไม่ต้องสมัคร) — แก้ pain "คิดว่าต้องสมัครถึงใช้ AI ได้" (PLG aha) */}
-          <GuestAiTry onGetStarted={onGetStarted} />
+          <div data-sec="try_ai"><GuestAiTry onGetStarted={onGetStarted} /></div>
           {/* objection handling: จัดการความกลัว AI (ใช้ไม่เป็น/ถูกต้องไหม/ไม่เคยใช้) */}
           <WhyTrustAi onGetStarted={onGetStarted} />
         </>
@@ -534,7 +537,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       <InstantPreview onGetStarted={onGetStarted} />
 
       {/* ─── Stats ─── */}
-      <section style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, backgroundColor: C.bg2, padding: '48px 24px' }}>
+      <section data-sec="credibility_bar" style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, backgroundColor: C.bg2, padding: '48px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 32, textAlign: 'center' }}>
           {stats.map(s => (
             <div key={s.label}>
@@ -546,7 +549,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── Social Proof (ซื่อสัตย์: track record ที่ปรึกษาจริง ไม่อ้างจำนวนผู้ใช้ AI) ─── */}
-      <section style={{ padding: '64px 24px', textAlign: 'center' }}>
+      <section data-sec="consultant_proof" style={{ padding: '64px 24px', textAlign: 'center' }}>
         <p style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.cyan5, marginBottom: 14 }}>
           เบื้องหลังระบบ คือทีมที่ปรึกษาตัวจริง
         </p>
@@ -568,7 +571,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── รีวิวจากสมาชิกจริง: แสดงรีวิวที่อนุมัติ (ถ้ามี) + วิดเจ็ตให้ดาว/เขียนรีวิว (แสดงเสมอ) ─── */}
-      <section style={{ padding: '64px 24px' }}>
+      <section data-sec="testimonials" style={{ padding: '64px 24px' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <p style={{ fontSize: 12, letterSpacing: '0.15em', textTransform: 'uppercase', color: C.cyan5, marginBottom: 10, textAlign: 'center' }}>
             เสียงจากผู้ใช้จริง
@@ -616,7 +619,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       <LeadCapture />
 
       {/* ─── Steps ─── */}
-      <section style={{ padding: '64px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+      <section data-sec="how_it_works" style={{ padding: '64px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12, color: C.white }}>
             เริ่มต้น <span style={{ color: C.cyan4 }}>3 ขั้นตอน</span>
@@ -637,7 +640,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── Features ─── */}
-      <section style={{ padding: '80px 24px' }}>
+      <section data-sec="features" style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 48 }}>
             ทุกอย่างที่ธุรกิจ<span style={{ color: C.cyan4 }}>ต้องการ</span> — อยู่ที่เดียว
@@ -655,7 +658,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── ทำไมต้องเป็นเรา (Differentiation) ─── */}
-      <section style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+      <section data-sec="compare" style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
             ทำไมต้อง <span style={{ color: C.cyan4 }}>CEO AI Thailand</span> — ไม่ใช่ AI ทั่วไป?
@@ -682,7 +685,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       <ValueTimeline onGetStarted={onGetStarted} />
 
       {/* ─── AI Skills ที่โตไปกับธุรกิจ — ระบบพัฒนา Skill ให้ + มี Skill ใหม่ตามระดับ ─── */}
-      <section style={{ padding: '80px 24px' }}>
+      <section data-sec="team" style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', color: C.cyan4, fontSize: 12.5, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 12 }}>
             AI Skills ที่โตไปกับคุณ
@@ -730,7 +733,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── 2 ชั้น: แอปทำเองได้ (เข้าถึงง่าย) · ที่ปรึกษาลึกส่งต่อ B.Training (คลาย correlational: มืออาชีพ↔ถูก) ─── */}
-      <section style={{ padding: '56px 24px' }}>
+      <section data-sec="self_serve" style={{ padding: '56px 24px' }}>
         <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
           <div style={{ padding: '24px 26px', borderRadius: 16, border: `1px solid ${C.cyan5}`, backgroundColor: C.bg2 }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: C.cyan4, letterSpacing: '0.05em', marginBottom: 8 }}>เริ่มเองในแอป · ฿0–1,490/เดือน</div>
@@ -748,7 +751,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── ผลลัพธ์ที่คุณจะได้ (Outcomes) ─── */}
-      <section style={{ padding: '80px 24px' }}>
+      <section data-sec="outcomes" style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: 820, margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 44 }}>
             ภายในไม่กี่นาที คุณจะได้ <span style={{ color: C.amber4 }}>ผลลัพธ์จริง</span>
@@ -765,7 +768,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── เรียนรู้จากเคสธุรกิจจริง (Social proof / content) ─── */}
-      <section style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+      <section data-sec="case_studies" style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
             เรียนรู้จาก <span style={{ color: C.cyan4 }}>เคสธุรกิจระดับโลก</span> — แล้วลงมือกับธุรกิจคุณ
@@ -787,7 +790,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── Trust (ทำไม AI เชื่อถือได้) ─── */}
-      <section style={{ padding: '80px 24px' }}>
+      <section data-sec="trust" style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', color: C.cyan4, fontSize: 12.5, fontWeight: 600, letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 12 }}>
             ความน่าเชื่อถือของระบบ AI
@@ -814,7 +817,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── Pricing ─── */}
-      <section id="pricing" ref={pricingRef} style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+      <section data-sec="pricing" id="pricing" ref={pricingRef} style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12, color: C.white }}>
             แพ็กเกจ <span style={{ color: C.cyan4 }}>สำหรับทุกขนาดธุรกิจ</span>
@@ -876,7 +879,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── Bottom CTA ─── */}
-      <section style={{ padding: '80px 24px', textAlign: 'center', borderTop: `1px solid ${C.border}`, background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.06) 0%, transparent 70%)' }}>
+      <section data-sec="final_cta" style={{ padding: '80px 24px', textAlign: 'center', borderTop: `1px solid ${C.border}`, background: 'radial-gradient(ellipse at center, rgba(6,182,212,0.06) 0%, transparent 70%)' }}>
         <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 700, marginBottom: 16 }}>
           พร้อมจ้าง AI <span style={{ color: C.amber5 }}>ทำงานแทนคุณ</span> แล้วหรือยัง?
         </h2>

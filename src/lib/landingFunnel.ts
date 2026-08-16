@@ -42,6 +42,13 @@ export interface LandingAgg {
   by_seg: Record<string, number>;
   by_ref: Record<string, number>;
   by_ab: Record<string, { total: number; signup: number; cta: number }>; // A/B: show/control/unset
+  /** วัน (จาก p_days) — ใช้บอกช่วงเวลาในบทวิเคราะห์ */
+  days?: number;
+  /** A/B พาดหัว · A/B ลำดับบล็อก — เดิมไปลง GA อย่างเดียว (0057) */
+  by_hero_ab?: Record<string, { total: number; signup: number; cta: number }>;
+  by_layout_ab?: Record<string, { total: number; signup: number; cta: number }>;
+  /** ความสนใจรายส่วนของหน้า (0057) — key = data-sec ที่ติดไว้บน LandingPage */
+  sections?: Record<string, { viewers: number; seconds: number; signups: number }>;
 }
 
 export interface FunnelStep {
@@ -172,6 +179,8 @@ interface FunnelState {
   cta: boolean;
   signup: boolean;
   ab: LandingVariant;   // กลุ่ม A/B (holdout 2 ส่วนใหม่)
+  heroAb?: string;      // กลุ่ม A/B พาดหัว (เดิมไปลง GA อย่างเดียว)
+  layoutAb?: string;    // กลุ่ม A/B ลำดับบล็อก (เดิมไปลง GA อย่างเดียว)
 }
 let state: FunnelState | null = null;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -197,7 +206,11 @@ function getSession(): string {
 }
 
 /** เริ่มเซสชัน funnel — เรียกครั้งเดียวตอน Landing mount (ส่ง view beacon) */
-export function initLandingFunnel(seg: string, referrer: string, origin: string): void {
+export function initLandingFunnel(
+  seg: string, referrer: string, origin: string,
+  /** กลุ่ม A/B อื่นของผู้เยี่ยมชมคนนี้ — เดิมส่งเข้า GA อย่างเดียว แอดมินในระบบอ่านไม่ได้ */
+  opts?: { heroAb?: string; layoutAb?: string },
+): void {
   if (typeof window === 'undefined') return;
   const session = getSession();
   state = {
@@ -206,6 +219,8 @@ export function initLandingFunnel(seg: string, referrer: string, origin: string)
     ref: refKind(referrer, origin),
     scroll: 0, dwell: 0, cta: false, signup: false,
     ab: landingVariant(session),
+    heroAb: opts?.heroAb,
+    layoutAb: opts?.layoutAb,
   };
   flush(); // นับ "เข้าดู" ทันที
 }
@@ -219,6 +234,53 @@ export function currentFunnelSession(): string {
 /** กลุ่ม A/B ของผู้เยี่ยมชมคนนี้ (deterministic จาก session) — ให้ LandingPage ตัดสินใจแสดง 2 ส่วนใหม่ */
 export function currentLandingVariant(): LandingVariant {
   return landingVariant(getSession());
+}
+
+/* ── ความสนใจรายส่วน ────────────────────────────────────────────────────
+ * ตอบคำถาม "คนเข้ามาแล้วสนใจส่วนไหนของหน้า" ซึ่ง max_scroll ตอบไม่ได้
+ * (เลื่อนผ่าน 100% กับ หยุดอ่าน 40 วินาทีตรงส่วนราคา = คนละความหมายกันคนละโลก)
+ *
+ * PDPA: เก็บแค่ "ชื่อส่วนที่เรากำหนดเอง → จำนวนวินาทีที่อยู่ในจอ"
+ *   ไม่เก็บพิกัดเมาส์ ไม่เก็บสิ่งที่ผู้ใช้พิมพ์ ไม่เก็บ URL ที่มา
+ */
+
+/** วินาทีสะสมต่อส่วน (ปัดลง) — key = SECTION_KEYS */
+const sectionSec: Record<string, number> = {};
+/** เวลาที่ส่วนนั้นเริ่มอยู่ในจอ (ms) — undefined = ไม่อยู่ในจอ */
+const sectionSince: Record<string, number> = {};
+
+function sectionSig(): string {
+  const keys = Object.keys(sectionSec).sort();
+  return keys.map(k => `${k}:${sectionSec[k]}`).join(',');
+}
+
+/** ส่วนนั้นเข้ามาอยู่ในจอ */
+export function markSectionEnter(key: string, now = Date.now()): void {
+  if (!state || !key) return;
+  if (sectionSince[key] === undefined) sectionSince[key] = now;
+}
+
+/** ส่วนนั้นออกจากจอ → บวกเวลาที่อยู่ในจอเข้าไป
+ *  นับเฉพาะที่อยู่ในจอ ≥ 1 วินาที (กันการเลื่อนผ่านเร็ว ๆ นับเป็นความสนใจ) */
+export function markSectionExit(key: string, now = Date.now()): void {
+  if (!state || !key) return;
+  const since = sectionSince[key];
+  if (since === undefined) return;
+  delete sectionSince[key];
+  const sec = Math.floor((now - since) / 1000);
+  if (sec < 1) return;
+  sectionSec[key] = Math.min(3600, (sectionSec[key] ?? 0) + sec);
+  scheduleFlush();
+}
+
+/** ปิดส่วนที่ยังค้างอยู่ในจอทั้งหมด — เรียกก่อนออกจากหน้า */
+export function closeOpenSections(now = Date.now()): void {
+  for (const k of Object.keys(sectionSince)) markSectionExit(k, now);
+}
+
+/** อ่านค่าปัจจุบัน (ใช้ในเทสต์และดีบัก) */
+export function currentSections(): Record<string, number> {
+  return { ...sectionSec };
 }
 
 export function markLandingScroll(pct: number): void {
@@ -253,7 +315,7 @@ function scheduleFlush(): void {
  *  หมายเหตุ: ใช้ sendBeacon ไม่ได้ เพราะตั้ง header apikey/Authorization ไม่ได้ */
 export function flush(force = false, leaving = false): void {
   if (!state || !isSupabaseEnabled || !supabase) return;
-  const sig = `${state.scroll}|${state.dwell}|${state.cta}|${state.signup}`;
+  const sig = `${state.scroll}|${state.dwell}|${state.cta}|${state.signup}|${sectionSig()}`;
   if (!force && sig === lastSent) return;
   lastSent = sig;
 
@@ -266,6 +328,11 @@ export function flush(force = false, leaving = false): void {
     p_signup: state.signup,
     p_dwell: state.dwell,
     p_ab: state.ab,
+    p_hero_ab: state.heroAb ?? null,
+    p_layout_ab: state.layoutAb ?? null,
+    // วินาทีที่แต่ละส่วนอยู่ในจอ — ตอบ "เขาสนใจส่วนไหนของหน้า"
+    // ไม่ใช่ PII: คีย์เป็นชื่อส่วนที่เรากำหนดเอง ค่าเป็นวินาที (เซิร์ฟเวอร์กรองซ้ำอีกชั้น)
+    p_sections: Object.keys(sectionSec).length ? sectionSec : null,
   };
 
   if (leaving) {

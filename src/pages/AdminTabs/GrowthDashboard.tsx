@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import GrowthAiPanel from '../../components/GrowthAiPanel';
 import type { AppData } from '../../types';
 import { isSupabaseEnabled } from '../../lib/supabase';
 import { adminListWorkspaces, wsLoad } from '../../lib/workspaces';
@@ -457,6 +458,9 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
           🕳️ <b style={{ color: 'var(--ink)' }}>Landing Funnel</b> — ยังไม่มีข้อมูลผู้เข้าชม (จะเริ่มเก็บเมื่อมีคนเปิดหน้า Landing สาธารณะหลัง deploy) · วัด scroll depth + dwell แบบนิรนาม
         </div>
       )}
+
+      {/* ความสนใจรายส่วน + ผล A/B ทุกตัว + AI วิเคราะห์ (0057) */}
+      <GrowthAiPanel landing={landing} />
 
       {/* Funnel */}
       {funnel && funnel.total > 0 && (

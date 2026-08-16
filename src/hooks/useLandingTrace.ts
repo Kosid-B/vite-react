@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
 import { track } from '../lib/analytics';
 import { scrollPct, crossedMilestones, createRageDetector } from '../lib/funnelTrace';
-import { initLandingFunnel, markLandingScroll, markLandingDwell, flush } from '../lib/landingFunnel';
+import {
+  initLandingFunnel, markLandingScroll, markLandingDwell, flush,
+  markSectionEnter, markSectionExit, closeOpenSections,
+} from '../lib/landingFunnel';
 
 /* ===== useLandingTrace — วัดความลึกของความสนใจบน Landing (PDPA-safe) =====
  * ส่ง 2 ทาง (anonymous · ไม่เก็บ PII · ไม่บันทึก cursor path):
@@ -13,12 +16,19 @@ import { initLandingFunnel, markLandingScroll, markLandingDwell, flush } from '.
 const SCROLL_MS = [25, 50, 75, 90];
 const DWELL_SEC = [10, 30, 60];
 
-export function useLandingTrace(seg = 'default', enabled = true): void {
+export function useLandingTrace(
+  seg = 'default',
+  enabled = true,
+  /** กลุ่ม A/B อื่นของผู้เยี่ยมชมคนนี้ — ผูกเข้าฐานข้อมูลเราด้วย ไม่ใช่ส่งเข้า GA อย่างเดียว
+   *  รับเป็นค่าเดี่ยว ไม่ใช่ออบเจกต์ เพราะออบเจกต์สร้างใหม่ทุก render จะทำให้ effect รันซ้ำ */
+  heroAb?: string,
+  layoutAb?: string,
+): void {
   useEffect(() => {
     if (!enabled || typeof window === 'undefined' || typeof document === 'undefined') return;
 
     // first-party funnel — เริ่มเซสชัน (ส่ง "เข้าดู" ทันที) · ref จำแนกจาก referrer แบบ PDPA-safe
-    try { initLandingFunnel(seg, document.referrer, window.location.origin); } catch { /* noop */ }
+    try { initLandingFunnel(seg, document.referrer, window.location.origin, { heroAb, layoutAb }); } catch { /* noop */ }
 
     let maxPct = 0;
     let exited = false;
@@ -43,12 +53,28 @@ export function useLandingTrace(seg = 'default', enabled = true): void {
       measure(); // วัด scroll ครั้งสุดท้ายก่อนส่ง — กันกรณีเลื่อนแล้วปิดทันทีก่อน debounce ทำงาน
       track('landing_exit_depth', { pct: maxPct });
       markLandingDwell(Math.round((Date.now() - startedAt) / 1000)); // เวลารวมบนหน้า
+      closeOpenSections(); // ปิดส่วนที่ยังอยู่ในจอ ไม่งั้นส่วนที่เขาค้างอ่านอยู่ตอนปิดหน้าจะนับเป็น 0
       flush(true, true); // ปิดท้าย: ส่งแบบ keepalive (ไม่งั้นเบราว์เซอร์ยกเลิกคำขอตอนปิดหน้า)
     };
     const onVisibility = () => { if (document.visibilityState === 'hidden') fireExit(); };
 
     const timers = DWELL_SEC.map((sec) =>
       window.setTimeout(() => { track('landing_dwell', { sec }); markLandingDwell(sec); }, sec * 1000));
+
+    /* ส่วนไหนอยู่ในจอบ้าง — อ่านจาก data-sec="<key>" ที่ LandingPage ติดไว้
+     * threshold 0.5 = ต้องเห็นครึ่งบล็อกถึงนับว่า "กำลังดูส่วนนี้" (เลื่อนผ่านเร็ว ๆ ไม่นับ) */
+    let io: IntersectionObserver | null = null;
+    if ('IntersectionObserver' in window) {
+      io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          const key = (e.target as HTMLElement).dataset.sec;
+          if (!key) continue;
+          if (e.isIntersecting) markSectionEnter(key);
+          else markSectionExit(key);
+        }
+      }, { threshold: 0.5 });
+      document.querySelectorAll('[data-sec]').forEach((el) => io!.observe(el));
+    }
 
     measure(); // วัดจุดเริ่มต้น (เผื่อหน้าสั้น = 100 ทันที)
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -57,6 +83,7 @@ export function useLandingTrace(seg = 'default', enabled = true): void {
     window.addEventListener('pagehide', fireExit);
 
     return () => {
+      io?.disconnect();
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('click', onClick);
       document.removeEventListener('visibilitychange', onVisibility);
@@ -64,5 +91,5 @@ export function useLandingTrace(seg = 'default', enabled = true): void {
       timers.forEach((t) => window.clearTimeout(t));
       fireExit(); // ออกจากหน้า (unmount) = บันทึก depth + dwell สุดท้าย
     };
-  }, [enabled, seg]);
+  }, [enabled, seg, heroAb, layoutAb]);
 }
