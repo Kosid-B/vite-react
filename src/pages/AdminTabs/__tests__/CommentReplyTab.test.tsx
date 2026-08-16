@@ -27,8 +27,26 @@ describe('แท็บตอบคอมเมนต์ — เรนเดอ�
     fireEvent.change(screen.getByPlaceholderText('50/30'), { target: { value: '50/30' } });
     expect(screen.getByText(/กำไรต่อชิ้น/).textContent).not.toContain('http');
 
-    fireEvent.click(screen.getByText(/ตอบในแชท/));
+    fireEvent.click(screen.getByText(/FB แชท/));
     expect(screen.getByText(/กำไรต่อชิ้น/).textContent).toContain('https://ceoaithailand.org');
+  });
+
+  it('ช่อง TikTok → ลิงก์แบบพิมพ์ตาม ไม่มี https:// (คอมเมนต์ TikTok กดลิงก์ไม่ได้)', () => {
+    render(<CommentReplyTab />);
+    fireEvent.change(screen.getByPlaceholderText('50/30'), { target: { value: '50/30' } });
+    fireEvent.click(screen.getByText(/TikTok คอมเมนต์/));
+    const out = screen.getByText(/กำไรต่อชิ้น/).textContent ?? '';
+    expect(out).toContain('ceoaithailand.org/ราคา');
+    expect(out).not.toContain('https://');
+  });
+
+  it('มีคอมเมนต์ปักหมุด TikTok ครบ 3 คำที่โฟกัส พร้อมเหตุผลว่าทำไมต้องใช้', () => {
+    render(<CommentReplyTab />);
+    expect(screen.getByText(/คอมเมนต์ปักหมุดใต้คลิป TikTok/)).toBeTruthy();
+    expect(screen.getByText(/15,900 วิว/)).toBeTruthy();
+    for (const kw of ['ราคา', 'ทุน', 'ลูกค้า']) {
+      expect(screen.getByText(`คลิปเรื่อง${kw}`), kw).toBeTruthy();
+    }
   });
 
   it('ต้นทุนมากกว่าราคา → ขึ้นคำเตือน และถามกลับแทนการคำนวณ', () => {
