@@ -20,6 +20,7 @@
  */
 
 import type { SkillBiz } from './skillCatalog';
+import { pricingInsights } from './pricingAnalysis';
 
 /* ── ข้อมูลที่ผู้ใช้กรอก ─────────────────────────────────────────────────── */
 
@@ -271,29 +272,9 @@ export function topicInsights(topic: TopicId, input: ProductInput, r: QuickResul
   }
 
   if (topic === 'pricing') {
-    if (v === 'loss') {
-      out.push({
-        kind: 'calc',
-        text: `ต้องขายอย่างน้อย ${baht(input.cost)} บาท ถึงจะเสมอตัว (ยังไม่มีกำไร)`,
-        from: 'ต้นทุนต่อหน่วยที่คุณกรอก',
-        tone: 'bad',
-      });
-    }
-    if (r.marginPct != null && r.marginPerUnit > 0) {
-      const up10 = round2(input.price * 1.1);
-      const newMargin = round2(up10 - input.cost);
-      out.push({
-        kind: 'calc',
-        text: `ถ้าขึ้นราคา 10% เป็น ${baht(up10)} บาท กำไรต่อหน่วยจะเป็น ${baht(newMargin)} บาท (จาก ${baht(r.marginPerUnit)})`,
-        from: 'ราคาขาย × 1.1 − ต้นทุน ที่คุณกรอก',
-      });
-    }
-    out.push({
-      kind: 'question',
-      text: 'ลูกค้าซื้อเพราะถูก หรือเพราะเหตุผลอื่น?',
-      why: 'ถ้าซื้อเพราะเหตุผลอื่น การขึ้นราคามักเสียลูกค้าน้อยกว่าที่กลัว — แต่ต้องรู้ก่อนว่าเหตุผลนั้นคืออะไร',
-    });
-    out.push({ kind: 'action', text: 'ลองขึ้นราคากับลูกค้ากลุ่มเล็กก่อน แล้ววัดว่ามีใครหายไปจริงไหม' });
+    // หัวข้อนี้ส่งต่อให้ lib/pricingAnalysis.ts ทั้งก้อน — โมดูลที่ติดตั้งจาก skill `pricing-analysis`
+    // (จุดคุ้มทุนเมื่อขึ้น/ลดราคา · ตรวจการตั้งราคาแบบต้นทุน+บวก · คำถามเชิงคุณค่า)
+    out.push(...pricingInsights(input));
   }
 
   if (topic === 'marketing') {

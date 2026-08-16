@@ -211,13 +211,13 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
               <div style={{ color: C.ink, fontSize: 15, fontWeight: 800, marginBottom: 4 }}>เก็บผลนี้ไว้ในระบบ แล้วให้ทีม AI ทำงานต่อ</div>
               <div style={{ color: C.sub, fontSize: 12.5, lineHeight: 1.7, marginBottom: 12 }}>
                 ตัวเลขที่คุณเพิ่งกรอกจะเข้าไปในระบบให้เอง — <b>ไม่ต้องกรอกซ้ำ</b> ·
-                ทดลองฟรี 15 วัน ไม่ต้องใช้บัตร
+                ฟรี 15 วัน · กรอกแค่ชื่อกับอีเมล · ไม่ต้องใช้บัตร
               </div>
               <button
                 onClick={saveAndSignup}
                 style={{ width: '100%', padding: '13px 26px', borderRadius: 12, border: 'none', background: C.amber, color: '#020617', fontFamily: 'inherit', fontWeight: 700, fontSize: 15.5, cursor: 'pointer' }}
               >
-                เก็บผลนี้ไว้ + สมัครฟรี →
+                เก็บผลนี้ไว้ + เปิดพื้นที่ทำงานของผม →
               </button>
             </div>
 

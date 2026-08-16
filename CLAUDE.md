@@ -105,6 +105,16 @@ src/lib/productQuickCheck.ts   — "ตรวจสินค้าเร็ว" 
                                  (ต่อยอด bizHint.ts · ร่างเก่า >30 วันทิ้ง · ชื่อสินค้าอยู่ localStorage ไม่ขึ้น DB)
                                  components/ProductQuickCheck.tsx วางสูงสุดบน Landing (นอก A/B holdout)
                                  GA4: quickcheck_submitted / quickcheck_topic_opened (← รู้ว่าคนกังวลเรื่องอะไร) / quickcheck_signup_click
+src/lib/pricingAnalysis.ts     — วิเคราะห์ราคา (ติดตั้งจาก skill `pricing-analysis` เข้าเป็นโค้ดจริง)
+                                 แกน: จุดคุ้มทุนเมื่อเปลี่ยนราคา y = 1 − m/m′ (m = กำไรต่อหน่วย)
+                                 ⇒ "ขึ้นราคา 10% เสียลูกค้าได้กี่ %" และ "ลดราคา 10% ต้องขายเพิ่มกี่ %"
+                                 เป็นเลขคณิตแน่นอน ไม่ต้องมีข้อมูลตลาด · + costPlusSignal (จับ anti-pattern
+                                 ตั้งราคาจากต้นทุน) + positionOf (ต้องมีราคาคู่แข่ง ≥2 เจ้าที่ผู้ใช้กรอกเอง)
+                                 ใช้ Insight type เดียวกับ productQuickCheck → พ่นราคาตลาดที่ไม่มีแหล่งไม่ได้
+                                 หัวข้อ "ตั้งราคา" บน Landing เรียกโมดูลนี้ทั้งก้อน (pure/tested 19 เทสต์)
+src/lib/trialRoadmap.ts        — แผน 15 วันที่ผู้ใช้ได้ของจริงกลับไป (ใช้ทั้งบน Landing เป็นคำสัญญา
+                                 และในแอปเป็นความคืบหน้า: nextStep/roadmapProgress) · เทสต์บังคับว่าทุกขั้น
+                                 ชี้หน้าที่มีอยู่จริง ห้ามสัญญาสิ่งที่ยังไม่ได้สร้าง · components/TrialRoadmap.tsx
 src/lib/processRegister.ts     — ทะเบียนกระบวนการ+ตัววัด (ขั้นที่ 1 ของ "SaaS แทนเอกสาร ISO" — docs/product/SAAS-AS-THE-SYSTEM.md)
                                  registerIssues/registerHealth บังคับสายโซ่: ตัววัดทุกตัวต้องมี whyFrom (มาจากความเสี่ยง/คุณค่าอะไร)
                                  ไม่งั้น blocker ที่ข้อ 9.1 · PROCESS_TEMPLATES + seedProcesses() วางโครงครอบคลุมข้อกำหนดครบทุกข้อ
