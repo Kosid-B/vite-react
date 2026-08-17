@@ -344,6 +344,13 @@ public.skill_auctions     — ประมูล skill แบบ English Auction
 public.skill_bids         — บิดประมูล โปร่งใสเห็นกันหมด (0012)
 public.workspace_integrations — credential ของ integration ที่ User เชื่อมเอง (LINE/Sheets) RLS per-workspace, revoke anon; ไม่อยู่ใน workspace_state (กัน secret รั่ว) (0020)
 public.ai_usage           — ตัวนับ AI calls ต่อ (bucket=ws/user/guest-IP, เดือน) บังคับ quota ฝั่ง server (0035) · RLS ปิดหมด เข้าผ่าน rpc bump_ai_usage/get_ai_usage (SECURITY DEFINER) · guest cap 25/เดือน/IP · flag ENFORCE_AI_QUOTA (default off, fail-open) wire ใน ai-assist/ai-plan/agent-run ผ่าน _shared/quota.ts · plan อ่านจาก workspace_plan mirror (trigger sync เฉพาะ role=service_role กัน spoof)
+public.client_errors (0058) — error ที่ผู้ใช้เจอจริงบนเบราว์เซอร์ (message/stack/path/ua · ไม่เก็บ IP/user id โดยตั้งใจ)
+  ทำไม: GA4 บอกได้แค่ "มี error กี่ครั้ง" · ตัวข้อความอยู่ใน Cloudflare Workers Logs ที่เก็บไม่กี่วัน → ตอบไม่ได้ว่าพังเพราะอะไร
+  เส้นทาง: ErrorBoundary/global handler → `errorReport.reportError` → beacon `/api/client-error` → worker `saveClientError`
+           → rpc `track_client_error` (anon · กันถล่มด้วยเพดาน 500 แถว/ชม.) · อ่านผ่าน `client_errors_agg` (guard is_app_admin)
+  UI: `components/ClientErrorsPanel.tsx` ในแท็บเวิร์กสเปซ (GrowthDashboard) · logic `lib/clientErrors.ts` (pure/tested)
+  ⚠️ chunk error ครั้งแรก **ไม่ถูกรายงาน** — ErrorBoundary reload แล้ว `return` ออกก่อน (เทสต์ล็อกไว้แล้ว)
+     ⇒ `react.ErrorBoundary` ใน GA/ตารางนี้ = บั๊กจริง ไม่ใช่ผลข้างเคียงของการ deploy (เคยตีความผิด — LESSONS-LEDGER #10)
 public.quickcheck_submissions (0056) — เก็บสิ่งที่ผู้เยี่ยมชมกรอกใน "ตรวจสินค้าเร็ว" บน Landing (first-party · ไม่มี PII)
   เก็บ: biz(dropdown)/price/cost/units/fixed_cost/verdict/topics[]/reached_cta · ❌ ไม่เก็บชื่อสินค้าที่ผู้ใช้พิมพ์
   (free text อาจมีชื่อร้าน/เบอร์ — อยู่ localStorage เครื่องผู้ใช้เพื่อยกเข้าแอปตอนสมัครเท่านั้น · มีเทสต์บังคับ)

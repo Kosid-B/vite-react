@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { reportError } from '../lib/errorReport';
+import { reportError, isChunkLoadError } from '../lib/errorReport';
 
 /* ===== Error Boundary — กันหน้าจอดำค้างทั้งแอป =====
  * เดิมถ้าหน้าใดหน้าหนึ่ง (lazy chunk) throw หรือโหลด chunk ไม่ได้ (เช่นหลัง deploy ใหม่
@@ -9,11 +9,6 @@ import { reportError } from '../lib/errorReport';
  *   • ถ้าเป็น error อื่น → แสดงหน้ากู้คืนภาษาไทย + ปุ่มโหลดใหม่ (ไม่ปล่อยให้จอดำเปล่า) */
 
 const RELOAD_FLAG = 'ceo_ai_chunk_reload';
-
-function isChunkLoadError(err: unknown): boolean {
-  const msg = (err instanceof Error ? `${err.name} ${err.message}` : String(err)).toLowerCase();
-  return /chunkloaderror|loading chunk|loading css chunk|failed to fetch dynamically imported module|importing a module script failed/.test(msg);
-}
 
 interface State { hasError: boolean; chunk: boolean }
 

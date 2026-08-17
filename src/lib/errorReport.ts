@@ -9,6 +9,16 @@ import { track } from './analytics';
 let count = 0;
 const seen = new Set<string>();
 
+/**
+ * error จากการโหลด chunk ไม่ได้ (เช่นหลัง deploy ใหม่ แต่เบราว์เซอร์ยัง cache index.html เก่า)
+ * แยกออกมาเป็น "หนึ่งความจริง" เพราะใช้ 2 ที่: ErrorBoundary (ตัดสินใจ reload)
+ * และแผงแอดมิน (แยกบั๊กจริง ออกจากผลข้างเคียงของการ deploy — ไม่งั้นอ่านตัวเลขผิด)
+ */
+export function isChunkLoadError(err: unknown): boolean {
+  const msg = (err instanceof Error ? `${err.name} ${err.message}` : String(err)).toLowerCase();
+  return /chunkloaderror|loading chunk|loading css chunk|failed to fetch dynamically imported module|importing a module script failed/.test(msg);
+}
+
 export function reportError(err: unknown, source: string): void {
   try {
     const e = err instanceof Error ? err : new Error(typeof err === 'string' ? err : JSON.stringify(err));

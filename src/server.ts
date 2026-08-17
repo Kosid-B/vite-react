@@ -40,6 +40,30 @@ async function fetchStorefront(slug: string, env: Env, origin: string): Promise<
   return { ...row, reviewCount: row.review_count, logoUrl };
 }
 
+/**
+ * เก็บ error ฝั่ง client ลง Supabase (rpc track_client_error · 0058) เพื่อค้นย้อนหลังได้
+ * Workers Logs เก็บไม่กี่วัน — ตารางนี้คือความจำระยะยาวของเรา
+ * เงียบเสมอเมื่อพลาด: การรายงาน error ต้องไม่กลายเป็นแหล่ง error เสียเอง
+ */
+async function saveClientError(env: Env, raw: string): Promise<void> {
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return;
+  let p: { message?: string; source?: string; path?: string; stack?: string; ua?: string };
+  try { p = JSON.parse(raw); } catch { return; }
+  if (!p?.message || !p?.source) return;
+  await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/track_client_error`, {
+    method: 'POST',
+    headers: {
+      apikey: env.SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      p_message: p.message, p_source: p.source,
+      p_path: p.path ?? null, p_stack: p.stack ?? null, p_ua: p.ua ?? null,
+    }),
+  });
+}
+
 /** อ่านโลโก้ SVG ของร้าน (published) — คืน null ถ้าไม่มี */
 async function fetchStorefrontLogo(slug: string, env: Env): Promise<string | null> {
   if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) return null;
@@ -191,10 +215,18 @@ async function handle(request: Request, env: Env): Promise<Response> {
       return Response.json({ ok: true, ts: Date.now() });
     }
 
-    // รับ error จากฝั่ง client (ErrorBoundary + global handlers) → log ให้ Cloudflare observability เก็บ
-    // = เห็นปัญหา production ก่อนผู้ใช้แจ้ง (ดูใน dashboard/ wrangler tail)
+    // รับ error จากฝั่ง client (ErrorBoundary + global handlers) → เก็บ 2 ที่
+    //   1) console.error → Cloudflare Workers Logs (เห็นสด ๆ ตอน debug)
+    //   2) Supabase client_errors (0058) → ค้นย้อนหลังได้ เพราะ Workers Logs เก็บไม่กี่วัน
+    //      (บทเรียน 17 ส.ค. 2569: GA บอกว่ามี error 35 เซสชัน แต่ตอบไม่ได้ว่าพังเพราะอะไร
+    //       เพราะหลักฐานหมดอายุไปแล้ว — ดู docs/LESSONS-LEDGER.md)
+    // ต้องไม่ทำให้ client พัง: อะไรล้มก็ยังคืน 204 (sendBeacon ไม่รออ่านผลอยู่แล้ว)
     if (url.pathname === '/api/client-error' && request.method === 'POST') {
-      try { console.error('[client-error]', (await request.text()).slice(0, 4000)); } catch { /* noop */ }
+      try {
+        const raw = (await request.text()).slice(0, 4000);
+        console.error('[client-error]', raw);
+        await saveClientError(env, raw);
+      } catch { /* noop */ }
       return new Response(null, { status: 204 });
     }
 
