@@ -422,7 +422,10 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 ```bash
 npm install          # install deps
 npm run dev          # dev server → http://localhost:5173
-npm run build        # production build → dist/
+npm run typecheck    # ⚠️ ตรวจ "ทั้งสองฝั่ง": tsc -b (แอป) + tsconfig.worker.json (server.ts/agent)
+                     #    tsc --noEmit ที่รากเป็น no-op · และ tsconfig.app.json exclude server.ts ไว้
+                     #    → ก่อน 17 ส.ค. 2569 โค้ด worker ไม่ถูกตรวจชนิดข้อมูลเลย (LESSONS-LEDGER #13)
+npm run build        # production build → dist/ (รวม typecheck ทั้งสองฝั่งแล้ว)
 npm run preview      # preview dist/ locally
 
 # Screenshot (requires dev server running)

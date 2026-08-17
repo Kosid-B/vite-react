@@ -1,3 +1,10 @@
+import type { GChannelId } from './lib/growthEconomics';
+
+/** ที่มาของผู้สมัคร (first-touch) — นิยามที่นี่เพราะใช้ทั้งฝั่งเบราว์เซอร์และฝั่ง Worker
+ *  lib/attribution.ts re-export ต่อให้ โค้ดเดิมที่ import จากที่นั่นยังใช้ได้เหมือนเดิม */
+export interface SignupSource { channel: GChannelId; source: string; medium: string; campaign: string }
+export interface SignupRecord { at: string; channel: GChannelId }
+
 export interface Stage {
   id: string;
   label: string;
@@ -610,7 +617,9 @@ export interface AppData {
   // Growth unit economics (admin): LTV/CAC/COCA/ROI รายสัปดาห์ต่อช่องทาง (กรอกมือ) — ดู lib/growthEconomics.ts
   growthEco?: import('./lib/growthEconomics').GrowthEcoState;
   // Attribution: ช่องทางที่มา + วันสมัคร (first-touch) — ใช้รวมยอดสมัครจริงต่อช่องทางใน Growth Dashboard
-  signupSource?: import('./lib/attribution').SignupSource;
+  // ⚠️ นิยามอยู่ที่ไฟล์นี้ (ไม่ใช่ lib/attribution) โดยตั้งใจ — attribution.ts ใช้ localStorage
+  //    ถ้าอ้างจากที่นั่น โค้ดฝั่ง Worker (ที่ไม่มี localStorage) จะลาก type จากไฟล์เบราว์เซอร์เข้ามาด้วย
+  signupSource?: SignupSource;
   signupAt?: string;  // yyyy-mm-dd (stamp ครั้งเดียวตอน migrate ถ้ายังไม่มี)
   retentionNudgeSeen?: string; // yyyy-mm-dd วันที่โชว์การ์ด "กลับมาทำต่อ" ล่าสุด (กันโชว์ซ้ำ/วัน)
 }

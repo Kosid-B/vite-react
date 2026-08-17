@@ -3,8 +3,10 @@
 import type { GChannelId } from './growthEconomics';
 import { isoWeekTag } from './growthEconomics';
 
-export interface SignupSource { channel: GChannelId; source: string; medium: string; campaign: string; }
-export interface SignupRecord { at: string; channel: GChannelId; }
+// นิยามย้ายไป types.ts แล้ว (ไฟล์นี้ใช้ localStorage — ฝั่ง Worker ลากเข้ามาไม่ได้)
+// re-export ไว้เพื่อให้ไฟล์ที่ import จากที่นี่อยู่แล้วไม่ต้องแก้
+import type { SignupSource, SignupRecord } from '../types';
+export type { SignupSource, SignupRecord };
 
 const KEY = 'ceoai_signup_src';
 

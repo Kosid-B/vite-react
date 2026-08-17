@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && vite-node scripts/prerender-seo.mjs",
+    "build": "tsc -b && tsc -p tsconfig.worker.json --noEmit && vite build && vite-node scripts/prerender-seo.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "verify:landed": "bash scripts/verify-landed.sh"
+    "verify:landed": "bash scripts/verify-landed.sh",
+    "typecheck": "tsc -b && tsc -p tsconfig.worker.json --noEmit",
+    "typecheck:worker": "tsc -p tsconfig.worker.json --noEmit"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.45.5",
@@ -20,6 +22,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260817.1",
     "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

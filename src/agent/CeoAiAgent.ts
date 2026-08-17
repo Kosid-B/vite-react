@@ -234,7 +234,7 @@ export class CeoAiAgent implements DurableObject {
     const raw = json.content?.[0]?.text ?? '';
 
     // Persist history
-    this.history = [...messages, { role: 'assistant', content: raw }].slice(-20);
+    this.history = [...messages, { role: 'assistant' as const, content: raw }].slice(-20);
 
     // Parse structured JSON
     try {

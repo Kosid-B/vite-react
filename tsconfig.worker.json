@@ -1,0 +1,30 @@
+{
+  /* ตรวจชนิดข้อมูลของโค้ดที่รันบน Cloudflare Workers (src/server.ts + src/agent)
+   *
+   * ⚠️ ทำไมต้องมีไฟล์นี้ (พบตอนตรวจทั้งระบบ 17 ส.ค. 2569):
+   *   tsconfig.app.json มี "exclude": ["src/server.ts", "src/agent"]
+   *   → โค้ดที่เสิร์ฟ production จริง (SEO ฝั่ง server, ลิงก์สั้น, guest AI, รับ error)
+   *     **ไม่ถูกตรวจชนิดข้อมูลเลยแม้แต่บรรทัดเดียว** และ `npm run build` ก็ไม่แตะ
+   *   `wrangler deploy --dry-run` จับได้แค่ตอน bundle ไม่เจอ พิมพ์ชื่อฟิลด์ผิด/ลืมเช็ค null
+   *
+   * แยกไฟล์เพราะ lib ต่างกัน: worker ไม่มี DOM แต่มี WebWorker + Cloudflare runtime
+   * รันด้วย: npm run typecheck:worker (รวมอยู่ใน npm run typecheck แล้ว)
+   */
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["@cloudflare/workers-types"],
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src/server.ts", "src/agent"]
+}

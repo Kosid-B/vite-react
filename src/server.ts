@@ -108,7 +108,7 @@ async function fetchReviewsAggregate(env: Env): Promise<ReviewAggregate | null> 
 
 /** ส่ง shell (index.html) ผ่าน HTMLRewriter — แทน title/meta/canonical/OG + แนบ JSON-LD */
 function injectSeo(shell: Response, seo: SeoData): Response {
-  const setContent = (content: string): ElementHandler => ({
+  const setContent = (content: string): HTMLRewriterElementContentHandlers => ({
     element(el) { el.setAttribute('content', content); },
   });
   return new HTMLRewriter()
