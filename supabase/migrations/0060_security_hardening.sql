@@ -108,12 +108,8 @@ alter function public.topup_pack_price(text)      set search_path = public;
 alter function public.topup_tokens_for_pack(text) set search_path = public;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- ตั้งใจ "ไม่" ตัด anon ออกจาก 3 ตัวนี้ — และนี่คือเหตุผลที่ตรวจมาแล้ว ไม่ใช่การเลี่ยง:
---   bump_ai_usage(text) · check_ai_tokens(text) · record_ai_tokens(int,int,text)
---
---   `supabase/functions/_shared/quota.ts` สร้าง client ด้วย **anon key + forward
---   Authorization ของผู้เรียก** → role ที่ไปถึง RPC = role ในโทเคนของผู้เรียก
---   ทั้ง 3 ฟังก์ชันรับพารามิเตอร์ `p_client_id` (guestKeyFor) = ออกแบบมาให้มีเส้นทาง guest
---   ถ้าตัด anon ทิ้ง ฟังก์ชันเหล่านี้จะ error แล้วโค้ดเป็น **fail-open** (ปล่อยให้เรียก AI ต่อ)
---   ⇒ ผลคือ "เพดานการใช้ของ guest หายไปเงียบ ๆ" ซึ่งแย่กว่าปล่อย execute ไว้
---   จะตัดได้เมื่อยืนยันว่าไม่มีเส้นทาง guest ที่ใช้ anon key จริง (งานรอบถัดไป)
+-- ณ ตอนเขียน 0060: เว้น bump_ai_usage / check_ai_tokens / record_ai_tokens ไว้ก่อน
+-- เพราะยังไม่มีหลักฐานว่าเส้นทาง guest ใช้ anon หรือไม่ (ห้ามเดาแล้วตัด)
+-- → ✅ ปิดหนี้แล้วที่ **0061** — ตรวจครบทั้ง 3 เส้นทางแล้วพบว่าไม่มีเส้นทาง guest
+--   ที่ถูกกฎหมายใช้ anon เลย (guest AI อยู่บน Cloudflare DO · edge fn มี verify_jwt)
+--   ดูหลักฐานเต็มในหัวไฟล์ 0061
