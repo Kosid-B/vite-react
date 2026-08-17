@@ -16,7 +16,9 @@ const seen = new Set<string>();
  */
 export function isChunkLoadError(err: unknown): boolean {
   const msg = (err instanceof Error ? `${err.name} ${err.message}` : String(err)).toLowerCase();
-  return /chunkloaderror|loading chunk|loading css chunk|failed to fetch dynamically imported module|importing a module script failed/.test(msg);
+  // "unable to preload css" = ของจริงที่เจอจากผู้ใช้ 17 ส.ค. 2569 — Vite โยนตอน asset hash เก่าหายหลัง deploy
+  // เดิมไม่อยู่ในรายการ → ไม่ถูก reload ให้อัตโนมัติ และไปโผล่ในรายงานปนกับบั๊กจริง
+  return /chunkloaderror|loading chunk|loading css chunk|unable to preload|failed to fetch dynamically imported module|importing a module script failed/.test(msg);
 }
 
 export function reportError(err: unknown, source: string): void {

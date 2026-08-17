@@ -337,8 +337,9 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
         const leak = biggestLeak(steps, landing); // null เมื่อข้อมูลยังเชื่อไม่ได้
         const bouncePct = landing.total > 0 ? Math.round((landing.bounce / landing.total) * 100) : 0;
         const refLabel: Record<string, string> = { direct: '🔗 พิมพ์ตรง/บุ๊กมาร์ก', social: '📱 โซเชียล', search: '🔍 ค้นหา (Google)', other: '🌐 เว็บอื่น' };
-        const refRows = Object.entries(landing.by_ref).sort((a, b) => b[1] - a[1]);
-        const refMax = Math.max(1, ...refRows.map(([, c]) => c));
+        // .total เสมอ — by_ref เป็นก้อน {total,cta,signup} ตั้งแต่ 0057 (เคยเรนเดอร์ก้อนนี้ตรง ๆ จนจอพัง)
+        const refRows = Object.entries(landing.by_ref).sort((a, b) => b[1].total - a[1].total);
+        const refMax = Math.max(1, ...refRows.map(([, c]) => c.total));
         return (
           <div style={{ border: '1px solid var(--sand)', borderRadius: 12, padding: '16px 18px', background: 'var(--cream2)', display: 'grid', gap: 14 }}>
             <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--ink)' }}>
@@ -410,9 +411,9 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
                     <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ width: 130, fontSize: 11.5, color: 'var(--ink)', flex: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{refLabel[k] ?? k}</span>
                       <div style={{ flex: 1, height: 12, borderRadius: 4, background: 'var(--cream2)', overflow: 'hidden' }}>
-                        <div style={{ width: `${(c / refMax) * 100}%`, height: '100%', background: '#0891b2', borderRadius: 4 }} />
+                        <div style={{ width: `${(c.total / refMax) * 100}%`, height: '100%', background: '#0891b2', borderRadius: 4 }} />
                       </div>
-                      <span style={{ width: 34, textAlign: 'right', fontSize: 11.5, color: 'var(--ink3)', flex: 'none' }}>{c}</span>
+                      <span style={{ width: 34, textAlign: 'right', fontSize: 11.5, color: 'var(--ink3)', flex: 'none' }}>{c.total}</span>
                     </div>
                   ))}
                 </div>

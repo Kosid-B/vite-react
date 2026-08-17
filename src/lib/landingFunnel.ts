@@ -30,6 +30,34 @@ export function refKind(referrer: string, origin: string): RefKind {
   }
 }
 
+/** ยอดต่อกลุ่ม (seg/ref/variant) — 0051 คืนเป็นตัวเลขเฉย ๆ · 0057 เปลี่ยนเป็นก้อนนี้ */
+export interface FunnelCell { total: number; cta: number; signup: number }
+
+/**
+ * แปลงค่าที่ได้จาก RPC ให้เป็น FunnelCell เสมอ — รับได้ทั้งตัวเลข (สคีมาเก่า) และอ็อบเจกต์ (ใหม่)
+ *
+ * ⚠️ ทำไมต้องทนทั้งสองแบบ: ฟังก์ชันใน Postgres กับหน้าเว็บ **deploy คนละเวลา**
+ *    วันที่ 17 ส.ค. 2569 เปลี่ยน SQL ให้คืนอ็อบเจกต์ แต่หน้าเว็บยัง `{c}` ตรง ๆ
+ *    → React error #31 "Objects are not valid as a React child" = แอดมินเปิดแท็บการเติบโตแล้วจอพัง
+ *    TypeScript จับไม่ได้เพราะฝั่ง client `as Partial<LandingAgg>` คือการ "ประกาศ" ไม่ใช่การตรวจ
+ */
+export function toCell(v: unknown): FunnelCell {
+  if (typeof v === 'number' && Number.isFinite(v)) return { total: v, cta: 0, signup: 0 };
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>;
+    const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) ? x : 0);
+    return { total: n(o.total), cta: n(o.cta), signup: n(o.signup) };
+  }
+  return { total: 0, cta: 0, signup: 0 };
+}
+
+function toCells(v: unknown): Record<string, FunnelCell> {
+  if (!v || typeof v !== 'object') return {};
+  const out: Record<string, FunnelCell> = {};
+  for (const [k, val] of Object.entries(v as Record<string, unknown>)) out[k] = toCell(val);
+  return out;
+}
+
 /** payload สรุปจาก RPC landing_funnel_agg */
 export interface LandingAgg {
   total: number;
@@ -39,8 +67,8 @@ export interface LandingAgg {
   avg_scroll: number;
   avg_dwell: number; // วินาที
   bounce: number;    // เข้ามาแล้วเด้งออก (<10 วิ และเลื่อน <25%)
-  by_seg: Record<string, number>;
-  by_ref: Record<string, number>;
+  by_seg: Record<string, FunnelCell>;
+  by_ref: Record<string, FunnelCell>;
   by_ab: Record<string, { total: number; signup: number; cta: number }>; // A/B: show/control/unset
   /** วัน (จาก p_days) — ใช้บอกช่วงเวลาในบทวิเคราะห์ */
   days?: number;
@@ -365,22 +393,42 @@ export function currentEngagement(): { dwellSec: number; scrollPct: number; reac
   };
 }
 
+/**
+ * แปลง payload ดิบจาก RPC → LandingAgg (pure · เทสต์ได้โดยไม่ต้องมี DB)
+ *
+ * แยกออกมาจาก loadLandingFunnel เพราะบั๊กที่ทำให้แอดมินจอพัง (17 ส.ค. 2569)
+ * อยู่ตรงชั้นนี้พอดี — เดิมเป็น `as Partial<LandingAgg>` ซึ่งไม่ได้ตรวจอะไรเลย
+ */
+export function normalizeLandingAgg(raw: unknown, days = 30): LandingAgg {
+  const d = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+  const cells = (v: unknown) => toCells(v) as Record<string, { total: number; signup: number; cta: number }>;
+  return {
+    total: num(d.total),
+    engaged: num(d.engaged),
+    cta: num(d.cta),
+    signup: num(d.signup),
+    avg_scroll: num(d.avg_scroll),
+    avg_dwell: num(d.avg_dwell),
+    bounce: num(d.bounce),
+    by_seg: toCells(d.by_seg),
+    by_ref: toCells(d.by_ref),
+    by_ab: cells(d.by_ab),
+    // เดิม 3 ตัวนี้ถูก "ลืมส่งต่อ" → GrowthAiPanel ได้ undefined ตลอด
+    // (แผงความสนใจรายส่วน + A/B พาดหัว/ลำดับบล็อก จึงว่างเปล่าทั้งที่ DB มีข้อมูล)
+    days: num(d.days) || days,
+    by_hero_ab: cells(d.by_hero_ab),
+    by_layout_ab: cells(d.by_layout_ab),
+    sections: (d.sections && typeof d.sections === 'object'
+      ? (d.sections as LandingAgg['sections'])
+      : {}),
+  };
+}
+
 /** ดึงสรุป funnel (admin เท่านั้น — RPC เช็ค is_app_admin เอง) */
 export async function loadLandingFunnel(days = 30): Promise<LandingAgg | null> {
   if (!isSupabaseEnabled || !supabase) return null;
   const { data, error } = await supabase.rpc('landing_funnel_agg', { p_days: days });
   if (error || !data) return null;
-  const d = data as Partial<LandingAgg>;
-  return {
-    total: d.total ?? 0,
-    engaged: d.engaged ?? 0,
-    cta: d.cta ?? 0,
-    signup: d.signup ?? 0,
-    avg_scroll: d.avg_scroll ?? 0,
-    avg_dwell: d.avg_dwell ?? 0,
-    bounce: d.bounce ?? 0,
-    by_seg: d.by_seg ?? {},
-    by_ref: d.by_ref ?? {},
-    by_ab: d.by_ab ?? {},
-  };
+  return normalizeLandingAgg(data, days);
 }
