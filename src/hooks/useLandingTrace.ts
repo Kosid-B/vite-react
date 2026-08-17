@@ -47,9 +47,19 @@ export function useLandingTrace(
 
     const onClick = () => { if (rage.push(Date.now())) track('landing_rage_click', {}); };
 
+    /* ⚠️ ตัวจับเวลา "อยู่บนหน้ากี่วินาที" ต้องหยุดเมื่อออกจากหน้าแล้ว
+     * บั๊กเดิม (พบจากข้อมูลจริง 17 ส.ค. 2569): setTimeout ยังเดินต่อหลังผู้ใช้สลับแอป
+     *   → คนเปิดดู 5 วิแล้วสลับไปแอปอื่น (พฤติกรรมปกติมากบนมือถือ) ถูกบันทึกเป็น 30 หรือ 60 วิ
+     *   → ในฐานข้อมูลจริงมี 22 คนที่ "อยู่ ≥30 วิ แต่ไม่เลื่อนเลยแม้แต่พิกเซลเดียว"
+     *   → ค่าเฉลี่ย "หยุดดู 38 วิ" บนแผงแอดมินจึงสูงกว่าความจริง
+     * แก้: เคลียร์ตัวจับเวลาตอนออก + ไม่บันทึกถ้าหน้าไม่ได้อยู่ในสายตาแล้ว */
+    let timers: number[] = [];
+
     const fireExit = () => {
       if (exited) return;
       exited = true;
+      timers.forEach((t) => window.clearTimeout(t));
+      timers = [];
       measure(); // วัด scroll ครั้งสุดท้ายก่อนส่ง — กันกรณีเลื่อนแล้วปิดทันทีก่อน debounce ทำงาน
       track('landing_exit_depth', { pct: maxPct });
       markLandingDwell(Math.round((Date.now() - startedAt) / 1000)); // เวลารวมบนหน้า
@@ -58,8 +68,13 @@ export function useLandingTrace(
     };
     const onVisibility = () => { if (document.visibilityState === 'hidden') fireExit(); };
 
-    const timers = DWELL_SEC.map((sec) =>
-      window.setTimeout(() => { track('landing_dwell', { sec }); markLandingDwell(sec); }, sec * 1000));
+    timers = DWELL_SEC.map((sec) =>
+      window.setTimeout(() => {
+        // เบราว์เซอร์หน่วง timer ในแท็บพื้นหลังแทนที่จะยกเลิก — ต้องกันซ้ำอีกชั้น
+        if (exited || document.visibilityState !== 'visible') return;
+        track('landing_dwell', { sec });
+        markLandingDwell(sec);
+      }, sec * 1000));
 
     /* ส่วนไหนอยู่ในจอบ้าง — อ่านจาก data-sec="<key>" ที่ LandingPage ติดไว้
      * threshold 0.5 = ต้องเห็นครึ่งบล็อกถึงนับว่า "กำลังดูส่วนนี้" (เลื่อนผ่านเร็ว ๆ ไม่นับ) */
@@ -88,8 +103,8 @@ export function useLandingTrace(
       document.removeEventListener('click', onClick);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('pagehide', fireExit);
-      timers.forEach((t) => window.clearTimeout(t));
-      fireExit(); // ออกจากหน้า (unmount) = บันทึก depth + dwell สุดท้าย
+      fireExit(); // ออกจากหน้า (unmount) = บันทึก depth + dwell สุดท้าย (เคลียร์ timer ให้ในตัว)
+      timers.forEach((t) => window.clearTimeout(t)); // เผื่อ fireExit เคยถูกเรียกไปแล้ว
     };
   }, [enabled, seg, heroAb, layoutAb]);
 }
