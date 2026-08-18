@@ -436,6 +436,16 @@ node .claude/skills/run-ceo-ai-thailand/driver.mjs --out /tmp/shot.png --nav "�
 ## Deploy Flow
 ```
 Production = Cloudflare Workers (worker ceo-ai-thailand ผูก custom domain ceoaithailand.org)
+🔴 GOTCHA ร้ายแรงที่สุดที่เคยเจอ (17 ส.ค. 2569) — `run_worker_first` ใน wrangler.jsonc ห้ามลบ
+  Cloudflare เสิร์ฟ static asset ก่อนเสมอ และตั้งแต่ compatibility_date >= 2025-04-01
+  flag `assets_navigation_prefers_asset_serving` เปิดเอง → navigation request (Sec-Fetch-Mode: navigate)
+  ที่ไม่ตรงไฟล์ไหน จะได้ index.html 200 **โดยไม่เรียก Worker เลย**
+  ⇒ ลิงก์สั้น /ราคา /ทุน /ลูกค้า ไม่ redirect · SEO ฝั่ง server ของ /start /sale /shop /legal /b/<slug>
+     ไม่ทำงาน · ทั้งที่โค้ด+เทสต์+`wrangler deploy --dry-run` ผ่านหมด (ทั้งสามตรวจแค่ว่าโค้ดถูก
+     ไม่มีอันไหนตรวจว่าแพลตฟอร์ม "เรียก" โค้ดนั้นจริงไหม)
+  กลไก: `src/lib/__tests__/workerRouting.test.ts` อ่าน wrangler.jsonc จริง + จำลอง matcher ของ Cloudflare
+     บังคับว่าทุกเส้นทางของ server.ts (รวมลิงก์สั้นทุกตัวทั้งไทย/percent-encoded) ต้องถึง Worker
+  ⚠️ /api/* ไม่โดนผลกระทบ (POST/fetch ไม่ใช่ navigation) — จึงหลอกให้คิดว่า Worker ทำงานปกติ
 AUTO-DEPLOY: push/merge เข้า main → .github/workflows/cloudflare-deploy.yml → wrangler deploy
   ต้องมี GitHub secrets: CLOUDFLARE_API_TOKEN (Workers Scripts:Edit + Zone Workers Routes:Edit
     + DNS:Edit + Account Settings:Read + User Details:Read) + CLOUDFLARE_ACCOUNT_ID

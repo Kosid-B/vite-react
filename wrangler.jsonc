@@ -6,7 +6,15 @@
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // 🔴 ห้ามลบ — ถ้าไม่มีบรรทัดนี้ Worker "ไม่ถูกเรียกเลย" ตอนคนเปิดหน้าเว็บ
+    // เหตุผล: compatibility_date ของเรา (2026-06-11) ใหม่กว่า 2025-04-01 → flag
+    //   `assets_navigation_prefers_asset_serving` เปิดโดยอัตโนมัติ = navigation request
+    //   (Sec-Fetch-Mode: navigate) จะถูกเสิร์ฟด้วย index.html ก่อน "โดยไม่เรียก Worker"
+    // ผลที่เคยเกิดจริง (พบ 17 ส.ค. 2569): ลิงก์สั้น /ราคา /ทุน /ลูกค้า ไม่ redirect,
+    //   SEO ฝั่ง server ของ /start /sale /shop /legal /b/<slug> ไม่เคยทำงานเลยสักครั้ง
+    // /* = ให้ Worker รันทุกเส้นทาง · ! = ยกเว้นไฟล์ static ที่ไม่ต้องผ่าน Worker (ประหยัด)
+    "run_worker_first": ["/*", "!/assets/*", "!/fonts/*", "!/og/*"]
   },
   "durable_objects": {
     "bindings": [
