@@ -37,9 +37,13 @@ jobs:
       - name: Deploy Worker + assets to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
-          # ⚠️ ต้อง >= 3.91.0 เพื่ออ่าน wrangler.jsonc (JSONC) — เดิม action ติดตั้ง 3.90.0
-          # ทำให้ deploy ล้มทุกครั้งด้วย "Missing entry-point" (มองไม่เห็น main ใน wrangler.jsonc)
-          wranglerVersion: '3.114.0'
+          # ⚠️ ต้องตรงกับ devDependencies.wrangler ใน package.json เป๊ะ ๆ
+          #    บังคับด้วยเทสต์ deployToolchain.test.ts — ถ้าไม่ตรง เทสต์ล้ม
+          # ประวัติ: >= 3.91.0 เพื่ออ่าน wrangler.jsonc (JSONC) — เดิม 3.90.0 ล้ม "Missing entry-point"
+          # 18 ส.ค. 2569: 3.114.0 → 4.123.0 เพราะ `assets.run_worker_first` แบบ array
+          #   ต้องการ wrangler >= 4.20.0 · v3 ปฏิเสธด้วย "Expected ... to be of type boolean"
+          #   (v3 ยัง warn ว่า observability.traces/persist เป็น "unexpected fields" = ตัดทิ้งด้วย)
+          wranglerVersion: '4.123.0'
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
