@@ -73,6 +73,20 @@ export default function ReachFunnelPanel({ landing }: { landing: LandingAgg | nu
         <br />กรอกยอดวิว/เข้าโปรไฟล์เอง (เก็บในเครื่องนี้) · ช่อง "มาถึงเว็บ" ดึงจากฐานข้อมูลจริง แก้ไม่ได้
       </div>
 
+      {/* 🔴 ต้องเตือนตรงนี้ ไม่งั้นแผงนี้จะโกหกโดยการละเว้น:
+          landing_funnel เก็บเฉพาะหน้า Landing (LandingPage.tsx เรียก useLandingTrace ที่เดียว)
+          แต่ลิงก์การตลาดทุกอันของเราชี้ไป /blog/* ⇒ ช่อง "มาถึงเว็บ" จะเป็น 0 แม้มีคนเข้าจริง
+          false negative อันตรายกว่าไม่มีตัวเลขเลย เพราะอ่านได้ว่า "คอนเทนต์ไม่ได้ผล" */}
+      <div style={{
+        border: '1px solid #dc2626', borderRadius: 10, padding: '9px 12px',
+        background: 'var(--cream)', fontSize: 11.5, color: 'var(--ink3)', lineHeight: 1.65, marginBottom: 12,
+      }}>
+        🔴 <b style={{ color: 'var(--ink)' }}>ช่อง &quot;มาถึงเว็บ&quot; ยังนับไม่ครบ</b> — ฐานข้อมูลของเรา (landing_funnel)
+        เก็บเฉพาะคนที่เข้า <b>หน้าแรก/หน้า Landing</b> ไม่เก็บหน้าบทความ <b>/blog/*</b>
+        <br />แต่ลิงก์การตลาดทุกอัน (/ราคา /ทุน /ลูกค้า …) พาไปที่บทความ ⇒ ช่องนี้ขึ้น 0 แม้มีคนเข้าจริง
+        <br />ตัวเลขจริงของบทความตอนนี้อยู่ใน <b>GA4 เท่านั้น</b> (รายงาน Pages → /blog/…)
+      </div>
+
       <div style={{ display: 'grid', gap: 8 }}>
         {PLATFORMS.map((p) => {
           const m = manual[p.id];
