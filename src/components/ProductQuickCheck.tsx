@@ -22,24 +22,43 @@ import { supabase, isSupabaseEnabled } from '../lib/supabase';
 
 const BIZ_OPTIONS: SkillBiz[] = ['food', 'retail', 'service', 'online', 'manufacture', 'property'];
 
+/** ตัวเลขตัวอย่างตอนเปิดหน้า — ชุดเดียวกับ placeholder เดิม (ร้านอาหารทั่วไป)
+ *  ต้องเป็นเคสที่ "ดูดีแต่มีปัญหา" ถึงจะสอนอะไรได้: กำไรต่อชิ้น 40% แต่ยังมีค่าใช้จ่ายคงที่รออยู่ */
+const DEMO = { biz: 'food' as SkillBiz, price: '50', cost: '30', units: '1,000', fixed: '30,000' };
+
 export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () => void }) {
   const light = useLandingTheme() === 'minimal';
   const C = light
     ? { bg: '#ffffff', panel: '#f8fafc', ink: '#0f172a', sub: '#475569', border: '#e2e8f0', cyan: '#0891b2', amber: '#f59e0b', field: '#ffffff', good: '#15803d', bad: '#dc2626' }
     : { bg: '#020617', panel: '#0f172a', ink: '#ffffff', sub: '#94a3b8', border: '#1e293b', cyan: '#22d3ee', amber: '#fbbf24', field: '#0b1324', good: '#4ade80', bad: '#f87171' };
 
-  const [biz, setBiz] = useState<SkillBiz>('food');
+  /* ── ให้ก่อน ขอทีหลัง (PLG) ──────────────────────────────────────────────
+   * เดิม: เปิดมาเจอฟอร์มเปล่า 6 ช่อง + ปุ่มสีเทากดไม่ได้ "กรอกราคาขายและต้นทุนก่อน"
+   *   = ด่านแรกของเว็บคือ "คุณต้องทำงานก่อนถึงจะได้อะไร" — ตรงข้ามกับ PLG
+   *   ผลจริง 11–18 ส.ค. 2569: ผู้เข้าชม 70 คน · กรอกสำเร็จ **0 คน**
+   * ตอนนี้: เปิดมาเห็นคำตอบที่คำนวณเสร็จแล้วทันที แล้วค่อยชวนเปลี่ยนเป็นตัวเลขของเขา
+   *   (แพตเทิร์นเดียวกับ demoRegister() ในหน้า 'process' — "อาฮ่า 10 วินาที")
+   * ⚠️ ตัวเลขตัวอย่างห้ามขึ้น DB — ไม่งั้น quickcheck_submissions จะเต็มไปด้วยเลขที่ไม่มีใครกรอก
+   *   (บทเรียนข้อ 11: ข้อมูลที่ดูเหมือนจริงแต่ไม่จริง อันตรายกว่าไม่มีข้อมูล) */
+  const [biz, setBiz] = useState<SkillBiz>(DEMO.biz);
   const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [cost, setCost] = useState('');
-  const [units, setUnits] = useState('');
-  const [fixed, setFixed] = useState('');
-  const [shown, setShown] = useState(false);
+  const [price, setPrice] = useState(DEMO.price);
+  const [cost, setCost] = useState(DEMO.cost);
+  const [units, setUnits] = useState(DEMO.units);
+  const [fixed, setFixed] = useState(DEMO.fixed);
+  const [shown, setShown] = useState(true);   // เห็นผลตั้งแต่วินาทีแรก
+  const [touched, setTouched] = useState(false); // false = ยังเป็นตัวอย่าง ห้ามนับเป็นข้อมูลจริง
   const [topics, setTopics] = useState<TopicId[]>([]);
+
+  /** ผู้ใช้แตะช่องไหนก็ตาม = เลิกเป็นตัวอย่าง เริ่มนับเป็นข้อมูลจริง */
+  function touch<T>(set: (v: T) => void) {
+    return (v: T) => { setTouched(true); set(v); };
+  }
 
   /** ส่งขึ้นแผงแอดมิน (นิรนาม · ไม่มีชื่อสินค้า) — เงียบเสมอ ห้ามทำหน้าเว็บพัง */
   function report(nextTopics: readonly TopicId[], cta: boolean) {
     if (!isSupabaseEnabled || !supabase) return;   // local/preview → ข้าม
+    if (!touched) return;   // ยังเป็นตัวเลขตัวอย่างของเรา ไม่ใช่ของผู้ใช้ → ไม่นับ
     try {
       const payload = quickTrackPayload(currentFunnelSession(), input, nextTopics, cta);
       supabase.rpc('track_quickcheck', payload).then(() => {}, () => {});
@@ -129,36 +148,38 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
             สินค้าของคุณ กำไรจริงเท่าไหร่?
           </h2>
           <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.7 }}>
-            กรอก 2 ช่องก็เห็นคำตอบ — คำนวณจากตัวเลขของคุณเอง ไม่ใช่ตัวเลขที่เราเดาให้
+            {touched
+              ? 'คำนวณจากตัวเลขของคุณเอง ไม่ใช่ตัวเลขที่เราเดาให้'
+              : 'ด้านล่างคือตัวอย่างที่คำนวณเสร็จแล้ว — แก้ตัวเลขให้เป็นของคุณได้เลย ไม่ต้องสมัคร'}
           </p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12, marginBottom: 14 }}>
           <div>
             <label style={lbl}>ธุรกิจแบบไหน</label>
-            <select style={field} value={biz} onChange={(e) => setBiz(e.target.value as SkillBiz)}>
+            <select style={field} value={biz} onChange={(e) => touch(setBiz)(e.target.value as SkillBiz)}>
               {BIZ_OPTIONS.map((b) => <option key={b} value={b}>{BIZ_LABEL[b]}</option>)}
             </select>
           </div>
           <div>
             <label style={lbl}>ขายอะไร (ไม่บังคับ)</label>
-            <input style={field} value={name} onChange={(e) => setName(e.target.value)} placeholder="เช่น ข้าวมันไก่" />
+            <input style={field} value={name} onChange={(e) => touch(setName)(e.target.value)} placeholder="เช่น ข้าวมันไก่" />
           </div>
           <div>
             <label style={lbl}>ราคาขาย/หน่วย (บาท) *</label>
-            <input style={field} inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="50" />
+            <input style={field} inputMode="decimal" value={price} onChange={(e) => touch(setPrice)(e.target.value)} placeholder="50" />
           </div>
           <div>
             <label style={lbl}>ต้นทุน/หน่วย (บาท) *</label>
-            <input style={field} inputMode="decimal" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="30" />
+            <input style={field} inputMode="decimal" value={cost} onChange={(e) => touch(setCost)(e.target.value)} placeholder="30" />
           </div>
           <div>
             <label style={lbl}>ขายได้/เดือน (หน่วย)</label>
-            <input style={field} inputMode="decimal" value={units} onChange={(e) => setUnits(e.target.value)} placeholder="1,000" />
+            <input style={field} inputMode="decimal" value={units} onChange={(e) => touch(setUnits)(e.target.value)} placeholder="1,000" />
           </div>
           <div>
             <label style={lbl}>ค่าใช้จ่ายคงที่/เดือน</label>
-            <input style={field} inputMode="decimal" value={fixed} onChange={(e) => setFixed(e.target.value)} placeholder="30,000" />
+            <input style={field} inputMode="decimal" value={fixed} onChange={(e) => touch(setFixed)(e.target.value)} placeholder="30,000" />
           </div>
         </div>
 
@@ -171,7 +192,7 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
             fontFamily: 'inherit', fontWeight: 700, fontSize: 15.5, cursor: canSubmit ? 'pointer' : 'default',
           }}
         >
-          {canSubmit ? 'ดูกำไรจริงของผม →' : 'กรอกราคาขายและต้นทุนก่อน'}
+          {!canSubmit ? 'ใส่ราคาขายและต้นทุนของคุณ' : touched ? 'ดูกำไรจริงของผม →' : 'คำนวณใหม่ด้วยตัวเลขของผม →'}
         </button>
 
         {shown && (
