@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import GrowthAiPanel from '../../components/GrowthAiPanel';
 import ClientErrorsPanel from '../../components/ClientErrorsPanel';
+import ContentPerformancePanel from '../../components/ContentPerformancePanel';
 import type { AppData } from '../../types';
 import { isSupabaseEnabled } from '../../lib/supabase';
 import { adminListWorkspaces, wsLoad } from '../../lib/workspaces';
@@ -463,6 +464,9 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
 
       {/* ความสนใจรายส่วน + ผล A/B ทุกตัว + AI วิเคราะห์ (0057) */}
       <GrowthAiPanel landing={landing} />
+
+      {/* คอนเทนต์ชิ้นไหนพาคนมา (0062) — วางก่อนแผง error เพราะเป็นคำถามหลักของการตลาด */}
+      <ContentPerformancePanel landing={landing} />
 
       {/* ผู้ใช้เจออะไรพัง (0058) — วางไว้บนสุดของส่วนวิเคราะห์เพราะ error กินคนก่อนที่ funnel จะได้เริ่ม */}
       <ClientErrorsPanel />

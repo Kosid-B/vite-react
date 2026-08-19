@@ -77,6 +77,11 @@ export interface LandingAgg {
   by_layout_ab?: Record<string, { total: number; signup: number; cta: number }>;
   /** ความสนใจรายส่วนของหน้า (0057) — key = data-sec ที่ติดไว้บน LandingPage */
   sections?: Record<string, { viewers: number; seconds: number; signups: number }>;
+  /** ⭐ คอนเทนต์ชิ้นไหนพาคนมา (0062) — เดิมทิ้งข้อมูลนี้ทั้งที่ติดแท็กลิงก์ไว้แล้ว
+   *  by_utm_source = แพลตฟอร์ม · by_campaign = หัวข้อ/บทความ · by_content = ชิ้นงานย่อย (c=) */
+  by_utm_source?: Record<string, FunnelCell>;
+  by_campaign?: Record<string, FunnelCell>;
+  by_content?: Record<string, FunnelCell>;
 }
 
 export interface FunnelStep {
@@ -211,6 +216,8 @@ interface FunnelState {
   ab: LandingVariant;   // กลุ่ม A/B (holdout 2 ส่วนใหม่)
   heroAb?: string;      // กลุ่ม A/B พาดหัว (เดิมไปลง GA อย่างเดียว)
   layoutAb?: string;    // กลุ่ม A/B ลำดับบล็อก (เดิมไปลง GA อย่างเดียว)
+  /** แท็กคอนเทนต์จาก utm (first-touch) — ตอบ "ชิ้นไหนพาคนมา" */
+  utm?: { source?: string; campaign?: string; content?: string };
 }
 let state: FunnelState | null = null;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -235,6 +242,26 @@ function getSession(): string {
   }
 }
 
+/** อ่านแท็กคอนเทนต์จาก query string (utm ที่ Worker ใส่ให้ตอน redirect ลิงก์สั้น)
+ *
+ * ทำไมต้องเก็บ: เราติดแท็กลิงก์ในคอนเทนต์อย่างละเอียด (`?s=yt&c=6a`) แต่เดิม funnel
+ * เก็บแค่ ref_kind = 'social' แล้วทิ้งที่เหลือ → ตอบไม่ได้ว่า "คลิปไหนพาคนมา"
+ *
+ * PDPA: utm = แท็กที่เราเขียนเอง ไม่ใช่ข้อมูลผู้ใช้ · ยอมเฉพาะ a-z 0-9 - _ ยาวไม่เกิน 32
+ * (ค่าอื่นทิ้งทั้งหมด — กันคนยัดข้อความ/อักขระแปลกเข้ารายงานผ่าน query string)
+ */
+export function utmFrom(search: string): { source?: string; campaign?: string; content?: string } {
+  const clean = (v: string | null): string | undefined => {
+    if (!v) return undefined;
+    const t = v.trim().toLowerCase().slice(0, 32);
+    return /^[a-z0-9_-]+$/.test(t) ? t : undefined;
+  };
+  try {
+    const q = new URLSearchParams(search);
+    return { source: clean(q.get('utm_source')), campaign: clean(q.get('utm_campaign')), content: clean(q.get('utm_content')) };
+  } catch { return {}; }
+}
+
 /** เริ่มเซสชัน funnel — เรียกครั้งเดียวตอน Landing mount (ส่ง view beacon) */
 export function initLandingFunnel(
   seg: string, referrer: string, origin: string,
@@ -251,6 +278,9 @@ export function initLandingFunnel(
     ab: landingVariant(session),
     heroAb: opts?.heroAb,
     layoutAb: opts?.layoutAb,
+    // first-touch: เก็บครั้งแรกเท่านั้น (ฝั่ง DB ก็ coalesce ค่าเดิมไว้) — คนกลับมาซ้ำ
+    // ต้องไม่ทับเครดิตของคอนเทนต์ที่พาเขามาครั้งแรก
+    utm: utmFrom(window.location.search),
   };
   flush(); // นับ "เข้าดู" ทันที
 }
@@ -363,6 +393,10 @@ export function flush(force = false, leaving = false): void {
     // วินาทีที่แต่ละส่วนอยู่ในจอ — ตอบ "เขาสนใจส่วนไหนของหน้า"
     // ไม่ใช่ PII: คีย์เป็นชื่อส่วนที่เรากำหนดเอง ค่าเป็นวินาที (เซิร์ฟเวอร์กรองซ้ำอีกชั้น)
     p_sections: Object.keys(sectionSec).length ? sectionSec : null,
+    // แท็กคอนเทนต์ → ตอบ "โพสต์/คลิปไหนพาคนมา และคนจากชิ้นไหนกด CTA"
+    p_utm_source: state.utm?.source ?? null,
+    p_utm_campaign: state.utm?.campaign ?? null,
+    p_utm_content: state.utm?.content ?? null,
   };
 
   if (leaving) {
@@ -421,6 +455,9 @@ export function normalizeLandingAgg(raw: unknown, days = 30): LandingAgg {
     days: num(d.days) || days,
     by_hero_ab: cells(d.by_hero_ab),
     by_layout_ab: cells(d.by_layout_ab),
+    by_utm_source: toCells(d.by_utm_source),
+    by_campaign: toCells(d.by_campaign),
+    by_content: toCells(d.by_content),
     sections: (d.sections && typeof d.sections === 'object'
       ? (d.sections as LandingAgg['sections'])
       : {}),
