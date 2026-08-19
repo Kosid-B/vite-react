@@ -6714,6 +6714,14 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .guest-bar button.guest-back { background:transparent; color:#e0f2fe; border:1px solid rgba(224,242,254,.45); font-weight:700; padding:6px 12px; }
 .guest-bar button.guest-back:hover { background:rgba(224,242,254,.12); filter:none; }
 
+/* แถบเตือน "กดลิงก์สมัคร แต่ล็อกอินค้างอยู่" — สีเหลืองอำพันให้ต่างจากแถบ guest (ฟ้า)
+   เพราะสองแถบนี้สื่อคนละเรื่อง: guest = ยังไม่ได้สมัคร · authswitch = สมัครแล้วแต่คนละบัญชี */
+.authswitch-bar { background:linear-gradient(90deg,#b45309,#92400e); color:#fffbeb; }
+.authswitch-bar b { color:#fff; }
+.authswitch-bar button { background:#fbbf24; color:#1c1917; }
+.authswitch-bar button.guest-back { background:transparent; color:#fef3c7; border-color:rgba(254,243,199,.5); }
+.authswitch-bar button.guest-back:hover { background:rgba(254,243,199,.14); }
+
 /* Aha-moment save-work prompt (soft email capture สำหรับ guest) */
 .savework-overlay { position:fixed; inset:0; z-index:200; background:rgba(2,6,23,.66); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px; animation:fadein .2s; }
 .savework-card { position:relative; width:100%; max-width:400px; background:var(--panel,#0f172a); border:1px solid #164e63; border-radius:18px; padding:28px 24px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.5); }

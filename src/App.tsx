@@ -1,5 +1,6 @@
 import './index.css';   // สไตล์ทั้งแอป — ย้ายมาจาก main.tsx เพื่อไม่ให้ marketing landing (`/`) โหลด index.css (~67KB)
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { wrongAccountText } from './lib/authIntent';
 import type { Session } from '@supabase/supabase-js';
 import type { AppData, PageId } from './types';
 import { DEFAULT_DATA } from './data';
@@ -255,6 +256,16 @@ export default function App() {
   // เข้ามาจาก marketing landing (`/?enter=auth|guest`) — init สถานะจาก query ตั้งแต่แรก (กันกระพริบ LandingPage)
   const entryParam = (() => { try { return new URLSearchParams(window.location.search).get('enter'); } catch { return null; } })();
   const [showAuth, setShowAuth] = useState(entryParam === 'auth');
+  /* 🔴 บั๊กจริง (พบ 19 ส.ค. 2569): `?enter=auth` ถูกอ่านอยู่ "ข้างใน" เงื่อนไข `!session`
+   *    ⇒ ถ้าเบราว์เซอร์ยังมี session ค้างอยู่ ลิงก์สมัครสมาชิกจะ **เงียบสนิท** แล้วเด้งเข้า Dashboard
+   *    ของบัญชีเดิม โดยไม่บอกสักคำว่าตอนนี้กำลังล็อกอินเป็นใคร
+   *    เจ้าของระบบทดสอบเอง → เห็นทุกอย่างปกติ → เข้าใจผิดว่าสมัครสำเร็จ (เกิดขึ้นจริงแล้ว)
+   *    เรื่องเดียวกับบั๊ก RLS: **หน้าจอดูปกติ ทั้งที่สถานะจริงไม่ใช่อย่างที่คิด** */
+  const [authIntentDismissed, setAuthIntentDismissed] = useState(false);
+  /* ⚠️ ต้องจำค่าไว้ตอน mount — `entryParam` อ่าน window.location.search สด ๆ ทุกครั้งที่ render
+   *    และมี useEffect ล้าง query ทิ้งทันทีหลัง mount (ให้ URL สะอาด)
+   *    ถ้าอ่านสดจะกลายเป็น null ในการ render ถัดไป → แถบเตือนหายไปเองก่อนผู้ใช้ทันอ่าน */
+  const [cameForAuth] = useState(entryParam === 'auth');
   const [seenLanding, setSeenLanding] = useState(() => !!localStorage.getItem('ceo_ai_seen'));
   // Guest mode (ลองก่อนสมัคร) — เข้าแอปด้วย localStorage โดยไม่ต้อง login (ลด friction #1)
   const [guestMode, setGuestMode] = useState(() => localStorage.getItem('ceo_ai_guest') === '1' || entryParam === 'guest');
@@ -554,6 +565,15 @@ export default function App() {
     if (supabase) await supabase.auth.signOut();
   }
 
+  /** ออกจากระบบแล้วไปหน้าสมัครทันที — สำหรับคนที่กดลิงก์สมัครทั้งที่ยังล็อกอินค้างอยู่ */
+  async function signOutThenSignup() {
+    track('auth_switch_account', {});
+    try { localStorage.removeItem('ceo_ai_guest'); } catch { /* noop */ }
+    setGuestMode(false);
+    await signOut();
+    setShowAuth(true);   // session กลายเป็น null → เงื่อนไขด้านล่างจะเรนเดอร์หน้า Auth ให้
+  }
+
   function exportData() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -652,6 +672,16 @@ export default function App() {
       <Suspense fallback={null}><Celebrate moment={celebration} onDone={() => setCelebration(null)} /></Suspense>
       {showSavePrompt && (
         <SaveWorkPrompt onClose={() => setShowSavePrompt(false)} onCaptured={() => setLeadCaptured(true)} />
+      )}
+      {/* กดลิงก์สมัครสมาชิกทั้งที่ยังล็อกอินค้างอยู่ → ต้องบอกให้รู้ ห้ามเงียบแล้วพาเข้า Dashboard เฉย ๆ */}
+      {cameForAuth && session && !authIntentDismissed && (
+        <div className="guest-bar authswitch-bar">
+          <span>
+            🔐 {wrongAccountText(session.user.email)}
+          </span>
+          <button onClick={signOutThenSignup}>ออกจากระบบแล้วสมัครใหม่ →</button>
+          <button className="guest-back" onClick={() => setAuthIntentDismissed(true)}>ใช้บัญชีนี้ต่อ</button>
+        </div>
       )}
       {isSupabaseEnabled && !session && guestMode && (
         <div className="guest-bar">
