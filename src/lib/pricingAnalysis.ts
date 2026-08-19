@@ -22,7 +22,8 @@
  * pure ทั้งไฟล์
  */
 
-import type { Insight, ProductInput } from './productQuickCheck';
+// ชนิดข้อมูลอยู่ใน core (บริสุทธิ์) — ห้าม import จาก productQuickCheck ที่ลาก supabase เข้ามา
+import type { Insight, ProductInput } from './quickCalcCore';
 
 /* ── ผลกระทบเมื่อเปลี่ยนราคา ─────────────────────────────────────────── */
 

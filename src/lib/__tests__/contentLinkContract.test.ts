@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { KEYWORD_OFFERS, VIDEO_TOPICS } from '../commentReply';
 import { SHORT_LINKS } from '../shortLinks';
 import { BLOG_POSTS, type BlogPost } from '../blogData';
+import { calcPageHtml, CALC_ANCHORS } from '../calcPage';
 
 /* กฎบังคับของโปรเจกต์ — skill `content-link-contract` ทำให้เครื่องตรวจแทนความจำคน
  *
@@ -16,6 +17,27 @@ import { BLOG_POSTS, type BlogPost } from '../blogData';
 
 /** คำนามที่ "ตรวจได้" — ถ้าคำสัญญาบอกว่ามีของพวกนี้ บทความต้องมีคำนั้นจริง */
 const CONCRETE_NOUNS = ['ตาราง', 'เครื่องคำนวณ', 'เช็คลิสต์', 'เทมเพลต', 'แบบฟอร์ม', 'ไฟล์', 'วิดีโอ', 'คอร์ส'];
+
+/* ปลายทางที่ "ไม่ใช่บทความ" แต่ส่งมอบของจริง — เครื่องมือที่ใช้ได้ทันที
+ *
+ * 19 ส.ค. 2569: /ราคา ถูกเปลี่ยนปลายทางจากบทความ → /calc เพราะ GA4 วัดได้ว่า
+ *   คนที่มาจากคลิปอยู่บนบทความเฉลี่ย **2 วินาที** แล้วปิด (คลิปสัญญา "คำนวณฟรี")
+ * เจตนาของ contract คือ "ปลายทางต้องมีของจริง" ไม่ใช่ "ปลายทางต้องเป็นบทความ"
+ *   จึงตรวจหน้าเครื่องมือด้วยเกณฑ์เดียวกัน: มีหัวข้อให้ชี้ได้ + มีของที่สัญญาไว้จริง
+ * ⚠️ ตรวจจาก HTML ที่เรนเดอร์จริง ไม่ใช่จากรายการที่เราประกาศไว้เฉย ๆ
+ */
+const TOOL_PAGES: Record<string, { anchors: readonly string[]; text: string }> = {
+  '/calc': {
+    anchors: CALC_ANCHORS,
+    // เรนเดอร์แบบกรอกตัวเลขแล้ว = สิ่งที่คนกดเข้ามาแล้วลงมือทำจะเห็นจริง
+    text: calcPageHtml('https://ceoaithailand.org', '?price=50&cost=30&units=1000&fixed=30000'),
+  },
+};
+
+function toolFor(shortLink: string) {
+  const link = SHORT_LINKS[shortLink];
+  return link ? TOOL_PAGES[link.path] : undefined;
+}
 
 function postFor(shortLink: string): BlogPost {
   const link = SHORT_LINKS[shortLink];
@@ -47,17 +69,24 @@ describe('สัญญาส่งมอบคอนเทนต์ — ทุ�
     expect(SURFACES.length).toBeGreaterThanOrEqual(8);
   });
 
-  it.each(SURFACES)('$label — ปลายทางต้องเป็นบทความที่มีอยู่จริง', ({ shortLink }) => {
-    expect(postFor(shortLink)).toBeDefined();
+  it.each(SURFACES)('$label — ปลายทางต้องมีอยู่จริง (บทความ หรือเครื่องมือ)', ({ shortLink }) => {
+    expect(toolFor(shortLink) ?? postFor(shortLink)).toBeDefined();
   });
 
-  it.each(SURFACES)('$label — ต้องชี้ได้ว่าอยู่หัวข้อไหนของบทความ (B4)', ({ shortLink, anchor }) => {
+  it.each(SURFACES)('$label — ต้องชี้ได้ว่าอยู่หัวข้อไหน (B4)', ({ shortLink, anchor }) => {
+    const tool = toolFor(shortLink);
+    if (tool) {
+      expect(tool.anchors, `"${anchor}" ไม่ใช่หัวข้อที่มีอยู่จริงบนหน้าเครื่องมือ`).toContain(anchor);
+      expect(tool.text, `หัวข้อ "${anchor}" ประกาศไว้ แต่ไม่โผล่ใน HTML จริง`).toContain(anchor);
+      return;
+    }
     const p = postFor(shortLink);
     expect(anchors(p), `"${anchor}" ไม่ใช่หัวข้อหรือคำถามที่มีอยู่จริงใน ${p.slug}`).toContain(anchor);
   });
 
-  it.each(SURFACES)('$label — ถ้าสัญญาว่ามี "ของ" บทความต้องมีของนั้นจริง', ({ shortLink, gives }) => {
-    const text = postText(postFor(shortLink));
+  it.each(SURFACES)('$label — ถ้าสัญญาว่ามี "ของ" ปลายทางต้องมีของนั้นจริง', ({ shortLink, gives }) => {
+    const tool = toolFor(shortLink);
+    const text = tool ? tool.text : postText(postFor(shortLink));
     for (const noun of CONCRETE_NOUNS) {
       if (gives.includes(noun)) {
         expect(text, `สัญญาว่ามี "${noun}" แต่บทความไม่มีคำนี้เลย — คนกดเข้าไปแล้วหาไม่เจอ`).toContain(noun);
@@ -67,6 +96,7 @@ describe('สัญญาส่งมอบคอนเทนต์ — ทุ�
 
   it('ห้ามชี้ปลายทางเป็นหน้าแรกหรือหน้าสมัคร (skill B5)', () => {
     for (const s of SURFACES) {
+      // /calc ไม่ใช่หน้าแรกและไม่ใช่หน้าสมัคร — เป็นเครื่องมือที่ตอบคำถามในคลิปโดยตรง
       expect(['/', '/start', '/checkup'], `${s.label} ชี้ไป ${s.shortLink}`).not.toContain(SHORT_LINKS[s.shortLink].path);
     }
   });

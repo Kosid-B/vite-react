@@ -194,7 +194,11 @@ describe('สัญญาในโพสต์ ต้องมีอยู่จ
 
   it('บทความปลายทางทั้ง 3 คำ พูดกับคนที่กำลังเริ่ม/ทำธุรกิจ ไม่ใช่องค์กรที่ระบบเดินแล้ว', () => {
     for (const o of FOCUS_OFFERS) {
-      const slug = SHORT_LINKS[o.shortLink].path.replace('/blog/', '');
+      const path = SHORT_LINKS[o.shortLink].path;
+      // ปลายทางที่เป็น "เครื่องมือ" ไม่ใช่บทความ — ตรวจด้วย contentLinkContract.test.ts แทน
+      // (/ราคา → /calc ตั้งแต่ 19 ส.ค. 2569 เพราะ GA4 วัดได้ว่าคนอยู่บนบทความ 2 วินาที)
+      if (!path.startsWith('/blog/')) continue;
+      const slug = path.replace('/blog/', '');
       const p = BLOG_POSTS.find((b) => b.slug === slug);
       expect(p, `${o.keyword} → ไม่พบบทความ ${slug}`).toBeTruthy();
       // ห้ามใช้ศัพท์มาตรฐาน/ข้อกำหนดในบทความประตูหน้า (ตกลงกับ User 16 ส.ค. 2569)

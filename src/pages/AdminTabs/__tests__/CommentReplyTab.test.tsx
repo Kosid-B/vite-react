@@ -7,6 +7,9 @@ import CommentReplyTab from '../CommentReplyTab';
  * (กับดักเดียวกับ GOTCHA #1 ใน CLAUDE.md: UI ที่เป็น prod-only reproduce ไม่ได้)
  * จึงเรนเดอร์คอมโพเนนต์ตรง ๆ แทนการไล่คลิกในเบราว์เซอร์ */
 
+/* ⚠️ ต้องเจาะจงที่ "ผลคำนวณ" เท่านั้น — คำว่า "กำไรต่อชิ้น" โผล่ในคำโปรยของ offer ด้วย
+ *    (เปลี่ยนคำโปรย 19 ส.ค. 2569 ตอนย้ายปลายทาง /ราคา → เครื่องคำนวณ)
+ *    ผลคำนวณมีลูกศร "→" นำหน้าเสมอ จึงใช้เป็นตัวแยก */
 describe('แท็บตอบคอมเมนต์ — เรนเดอร์และคำนวณถูกจริง', () => {
   it('ยังไม่พิมพ์อะไร → ขึ้นข้อความถามกลับ ไม่ใช่ตัวเลขมั่ว', () => {
     render(<CommentReplyTab />);
@@ -16,7 +19,7 @@ describe('แท็บตอบคอมเมนต์ — เรนเดอ�
   it('พิมพ์ "1,500/900" → คำนวณถูก (เคสจุลภาคที่เคยพลาด)', () => {
     render(<CommentReplyTab />);
     fireEvent.change(screen.getByPlaceholderText('50/30'), { target: { value: 'ขาย 1,500 ทุน 900' } });
-    const out = screen.getByText(/กำไรต่อชิ้น/).textContent ?? '';
+    const out = screen.getByText(/→ กำไรต่อชิ้น/).textContent ?? '';
     expect(out).toContain('ราคา 1,500 ต้นทุน 900');
     expect(out).toContain('กำไรต่อชิ้น 600 บาท (40%)');
     expect(out).toContain('เสียลูกค้าได้ถึง 20%');
@@ -25,17 +28,17 @@ describe('แท็บตอบคอมเมนต์ — เรนเดอ�
   it('โหมดคอมเมนต์ต้องไม่มีลิงก์ · สลับเป็นแชทแล้วมีลิงก์', () => {
     render(<CommentReplyTab />);
     fireEvent.change(screen.getByPlaceholderText('50/30'), { target: { value: '50/30' } });
-    expect(screen.getByText(/กำไรต่อชิ้น/).textContent).not.toContain('http');
+    expect(screen.getByText(/→ กำไรต่อชิ้น/).textContent).not.toContain('http');
 
     fireEvent.click(screen.getByText(/FB แชท/));
-    expect(screen.getByText(/กำไรต่อชิ้น/).textContent).toContain('https://ceoaithailand.org');
+    expect(screen.getByText(/→ กำไรต่อชิ้น/).textContent).toContain('https://ceoaithailand.org');
   });
 
   it('ช่อง TikTok → ลิงก์แบบพิมพ์ตาม ไม่มี https:// (คอมเมนต์ TikTok กดลิงก์ไม่ได้)', () => {
     render(<CommentReplyTab />);
     fireEvent.change(screen.getByPlaceholderText('50/30'), { target: { value: '50/30' } });
     fireEvent.click(screen.getByText(/TikTok คอมเมนต์/));
-    const out = screen.getByText(/กำไรต่อชิ้น/).textContent ?? '';
+    const out = screen.getByText(/→ กำไรต่อชิ้น/).textContent ?? '';
     expect(out).toContain('ceoaithailand.org/ราคา');
     expect(out).not.toContain('https://');
   });

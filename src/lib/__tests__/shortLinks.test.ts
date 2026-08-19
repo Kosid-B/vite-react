@@ -138,9 +138,9 @@ describe('shortLinks — ติด utm ให้อัตโนมัติ', ()
 describe('ตัวย่อแพลตฟอร์มท้าย path — สำหรับคอมเมนต์ที่คนต้องพิมพ์เอง', () => {
   const O = 'https://ceoaithailand.org';
 
-  it('/ราคา/tt → บทความราคา + utm_source=tiktok (ไม่ต้องมี ?s=)', () => {
+  it('/ราคา/tt → เครื่องคำนวณ + utm_source=tiktok (ไม่ต้องมี ?s=)', () => {
     const r = resolveShortLinkWithSource('/ราคา/tt');
-    expect(r.link?.path).toBe('/blog/pricing-no-loss');
+    expect(r.link?.path).toBe('/calc');
     expect(r.src).toBe('tt');
     const u = new URL(shortLinkTarget(r.link!, O, '', r.src));
     expect(u.searchParams.get('utm_source')).toBe('tiktok');
@@ -154,7 +154,7 @@ describe('ตัวย่อแพลตฟอร์มท้าย path — ส
     }
     // path ไทยถูก encode เสมอเมื่อมาจากเบราว์เซอร์จริง
     const enc = resolveShortLinkWithSource('/%E0%B8%A3%E0%B8%B2%E0%B8%84%E0%B8%B2/ttc');
-    expect(enc.link?.path).toBe('/blog/pricing-no-loss');
+    expect(enc.link?.path).toBe('/calc');
     expect(enc.src).toBe('ttc');
   });
 
@@ -167,7 +167,7 @@ describe('ตัวย่อแพลตฟอร์มท้าย path — ส
 
   it('ของเก่าต้องไม่พัง — /ราคา เปล่า ๆ และ /ราคา?s=ttc ยังทำงานเหมือนเดิม', () => {
     expect(resolveShortLinkWithSource('/ราคา').src).toBeNull();
-    expect(resolveShortLink('/ราคา')?.path).toBe('/blog/pricing-no-loss');
+    expect(resolveShortLink('/ราคา')?.path).toBe('/calc');
   });
 
   it('ส่วนท้ายที่ไม่ใช่ตัวย่อ = ไม่ใช่ลิงก์สั้น (ห้ามเดา)', () => {

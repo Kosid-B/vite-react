@@ -22,8 +22,14 @@ export const SHORT_LINKS: Record<string, ShortLink> = {
   '/ซิม':      { path: '/blog/sim-update-scam-check',    campaign: 'sim_scam' },
   '/tun':      { path: '/blog/start-business-no-capital', campaign: 'no_capital' },
   '/ทุน':      { path: '/blog/start-business-no-capital', campaign: 'no_capital' },
-  '/price':    { path: '/blog/pricing-no-loss',           campaign: 'pricing' },
-  '/ราคา':     { path: '/blog/pricing-no-loss',           campaign: 'pricing' },
+  // 🔴 เปลี่ยนปลายทาง 19 ส.ค. 2569 จากบทความ → เครื่องคำนวณ
+  //    GA4 (22 ก.ค.–18 ส.ค.): คนที่มาจากคลิปอยู่บนบทความ pricing-no-loss เฉลี่ย **2 วินาที**
+  //    คลิปปิดท้ายด้วยคำว่า "คำนวณฟรี" แต่ปลายทางเป็นบทความให้อ่าน = ผิดสัญญาโดยไม่ตั้งใจ
+  //    ลิงก์ไปบทความเต็มยังอยู่ท้ายหน้า /calc สำหรับคนที่อยากอ่านต่อ
+  '/price':    { path: '/calc',                           campaign: 'pricing' },
+  '/ราคา':     { path: '/calc',                           campaign: 'pricing' },
+  // ไม่เพิ่มชื่อพ้องอีก — ยิ่งมี alias ยิ่งทำให้ "campaign → ลิงก์ที่คนเห็น" ย้อนกลับไม่ตรง
+  //   (เพิ่ม /คิด แล้วรายงานเปลี่ยนไปเรียกชิ้นนี้ว่า /คิด ทั้งที่ในคลิปเขียนว่า /ราคา)
   '/customer': { path: '/blog/first-customers-no-ads',    campaign: 'first_customers' },
   '/ลูกค้า':    { path: '/blog/first-customers-no-ads',    campaign: 'first_customers' },
   '/plan':     { path: '/blog/business-plan-fast',        campaign: 'business_plan' },

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { VIDEO_TOPICS, videoEnding } from '../commentReply';
 import { SHORT_LINKS } from '../shortLinks';
+import { calcPageHtml, CALC_ANCHORS } from '../calcPage';
 import { blogPostBySlug } from '../blogData';
 
 /* ทำให้ skill `content-link-contract` ข้อ B4 บังคับได้ด้วยเครื่อง ไม่ใช่ด้วยความจำคน
@@ -15,18 +16,32 @@ import { blogPostBySlug } from '../blogData';
  */
 
 describe('ตอนจบคลิปแบบค้าง ↔ บทความปลายทาง (content-link-contract B4)', () => {
-  it.each(VIDEO_TOPICS)('$topic — ลิงก์สั้นต้องมีจริงและชี้ไปบทความที่มีอยู่', (t) => {
+  /* ปลายทางเป็น "เครื่องมือ" ได้ ไม่จำเป็นต้องเป็นบทความเสมอไป
+   * 19 ส.ค. 2569: /ราคา → /calc เพราะ GA4 วัดได้ว่าคนที่มาจากคลิปอยู่บนบทความ 2 วินาที
+   * เจตนาของกฎคือ "คำถามปิดคลิปต้องมีคำตอบอยู่ที่ปลายทางจริง" ไม่ใช่ "ต้องเป็น FAQ ของบทความ" */
+  const TOOL_PATHS = new Set(['/calc']);
+
+  it.each(VIDEO_TOPICS)('$topic — ลิงก์สั้นต้องมีจริงและชี้ไปปลายทางที่มีอยู่', (t) => {
     const link = SHORT_LINKS[t.shortLink];
     expect(link, `${t.shortLink} ไม่มีใน SHORT_LINKS`).toBeDefined();
+    if (TOOL_PATHS.has(link.path)) return;                 // เครื่องมือ — ตรวจในเทสต์ถัดไป
     const slug = link.path.replace('/blog/', '');
     expect(blogPostBySlug(slug), `ไม่มีบทความ ${slug}`).toBeDefined();
   });
 
-  it.each(VIDEO_TOPICS)('$topic — คำถามที่ใช้ปิดคลิป ต้องมีคำตอบอยู่ในบทความจริง', (t) => {
-    const slug = SHORT_LINKS[t.shortLink].path.replace('/blog/', '');
-    const post = blogPostBySlug(slug)!;
+  it.each(VIDEO_TOPICS)('$topic — คำถามที่ใช้ปิดคลิป ต้องมีคำตอบอยู่ที่ปลายทางจริง', (t) => {
+    const path = SHORT_LINKS[t.shortLink].path;
+    if (TOOL_PATHS.has(path)) {
+      // ตรวจจาก HTML ที่เรนเดอร์จริงหลังกรอกตัวเลข — ไม่ใช่จากรายการที่เราประกาศไว้เฉย ๆ
+      const html = calcPageHtml('https://ceoaithailand.org', '?price=50&cost=30&units=1000&fixed=30000');
+      expect(CALC_ANCHORS, `หน้าเครื่องมือไม่มีหัวข้อ "${t.answeredBy}"`).toContain(t.answeredBy);
+      expect(html, `หัวข้อ "${t.answeredBy}" ไม่โผล่ใน HTML จริง — ตอนจบคลิปจะกลายเป็น clickbait`)
+        .toContain(t.answeredBy);
+      return;
+    }
+    const post = blogPostBySlug(path.replace('/blog/', ''))!;
     const questions = post.faq.map((f) => f.q);
-    expect(questions, `บทความ ${slug} ไม่มี FAQ "${t.answeredBy}" — ตอนจบคลิปจะกลายเป็น clickbait`)
+    expect(questions, `บทความไม่มี FAQ "${t.answeredBy}" — ตอนจบคลิปจะกลายเป็น clickbait`)
       .toContain(t.answeredBy);
   });
 

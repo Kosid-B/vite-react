@@ -8,6 +8,7 @@ import {
 } from './lib/seoData';
 
 import { resolveShortLinkWithSource, shortLinkTarget } from './lib/shortLinks';
+import { calcPageHtml } from './lib/calcPage';
 
 export { CeoAiAgent } from './agent/CeoAiAgent';
 
@@ -305,6 +306,15 @@ async function handle(request: Request, env: Env): Promise<Response> {
         });
       }
       // /blog/<slug> → บทความเดี่ยว (server-render เต็ม = Google index ได้โดยไม่รอ JS)
+      // /calc → เครื่องคำนวณกำไรฝั่ง server (ไม่มี JS · เปิดปุ๊บกรอกได้เลย)
+      //   มีเพราะ GA4 บอกว่าคนที่มาจากคลิปอยู่บนบทความเฉลี่ย **2 วินาที** แล้วปิด
+      //   คลิปสัญญาว่า "คำนวณฟรี" แต่ปลายทางเป็นบทความให้อ่าน — เขามาเพื่อทำ ไม่ใช่อ่าน
+      if (url.pathname === '/calc' || url.pathname === '/calc/') {
+        return new Response(calcPageHtml(origin, url.search), {
+          headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' },
+        });
+      }
+
       // ⚠️ URL เดียวกันสองหน้าตา: /blog/x กับ /blog/x/ เคยเสิร์ฟเนื้อหาเดียวกันทั้งคู่
       //    ผลจริงที่วัดได้ใน GA4 (22 ก.ค.–18 ส.ค. 2569): บทความ pricing-no-loss ถูกแยกเป็น 2 แถว
       //    (7 คน / 1 คน) ⇒ อ่านตัวเลขผิดโดยไม่รู้ตัว + Google เห็นเป็นหน้าซ้ำ

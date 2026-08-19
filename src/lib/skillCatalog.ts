@@ -26,7 +26,9 @@ export type SkillStage = 'validate' | 'model' | 'launch' | 'scale' | 'protect';
 /** ประเภทธุรกิจที่ทักษะนี้เหมาะเป็นพิเศษ ('all' = ใช้ได้ทุกธุรกิจ) */
 export type SkillOrigin = 'signature' | 'standard';
 
-export type SkillBiz = 'all' | 'food' | 'retail' | 'service' | 'online' | 'manufacture' | 'property' | 'nonprofit';
+// นิยามย้ายไป quickCalcCore.ts (ไฟล์ที่ไม่มี side effect) เพื่อให้ Worker ใช้ได้โดยไม่ลาก supabase
+export type { SkillBiz } from './quickCalcCore';
+import type { SkillBiz } from './quickCalcCore';
 
 export interface SkillEntry {
   id: string;
