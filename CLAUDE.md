@@ -202,8 +202,11 @@ src/lib/growthPdca.ts          — วงจร PDCA ของ "การเต�
                                  REACH_FLOOR_PER_WEEK=100 — ต่ำกว่านี้คอขวดคือ "ไม่มีคนมา" ห้ามไปแก้หน้าเว็บ
                                  Tracker.receiving: true/false/**null(=ตรวจไม่ได้)** → blindSpots 🔴/🟡 (pure/tested 16 เทสต์)
 src/lib/amplitude.ts           — sink ที่ 2 คู่กับ GA (funnel/retention/cohort + session replay)
+                                 SDK = `@amplitude/unified` · init ที่ `src/main.tsx` (รากฝั่ง client) ครั้งเดียวด้วย
+                                 `initAll` — ไฟล์นี้เป็นแค่ helper (track/setUserId/reset) ที่ใช้ instance เดียวกัน
                                  ⚠️ ต้องมี VITE_AMPLITUDE_KEY ใน GitHub Secrets **และ** ใน build step ของ
                                  cloudflare-deploy.yml ไม่งั้นเงียบสนิทโดยไม่มีใครรู้ (ledger #18) — `envContract.test.ts` เฝ้าอยู่
+                                 (ไม่มีคีย์ = `console.warn('Amplitude API key missing — analytics disabled')` ให้ดังไว้)
 src/lib/resourceBridge.ts      — คำขอก้อนใหญ่→ห้องบอร์ด(+XP) + ทรัพยากรอนุมัติ→รายจ่าย finance อัตโนมัติ (pure, tested)
 src/pages/CityLevelUp.tsx      — หน้า 'citylevelup' เมือง 3 มิติ Level Up (ใช้ lib/cityScape.ts)
 src/lib/cityScape.ts           — เอนจินวาดเมืองไอโซเมตริก SVG + auto-detect เวลา/ฤดู (framework-agnostic)
@@ -420,11 +423,18 @@ public.ai_topup           — Top-up packs: credits AI เพิ่มต่อ 
 ### Marketing connectors / analytics sinks
 ```
 Amplitude (product analytics: funnel/retention/cohort + Session Replay) — src/lib/amplitude.ts
-  ส่ง event ชุดเดียวกับ GA ผ่าน track() (analytics.ts) เข้า Amplitude Browser SDK + plugin-session-replay-browser
-  (อัดเมาส์/คลิก/สโครล ดูว่าคนค้าง/ลังเลตรงไหน) · SDK โหลดแบบ dynamic import = ไม่บวมบันเดิลหลักเมื่อไม่มีคีย์
-  gate ด้วย VITE_AMPLITUDE_KEY (public client key เหมือน GA id — ไม่มี = inert สนิท) · Session Replay mask
-  ระดับ 'medium' = ปิดบังทุก input (อีเมล/ชื่อ/เบอร์) อัตโนมัติ (PDPA) · sampleRate ปรับผ่าน VITE_AMPLITUDE_REPLAY_SR
-  (default 1) · identifyAmplitudeUser(uid) ผูกตอน login / resetAmplitudeUser() ตอน logout (App.tsx) ·
+  ส่ง event ชุดเดียวกับ GA ผ่าน track() (analytics.ts) เข้า `@amplitude/unified` (analytics + session replay
+  ในแพ็กเกจเดียว · แทน analytics-browser + plugin-session-replay-browser เดิม 19 ส.ค. 2569)
+  init ที่ `src/main.tsx`: `amplitude.initAll(KEY, { analytics:{autocapture:true},
+  sessionReplay:{sampleRate:1, privacyConfig:{defaultMaskLevel:'medium'}} })` — ครั้งเดียวต่อ lifecycle
+  ⚠️ autocapture=true (ของเดิมปิดไว้) → มี event อัตโนมัติ `[Amplitude] Page Viewed`/click/session_start
+     ปนกับ event ที่เราตั้งชื่อเอง — เวลาอ่านรายงานต้องแยกให้ออก
+  ⚠️ import แบบ static ที่ราก = SDK อยู่ในบันเดิลหลักเสมอ (index chunk ~450KB / gzip ~132KB) แม้ไม่มีคีย์
+     (แลกมากับการ init ที่รากตามสเปกติดตั้ง · ของเดิม dynamic import ไม่บวมเมื่อไม่มีคีย์)
+  gate ด้วย VITE_AMPLITUDE_KEY (public client key เหมือน GA id — ไม่มี = ไม่ init + warn) · Session Replay mask
+  ระดับ 'medium' = ปิดบังทุก input (อีเมล/ชื่อ/เบอร์) อัตโนมัติ (PDPA · เก็บไว้โดยตั้งใจ)
+  event ยืนยันการติดตั้ง: `Viewed Home Page` (prompt_version: 'BA400.4') ยิงที่ main.tsx ถัดจาก initAll ·
+  identifyAmplitudeUser(uid) ผูกตอน login / resetAmplitudeUser() ตอน logout (App.tsx) ·
   tab_open ยิงตอนสลับหน้า (feature funnel) · ควร gate ด้วย consent เหมือน GA/Pixel ที่จุดเรียก track()
   ⚠️ deps เพิ่ม nanoid override ^3.3.17 (rrweb ดึง nanoid <3.3.17 = high vuln → CI dependency-audit fail ถ้าไม่ override)
 HubSpot (CRM + marketing automation) — supabase/functions/hubspot-sync (cron pattern เดียวกับ lead-nurture)

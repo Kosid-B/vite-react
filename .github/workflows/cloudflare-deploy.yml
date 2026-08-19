@@ -40,8 +40,6 @@ jobs:
           #    "เขียนถูก" ≠ "ทำงานจริง" — บังคับด้วย envContract.test.ts แล้ว
           # คีย์นี้เป็น public client key (เหมือน GA measurement id) ฝังในบันเดิลได้โดยดีไซน์
           VITE_AMPLITUDE_KEY: ${{ secrets.VITE_AMPLITUDE_KEY }}
-          # อัตราสุ่มอัด session replay 0..1 (ว่าง = 1 = อัดทุกเซสชัน) — ตั้งที่ Variables ไม่ใช่ Secrets
-          VITE_AMPLITUDE_REPLAY_SR: ${{ vars.VITE_AMPLITUDE_REPLAY_SR }}
 
       - name: Deploy Worker + assets to Cloudflare
         uses: cloudflare/wrangler-action@v3
