@@ -32,6 +32,21 @@ export const CALC_ANCHORS = [
   'ขึ้นราคา 10% เสียลูกค้าได้กี่ %',
 ] as const;
 
+/** ตัวอย่างตัวเลขในช่องกรอก ปรับตามกลุ่มผู้อ่าน (Dynamic PLG — ห้ามรับ seg มาแล้วทิ้ง)
+ *  ตัวเลขเป็นแค่ placeholder (ข้อความจาง ๆ) ไม่ใช่ค่าที่กรอกให้ — ผู้ใช้ยังต้องใส่ของตัวเองเสมอ */
+const SEG_EXAMPLE: Record<string, { price: string; cost: string; units: string; fixed: string; unit: string }> = {
+  palm:   { price: '5', cost: '3', units: '20,000', fixed: '15,000', unit: 'กิโล' },
+  food:   { price: '50', cost: '30', units: '1,000', fixed: '30,000', unit: 'จาน' },
+  newbie: { price: '200', cost: '120', units: '100', fixed: '5,000', unit: 'ชิ้น' },
+};
+const SEG_DEFAULT = { price: '50', cost: '30', units: '1,000', fixed: '30,000', unit: 'ชิ้น' };
+
+function exampleFor(search: string): typeof SEG_DEFAULT {
+  let seg = '';
+  try { seg = (new URLSearchParams(search).get('seg') ?? '').trim().toLowerCase(); } catch { /* empty */ }
+  return SEG_EXAMPLE[seg] ?? SEG_DEFAULT;
+}
+
 export interface CalcParams {
   price: number; cost: number; units: number; fixed: number;
   /** มีตัวเลขพอจะคำนวณไหม (ต้องมีอย่างน้อยราคาขาย) */
@@ -173,19 +188,20 @@ ${ladder}
   }
 
   const val = (n: number) => (n > 0 ? String(n) : '');
+  const ex = exampleFor(search);
 
   const body = `<div class="wrap">
 <h1>${esc(CALC_ANCHORS[0])}</h1>
 <p class="sub">ใส่ 2 ช่องก็เห็นคำตอบ · ไม่ต้องสมัคร · เราไม่เก็บชื่อสินค้าของคุณ</p>
 <form method="get" action="${esc(origin)}/calc">
-  <label>ขายชิ้นละกี่บาท <span class="hint">(จำเป็น)</span>
-    <input name="price" type="text" inputmode="decimal" value="${esc(val(p.price))}" placeholder="เช่น 50" autofocus></label>
-  <label>ต้นทุนชิ้นละกี่บาท <span class="hint">(ค่าของ/วัตถุดิบ)</span>
-    <input name="cost" type="text" inputmode="decimal" value="${esc(val(p.cost))}" placeholder="เช่น 30"></label>
-  <label>ขายได้กี่ชิ้นต่อเดือน <span class="hint">(ไม่รู้ก็เว้นไว้ได้)</span>
-    <input name="units" type="text" inputmode="decimal" value="${esc(val(p.units))}" placeholder="เช่น 1000"></label>
+  <label>ขาย${esc(ex.unit)}ละกี่บาท <span class="hint">(จำเป็น)</span>
+    <input name="price" type="text" inputmode="decimal" value="${esc(val(p.price))}" placeholder="เช่น ${esc(ex.price)}" autofocus></label>
+  <label>ต้นทุน${esc(ex.unit)}ละกี่บาท <span class="hint">(ค่าของ/วัตถุดิบ)</span>
+    <input name="cost" type="text" inputmode="decimal" value="${esc(val(p.cost))}" placeholder="เช่น ${esc(ex.cost)}"></label>
+  <label>ขายได้กี่${esc(ex.unit)}ต่อเดือน <span class="hint">(ไม่รู้ก็เว้นไว้ได้)</span>
+    <input name="units" type="text" inputmode="decimal" value="${esc(val(p.units))}" placeholder="เช่น ${esc(ex.units)}"></label>
   <label>ค่าใช้จ่ายคงที่ต่อเดือน <span class="hint">(ค่าเช่า เงินเดือน ไฟ)</span>
-    <input name="fixed" type="text" inputmode="decimal" value="${esc(val(p.fixed))}" placeholder="เช่น 30000"></label>
+    <input name="fixed" type="text" inputmode="decimal" value="${esc(val(p.fixed))}" placeholder="เช่น ${esc(ex.fixed)}"></label>
   <button type="submit">${p.filled ? 'คิดใหม่' : 'คิดให้ดูเลย'}</button>
 </form>
 ${result}

@@ -51,7 +51,32 @@ export function ctaHref(origin: string, opts: { seg: HeroSeg; from: string; path
   return `${origin}${p}?seg=${encodeURIComponent(opts.seg)}&from=${encodeURIComponent(opts.from)}`;
 }
 
-/** CTA ของบทความ — seg มาจากหมวดของบทความนั้นเอง */
+/** บทความที่ CTA สัญญาว่า "จะได้คำนวณ" → ต้องพาไปที่ **เครื่องมือ** ไม่ใช่หน้าสมัคร
+ *
+ * 🔴 ปัญหาจริงที่แก้ (19 ส.ค. 2569): CTA ของบทความเหล่านี้เขียนว่า
+ *   "ให้ AI ช่วยคิดต้นทุน + ตั้งราคาให้มีกำไร — ฟรี" / "คิดต้นทุนต่อหน่วยให้ชัด"
+ *   แต่ลิงก์ไป `/start` ซึ่งเป็น **หน้าสมัคร** — กดแล้วไม่ได้คำนวณอะไรเลย
+ *   = คำสัญญาที่ปลายทางไม่มี ซ้ำรอยเดียวกับตอนจบคลิปที่บอก "คำนวณฟรี" แล้วพาไปบทความ
+ *   (GA4 22 ก.ค.–18 ส.ค.: คนอยู่บนบทความเฉลี่ย 2–4 วินาที แล้วปิด)
+ *
+ * หลัก: **คำที่เขียนบนปุ่มต้องตรงกับสิ่งที่เจอหลังกด** — ไม่มีข้อยกเว้น
+ */
+export const BLOG_TOOL_CTA: Record<string, string> = {
+  'pricing-no-loss': '/calc',
+  'ai-era-hardware-cost': '/calc',
+  'palm-price-what-you-control': '/calc',
+};
+
+/** CTA ของบทความ — seg มาจากหมวดของบทความนั้นเอง
+ *  บทความที่มีเครื่องมือตรงเรื่อง → ไปที่เครื่องมือ (ติด utm ให้วัดได้ว่ามาจากบทความไหน) */
 export function blogCtaHref(origin: string, slug: string, category: string): string {
-  return ctaHref(origin, { seg: segForCategory(category), from: `blog_${slug}` });
+  const seg = segForCategory(category);
+  const tool = BLOG_TOOL_CTA[slug];
+  // ⚠️ ลิงก์ไปเครื่องมือก็ต้องพก seg + from ไปด้วย (กฎ Dynamic PLG — ห้ามทิ้งบริบท)
+  //    และ /calc ต้อง **อ่าน seg ไปใช้จริง** ไม่ใช่แค่รับมาแล้วทิ้ง
+  //    (เคยพลาดแบบนั้นมาแล้ว: เติม ?seg= ให้ CTA แต่ /start ไม่ได้อ่านค่านั้นเลย)
+  const base = ctaHref(origin, { seg, from: `blog_${slug}`, path: tool ?? '/start' });
+  return tool
+    ? `${base}&utm_source=blog&utm_medium=article_cta&utm_campaign=${encodeURIComponent(slug)}`
+    : base;
 }

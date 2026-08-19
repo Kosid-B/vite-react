@@ -57,8 +57,15 @@ describe('บริบทต้องเดินทางไปกับผู�
   });
 
   it('blogCtaHref เข้ารหัส query ถูกต้อง', () => {
-    expect(blogCtaHref(ORIGIN, 'pricing-no-loss', 'การเงิน & ราคา'))
-      .toBe(`${ORIGIN}/start?seg=seller&from=blog_pricing-no-loss`);
+    // บทความที่ยังไปหน้า Landing ตามปกติ
+    expect(blogCtaHref(ORIGIN, 'first-customers-no-ads', 'การตลาด'))
+      .toBe(`${ORIGIN}/start?seg=seller&from=blog_first-customers-no-ads`);
+    // บทความที่ CTA สัญญาว่า "จะได้คำนวณ" → ไปเครื่องมือ (19 ส.ค. 2569)
+    // แต่ยังต้องพก seg + from ครบเหมือนเดิม แล้วค่อยต่อ utm
+    expect(blogCtaHref(ORIGIN, 'pricing-no-loss', 'การเงิน & ราคา')).toBe(
+      `${ORIGIN}/calc?seg=seller&from=blog_pricing-no-loss` +
+      `&utm_source=blog&utm_medium=article_cta&utm_campaign=pricing-no-loss`,
+    );
   });
 });
 
