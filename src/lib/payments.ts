@@ -244,3 +244,15 @@ export async function verifyTopupSlip(input: { workspaceId: string; requestId: s
   }
   return (data as VerifySlipResult) ?? { ok: false, reason: 'no_response' };
 }
+
+/** สถิติ "เส้นทางรับเงินเคยถูกใช้จริงไหม" (แอดมิน) — ใช้กับ paymentReadiness()
+ *  ⚠️ นับ verified จาก `verified_at` ที่ server เขียนหลัง SlipOK ผ่านเท่านั้น
+ *     ห้ามนับจาก status='approved' เพราะแอดมินกดเองก็ได้ = ไม่ใช่หลักฐานว่าระบบตรวจทำงาน */
+export async function paymentProofStats(): Promise<{ total: number; verified: number } | null> {
+  if (!isSupabaseEnabled || !supabase) return null;
+  const all = await supabase.from('payment_submissions').select('id', { count: 'exact', head: true });
+  if (all.error) return null;
+  const ok = await supabase.from('payment_submissions')
+    .select('id', { count: 'exact', head: true }).not('verified_at', 'is', null);
+  return { total: all.count ?? 0, verified: ok.error ? 0 : (ok.count ?? 0) };
+}

@@ -3,6 +3,7 @@ import GrowthAiPanel from '../../components/GrowthAiPanel';
 import ClientErrorsPanel from '../../components/ClientErrorsPanel';
 import ContentPerformancePanel from '../../components/ContentPerformancePanel';
 import GrowthPdcaPanel from '../../components/GrowthPdcaPanel';
+import PaymentReadinessPanel from '../../components/PaymentReadinessPanel';
 import type { AppData } from '../../types';
 import { isSupabaseEnabled } from '../../lib/supabase';
 import { adminListWorkspaces, wsLoad } from '../../lib/workspaces';
@@ -471,6 +472,9 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
       {/* 🔁 PDCA — ต้องอยู่ก่อนทุกแผงตัวเลข เพราะมันบอกว่า "ตัวเลขข้างล่างเชื่อได้แค่ไหน"
           อ่านตัวเลขก่อนรู้ว่าวงจรค้างตรงไหน = ได้ข้อสรุปที่มั่นใจแต่ผิด */}
       <GrowthPdcaPanel landing={landing} plannedPieces={PLANNED_PIECES_THIS_CYCLE} windowDays={landing?.days ?? 30} />
+
+      {/* 💰 ปลายทางจริงของวงจรคือเงินเข้าบัญชี ไม่ใช่ยอดสมัคร — วางติดกับ PDCA */}
+      <PaymentReadinessPanel />
 
       {/* ความสนใจรายส่วน + ผล A/B ทุกตัว + AI วิเคราะห์ (0057) */}
       <GrowthAiPanel landing={landing} />
