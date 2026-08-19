@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import GrowthAiPanel from '../../components/GrowthAiPanel';
 import ClientErrorsPanel from '../../components/ClientErrorsPanel';
 import ContentPerformancePanel from '../../components/ContentPerformancePanel';
+import GrowthPdcaPanel from '../../components/GrowthPdcaPanel';
 import type { AppData } from '../../types';
 import { isSupabaseEnabled } from '../../lib/supabase';
 import { adminListWorkspaces, wsLoad } from '../../lib/workspaces';
@@ -188,6 +189,11 @@ function UnitEconomics({ data, onUpdate, real }: { data: AppData; onUpdate: (d: 
     </div>
   );
 }
+
+/** ชิ้นงานที่วางแผนจะปล่อยในรอบนี้ (ตรงกับปฏิทิน: คลิป #1–#4 + ชุดโพสต์ FB)
+ *  วางเป็นค่าคงที่ไว้ก่อน เพราะปฏิทินยังไม่ได้ต่อเข้าแอป — แก้ที่นี่เมื่อรอบเปลี่ยน
+ *  ⚠️ ค่านี้คือ "แผน" ไม่ใช่ "ผล" — ผลของ Do อ่านจากข้อมูลจริง (shippedPieces) เท่านั้น */
+const PLANNED_PIECES_THIS_CYCLE = 4;
 
 export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; onUpdate?: (d: AppData) => void } = {}) {
   const [loading, setLoading] = useState(false);
@@ -461,6 +467,10 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
           🕳️ <b style={{ color: 'var(--ink)' }}>Landing Funnel</b> — ยังไม่มีข้อมูลผู้เข้าชม (จะเริ่มเก็บเมื่อมีคนเปิดหน้า Landing สาธารณะหลัง deploy) · วัด scroll depth + dwell แบบนิรนาม
         </div>
       )}
+
+      {/* 🔁 PDCA — ต้องอยู่ก่อนทุกแผงตัวเลข เพราะมันบอกว่า "ตัวเลขข้างล่างเชื่อได้แค่ไหน"
+          อ่านตัวเลขก่อนรู้ว่าวงจรค้างตรงไหน = ได้ข้อสรุปที่มั่นใจแต่ผิด */}
+      <GrowthPdcaPanel landing={landing} plannedPieces={PLANNED_PIECES_THIS_CYCLE} windowDays={landing?.days ?? 30} />
 
       {/* ความสนใจรายส่วน + ผล A/B ทุกตัว + AI วิเคราะห์ (0057) */}
       <GrowthAiPanel landing={landing} />

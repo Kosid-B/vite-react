@@ -33,6 +33,15 @@ jobs:
           # ตั้งใน repo: Settings → Secrets and variables → Actions (ชุดเดียวกับ deploy.yml)
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # ── Amplitude (product analytics + session replay) ────────────────────
+          # 🔴 บทเรียน 19 ส.ค. 2569: โค้ด Amplitude เขียนเสร็จ · เทสต์ผ่าน · connector ต่อแล้ว
+          #    แต่ตัวแปรนี้ไม่เคยถูกส่งเข้า build → bundle บน production มี AMP_KEY=''
+          #    → isAmplitudeEnabled=false → SDK ไม่เคยโหลด → Amplitude ได้ข้อมูล 0 event
+          #    "เขียนถูก" ≠ "ทำงานจริง" — บังคับด้วย envContract.test.ts แล้ว
+          # คีย์นี้เป็น public client key (เหมือน GA measurement id) ฝังในบันเดิลได้โดยดีไซน์
+          VITE_AMPLITUDE_KEY: ${{ secrets.VITE_AMPLITUDE_KEY }}
+          # อัตราสุ่มอัด session replay 0..1 (ว่าง = 1 = อัดทุกเซสชัน) — ตั้งที่ Variables ไม่ใช่ Secrets
+          VITE_AMPLITUDE_REPLAY_SR: ${{ vars.VITE_AMPLITUDE_REPLAY_SR }}
 
       - name: Deploy Worker + assets to Cloudflare
         uses: cloudflare/wrangler-action@v3

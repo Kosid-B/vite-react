@@ -30,6 +30,19 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 เส้นแบ่งระหว่าง "เปิดช่องว่าง" กับ "หลอกให้กด" = ปลายทางมีของจริงไหม เท่านั้น
 กลไก: `contentLinkContract.test.ts` (ทุก offer/คลิป → `provenBy`/`answeredBy` ต้องเป็นหัวข้อจริงในบทความ + ถ้าสัญญาว่ามี "ตาราง/เครื่องคำนวณ/เช็คลิสต์" บทความต้องมีจริง) · `videoEndingContract.test.ts`
 
+🔁 **การวางระบบทุกอย่างต้องเป็นวงจร PDCA** (ยืนยันโดยเจ้าของ 19 ส.ค. 2569)
+ห้ามส่งมอบ "สิ่งที่ทำ" เดี่ยว ๆ — ต้องบอกได้ว่ามันอยู่ตรงไหนของวงจร และวงจรปิดยังไง
+**① Plan** ตั้งใจปล่อยอะไร กี่ชิ้น · **② Do** หลักฐานคือ **มีคนเข้ามาจากชิ้นนั้นจริง** ไม่ใช่คำว่า "โพสต์แล้ว"
+**③ Check** ต้องพิสูจน์ว่า *เครื่องมือวัดทำงานอยู่* **ก่อน** อ่านตัวเลข · **④ Act** ห้ามตัดสินใจถ้า ③ ยังตาบอด
+⚠️ **ลำดับนี้ห้ามข้าม** — ที่ผ่านมาเรากระโดดไป Act (แก้พาดหัว/เพิ่มฟีเจอร์) ตอน Check ยังตาบอด
+   ผลคือ "แก้แล้วดีขึ้นไหม" ตอบไม่ได้สักครั้ง แล้ววนแก้ใหม่ไปเรื่อย ๆ
+⚠️ **เครื่องมือที่ "ตั้งไว้แต่ไม่ได้ต่อ" ทำให้ทุกตัวเลขกลายเป็นคำโกหกโดยการละเว้น** (Amplitude ได้ 0 event 
+   มาตลอด — ledger ข้อ 18) · `receiving: null` = **ตรวจไม่ได้** ต้องประกาศเป็นจุดบอด ห้ามเดาว่า "มีคีย์ = ใช้ได้"
+กลไก: `src/lib/growthPdca.ts` (pure/tested · `stuckAt` = เฟสแรกที่ยังไม่ผ่าน · `canAct` ล็อกเมื่อ Check ไม่ผ่าน)
+   · แผง `components/GrowthPdcaPanel.tsx` **อยู่บนสุด** ของแท็บการเติบโต (อ่านตัวเลขก่อนรู้ว่าวงจรค้างตรงไหน = มั่นใจแต่ผิด)
+   · PDCA ฝั่งคุณภาพ/ISO เป็นคนละวงจร ใช้หลักเดียวกัน: `src/lib/eqms.ts`
+   · `envContract.test.ts` = ชั้น Check ของ "โค้ดถูกเรียกใช้จริงไหม" (env ทุกตัวต้องถูกส่งเข้า build)
+
 ⚙️ **กฎบังคับการพัฒนา — skill `dynamic-plg`** (ยืนยันโดยเจ้าของ 16 ส.ค. 2569)
 ทุกการแก้ไข/พัฒนาต้องเป็น **PLG** (ผู้ใช้ได้คุณค่าเองโดยไม่ต้องผ่านคน) และ **Dynamic PLG** (สิ่งที่เห็นเปลี่ยนตามสิ่งที่ระบบรู้เกี่ยวกับเขา)
 รวมถึง **Landing Page ต้อง dynamic ตามผู้ใช้** — ระบบรู้อะไรแล้วยังแสดงเหมือนไม่รู้ = ผิดกฎ
@@ -182,6 +195,15 @@ src/pages/ProcessRegister.tsx  — หน้า 'process' ทะเบียน�
                                  (ข้อที่กระบวนการอื่นถือแล้วจะจาง) + แถบสุขภาพ + รายการ "สิ่งที่ผู้ตรวจจะเจอ"
                                  · demoRegister() = "อาฮ่า 10 วินาที" โหมดพรีวิว (ไม่บันทึกลง AppData · save() ปิดตายตอน demo)
                                    จงใจใส่ตัววัดที่ไม่มี whyFrom 1 ตัว ให้เห็นระบบจับได้สด ๆ
+src/lib/growthPdca.ts          — วงจร PDCA ของ "การเติบโต" (คนละวงจรกับ eqms.ts ที่เป็น PDCA ของคุณภาพ/ISO)
+                                 growthPdca() คืน stuckAt = เฟสแรกที่ยังไม่ผ่าน · canAct = false เมื่อ Check ยังไม่ ok
+                                 shippedPieces() นับ Do จาก "คนเข้าจริงต่อแคมเปญ" ไม่ใช่จำนวนโพสต์ที่เราบอกว่าโพสต์แล้ว
+                                 bottleneckOf() ตอบ 'unknown' อย่างซื่อสัตย์เมื่อคนน้อยเกินฟันธง (MIN_FOR_RATE=100)
+                                 REACH_FLOOR_PER_WEEK=100 — ต่ำกว่านี้คอขวดคือ "ไม่มีคนมา" ห้ามไปแก้หน้าเว็บ
+                                 Tracker.receiving: true/false/**null(=ตรวจไม่ได้)** → blindSpots 🔴/🟡 (pure/tested 16 เทสต์)
+src/lib/amplitude.ts           — sink ที่ 2 คู่กับ GA (funnel/retention/cohort + session replay)
+                                 ⚠️ ต้องมี VITE_AMPLITUDE_KEY ใน GitHub Secrets **และ** ใน build step ของ
+                                 cloudflare-deploy.yml ไม่งั้นเงียบสนิทโดยไม่มีใครรู้ (ledger #18) — `envContract.test.ts` เฝ้าอยู่
 src/lib/resourceBridge.ts      — คำขอก้อนใหญ่→ห้องบอร์ด(+XP) + ทรัพยากรอนุมัติ→รายจ่าย finance อัตโนมัติ (pure, tested)
 src/pages/CityLevelUp.tsx      — หน้า 'citylevelup' เมือง 3 มิติ Level Up (ใช้ lib/cityScape.ts)
 src/lib/cityScape.ts           — เอนจินวาดเมืองไอโซเมตริก SVG + auto-detect เวลา/ฤดู (framework-agnostic)

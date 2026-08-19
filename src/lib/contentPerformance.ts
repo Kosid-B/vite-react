@@ -74,8 +74,18 @@ export function byContent(agg: LandingAgg | null): ContentRow[] {
 export function untaggedPct(agg: LandingAgg | null): number {
   const total = agg?.total ?? 0;
   if (total === 0) return 0;
-  const untagged = agg?.by_utm_source?.[UNKNOWN]?.total ?? 0;
-  return Math.round((untagged / total) * 100);
+  // ⚠️ นับจาก "คนที่ติดแท็กจริง" แล้วลบออก — ไม่ใช่อ่านช่อง UNKNOWN ตรง ๆ
+  //    บั๊กเดิม (พบ 19 ส.ค. 2569): ถ้า by_utm_source ไม่มีมาเลย (สคีมาเก่า/ยังไม่มีใครติดแท็ก)
+  //    ช่อง UNKNOWN จะไม่มี → `?? 0` ทำให้คืน "ไม่ติดแท็ก 0%" = อ่านว่า "ติดแท็กครบทุกคน"
+  //    ทั้งที่ความจริงคือ **ไม่มีใครติดแท็กเลย** — คีย์ที่หายกลายเป็นข่าวดีปลอม
+  //    (บั๊กพันธุ์เดียวกับ migration 0057 ที่ทำ engaged/bounce หาย แล้วโชว์ 0)
+  const buckets = agg?.by_utm_source ?? {};
+  let tagged = 0;
+  for (const [k, v] of Object.entries(buckets)) {
+    if (k === UNKNOWN) continue;
+    tagged += v?.total ?? 0;
+  }
+  return Math.round(((total - Math.min(tagged, total)) / total) * 100);
 }
 
 /** ข้อความบอกสถานะแบบตรงไปตรงมา — ห้ามชวนให้อ่านตัวเลขที่ยังเชื่อไม่ได้ */
