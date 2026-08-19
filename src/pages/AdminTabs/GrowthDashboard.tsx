@@ -4,6 +4,7 @@ import ClientErrorsPanel from '../../components/ClientErrorsPanel';
 import ContentPerformancePanel from '../../components/ContentPerformancePanel';
 import GrowthPdcaPanel from '../../components/GrowthPdcaPanel';
 import PaymentReadinessPanel from '../../components/PaymentReadinessPanel';
+import ReachFunnelPanel from '../../components/ReachFunnelPanel';
 import type { AppData } from '../../types';
 import { isSupabaseEnabled } from '../../lib/supabase';
 import { adminListWorkspaces, wsLoad } from '../../lib/workspaces';
@@ -478,6 +479,10 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
 
       {/* ความสนใจรายส่วน + ผล A/B ทุกตัว + AI วิเคราะห์ (0057) */}
       <GrowthAiPanel landing={landing} />
+
+      {/* 📡 ขั้นที่หายไปของ funnel: วิวบนแพลตฟอร์ม → คนมาถึงเว็บ
+          วางก่อน ContentPerformance เพราะถ้าเพดานอยู่ก่อนถึงเว็บ การเทียบคอนเทนต์ยังไม่มีความหมาย */}
+      <ReachFunnelPanel landing={landing} />
 
       {/* คอนเทนต์ชิ้นไหนพาคนมา (0062) — วางก่อนแผง error เพราะเป็นคำถามหลักของการตลาด */}
       <ContentPerformancePanel landing={landing} />
