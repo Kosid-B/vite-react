@@ -83,11 +83,38 @@ function cleanTag(v: string | null): string | null {
  *  รองรับ: percent-encoding (path ไทยถูก encode เสมอ), ตัวพิมพ์ใหญ่, slash ท้าย
  *  คืน null ถ้าไม่ใช่ลิงก์สั้น (ให้ router เดินต่อไปทางปกติ) */
 export function resolveShortLink(pathname: string): ShortLink | null {
+  return resolveShortLinkWithSource(pathname).link;
+}
+
+/** เหมือน resolveShortLink แต่คืน "ตัวย่อแพลตฟอร์ม" ที่ติดมาท้าย path ด้วย
+ *
+ *  🔴 ปัญหาจริงที่แก้ (19 ส.ค. 2569): ในคอมเมนต์ TikTok/IG ลิงก์ **กดไม่ได้**
+ *     มันเป็นข้อความเปล่า ๆ คนที่สนใจจะ "พิมพ์ตามที่เห็น"
+ *     ⇒ `ceoaithailand.org/ราคา?s=ttc` มีโอกาสสูงมากที่คนจะพิมพ์แค่ `ceoaithailand.org/ราคา`
+ *        แล้วส่วน `?s=ttc` หายไป → utm_source กลายเป็น 'social' → **แยกไม่ออกว่ามาจาก TikTok**
+ *        เท่ากับติดแท็กไว้แต่ได้ข้อมูลเหมือนไม่ได้ติด
+ *
+ *  วิธีแก้: ยอมให้เขียนตัวย่อเป็น "ส่วนท้ายของ path" ได้ด้วย — `/ราคา/tt`
+ *     สั้นเท่าเดิม พิมพ์ง่ายกว่า (ไม่มี ? และ =) และไม่มีอะไรให้ลืมพิมพ์
+ *     ?s= ยังใช้ได้เหมือนเดิมทุกประการ (ของเก่าไม่พัง) และมีความสำคัญเหนือกว่าถ้าใส่มาทั้งคู่
+ */
+export function resolveShortLinkWithSource(pathname: string): { link: ShortLink | null; src: string | null } {
   let p = pathname;
   try { p = decodeURIComponent(pathname); } catch { /* encoding พัง → ใช้ค่าดิบ */ }
   p = p.replace(/\/+$/, '').toLowerCase();
-  if (p === '') return null;
-  return SHORT_LINKS[p] ?? null;
+  if (p === '') return { link: null, src: null };
+
+  const direct = SHORT_LINKS[p];
+  if (direct) return { link: direct, src: null };
+
+  // ลองตัดส่วนท้ายออก 1 ชั้น แล้วดูว่าส่วนที่เหลือเป็นลิงก์สั้น + ส่วนท้ายเป็นตัวย่อแพลตฟอร์มไหม
+  const cut = p.lastIndexOf('/');
+  if (cut > 0) {
+    const head = p.slice(0, cut);
+    const tail = p.slice(cut + 1);
+    if (SHORT_LINKS[head] && SOURCE_PRESETS[tail]) return { link: SHORT_LINKS[head], src: tail };
+  }
+  return { link: null, src: null };
 }
 
 /** ประกอบ URL ปลายทางพร้อม utm — ให้ Worker redirect ไปตรง ๆ
@@ -99,13 +126,16 @@ export function resolveShortLink(pathname: string): ShortLink | null {
  *    2. `s=<คีย์>` จาก SOURCE_PRESETS  ← ทางที่แนะนำ (สั้น จำง่าย)
  *    3. ค่าเริ่มต้น social / organic
  *  `c=<ตัวย่อ>` (หรือ utm_content) = แยกคลิป/ชิ้นงานย่อยในแคมเปญเดียวกัน เช่น `c=1a` */
-export function shortLinkTarget(link: ShortLink, origin: string, search = ''): string {
+export function shortLinkTarget(link: ShortLink, origin: string, search = '', pathSrc: string | null = null): string {
   const to = new URL(link.path, origin);
 
   let q: URLSearchParams;
   try { q = new URLSearchParams(search); } catch { q = new URLSearchParams(); }
 
-  const preset = SOURCE_PRESETS[cleanTag(q.get('s')) ?? ''] ?? DEFAULT_SOURCE;
+  // `?s=` ชนะ path suffix เมื่อใส่มาทั้งคู่ (ผู้ใช้เขียนเจาะจงกว่า)
+  const preset = SOURCE_PRESETS[cleanTag(q.get('s')) ?? '']
+    ?? SOURCE_PRESETS[pathSrc ?? '']
+    ?? DEFAULT_SOURCE;
   const source = cleanTag(q.get('utm_source')) ?? preset.source;
   const medium = cleanTag(q.get('utm_medium')) ?? preset.medium;
   const content = cleanTag(q.get('c')) ?? cleanTag(q.get('utm_content'));

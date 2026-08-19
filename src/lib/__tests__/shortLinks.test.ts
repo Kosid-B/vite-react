@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SHORT_LINKS, SOURCE_PRESETS, resolveShortLink, shortLinkTarget } from '../shortLinks';
+import { SHORT_LINKS, SOURCE_PRESETS, resolveShortLink, resolveShortLinkWithSource, shortLinkTarget } from '../shortLinks';
 import { BLOG_POSTS } from '../blogData';
 
 const ORIGIN = 'https://ceoaithailand.org';
@@ -126,5 +126,53 @@ describe('shortLinks — ติด utm ให้อัตโนมัติ', ()
     for (const [th, en] of [['/ซิม', '/sms'], ['/ราคา', '/price'], ['/ทุน', '/tun'], ['/ลูกค้า', '/customer']]) {
       expect(SHORT_LINKS[th]).toEqual(SHORT_LINKS[en]);
     }
+  });
+});
+
+/* ── ตัวย่อแพลตฟอร์มแบบ "ส่วนท้ายของ path" (19 ส.ค. 2569) ───────────────────
+ * เหตุผล: คอมเมนต์ TikTok/IG ลิงก์กดไม่ได้ คนต้องพิมพ์ตาม
+ *   `?s=ttc` จึงมีโอกาสสูงที่จะถูกพิมพ์ตกหล่น → utm_source กลายเป็น social
+ *   = ติดแท็กไว้แต่ได้ข้อมูลเหมือนไม่ได้ติด
+ * `/ราคา/tt` พิมพ์ง่ายกว่า ไม่มี ? หรือ = และไม่มีอะไรให้ลืม
+ */
+describe('ตัวย่อแพลตฟอร์มท้าย path — สำหรับคอมเมนต์ที่คนต้องพิมพ์เอง', () => {
+  const O = 'https://ceoaithailand.org';
+
+  it('/ราคา/tt → บทความราคา + utm_source=tiktok (ไม่ต้องมี ?s=)', () => {
+    const r = resolveShortLinkWithSource('/ราคา/tt');
+    expect(r.link?.path).toBe('/blog/pricing-no-loss');
+    expect(r.src).toBe('tt');
+    const u = new URL(shortLinkTarget(r.link!, O, '', r.src));
+    expect(u.searchParams.get('utm_source')).toBe('tiktok');
+    expect(u.searchParams.get('utm_campaign')).toBe('pricing');
+  });
+
+  it('ใช้ได้ทุกตัวย่อใน SOURCE_PRESETS และกับ path ที่ถูก encode', () => {
+    for (const key of Object.keys(SOURCE_PRESETS)) {
+      const r = resolveShortLinkWithSource(`/ราคา/${key}`);
+      expect(r.src, `/ราคา/${key} ต้องอ่านตัวย่อออก`).toBe(key);
+    }
+    // path ไทยถูก encode เสมอเมื่อมาจากเบราว์เซอร์จริง
+    const enc = resolveShortLinkWithSource('/%E0%B8%A3%E0%B8%B2%E0%B8%84%E0%B8%B2/ttc');
+    expect(enc.link?.path).toBe('/blog/pricing-no-loss');
+    expect(enc.src).toBe('ttc');
+  });
+
+  it('?s= ชนะ path suffix เมื่อใส่มาทั้งคู่ (ผู้ใช้เขียนเจาะจงกว่า)', () => {
+    const r = resolveShortLinkWithSource('/ราคา/tt');
+    const u = new URL(shortLinkTarget(r.link!, O, '?s=ytc', r.src));
+    expect(u.searchParams.get('utm_source')).toBe('youtube');
+    expect(u.searchParams.get('utm_medium')).toBe('comment');
+  });
+
+  it('ของเก่าต้องไม่พัง — /ราคา เปล่า ๆ และ /ราคา?s=ttc ยังทำงานเหมือนเดิม', () => {
+    expect(resolveShortLinkWithSource('/ราคา').src).toBeNull();
+    expect(resolveShortLink('/ราคา')?.path).toBe('/blog/pricing-no-loss');
+  });
+
+  it('ส่วนท้ายที่ไม่ใช่ตัวย่อ = ไม่ใช่ลิงก์สั้น (ห้ามเดา)', () => {
+    expect(resolveShortLinkWithSource('/ราคา/xyz').link).toBeNull();
+    expect(resolveShortLinkWithSource('/ไม่มีจริง/tt').link).toBeNull();
+    expect(resolveShortLinkWithSource('/tt').link).toBeNull();
   });
 });

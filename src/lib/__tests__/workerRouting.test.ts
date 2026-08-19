@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SHORT_LINKS } from '../shortLinks';
+import { SHORT_LINKS, SOURCE_PRESETS } from '../shortLinks';
 
 /* สัญญาระหว่าง wrangler.jsonc กับโค้ดใน src/server.ts
  *
@@ -74,6 +74,16 @@ describe('wrangler.jsonc ↔ src/server.ts — Worker ต้องได้ร�
     // path ไทยเดินทางจริงในรูป percent-encoded — ต้องครอบคลุมด้วย
     expect(workerRuns(encodeURI(key), rule), `${encodeURI(key)} ไม่ถึง Worker`).toBe(true);
   });
+
+  // รูปแบบ `/ราคา/tt` (ตัวย่อแพลตฟอร์มท้าย path) — สำหรับคอมเมนต์ที่คนต้องพิมพ์เอง
+  // ถ้ารูปแบบนี้ไม่ถึง Worker จะโดนเสิร์ฟเป็น index.html แล้วไม่ redirect เลย
+  it.each(Object.keys(SHORT_LINKS).flatMap((k) => Object.keys(SOURCE_PRESETS).map((s) => `${k}/${s}`)))(
+    'ลิงก์สั้นพร้อมตัวย่อ %s ต้องถึง Worker',
+    (path) => {
+      expect(workerRuns(path, rule), `${path} ไม่ถึง Worker`).toBe(true);
+      expect(workerRuns(encodeURI(path), rule), `${encodeURI(path)} ไม่ถึง Worker`).toBe(true);
+    },
+  );
 
   it('ไฟล์ bundle ต้อง "ไม่" ผ่าน Worker (ประหยัด invocation)', () => {
     expect(workerRuns('/assets/index-abc123.js', rule)).toBe(false);
