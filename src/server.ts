@@ -305,6 +305,15 @@ async function handle(request: Request, env: Env): Promise<Response> {
         });
       }
       // /blog/<slug> → บทความเดี่ยว (server-render เต็ม = Google index ได้โดยไม่รอ JS)
+      // ⚠️ URL เดียวกันสองหน้าตา: /blog/x กับ /blog/x/ เคยเสิร์ฟเนื้อหาเดียวกันทั้งคู่
+      //    ผลจริงที่วัดได้ใน GA4 (22 ก.ค.–18 ส.ค. 2569): บทความ pricing-no-loss ถูกแยกเป็น 2 แถว
+      //    (7 คน / 1 คน) ⇒ อ่านตัวเลขผิดโดยไม่รู้ตัว + Google เห็นเป็นหน้าซ้ำ
+      //    รูปแบบมาตรฐาน = **ไม่มี slash ท้าย** (ตรงกับ SHORT_LINKS และ sitemap.xml)
+      const blogSlash = url.pathname.match(/^\/blog\/([^/]+)\/$/);
+      if (blogSlash) {
+        return Response.redirect(`${origin}/blog/${blogSlash[1]}${url.search}`, 301);
+      }
+
       const blogM = url.pathname.match(/^\/blog\/([^/]+)\/?$/);
       if (blogM) {
         const html = blogPostHtml(origin, decodeURIComponent(blogM[1]));
