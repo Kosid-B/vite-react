@@ -196,6 +196,9 @@ export function sitemapXml(
     { loc: origin, priority: '1.0' },
     ...(listMarket ? [{ loc: `${origin}/b`, priority: '0.9' }] : []),
     { loc: `${origin}/start`, priority: '0.8' },
+    // เครื่องคำนวณกำไร/จุดคุ้มทุน — ปลายทางของลิงก์การตลาดเรื่องราคาตั้งแต่ 19 ส.ค. 2569
+    // ให้ค้นเจอเองได้ด้วย (คนค้น "ตั้งราคายังไงไม่ขาดทุน" ควรเจอเครื่องมือ ไม่ใช่แค่บทความ)
+    { loc: `${origin}/calc`, priority: '0.8' },
     { loc: `${origin}/sell`, priority: '0.8' },
     { loc: `${origin}/sale`, priority: '0.8' },
     { loc: `${origin}/faq`, priority: '0.7' },

@@ -53,6 +53,7 @@ const WORKER_ROUTES = [
   '/b', '/b/some-shop', '/b/some-shop/logo.svg',
   '/blog', '/blog/pricing-no-loss',
   '/start', '/sale', '/shop', '/legal',
+  '/calc',   // เครื่องคำนวณฝั่ง server — ถ้าไม่ถึง Worker จะโดนเสิร์ฟเป็น index.html แล้วฟอร์มหาย
   '/',
 ];
 

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { calcPageHtml, parseCalcParams } from '../calcPage';
 import { SHORT_LINKS } from '../shortLinks';
 import { quickCheck } from '../quickCalcCore';
+import { sitemapXml } from '../seoData';
 
 /* หน้า /calc มีเพราะตัวเลขจริงจาก GA4 (22 ก.ค.–18 ส.ค. 2569):
  *   คลิป TikTok 14,500 วิว → เปิดบทความ 8 คน → อยู่เฉลี่ย **2 วินาที** แล้วปิด
@@ -86,5 +87,11 @@ describe('ลิงก์การตลาดเรื่องราคา ต
   // ไม่เพิ่ม alias เกินจำเป็น — ยิ่งมีชื่อพ้อง รายงานยิ่งเรียกชิ้นงานผิดชื่อจากที่เขียนในคลิป
   it.each(['/ราคา', '/price'])('%s → /calc', (key) => {
     expect(SHORT_LINKS[key].path).toBe('/calc');
+  });
+});
+
+describe('/calc ต้องถูกค้นเจอเองได้ ไม่ใช่เข้าถึงได้เฉพาะคนที่ดูคลิป', () => {
+  it('อยู่ใน sitemap.xml', () => {
+    expect(sitemapXml([], 'https://ceoaithailand.org')).toContain('<loc>https://ceoaithailand.org/calc</loc>');
   });
 });
