@@ -2,14 +2,25 @@
 // กรอกต้นทุนมือใน admin · แผน: organic ก่อน → มีรายรับ (MRR>0) ค่อยปลดล็อกลงแอด
 // pure + tested · ไม่แต่งตัวเลข (คำนวณจากที่กรอก)
 
-export type GChannelId = 'youtube' | 'fb_group' | 'line' | 'seo' | 'word_of_mouth' | 'other';
+/* ช่องทางลูกค้า — ต้องครอบคลุมทุกแพลตฟอร์มที่เราติดแท็กไว้จริงใน SOURCE_PRESETS
+ * ⚠️ `fb_group` คงชื่อเดิมไว้เพื่อไม่ให้ข้อมูลที่บันทึกไปแล้วเสีย — แต่หมายถึง Facebook ทั้งหมด
+ *    (เพจ · กลุ่ม · คอมเมนต์ปักหมุด) ไม่ใช่แค่กลุ่ม
+ * มีเทสต์บังคับว่าทุก preset ใน shortLinks ต้องมีช่องทางรองรับ (channelTaxonomy.test.ts) */
+export type GChannelId =
+  | 'youtube' | 'tiktok' | 'fb_group' | 'instagram' | 'line' | 'linkedin'
+  | 'seo' | 'word_of_mouth' | 'offline' | 'other';
 
 export const G_CHANNELS: { id: GChannelId; label: string; icon: string }[] = [
   { id: 'youtube', label: 'YouTube', icon: '▶️' },
-  { id: 'fb_group', label: 'FB Group', icon: '👥' },
+  // TikTok = แพลตฟอร์มที่ reach สูงสุดของเรา (15,900 วิว) — เดิมตกไปเป็น "อื่นๆ" ทั้งหมด
+  { id: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { id: 'fb_group', label: 'Facebook', icon: '👥' },   // เพจ + กลุ่ม + คอมเมนต์ (id เดิมเพื่อความเข้ากันได้)
+  { id: 'instagram', label: 'Instagram', icon: '📸' },
   { id: 'line', label: 'LINE', icon: '💚' },
+  { id: 'linkedin', label: 'LinkedIn', icon: '💼' },
   { id: 'seo', label: 'SEO', icon: '🔍' },
   { id: 'word_of_mouth', label: 'ปากต่อปาก', icon: '🗣️' },
+  { id: 'offline', label: 'ออฟไลน์ / QR', icon: '📇' },
   { id: 'other', label: 'อื่นๆ', icon: '➕' },
 ];
 

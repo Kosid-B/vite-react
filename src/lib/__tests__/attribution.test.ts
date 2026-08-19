@@ -3,7 +3,7 @@ import {
   channelFromUtm, channelFromReferrer, resolveChannel, sourceFrom,
   aggregateSignups, signupsForWeek, type SignupRecord,
 } from '../attribution';
-import { isoWeekTag } from '../growthEconomics';
+import { isoWeekTag, G_CHANNELS } from '../growthEconomics';
 
 describe('channelFromUtm', () => {
   it('map แหล่งหลัก', () => {
@@ -66,11 +66,13 @@ describe('aggregateSignups + signupsForWeek', () => {
     expect(agg[wk].line).toBe(1);
   });
 
-  it('signupsForWeek เติมครบ 6 ช่อง (ว่าง=0)', () => {
+  it('signupsForWeek เติมครบทุกช่องทาง (ว่าง=0)', () => {
     const w = signupsForWeek(records, wk);
     expect(w.youtube).toBe(2);
     expect(w.seo).toBe(0);
-    expect(Object.keys(w)).toHaveLength(6);
+    // ⚠️ ห้าม hardcode จำนวนช่องทาง — เดิมล็อกไว้ที่ 6 แล้วพอเพิ่ม TikTok/Instagram/
+    // LinkedIn/ออฟไลน์ (19 ส.ค. 2569) เทสต์ล้มทั้งที่โค้ดถูก · ต้องเทียบกับรายการจริง
+    expect(Object.keys(w).sort()).toEqual(G_CHANNELS.map((c) => c.id).sort());
   });
 
   it('สัปดาห์ที่ไม่มีข้อมูล → ทุกช่อง 0', () => {
