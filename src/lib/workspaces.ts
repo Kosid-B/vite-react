@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { reportError } from './errorReport';
 import type { AppData } from '../types';
 
 export interface Workspace {
@@ -18,7 +19,17 @@ export interface Member {
 export async function ensureDefaultWorkspace(): Promise<string | null> {
   if (!supabase) return null;
   const { data, error } = await supabase.rpc('ensure_default_workspace');
-  if (error) { console.warn('[ws] ensureDefault:', error.message); return null; }
+  if (error) {
+    /* 🔴 เดิมตรงนี้ `console.warn` แล้วเงียบ — ทำให้บั๊กที่ร้ายแรงที่สุดของระบบซ่อนตัวได้นาน
+     *    (RLS ไม่มี policy INSERT + helper วนเรียกตัวเอง · migration 0063/0064)
+     *    ผู้ใช้ล็อกอินสำเร็จ เห็นหน้าจอปกติ แต่ **ไม่มีที่เก็บงานบนเซิร์ฟเวอร์เลย**
+     *    และไม่มีใครรู้ เพราะไม่มีอะไรดังขึ้นมาสักอย่าง
+     * ⇒ ต้องรายงานเข้าระบบเก็บ error ของเราเอง (client_errors) เสมอ
+     *    ความล้มเหลวที่เงียบ อันตรายกว่าจอพัง เพราะไม่มีวันถูกซ่อม */
+    console.warn('[ws] ensureDefault:', error.message);
+    reportError(new Error(`ensure_default_workspace failed: ${error.message}`), 'workspace.ensureDefault');
+    return null;
+  }
   return data as string;
 }
 
