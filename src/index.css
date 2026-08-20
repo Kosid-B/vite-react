@@ -6714,6 +6714,24 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .guest-bar button.guest-back { background:transparent; color:#e0f2fe; border:1px solid rgba(224,242,254,.45); font-weight:700; padding:6px 12px; }
 .guest-bar button.guest-back:hover { background:rgba(224,242,254,.12); filter:none; }
 
+/* ── Hero บนมือถือ: ย่อให้ "เครื่องคำนวณ" โผล่พ้นขอบจอ ────────────────────────
+   🔴 ตัวเลขจริง 20 ส.ค. 2569 (landing_funnel, ผู้เข้าชม 75 คน):
+        เลื่อนอย่างน้อย 1%  = 11 คน (15%)
+        ไม่เลื่อนเลย       = 64 คน (85%)   ← ค่าเฉลี่ยการเลื่อนทั้งเว็บ = 5.2%
+   ⇒ อะไรก็ตามที่ต้องเลื่อนถึงจะเห็น = 85% ของคนที่มาไม่มีวันเห็น
+   วัดจริงบน iPhone 390×844: hero กินพื้นที่ 123→1157px ⇒ เครื่องคำนวณเริ่มที่ 1157px
+   = ต่ำกว่าขอบจอ (844px) อยู่ 313px ทั้งที่ย้ายขึ้นมาเป็นลำดับที่ 2 แล้ว
+   ⇒ ต้องย่อ hero ให้ขอบบนของเครื่องคำนวณ "โผล่" ให้เห็นตั้งแต่ยังไม่เลื่อน
+      (เห็นแค่ขอบก็พอ — คนจะรู้ว่ามีของอยู่ข้างล่างแล้วเลื่อนต่อเอง)
+   ⚠️ ต้องใช้ !important เพราะ hero ใช้ inline style */
+@media (max-width: 560px) {
+  /* บีบเฉพาะ "ระยะห่าง" — ไม่ตัดข้อความหรือตัวเลือกใด ๆ ออก (นั่นเป็นการตัดสินใจเชิงธุรกิจ ไม่ใช่เชิงเทคนิค) */
+  .lp-hero { min-height: calc(58vh - 60px) !important; padding: 22px 20px !important; }
+  .lp-hero .lp-hero-h1 { margin-bottom: 12px !important; }
+  .lp-hero > p { margin-bottom: 12px !important; }
+  .lp-hero > div:first-of-type + div { margin-bottom: 12px !important; }   /* badge */
+}
+
 /* แถบเตือน "กดลิงก์สมัคร แต่ล็อกอินค้างอยู่" — สีเหลืองอำพันให้ต่างจากแถบ guest (ฟ้า)
    เพราะสองแถบนี้สื่อคนละเรื่อง: guest = ยังไม่ได้สมัคร · authswitch = สมัครแล้วแต่คนละบัญชี */
 .authswitch-bar { background:linear-gradient(90deg,#b45309,#92400e); color:#fffbeb; }
