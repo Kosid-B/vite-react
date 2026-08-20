@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveWsLoad } from '../wsSync';
-import { isForeignLocalData } from '../../App';
+import { resolveWsLoad, isForeignLocalData } from '../wsSync';
 
 /* 🔴 บั๊กข้อมูลรั่วข้ามบัญชี (พบบน production 20 ส.ค. 2569)
  *

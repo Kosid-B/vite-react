@@ -44,3 +44,10 @@ export function resolveWsLoad(args: {
 export function localBelongsTo(dataWs: string | null, activeWs: string): boolean {
   return dataWs === null || dataWs === activeWs;
 }
+
+/** ข้อมูลใน localStorage เป็นของ "คนอื่น" ไหม — มีเจ้าของที่ระบุไว้ และไม่ใช่คนที่กำลังล็อกอินอยู่
+ *  (เดิมอยู่ใน App.tsx — ย้ายมาที่นี่เพราะ export ที่ไม่ใช่คอมโพเนนต์ในไฟล์คอมโพเนนต์
+ *   ทำให้ Vite Fast Refresh พังทั้งไฟล์ · และตรรกะนี้เป็นเพื่อนบ้านของ resolveWsLoad อยู่แล้ว) */
+export function isForeignLocalData(localOwner: string | null, currentUid: string | null | undefined): boolean {
+  return !!localOwner && !!currentUid && localOwner !== currentUid;
+}

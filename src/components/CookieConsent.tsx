@@ -36,9 +36,17 @@ export default function CookieConsent() {
   return (
     <div className="cc-banner" role="dialog" aria-live="polite" aria-label="ความยินยอมการใช้คุกกี้">
       <style>{CC_CSS}</style>
+      {/* ข้อความสั้นบนมือถือ · เต็มบนจอใหญ่ — รายละเอียดครบอยู่ที่ /legal#cookies เสมอ
+          🔴 เหตุผล (วัดจริง 20 ส.ค. 2569 บน iPhone 390px): แถบเดิมสูง ~130px และ "ทับช่องกรอก"
+             ของเครื่องคำนวณพอดี ⇒ คนกำลังจะใส่ตัวเลขแล้วโดนบัง
+          PDPA ยังครบ: บอกว่าใช้คุกกี้อะไร · มีลิงก์นโยบาย · เลือกปฏิเสธได้เท่าเทียม · ไม่ยอมรับให้เอง */}
       <div className="cc-text">
-        🍪 เราใช้คุกกี้ที่จำเป็นเพื่อให้ระบบทำงาน และคุกกี้วิเคราะห์/การตลาด (Google Analytics, LINE) เพื่อพัฒนาบริการ
-        โดยเปิดใช้เมื่อคุณยินยอมเท่านั้น · อ่าน<a href="/legal#cookies">นโยบายคุกกี้</a>
+        <span className="cc-full">
+          🍪 เราใช้คุกกี้ที่จำเป็นเพื่อให้ระบบทำงาน และคุกกี้วิเคราะห์/การตลาด (Google Analytics, LINE)
+          เพื่อพัฒนาบริการ โดยเปิดใช้เมื่อคุณยินยอมเท่านั้น ·{' '}
+        </span>
+        <span className="cc-short">🍪 ใช้คุกกี้วิเคราะห์เมื่อคุณยินยอม · </span>
+        <a href="/legal#cookies">นโยบายคุกกี้</a>
       </div>
       <div className="cc-actions">
         <button className="cc-btn cc-ghost" onClick={() => choose('necessary')}>เฉพาะที่จำเป็น</button>
@@ -65,6 +73,15 @@ const CC_CSS = `
 .cc-btn:hover{ transform:translateY(-1px); filter:brightness(1.08); }
 .cc-ghost{ background:transparent; color:#cbd5e1; }
 .cc-primary{ background:#06b6d4; border-color:#06b6d4; color:#04121a; }
-@media (max-width:560px){ .cc-banner{ flex-direction:column; align-items:stretch; text-align:center; }
-  .cc-actions{ justify-content:center; } }
+.cc-short{ display:none; }
+/* มือถือ: บีบให้เตี้ยที่สุดเท่าที่ยังอ่านออกและกดง่าย — เดิมสูง ~130px จนบังช่องกรอก
+   ปุ่มสองปุ่มยังกว้างเท่ากัน (flex:1) = ปฏิเสธง่ายเท่ายอมรับ ไม่เป็น dark pattern */
+@media (max-width:560px){
+  .cc-banner{ gap:8px; padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px)); }
+  .cc-full{ display:none; }
+  .cc-short{ display:inline; }
+  .cc-text{ font-size:12px; line-height:1.45; text-align:center; }
+  .cc-actions{ width:100%; gap:8px; }
+  .cc-btn{ flex:1; padding:9px 10px; font-size:12.5px; }
+}
 `;

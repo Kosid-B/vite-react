@@ -7,7 +7,7 @@ import { DEFAULT_DATA } from './data';
 import { defaultExperiments, recordActiveDay } from './lib/experiments';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
-import { resolveWsLoad } from './lib/wsSync';
+import { resolveWsLoad, isForeignLocalData } from './lib/wsSync';
 import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
 import { rememberSourceOnce, readRememberedSource } from './lib/attribution';
@@ -91,10 +91,6 @@ function writeLocalOwner(uid: string | null | undefined): void {
     if (uid) localStorage.setItem(DATA_OWNER_KEY, uid);
     else localStorage.removeItem(DATA_OWNER_KEY);
   } catch { /* noop */ }
-}
-/** ข้อมูลใน local เป็นของ "คนอื่น" ไหม — มีเจ้าของที่ระบุไว้ และไม่ใช่คนที่กำลังล็อกอินอยู่ */
-export function isForeignLocalData(localOwner: string | null, currentUid: string | null | undefined): boolean {
-  return !!localOwner && !!currentUid && localOwner !== currentUid;
 }
 /** ยกตัวเลขจาก "ตรวจสินค้าเร็ว" บนหน้าแรกเข้าแอปแล้วหรือยัง (ทำครั้งเดียวต่อเครื่อง) */
 const QUICK_APPLIED_KEY = 'ceo_ai_quick_applied';
