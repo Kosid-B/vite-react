@@ -138,7 +138,10 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
   };
 
   return (
-    <section style={{ padding: '64px 24px', background: C.bg, borderTop: `1px solid ${C.border}` }}>
+    /* 🔴 className เพื่อบีบ padding บนมือถือ (20 ส.ค. 2569)
+       วัดจริง iPhone 390×844: ด้วย padding 64px พาดหัว "สินค้าของคุณ กำไรจริงเท่าไหร่?"
+       ตกอยู่ที่ 854px = **เกินขอบจอไป 10px** ⇒ คนเห็นแค่ที่ว่าง ไม่รู้ว่ามีเครื่องมืออยู่ */
+    <section className="pqc-section" style={{ padding: '64px 24px', background: C.bg, borderTop: `1px solid ${C.border}` }}>
       <div style={{ maxWidth: 720, margin: '0 auto', border: `1px solid ${C.border}`, borderRadius: 18, background: C.panel, padding: '28px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ display: 'inline-block', padding: '5px 14px', borderRadius: 999, border: `1px solid ${C.cyan}`, color: C.cyan, fontSize: 12.5, fontWeight: 700, marginBottom: 12 }}>

@@ -363,15 +363,20 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </nav>
 
       {/* ─── Challenger banner (สลับ 11:00 / 20:00 เวลาไทย · จุดยืน co-opetition) ─── */}
-      <div style={{ borderBottom: `1px solid ${C.border}`, background: 'linear-gradient(90deg, rgba(245,158,11,0.10), rgba(6,182,212,0.10))', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textAlign: 'center' }}>
+      {/* 🔴 ซ่อนบนมือถือ (20 ส.ค. 2569): กิน 63px ของจอแรก และข้อความซ้ำกับ hero อยู่แล้ว
+          จอแรกบนมือถือมีที่จำกัดมาก ต้องเก็บไว้ให้ "เครื่องคำนวณ" ซึ่งเป็นของที่ใช้ได้จริง */}
+      <div className="lp-promo-strip" style={{ borderBottom: `1px solid ${C.border}`, background: 'linear-gradient(90deg, rgba(245,158,11,0.10), rgba(6,182,212,0.10))', padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textAlign: 'center' }}>
         <span style={{ flex: 'none', background: C.amber5, color: '#020617', fontWeight: 800, fontSize: 11, padding: '3px 9px', borderRadius: 999 }}>SME</span>
         <span key={challenger} style={{ color: C.white, fontSize: 14, fontWeight: 600, lineHeight: 1.5, animation: 'lpFadeIn .5s ease' }}>{challenger}</span>
       </div>
       <style>{`@keyframes lpFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
         /* มือถือ: h1 ใหญ่ดันปุ่ม CTA ลงไปชนแถบคุกกี้ (fixed ล่าง) → ลด h1 + ไหลจากบน + เว้นที่ให้แถบคุกกี้ ปุ่มจึงไม่ถูกบัง */
+        /* ⚠️ 200px เดิมเผื่อไว้ตอนแถบคุกกี้ยังสูง ~130px — ย่อแถบเหลือ 86px แล้ว (20 ส.ค. 2569)
+           จึงคืนพื้นที่ให้จอแรก · ยังเผื่อพอไม่ให้ปุ่มโดนแถบคุกกี้บัง */
         @media (max-width: 768px) {
-          .lp-hero { min-height: auto !important; justify-content: flex-start !important; padding-top: 28px !important; padding-bottom: 200px !important; }
+          .lp-hero { min-height: auto !important; justify-content: flex-start !important; padding-top: 20px !important; padding-bottom: 104px !important; }
           .lp-hero-h1 { font-size: 30px !important; }
+          .lp-promo-strip { display: none !important; }
         }`}</style>
 
       {/* ─── Hero ─── */}
@@ -428,35 +433,6 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
               ? 'ไม่ต้องล็อกอิน · ใช้ได้ทันที · เก็บงานที่ทำไว้ทีหลังได้'
               : 'ไม่ต้องใช้บัตรเครดิต · กรอกแค่ชื่อกับอีเมล · ใช้งานได้ทันที ไม่ต้องรออนุมัติ'}
           </div>
-          {onTryGuest && (
-            <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <button
-                onClick={() => { markLandingSignup(); track('landing_cta_click', { cta: 'hero_signup', layout: layoutAb }); onGetStarted(); }}
-                onMouseEnter={() => setGuestHover(true)}
-                onMouseLeave={() => setGuestHover(false)}
-                style={{
-                  padding: '13px 30px', borderRadius: 12,
-                  border: `1.5px solid ${C.cyan5}`,
-                  background: guestHover ? 'rgba(6,182,212,0.16)' : 'rgba(6,182,212,0.06)',
-                  color: C.cyan3, fontFamily: 'inherit', fontWeight: 700, fontSize: 16,
-                  cursor: 'pointer', transition: 'all .2s',
-                }}
-              >
-                หรือ เปิดพื้นที่ทำงานของผม — ฟรี 15 วัน ไม่ต้องใช้บัตร →
-              </button>
-              <span style={{ color: C.slate5, fontSize: 12.5 }}>กรอกแค่ชื่อกับอีเมล · งานที่ทำไว้จะถูกเก็บให้ · ยกเลิกเมื่อไหร่ก็ได้</span>
-            </div>
-          )}
-          {/* ทางเลือกรอง (ร้านฝากขาย) — ลดจากปุ่มเด่นเป็นลิงก์ subtle เพื่อโฟกัส CTA หลัก (ลด decision paralysis) */}
-          <div style={{ marginTop: 22 }}>
-            <a
-              href="/shop"
-              onClick={() => { markLandingCta(); track('landing_cta_click', { cta: 'hero_shop_signup', layout: layoutAb }); }}
-              style={{ color: C.slate5, fontSize: 13.5, textDecoration: 'none', borderBottom: `1px dashed ${C.border}`, paddingBottom: 1 }}
-            >
-              หรือแค่อยากเปิดร้านฝากขายสินค้า? 🏪 เริ่มฟรี · รายวัน ฿19
-            </a>
-          </div>
         </div>
       </section>
 
@@ -467,6 +443,43 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           ⇒ เครื่องมือที่เป็นคุณค่าชิ้นแรกของเว็บ ถูก 97% ของคนที่มาไม่เคยเห็น
           ยืนยันด้วยการเดินระบบจริงบน iPhone 390px (ต้องเลื่อนผ่าน hero เต็มจอ + positioning ก่อน) */}
       <div data-sec="quickcheck"><ProductQuickCheck onGetStarted={onGetStarted} /></div>
+
+      {/* 🔴 ย้ายลงมาจาก hero (20 ส.ค. 2569 — เจ้าของเลือกทางเลือก A)
+          เดิม hero มี CTA ซ้อนกัน 3 ชั้น รวม 318px ⇒ ดันเครื่องคำนวณจมใต้ขอบจอ
+          วัดจริง: ผู้เข้าชม 75 คน · คนที่เคยเห็นเครื่องคำนวณ = **0**
+          ⇒ ย้าย 2 ตัวเลือกรองลงมาไว้ "หลัง" ของที่ใช้ได้จริง — ไม่ได้ลบ ใครอยากได้ยังเจอ
+          (ลำดับนี้ตรงกับหลักของโปรเจกต์: ให้ก่อน ขอทีหลัง) */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '4px 24px 40px', textAlign: 'center' }}>
+        {onTryGuest && (
+          <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={() => { markLandingSignup(); track('landing_cta_click', { cta: 'hero_signup', layout: layoutAb }); onGetStarted(); }}
+              onMouseEnter={() => setGuestHover(true)}
+              onMouseLeave={() => setGuestHover(false)}
+              style={{
+                padding: '13px 30px', borderRadius: 12,
+                border: `1.5px solid ${C.cyan5}`,
+                background: guestHover ? 'rgba(6,182,212,0.16)' : 'rgba(6,182,212,0.06)',
+                color: C.cyan3, fontFamily: 'inherit', fontWeight: 700, fontSize: 16,
+                cursor: 'pointer', transition: 'all .2s',
+              }}
+            >
+              หรือ เปิดพื้นที่ทำงานของผม — ฟรี 15 วัน ไม่ต้องใช้บัตร →
+            </button>
+            <span style={{ color: C.slate5, fontSize: 12.5 }}>กรอกแค่ชื่อกับอีเมล · งานที่ทำไว้จะถูกเก็บให้ · ยกเลิกเมื่อไหร่ก็ได้</span>
+            </div>
+        )}
+          {/* ทางเลือกรอง (ร้านฝากขาย) — ลดจากปุ่มเด่นเป็นลิงก์ subtle เพื่อโฟกัส CTA หลัก (ลด decision paralysis) */}
+        <div style={{ marginTop: 22 }}>
+          <a
+            href="/shop"
+            onClick={() => { markLandingCta(); track('landing_cta_click', { cta: 'hero_shop_signup', layout: layoutAb }); }}
+            style={{ color: C.slate5, fontSize: 13.5, textDecoration: 'none', borderBottom: `1px dashed ${C.border}`, paddingBottom: 1 }}
+          >
+            หรือแค่อยากเปิดร้านฝากขายสินค้า? 🏪 เริ่มฟรี · รายวัน ฿19
+          </a>
+        </div>
+      </div>
 
       <section data-sec="positioning" style={{ padding: '0 24px' }}>
         <div style={{ maxWidth: 920, margin: '0 auto', borderRadius: 16, border: `1px solid ${C.border}`, background: C.bg2, padding: '22px 24px' }}>
