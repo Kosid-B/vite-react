@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { reachRow, reachRows, reachAdvice, MIN_VIEWS_FOR_RATE, type PlatformReach } from '../reachFunnel';
+import { reachRow, reachRows, reachAdvice, MIN_VIEWS_FOR_RATE, type PlatformReach, routeCompare} from '../reachFunnel';
 
 const tt = (o: Partial<PlatformReach> = {}): PlatformReach => ({
   platform: 'tiktok', label: 'TikTok', views: 15900, profileVisits: 11,
@@ -61,5 +61,41 @@ describe('reachFunnel — ตัวเลขจริง 16 ส.ค. 2569: 15,90
   it('หารศูนย์ / ค่าประหลาด ต้องไม่ throw', () => {
     expect(() => reachRow(tt({ views: 0, profileVisits: 0, arrivals: 0 }))).not.toThrow();
     expect(reachRow(tt({ views: 0, profileVisits: 0, arrivals: 0 })).passThroughPct).toBe(0);
+  });
+});
+
+describe('คอมเมนต์ปักหมุด vs ไบโอ — อ่านผลจาก by_medium (0065)', () => {
+  it('ยังน้อยเกินไป = ต้องบอกตรง ๆ ว่าเทียบไม่ได้ ห้ามประกาศผู้ชนะ', () => {
+    const r = routeCompare('tiktok', { 'tiktok/comment': { total: 6 }, 'tiktok/bio': { total: 1 } });
+    expect(r.ready).toBe(false);
+    expect(r.message).toContain('ยังเทียบไม่ได้');
+    // 6 เท่า 1 = ต่างกัน 6 เท่า แต่ห้ามพูดว่าใครชนะ
+    expect(r.message).not.toContain('มากกว่า');
+  });
+
+  it('พอเทียบได้แล้ว บอกผู้ชนะพร้อมตัวเลขดิบทั้งสองฝั่ง', () => {
+    const r = routeCompare('tiktok', { 'tiktok/comment': { total: 90 }, 'tiktok/bio': { total: 30 } });
+    expect(r.ready).toBe(true);
+    expect(r.message).toContain('คอมเมนต์ปักหมุด');
+    expect(r.message).toContain('3 เท่า');
+    expect(r.message).toContain('90');
+    expect(r.message).toContain('30');
+  });
+
+  it('ไบโอชนะก็ต้องรายงานตามจริง — ไม่ใช่เขียนให้เข้าข้างสมมติฐานที่ตั้งไว้', () => {
+    const r = routeCompare('tiktok', { 'tiktok/comment': { total: 20 }, 'tiktok/bio': { total: 40 } });
+    expect(r.message).toContain('ลิงก์ในไบโอ');
+  });
+
+  it('แยกแพลตฟอร์มออกจากกัน — youtube/comment ต้องไม่ปนกับ tiktok/comment', () => {
+    const by = { 'tiktok/comment': { total: 50 }, 'youtube/comment': { total: 99 }, 'tiktok/bio': { total: 25 } };
+    expect(routeCompare('tiktok', by).comment).toBe(50);
+    expect(routeCompare('youtube', by).comment).toBe(99);
+    expect(routeCompare('youtube', by).bio).toBe(0);
+  });
+
+  it('ไม่มีข้อมูลเลย ต้องไม่พัง', () => {
+    const r = routeCompare('tiktok', null);
+    expect(r).toMatchObject({ comment: 0, bio: 0, ready: false });
   });
 });

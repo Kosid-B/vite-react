@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  reachRows, reachAdvice, type PlatformReach, type LinkPlacement, type ReachRow,
+  reachRows, reachAdvice, routeCompare, type PlatformReach, type LinkPlacement, type ReachRow,
 } from '../lib/reachFunnel';
 import type { LandingAgg } from '../lib/landingFunnel';
 
@@ -81,10 +81,40 @@ export default function ReachFunnelPanel({ landing }: { landing: LandingAgg | nu
         border: '1px solid #dc2626', borderRadius: 10, padding: '9px 12px',
         background: 'var(--cream)', fontSize: 11.5, color: 'var(--ink3)', lineHeight: 1.65, marginBottom: 12,
       }}>
-        🔴 <b style={{ color: 'var(--ink)' }}>ช่อง &quot;มาถึงเว็บ&quot; ยังนับไม่ครบ</b> — ฐานข้อมูลของเรา (landing_funnel)
-        เก็บเฉพาะคนที่เข้า <b>หน้าแรก/หน้า Landing</b> ไม่เก็บหน้าบทความ <b>/blog/*</b>
-        <br />แต่ลิงก์การตลาดทุกอัน (/ราคา /ทุน /ลูกค้า …) พาไปที่บทความ ⇒ ช่องนี้ขึ้น 0 แม้มีคนเข้าจริง
-        <br />ตัวเลขจริงของบทความตอนนี้อยู่ใน <b>GA4 เท่านั้น</b> (รายงาน Pages → /blog/…)
+        🟡 <b style={{ color: 'var(--ink)' }}>ช่อง &quot;มาถึงเว็บ&quot; นับได้บางส่วน</b> — landing_funnel เก็บเฉพาะคนที่เข้า
+        <b>หน้าแรก/หน้า Landing</b> ไม่เก็บหน้าบทความ <b>/blog/*</b> ซึ่งเป็นปลายทางของลิงก์การตลาดทุกอัน
+        <br />ตั้งแต่ 20 ส.ค. 69 ปุ่มในบทความ<b>ส่งต่อที่มาเดิม</b>แล้ว (utmForward.ts) ⇒ คนที่อ่านบทความ
+        <b>แล้วกดต่อ</b> จะถูกนับพร้อมแพลตฟอร์มต้นทางที่ถูกต้อง
+        <br />🔴 แต่คนที่<b>เข้าบทความแล้วออกเลย</b> ยังไม่ถูกนับที่นี่ — ดูใน <b>GA4</b> (Pages → /blog/…)
+      </div>
+
+      {/* ⭐ การทดลองที่กำลังรัน: คอมเมนต์ปักหมุด vs ไบโอ — เพิ่งวัดแยกได้หลัง migration 0065
+          (ก่อนหน้านี้ tiktok/bio กับ tiktok/comment ถูกรวมเป็นก้อนเดียว = ทดลองแล้วอ่านผลไม่ได้) */}
+      <div style={{
+        border: '1px solid #7c3aed', borderRadius: 10, padding: '10px 12px',
+        background: 'rgba(124,58,237,0.07)', marginBottom: 12, display: 'grid', gap: 6,
+      }}>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--ink)' }}>
+          🧪 คอมเมนต์ปักหมุด vs ลิงก์ในไบโอ — ทางไหนพาคนมาได้จริงมากกว่า
+        </div>
+        {PLATFORMS.map((p) => {
+          const r = routeCompare(p.utm, landing?.by_medium);
+          if (!r.comment && !r.bio) return null;
+          return (
+            <div key={p.id} style={{ fontSize: 11.5, lineHeight: 1.6, color: r.ready ? 'var(--ink)' : 'var(--ink3)' }}>
+              {r.ready ? '📊 ' : '⏳ '}<b>{p.label}</b> — {r.message}
+            </div>
+          );
+        })}
+        {PLATFORMS.every((p) => {
+          const r = routeCompare(p.utm, landing?.by_medium);
+          return !r.comment && !r.bio;
+        }) && (
+          <div style={{ fontSize: 11.5, color: 'var(--ink3)', lineHeight: 1.65 }}>
+            ยังไม่มีใครมาถึงเว็บผ่านลิงก์ที่ติดแท็กช่องทาง — เริ่มนับได้เมื่อโพสต์ชุดถัดไปใช้
+            <code style={{ fontSize: 11 }}> /ราคา/ttc </code>(คอมเมนต์) และ<code style={{ fontSize: 11 }}> ?s=tt </code>(ไบโอ)
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'grid', gap: 8 }}>

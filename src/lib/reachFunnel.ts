@@ -118,3 +118,59 @@ export function reachAdvice(rows: ReachRow[]): string {
   if (best) return `${best.label} ส่งคนมาได้ดีที่สุด (${best.passThroughPct}%) และไม่มีขั้นไหนตัน — ทุ่มวิวไปทางนี้ได้ผลตรง ๆ`;
   return 'ทุกแพลตฟอร์มยังมีคนเห็นน้อยเกินจะสรุป — คอขวดคือปริมาณคอนเทนต์';
 }
+
+/* ── การทดลอง "คอมเมนต์ปักหมุด vs ไบโอ" ────────────────────────────────
+ *
+ * ตั้งขึ้น 20 ส.ค. 2569 หลังวัดเพดานไบโอได้ซ้ำเป็นครั้งที่สอง (15,900 วิว → เข้าโปรไฟล์ 13 คน)
+ * ก่อนหน้านี้เราย้ายลิงก์ไปคอมเมนต์ไม่ได้ "แบบพิสูจน์ได้" เพราะ landing_funnel ไม่เก็บ utm_medium
+ *   ⇒ tiktok/bio กับ tiktok/comment รวมเป็นก้อนเดียวชื่อ 'tiktok' — ทำการทดลองที่วัดผลไม่ได้
+ * migration 0065 เพิ่มคอลัมน์ + by_medium แล้ว ฟังก์ชันนี้คืออ่านผลของมัน
+ *
+ * ⚠️ ห้ามประกาศผู้ชนะเร็วเกิน — ต้องมีคนถึงเว็บพอสมควรทั้งสองทางก่อน
+ *    (คนเดียวขยับเปอร์เซ็นต์ได้หลายสิบเมื่อฐานเล็ก · หลักเดียวกับ MIN_SAMPLE ใน landingFunnel)
+ */
+
+/** จำนวนคนที่มาถึงเว็บขั้นต่ำ "ต่อทาง" ก่อนจะเทียบกันได้ */
+export const MIN_ARRIVALS_PER_ROUTE = 20;
+
+export interface RouteCompare {
+  platform: string;
+  /** คนที่มาถึงเว็บผ่านคอมเมนต์ปักหมุด */
+  comment: number;
+  /** คนที่มาถึงเว็บผ่านลิงก์ในไบโอ */
+  bio: number;
+  /** สรุปได้หรือยัง — false = ยังน้อยเกินไป */
+  ready: boolean;
+  /** ข้อความที่แสดงให้คนอ่าน — ต้องบอกความจริงตอนที่ยังสรุปไม่ได้ด้วย */
+  message: string;
+}
+
+/** อ่านผล bio vs comment ของแพลตฟอร์มหนึ่ง จาก by_medium ที่ landing_funnel_agg คืนมา
+ *  @param byMedium คีย์เป็น "source/medium" เช่น `tiktok/comment` */
+export function routeCompare(
+  platform: string,
+  byMedium: Record<string, { total: number }> | null | undefined,
+): RouteCompare {
+  const at = (m: string) => Math.max(0, byMedium?.[`${platform}/${m}`]?.total ?? 0);
+  const comment = at('comment');
+  const bio = at('bio');
+  const ready = comment >= MIN_ARRIVALS_PER_ROUTE && bio >= MIN_ARRIVALS_PER_ROUTE;
+
+  if (!ready) {
+    const need = MIN_ARRIVALS_PER_ROUTE;
+    return {
+      platform, comment, bio, ready: false,
+      message: `คอมเมนต์ ${comment} คน · ไบโอ ${bio} คน — ยังเทียบไม่ได้ ` +
+        `(ต้องการอย่างน้อย ${need} คนต่อทาง ไม่งั้นคนเดียวขยับผลได้ทั้งหมด)`,
+    };
+  }
+  if (comment === bio) {
+    return { platform, comment, bio, ready: true, message: `เท่ากันพอดี (${comment} คน) — ยังไม่มีทางไหนชนะ` };
+  }
+  const win = comment > bio ? 'คอมเมนต์ปักหมุด' : 'ลิงก์ในไบโอ';
+  const times = Math.round((Math.max(comment, bio) / Math.max(1, Math.min(comment, bio))) * 10) / 10;
+  return {
+    platform, comment, bio, ready: true,
+    message: `${win} พาคนมาได้มากกว่า ${times} เท่า (คอมเมนต์ ${comment} · ไบโอ ${bio})`,
+  };
+}

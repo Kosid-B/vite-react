@@ -46,7 +46,8 @@
 Facebook   https://ceoaithailand.org/ready?s=fb
 LINE       https://ceoaithailand.org/ready?s=line
 LinkedIn   https://ceoaithailand.org/ready?s=li
-TikTok     https://ceoaithailand.org/ready?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/ready/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/ready?s=tt
 Instagram  https://ceoaithailand.org/ready?s=ig
 Shorts     https://ceoaithailand.org/ready?s=yt&c=9a
 ในภาพ/คลิป ceoaithailand.org/ready

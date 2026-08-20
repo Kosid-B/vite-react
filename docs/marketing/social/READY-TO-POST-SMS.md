@@ -11,7 +11,8 @@
 
 | แพลตฟอร์ม | ลิงก์ | วางตรงไหน |
 |---|---|---|
-| TikTok | `https://ceoaithailand.org/sms?s=tt` | ไบโอ (ช่อง "ลิงก์") |
+| TikTok ⭐ **คอมเมนต์ปักหมุด** | `ceoaithailand.org/sms/ttc` | ทางหลัก — ทุกคนที่ดูเห็นเลย ไม่ต้องเข้าโปรไฟล์ |
+| TikTok ไบโอ ⚠️ เพดาน ~13 คน/คลิป | `https://ceoaithailand.org/sms?s=tt` | ไบโอ (ช่อง "ลิงก์") |
 | YouTube Shorts | `https://ceoaithailand.org/sms?s=yt&c=6a` | คำอธิบายใต้คลิป |
 | Facebook | `https://ceoaithailand.org/sms?s=fb` | ท้ายแคปชัน |
 | Instagram feed | `https://ceoaithailand.org/sms?s=ig` | ไบโอ |
@@ -30,7 +31,8 @@
 สร้างธุรกิจและวางระบบด้วยตัวคนเดียว ด้วยทีม AI
 เช็ก SMS ปลอม อ่านฟรี ไม่ต้องสมัคร 👇
 ```
-ช่อง "ลิงก์" → `https://ceoaithailand.org/sms?s=tt`
+ช่อง "ลิงก์" (ไบโอ · เพดาน ~13 คน) → `https://ceoaithailand.org/sms?s=tt`
+📌 **คอมเมนต์ปักหมุด (ทางหลัก)** → พิมพ์ตามได้เลยครับ `ceoaithailand.org/sms/ttc`
 
 **แคปชันคลิป — เวอร์ชัน A (ตรงประเด็น)**
 ```

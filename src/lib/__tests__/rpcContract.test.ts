@@ -26,11 +26,11 @@ const CONTRACTS: { fn: string; consumer: string; keys: string[]; minFile?: strin
   {
     fn: 'landing_funnel_agg',
     consumer: 'LandingAgg (lib/landingFunnel.ts)',
-    minFile: '0062', // 0057 ทำคีย์หาย · 0062 เพิ่ม utm — ห้ามถอยกลับไปก่อนหน้านี้
+    minFile: '0065', // 0057 ทำคีย์หาย · 0062 เพิ่ม utm · 0065 เพิ่ม by_medium — ห้ามถอยกลับ
     keys: [
       'days', 'total', 'engaged', 'cta', 'signup', 'avg_scroll', 'avg_dwell', 'bounce',
       'by_seg', 'by_ref', 'by_ab', 'by_hero_ab', 'by_layout_ab', 'sections',
-      'by_utm_source', 'by_campaign', 'by_content',
+      'by_utm_source', 'by_campaign', 'by_content', 'by_medium',
     ],
   },
   {

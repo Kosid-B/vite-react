@@ -43,7 +43,8 @@
 Facebook   https://ceoaithailand.org/palm?s=fb
 LINE       https://ceoaithailand.org/palm?s=line
 LinkedIn   https://ceoaithailand.org/palm?s=li
-TikTok     https://ceoaithailand.org/palm?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/palm/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/palm?s=tt
 Instagram  https://ceoaithailand.org/palm?s=ig
 Shorts     https://ceoaithailand.org/palm?s=yt&c=8a
 ในภาพ/คลิป ceoaithailand.org/palm

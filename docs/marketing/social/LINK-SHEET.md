@@ -1,7 +1,15 @@
 # ตารางลิงก์ต่อภาพ — ก๊อปวางได้เลย
 
-> **กฎเดียวที่ต้องจำ:** ปุ่มในภาพกดไม่ได้ — ลิงก์ต้องอยู่ใน**ข้อความ**เสมอ
+> **กฎที่ 1:** ปุ่มในภาพกดไม่ได้ — ลิงก์ต้องอยู่ใน**ข้อความ**เสมอ
 > URL ในภาพมีไว้ให้คน "พิมพ์ตาม" · URL ในแคปชันมีไว้ให้คน "กด"
+>
+> **กฎที่ 2 (ใหม่ 20 ส.ค. 69):** ⭐ **คอมเมนต์ปักหมุด = ทางหลัก · ไบโอ = ทางสำรอง**
+> วัดจริง 2 ครั้งด้วยตัวเลขเกือบเท่ากัน: **15,900 วิว → เข้าโปรไฟล์ 11–13 คน**
+> ลิงก์อยู่ในไบโอ ⇒ เพดานคนที่ *มีโอกาส* กดลิงก์ = 13 คน ไม่ว่าคลิปจะดังแค่ไหน
+> คอมเมนต์ปักหมุดอยู่ใต้คลิป ทุกคนที่ดูเห็นได้เลย = ข้ามเพดานนั้น
+>
+> **กฎที่ 3:** ห้ามใช้ลิงก์ข้ามแพลตฟอร์ม — เคยพลาดจริง โพสต์ลง TikTok ด้วยลิงก์ที่ติด
+> `utm_source=youtube` ⇒ ถ้ามีคนกด รายงานจะโยนเครดิตไปให้ YouTube ทั้งหมด
 
 ---
 
@@ -33,7 +41,8 @@
 Facebook   https://ceoaithailand.org/sms?s=fb
 LINE       https://ceoaithailand.org/sms?s=line
 LinkedIn   https://ceoaithailand.org/sms?s=li
-TikTok     https://ceoaithailand.org/sms?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/sms/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/sms?s=tt
 Instagram  https://ceoaithailand.org/sms?s=ig
 Shorts     https://ceoaithailand.org/sms?s=yt&c=6a
 ในภาพ/คลิป ceoaithailand.org/sms
@@ -45,7 +54,8 @@ Shorts     https://ceoaithailand.org/sms?s=yt&c=6a
 Facebook   https://ceoaithailand.org/price?s=fb&c=evgB
 LINE       https://ceoaithailand.org/price?s=line&c=evgB
 LinkedIn   https://ceoaithailand.org/price?s=li&c=evgB
-TikTok     https://ceoaithailand.org/price?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/price/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/price?s=tt
 Instagram  https://ceoaithailand.org/price?s=ig
 Shorts     https://ceoaithailand.org/price?s=yt&c=1a
 ในภาพ/คลิป ceoaithailand.org/price
@@ -56,7 +66,8 @@ Shorts     https://ceoaithailand.org/price?s=yt&c=1a
 Facebook   https://ceoaithailand.org/tun?s=fb&c=evgA
 LINE       https://ceoaithailand.org/tun?s=line&c=evgA
 LinkedIn   https://ceoaithailand.org/tun?s=li&c=evgA
-TikTok     https://ceoaithailand.org/tun?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/tun/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/tun?s=tt
 Instagram  https://ceoaithailand.org/tun?s=ig
 Shorts     https://ceoaithailand.org/tun?s=yt&c=2a
 ในภาพ/คลิป ceoaithailand.org/tun
@@ -68,7 +79,8 @@ Shorts     https://ceoaithailand.org/tun?s=yt&c=2a
 Facebook   https://ceoaithailand.org/customer?s=fb
 LINE       https://ceoaithailand.org/customer?s=line
 LinkedIn   https://ceoaithailand.org/customer?s=li
-TikTok     https://ceoaithailand.org/customer?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/customer/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/customer?s=tt
 Instagram  https://ceoaithailand.org/customer?s=ig
 Shorts     https://ceoaithailand.org/customer?s=yt&c=5a
 ในภาพ/คลิป ceoaithailand.org/customer
@@ -79,7 +91,8 @@ Shorts     https://ceoaithailand.org/customer?s=yt&c=5a
 Facebook   https://ceoaithailand.org/plan?s=fb
 LINE       https://ceoaithailand.org/plan?s=line
 LinkedIn   https://ceoaithailand.org/plan?s=li
-TikTok     https://ceoaithailand.org/plan?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/plan/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/plan?s=tt
 Instagram  https://ceoaithailand.org/plan?s=ig
 Shorts     https://ceoaithailand.org/plan?s=yt&c=3a
 ในภาพ/คลิป ceoaithailand.org/plan
@@ -90,7 +103,8 @@ Shorts     https://ceoaithailand.org/plan?s=yt&c=3a
 Facebook   https://ceoaithailand.org/ai?s=fb&c=job26b
 LINE       https://ceoaithailand.org/ai?s=line&c=job26b
 LinkedIn   https://ceoaithailand.org/ai?s=li&c=job26b
-TikTok     https://ceoaithailand.org/ai?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/ai/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/ai?s=tt
 Instagram  https://ceoaithailand.org/ai?s=ig
 Shorts     https://ceoaithailand.org/ai?s=yt&c=4a
 ในภาพ/คลิป ceoaithailand.org/ai
@@ -101,7 +115,8 @@ Shorts     https://ceoaithailand.org/ai?s=yt&c=4a
 Facebook   https://ceoaithailand.org/pc?s=fb
 LINE       https://ceoaithailand.org/pc?s=line
 LinkedIn   https://ceoaithailand.org/pc?s=li
-TikTok     https://ceoaithailand.org/pc?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/pc/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/pc?s=tt
 Instagram  https://ceoaithailand.org/pc?s=ig
 Shorts     https://ceoaithailand.org/pc?s=yt&c=7a
 ในภาพ/คลิป ceoaithailand.org/pc
@@ -112,7 +127,8 @@ Shorts     https://ceoaithailand.org/pc?s=yt&c=7a
 Facebook   https://ceoaithailand.org/palm?s=fb
 LINE       https://ceoaithailand.org/palm?s=line
 LinkedIn   https://ceoaithailand.org/palm?s=li
-TikTok     https://ceoaithailand.org/palm?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/palm/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/palm?s=tt
 Instagram  https://ceoaithailand.org/palm?s=ig
 Shorts     https://ceoaithailand.org/palm?s=yt&c=8a
 ในภาพ/คลิป ceoaithailand.org/palm
@@ -134,7 +150,8 @@ tag ต่อคลิป: `iso14026` · `paperonly` · `keyperson` · `lostdeal
 Facebook   https://ceoaithailand.org/ready?s=fb
 LINE       https://ceoaithailand.org/ready?s=line
 LinkedIn   https://ceoaithailand.org/ready?s=li
-TikTok     https://ceoaithailand.org/ready?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/ready/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/ready?s=tt
 Instagram  https://ceoaithailand.org/ready?s=ig
 Shorts     https://ceoaithailand.org/ready?s=yt&c=9a
 ในภาพ/คลิป ceoaithailand.org/ready
@@ -149,12 +166,21 @@ Shorts     https://ceoaithailand.org/ready?s=yt&c=9a
 **URL ในภาพ** ใช้ตัวสั้นเปล่า ๆ (ให้คนพิมพ์ตาม) · **URL ในแคปชัน/คำอธิบาย** ต่อท้ายด้วย `?s=`
 ไม่ต่อก็ยังใช้ได้ แค่จะรวมเป็นก้อน `social` แยกไม่ออกว่ามาจากที่ไหน
 
+**สองรูปแบบ ใช้คนละที่ — เลือกตามว่าคน "กด" หรือ "พิมพ์"**
+- คนกดได้ (YouTube · Facebook · LINE · เว็บ) → ใช้ `?s=ytc` — ยาวได้ ไม่มีใครต้องพิมพ์
+- **คนต้องพิมพ์เอง (TikTok · ตัวหนังสือบนจอ · ป้าย/QR สำรอง) → ใช้ตัวย่อ*ท้าย path* `/ttc`**
+  เพราะไม่มี `?` และ `=` ให้ลืมพิมพ์ · ถ้าเขาพิมพ์ตกเหลือ `/ราคา` ก็ยังเข้าได้ตามปกติ
+  (แย่ที่สุด = เท่าของเดิม ไม่มีทางแย่กว่า)
+
 | ต่อท้าย | แพลตฟอร์ม | ตัวอย่างเต็ม |
 |---|---|---|
-| `?s=yt` | YouTube Shorts | `ceoaithailand.org/price?s=yt` |
-| `?s=ytv` | YouTube คลิปยาว | `ceoaithailand.org/price?s=ytv` |
-| `?s=tt` | TikTok (ไบโอ) | `ceoaithailand.org/sms?s=tt` |
-| `?s=fb` | Facebook feed | `ceoaithailand.org/sms?s=fb` |
+| `?s=yt` | YouTube Shorts — คำบรรยายใต้คลิป | `ceoaithailand.org/price?s=yt` |
+| **`/ytc`** ⭐ | **YouTube — คอมเมนต์ปักหมุด** (กดได้) | `ceoaithailand.org/price?s=ytc` |
+| `/ytv` | YouTube — ตัวหนังสือบนจอ (คนพิมพ์ตาม) | `ceoaithailand.org/price/ytv` |
+| **`/ttc`** ⭐ | **TikTok — คอมเมนต์ปักหมุด** (คนพิมพ์ตาม) | `ceoaithailand.org/sms/ttc` |
+| `?s=tt` | TikTok — ไบโอ ⚠️ เพดาน ~13 คน/คลิป | `ceoaithailand.org/sms?s=tt` |
+| `?s=fb` | Facebook feed / ทักแชท | `ceoaithailand.org/sms?s=fb` |
+| **`?s=fbc`** ⭐ | **Facebook — คอมเมนต์ปักหมุด** | `ceoaithailand.org/sms?s=fbc` |
 | `?s=ig` | Instagram Story | `ceoaithailand.org/tun?s=ig` |
 | `?s=line` | LINE / กลุ่มไลน์ | `ceoaithailand.org/customer?s=line` |
 | `?s=li` | LinkedIn | `ceoaithailand.org/plan?s=li` |

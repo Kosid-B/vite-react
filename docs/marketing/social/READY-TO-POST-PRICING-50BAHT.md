@@ -267,7 +267,8 @@ https://ceoaithailand.org/price?s=fb&c=energy
 Facebook   https://ceoaithailand.org/price?s=fb&c=plate
 LINE       https://ceoaithailand.org/price?s=line&c=plate
 LinkedIn   https://ceoaithailand.org/price?s=li&c=plate
-TikTok     https://ceoaithailand.org/price?s=tt
+TikTok คอมเมนต์ปักหมุด ⭐ ceoaithailand.org/price/ttc   ← ทางหลัก (คนพิมพ์ตาม · ไม่มี ? และ = ให้ลืม)
+TikTok ไบโอ (เพดาน)  https://ceoaithailand.org/price?s=tt
 Instagram  https://ceoaithailand.org/price?s=ig
 Shorts     https://ceoaithailand.org/price?s=yt&c=1a
 ในภาพ/คลิป ceoaithailand.org/price

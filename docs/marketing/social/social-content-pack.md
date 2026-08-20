@@ -23,7 +23,7 @@ CEO · การตลาด · นักวิจัย · คนทำเอ�
 ```
 คอมเมนต์แรก (เจ้าของโพสต์):
 ```
-ลองใช้ฟรีที่นี่ 👉 https://ceoaithailand.org/start?utm_source=facebook&utm_medium=social&utm_campaign=fb_launch
+ลองใช้ฟรีที่นี่ 👉 https://ceoaithailand.org/ai?s=fb&c=launch
 ```
 
 ## 📘 FB — โพสต์บนเพจ B. Training Consultant (cross-promote)
@@ -41,7 +41,7 @@ CEO · การตลาด · นักวิจัย · คนทำเอ�
 ```
 คอมเมนต์แรก:
 ```
-👉 https://ceoaithailand.org/start?utm_source=btc_facebook&utm_medium=social&utm_campaign=fb_launch
+👉 https://ceoaithailand.org/ai?s=fb&c=btcpage
 โทรปรึกษา 081-781-7773
 ```
 

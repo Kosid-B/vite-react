@@ -24,7 +24,8 @@
 | Facebook | `https://ceoaithailand.org/pc?s=fb` | ท้ายแคปชัน |
 | LINE | `https://ceoaithailand.org/pc?s=line` | ข้อความ |
 | LinkedIn | `https://ceoaithailand.org/pc?s=li` | ท้ายโพสต์ |
-| TikTok | `https://ceoaithailand.org/pc?s=tt` | ไบโอ (31 ส.ค.) |
+| TikTok ⭐ **คอมเมนต์ปักหมุด** | `ceoaithailand.org/pc/ttc` | ทางหลัก — ทุกคนที่ดูเห็นเลย ไม่ต้องเข้าโปรไฟล์ |
+| TikTok ไบโอ ⚠️ เพดาน ~13 คน/คลิป | `https://ceoaithailand.org/pc?s=tt` | ไบโอ (31 ส.ค.) |
 | YouTube Shorts | `https://ceoaithailand.org/pc?s=yt&c=7a` | คำอธิบาย |
 | Instagram | `https://ceoaithailand.org/pc?s=ig` | ไบโอ / Link sticker |
 
@@ -118,7 +119,8 @@ https://ceoaithailand.org/pc?s=li
 สร้างธุรกิจและวางระบบด้วยตัวคนเดียว ด้วยทีม AI
 ต้นทุนขึ้น ปรับราคายังไงไม่ขาดทุน อ่านฟรี 👇
 ```
-ช่อง "ลิงก์" → `https://ceoaithailand.org/pc?s=tt`
+ช่อง "ลิงก์" (ไบโอ · เพดาน ~13 คน) → `https://ceoaithailand.org/pc?s=tt`
+📌 **คอมเมนต์ปักหมุด (ทางหลัก)** → พิมพ์ตามได้เลยครับ `ceoaithailand.org/pc/ttc`
 
 **แคปชัน**
 ```

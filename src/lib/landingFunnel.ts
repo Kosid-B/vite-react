@@ -82,6 +82,8 @@ export interface LandingAgg {
    *  by_utm_source = แพลตฟอร์ม · by_campaign = หัวข้อ/บทความ · by_content = ชิ้นงานย่อย (c=) */
   by_utm_source?: Record<string, FunnelCell>;
   by_campaign?: Record<string, FunnelCell>;
+  /** ⭐ "source/medium" — ตอบ "คอมเมนต์ปักหมุด vs ไบโอ" (tiktok/comment vs tiktok/bio · 0065) */
+  by_medium?: Record<string, FunnelCell>;
   by_content?: Record<string, FunnelCell>;
 }
 
@@ -217,8 +219,10 @@ interface FunnelState {
   ab: LandingVariant;   // กลุ่ม A/B (holdout 2 ส่วนใหม่)
   heroAb?: string;      // กลุ่ม A/B พาดหัว (เดิมไปลง GA อย่างเดียว)
   layoutAb?: string;    // กลุ่ม A/B ลำดับบล็อก (เดิมไปลง GA อย่างเดียว)
-  /** แท็กคอนเทนต์จาก utm (first-touch) — ตอบ "ชิ้นไหนพาคนมา" */
-  utm?: { source?: string; campaign?: string; content?: string };
+  /** แท็กคอนเทนต์จาก utm (first-touch) — ตอบ "ชิ้นไหนพาคนมา"
+   *  medium = ช่องทางภายในแพลตฟอร์มเดียวกัน (bio vs comment) — ตัวเดียวที่ตอบได้ว่า
+   *  "คอมเมนต์ปักหมุดชนะไบโอไหม" ซึ่งเป็นการทดลองที่กำลังรันอยู่ (0065) */
+  utm?: { source?: string; medium?: string; campaign?: string; content?: string };
 }
 let state: FunnelState | null = null;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -269,7 +273,7 @@ export function utmFrom(search: string): { source?: string; campaign?: string; c
  *     ไม่ได้พามาที่ Landing ตรง ๆ ⇒ ถ้าอ่านแค่ query ของหน้านี้ เราจะเห็น utm ก็ต่อเมื่อ
  *     เขากดปุ่ม CTA ที่ถูกเติม utm ไว้เท่านั้น · คนที่กด "หน้าหลัก" บนแถบนำทางแทน จะกลายเป็น direct
  *     (ตรวจจริง 20 ส.ค. 2569: 75 แถวใน landing_funnel มี utm แค่ 1 แถว) */
-function resolvedUtm(search: string): { source?: string; campaign?: string; content?: string } {
+function resolvedUtm(search: string): { source?: string; medium?: string; campaign?: string; content?: string } {
   const cur = pickUtm(search);
   let stored: ReturnType<typeof readFirstTouch> = null;
   try { stored = readFirstTouch(localStorage.getItem(UTM_FIRST_TOUCH_KEY), Date.now()); } catch { /* noop */ }
@@ -280,7 +284,7 @@ function resolvedUtm(search: string): { source?: string; campaign?: string; cont
   // ไม่มีที่มาเลย = อย่าแต่งค่าให้ (ปล่อยว่างดีกว่าเขียน 'site' ทับแล้วอ่านผิดว่ามีที่มา)
   if (!Object.keys(cur).length && !stored) return {};
   const u = mergeUtm(cur, stored);
-  return { source: u.utm_source, campaign: u.utm_campaign, content: u.utm_content };
+  return { source: u.utm_source, medium: u.utm_medium, campaign: u.utm_campaign, content: u.utm_content };
 }
 
 /** เริ่มเซสชัน funnel — เรียกครั้งเดียวตอน Landing mount (ส่ง view beacon) */
@@ -418,6 +422,7 @@ export function flush(force = false, leaving = false): void {
     p_utm_source: state.utm?.source ?? null,
     p_utm_campaign: state.utm?.campaign ?? null,
     p_utm_content: state.utm?.content ?? null,
+    p_utm_medium: state.utm?.medium ?? null,
   };
 
   if (leaving) {
@@ -478,6 +483,7 @@ export function normalizeLandingAgg(raw: unknown, days = 30): LandingAgg {
     by_layout_ab: cells(d.by_layout_ab),
     by_utm_source: toCells(d.by_utm_source),
     by_campaign: toCells(d.by_campaign),
+    by_medium: toCells(d.by_medium),
     by_content: toCells(d.by_content),
     sections: (d.sections && typeof d.sections === 'object'
       ? (d.sections as LandingAgg['sections'])
