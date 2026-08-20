@@ -15,10 +15,10 @@ const root = resolve(__dirname, '../../..');
 const landing = readFileSync(resolve(root, 'src/pages/LandingPage.tsx'), 'utf8');
 const cookie = readFileSync(resolve(root, 'src/components/CookieConsent.tsx'), 'utf8');
 
-/** ดึงบล็อก @media (max-width: 768px) ของ <style> ใน LandingPage */
-function mobileBlock(): string {
-  const i = landing.indexOf('@media (max-width: 768px)');
-  expect(i, 'LandingPage ต้องมีบล็อก @media (max-width: 768px) สำหรับจอแรกมือถือ').toBeGreaterThan(-1);
+/** ดึงบล็อก @media (max-width: Npx) ของ <style> ใน LandingPage */
+function mobileBlock(width = 768): string {
+  const i = landing.indexOf(`@media (max-width: ${width}px)`);
+  expect(i, `LandingPage ต้องมีบล็อก @media (max-width: ${width}px) สำหรับจอแรกมือถือ`).toBeGreaterThan(-1);
   const open = landing.indexOf('{', i);
   let depth = 0;
   for (let j = open; j < landing.length; j++) {
@@ -110,5 +110,64 @@ describe('ที่กันให้ของที่ position:fixed ต้อ
 
   it('ต้องคืนค่า padding เดิมเมื่อแถบหายไป (ไม่ทิ้งช่องว่างค้างไว้)', () => {
     expect(cookie).toMatch(/document\.body\.style\.paddingBottom\s*=\s*''/);
+  });
+});
+
+
+/* ══════════════════════════════════════════════════════════════════════
+ * จอที่แคบกว่า 390px — วัดจริง 20 ส.ค. 2569 (worst case seg=food)
+ *   iPhone SE 320x568 พาดหัวเครื่องคำนวณเกินขอบที่มองเห็นไป 263px
+ *   Android 360x640 เกิน 111px · iPhone 8 375x667 เกิน 26px · 390px ขึ้นไปผ่าน
+ * สาเหตุ: ตัวอักษรขนาดเดิมตกบรรทัดมากขึ้นเมื่อจอแคบลง — hero สูงขึ้นทั้งที่จอเตี้ยลง
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/** ขนาดตัวอักษร (px) ของ selector ในบล็อกความกว้างที่ระบุ */
+function fontSizeOf(selector: string, width: number): number | null {
+  const block = mobileBlock(width);
+  const re = new RegExp(`${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{([^}]*)\\}`);
+  const m = block.match(re);
+  if (!m) return null;
+  const f = m[1].match(/font-size:\s*([\d.]+)px/);
+  return f ? Number(f[1]) : null;
+}
+
+describe('จอแคบกว่า 390px ต้องมีชั้นบีบของตัวเอง', () => {
+  it('มีทั้งสองชั้น — 389px (360/375) และ 340px (320)', () => {
+    expect(landing).toContain('@media (max-width: 389px)');
+    expect(landing).toContain('@media (max-width: 340px)');
+  });
+
+  it('ยิ่งจอแคบ ตัวอักษรพาดหัวยิ่งเล็กลง (ไม่ใช่บีบเท่ากันหมด)', () => {
+    const wide = fontSizeOf('.lp-hero-h1', 768) ?? fontSizeOf('.lp-hero .lp-hero-h1', 768);
+    const mid = fontSizeOf('.lp-hero .lp-hero-h1', 389);
+    const narrow = fontSizeOf('.lp-hero .lp-hero-h1', 340);
+    expect(wide, 'บล็อก 768px ต้องกำหนดขนาดพาดหัว').toBeGreaterThan(0);
+    expect(mid, 'บล็อก 389px ต้องกำหนดขนาดพาดหัว').toBeGreaterThan(0);
+    expect(narrow, 'บล็อก 340px ต้องกำหนดขนาดพาดหัว').toBeGreaterThan(0);
+    expect(mid!).toBeLessThan(wide!);
+    expect(narrow!).toBeLessThan(mid!);
+    // แต่ต้องยังใหญ่กว่าตัวหนังสือเนื้อหา ไม่งั้นอ่านจากระยะแขนไม่ออก
+    expect(narrow!).toBeGreaterThanOrEqual(20);
+  });
+
+  it('🔴 ห้ามแก้ nav ด้วยการบังคับความสูง — ต้องแก้ที่เนื้อหาในแถบ', () => {
+    // บทเรียนเดียวกับ padding-bottom ของแถบคุกกี้: บังคับขนาดกล่อง = ซ่อนอาการ ไม่ใช่แก้เหตุ
+    // ของจริงที่เจอ: ปุ่มใน nav สูง 62px อยู่ในแถบสูง 60px และแบรนด์ตกสองบรรทัดตั้งแต่ก่อนแก้
+    for (const w of [389, 340]) {
+      expect(mobileBlock(w), `บล็อก ${w}px`).not.toMatch(/(^|[\s{;])nav\s*\{[^}]*height:/);
+    }
+  });
+
+  it('คลาสที่ CSS อ้างถึง ต้องมีอยู่จริงใน JSX (กัน selector ที่ไม่ตรงอะไรเลย)', () => {
+    for (const cls of ['lp-nav', 'lp-nav-brand', 'lp-nav-theme-label']) {
+      expect(landing, `${cls} ถูกใช้ใน CSS แต่ไม่มีใน JSX = กฎนั้นไม่ทำงานเลย`)
+        .toContain(`className="${cls}"`);
+    }
+  });
+
+  it('ปุ่มสลับธีมที่ซ่อนป้ายชื่อบนจอ 320px ต้องยังบอกได้ว่ามันคืออะไร', () => {
+    // ซ่อน "ตัวหนังสือ" ได้ แต่ห้ามซ่อน "ความหมาย" — ไม่งั้นคนใช้ screen reader เจอปุ่มเปล่า
+    expect(mobileBlock(340)).toContain('.lp-nav-theme-label { display: none');
+    expect(landing).toMatch(/aria-label=\{`สลับธีม/);
   });
 });

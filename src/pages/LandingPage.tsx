@@ -335,8 +335,8 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       )}
 
       {/* ─── Nav ─── */}
-      <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${C.border}`, backgroundColor: C.navBg, backdropFilter: 'blur(12px)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
-        <span style={{ fontWeight: 700, fontSize: 18, color: C.cyan4, letterSpacing: '-0.5px' }}>
+      <nav className="lp-nav" style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${C.border}`, backgroundColor: C.navBg, backdropFilter: 'blur(12px)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
+        <span className="lp-nav-brand" style={{ fontWeight: 700, fontSize: 18, color: C.cyan4, letterSpacing: '-0.5px' }}>
           CEO AI Thailand
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -349,7 +349,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border2}`, background: 'transparent', color: C.slate4, fontFamily: 'inherit', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all .2s' }}
           >
             <span aria-hidden="true">{themeIcon(nextTheme(theme))}</span>
-            <span style={{ display: 'inline' }}>{themeLabel(nextTheme(theme))}</span>
+            <span className="lp-nav-theme-label" style={{ display: 'inline' }}>{themeLabel(nextTheme(theme))}</span>
           </button>
           <button
             onClick={() => { markLandingSignup(); onGetStarted(); }}
@@ -389,6 +389,50 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           .lp-hero > div:last-of-type button { font-size: 16px !important; padding: 13px 20px !important; }
           .lp-hero > div:last-of-type > div { font-size: 12px !important; margin-top: 8px !important; }
           .lp-promo-strip { display: none !important; }
+        }
+
+        /* 🔴 จอที่แคบกว่า 390px ยังไม่พ้นขอบจอ — วัดจริง 20 ส.ค. 2569 (worst case seg=food)
+           ก่อนแก้: iPhone SE 320x568 พาดหัวเครื่องคำนวณเกินไป 263px · Android 360x640 เกิน 111px
+                   iPhone 8 375x667 เกิน 26px  ⇐ เครื่องที่ยังมีคนใช้เยอะ ไม่ใช่แค่ SE
+           สาเหตุ: ตัวอักษรขนาดเดิมตกบรรทัดมากขึ้นตามความกว้างที่หายไป
+                   (h1 ที่ 390px = 3 บรรทัด · ที่ 320px = 5 บรรทัด) — hero จึงสูงขึ้นทั้งที่จอเตี้ยลง
+           แก้เป็น 2 ชั้นตามความกว้าง ไม่ใช่ชั้นเดียว เพราะ 375px มีที่เหลือเยอะกว่า 320px มาก
+           ⇒ บีบเท่ากันหมด = 375px ถูกย่อเกินจำเป็นโดยไม่ได้อะไรเพิ่ม */
+        @media (max-width: 389px) {
+          /* 🔴 nav ล้นอยู่แล้วตั้งแต่ก่อนแก้ (ปุ่มสูง 62px ในแถบสูง 60px · แบรนด์ตก 2 บรรทัด)
+             แก้ที่ "เนื้อหาในแถบ" ไม่ใช่บังคับความสูงแถบ — บังคับความสูงคือซ่อนอาการ ไม่ใช่แก้เหตุ */
+          .lp-nav { padding-left: 14px !important; padding-right: 14px !important; }
+          .lp-nav-brand { font-size: 15px !important; white-space: nowrap !important; }
+          .lp-nav > div { gap: 6px !important; }
+          .lp-nav a, .lp-nav button { font-size: 12.5px !important; padding: 6px 9px !important; }
+          .lp-hero { padding-top: 8px !important; padding-bottom: 6px !important; }
+          .lp-hero .lp-hero-h1 { font-size: 26px !important; line-height: 1.2 !important; margin-bottom: 7px !important; }
+          .lp-hero > p:first-of-type { font-size: 14px !important; line-height: 1.45 !important; margin-bottom: 7px !important; }
+          .lp-hero > div:first-of-type + div { font-size: 11px !important; padding: 3px 9px !important; margin-bottom: 6px !important; }
+          .lp-hero > div:last-of-type button { font-size: 15px !important; padding: 11px 16px !important; }
+          .lp-hero > div:last-of-type > div { font-size: 11px !important; margin-top: 5px !important; line-height: 1.4 !important; }
+          /* กฎของเครื่องคำนวณอยู่ที่นี่ด้วย เพราะมันถูกใช้เฉพาะบนหน้านี้ และต้องคิดพร้อมกับ hero
+             (แยกไฟล์แล้วจะกลายเป็นสองที่ที่ต้องแก้พร้อมกัน — เคยพลาดแบบนั้นมาแล้ว) */
+          .pqc-section { padding-top: 4px !important; }
+          .pqc-section > div { padding-top: 8px !important; }
+          .pqc-section h2 { font-size: 19px !important; line-height: 1.28 !important; margin-bottom: 5px !important; }
+        }
+
+        /* ชั้นที่ 2 — จอ 320px (iPhone SE) บีบเพิ่มอีกชั้น เพราะยังเกินอยู่ 150px หลังชั้นแรก */
+        @media (max-width: 340px) {
+          /* 320px: ป้ายชื่อธีมไม่พอที่จริง ๆ — เหลือไอคอนอย่างเดียว ปุ่มยังกดได้เหมือนเดิม
+             และยังมี aria-label บอกว่ามันคืออะไร (ไม่ได้ตัดฟังก์ชันทิ้ง แค่ไม่แสดงตัวหนังสือ) */
+          .lp-nav-brand { font-size: 13.5px !important; }
+          .lp-nav a, .lp-nav button { font-size: 11.5px !important; padding: 5px 7px !important; }
+          .lp-nav-theme-label { display: none !important; }
+          .lp-hero { padding-top: 5px !important; padding-bottom: 5px !important; }
+          .lp-hero .lp-hero-h1 { font-size: 22px !important; margin-bottom: 6px !important; }
+          .lp-hero > p:first-of-type { font-size: 13px !important; line-height: 1.42 !important; margin-bottom: 6px !important; }
+          .lp-hero > div:first-of-type + div { font-size: 10.5px !important; padding: 2px 8px !important; margin-bottom: 5px !important; }
+          .lp-hero > div:last-of-type button { font-size: 15px !important; padding: 10px 13px !important; }
+          .lp-hero > div:last-of-type > div { font-size: 10.5px !important; margin-top: 4px !important; line-height: 1.35 !important; }
+          .pqc-section > div { padding-top: 4px !important; }
+          .pqc-section h2 { font-size: 18.5px !important; margin-bottom: 4px !important; }
         }`}</style>
 
       {/* ─── Hero ─── */}
