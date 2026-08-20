@@ -581,7 +581,14 @@ export default function App() {
     }
   }, [activePage, data, updateData]);
 
-  async function signOut() {
+  /** ออกจากระบบ — `via` บอกว่ามาจากปุ่มไหน
+   *
+   * 🔴 ทำไมต้องมี `via` (20 ส.ค. 2569): ผู้ใช้รายงานว่า "กดจ่ายค่าสมาชิกแล้วเด้งออก"
+   *    auth log ของ Supabase ยืนยันว่ามีการเรียก `logout` จริงเวลา 07:59:20
+   *    แต่ **เราบอกไม่ได้เลยว่ามาจากปุ่มไหน** เพราะไม่เคยบันทึกไว้
+   *    ⇒ ได้แต่เดา ซึ่งขัดกฎข้อแรกของโปรเจกต์ · คราวหน้าต้องตอบได้จากข้อมูล */
+  async function signOut(via = 'unknown') {
+    track('sign_out', { via });
     /* ล้างข้อมูลของคนที่ออกจากระบบทิ้งจากเครื่องนี้ — เบราว์เซอร์เครื่องเดียวอาจมีหลายคนใช้
      * ถ้าไม่ล้าง คนถัดไปที่เปิดเว็บจะ "เห็น" งานของคนก่อนหน้าบนหน้าจอทันทีตั้งแต่ยังไม่ล็อกอิน
      * (ข้อมูลจริงยังอยู่บนคลาวด์ ล็อกอินกลับมาก็ได้คืนครบ) */
@@ -596,7 +603,7 @@ export default function App() {
     track('auth_switch_account', {});
     try { localStorage.removeItem('ceo_ai_guest'); } catch { /* noop */ }
     setGuestMode(false);
-    await signOut();
+    await signOut('auth_switch');
     setShowAuth(true);   // session กลายเป็น null → เงื่อนไขด้านล่างจะเรนเดอร์หน้า Auth ให้
   }
 
@@ -736,7 +743,7 @@ export default function App() {
         onExport={exportData}
         onImportFile={importData}
         userEmail={session?.user.email ?? null}
-        onSignOut={isSupabaseEnabled ? signOut : undefined}
+        onSignOut={isSupabaseEnabled ? () => signOut('sidebar') : undefined}
         workspaces={workspaces}
         activeWs={activeWs}
         onSwitchWs={setActiveWs}

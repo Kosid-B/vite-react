@@ -550,7 +550,15 @@ export default function Sidebar({ activePage, onNavigate, doneCount, totalAction
           <div className="sidebar-account">
             <div className="sidebar-account-email" title={userEmail ?? ''}>{userEmail ?? 'บัญชีของฉัน'}</div>
             <MfaSetup />
-            <button className="sidebar-signout" onClick={onSignOut}>ออกจากระบบ</button>
+            {/* 🔴 ถามยืนยันก่อน (20 ส.ค. 2569): ผู้ใช้หลุดออกจากระบบระหว่างกำลังจะจ่ายเงิน
+                และเราพิสูจน์ไม่ได้ว่ากดปุ่มไหน — บนมือถือเมนูนี้ยาวและต้องเลื่อน
+                ปุ่มที่ "กดพลาดแล้วเสียหาย" ต้องถามก่อนเสมอ ไม่ว่าสาเหตุจริงจะใช่ข้อนี้หรือไม่ */}
+            <button
+              className="sidebar-signout"
+              onClick={() => {
+                if (window.confirm('ออกจากระบบใช่ไหม?\n\nงานของคุณถูกบันทึกไว้บนคลาวด์แล้ว — ล็อกอินกลับมาได้ครบ')) onSignOut();
+              }}
+            >ออกจากระบบ</button>
           </div>
         )}
 

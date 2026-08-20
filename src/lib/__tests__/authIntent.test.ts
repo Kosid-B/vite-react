@@ -59,3 +59,32 @@ describe('หน้าสมัคร — คำบนปุ่มต้อง�
     expect(tab![0]).toContain('สมัครสมาชิก');
   });
 });
+
+describe('ออกจากระบบ — ต้องรู้ว่ามาจากปุ่มไหน และต้องกดพลาดไม่ได้', () => {
+  const app = readFileSync(join(process.cwd(), 'src', 'App.tsx'), 'utf8');
+  const sidebar = readFileSync(join(process.cwd(), 'src', 'components', 'Sidebar.tsx'), 'utf8');
+
+  /* ของจริง 20 ส.ค. 2569: ผู้ใช้บอก "กดจ่ายค่าสมาชิกแล้วเด้งออก"
+   * auth log ของ Supabase ยืนยันว่ามี logout จริงเวลา 07:59:20
+   * แต่เราบอกไม่ได้ว่ามาจากปุ่มไหน เพราะไม่เคยบันทึก → ได้แต่เดา */
+
+  it('signOut ต้องบันทึกว่ามาจากไหน (via) — ไม่งั้นครั้งหน้าก็ยังเดาอยู่ดี', () => {
+    expect(app).toMatch(/async function signOut\(via\s*=/);
+    expect(app).toMatch(/track\('sign_out',\s*\{\s*via\s*\}\)/);
+  });
+
+  it('ทุกจุดที่เรียก signOut ต้องระบุที่มา ไม่ปล่อยเป็น unknown', () => {
+    // ปุ่มในเมนู + ปุ่มสลับบัญชี = 2 ที่ · ห้ามมีการเรียกแบบไม่ใส่เหตุผล
+    expect(app).toContain("signOut('sidebar')");
+    expect(app).toContain("signOut('auth_switch')");
+    // ไม่นับ supabase.auth.signOut() ซึ่งเป็น API ของไลบรารี ไม่ใช่ฟังก์ชันของเรา
+    const bare = (app.match(/(?<!auth\.)\bsignOut\(\)/g) ?? []);
+    expect(bare, 'มีการเรียก signOut() ของเราโดยไม่บอกที่มา').toEqual([]);
+  });
+
+  it('ปุ่มออกจากระบบในเมนู ต้องถามยืนยันก่อน (กดพลาดบนมือถือแล้วเสียหาย)', () => {
+    const btn = sidebar.match(/className="sidebar-signout"[\s\S]{0,320}?<\/button>/);
+    expect(btn, 'ไม่พบปุ่มออกจากระบบ').toBeTruthy();
+    expect(btn![0]).toContain('window.confirm');
+  });
+});
