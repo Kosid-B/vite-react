@@ -214,7 +214,11 @@ export default function Auth({ onBack }: { onBack?: () => void } = {}) {
           <>
             <div className="auth-tabs">
               <button className={mode === 'signin' ? 'active' : ''} onClick={() => { setMode('signin'); setMsg(null); }}>เข้าสู่ระบบ</button>
-              <button className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setMsg(null); }}>เปิดพื้นที่ทำงาน</button>
+              {/* 🔴 เดิมเขียนว่า "เปิดพื้นที่ทำงาน" — ผู้ใช้จริงหาแท็บสมัครไม่เจอ (20 ส.ค. 2569)
+                  เจ้าของระบบเองยังกดผิดไปแท็บ "เข้าสู่ระบบ" แล้วเจอ "อีเมลหรือรหัสผ่านไม่ถูกต้อง"
+                  ทั้งที่ยังไม่เคยมีบัญชี → เข้าใจว่าระบบจำรหัสผ่านไม่ได้
+                  ⇒ ปุ่มต้องใช้คำที่คนคาดหวัง ไม่ใช่คำที่เราคิดว่าเท่ */}
+              <button className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setMsg(null); }}>สมัครสมาชิก</button>
             </div>
 
             {/* บอกก่อนว่าต้องกรอกอะไรบ้าง — คนกดเข้ามาแล้วเจอฟอร์มโดยไม่รู้ว่ายาวแค่ไหน จะกดปิด

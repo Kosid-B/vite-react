@@ -15,8 +15,20 @@ export function resolveWsLoad(args: {
   localRev: number;
   localBelongsToThisWs: boolean;    // local ผูกกับ ws นี้ตรง ๆ (dataWs === ws)
   localIsUnbound?: boolean;         // local ยังไม่ผูก ws ไหนเลย (dataWs === null = งาน guest/ครั้งแรก) — default false
+  /** 🔴 local เป็นข้อมูลของ "คนอื่น" ที่ค้างอยู่ในเบราว์เซอร์เครื่องนี้ — ห้าม push ขึ้นที่ไหนทั้งสิ้น
+   *
+   * บั๊กจริง (พบ 20 ส.ค. 2569): ผู้ใช้ใหม่สมัคร+ล็อกอินบนเบราว์เซอร์ที่เคยมีคนอื่นใช้
+   *   → `dataWsRef` เป็น null เสมอตอนโหลดหน้าใหม่ (เป็น useRef ไม่ได้ persist)
+   *   → localIsUnbound = true → ระบบเข้าใจว่า "งาน guest ของเจ้าตัว" → push ขึ้น ws ใหม่
+   *   ⇒ **ข้อมูลธุรกิจของคนก่อนหน้าถูกคัดลอกเข้าบัญชีของคนใหม่ทั้งก้อน**
+   *   ยืนยันจาก production: workspace_state ของสองบัญชี md5 ตรงกันทุกไบต์ (121,448 bytes)
+   *
+   * ⇒ "ไม่ผูก ws" ไม่ได้แปลว่า "เป็นของคนที่กำลังล็อกอินอยู่" — ต้องดูตัวตนของเจ้าของข้อมูลด้วย */
+  localIsForeign?: boolean;
 }): WsLoadAction {
-  const { hasCloud, cloudRev, localRev, localBelongsToThisWs, localIsUnbound = false } = args;
+  const { hasCloud, cloudRev, localRev, localBelongsToThisWs, localIsUnbound = false, localIsForeign = false } = args;
+  // ข้อมูลของคนอื่น: ใช้คลาวด์ถ้ามี ไม่มีก็เริ่มใหม่ — ห้ามเอาไป push เด็ดขาด
+  if (localIsForeign) return hasCloud ? 'use-cloud' : 'init-fresh-push';
   if (hasCloud) {
     // rev-guard (กัน cloud เก่าทับ local ใหม่) ใช้ได้เฉพาะเมื่อ local ผูกกับ ws นี้ "ตรง ๆ"
     // ⚠️ งาน guest ที่ยังไม่ผูก (unbound) ห้ามทับ cloud จริงของผู้ใช้ที่กลับมาล็อกอิน (กันงาน scratch ทับบัญชีจริง)

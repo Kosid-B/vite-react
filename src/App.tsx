@@ -77,6 +77,25 @@ const ComplianceCheck = lazy(() => import('./pages/ComplianceCheck'));
 const Knowledge = lazy(() => import('./pages/Knowledge'));
 
 const STORAGE_KEY = 'cjux2';
+/* เจ้าของข้อมูลที่อยู่ใน localStorage ก้อนนี้ (auth user id) — '' หรือไม่มี = งานตอนยังไม่ล็อกอิน (guest)
+ * 🔴 มีเพราะบั๊กจริง 20 ส.ค. 2569: ผู้ใช้ใหม่ล็อกอินบนเบราว์เซอร์ที่เคยมีคนอื่นใช้
+ *    แล้วข้อมูลธุรกิจของคนก่อนถูกคัดลอกขึ้นบัญชีใหม่ทั้งก้อน (md5 ตรงกันทุกไบต์)
+ *    เพราะ `dataWsRef` เป็น useRef ที่รีเซ็ตเป็น null ทุกครั้งที่โหลดหน้า
+ *    ⇒ ระบบตีความว่า "งาน guest ของเจ้าตัว" ทั้งที่เป็นของคนอื่น */
+const DATA_OWNER_KEY = 'cjux2_uid';
+function readLocalOwner(): string | null {
+  try { return localStorage.getItem(DATA_OWNER_KEY); } catch { return null; }
+}
+function writeLocalOwner(uid: string | null | undefined): void {
+  try {
+    if (uid) localStorage.setItem(DATA_OWNER_KEY, uid);
+    else localStorage.removeItem(DATA_OWNER_KEY);
+  } catch { /* noop */ }
+}
+/** ข้อมูลใน local เป็นของ "คนอื่น" ไหม — มีเจ้าของที่ระบุไว้ และไม่ใช่คนที่กำลังล็อกอินอยู่ */
+export function isForeignLocalData(localOwner: string | null, currentUid: string | null | undefined): boolean {
+  return !!localOwner && !!currentUid && localOwner !== currentUid;
+}
 /** ยกตัวเลขจาก "ตรวจสินค้าเร็ว" บนหน้าแรกเข้าแอปแล้วหรือยัง (ทำครั้งเดียวต่อเครื่อง) */
 const QUICK_APPLIED_KEY = 'ceo_ai_quick_applied';
 
@@ -367,19 +386,20 @@ export default function App() {
         localRev: local.rev ?? 0,
         localBelongsToThisWs: dataWsRef.current === ws,
         localIsUnbound: dataWsRef.current === null,
+        localIsForeign: isForeignLocalData(readLocalOwner(), session?.user.id),
       });
       if (action === 'use-cloud' && merged) {
         setData(merged);
         dataRef.current = merged;
         dataWsRef.current = ws;
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* empty */ }
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); writeLocalOwner(session?.user.id); } catch { /* empty */ }
       } else if (action === 'init-fresh-push') {
         // สลับมา ws ใหม่ที่คลาวด์ว่าง — เริ่มด้วยข้อมูลเริ่มต้น (ห้ามเอาข้อมูล ws เดิมมาปน)
         const fresh = migrate(JSON.parse(JSON.stringify(DEFAULT_DATA)) as AppData);
         setData(fresh);
         dataRef.current = fresh;
         dataWsRef.current = ws;
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)); } catch { /* empty */ }
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)); writeLocalOwner(session?.user.id); } catch { /* empty */ }
         pendingWsRef.current = ws;
         void wsSave(ws, fresh).then(ok => { if (ok && pendingWsRef.current === ws) pendingWsRef.current = null; });
       } else {
@@ -399,7 +419,7 @@ export default function App() {
     const next = { ...data, rev: (data.rev ?? 0) + 1, subscription: { ...data.subscription, plan: 'free' as const, status: 'trial' as const, trialEndDate: trialEnd } };
     setData(next);
     dataRef.current = next;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* empty */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); writeLocalOwner(session?.user.id); } catch { /* empty */ }
     if (activeWs) { pendingWsRef.current = activeWs; void wsSave(activeWs, next).then(ok => { if (ok) pendingWsRef.current = null; }); }
     showToast('ยินดีต้อนรับ! เริ่มทดลองใช้ฟรี 15 วันแล้ว 🎉');
     track('trial_started', { plan: 'free' }); // funnel: เริ่มทดลอง (ยิงครั้งเดียว — effect guard ด้วย status transition)
@@ -462,7 +482,7 @@ export default function App() {
     try {
       const serial = JSON.stringify(next);
       requestAnimationFrame(() => {
-        try { localStorage.setItem(STORAGE_KEY, serial); } catch { /* empty */ }
+        try { localStorage.setItem(STORAGE_KEY, serial); writeLocalOwner(session?.user.id); } catch { /* empty */ }
       });
     } catch { /* empty */ }
     // sync ขึ้นคลาวด์แบบ debounce เมื่อล็อกอิน + เลือกเวิร์กสเปซแล้ว
@@ -562,6 +582,12 @@ export default function App() {
   }, [activePage, data, updateData]);
 
   async function signOut() {
+    /* ล้างข้อมูลของคนที่ออกจากระบบทิ้งจากเครื่องนี้ — เบราว์เซอร์เครื่องเดียวอาจมีหลายคนใช้
+     * ถ้าไม่ล้าง คนถัดไปที่เปิดเว็บจะ "เห็น" งานของคนก่อนหน้าบนหน้าจอทันทีตั้งแต่ยังไม่ล็อกอิน
+     * (ข้อมูลจริงยังอยู่บนคลาวด์ ล็อกอินกลับมาก็ได้คืนครบ) */
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
+    writeLocalOwner(null);
+    dataWsRef.current = null;
     if (supabase) await supabase.auth.signOut();
   }
 

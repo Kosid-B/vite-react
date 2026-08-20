@@ -47,3 +47,15 @@ describe('App.tsx ต้องใช้เงื่อนไขนี้จร�
     expect(fn![0]).toContain('setShowAuth(true)');
   });
 });
+
+describe('หน้าสมัคร — คำบนปุ่มต้องเป็นคำที่คนหา', () => {
+  const auth = readFileSync(join(process.cwd(), 'src', 'components', 'Auth.tsx'), 'utf8');
+
+  it('แท็บสมัครต้องเขียนว่า "สมัครสมาชิก" ไม่ใช่คำที่ต้องตีความ', () => {
+    // ของจริง 20 ส.ค. 2569: แท็บชื่อ "เปิดพื้นที่ทำงาน" → เจ้าของระบบเองยังหาไม่เจอ
+    // กดไปแท็บ "เข้าสู่ระบบ" แล้วเจอ "อีเมลหรือรหัสผ่านไม่ถูกต้อง" ทั้งที่ยังไม่มีบัญชี
+    const tab = auth.match(/mode === 'signup' \? 'active' : ''[\s\S]{0,160}?<\/button>/);
+    expect(tab, 'ไม่พบแท็บสมัคร').toBeTruthy();
+    expect(tab![0]).toContain('สมัครสมาชิก');
+  });
+});
