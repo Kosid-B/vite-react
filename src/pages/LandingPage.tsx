@@ -461,6 +461,13 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── Matchmaker VP band — ไม่ใช่แค่ "สร้างร้าน" แต่ "จับคู่" ให้ (แก้ pain รอ walk-in) ─── */}
+      {/* 🔴 ย้ายขึ้นมาไว้ใต้ hero ทันที (20 ส.ค. 2569)
+          เดิมอยู่ถัดจาก positioning = ลงไปเกือบ 2 หน้าจอบนมือถือ (hero สูง 90vh)
+          แต่ข้อมูลจริงของเราเอง: ผู้เข้าชม 72 คน **เลื่อนเกินครึ่งหน้าแค่ 2 คน (2.8%)**
+          ⇒ เครื่องมือที่เป็นคุณค่าชิ้นแรกของเว็บ ถูก 97% ของคนที่มาไม่เคยเห็น
+          ยืนยันด้วยการเดินระบบจริงบน iPhone 390px (ต้องเลื่อนผ่าน hero เต็มจอ + positioning ก่อน) */}
+      <div data-sec="quickcheck"><ProductQuickCheck onGetStarted={onGetStarted} /></div>
+
       <section data-sec="positioning" style={{ padding: '0 24px' }}>
         <div style={{ maxWidth: 920, margin: '0 auto', borderRadius: 16, border: `1px solid ${C.border}`, background: C.bg2, padding: '22px 24px' }}>
           <div style={{ textAlign: 'center', fontSize: 'clamp(17px, 2.4vw, 22px)', fontWeight: 800, color: C.white, marginBottom: 4 }}>
@@ -489,7 +496,6 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
            วางสูงที่สุดโดยตั้งใจ — ข้อมูลจริง 11–15 ส.ค. 2569 บอกว่าผู้เข้าชมจากโซเชียล 28 คน
            มี max_scroll = 0 ทั้ง 28 คน · อะไรที่อยู่ล่าง fold เท่ากับไม่มี */}
       <ReturningGreeting onGetStarted={onGetStarted} />
-      <div data-sec="quickcheck"><ProductQuickCheck onGetStarted={onGetStarted} /></div>
 
       {/* ─── 15 วันฟรีจะเกิดอะไรขึ้น — ตอบข้อกังวลจริง "เสียเวลาแล้วไม่ได้อะไร" ───
            วางต่อจากประตูหน้าทันที: เห็นตัวเลขของตัวเองแล้ว → เห็นว่าเดินต่อยังไง → ค่อยกดเริ่ม */}

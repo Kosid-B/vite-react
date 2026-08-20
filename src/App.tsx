@@ -687,9 +687,18 @@ export default function App() {
   const showAudienceChooser = data.audienceType == null && firstRun;
   // ถัดมา: ผู้ใช้ใหม่ (เลือก audience แล้ว ยังไม่เลือกเป้าหมาย) → ถาม "วันนี้อยากทำอะไร?"
   const showGoalChooser = data.audienceType != null && data.onboardGoal == null && firstRun;
-  // OnboardingTour: ไม่โชว์ให้คน "ดูภาพรวมก่อน" (explore) — กันเจอ modal ซ้อน (GoalChooser → Tour) ที่ทำให้คนหลุด
-  // เหลือทัวร์เฉพาะผู้ใช้เดิมที่ยังไม่เคยเลือกเป้าหมาย (มาก่อนมี GoalChooser · ทัวร์ self-gate ของมันเองอยู่แล้ว)
-  const showTour = data.onboardGoal == null && !showGoalChooser;
+  /* OnboardingTour: ห้ามโผล่ทับด่านถามใด ๆ
+   *
+   * 🔴 บั๊กจริง (จับได้ตอนเดินระบบด้วยเบราว์เซอร์จริง 20 ส.ค. 2569):
+   *   เดิมกันแค่ `!showGoalChooser` — แต่ด่านแรกคือ `AudienceChooser` ("คุณขายให้ใครเป็นหลัก?")
+   *   ตอนอยู่ด่านนั้น `audienceType == null` ⇒ `showGoalChooser` เป็น false ⇒ เงื่อนไขผ่าน
+   *   ⇒ **ทัวร์ต้อนรับเด้งทับด่านถามกลุ่มลูกค้า** ผู้ใช้ใหม่เจอหน้าต่างซ้อนกัน 2 ชั้นตั้งแต่นาทีแรก
+   *   (ยืนยันด้วยภาพหน้าจอ iPhone 390px: การ์ด "ยินดีต้อนรับ" ทับ "คุณขายให้ใครเป็นหลัก?")
+   *
+   * ⚠️ คอมเมนต์เดิมเขียนว่ากันการซ้อนไว้แล้ว — กันจริงแค่ครึ่งเดียว
+   *    เพราะ AudienceChooser ถูกเพิ่มมาทีหลังแล้วไม่ได้กลับมาแก้เงื่อนไขนี้
+   *    ⇒ ด่านถามใหม่ทุกด่านต้องมาต่อท้ายบรรทัดนี้เสมอ (มีเทสต์บังคับ) */
+  const showTour = data.onboardGoal == null && !showGoalChooser && !showAudienceChooser;
 
   return (
     <div className="app">
