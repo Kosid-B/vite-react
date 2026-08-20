@@ -30,3 +30,36 @@ export function createRageDetector(windowMs = 1000, threshold = 3) {
     },
   };
 }
+
+/* ── "กำลังดูส่วนนี้อยู่ไหม" ────────────────────────────────────────────────
+ * 🔴 บั๊กที่วัดเจอจริง 20 ส.ค. 2569: เดิมใช้ IntersectionObserver{threshold:0.5}
+ *    = ต้องเห็น "ครึ่งหนึ่งของบล็อก" ถึงจะเริ่มนับเวลา
+ *    แต่บนมือถือ (iPhone 13 · จอ 664px) วัดความสูงจริงของบล็อกบน Landing ได้:
+ *      quickcheck 2045px · pricing 2284px · roadmap 1921px · trust 1707px · team 1501px
+ *    บล็อกที่สูงเกิน 2 เท่าของจอ **เป็นไปไม่ได้ทางเรขาคณิต** ที่จะเห็นถึง 50%
+ *    ⇒ เวลาที่คนใช้กับ "เครื่องคำนวณ" และ "ราคา" — สองบล็อกสำคัญที่สุดของธุรกิจ —
+ *      ถูกบันทึกเป็น 0 มาตลอด ไม่ใช่เพราะไม่มีคนดู แต่เพราะเครื่องมือวัดไม่ได้
+ *
+ * เกณฑ์ใหม่จึงต้องมองสองทาง: เห็นบล็อกไปครึ่งหนึ่ง **หรือ** บล็อกนี้กินพื้นที่จอไปครึ่งจอ
+ * (บล็อกยาว ๆ ที่เต็มจออยู่ = กำลังอ่านอยู่แน่นอน แม้จะเห็นแค่ 20% ของบล็อก) */
+
+/** สัดส่วนของจอที่บล็อกต้องกิน ถึงจะถือว่า "กำลังดูบล็อกนี้" */
+export const SECTION_VIEWPORT_SHARE = 0.5;
+/** สัดส่วนของตัวบล็อกที่ต้องเห็น ถึงจะถือว่า "กำลังดูบล็อกนี้" (ใช้กับบล็อกเตี้ยกว่าจอ) */
+export const SECTION_SELF_SHARE = 0.5;
+
+/** threshold ที่ต้องสมัครไว้ — ต้องถี่พอให้บล็อกสูง ๆ (ratio สูงสุดต่ำ) ยังมี callback ตอนข้ามเกณฑ์ */
+export const SECTION_THRESHOLDS = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.35, 0.5, 0.75, 1];
+
+/**
+ * บล็อกนี้ถือว่า "กำลังถูกดู" ไหม
+ * @param ratio            intersectionRatio (ส่วนของบล็อกที่เห็น)
+ * @param intersectionH    ความสูง (px) ของส่วนที่เห็นจริงในจอ
+ * @param viewportH        ความสูงจอ (px)
+ */
+export function sectionInView(ratio: number, intersectionH: number, viewportH: number): boolean {
+  if (!(intersectionH > 0)) return false;
+  const vh = Number.isFinite(viewportH) && viewportH > 0 ? viewportH : 0;
+  if (vh > 0 && intersectionH / vh >= SECTION_VIEWPORT_SHARE) return true;
+  return Number.isFinite(ratio) && ratio >= SECTION_SELF_SHARE;
+}

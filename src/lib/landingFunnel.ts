@@ -6,6 +6,7 @@
  *                    (2) beacon ส่ง RPC track_landing (upsert monotonic) — no-op ในโหมด local */
 import { supabase, isSupabaseEnabled } from './supabase';
 import { landingVariant, type LandingVariant } from './landingAb';
+import { pickUtm, readFirstTouch, mergeUtm, shouldStoreFirstTouch, UTM_FIRST_TOUCH_KEY } from './utmForward';
 
 // ── (1) ตรรกะ pure ───────────────────────────────────────────────────────────
 
@@ -262,6 +263,26 @@ export function utmFrom(search: string): { source?: string; campaign?: string; c
   } catch { return {}; }
 }
 
+/** utm ที่ควรผูกกับผู้เข้าชมคนนี้ — URL ปัจจุบันก่อน, ไม่มีก็ใช้ "ที่มาแรก" ที่หน้า blog/calc เก็บไว้
+ *
+ *  🔴 ทำไมต้องมองย้อนไปที่ localStorage: ลิงก์สั้นทุกตัวพาคนไปลงที่ /blog/<slug> หรือ /calc
+ *     ไม่ได้พามาที่ Landing ตรง ๆ ⇒ ถ้าอ่านแค่ query ของหน้านี้ เราจะเห็น utm ก็ต่อเมื่อ
+ *     เขากดปุ่ม CTA ที่ถูกเติม utm ไว้เท่านั้น · คนที่กด "หน้าหลัก" บนแถบนำทางแทน จะกลายเป็น direct
+ *     (ตรวจจริง 20 ส.ค. 2569: 75 แถวใน landing_funnel มี utm แค่ 1 แถว) */
+function resolvedUtm(search: string): { source?: string; campaign?: string; content?: string } {
+  const cur = pickUtm(search);
+  let stored: ReturnType<typeof readFirstTouch> = null;
+  try { stored = readFirstTouch(localStorage.getItem(UTM_FIRST_TOUCH_KEY), Date.now()); } catch { /* noop */ }
+  if (shouldStoreFirstTouch(cur, stored)) {
+    try { localStorage.setItem(UTM_FIRST_TOUCH_KEY, JSON.stringify({ t: Date.now(), u: cur })); } catch { /* noop */ }
+    stored = cur;
+  }
+  // ไม่มีที่มาเลย = อย่าแต่งค่าให้ (ปล่อยว่างดีกว่าเขียน 'site' ทับแล้วอ่านผิดว่ามีที่มา)
+  if (!Object.keys(cur).length && !stored) return {};
+  const u = mergeUtm(cur, stored);
+  return { source: u.utm_source, campaign: u.utm_campaign, content: u.utm_content };
+}
+
 /** เริ่มเซสชัน funnel — เรียกครั้งเดียวตอน Landing mount (ส่ง view beacon) */
 export function initLandingFunnel(
   seg: string, referrer: string, origin: string,
@@ -280,7 +301,7 @@ export function initLandingFunnel(
     layoutAb: opts?.layoutAb,
     // first-touch: เก็บครั้งแรกเท่านั้น (ฝั่ง DB ก็ coalesce ค่าเดิมไว้) — คนกลับมาซ้ำ
     // ต้องไม่ทับเครดิตของคอนเทนต์ที่พาเขามาครั้งแรก
-    utm: utmFrom(window.location.search),
+    utm: resolvedUtm(window.location.search),
   };
   flush(); // นับ "เข้าดู" ทันที
 }

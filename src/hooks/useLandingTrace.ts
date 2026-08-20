@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { track } from '../lib/analytics';
-import { scrollPct, crossedMilestones, createRageDetector } from '../lib/funnelTrace';
+import { scrollPct, crossedMilestones, createRageDetector, sectionInView, SECTION_THRESHOLDS } from '../lib/funnelTrace';
 import {
   initLandingFunnel, markLandingScroll, markLandingDwell, flush,
   markSectionEnter, markSectionExit, closeOpenSections,
@@ -77,17 +77,20 @@ export function useLandingTrace(
       }, sec * 1000));
 
     /* ส่วนไหนอยู่ในจอบ้าง — อ่านจาก data-sec="<key>" ที่ LandingPage ติดไว้
-     * threshold 0.5 = ต้องเห็นครึ่งบล็อกถึงนับว่า "กำลังดูส่วนนี้" (เลื่อนผ่านเร็ว ๆ ไม่นับ) */
+     * เกณฑ์อยู่ใน sectionInView (funnelTrace.ts) — เห็นครึ่งบล็อก "หรือ" บล็อกกินครึ่งจอ
+     * 🔴 เดิมใช้ threshold 0.5 ล้วน ⇒ บล็อกที่สูงเกิน 2 เท่าของจอ (quickcheck/pricing/roadmap
+     *    บนมือถือ) เข้าเกณฑ์ไม่ได้เลยแม้แต่ครั้งเดียว = เวลาที่คนใช้กับสองบล็อกนั้นเป็น 0 ตลอด */
     let io: IntersectionObserver | null = null;
     if ('IntersectionObserver' in window) {
       io = new IntersectionObserver((entries) => {
+        const vh = window.innerHeight;
         for (const e of entries) {
           const key = (e.target as HTMLElement).dataset.sec;
           if (!key) continue;
-          if (e.isIntersecting) markSectionEnter(key);
+          if (sectionInView(e.intersectionRatio, e.intersectionRect.height, vh)) markSectionEnter(key);
           else markSectionExit(key);
         }
-      }, { threshold: 0.5 });
+      }, { threshold: SECTION_THRESHOLDS });
       document.querySelectorAll('[data-sec]').forEach((el) => io!.observe(el));
     }
 

@@ -162,6 +162,26 @@ GOTCHA #4 — "ขอบจอ" ของ iPhone **ไม่ใช่ 844px** (�
     ที่ถูก = กันที่ท้าย `<body>` โดยวัดความสูงจริงของแถบ (CookieConsent.tsx + ResizeObserver)
   • กลไก: `src/lib/__tests__/mobileFoldContract.test.ts` (เพดาน padding + ลำดับ section + วิธีกันที่ของ fixed)
     · `onboardingOverlay.test.ts` ล็อกว่า quickcheck ต้องเป็น section ที่ 2 ต่อจาก hero
+
+GOTCHA #5 — ตัวเลข "เลื่อนไปกี่ %" บนหน้า Landing **ไม่ได้แปลว่าอ่านไปเท่านั้น** (วัดจริง 20 ส.ค. 2569)
+  • หน้า Landing สูง **38,894px** บน iPhone 13 (จอ 664px) = 58 หน้าจอ
+    ⇒ คนที่อ่าน hero + เครื่องคำนวณ + positioning + roadmap ครบ (2,400px) ได้ `max_scroll` = **6%**
+    ⇒ `engaged` ที่นิยามว่า "เลื่อน ≥ 50%" = ต้องเลื่อนผ่าน 19,000px ≈ ไม่มีวันมีใครถึง
+  • ⚠️ ห้ามอ่าน `avg_scroll` ว่า "อ่านเนื้อหาไปกี่ %" — ให้ดู `sections` (วินาทีต่อบล็อก) แทน
+    ซึ่งเพิ่งเริ่มเก็บได้จริงหลังแก้ GOTCHA ของ IntersectionObserver (ledger #25)
+  • `max_scroll = 0` แปลว่า "ขยับน้อยกว่า ~190px" ไม่ใช่ "ไม่ขยับเลย"
+
+GOTCHA #6 — แท็ก utm ตายกลางทาง ระหว่างลิงก์สั้น → บทความ → /start (ledger #24)
+  • ลิงก์สั้นทุกตัวชี้ไป `/blog/<slug>` หรือ `/calc` = HTML ที่ Worker เรนเดอร์ **ไม่มี React**
+    ⇒ ไม่มีแถวใน `landing_funnel` เลย · funnel เห็นคนก็ต่อเมื่อเขาเดินมาถึงหน้า Landing แล้ว
+  • ปุ่มในบทความเคยเขียน `utm_source=blog` **ทับ** ที่มาจริง ⇒ เครดิตของ Facebook/TikTok หายที่ hop นั้น
+  • ⚠️ คนที่มาจากบทความของเราเอง จะถูกจำแนกเป็น `ref_kind='direct'` เสมอ (referrer = โดเมนตัวเอง)
+    ⇒ ตัวเลข "direct" ในรายงาน **ไม่ใช่** "พิมพ์ URL เข้ามาเอง"
+  • กลไก: `src/lib/utmForward.ts` (`mergeUtm` — ที่มาแรกชนะสำหรับ source/medium · หน้าปัจจุบันชนะสำหรับ
+    campaign/content) + `utmForwardScript()` ฝังท้ายทุกหน้า server-rendered (ต้องทำฝั่ง browser
+    เพราะหน้าพวกนี้ cache 1 ชม. — ฝังฝั่ง server = คนถัดไปได้เครดิตของคนก่อน)
+    · `attributionContract.test.ts` รันสคริปต์ตัวจริงใน jsdom + บังคับว่า JS กับ TS ใช้ชื่อคีย์เดียวกัน
+  • 🟡 `landing_funnel` ยังไม่มีคอลัมน์ `utm_medium` ⇒ ตอบไม่ได้ว่า "คอมเมนต์ปักหมุด vs ไบโอ" อันไหนดีกว่า
 ```
 
 ## Key Source Files

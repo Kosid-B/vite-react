@@ -22,6 +22,7 @@ import {
   type ProductInput, type Insight, type SkillBiz,
 } from './quickCalcCore';
 import { priceLadder } from './pricingAnalysis';
+import { utmForwardScript } from './utmForward';
 
 /** หัวข้อที่ปรากฏจริงบนหน้า /calc — คำสัญญาในคลิป/คอมเมนต์ต้องชี้มาที่หัวข้อในลิสต์นี้ได้
  *  (บทบาทเดียวกับ h2 ของบทความ ใน content-link-contract ข้อ B4)
@@ -205,7 +206,7 @@ ${ladder}
   <button type="submit">${p.filled ? 'คิดใหม่' : 'คิดให้ดูเลย'}</button>
 </form>
 ${result}
-<a class="cta" href="${esc(origin)}/start?utm_source=calc&utm_medium=page&utm_campaign=pricing">ให้ระบบช่วยวางราคาทั้งร้าน →</a>
+<a class="cta" href="${esc(origin)}/start">ให้ระบบช่วยวางราคาทั้งร้าน →</a>
 <a class="more" href="${esc(origin)}/blog/pricing-no-loss">อ่านเต็ม ๆ ว่าทำไมยิ่งขายยิ่งขาดทุน →</a>
 <footer>CEO AI Thailand · หนึ่งในผลิตภัณฑ์ของ B. Training Consultant</footer>
 </div>`;
@@ -231,6 +232,6 @@ gtag('config','G-CHJ99RY1Q1',{linker:{domains:['b-tctraining.com','ceoaithailand
 if('requestIdleCallback' in window)requestIdleCallback(l,{timeout:4000});else setTimeout(l,3000);})();
 </script>
 </head>
-<body>${body}</body>
+<body>${body}<script>${utmForwardScript('calc', origin)}</script></body>
 </html>`;
 }

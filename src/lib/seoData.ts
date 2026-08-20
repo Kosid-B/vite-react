@@ -2,6 +2,8 @@
  * Worker (src/server.ts) inject ฝั่ง server ผ่าน HTMLRewriter,
  * client (src/lib/seo.ts) inject ตอน render — ทั้งคู่เรียกฟังก์ชันในไฟล์นี้เพื่อให้ผลตรงกัน.
  * ห้าม import อะไรที่แตะ DOM/browser — ต้องรันได้ทั้งใน Cloudflare Worker และเบราว์เซอร์. */
+import { utmForwardScript } from './utmForward';
+
 
 import { DBD_SECTORS } from '../data/dbd';
 import { DE24_DEFS, DE24_PHASE_LABELS } from './de24Sync';
@@ -526,6 +528,7 @@ if('requestIdleCallback' in window)requestIdleCallback(l,{timeout:4000});else se
 <div class="glow"></div>
 ${opts.body}
 </main>
+<script>${utmForwardScript(opts.path.replace(/^\/+|\/+$/g, '').split('/').pop() || 'page', opts.origin)}</script>
 </body>
 </html>
 `;
