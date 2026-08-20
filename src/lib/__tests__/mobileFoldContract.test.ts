@@ -70,6 +70,35 @@ describe('สัญญาจอแรกบนมือถือ — ห้า�
   it('แถบโปรโมทต้องถูกซ่อนบนมือถือ (พื้นที่จอแรกแพงเกินกว่าจะใช้กับแบนเนอร์)', () => {
     expect(mobileBlock()).toMatch(/\.lp-promo-strip\s*\{[^}]*display:\s*none/);
   });
+
+  /* งบของ hero: ทุกชิ้นที่เพิ่มเข้า hero = ดันเครื่องคำนวณลงไปใต้แถบคุกกี้
+   * วัดจริง iPhone 13 (จอ 664 · แถบคุกกี้บังก้นจอ 86px ⇒ ที่ใช้ได้ 578px):
+   *   hero 393px → พาดหัวเครื่องคำนวณอยู่ที่ 537–572 = เห็นเต็มบรรทัด เหลือระยะแค่ 6px
+   * ⇒ เพิ่มอะไรใน hero อีกแม้แต่บรรทัดเดียว = พาดหัวจมทันที */
+  it('hero ต้องมีลูกที่กินความสูงไม่เกินงบ (ตอนนี้ 4 ชิ้น: ป้าย · พาดหัว · ย่อหน้ารอง · CTA)', () => {
+    const i = landing.indexOf('data-sec="hero"');
+    const j = landing.indexOf('data-sec="quickcheck"');
+    expect(i).toBeGreaterThan(-1);
+    expect(j).toBeGreaterThan(i);
+    const hero = landing.slice(i, j);
+    const paras = (hero.match(/^\s{8}<p[\s>]/gm) || []).length;
+    expect(
+      paras,
+      `hero มี <p> ${paras} ก้อน — งบคือ 1 ก้อน\n` +
+      'จอแรกบนมือถือเหลือระยะแค่ 6px · เพิ่มย่อหน้าอีกก้อน = พาดหัวเครื่องคำนวณจมใต้แถบคุกกี้ทันที\n' +
+      'ถ้าต้องเพิ่มข้อความจริง ๆ ให้วางไว้ "ใต้เครื่องคำนวณ" แทน (ให้ก่อน ขอทีหลัง)',
+    ).toBeLessThanOrEqual(1);
+  });
+
+  it('บรรทัด loss-aversion (⏳) ต้องอยู่ใต้เครื่องคำนวณ ไม่ใช่ใน hero', () => {
+    const line = landing.indexOf('⏳ ทุกวันที่ยังทำเองทุกอย่าง');
+    const qc = landing.indexOf('data-sec="quickcheck"');
+    expect(line, 'ยังต้องมีบรรทัดนี้อยู่ — ย้ายที่ ไม่ใช่ตัดทิ้ง').toBeGreaterThan(-1);
+    expect(
+      line,
+      'คำเตือนเรื่อง "เวลาที่หายไป" ต้องมาหลังคนเห็นตัวเลขกำไรของตัวเอง ไม่ใช่ก่อนเห็นอะไรเลย',
+    ).toBeGreaterThan(qc);
+  });
 });
 
 describe('ที่กันให้ของที่ position:fixed ต้องอยู่ที่ท้าย <body>', () => {

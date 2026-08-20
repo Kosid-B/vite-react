@@ -381,9 +381,13 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           /* บีบ "ตัวหนังสือรอง" ในจอแรกให้แน่นขึ้น — ไม่ตัดข้อความสักคำ แค่ขนาด/ระยะบรรทัดบนมือถือ
              (พาดหัวคงขนาดเดิม เพราะเป็นชิ้นเดียวที่ต้องอ่านออกจากระยะแขน) */
           .lp-hero > p:first-of-type { font-size: 15.5px !important; line-height: 1.55 !important; margin-bottom: 10px !important; }
-          .lp-hero > p:last-of-type { margin-bottom: 8px !important; }
           .lp-hero .lp-hero-h1 { margin-bottom: 8px !important; }
           .lp-hero > div:first-of-type + div { font-size: 12px !important; padding: 5px 12px !important; letter-spacing: 0 !important; margin-bottom: 8px !important; }
+          /* ปุ่ม CTA หลัก: 18px + padding 16/40 = สูง 123px บนมือถือ (ตกบรรทัด 2 บรรทัด)
+             ย่อเหลือ 16px + padding 13/20 = ยังเป็นเป้ากดที่ใหญ่กว่าเกณฑ์ 44px มาก
+             แต่คืนพื้นที่ให้เครื่องคำนวณโผล่ขึ้นมา "เหนือแถบคุกกี้" ได้ */
+          .lp-hero > div:last-of-type button { font-size: 16px !important; padding: 13px 20px !important; }
+          .lp-hero > div:last-of-type > div { font-size: 12px !important; margin-top: 8px !important; }
           .lp-promo-strip { display: none !important; }
         }`}</style>
 
@@ -407,11 +411,6 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           <strong style={{ color: C.white }}>{heroCopy.subLead}</strong><br />
           {heroCopy.subRest}
         </p>
-        {/* loss aversion (ซื่อสัตย์ — ไม่ขู่ปลอม): ต้นทุนของการยังไม่เริ่ม */}
-        <p style={{ fontSize: 14.5, color: C.slate5, marginBottom: 40, maxWidth: 560, lineHeight: 1.6 }}>
-          ⏳ ทุกวันที่ยังทำเองทุกอย่าง คือเวลาที่เอาไปโตธุรกิจได้...ที่หายไปเรื่อย ๆ
-        </p>
-
         <div style={{ position: 'relative', display: 'inline-block' }}>
           {/* Guest-first: ปุ่มหลัก = "ลองเลยไม่ต้องสมัคร" (ลด friction ก่อนเห็นคุณค่า) · สมัคร = ปุ่มรอง
               โหมด local (ไม่มี onTryGuest) → ปุ่มหลักเป็นสมัครเหมือนเดิม */}
@@ -458,6 +457,14 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           ⇒ ย้าย 2 ตัวเลือกรองลงมาไว้ "หลัง" ของที่ใช้ได้จริง — ไม่ได้ลบ ใครอยากได้ยังเจอ
           (ลำดับนี้ตรงกับหลักของโปรเจกต์: ให้ก่อน ขอทีหลัง) */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '4px 24px 40px', textAlign: 'center' }}>
+        {/* loss aversion (ซื่อสัตย์ — ไม่ขู่ปลอม): ต้นทุนของการยังไม่เริ่ม
+            🔴 ย้ายลงมาจาก hero (20 ส.ค. 2569) — 2 เหตุผล:
+              ① วัดจริง: บรรทัดนี้กินจอแรกบนมือถือ 54px ⇒ ดันพาดหัวเครื่องคำนวณจมใต้แถบคุกกี้
+              ② มันได้ผลกว่าตรงนี้ — คนเพิ่งเห็น "กำไรจริง" ของตัวเองไปหมาด ๆ
+                 คำว่า "เวลาที่หายไป" จึงมีตัวเลขรองรับ ไม่ใช่คำขู่ลอย ๆ ก่อนเห็นอะไรเลย */}
+        <p style={{ fontSize: 14.5, color: C.slate5, margin: '4px 0 6px', maxWidth: 560, lineHeight: 1.6 }}>
+          ⏳ ทุกวันที่ยังทำเองทุกอย่าง คือเวลาที่เอาไปโตธุรกิจได้...ที่หายไปเรื่อย ๆ
+        </p>
         {onTryGuest && (
           <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
             <button
