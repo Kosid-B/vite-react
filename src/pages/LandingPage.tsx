@@ -370,12 +370,20 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         <span key={challenger} style={{ color: C.white, fontSize: 14, fontWeight: 600, lineHeight: 1.5, animation: 'lpFadeIn .5s ease' }}>{challenger}</span>
       </div>
       <style>{`@keyframes lpFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-        /* มือถือ: h1 ใหญ่ดันปุ่ม CTA ลงไปชนแถบคุกกี้ (fixed ล่าง) → ลด h1 + ไหลจากบน + เว้นที่ให้แถบคุกกี้ ปุ่มจึงไม่ถูกบัง */
-        /* ⚠️ 200px เดิมเผื่อไว้ตอนแถบคุกกี้ยังสูง ~130px — ย่อแถบเหลือ 86px แล้ว (20 ส.ค. 2569)
-           จึงคืนพื้นที่ให้จอแรก · ยังเผื่อพอไม่ให้ปุ่มโดนแถบคุกกี้บัง */
+        /* มือถือ: h1 ใหญ่ → ลด h1 + ไหลจากบน ให้เนื้อหาชิ้นถัดไปขึ้นมาอยู่ในจอแรกให้ได้มากที่สุด */
+        /* 🔴 เคยเว้น padding-bottom 200px แล้ว 104px ไว้ "กันแถบคุกกี้บังปุ่ม" — ผิดโดยโครงสร้าง
+           แถบคุกกี้ position:fixed บัง "ก้นจอ" ไม่ใช่ "ก้น hero" ⇒ เว้นเท่าไรก็ไม่ช่วย
+           วัดจริง iPhone 390x664: เว้น 104px แล้วปุ่มยังถูกบัง 34px อยู่ดี แถมกินจอแรกไป 104px
+           ที่ถูกคือกันที่ท้าย <body> — ย้ายไปทำใน CookieConsent.tsx แล้ว (20 ส.ค. 2569) */
         @media (max-width: 768px) {
-          .lp-hero { min-height: auto !important; justify-content: flex-start !important; padding-top: 20px !important; padding-bottom: 104px !important; }
+          .lp-hero { min-height: auto !important; justify-content: flex-start !important; padding-top: 12px !important; padding-bottom: 10px !important; }
           .lp-hero-h1 { font-size: 30px !important; }
+          /* บีบ "ตัวหนังสือรอง" ในจอแรกให้แน่นขึ้น — ไม่ตัดข้อความสักคำ แค่ขนาด/ระยะบรรทัดบนมือถือ
+             (พาดหัวคงขนาดเดิม เพราะเป็นชิ้นเดียวที่ต้องอ่านออกจากระยะแขน) */
+          .lp-hero > p:first-of-type { font-size: 15.5px !important; line-height: 1.55 !important; margin-bottom: 10px !important; }
+          .lp-hero > p:last-of-type { margin-bottom: 8px !important; }
+          .lp-hero .lp-hero-h1 { margin-bottom: 8px !important; }
+          .lp-hero > div:first-of-type + div { font-size: 12px !important; padding: 5px 12px !important; letter-spacing: 0 !important; margin-bottom: 8px !important; }
           .lp-promo-strip { display: none !important; }
         }`}</style>
 

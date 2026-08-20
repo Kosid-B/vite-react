@@ -6717,7 +6717,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 /* เครื่องคำนวณบนมือถือ: บีบ padding บน เพื่อให้ "พาดหัว" โผล่พ้นขอบจอตั้งแต่ยังไม่เลื่อน
    (เห็นแค่ที่ว่างของ section ไม่มีความหมาย — ต้องเห็นตัวหนังสือถึงจะรู้ว่ามีของ) */
 @media (max-width: 560px) {
-  .pqc-section { padding-top: 20px !important; padding-bottom: 40px !important; }
+  .pqc-section { padding-top: 10px !important; padding-bottom: 40px !important; }
 }
 
 /* ── Hero บนมือถือ: ย่อให้ "เครื่องคำนวณ" โผล่พ้นขอบจอ ────────────────────────

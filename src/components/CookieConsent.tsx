@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /* ===== แถบความยินยอมคุกกี้ (Cookie Consent Banner) =====
  * แสดงครั้งแรกที่เข้าเว็บ (ทุกหน้า รวมหน้าสาธารณะ) — เก็บผลใน localStorage
@@ -12,12 +12,30 @@ const GA_DISABLE = 'ga-disable-G-CHJ99RY1Q1';
 
 export default function CookieConsent() {
   const [show, setShow] = useState(false);
+  const barRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let v: string | null = null;
     try { v = localStorage.getItem(KEY); } catch { /* noop */ }
     if (v !== 'all' && v !== 'necessary') setShow(true);
   }, []);
+
+  /* 🔴 กันที่ให้แถบคุกกี้ "ที่ท้ายเอกสาร" ไม่ใช่ "ในส่วนใดส่วนหนึ่งของหน้า" (20 ส.ค. 2569)
+   * แถบนี้ position:fixed ⇒ มันบัง "ก้นจอ" เสมอ ไม่ว่าเลื่อนอยู่ตรงไหนของหน้า
+   * การไปเว้น padding-bottom ไว้ใน .lp-hero จึงผิดโดยโครงสร้าง:
+   *   ① ไม่ได้ช่วยเลย — ปุ่ม CTA ยังถูกบัง 34px (วัดจริงบน iPhone 390x664)
+   *   ② เสียพื้นที่จอแรก 104px ทั้งที่จอแรกคือทรัพยากรแพงที่สุดของเว็บนี้
+   * ที่ถูกคือกันที่ท้าย <body> เพื่อให้เนื้อหาชิ้นสุดท้ายเลื่อนพ้นแถบได้ */
+  useEffect(() => {
+    if (!show) return;
+    const el = barRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const apply = () => { document.body.style.paddingBottom = `${Math.ceil(el.getBoundingClientRect().height)}px`; };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(el);
+    return () => { ro.disconnect(); document.body.style.paddingBottom = ''; };
+  }, [show]);
 
   function choose(choice: 'all' | 'necessary') {
     try { localStorage.setItem(KEY, choice); } catch { /* noop */ }
@@ -34,7 +52,7 @@ export default function CookieConsent() {
   if (!show) return null;
 
   return (
-    <div className="cc-banner" role="dialog" aria-live="polite" aria-label="ความยินยอมการใช้คุกกี้">
+    <div ref={barRef} className="cc-banner" role="dialog" aria-live="polite" aria-label="ความยินยอมการใช้คุกกี้">
       <style>{CC_CSS}</style>
       {/* ข้อความสั้นบนมือถือ · เต็มบนจอใหญ่ — รายละเอียดครบอยู่ที่ /legal#cookies เสมอ
           🔴 เหตุผล (วัดจริง 20 ส.ค. 2569 บน iPhone 390px): แถบเดิมสูง ~130px และ "ทับช่องกรอก"
