@@ -1,6 +1,6 @@
 ---
 name: data-flow
-description: "Use for write data flow"
+description: "สถาปัตยกรรมการไหลของข้อมูล (Data Flow) สำหรับ SaaS บน Supabase — ออกแบบเส้นทางข้อมูลตั้งแต่ต้นทางถึงปลายทาง สิทธิ์ RLS จุดที่ข้อมูลถูกเขียน/อ่าน และการแยกข้อมูลระหว่างผู้ใช้ · ใช้เมื่อออกแบบตาราง เพิ่ม RPC เชื่อมระบบภายนอก หรือตรวจว่าข้อมูลรั่วข้ามผู้ใช้ได้ไหม"
 ---
 
 title: Data Flow Architecture & Design Skill

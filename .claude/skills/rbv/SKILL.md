@@ -1,6 +1,6 @@
 ---
 name: rbv
-description: "Management"
+description: "Resource-Based View (RBV) + กรอบ VRIO — วิเคราะห์ว่าทรัพยากรภายในตัวไหนสร้างความได้เปรียบที่ยั่งยืน (มีคุณค่า · หายาก · ลอกเลียนยาก · องค์กรใช้ประโยชน์ได้จริง) · ใช้เมื่อถามว่า \"อะไรคือแต้มต่อของเรา\" วางจุดยืนแข่งขัน ประเมินคูเมือง (moat) หรือพบคำว่า VRIO · RBV · competitive advantage · core competency"
 ---
 
 # Skill: Resource-Based View (RBV) & VRIO Analysis Specialist

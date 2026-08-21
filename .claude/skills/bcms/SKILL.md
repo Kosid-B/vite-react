@@ -1,6 +1,6 @@
 ---
 name: bcms
-description: "BCMS"
+description: "ISO 22301 BCMS — ออกแบบสถาปัตยกรรม/สคีมา/ฟีเจอร์ SaaS สำหรับบริหารความต่อเนื่องทางธุรกิจตามวงจร PDCA (BIA · RTO/RPO · แผนรับมือ · การซ้อม) · ใช้เมื่อสร้างหรือตรวจฟีเจอร์ด้านความต่อเนื่อง/ความยืดหยุ่นขององค์กร หรือพบคำว่า BCMS · BCP · ISO 22301 · Business Continuity"
 ---
 
 # 🛡️ Agent Skill: ISO 22301 BCMS & Resilience Master
