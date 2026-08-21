@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveWsLoad, isForeignLocalData } from '../wsSync';
+import { resolveWsLoad, isForeignLocalData, localOwnership, GUEST_OWNER } from '../wsSync';
 
 /* 🔴 บั๊กข้อมูลรั่วข้ามบัญชี (พบบน production 20 ส.ค. 2569)
  *
@@ -54,17 +54,74 @@ describe('resolveWsLoad — ข้อมูลของคนอื่น ห้
       .toBe('use-cloud');
   });
 
-  it('พฤติกรรมเดิมต้องไม่พัง — งาน guest ที่ไม่มีเจ้าของ ยัง migrate ขึ้น ws ใหม่ได้', () => {
+  it('งาน guest ที่ "ทำเครื่องหมายไว้" ยัง migrate ขึ้น ws ใหม่ได้ (เส้นทางที่ตั้งใจ)', () => {
     expect(resolveWsLoad({
       hasCloud: false, cloudRev: 0, localRev: 5,
-      localBelongsToThisWs: false, localIsUnbound: true, localIsForeign: false,
+      localBelongsToThisWs: false, localIsUnbound: true, ownership: 'guest',
     })).toBe('keep-local-push');
+  });
+
+  it('🔴 แต่ "ไม่มีเจ้าของเลย" ห้าม migrate — นี่คือรูที่ทำให้บั๊กเกิดซ้ำรอบสอง', () => {
+    // เทสต์เดิมเคยเขียนว่าเคสนี้ต้อง keep-local-push โดยเรียกมันว่า "งาน guest ที่ไม่มีเจ้าของ"
+    // ซึ่งเป็นการยืนยันพฤติกรรมที่เป็นต้นเหตุเอง — ข้อมูลของบัญชีก่อนหน้าก็ "ไม่มีเจ้าของ" เหมือนกัน
+    // แยกสองอย่างนี้ออกจากกันไม่ได้ถ้าไม่ทำเครื่องหมาย ⇒ ต้องเลือกฝั่งที่ปลอดภัยกว่า
+    expect(resolveWsLoad({
+      hasCloud: false, cloudRev: 0, localRev: 5,
+      localBelongsToThisWs: false, localIsUnbound: true, ownership: 'unknown',
+    })).toBe('init-fresh-push');
   });
 
   it('พฤติกรรมเดิมต้องไม่พัง — local ของ ws นี้และใหม่กว่า ยังชนะคลาวด์', () => {
     expect(resolveWsLoad({
       hasCloud: true, cloudRev: 2, localRev: 7,
-      localBelongsToThisWs: true, localIsForeign: false,
+      localBelongsToThisWs: true, ownership: 'self',
     })).toBe('keep-local-push');
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+ * รอบที่ 2 — 21 ส.ค. 2569: บั๊กเดิม **เกิดซ้ำทั้งที่แก้ไปแล้ว 23 ชั่วโมงก่อนหน้า**
+ * ตัวกันของเดิมเป็น fail-open: ถ้าฝั่งใดฝั่งหนึ่งไม่รู้ค่า มันบอกว่า "ไม่ใช่ของคนอื่น"
+ * ยืนยันจาก production: workspace ของบัญชีใหม่ตรงกับของแอดมิน 36 จาก 40 คีย์
+ *   รวมถึง plan: "scale" ที่บัญชีนั้นไม่เคยซื้อ และ signupAt ของอีกคน
+ * ══════════════════════════════════════════════════════════════════════ */
+
+describe('localOwnership — ต้อง fail-closed เมื่อพิสูจน์ไม่ได้', () => {
+  it('ไม่มีเจ้าของบันทึกไว้ = unknown (ไม่ใช่ "ของเจ้าตัว")', () => {
+    expect(localOwnership(null, 'user-B')).toBe('unknown');
+  });
+
+  it('🔴 ยังไม่รู้ว่าใครล็อกอินอยู่ = unknown — เคสนี้เองที่ตัวกันเดิมปล่อยผ่าน', () => {
+    expect(localOwnership('user-A', undefined)).toBe('unknown');
+    expect(localOwnership('user-A', null)).toBe('unknown');
+  });
+
+  it('ของคนอื่นชัดเจน = foreign · ของเจ้าตัว = self · งาน guest = guest', () => {
+    expect(localOwnership('user-A', 'user-B')).toBe('foreign');
+    expect(localOwnership('user-A', 'user-A')).toBe('self');
+    expect(localOwnership(GUEST_OWNER, 'user-B')).toBe('guest');
+  });
+
+  it('ทุกสถานะที่ไม่ใช่ self/guest ห้าม push ขึ้นเวิร์กสเปซที่ยังว่าง', () => {
+    for (const ownership of ['foreign', 'unknown'] as const) {
+      expect(resolveWsLoad({
+        hasCloud: false, cloudRev: 0, localRev: 9999,
+        localBelongsToThisWs: true, localIsUnbound: true, ownership,
+      }), ownership).toBe('init-fresh-push');
+    }
+  });
+});
+
+describe('App.tsx ต้องไม่กลับไปลบชื่อเจ้าของตอนยังไม่ล็อกอิน', () => {
+  it('เซฟตอนไม่ล็อกอิน ต้องเขียนว่า guest ไม่ใช่ลบทิ้ง', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { resolve } = await import('node:path');
+    const app = readFileSync(resolve(__dirname, '../../App.tsx'), 'utf8');
+    // ของเดิม: `if (uid) setItem(...) else removeItem(...)` ⇒ ทุกครั้งที่เซฟตอนไม่ล็อกอิน
+    // เครื่องหมายเจ้าของถูกลบ ทั้งที่ข้อมูลของคนเก่ายังอยู่ = ตัวกันตาบอด
+    expect(app).toContain("localStorage.setItem(DATA_OWNER_KEY, uid || GUEST_OWNER)");
+    expect(app, 'ลบชื่อเจ้าของได้ทางเดียวคือ clearLocalOwner() ซึ่งเรียกคู่กับการลบข้อมูล')
+      .toContain('clearLocalOwner()');
+    expect(app).toContain('ownership: localOwnership(readLocalOwner(), session?.user.id)');
   });
 });

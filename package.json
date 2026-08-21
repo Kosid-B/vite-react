@@ -12,7 +12,8 @@
     "test:run": "vitest run",
     "verify:landed": "bash scripts/verify-landed.sh",
     "typecheck": "tsc -b && tsc -p tsconfig.worker.json --noEmit",
-    "typecheck:worker": "tsc -p tsconfig.worker.json --noEmit"
+    "typecheck:worker": "tsc -p tsconfig.worker.json --noEmit",
+    "contrast-audit": "node scripts/contrast-audit.mjs"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.45.5",

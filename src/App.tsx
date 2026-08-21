@@ -7,7 +7,8 @@ import { DEFAULT_DATA } from './data';
 import { defaultExperiments, recordActiveDay } from './lib/experiments';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
-import { resolveWsLoad, isForeignLocalData } from './lib/wsSync';
+import { localOwnership, GUEST_OWNER } from './lib/wsSync';
+import { resolveWsLoad } from './lib/wsSync';
 import { setAgentWorkspace } from './lib/agentClient';
 import { bumpStreak } from './lib/streak';
 import { rememberSourceOnce, readRememberedSource } from './lib/attribution';
@@ -86,11 +87,17 @@ const DATA_OWNER_KEY = 'cjux2_uid';
 function readLocalOwner(): string | null {
   try { return localStorage.getItem(DATA_OWNER_KEY); } catch { return null; }
 }
+/** บันทึกว่า "ข้อมูลในเครื่องนี้เป็นของใคร"
+ *
+ *  🔴 ของเดิมรับ undefined แล้ว **ลบเครื่องหมายทิ้ง** — ซึ่งเกิดทุกครั้งที่เซฟตอนยังไม่ล็อกอิน
+ *     ผลคือข้อมูลของคนก่อนหน้ายังอยู่ครบ แต่ "ไม่มีชื่อเจ้าของ" ⇒ ตัวกันข้อมูลข้ามบัญชีตาบอด
+ *     ตอนนี้ไม่ล็อกอิน = เขียนว่า 'guest' (ยังยกเข้าบัญชีตอนสมัครได้ตามเดิม)
+ *     การลบเครื่องหมายเหลือทางเดียวคือ clearLocalOwner() ซึ่งเรียกคู่กับการลบตัวข้อมูลเสมอ */
 function writeLocalOwner(uid: string | null | undefined): void {
-  try {
-    if (uid) localStorage.setItem(DATA_OWNER_KEY, uid);
-    else localStorage.removeItem(DATA_OWNER_KEY);
-  } catch { /* noop */ }
+  try { localStorage.setItem(DATA_OWNER_KEY, uid || GUEST_OWNER); } catch { /* noop */ }
+}
+function clearLocalOwner(): void {
+  try { localStorage.removeItem(DATA_OWNER_KEY); } catch { /* noop */ }
 }
 /** ยกตัวเลขจาก "ตรวจสินค้าเร็ว" บนหน้าแรกเข้าแอปแล้วหรือยัง (ทำครั้งเดียวต่อเครื่อง) */
 const QUICK_APPLIED_KEY = 'ceo_ai_quick_applied';
@@ -382,7 +389,7 @@ export default function App() {
         localRev: local.rev ?? 0,
         localBelongsToThisWs: dataWsRef.current === ws,
         localIsUnbound: dataWsRef.current === null,
-        localIsForeign: isForeignLocalData(readLocalOwner(), session?.user.id),
+        ownership: localOwnership(readLocalOwner(), session?.user.id),
       });
       if (action === 'use-cloud' && merged) {
         setData(merged);
@@ -395,12 +402,21 @@ export default function App() {
         setData(fresh);
         dataRef.current = fresh;
         dataWsRef.current = ws;
+        try {
+          // สำรองของเดิมไว้ก่อนทับ — "ไม่รู้ว่าเป็นของใคร" ไม่ได้แปลว่า "ทิ้งได้"
+          // ถ้าเป็นงานของเจ้าตัวจริง ยังกู้จากคีย์นี้ได้ · ถ้าเป็นของคนอื่นก็ไม่ได้ถูกอัปขึ้นบัญชีใคร
+          const prev = localStorage.getItem(STORAGE_KEY);
+          if (prev) localStorage.setItem(STORAGE_KEY + '_orphan', prev);
+        } catch { /* empty */ }
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)); writeLocalOwner(session?.user.id); } catch { /* empty */ }
         pendingWsRef.current = ws;
         void wsSave(ws, fresh).then(ok => { if (ok && pendingWsRef.current === ws) pendingWsRef.current = null; });
       } else {
         // keep-local-push: local เป็นของ ws นี้ + ใหม่กว่า/คลาวด์ว่าง → เก็บ local แล้วดันขึ้น
         dataWsRef.current = ws;
+        // ⚠️ ต้องปั๊มชื่อเจ้าของตรงนี้ด้วย — เดิมสาขานี้ไม่เขียน ทำให้ข้อมูลที่เพิ่งยืนยันว่าเป็น
+        //    ของคนนี้ กลายเป็น "ไร้เจ้าของ" ในรอบถัดไป แล้วตัวกันก็ตาบอดอีก
+        try { writeLocalOwner(session?.user.id); } catch { /* empty */ }
         pendingWsRef.current = ws;
         void wsSave(ws, local).then(ok => { if (ok && pendingWsRef.current === ws) pendingWsRef.current = null; });
       }
@@ -589,7 +605,7 @@ export default function App() {
      * ถ้าไม่ล้าง คนถัดไปที่เปิดเว็บจะ "เห็น" งานของคนก่อนหน้าบนหน้าจอทันทีตั้งแต่ยังไม่ล็อกอิน
      * (ข้อมูลจริงยังอยู่บนคลาวด์ ล็อกอินกลับมาก็ได้คืนครบ) */
     try { localStorage.removeItem(STORAGE_KEY); } catch { /* noop */ }
-    writeLocalOwner(null);
+    clearLocalOwner();   // ลบข้อมูลกับลบชื่อเจ้าของต้องไปด้วยกันเสมอ ไม่งั้นเหลือข้อมูลไร้เจ้าของ
     dataWsRef.current = null;
     if (supabase) await supabase.auth.signOut();
   }
