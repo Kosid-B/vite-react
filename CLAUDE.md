@@ -286,6 +286,9 @@ src/agent/CeoAiAgent.ts        — DO: AI ที่ปรึกษา (haiku) ·
 src/lib/seoData.ts             — pure SEO builders (title/meta/canonical/JSON-LD/sitemap) ใช้ร่วม worker+client
 src/lib/seo.ts                 — client applySeo() (idempotent) เรียกในหน้า public
 src/lib/ambientAudio.ts        — เพลงบรรเลงโปรซีเจอรัล (Web Audio API ไม่มีไฟล์/ลิขสิทธิ์) ปรับโทนตามเวลาจริง (reuse detectTime) · opt-in ปิดเป็นค่าเริ่มต้น · ปุ่ม components/AmbientMusic.tsx ใน sidebar footer
+docs/design/FIGMA-WORKFLOW.md   — ออกแบบใน Figma → เขียนเป็นโค้ด (ไฟล์ `uYYmkDgjSHTRjGAKCRMSU2`)
+                                 กรอบเครื่อง 3 ขนาดพร้อมเส้น "ขอบที่มองเห็นได้จริง" + Variables สีที่ชื่อตรงกับโทเคนในโค้ด
+                                 ⚠️ Figma ไม่ใช่ตัวตัดสินขอบจอ — ต้องวัดซ้ำในเบราว์เซอร์เสมอ (ต่างกัน ~114px)
 docs/marketing/                — แผนการตลาด/หาลูกค้า (SEO, FB group, LinkedIn, networking, market research)
 ```
 
