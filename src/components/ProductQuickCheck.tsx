@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useLandingTheme } from '../lib/landingTheme';
 import { track } from '../lib/analytics';
+import { nextProblemsFor, focusFor, nextProblemsHeading } from '../lib/nextProblems';
 import { rememberBizHint } from '../lib/bizHint';
 import { BIZ_LABEL, type SkillBiz } from '../lib/skillCatalog';
 import {
@@ -246,6 +247,46 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
                 </div>
               );
             })}
+
+            {/* ⭐ "เรื่องต้นทุนจบแล้ว — ยังเหลืออีก N เรื่อง"
+                วางตรงนี้เพราะเป็นจุดเดียวที่มีหลักฐานว่าคนอยู่จริง (ดูเหตุผลเต็มใน lib/nextProblems.ts)
+                หน้า Landing มี 19 บล็อก แต่ 15 บล็อกท้ายหน้ามีคนเห็น 0 คน — ใส่ตรงนั้นเท่ากับไม่ได้ใส่ */}
+            <div style={{ marginTop: 18, paddingTop: 18, borderTop: `1px solid ${C.border}` }}>
+              <div style={{ color: C.ink, fontSize: 15.5, fontWeight: 800, marginBottom: 4 }}>
+                {nextProblemsHeading()}
+              </div>
+              {(() => {
+                const f = focusFor(result);
+                return f ? (
+                  <div style={{ color: C.ink, fontSize: 12.5, lineHeight: 1.7, marginBottom: 10, padding: '9px 12px', borderRadius: 9, border: `1px solid ${C.cyan}`, background: light ? '#ecfeff' : '#083344' }}>
+                    👉 <b>จากตัวเลขของคุณ เรื่องที่ควรทำต่อคือข้อแรก</b> — {f.why}
+                  </div>
+                ) : (
+                  <div style={{ color: C.sub, fontSize: 12.5, lineHeight: 1.7, marginBottom: 10 }}>
+                    ใส่ยอดขายต่อเดือนกับค่าใช้จ่ายคงที่เพิ่ม แล้วระบบจะบอกได้ว่าควรทำเรื่องไหนต่อก่อน
+                  </div>
+                );
+              })()}
+              <div style={{ display: 'grid', gap: 8 }}>
+                {nextProblemsFor(result).map((p, idx) => (
+                  <a
+                    key={p.id}
+                    href={`${p.shortLink}?utm_source=site&utm_medium=quickcheck&utm_campaign=${p.id}`}
+                    onClick={() => track('nextproblem_click', { id: p.id, rank: idx + 1 })}
+                    style={{
+                      display: 'block', textDecoration: 'none',
+                      border: `1px solid ${idx === 0 && focusFor(result) ? C.cyan : C.border}`,
+                      borderRadius: 11, padding: '11px 13px', background: C.field,
+                    }}
+                  >
+                    <div style={{ color: C.ink, fontSize: 14, fontWeight: 700, lineHeight: 1.5 }}>{p.icon} {p.ask}</div>
+                    <div style={{ color: C.sub, fontSize: 12, marginTop: 4, lineHeight: 1.55 }}>
+                      {p.gives} <span style={{ color: C.cyan, fontWeight: 700 }}>— อ่านฟรี ไม่ต้องสมัคร →</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
 
             <div style={{ marginTop: 18, padding: '16px', borderRadius: 12, border: `1px solid ${C.cyan}`, background: light ? '#ecfeff' : '#083344' }}>
               <div style={{ color: C.ink, fontSize: 15, fontWeight: 800, marginBottom: 4 }}>เก็บผลนี้ไว้ในระบบ แล้วให้ทีม AI ทำงานต่อ</div>

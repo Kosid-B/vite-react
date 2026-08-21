@@ -233,6 +233,14 @@ src/lib/productQuickCheck.ts   — "ตรวจสินค้าเร็ว" 
                                  (ต่อยอด bizHint.ts · ร่างเก่า >30 วันทิ้ง · ชื่อสินค้าอยู่ localStorage ไม่ขึ้น DB)
                                  components/ProductQuickCheck.tsx วางสูงสุดบน Landing (นอก A/B holdout)
                                  GA4: quickcheck_submitted / quickcheck_topic_opened (← รู้ว่าคนกังวลเรื่องอะไร) / quickcheck_signup_click
+src/lib/nextProblems.ts        — "เรื่องต้นทุนจบแล้ว — ยังเหลืออีก 7 เรื่องที่ทำให้ร้านไม่โต" (pure/tested)
+                                 วางท้ายเครื่องคำนวณ **โดยตั้งใจ** — หน้า Landing มี 19 บล็อก แต่ 15 บล็อกท้ายหน้า
+                                 มีคนเห็น **0 คน** (เวลาที่ทุกคนเคยใช้กับเนื้อหาเรารวมกัน = 86 วินาที)
+                                 จุดเดียวที่มีหลักฐานว่าคนอยู่จริงคือท้ายเครื่องคำนวณ (อยู่ 10 วิ · hero ได้ 6 วิ)
+                                 focusFor() ชี้เรื่องถัดไปจาก **ตัวเลขที่เขากรอกเอง** เท่านั้น · คืน null เมื่อข้อมูลไม่พอ (ห้ามเดา)
+                                 nextProblemsFor() จัดลำดับใหม่เท่านั้น **ห้ามตัดเรื่องไหนทิ้ง** (skill beachhead-who-not-what)
+                                 ทุกเรื่องต้องมีปลายทางจริงทั้ง SHORT_LINKS และ PageId · ลิงก์ติด utm_medium=quickcheck
+                                 ⇒ GA/DB ตอบได้ว่า **pain ไหนของ SME ไทยแรงที่สุด** (event: nextproblem_click)
 src/lib/pricingAnalysis.ts     — วิเคราะห์ราคา (ติดตั้งจาก skill `pricing-analysis` เข้าเป็นโค้ดจริง)
                                  แกน: จุดคุ้มทุนเมื่อเปลี่ยนราคา y = 1 − m/m′ (m = กำไรต่อหน่วย)
                                  ⇒ "ขึ้นราคา 10% เสียลูกค้าได้กี่ %" และ "ลดราคา 10% ต้องขายเพิ่มกี่ %"
