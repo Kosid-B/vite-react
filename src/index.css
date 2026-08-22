@@ -7192,3 +7192,11 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .topup-price { color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .treasury-toggle { color: #067baf; }   /* 2.14 */
 :root[data-theme="minimal"] .xedge-cap { color: #067baf; }   /* 2.14 */
+
+/* 🔴 8 คลาสนี้ถอน override ออกโดยตั้งใจ — อย่าเติมกลับด้วยสีเดียว
+ *    city-tier-name · cs-keylesson-label · db-cp-chip · iso-hm-pct
+ *    skm-card-cat · ai-task-owner · city-card-ico · cs-badge
+ *  เหตุผล: คลาสเดียวถูกใช้บน "พื้นหลังหลายแบบ" (การ์ดสว่าง + แถบเข้ม)
+ *  ⇒ ตั้งสีตัวอักษรค่าเดียวย่อมผิดที่ใดที่หนึ่งเสมอ · วัดจริงแล้วแย่ลงจากเดิม
+ *  ที่ถูกคือแยก selector ตามบริบท หรือแก้ที่ตัวคอมโพเนนต์ให้พื้นหลังคงที่
+ *  (งานที่เหลือ — ดู docs/review/CONTRAST-AUDIT-2026-08-22.md) */
