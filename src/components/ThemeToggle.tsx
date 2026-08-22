@@ -6,7 +6,8 @@ import { THEME } from '../config';
 /* ThemeToggle — ปุ่มสลับธีม เข้ม ↔ มินิมอล (ในฟุตเตอร์ sidebar) */
 export default function ThemeToggle() {
   const [t, setT] = useState<ThemeId>(() => readTheme());
-  // 🔴 ธีมมินิมอลยังไม่เสร็จสำหรับหน้าในแอป (41 จุดมองไม่เห็นเลย · ดู config.THEME)
+  // สวิตช์ความปลอดภัย — ถ้าธีมสว่างมีจุดที่อ่านไม่ออกอีก ให้ปิดที่ config.THEME.inAppLive
+  // (ปิดแล้วจะบังคับดึงคนที่ค้างอยู่ในธีมสว่างกลับธีมเข้มด้วย ไม่ใช่แค่ซ่อนปุ่ม — ดู App.tsx)
   if (!THEME.inAppLive) return null;
   const nxt = nextTheme(t);
 
