@@ -459,10 +459,10 @@ export default function StartLanding() {
 
       <footer className="start-foot">
         CEO AI Thailand — แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย ·{' '}
-        <a href="/b">สารบัญธุรกิจ</a> ·{' '}
-        <a href="/mit24">MIT 24 Steps</a> ·{' '}
-        <a href="/faq">คำถามที่พบบ่อย</a> ·{' '}
-        โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
+        <a className="legal-link" href="/b">สารบัญธุรกิจ</a> ·{' '}
+        <a className="legal-link" href="/mit24">MIT 24 Steps</a> ·{' '}
+        <a className="legal-link" href="/faq">คำถามที่พบบ่อย</a> ·{' '}
+        โดย <a className="legal-link" href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
         <br />
         เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a className="legal-link" href="tel:08178177773">081-7817-7773</a>
         <br />
