@@ -21,6 +21,10 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 "เขียนถูก" ≠ "ทำงานจริง" · เครื่องมือทุกตัว (tsc/vitest/eslint/wrangler --dry-run) ตรวจแค่ว่าโค้ดถูก **ไม่มีตัวไหนตรวจว่าโค้ดถูกเรียกใช้**
 พิสูจน์ 4 ชั้น: ①โค้ดถูกเรียกจริงไหม ②ข้อมูลหน้าตาตรงกับที่ประกาศไหม (`as Partial<>` = ประกาศ ไม่ใช่ตรวจ) ③เครื่องมือที่ตรวจ = ตัวที่ใช้จริงไหม ④CI ขึ้น success แล้วไหม
 ⚠️ **"push แล้ว" ≠ "อยู่บน production แล้ว"** — เช็ค GitHub Actions ก่อนบอกผู้ใช้ให้ไปทดสอบเสมอ
+🚦 **ด่านเดียวก่อน commit ทุกครั้ง = `npm run ci`** (= `lint && build && test:run` — ขั้นเดียวกับที่ CI รันจริง)
+   ห้ามพูดว่า "เทสต์ผ่าน" ถ้ารันแค่ `vitest`/`typecheck` — **`lint` คือขั้นที่ถูกลืมจนแดงติดกัน 54 รอบ 3 วัน** (ledger #36)
+   และห้ามพูดว่า "เสร็จ" ถ้ายังไม่ได้เปิดดูผล CI รอบล่าสุดด้วยตาตัวเอง — เจ้าของไม่ควรต้องถ่ายภาพหน้าจอมาบอกเรา
+   กลไก: `ciGate.test.ts` อ่าน `ci.yml` ตัวจริง ⇒ ขั้นใหม่ใน CI ที่ไม่อยู่ใน `npm run ci` = เทสต์แดงทันที
 กลไก: `rpcContract.test.ts` (SQL↔TS) · `workerRouting.test.ts` (server.ts↔wrangler.jsonc) · `deployToolchain.test.ts` (เวอร์ชันเครื่องมือ dev↔CI)
 
 📣 **ก่อนปล่อยคอนเทนต์ทุกชิ้น — skill `content-link-contract`** (ยกเป็นกฎบังคับ 19 ส.ค. 2569)

@@ -26,7 +26,7 @@ function readSkills(): Skill[] {
   return readdirSync(SKILLS)
     .filter((d) => statSync(join(SKILLS, d)).isDirectory())
     .map((name) => {
-      let text = '';
+      let text: string;
       // ⚠️ skill ที่มากับ Anthropic ใช้ CRLF — ถ้าไม่แปลงก่อน regex จะไม่แมตช์แล้วรายงานผิดว่า
       //    "ไม่มี description" ทั้งที่มี (เจอจริงตอนเขียนเทสต์นี้ 2 ไฟล์)
       try { text = readFileSync(join(SKILLS, name, 'SKILL.md'), 'utf8').replace(/\r\n/g, '\n'); }

@@ -42,7 +42,7 @@ describe('App.tsx ต้องใช้เงื่อนไขนี้จร�
   });
 
   it('ปุ่มต้องพาไปหน้าสมัครจริงหลังออกจากระบบ ไม่ใช่แค่ signOut แล้วทิ้งไว้', () => {
-    const fn = app.match(/async function signOutThenSignup\(\)[\s\S]{0,400}?\n  \}/);
+    const fn = app.match(/async function signOutThenSignup\(\)[\s\S]{0,400}?\n {2}\}/);
     expect(fn, 'ไม่พบ signOutThenSignup').toBeTruthy();
     expect(fn![0]).toContain('setShowAuth(true)');
   });

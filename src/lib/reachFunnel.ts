@@ -60,9 +60,9 @@ export function reachRow(p: PlatformReach): ReachRow {
     ? null : pct(p.arrivals, p.profileVisits);
   const passThroughPct = pct(p.arrivals, p.views);
 
-  let ceiling: CeilingStep = 'unknown';
+  let ceiling: CeilingStep;
   let ceilingCount: number | null = null;
-  let verdict = '';
+  let verdict: string;
 
   if (p.views < MIN_VIEWS_FOR_RATE) {
     ceiling = 'to_view';

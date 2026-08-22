@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && tsc -p tsconfig.worker.json --noEmit && vite build && vite-node scripts/prerender-seo.mjs",
+    "ci": "npm run lint && npm run build && npm run test:run",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
