@@ -39,21 +39,51 @@ export const RESERVE_PCT = 0.15;
 
 export type VideoPlan = 'free' | 'starter' | 'growth' | 'scale';
 
-/** จำนวนคลิปฟรีต่อเดือนต่อเวิร์กสเปซ
- *  🔴 ตัวเลขนี้ **ไม่ใช่คำสัญญา** — เพดานเงินชนะเสมอ
- *     ถ้างบรวมหมด free ได้ 0 คลิปแม้จะยังไม่ครบโควตา (ดู decide() เหตุผล 'global')
- *  free = 1 โดยตั้งใจ: "อาฮ่า" ต้องได้ฟรี แต่คลิปที่ 2 ต้องจ่าย (แพตเทิร์นเดียวกับโควตา token) */
-export const FREE_CLIPS_PER_MONTH: Record<VideoPlan, number> = {
-  free: 1, starter: 4, growth: 15, scale: 50,
+/** ต้นทุนจริงของ 1 คลิป (บาท · worst case) — คำนวณ 22 ส.ค. 2569 จากราคา provider จริง
+ *    เรนเดอร์ Wan 2.6 8 วินาที 1080p  $0.40 = ฿15.20
+ *  × ตัวคูณงานที่ต้องทำซ้ำ 1.6 เท่า            = ฿24.32   🟡 ยังไม่รู้อัตราจริง ตั้งแพงไว้ก่อน
+ *  + ชั้นบท (LLM ~12,000 tokens worst case)   = ฿3.63
+ *  + เสียงไทย TTS (~150 ตัวอักษร)              = ฿0.09
+ *                                        รวม ≈ ฿28  → ปัดขึ้นเป็น 35 เผื่อพลาด
+ *  ⚠️ ตัวเลขที่แพงที่สุดไม่ใช่ค่าเรนเดอร์ แต่คือ "คลิปที่ออกมาแล้วใช้ไม่ได้ ต้องทำใหม่"
+ *     ⇒ ทุกอย่างที่ลดอัตราทำซ้ำ (prompt ดีขึ้น · ให้ผู้ใช้ยืนยัน storyboard ก่อนเรนเดอร์)
+ *       ประหยัดกว่าการเปลี่ยนไปหา provider ที่ถูกกว่า */
+export const WORST_CASE_CLIP_THB = 35;
+
+/** 🔴 คลิปฟรี = **1 คลิปตลอดชีพ** ไม่ใช่ต่อเดือน
+ *
+ *  ตอนแรกผมตั้งเป็น 1 คลิป/เดือน แล้วคำนวณดูถึงเห็นว่ามันฆ่าการเติบโตของตัวเอง:
+ *    งบกองกลาง ฿850 ÷ ฿28 = ~30 คลิป/เดือน
+ *    ถ้าให้ฟรีทุกเดือน → เดือนที่ 1 ผู้ใช้ฟรี 30 คนได้อาฮ่า
+ *                       เดือนที่ 2 คน 30 คนเดิมมารับอีก → งบหมด → **คนใหม่ไม่ได้อะไรเลย**
+ *    ⇒ งบทั้งก้อนถูกล็อกไว้กับคนกลุ่มเดิมที่ยังไม่จ่ายเงิน การเติบโตหยุดตายที่ 30 คน
+ *  ให้ครั้งเดียวตลอดชีพ → ทุกเดือนมีที่ว่างให้ **คนใหม่ 30 คน** ได้อาฮ่าเสมอ
+ *  (อาฮ่าต้องเกิดครั้งเดียว · การให้ซ้ำคือค่าบำรุงรักษา ไม่ใช่ค่าหาลูกค้า) */
+export const FREE_CLIPS_LIFETIME = 1;
+
+/** โควตาคลิปต่อเดือนของแพ็กที่จ่ายเงิน */
+export const PAID_CLIPS_PER_MONTH: Record<Exclude<VideoPlan, 'free'>, number> = {
+  starter: 4, growth: 15, scale: 50,
 };
+
+/** เพดานค่าเรนเดอร์ของแพ็กที่จ่ายเงิน — **งอกจากโควตาที่สัญญาไว้** ไม่ใช่ตัวเลขที่ตั้งลอย ๆ
+ *  🔴 ตอนแรกผมตั้งเป็น ~15% ของราคาแพ็ก แล้วเจอว่า starter ได้เพดาน ฿88
+ *     แต่โควตา 4 คลิป × ฿28 = ฿112 ⇒ **ระบบจะตัดที่คลิปที่ 3 ทั้งที่สัญญาไว้ 4**
+ *     = ความผิดพลาดแบบเดียวกับที่เพิ่งแก้ไป แค่เล็กลง
+ *  ⇒ ผูกสองตัวเลขนี้เข้าด้วยกันด้วยสูตร ไม่ใช่ด้วยความจำ (มีเทสต์บังคับว่ามาร์จินต้องยังผ่าน) */
+export function paidRenderBudgetThb(plan: Exclude<VideoPlan, 'free'>): number {
+  return PAID_CLIPS_PER_MONTH[plan] * WORST_CASE_CLIP_THB;
+}
 
 export type BudgetInput = {
   /** ใช้ไปแล้วทั้งระบบเดือนนี้ (บาท) — รวมงานที่จองไว้แต่ยังไม่เสร็จด้วย */
   spentGlobalThb: number;
   /** ใช้ไปแล้วของเวิร์กสเปซนี้เดือนนี้ (บาท) */
   spentWsThb: number;
-  /** คลิปที่เวิร์กสเปซนี้สร้างสำเร็จแล้วเดือนนี้ */
+  /** คลิปที่เวิร์กสเปซนี้สร้างสำเร็จแล้วเดือนนี้ (ใช้กับแพ็กที่จ่ายเงิน) */
   clipsThisMonth: number;
+  /** คลิปที่เวิร์กสเปซนี้เคยสร้างทั้งหมดตั้งแต่เปิดบัญชี (ใช้กับแพ็กฟรี) */
+  clipsLifetime: number;
   /** ราคาที่ประเมินไว้ของคลิปนี้ (บาท) — null = ประเมินไม่ได้ */
   estCostThb: number | null;
   plan: VideoPlan;
@@ -109,7 +139,7 @@ export function decide(input: BudgetInput): BudgetDecision {
   const usable = isFree ? usablePoolThb() : Number.POSITIVE_INFINITY;
   const wsCap = isFree
     ? freeWorkspaceCapThb()
-    : PAID_RENDER_BUDGET_THB[input.plan as Exclude<VideoPlan, 'free'>];
+    : paidRenderBudgetThb(input.plan as Exclude<VideoPlan, 'free'>);
   const remainingGlobalThb = isFree ? round2(Math.max(0, usable - input.spentGlobalThb)) : Infinity;
   const remainingWsThb = round2(Math.max(0, Math.min(wsCap - input.spentWsThb, remainingGlobalThb)));
   const base = { remainingWsThb, remainingGlobalThb };
@@ -120,11 +150,18 @@ export function decide(input: BudgetInput): BudgetDecision {
       message: 'ยังประเมินค่าเรนเดอร์ของคลิปนี้ไม่ได้ จึงยังสั่งทำไม่ได้ — ไม่ใช่ความผิดของคุณ เราต้องแก้ฝั่งระบบก่อน' };
   }
 
-  // ② โควตาคลิปของแพ็ก
-  const quota = FREE_CLIPS_PER_MONTH[input.plan];
-  if (input.clipsThisMonth >= quota) {
-    return { allow: false, reason: 'quota', ...base,
-      message: `เดือนนี้ใช้ครบ ${quota} คลิปแล้ว — อัปแพ็กหรือรอเดือนหน้าได้` };
+  // ② โควตาคลิป — ฟรีนับตลอดชีพ · จ่ายเงินนับรายเดือน
+  if (isFree) {
+    if (input.clipsLifetime >= FREE_CLIPS_LIFETIME) {
+      return { allow: false, reason: 'quota', ...base,
+        message: 'คลิปฟรีของคุณใช้ไปแล้ว — บทและสตอรีบอร์ดยังทำได้ไม่จำกัด อัปแพ็กเมื่อไรก็เรนเดอร์ต่อได้' };
+    }
+  } else {
+    const quota = PAID_CLIPS_PER_MONTH[input.plan as Exclude<VideoPlan, 'free'>];
+    if (input.clipsThisMonth >= quota) {
+      return { allow: false, reason: 'quota', ...base,
+        message: `เดือนนี้ใช้ครบ ${quota} คลิปแล้ว — อัปแพ็กหรือรอเดือนหน้าได้` };
+    }
   }
 
   // ③ เพดานของเวิร์กสเปซนี้ (กันคนเดียวกินงบทั้งเดือน)
