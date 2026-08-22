@@ -85,6 +85,22 @@ describe('theme-safe-color — เครื่องมือตรวจต้�
     expect(audit).toMatch(/goal-overlay/);
   });
 
+  it('🔴 ตัวตรวจต้องไม่ใช้ el.remove() กับ overlay — React จะเรนเดอร์จน sidebar หาย', () => {
+    /* วัดได้จริง: ใช้ el.remove() แล้วคลิกได้ 1 ปุ่ม หลังจากนั้น sidebar เหลือ **0 ปุ่มจาก 22**
+       เพราะ element พวกนี้ React เป็นเจ้าของ — ลบทิ้งแล้ว virtual DOM ไม่ตรงกับของจริง
+       ที่ถูกคือปิด pointer-events + ซ่อนด้วย CSS (ไม่แตะโครงสร้าง DOM) */
+    expect(audit).not.toMatch(/querySelectorAll\((?:'|")\[class\*="overlay"\]/);
+    expect(audit).toMatch(/pointer-events:\s*none/);
+    expect(audit).toMatch(/addStyleTag/);
+  });
+
+  it('🔴 ตัวตรวจห้ามข้ามหน้าแบบเงียบ — ทั้ง catch และ continue ต้องบันทึกไว้', () => {
+    // `continue` ก็เป็นการข้ามแบบเงียบเหมือน catch ว่าง ๆ — พลาดจุดนี้มาแล้ว
+    expect(audit).toMatch(/skipped\.push/);
+    expect(audit).toMatch(/เดินไม่ถึง/);
+    expect(audit).not.toMatch(/if \(!btns\[i\]\) continue;/);
+  });
+
   it('ตัวตรวจต้องไม่อ่าน gradient โปร่งใสเป็นสีพื้นทึบ', () => {
     // เคยพลาด: อ่าน rgba(52,211,153,.08) เป็นเขียวทึบ ⇒ รายงาน "เขียวบนเขียว" ผิด ๆ
     expect(audit).toMatch(/g\.a > 0\.5/);

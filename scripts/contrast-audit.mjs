@@ -74,15 +74,15 @@ async function openAllNav(page) {
   await page.waitForTimeout(400);
   await page.evaluate(() => { document.querySelector('.focus-unlock')?.click(); });   // เลิกโหมดโฟกัส
   await page.waitForTimeout(400);
-  // 🔴 ลบ overlay ที่บังการคลิก — CLAUDE.md GOTCHA #2 เขียนเรื่องนี้ไว้แล้ว
-  //    ("ต้องลบ .onb-overlay/.goal-overlay ก่อน hover")
-  //    ไม่ลบ = ทุกการคลิก timeout เงียบ ๆ ⇒ ตัวตรวจเดินได้ 6 หน้าแล้วรายงานเขียว
-  //    ⇒ คำตอบอยู่ในเอกสารของโปรเจกต์เองมาตลอด แต่ตัวตรวจไม่ได้ถูกเขียนตามนั้น
-  await page.evaluate(() => {
-    for (const sel of ['.onb-overlay', '.goal-overlay', '.modal-backdrop', '[class*="overlay"]']) {
-      for (const el of document.querySelectorAll(sel)) el.remove();
-    }
-  });
+  // 🔴 ปิดการรับคลิกของ overlay ที่บังอยู่ — CLAUDE.md GOTCHA #2 เขียนไว้แล้ว
+  //    ⚠️ **ห้ามใช้ el.remove()** — element พวกนี้ React เป็นเจ้าของ
+  //       ลบทิ้งแล้ว React เรนเดอร์ใหม่จนทั้ง sidebar หาย (วัดได้: หลังคลิกเหลือ 0 ปุ่มจาก 22)
+  //       ⇒ ตัวตรวจเดินได้แค่หน้าเดียวต่อธีม แล้วข้ามที่เหลือเงียบ ๆ ด้วย `continue`
+  //    ที่ถูกคือปิด pointer-events + ซ่อน — ไม่แตะโครงสร้าง DOM ของ React
+  await page.addStyleTag({ content: `
+    .onb-overlay, .goal-overlay, .modal-backdrop, .upgrade-wall, .aia-panel {
+      pointer-events: none !important; visibility: hidden !important;
+    }` });
   await page.waitForTimeout(200);
   // กางทุกกลุ่มที่ยุบอยู่ (วนหลายรอบ เพราะกางกลุ่มหนึ่งอาจเผยกลุ่มถัดไป)
   for (let i = 0; i < 4; i++) {
@@ -147,14 +147,12 @@ for (const theme of ['minimal', 'dark']) {
       //    เพราะแต่ละหน้าเปิด overlay ของตัวเอง (ทัวร์/upgrade wall/แผง AI)
       //    ทำครั้งเดียวตอนต้น = คลิกได้แค่ปุ่มแรก แล้วที่เหลือ timeout เงียบ (เดินได้ 8 จาก 30)
       await app.evaluate(() => {
-        for (const sel of ['.onb-overlay', '.goal-overlay', '.modal-backdrop', '.upgrade-wall', '[class*="overlay"]']) {
-          for (const el of document.querySelectorAll(sel)) el.remove();
-        }
         for (const b of document.querySelectorAll('button.nav-group-toggle:not(.open)')) b.click();
+        document.querySelector('.focus-unlock')?.click();   // โหมดโฟกัสอาจกลับมาหลังเปลี่ยนหน้า
       });
       await app.waitForTimeout(250);
       const btns = await app.$$('button.nav-item');
-      if (!btns[i]) continue;
+      if (!btns[i]) { skipped.push(`${theme}/${label}: ไม่พบปุ่มลำดับที่ ${i} (เหลือ ${btns.length} ปุ่ม)`); continue; }
       label = ((await btns[i].innerText()) || label).split('\n')[0].trim().slice(0, 28) || label;
       await btns[i].click({ timeout: 3000 });
       await app.waitForTimeout(650);
