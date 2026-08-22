@@ -289,6 +289,17 @@ src/lib/growthPdca.ts          — วงจร PDCA ของ "การเต�
                                  bottleneckOf() ตอบ 'unknown' อย่างซื่อสัตย์เมื่อคนน้อยเกินฟันธง (MIN_FOR_RATE=100)
                                  REACH_FLOOR_PER_WEEK=100 — ต่ำกว่านี้คอขวดคือ "ไม่มีคนมา" ห้ามไปแก้หน้าเว็บ
                                  Tracker.receiving: true/false/**null(=ตรวจไม่ได้)** → blindSpots 🔴/🟡 (pure/tested 16 เทสต์)
+src/lib/stageFit.ts            — "งานชิ้นนี้ถึงเวลาของมันหรือยัง" (skill `case-study-stage-fit` ในรูปโค้ด)
+                                 stageOf() หาเฟสจากตัวเลขจริง: reach → convert → retain → scale (ข้ามไม่ได้)
+                                 ใช้ REACH_FLOOR_PER_WEEK + MIN_FOR_RATE ตัวเดียวกับ growthPdca (ห้ามเขียนเลขซ้ำ)
+                                 INITIATIVES = งานจริง 12 รายการ → คัดเป็น ✅ทำได้ตอนนี้ / ⏳ยังไม่ถึงเวลา / 🚫ห้ามทำ
+                                 กฎที่เทสต์บังคับ: งานที่เลื่อน **ต้องมีตัวเลขปลดล็อก** (ห้ามเขียน "เมื่อโตกว่านี้")
+                                 · งานที่ห้าม ต้องบอกว่าทำไม · ทุกงานต้องอยู่กองใดกองหนึ่ง ห้ามหาย
+                                 ⚠️ ผลจริง 22 ส.ค. 2569: เฟส **reach** (19 คน/สัปดาห์ · สะสม 79 · จ่ายจริง **0 ราย**)
+                                    ⇒ Video Orchestrator/CRM/lock-in = ยังไม่ถึงเวลา · แต่ "ทำคลิปด้วยมือ 5 คลิป" = ทำได้เลย
+                                 components/StageFitPanel.tsx อยู่ใต้ GrowthPdcaPanel (PDCA บอกว่าค้างตรงไหน · แผงนี้บอกว่าทำอะไร)
+                                 lib/payments.ts `payingCustomerCount()` นับ **ธุรกิจ** ที่จ่ายจริง (ตัด admin-free)
+                                 คืน null = **ตรวจไม่ได้** ≠ 0 · UI fail-closed: ตรวจไม่ได้ = ไม่ปลดล็อกงานเฟสหลัง
 src/lib/amplitude.ts           — sink ที่ 2 คู่กับ GA (funnel/retention/cohort + session replay)
                                  ⚠️ ต้องมี VITE_AMPLITUDE_KEY ใน GitHub Secrets **และ** ใน build step ของ
                                  cloudflare-deploy.yml ไม่งั้นเงียบสนิทโดยไม่มีใครรู้ (ledger #18) — `envContract.test.ts` เฝ้าอยู่
