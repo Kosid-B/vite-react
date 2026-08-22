@@ -225,7 +225,8 @@ export default function Billing({ data, onUpdate, wsId }: Props) {
     }
     // GA4 purchase — รายได้จริง (ผู้ใช้ยืนยันด้วยสลิป)
     track('purchase', { transaction_id: invoice.id, value: sub.amount, currency: 'THB', plan: sub.plan, cycle: sub.cycle });
-    // funnel: จ่ายเงินตามแพ็ก (paid_starter / paid_growth / paid_scale)
+    // ⚠️ ชื่อ event ประกอบจากตัวแปร — grep หาชื่อเต็มไม่เจอ (skill `tracking-contract` กับดัก ②)
+    // แตกเป็น 3 ตัว: paid_starter | paid_growth | paid_scale — ทั้งสามเป็น key event ใน GA4 ห้ามลบ
     track('paid_' + sub.plan, { value: sub.amount, cycle: sub.cycle });
     // Referral: ผู้ถูกชวนสมัครแพ็กจ่ายเงิน → server ให้เครดิตทั้งคู่ (referee ต้องเป็นแพ็กจ่ายเงิน — ตรวจฝั่ง server)
     const ref = getPendingRef();

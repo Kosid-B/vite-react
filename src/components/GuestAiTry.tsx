@@ -28,6 +28,7 @@ export default function GuestAiTry({ onGetStarted }: { onGetStarted: () => void 
     setBusy(false);
     if (!r) { setNoWorker(true); track('guest_ai_unavailable', {}); return; }
     setRes(r);
+    // ชื่อ event แตกเป็น 2 ตัว: guest_ai_capped (โควตาหมด) | guest_ai_result (ตอบได้)
     track(r.capped ? 'guest_ai_capped' : 'guest_ai_result', {});
   }
 
