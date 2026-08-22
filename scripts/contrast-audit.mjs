@@ -101,6 +101,7 @@ async function openAllNav(page) {
 }
 
 const findings = [];
+const skipped = [];
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 let pagesScanned = 0;
 
@@ -142,6 +143,16 @@ for (const theme of ['minimal', 'dark']) {
   for (let i = 0; i < navCount; i++) {
     let label = `เมนู#${i + 1}`;
     try {
+      // 🔴 ล้าง overlay + กางกลุ่ม **ก่อนทุกการคลิก** ไม่ใช่แค่ครั้งแรก
+      //    เพราะแต่ละหน้าเปิด overlay ของตัวเอง (ทัวร์/upgrade wall/แผง AI)
+      //    ทำครั้งเดียวตอนต้น = คลิกได้แค่ปุ่มแรก แล้วที่เหลือ timeout เงียบ (เดินได้ 8 จาก 30)
+      await app.evaluate(() => {
+        for (const sel of ['.onb-overlay', '.goal-overlay', '.modal-backdrop', '.upgrade-wall', '[class*="overlay"]']) {
+          for (const el of document.querySelectorAll(sel)) el.remove();
+        }
+        for (const b of document.querySelectorAll('button.nav-group-toggle:not(.open)')) b.click();
+      });
+      await app.waitForTimeout(250);
       const btns = await app.$$('button.nav-item');
       if (!btns[i]) continue;
       label = ((await btns[i].innerText()) || label).split('\n')[0].trim().slice(0, 28) || label;
@@ -151,13 +162,10 @@ for (const theme of ['minimal', 'dark']) {
       await app.waitForTimeout(450);
       for (const f of await app.evaluate(SCAN, THRESHOLD)) findings.push({ ...f, page: label, theme });
       pagesScanned++;
-      // กลุ่มเมนูอาจยุบกลับหลังเปลี่ยนหน้า — กางใหม่ให้ปุ่มถัดไปยังกดได้
-      await app.evaluate(() => {
-        for (const sel of ['.onb-overlay', '.goal-overlay', '.modal-backdrop']) for (const el of document.querySelectorAll(sel)) el.remove();
-        for (const b of document.querySelectorAll('button.nav-group-toggle:not(.open)')) b.click();
-      });
-      await app.waitForTimeout(250);
-    } catch { /* กดไม่ได้ (ล็อกตามแพ็ก/ปุ่มเป็นตัวยุบกลุ่ม) */ }
+    } catch (e) {
+      // ห้ามเงียบ — ความเงียบตรงนี้คือเหตุผลที่บั๊กกลับมารอบ 2
+      skipped.push(`${theme}/${label}: ${String(e).split('\n')[0].slice(0, 60)}`);
+    }
   }
   await dctx.close();
 }
@@ -173,6 +181,10 @@ const list = [...worst.values()].sort((a, b) => a.ratio - b.ratio);
 
 const MIN_PAGES = 30;   // 2 ธีม × (3 หน้าสาธารณะ + เมนูในแอปอย่างน้อย ~12)
 console.log(`สแกน ${pagesScanned} หน้า (2 ธีม) · เกณฑ์ contrast < ${THRESHOLD}`);
+if (skipped.length) {
+  console.log(`\n⚠️ เดินไม่ถึง ${skipped.length} หน้า — จุดบอดที่ต้องประกาศ ห้ามกลบ:`);
+  for (const s2 of skipped.slice(0, 12)) console.log('   · ' + s2);
+}
 if (pagesScanned < MIN_PAGES) {
   console.log(`\n🔴 ตัวตรวจเดินไม่ครบ (${pagesScanned} < ${MIN_PAGES}) — ผลลัพธ์อ่านไม่ได้ ไม่ว่าจะเขียวแค่ไหน`);
   console.log('   เครื่องมือที่เดินไม่ครบ อันตรายกว่าไม่มีเครื่องมือ (skill `theme-safe-color`)');
