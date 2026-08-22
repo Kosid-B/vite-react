@@ -101,6 +101,11 @@ describe('theme-safe-color — เครื่องมือตรวจต้�
     expect(audit).not.toMatch(/if \(!btns\[i\]\) continue;/);
   });
 
+  it('ตัวตรวจต้องข้ามข้อความที่เป็นอีโมจิล้วน (CSS color ไม่ได้ระบายสีอีโมจิ)', () => {
+    // เคสจริง: <SPAN.city-card-ico>"🏛️" ถูกรายงาน contrast 1.04 ทั้งที่มองเห็นชัด
+    expect(audit).toMatch(/\\p\{L\}/);
+  });
+
   it('ตัวตรวจต้องไม่อ่าน gradient โปร่งใสเป็นสีพื้นทึบ', () => {
     // เคยพลาด: อ่าน rgba(52,211,153,.08) เป็นเขียวทึบ ⇒ รายงาน "เขียวบนเขียว" ผิด ๆ
     expect(audit).toMatch(/g\.a > 0\.5/);

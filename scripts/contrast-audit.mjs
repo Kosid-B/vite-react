@@ -50,6 +50,10 @@ const SCAN = (threshold) => {
   for (const el of document.querySelectorAll('body *')) {
     const txt = [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent.trim()).join(' ').trim();
     if (txt.length < 2) continue;
+    // 🔴 ข้ามข้อความที่เป็น "อีโมจิ/สัญลักษณ์ล้วน" — ฟอนต์อีโมจิระบายสีเอง
+    //    CSS `color` ไม่มีผลกับมัน ⇒ รายงานไปก็แก้ไม่ได้ และกลบเคสจริงด้วยเสียงรบกวน
+    //    (เคสจริง: <SPAN.city-card-ico>"🏛️" ถูกรายงานว่า contrast 1.04 ทั้งที่มองเห็นชัด)
+    if (!/[\p{L}\p{N}]/u.test(txt)) continue;
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) continue;
     const cs = getComputedStyle(el);

@@ -464,7 +464,7 @@ export default function StartLanding() {
         <a href="/faq">คำถามที่พบบ่อย</a> ·{' '}
         โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
         <br />
-        เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a href="tel:08178177773">081-7817-7773</a>
+        เราให้บริการที่ปรึกษามามากกว่า 20 ปีในประเทศไทย · โทร <a className="legal-link" href="tel:08178177773">081-7817-7773</a>
         <br />
         <LegalLinks />
         <div style={{ marginTop: 14 }}><IsmsBadge /></div>
