@@ -5,6 +5,7 @@ import ContentPerformancePanel from '../../components/ContentPerformancePanel';
 import GrowthPdcaPanel from '../../components/GrowthPdcaPanel';
 import PaymentReadinessPanel from '../../components/PaymentReadinessPanel';
 import ReachFunnelPanel from '../../components/ReachFunnelPanel';
+import StageFitPanel from '../../components/StageFitPanel';
 import type { AppData } from '../../types';
 import { isSupabaseEnabled } from '../../lib/supabase';
 import { adminListWorkspaces, wsLoad } from '../../lib/workspaces';
@@ -473,6 +474,10 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
       {/* 🔁 PDCA — ต้องอยู่ก่อนทุกแผงตัวเลข เพราะมันบอกว่า "ตัวเลขข้างล่างเชื่อได้แค่ไหน"
           อ่านตัวเลขก่อนรู้ว่าวงจรค้างตรงไหน = ได้ข้อสรุปที่มั่นใจแต่ผิด */}
       <GrowthPdcaPanel landing={landing} plannedPieces={PLANNED_PIECES_THIS_CYCLE} windowDays={landing?.days ?? 30} />
+
+      {/* 🎯 PDCA บอก "วงจรค้างตรงไหน" · แผงนี้บอก "แล้วควรทำอะไร / อะไรยังไม่ถึงเวลา"
+          วางติดกันโดยตั้งใจ — เดิมรู้ว่าคอขวดคือ reach แต่ไม่มีอะไรกันไม่ให้ไปทำฟีเจอร์ต่อ */}
+      <StageFitPanel landing={landing} />
 
       {/* 💰 ปลายทางจริงของวงจรคือเงินเข้าบัญชี ไม่ใช่ยอดสมัคร — วางติดกับ PDCA */}
       <PaymentReadinessPanel />

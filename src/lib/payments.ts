@@ -1,4 +1,5 @@
 import { isSupabaseEnabled, supabase } from './supabase';
+import { isRealPayment } from './skillStats';
 
 /** อัปสลิปในแอป + คิวแอดมินยืนยัน (ตาราง payment_submissions + bucket payment-slips)
  *  อนุมัติแล้ว → client ของผู้ใช้เอง (Billing) เปิดใช้งานแพ็กให้ (ไม่เขียนข้าม workspace) */
@@ -255,4 +256,26 @@ export async function paymentProofStats(): Promise<{ total: number; verified: nu
   const ok = await supabase.from('payment_submissions')
     .select('id', { count: 'exact', head: true }).not('verified_at', 'is', null);
   return { total: all.count ?? 0, verified: ok.error ? 0 : (ok.count ?? 0) };
+}
+
+/** จำนวน "ลูกค้าที่จ่ายเงินจริง" (แอดมิน) — ใช้ตัดสินเฟสใน stageFit.ts
+ *  ⚠️ นับ **ธุรกิจ** (workspace) ไม่ใช่จำนวนรายการ · และตัด NON_REVENUE_PAY_METHODS ออกก่อนเสมอ
+ *     ถ้านับทุกแถว จะได้ 146 รายการ ฿239,290 ทั้งที่เงินจริง = ฿0 (skillStats.ts อธิบายไว้)
+ *     ตัวเลขที่โกหกตัวเองอันตรายกว่าไม่มีตัวเลขเลย — และเฟสที่ผิดจะพาไปทำงานผิดทั้งรอบ
+ *  🟢 ชื่อคอลัมน์ยืนยันกับสคีมา production แล้ว (workspace_id/user_id — ไม่มี buyer_id)
+ *  คืน null = **ตรวจไม่ได้** (ไม่ใช่ 0) ⇒ ฝั่ง UI ต้องแยกสองกรณีนี้ออกจากกัน */
+export async function payingCustomerCount(): Promise<number | null> {
+  if (!isSupabaseEnabled || !supabase) return null;
+  const { data, error } = await supabase
+    .from('skill_purchases')
+    .select('workspace_id, user_id, pay_method')
+    .limit(5000);
+  if (error || !data) return null;
+  const buyers = new Set<string>();
+  for (const row of data as { workspace_id?: string | null; user_id?: string | null; pay_method?: string | null }[]) {
+    if (!isRealPayment(row.pay_method ?? '')) continue;
+    const key = row.workspace_id || row.user_id;
+    if (key) buyers.add(key);
+  }
+  return buyers.size;
 }
