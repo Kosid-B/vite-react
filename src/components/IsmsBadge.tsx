@@ -25,4 +25,11 @@ const ISMS_CSS = `
 .isms-badge-sub{ color:rgba(103,232,249,.7); font-size:11px; font-weight:400; }
 .isms-badge.compact{ width:100%; margin-top:8px; padding:7px 8px; font-size:11px; }
 .isms-badge.compact .isms-badge-sub{ flex-basis:100%; text-align:center; font-size:10px; }
+
+/* 🔴 ธีมสว่าง: สีไซแอนอ่อนข้างบนอ่านไม่ออกบนพื้นขาว (วัดได้ 1.19–1.39 = มองไม่เห็น)
+   กติกา skill \`theme-safe-color\`: เขียนสีตัวอักษรตายตัวเมื่อไร ต้องเขียนคู่กับพื้นหลังเสมอ */
+:root[data-theme="minimal"] .isms-badge{ color:#0e7490; border-color:rgba(6,182,212,.5); background:rgba(6,182,212,.10); }
+:root[data-theme="minimal"] .isms-badge strong{ color:#0b4f5e; }
+:root[data-theme="minimal"] .isms-badge-sub{ color:#0e6072; }
+:root[data-theme="minimal"] .isms-badge a{ color:#0e7490; }
 `;

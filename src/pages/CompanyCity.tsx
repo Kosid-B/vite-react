@@ -18,6 +18,7 @@ import ProofCardShare from '../components/ProofCardShare';
 import TestimonialForm from '../components/TestimonialForm';
 import CityRewards from '../components/CityRewards';
 import CityscapeHero from '../components/CityscapeHero';
+import { readableOn, SURFACE_DARKEST } from '../lib/readableColor';
 
 /* ===== เมืองบริษัท (Company City) — เกมส์ SIM การเติบโต =====
  * เมืองโตตามความคืบหน้าจริง: อาคารสูงขึ้นเมื่อทำงานจริง, ปลดล็อกย่านใหม่ตามเหตุการณ์สำคัญ
@@ -48,7 +49,7 @@ export default function CompanyCity({ data, onNavigate, onUpdate, wsId = null }:
         <div className="city-tier" style={{ borderColor: `${s.level.color}66`, background: `${s.level.color}1a` }}>
           <span className="city-tier-badge">{s.level.badge}</span>
           <div>
-            <div className="city-tier-name" style={{ color: s.level.color }}>{s.tier.label}</div>
+            <div className="city-tier-name" style={{ color: readableOn(s.level.color, SURFACE_DARKEST) }}>{s.tier.label}</div>
             <div className="city-tier-rank">ระดับ {s.level.rank}</div>
           </div>
         </div>

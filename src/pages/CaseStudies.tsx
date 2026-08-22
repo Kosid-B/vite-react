@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { AppData, CaseStudy } from '../types';
+import { readableOn } from '../lib/readableColor';
 
 export default function CaseStudies({ data }: { data?: AppData }) {
   // built-in cases = chunk แยก โหลดแบบ dynamic (ลด page chunk + cache แยกข้าม deploy)
@@ -60,7 +61,7 @@ export default function CaseStudies({ data }: { data?: AppData }) {
       {/* Case Header */}
       <div className="cs-header" style={{ borderLeftColor: cs.color }}>
         <div className="cs-header-meta">
-          <span className="cs-badge" style={{ background: cs.color + '22', color: cs.color }}>{cs.industry}</span>
+          <span className="cs-badge" style={{ background: cs.color + '22', color: readableOn(cs.color) }}>{cs.industry}</span>
           <span className="cs-badge cs-badge-neutral">{cs.origin}</span>
         </div>
         <div className="cs-title">{cs.title}</div>

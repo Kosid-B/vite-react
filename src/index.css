@@ -7200,3 +7200,11 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
  *  ⇒ ตั้งสีตัวอักษรค่าเดียวย่อมผิดที่ใดที่หนึ่งเสมอ · วัดจริงแล้วแย่ลงจากเดิม
  *  ที่ถูกคือแยก selector ตามบริบท หรือแก้ที่ตัวคอมโพเนนต์ให้พื้นหลังคงที่
  *  (งานที่เหลือ — ดู docs/review/CONTRAST-AUDIT-2026-08-22.md) */
+
+/* 🔴 คู่ "สีตัวอักษร + พื้นหลัง" ที่ต้องอยู่ด้วยกัน (skill `theme-safe-color`)
+   วัดได้ว่าตกเกณฑ์ในธีมใดธีมหนึ่ง เพราะเดิมกำหนดแค่ครึ่งเดียว */
+.skm-btn.owned { background: #064e3b; color: #6ee7b7; }
+:root[data-theme="minimal"] .skm-btn.owned { background: #d1fae5; color: #065f46; }
+:root[data-theme="minimal"] .start-roi-punch b { color: #047857; }
+:root[data-theme="minimal"] .start-plan-price b,
+:root[data-theme="minimal"] .start-price-note b { color: #047857; }

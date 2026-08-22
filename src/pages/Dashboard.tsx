@@ -13,6 +13,7 @@ import UpgradeNudge from '../components/UpgradeNudge';
 import EcosystemFlow from '../components/EcosystemFlow';
 import { de24Journey } from '../lib/de24Journey';
 import { track } from '../lib/analytics';
+import { readableOn } from '../lib/readableColor';
 
 interface Props {
   data: AppData;
@@ -837,7 +838,7 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
               <div className="db-cp-goal">{month.goal.slice(0, 90)}{month.goal.length > 90 ? '…' : ''}</div>
               <div className="db-cp-cols">
                 {month.cols.map((col, ci) => (
-                  <div key={ci} className="db-cp-chip" style={{ borderColor: col.color, color: col.color }}>
+                  <div key={ci} className="db-cp-chip" style={{ borderColor: col.color, color: readableOn(col.color) }}>
                     {col.items.length} รายการ
                   </div>
                 ))}

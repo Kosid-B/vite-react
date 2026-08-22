@@ -45,6 +45,7 @@ import {
 import { effectiveOwnedSkills, isBundledByScale } from '../lib/skillAccess';
 import { localPlan } from '../lib/planFallback';
 import { pickTeamTemplate, type TeamTemplate } from '../lib/teamTemplates';
+import { readableOn } from '../lib/readableColor';
 
 interface Props {
   data: AppData;
@@ -2369,7 +2370,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                       {owned && <span className="skm-owned-badge">{bundled ? '🏢 รวมในแพ็ก Scale' : '✓ โหลดแล้ว'}</span>}
                     </div>
                     <div className="skm-card-name">{sk.name}</div>
-                    <div className="skm-card-cat" style={{ color: catMeta.color }}>{catMeta.icon} {catMeta.label}</div>
+                    <div className="skm-card-cat" style={{ color: readableOn(catMeta.color) }}>{catMeta.icon} {catMeta.label}</div>
                     <div className="skm-card-desc">{sk.desc}</div>
                     <div className="skm-card-tags">
                       {sk.tags.slice(0, 3).map(t => <span key={t} className="skm-tag">{t}</span>)}
