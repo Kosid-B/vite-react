@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { marginPct, MIN_MARGIN_PCT } from '../tokenEconomics';
+import { marginPct, MIN_MARGIN_PCT, tokenCostThb, PLAN_PRICE_THB, PLAN_MONTHLY_TOKENS } from '../tokenEconomics';
 import {
   decide, usdToThb, usablePoolThb, freeWorkspaceCapThb, clipsAffordable,
   FREE_POOL_THB_PER_MONTH, paidRenderBudgetThb, PAID_CLIPS_PER_MONTH,
   FREE_CLIPS_LIFETIME, WORST_CASE_CLIP_THB, USD_TO_THB,
+  planTotalCostThb, VIDEO_PLAN, PLAN_TOKENS_MIRROR,
 } from '../videoBudget';
 
 const base = { spentGlobalThb: 0, spentWsThb: 0, clipsThisMonth: 0, clipsLifetime: 0, estCostThb: 15, plan: 'free' as const };
@@ -53,11 +54,36 @@ describe('videoBudget — งบกองกลางคุมเฉพาะผ
     }
   });
 
-  it('ทุกแพ็กที่จ่ายเงินยังต้องมีกำไร ≥ MIN_MARGIN_PCT แม้ใช้โควตาเต็มแบบ worst case', () => {
-    const price = { starter: 590, growth: 1490, scale: 5900 } as const;
+  /* 🔴 เทสต์ตัวเดิมของข้อนี้ **ผิดแบบเดียวกับโค้ด** — เช็ค marginPct(ราคา, ค่าวิดีโอ)
+     โดยไม่นับต้นทุน token ที่แพ็กสัญญาไว้อยู่แล้ว (57-61% ของราคา)
+     ⇒ มันเห็นด้วยกับความผิดพลาด แทนที่จะจับได้ · ตัวใหม่นับทั้งสองก้อน */
+  it('🔴 ทุกแพ็กต้องมีกำไร ≥ MIN_MARGIN_PCT เมื่อนับ **ทั้งค่า token และค่าวิดีโอ** แบบใช้เต็มโควตา', () => {
     for (const plan of ['starter', 'growth', 'scale'] as const) {
-      expect(marginPct(price[plan], paidRenderBudgetThb(plan))).toBeGreaterThanOrEqual(MIN_MARGIN_PCT);
+      const cost = planTotalCostThb(PLAN_TOKENS_MIRROR[plan], PAID_CLIPS_PER_MONTH[plan], tokenCostThb);
+      expect(marginPct(PLAN_PRICE_THB[plan], cost)).toBeGreaterThanOrEqual(MIN_MARGIN_PCT);
     }
+  });
+
+  it('โควตา token ที่ใช้ตรวจมาร์จิน ต้องตรงกับของจริงใน tokenEconomics (กัน config drift)', () => {
+    for (const plan of ['starter', 'growth', 'scale'] as const) {
+      expect(PLAN_TOKENS_MIRROR[plan]).toBe(PLAN_MONTHLY_TOKENS[plan]);
+    }
+  });
+
+  it('แพ็กสายวิดีโอ ฿1,790 ต้องผ่านเกณฑ์กำไรเมื่อนับทั้งสองก้อน', () => {
+    const cost = planTotalCostThb(VIDEO_PLAN.monthlyTokens, VIDEO_PLAN.clipsPerMonth, tokenCostThb);
+    expect(marginPct(VIDEO_PLAN.priceThb, cost)).toBeGreaterThanOrEqual(MIN_MARGIN_PCT);
+  });
+
+  it('แพ็กสายวิดีโอต้องให้คลิปมากกว่าแพ็กเดิมทุกตัวที่ราคาต่ำกว่า — ไม่งั้นไม่มีเหตุผลให้ซื้อ', () => {
+    expect(VIDEO_PLAN.clipsPerMonth).toBeGreaterThan(PAID_CLIPS_PER_MONTH.growth);
+    expect(VIDEO_PLAN.priceThb).toBeGreaterThan(PLAN_PRICE_THB.growth);
+  });
+
+  it('🟡 เตือนความเปราะ: ถ้าอัตราทำซ้ำจริงแย่กว่าที่ตั้งไว้มาก แพ็ก ฿1,790 จะตกเกณฑ์', () => {
+    // ต้นทุน/คลิปถ้า retry เป็น 2.5x แทน 1.6x → ~฿42
+    const worse = tokenCostThb(VIDEO_PLAN.monthlyTokens) + VIDEO_PLAN.clipsPerMonth * 42;
+    expect(marginPct(VIDEO_PLAN.priceThb, worse)).toBeLessThan(MIN_MARGIN_PCT);
   });
 });
 
