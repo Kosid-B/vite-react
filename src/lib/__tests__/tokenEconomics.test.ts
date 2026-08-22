@@ -43,7 +43,13 @@ describe('tokenEconomics — ต้นทุน/มาร์จิน', () => {
   it('marginPct + meetsMinMargin', () => {
     expect(marginPct(100, 70)).toBeCloseTo(30, 6);
     expect(marginPct(0, 10)).toBe(0);
-    expect(meetsMinMargin(100, Math.round(70 / 0.3024 * 1000))).toBe(true);
+    /* ⚠️ เดิมเขียนเป็นเลขคงที่ที่ผูกกับเกณฑ์ 30% ⇒ พังทันทีที่เจ้าของยกเกณฑ์เป็น 32%
+       เขียนใหม่ให้ derive จาก MIN_MARGIN_PCT — เทสต์ต้องตามเกณฑ์ ไม่ใช่ล็อกเกณฑ์ไว้ */
+    const price = 100;
+    const maxCost = price * (1 - MIN_MARGIN_PCT / 100);        // ต้นทุนสูงสุดที่ยังผ่าน
+    const per1k = blendedThbPer1k();
+    expect(meetsMinMargin(price, Math.floor((maxCost / per1k) * 1000) - 1000)).toBe(true);
+    expect(meetsMinMargin(price, Math.ceil((maxCost / per1k) * 1000) + 1000)).toBe(false);
   });
 });
 

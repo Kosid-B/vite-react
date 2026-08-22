@@ -22,7 +22,12 @@ export const USD_THB = 36;
 export const OUTPUT_SHARE = 0.45;
 
 /** กำไรขั้นต่ำที่ยอมรับได้ (% ของรายได้) — ข้อกำหนดจาก User */
-export const MIN_MARGIN_PCT = 30;
+export const MIN_MARGIN_PCT = 32;
+
+/** เป้าที่ใช้ "ตั้งตัวเลขจริง" — สูงกว่าเกณฑ์ขั้นต่ำไว้เผื่อ
+ *  เพราะตัวเลขที่ผ่านแบบเฉียด (เช่น 32.1%) จะตกเกณฑ์ทันทีที่ราคา provider ขยับนิดเดียว
+ *  ⇒ ตั้งโควตาด้วย TARGET ตรวจด้วย MIN */
+export const TARGET_MARGIN_PCT = 34;
 
 /** ราคา USD ต่อ 1M tokens (input, output) — ค่าจากราคาป้ายผู้ให้บริการ */
 export interface TokenPrice { inUsd: number; outUsd: number }

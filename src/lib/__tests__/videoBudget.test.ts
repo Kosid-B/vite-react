@@ -120,9 +120,21 @@ describe('videoBudget — โควตาคลิป', () => {
 
   it('โควตาของแพ็กที่จ่ายเงินต้องเพิ่มตามราคา', () => {
     const p = PAID_CLIPS_PER_MONTH;
-    expect(FREE_CLIPS_LIFETIME).toBeLessThan(p.starter);
+    /* ⚠️ ห้ามเทียบ FREE_CLIPS_LIFETIME กับ starter ด้วย "<" ตรง ๆ — คนละหน่วย
+       ฟรี = 1 ครั้งตลอดชีพ · starter = 1 ครั้งต่อเดือน (ได้ 12 คลิป/ปี เทียบกับ 1)
+       เกณฑ์ที่ถูกคือ "จ่ายเงินแล้วต้องไม่ได้น้อยกว่าฟรี" */
+    expect(p.starter).toBeGreaterThanOrEqual(FREE_CLIPS_LIFETIME);
     expect(p.starter).toBeLessThan(p.growth);
     expect(p.growth).toBeLessThan(p.scale);
+  });
+
+  it('🔴 ทุกแพ็กต้องมีกำไร **สูงกว่า 32%** (เจ้าของยกเกณฑ์ 22 ส.ค. 2569) เมื่อนับทั้ง token และวิดีโอ', () => {
+    for (const plan of ['starter', 'growth', 'scale'] as const) {
+      const cost = planTotalCostThb(PLAN_TOKENS_MIRROR[plan], PAID_CLIPS_PER_MONTH[plan], tokenCostThb);
+      expect(marginPct(PLAN_PRICE_THB[plan], cost)).toBeGreaterThan(32);
+    }
+    const vp = planTotalCostThb(VIDEO_PLAN.monthlyTokens, VIDEO_PLAN.clipsPerMonth, tokenCostThb);
+    expect(marginPct(VIDEO_PLAN.priceThb, vp)).toBeGreaterThan(32);
   });
 });
 
