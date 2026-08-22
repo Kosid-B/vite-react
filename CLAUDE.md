@@ -24,7 +24,10 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 🚦 **ด่านเดียวก่อน commit ทุกครั้ง = `npm run ci`** (= `lint && build && test:run` — ขั้นเดียวกับที่ CI รันจริง)
    ห้ามพูดว่า "เทสต์ผ่าน" ถ้ารันแค่ `vitest`/`typecheck` — **`lint` คือขั้นที่ถูกลืมจนแดงติดกัน 54 รอบ 3 วัน** (ledger #36)
    และห้ามพูดว่า "เสร็จ" ถ้ายังไม่ได้เปิดดูผล CI รอบล่าสุดด้วยตาตัวเอง — เจ้าของไม่ควรต้องถ่ายภาพหน้าจอมาบอกเรา
-   กลไก: `ciGate.test.ts` อ่าน `ci.yml` ตัวจริง ⇒ ขั้นใหม่ใน CI ที่ไม่อยู่ใน `npm run ci` = เทสต์แดงทันที
+   กลไก: `ciGate.test.ts` อ่าน **`ci.yml` และ `cloudflare-deploy.yml` ตัวจริง** ⇒ ขั้นใหม่ที่ไม่อยู่ใน `npm run ci` = แดงทันที
+🔒 **`cloudflare-deploy.yml` มีขั้น `lint` แล้ว (22 ส.ค. 2569 · ห้ามลบ)** — เดิมรันแค่ `build` ⇒ ของที่ lint ไม่ผ่านขึ้น production ได้
+   นั่นคือเหตุผลที่ CI แดง 54 รอบโดย**ไม่มีอาการอะไรให้สังเกต** (deploy ยังเขียวตลอด = CI ที่แดงไม่ได้กั้นอะไรเลย)
+   ⚠️ ผลข้างเคียงที่ยอมรับแล้ว: lint แดง = deploy ไม่ออก แม้ตอนแก้ของเสียด่วน — **ทางออกคือแก้ lint ให้ผ่าน ไม่ใช่ลบขั้นนี้**
 กลไก: `rpcContract.test.ts` (SQL↔TS) · `workerRouting.test.ts` (server.ts↔wrangler.jsonc) · `deployToolchain.test.ts` (เวอร์ชันเครื่องมือ dev↔CI)
 
 📣 **ก่อนปล่อยคอนเทนต์ทุกชิ้น — skill `content-link-contract`** (ยกเป็นกฎบังคับ 19 ส.ค. 2569)

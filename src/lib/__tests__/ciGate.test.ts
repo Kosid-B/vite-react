@@ -21,6 +21,17 @@ const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
   scripts: Record<string, string>;
 };
 const ciYml = readFileSync(resolve(root, '.github/workflows/ci.yml'), 'utf8');
+/** 🔴 workflow ที่ "ขึ้น production จริง" — ต้องถูกเฝ้าด้วย ไม่ใช่แค่ ci.yml
+ *  เดิม deploy รันแค่ `npm run build` ⇒ ของที่ lint ไม่ผ่านขึ้น production ได้
+ *  ทำให้ CI แดง 54 รอบโดยไม่มีอาการ (ledger #36–37) — เจ้าของสั่งปิดช่อง 22 ส.ค. 2569 */
+const deployYml = readFileSync(resolve(root, '.github/workflows/cloudflare-deploy.yml'), 'utf8');
+
+/** ตัดคอมเมนต์ YAML ออกก่อนตรวจ — ไม่งั้นคำที่เราเขียน "อธิบาย" ในคอมเมนต์
+ *  จะถูกนับเป็นขั้นจริง (เจอจริงตอนเขียนเทสต์นี้: คอมเมนต์พูดถึง `npm run build`
+ *  แล้วทำให้การตรวจ "lint มาก่อน build ไหม" อ่านตำแหน่งผิด) */
+function stripComments(yml: string): string {
+  return yml.split('\n').filter((l) => !l.trim().startsWith('#')).join('\n');
+}
 
 /** ดึงชื่อ script ทุกตัวที่ CI สั่งด้วย `npm run <name>` */
 function npmRunStepsIn(yml: string): string[] {
@@ -36,7 +47,7 @@ describe('ci gate — เครื่องมือที่ตรวจใน�
 
   it('ทุกขั้นของ ci.yml ถูกครอบด้วย `npm run ci`', () => {
     const ciScript = pkg.scripts.ci ?? '';
-    const missing = npmRunStepsIn(ciYml).filter((s) => !ciScript.includes(`npm run ${s}`));
+    const missing = npmRunStepsIn(stripComments(ciYml)).filter((s) => !ciScript.includes(`npm run ${s}`));
     expect(missing, `ขั้นที่ CI รันแต่ \`npm run ci\` ไม่ได้รัน: ${missing.join(', ')}`).toEqual([]);
   });
 
@@ -52,5 +63,30 @@ describe('ci gate — เครื่องมือที่ตรวจใน�
 
   it('`npm run ci` ต่อด้วย && ไม่ใช่ท่อ — ท่อทำให้ exit code เป็นของคำสั่งท้ายสุด (ledger #33)', () => {
     expect(pkg.scripts.ci).not.toContain('|');
+  });
+});
+
+describe('deploy ที่ขึ้น production จริง ต้องกั้นด้วยด่านเดียวกับ CI', () => {
+  it('cloudflare-deploy.yml ต้องมีขั้น lint', () => {
+    expect(stripComments(deployYml), 'ของที่ lint ไม่ผ่านต้องขึ้น production ไม่ได้')
+      .toContain('npm run lint');
+  });
+
+  it('lint ต้องอยู่ "ก่อน" build — ล้มเร็วก่อนเผาเวลา build', () => {
+    const steps = stripComments(deployYml);
+    const lintAt = steps.indexOf('npm run lint');
+    const buildAt = steps.indexOf('npm run build');
+    expect(lintAt).toBeGreaterThan(-1);
+    expect(buildAt).toBeGreaterThan(-1);
+    expect(lintAt).toBeLessThan(buildAt);
+  });
+
+  it('ทุกขั้น npm run ของ deploy ต้องอยู่ใน `npm run ci` ด้วย', () => {
+    // ⇒ ถ้ามีคนเพิ่มขั้นใหม่เข้า deploy แล้วเรารันในเครื่องไม่ได้ = รู้ตัวทันที
+    const ciScript = pkg.scripts.ci ?? '';
+    const missing = npmRunStepsIn(stripComments(deployYml))
+      .filter((s) => s !== 'ci')
+      .filter((s) => !ciScript.includes(`npm run ${s}`));
+    expect(missing, `ขั้นที่ deploy รันแต่ \`npm run ci\` ไม่ได้รัน: ${missing.join(', ')}`).toEqual([]);
   });
 });

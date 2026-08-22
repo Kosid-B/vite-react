@@ -27,6 +27,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 🔴 ด่านที่ขาดมาตลอด (LESSONS-LEDGER #36–37 · เจ้าของสั่งปิดช่อง 22 ส.ค. 2569)
+      #    ก่อนหน้านี้ deploy รันแค่ `npm run build` ⇒ ของที่ lint ไม่ผ่านขึ้น production ได้ทันที
+      #    ผลคือ CI แดงติดกัน 54 รอบ 3 วัน โดยไม่มีอาการอะไรให้สังเกต เพราะ deploy ยังเขียวตลอด
+      #    ⇒ "CI ที่แดงไม่ได้กั้นอะไรเลย" · และ rules-of-hooks (บั๊กที่ทำแอปขาวตอนล็อกอิน)
+      #      เป็นกฎของ eslint ตัวเดียว — tsc/vitest มองไม่เห็น
+      #    ⚠️ ผลข้างเคียงที่ยอมรับแล้ว: lint แดง = deploy ไม่ออก แม้ตอนต้องแก้ของเสียด่วน
+      #       ทางออกตอนฉุกเฉินคือแก้ lint ให้ผ่าน ไม่ใช่ลบขั้นนี้ทิ้ง
+      - name: Lint (ด่านเดียวกับ ci.yml — ห้ามลบ)
+        run: npm run lint
+
       - name: Build (tsc + vite)
         run: npm run build
         env:
