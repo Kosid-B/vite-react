@@ -868,8 +868,12 @@ body {
 .db-a-label { font-size: 12px; font-weight: 600; }
 .db-a-bar-wrap { background: rgba(0,0,0,.08); border-radius: 3px; height: 6px; overflow: hidden; }
 .db-a-bar { height: 100%; border-radius: 3px; transition: width .5s; }
-.db-a-count { font-size: 14px; font-weight: 700; text-align: right; }
-.db-a-count span { font-size: 12px; font-weight: 400; color: var(--ink3); }
+/* ⚠️ .db-a-row มีพื้นหลัง "ครีมสว่างตายตัว" มาจากข้อมูล (pBgs ใน Dashboard.tsx — #fdf3f0/#fdf6ec/#f5f0e8)
+   พื้นหลังไม่พลิกตามธีม ⇒ ตัวหนังสือข้างในห้ามใช้โทเคน --ink/--ink3 ที่พลิกตามธีม
+   ของเดิม: span ใช้ var(--ink3) ⇒ contrast 1.81 บนครีม = มองไม่เห็นเลย **ทั้งสองธีม**
+   (skill theme-safe-color: สีตัวอักษรไม่มีความหมาย จนกว่าจะรู้ว่าพื้นหลังจริงตอนรันคือสีอะไร) */
+.db-a-count { font-size: 14px; font-weight: 700; text-align: right; color: #2b2b2b; }
+.db-a-count span { font-size: 12px; font-weight: 400; color: #5f5f5f; }
 .db-a-pending-title { font-size: 12.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; }
 .db-a-pending-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink2); padding: 3px 0; }
 .db-a-pending-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--rust); flex-shrink: 0; }
