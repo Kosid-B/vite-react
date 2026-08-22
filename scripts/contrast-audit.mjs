@@ -1,21 +1,22 @@
-/* contrast-audit — หา "ตัวหนังสือที่มองไม่เห็น" ในธีมสว่าง โดยวัดจากเบราว์เซอร์จริง
+/* contrast-audit — หา "ตัวหนังสือที่มองไม่เห็น" ทุกหน้า ทุกธีม โดยวัดจากเบราว์เซอร์จริง
  *
- * 🔴 ทำไมต้องมี (เจ้าของแจ้ง 21 ส.ค. 2569): "ตัวอักษรเป็นสีขาวกลืนไปกับพื้นหลัง"
- *    ต้นเหตุคือ CSS เขียนสีตายตัวอย่าง rgba(255,255,255,.5) ซึ่งถูกในธีมเข้ม
- *    แต่ธีมสว่างพลิกพื้นหลังเป็นสีขาว ⇒ contrast = 1.0 = มองไม่เห็นเลยแม้แต่นิดเดียว
+ * 🔴 ทำไมต้องมี (เจ้าของแจ้ง 21 ส.ค. + **แจ้งซ้ำ 22 ส.ค. 2569**)
+ *    "ตัวอักษรสีกลืนไปกับพื้นหลัง" — รอบแรกแก้แล้ว แต่กลับมาอีกที่หน้าอื่น
+ *    ต้นเหตุรอบสอง: **สคริปต์เดินไม่ครบทุกหน้า** — เดินแค่ปุ่มที่เห็นใน sidebar (13 หน้า)
+ *    แต่เมนูอยู่ในกลุ่มที่ "ยุบอยู่" และโหมดโฟกัสซ่อนเมนูส่วนใหญ่ไว้
+ *    ⇒ หน้า BMC / MIT24 ที่เจ้าของเจอปัญหา **ไม่เคยถูกสแกนเลยสักครั้ง**
  *
- * ⚠️ เครื่องมือที่อ่านไฟล์ CSS ตรวจเรื่องนี้ไม่ได้ — ต้องรู้ว่า "พื้นหลังจริงตอนรัน" คือสีอะไร
- *    (สีพื้นมาจาก element แม่ที่อาจอยู่คนละไฟล์) ⇒ ต้องวัดในเบราว์เซอร์เท่านั้น
+ * บทเรียน: เครื่องมือตรวจที่ "เดินไม่ครบ" อันตรายกว่าไม่มีเครื่องมือ
+ *          เพราะมันรายงานเขียวแล้วเราหยุดหา (skill `tracking-contract` กับดัก ④)
+ *
+ * ⚠️ อ่านไฟล์ CSS ตรวจเรื่องนี้ไม่ได้ — พื้นหลังจริงมาจาก element แม่ที่อาจอยู่คนละไฟล์
  *
  * วิธีใช้:  npm run dev   แล้ว   node scripts/contrast-audit.mjs [threshold]
- *   threshold เริ่มต้น 1.8 = "แทบมองไม่เห็น" · ใช้ 4.5 เพื่อดูตามเกณฑ์ WCAG AA
+ *   4.5 = เกณฑ์ WCAG AA (ค่าเริ่มต้น) · 3.0 = ตัวหนังสือใหญ่ · 1.8 = "แทบมองไม่เห็น"
  */
-import { readFileSync } from 'node:fs';
-
 const PW = '/opt/node22/lib/node_modules/playwright/index.js';
 const BASE = process.env.AUDIT_URL || 'http://localhost:5173/';
-const THRESHOLD = Number(process.argv[2] || 1.8);
-
+const THRESHOLD = Number(process.argv[2] || 4.5);
 const { chromium, devices } = (await import(PW)).default;
 
 const SCAN = (threshold) => {
@@ -29,10 +30,20 @@ const SCAN = (threshold) => {
     const p = m[1].split(',').map((x) => parseFloat(x));
     return { rgb: [p[0], p[1], p[2]], a: p.length > 3 ? p[3] : 1 };
   };
-  // พื้นหลัง "ที่ตาเห็นจริง" = ไล่ขึ้นไปหาแม่ตัวแรกที่ทึบพอ
+  // พื้นหลัง "ที่ตาเห็นจริง" = ไล่ขึ้นไปหาแม่ตัวแรกที่ทึบพอ (gradient นับด้วย — ใช้สีกลางโดยประมาณ)
   const bgOf = (el) => {
     let e = el;
-    while (e) { const c = parse(getComputedStyle(e).backgroundColor); if (c && c.a > 0.5) return c.rgb; e = e.parentElement; }
+    while (e) {
+      const cs = getComputedStyle(e);
+      const c = parse(cs.backgroundColor);
+      if (c && c.a > 0.5) return c.rgb;
+      // gradient: รับเฉพาะที่ทึบพอ — ของโปร่ง (เช่น rgba(...,.08)) แทบไม่เปลี่ยนสีพื้นจริง
+      // 🔴 เคยพลาด: อ่าน rgba(52,211,153,.08) เป็นเขียวทึบ ⇒ รายงาน "เขียวบนเขียว" ทั้งที่พื้นจริงเป็นสีเข้ม
+      //    ตัวตรวจที่รายงานผิด ทำให้คนเลิกเชื่อผลของมัน = แย่พอ ๆ กับไม่มีเครื่องมือ
+      const gi = cs.backgroundImage;
+      if (gi && gi !== 'none') { const g = parse(gi); if (g && g.a > 0.5) return g.rgb; }
+      e = e.parentElement;
+    }
     return [255, 255, 255];
   };
   const out = {};
@@ -42,7 +53,7 @@ const SCAN = (threshold) => {
     const rect = el.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) continue;
     const cs = getComputedStyle(el);
-    if (cs.visibility === 'hidden' || cs.opacity === '0') continue;
+    if (cs.visibility === 'hidden' || cs.opacity === '0' || cs.display === 'none') continue;
     const fg = parse(cs.color);
     if (!fg) continue;
     const bg = bgOf(el);
@@ -50,39 +61,116 @@ const SCAN = (threshold) => {
     const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
     if (ratio >= threshold) continue;
     const key = el.tagName + '.' + String(el.className).split(' ')[0];
-    if (!out[key]) out[key] = { key, ratio: Math.round(ratio * 100) / 100, color: cs.color, bg: `rgb(${bg.join(',')})`, txt: txt.slice(0, 44) };
+    if (!out[key] || out[key].ratio > ratio) {
+      out[key] = { key, ratio: Math.round(ratio * 100) / 100, color: cs.color, bg: `rgb(${bg.join(',')})`, txt: txt.slice(0, 40), size: cs.fontSize };
+    }
   }
   return Object.values(out);
 };
 
+/** เปิดทุกอย่างที่ซ่อนเมนูไว้ แล้วคืนรายชื่อหน้าที่กดได้จริงทั้งหมด */
+async function openAllNav(page) {
+  await page.evaluate(() => { document.querySelector('.goal-skip')?.click(); });
+  await page.waitForTimeout(400);
+  await page.evaluate(() => { document.querySelector('.focus-unlock')?.click(); });   // เลิกโหมดโฟกัส
+  await page.waitForTimeout(400);
+  // กางทุกกลุ่มที่ยุบอยู่ (วนหลายรอบ เพราะกางกลุ่มหนึ่งอาจเผยกลุ่มถัดไป)
+  for (let i = 0; i < 4; i++) {
+    const opened = await page.evaluate(() => {
+      let n = 0;
+      for (const b of document.querySelectorAll('button.nav-group-toggle:not(.open)')) { b.click(); n++; }
+      return n;
+    });
+    await page.waitForTimeout(350);
+    if (!opened) break;
+  }
+  // คืน "จำนวน" ไม่ใช่ชื่อ — คลิกด้วย index แล้ว query ใหม่ทุกครั้ง
+  // (เดิมคลิกด้วย :has-text ซึ่งพังทั้งหมดเงียบ ๆ เพราะชื่อมีหลายบรรทัด/ซ้ำกัน
+  //  ⇒ ตัวตรวจรายงาน "สแกน 6 หน้า" แต่ไม่มีใครอ่านบรรทัดนั้น — กับดักเดียวกับที่ skill เตือนไว้)
+  return page.$$eval('button.nav-item', (els) => els.length);
+}
+
+const findings = [];
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
-const ctx = await browser.newContext({ ...devices['iPhone 13'] });
-await ctx.addInitScript(() => { try { localStorage.setItem('ceoai_theme', 'minimal'); localStorage.setItem('ceo_ai_seen', '1'); } catch { /* noop */ } });
-const page = await ctx.newPage();
-await page.goto(BASE, { waitUntil: 'networkidle' });
-await page.waitForTimeout(1200);
+let pagesScanned = 0;
 
-// ปิด overlay เลือกเป้าหมาย (ถ้ามี) เพื่อให้เดินหน้าอื่นต่อได้ — แต่สแกนมันก่อน
-let findings = (await page.evaluate(SCAN, THRESHOLD)).map((f) => ({ ...f, page: 'แรกเข้า' }));
-await page.evaluate(() => { document.querySelector('.goal-skip')?.click(); });
-await page.waitForTimeout(500);
+const initTheme = (t) => {
+  try { localStorage.setItem('ceoai_theme', t); localStorage.setItem('ceo_ai_seen', '1'); localStorage.setItem('ceo_ai_beginner', '0'); } catch { /* noop */ }
+};
 
-const navs = await page.$$eval('button.nav-item', (els) => els.map((e) => e.textContent.trim()).filter(Boolean));
-for (const label of navs) {
-  try {
-    await page.click(`button.nav-item:has-text("${label.replace(/"/g, '')}")`, { timeout: 2500 });
-    await page.waitForTimeout(700);
-    for (const f of await page.evaluate(SCAN, THRESHOLD)) {
-      if (!findings.some((x) => x.key === f.key)) findings.push({ ...f, page: label });
-    }
-  } catch { /* หน้านั้นกดไม่ได้ (ล็อกตามแพ็ก) — ข้าม */ }
+for (const theme of ['minimal', 'dark']) {
+  // จอมือถือ: หน้าสาธารณะ (คนส่วนใหญ่เข้ามาทางนี้)
+  const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+  await ctx.addInitScript(initTheme, theme);
+  const page = await ctx.newPage();
+
+  // ── หน้าสาธารณะ (ไม่ต้องล็อกอิน) ──
+  for (const path of ['/', '/start', '/calc']) {
+    try {
+      await page.goto(BASE.replace(/\/$/, '') + path, { waitUntil: 'networkidle' });
+      await page.waitForTimeout(900);
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await page.waitForTimeout(600);
+      for (const f of await page.evaluate(SCAN, THRESHOLD)) findings.push({ ...f, page: path, theme });
+      pagesScanned++;
+    } catch { /* หน้านั้นเปิดไม่ได้ */ }
+  }
+
+  await ctx.close();
+
+  // ── หน้าในแอป: ต้องใช้ **จอเดสก์ท็อป** ──
+  // 🔴 เคยพลาด: สแกนด้วยจอมือถือ ⇒ sidebar เป็นลิ้นชักที่ซ่อนอยู่
+  //    ปุ่มเมนูมีอยู่ใน DOM (นับได้ 22 ปุ่ม) แต่กดไม่ได้เพราะมองไม่เห็น
+  //    ⇒ ทุกการคลิก timeout เงียบ ๆ ในบล็อก catch ⇒ สแกนได้ 6 หน้าแล้วรายงานเขียว
+  const dctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await dctx.addInitScript(initTheme, theme);
+  const app = await dctx.newPage();
+  await app.goto(BASE, { waitUntil: 'networkidle' });
+  await app.waitForTimeout(1000);
+  const navCount = await openAllNav(app);
+  console.error(`  [${theme}] พบเมนูในแอป ${navCount} ปุ่ม`);
+  for (let i = 0; i < navCount; i++) {
+    let label = `เมนู#${i + 1}`;
+    try {
+      const btns = await app.$$('button.nav-item');
+      if (!btns[i]) continue;
+      label = ((await btns[i].innerText()) || label).split('\n')[0].trim().slice(0, 28) || label;
+      await btns[i].click({ timeout: 3000 });
+      await app.waitForTimeout(650);
+      await app.evaluate(() => window.scrollTo(0, document.body.scrollHeight));   // เนื้อหาใต้ขอบจอ
+      await app.waitForTimeout(450);
+      for (const f of await app.evaluate(SCAN, THRESHOLD)) findings.push({ ...f, page: label, theme });
+      pagesScanned++;
+      // กลุ่มเมนูอาจยุบกลับหลังเปลี่ยนหน้า — กางใหม่ให้ปุ่มถัดไปยังกดได้
+      await app.evaluate(() => { for (const b of document.querySelectorAll('button.nav-group-toggle:not(.open)')) b.click(); });
+      await app.waitForTimeout(250);
+    } catch { /* กดไม่ได้ (ล็อกตามแพ็ก/ปุ่มเป็นตัวยุบกลุ่ม) */ }
+  }
+  await dctx.close();
 }
-
 await browser.close();
-console.log(`สแกน ${navs.length + 1} หน้า · เกณฑ์ contrast < ${THRESHOLD}`);
-if (findings.length === 0) { console.log('✅ ไม่พบตัวหนังสือที่อ่านไม่ออก'); process.exit(0); }
+
+// รวมคลาสซ้ำ เก็บเคสที่แย่ที่สุดไว้
+const worst = new Map();
 for (const f of findings) {
-  console.log(`  ${String(f.ratio).padStart(5)}  ${f.color} บน ${f.bg}  <${f.key}>  [${f.page}]  ${JSON.stringify(f.txt)}`);
+  const k = f.theme + '|' + f.key;
+  if (!worst.has(k) || worst.get(k).ratio > f.ratio) worst.set(k, f);
 }
-console.log(`\n🔴 พบ ${findings.length} คลาส — แก้โดยใช้โทเคนธีม (var(--ink) / --ink3 / --accent-text) แทนสีตายตัว`);
-process.exit(1);
+const list = [...worst.values()].sort((a, b) => a.ratio - b.ratio);
+
+const MIN_PAGES = 30;   // 2 ธีม × (3 หน้าสาธารณะ + เมนูในแอปอย่างน้อย ~12)
+console.log(`สแกน ${pagesScanned} หน้า (2 ธีม) · เกณฑ์ contrast < ${THRESHOLD}`);
+if (pagesScanned < MIN_PAGES) {
+  console.log(`\n🔴 ตัวตรวจเดินไม่ครบ (${pagesScanned} < ${MIN_PAGES}) — ผลลัพธ์อ่านไม่ได้ ไม่ว่าจะเขียวแค่ไหน`);
+  console.log('   เครื่องมือที่เดินไม่ครบ อันตรายกว่าไม่มีเครื่องมือ (skill `theme-safe-color`)');
+  process.exit(2);
+}
+if (!list.length) { console.log('✅ ไม่พบตัวหนังสือที่อ่านไม่ออก'); process.exit(0); }
+const INVISIBLE = list.filter((f) => f.ratio < 2);
+if (INVISIBLE.length) console.log(`\n🔴 มองไม่เห็นเลย (< 2.0) — ${INVISIBLE.length} คลาส`);
+for (const f of list) {
+  const tag = f.ratio < 2 ? '🔴' : f.ratio < 3 ? '🟠' : '🟡';
+  console.log(`${tag} ${String(f.ratio).padStart(5)}  [${f.theme}] ${f.color} บน ${f.bg}  <${f.key}>  [${f.page}]  ${JSON.stringify(f.txt)}`);
+}
+console.log(`\nพบ ${list.length} คลาส — แก้โดยใช้โทเคนธีม (var(--ink)/--ink3/--accent-text) แทนสีตายตัว`);
+process.exit(INVISIBLE.length ? 1 : 0);

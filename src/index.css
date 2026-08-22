@@ -1085,32 +1085,32 @@ body {
   background: linear-gradient(135deg, rgba(52,211,153,.14), rgba(34,211,238,.10));
   border: 1px solid rgba(52,211,153,.3); }
 .de24g-hd { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
-.de24g-title { font-size: 16px; font-weight: 800; color: #fff; }
-.de24g-count { font-size: 14px; color: #cbd5e1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.de24g-title { font-size: 16px; font-weight: 800; color: var(--ink); }
+.de24g-count { font-size: 14px; color: var(--ink2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .de24g-count b { color: #34d399; font-size: 17px; }
 .de24g-bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
 .de24g-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#34d399,#22d3ee); transition: width .5s ease; }
-.de24g-phase { font-size: 13.5px; color: #94a3b8; margin-top: 14px; }
-.de24g-phase b { color: #e2e8f0; }
-.de24g-phase-prog { color: #64748b; }
-.de24g-intent { font-size: 13.5px; line-height: 1.6; color: #cbd5e1; margin-top: 4px; }
+.de24g-phase { font-size: 13.5px; color: var(--ink3); margin-top: 14px; }
+.de24g-phase b { color: var(--ink); }
+.de24g-phase-prog { color: var(--ink4); }
+.de24g-intent { font-size: 13.5px; line-height: 1.6; color: var(--ink2); margin-top: 4px; }
 .de24g-current { display: flex; gap: 14px; align-items: flex-start; margin-top: 14px;
   background: rgba(2,6,23,.4); border: 1px solid rgba(148,163,184,.18); border-radius: 12px; padding: 16px; }
 .de24g-current-num { flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
   font-size: 18px; font-weight: 800; color: #020617; background: linear-gradient(135deg,#34d399,#22d3ee); }
-.de24g-current-name { font-size: 16px; font-weight: 700; color: #fff; }
-.de24g-current-guide { font-size: 14px; line-height: 1.6; color: #94a3b8; margin-top: 4px; }
+.de24g-current-name { font-size: 16px; font-weight: 700; color: var(--ink); }
+.de24g-current-guide { font-size: 14px; line-height: 1.6; color: var(--ink3); margin-top: 4px; }
 .de24g-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
 .de24g-btn { font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 10px; padding: 10px 16px;
   color: #e2e8f0; background: rgba(148,163,184,.12); border: 1px solid rgba(148,163,184,.28); }
 .de24g-btn.primary { color: #020617; background: linear-gradient(135deg,#34d399,#22d3ee); border: none; font-weight: 700; }
 .de24g-btn:hover { filter: brightness(1.05); }
-.de24g-next { font-size: 13px; color: #64748b; margin-top: 12px; }
-.de24g-next b { color: #94a3b8; }
-.de24g-hint { font-size: 13px; color: #94a3b8; margin-top: 8px; font-style: italic; }
-.de24g-learn { display: inline-block; margin-top: 10px; font-size: 13px; color: #22d3ee; text-decoration: none; }
+.de24g-next { font-size: 13px; color: var(--ink4); margin-top: 12px; }
+.de24g-next b { color: var(--ink3); }
+.de24g-hint { font-size: 13px; color: var(--ink3); margin-top: 8px; font-style: italic; }
+.de24g-learn { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--accent-text); text-decoration: none; }
 .de24g-learn:hover { text-decoration: underline; }
-.de24g-done { display: flex; gap: 14px; align-items: center; margin-top: 14px; font-size: 14.5px; line-height: 1.6; color: #e2e8f0; }
+.de24g-done { display: flex; gap: 14px; align-items: center; margin-top: 14px; font-size: 14.5px; line-height: 1.6; color: var(--ink); }
 .de24g-done b { color: #34d399; }
 .de24g-done-ic { font-size: 30px; }
 
@@ -1121,13 +1121,13 @@ body {
 }
 .de-hero-badge {
   display: inline-block; font-size: 12.5px; font-weight: 700; letter-spacing: .06em;
-  text-transform: uppercase; color: #7dd3fc;
+  text-transform: uppercase; color: var(--accent-text);
   background: rgba(56,189,248,.14); border: 1px solid rgba(56,189,248,.3);
   padding: 3px 9px; border-radius: 20px; margin-bottom: 9px;
 }
-.de-hero-title { font-size: 17px; font-weight: 800; color: #fff; margin-bottom: 7px; }
-.de-hero-body { font-size: 14px; line-height: 1.65; color: rgba(255,255,255,.8); max-width: 760px; }
-.de-hero-body b { color: #ffd7c7; }
+.de-hero-title { font-size: 17px; font-weight: 800; color: var(--ink); margin-bottom: 7px; }
+.de-hero-body { font-size: 14px; line-height: 1.65; color: var(--ink2); max-width: 760px; }
+.de-hero-body b { color: var(--accent-text); }
 
 .bmc-canvas {
   display: grid;
@@ -5366,6 +5366,22 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .start-src { color:#64748b; }
 :root[data-theme="minimal"] .start-inline-link { color:#16a34a; }
 :root[data-theme="minimal"] .start-h2 { color:#0f172a; }
+
+/* 🔴 แก้ 22 ส.ค. 2569 — เจ้าของถ่ายภาพมาให้ดู "ตัวอักษรกลืนพื้นหลัง" รอบที่ 2
+   ต้นเหตุ: ธีมสว่าง override **สีตัวอักษร** ให้เข้ม แต่ไม่ได้ override **พื้นหลัง** ที่เขียนตายตัวเป็นสีเข้ม
+   ⇒ เข้มบนเข้ม = contrast 1.00 (มองไม่เห็นเลย) — วัดได้จริงด้วย contrast-audit
+   กติกา (skill `theme-safe-color`): แก้สีตัวอักษรตามธีม ต้องไล่ดูพื้นหลังของบล็อกนั้นด้วยเสมอ */
+:root[data-theme="minimal"] .start-why-sec,
+:root[data-theme="minimal"] .start-share-sec { background:#f1f5f9; border-top-color:#e2e8f0; border-bottom-color:#e2e8f0; }
+:root[data-theme="minimal"] .start-persona,
+:root[data-theme="minimal"] .start-why-card { background:#ffffff; border-color:#e2e8f0; }
+:root[data-theme="minimal"] .start-persona p,
+:root[data-theme="minimal"] .start-why-card p { color:#475569; }
+:root[data-theme="minimal"] .start-persona-name,
+:root[data-theme="minimal"] .start-why-name { color:#0e7490; }
+:root[data-theme="minimal"] .isms-badge,
+:root[data-theme="minimal"] .isms-badge-sub { color:#0e7490; }
+:root[data-theme="minimal"] .start-price-note { color:#475569; }
 :root[data-theme="minimal"] .start-price-note { color:#475569; }
 :root[data-theme="minimal"] .start-why-sec .start-price-note b { color:#b45309; }
 :root[data-theme="minimal"] .start-step { border-left-color:#0891b2; }
