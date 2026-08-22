@@ -27,7 +27,7 @@ describe('appDataGuard — ข้อมูลคลาวด์ที่ไม�
   });
 
   it('ไม่ทับข้อมูลที่ผู้ใช้มีอยู่จริง', () => {
-    const mine = [{ id: 'a1', title: 'ของผม', done: true, priority: 1 }];
+    const mine = [{ done: true, title: 'ของผม', desc: '', priority: 1, nb: '', nt: '', tags: [] }];
     const parsed = fillMissingTopLevel(
       { rev: 3, actions: mine } as unknown as AppData, DEFAULT_DATA);
     expect(parsed.actions).toEqual(mine);
@@ -48,7 +48,7 @@ describe('appDataGuard — ข้อมูลคลาวด์ที่ไม�
   it('คัดลอกลึก — แก้ข้อมูลผู้ใช้แล้วต้องไม่ไปโดน DEFAULT_DATA', () => {
     const before = DEFAULT_DATA.actions.length;
     const parsed = fillMissingTopLevel({ rev: 1 } as unknown as AppData, DEFAULT_DATA);
-    parsed.actions.push({ ...parsed.actions[0], id: 'x-new' });
+    parsed.actions.push({ ...parsed.actions[0], title: 'ของใหม่' });
     expect(DEFAULT_DATA.actions.length).toBe(before);
     expect(parsed.actions).not.toBe(DEFAULT_DATA.actions);
   });
