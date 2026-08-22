@@ -4,6 +4,7 @@ import { wrongAccountText } from './lib/authIntent';
 import type { Session } from '@supabase/supabase-js';
 import type { AppData, PageId } from './types';
 import { DEFAULT_DATA } from './data';
+import { readTheme, setTheme } from './lib/theme';
 import { fillMissingTopLevel } from './lib/appDataGuard';
 import { defaultExperiments, recordActiveDay } from './lib/experiments';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
@@ -38,7 +39,7 @@ import UpgradeWall from './components/UpgradeWall';
 import { canAccess, setAdminFullAccess, setGuestFullAccess } from './lib/access';
 import { isSheetsCallback, handleSheetsCallback } from './lib/sheets';
 import { isLineCallback, handleLineCallback } from './lib/lineLogin';
-import { isAdminEmail, INTEGRATIONS } from './config';
+import { isAdminEmail, INTEGRATIONS, THEME } from './config';
 import { readPendingHandoff, applyPendingHandoff } from './lib/handoffClient';
 import { readQuickDraft, draftToFinance, clearQuickDraft } from './lib/productQuickCheck';
 import LegalLinks from './components/LegalLinks';
@@ -673,6 +674,19 @@ export default function App() {
     if (!guestMode) return <LandingPage onGetStarted={() => setShowAuth(true)} onTryGuest={startGuest} />;
     // guest → ตกลงไปเรนเดอร์แอปด้านล่าง (ทดลองใช้ด้วย localStorage) พร้อมแบนเนอร์ชวนสมัคร
   }
+
+  /* 🔴 ธีมมินิมอลยังไม่เสร็จสำหรับ "หน้าในแอป" — บังคับธีมเข้มเมื่ออยู่ในแอป
+   *   วัดจริง 22 ส.ค. 2569: ธีมสว่างมีข้อความ contrast < 2.0 (มองไม่เห็นเลย) 41 จุด
+   *   26 จุดอยู่ในหน้า "บริษัท AI" ซึ่งเป็นหน้าหลักของผลิตภัณฑ์
+   *   ⚠️ ซ่อนปุ่มสลับธีมอย่างเดียวไม่พอ — คนที่เลือกมินิมอลไว้แล้วจะติดอยู่ในหน้าจอ
+   *      ที่อ่านไม่ออกโดยออกไม่ได้ (ปุ่มที่จะกดกลับก็มองไม่เห็น)
+   *   เปิดคืนโดยตั้ง config THEME.inAppLive = true เมื่อ contrast-audit รายงาน 🔴 = 0 */
+  useEffect(() => {
+    if (THEME.inAppLive) return;
+    if (landingPreview) return;                       // หน้าแนะนำใช้ธีมสว่างได้ (ทำไว้ครบแล้ว)
+    if (!isSupabaseEnabled && !seenLanding) return;   // ยังอยู่หน้า Landing ของโหมด local
+    if (readTheme() === 'minimal') setTheme('dark');
+  }, [landingPreview, seenLanding]);
 
   // โหมด local (ไม่มี backend): โชว์ landing ครั้งแรกครั้งเดียว แล้วเข้าแอปเลย
   if (!isSupabaseEnabled && !seenLanding) {
