@@ -4,6 +4,7 @@ import { wrongAccountText } from './lib/authIntent';
 import type { Session } from '@supabase/supabase-js';
 import type { AppData, PageId } from './types';
 import { DEFAULT_DATA } from './data';
+import { fillMissingTopLevel } from './lib/appDataGuard';
 import { defaultExperiments, recordActiveDay } from './lib/experiments';
 import { isSupabaseEnabled, supabase } from './lib/supabase';
 import { ensureDefaultWorkspace, listWorkspaces, createWorkspace, wsLoad, wsSave, type Workspace } from './lib/workspaces';
@@ -142,6 +143,11 @@ const PAGE_FLOW: { id: PageId; label: string }[] = [
 
 /** เติม field ที่ขาดให้ครบตาม schema ปัจจุบัน (รองรับข้อมูลเก่า/จากคลาวด์) */
 function migrate(parsed: AppData): AppData {
+  /* 🔴 ชั้นแรก: เติม "ทุกคีย์บนสุด" ที่หายไปจากค่าเริ่มต้นก่อนเสมอ
+     เว็บเคยเปิดไม่ได้ทั้งหน้าเพราะแถวคลาวด์เป็น {"rev":9999} → data.actions undefined
+     → data.actions.filter โยน → ErrorBoundary กินทั้งหน้า (22 ส.ค. 2569)
+     เหตุผลเต็ม + ขอบเขต: src/lib/appDataGuard.ts */
+  fillMissingTopLevel(parsed, DEFAULT_DATA);
   if (!parsed.funnel) parsed.funnel = DEFAULT_DATA.funnel;
   if (!parsed.roi) parsed.roi = DEFAULT_DATA.roi;
   if (!parsed.businessModel) {
