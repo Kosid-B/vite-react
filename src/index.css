@@ -7000,7 +7000,6 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root:not([data-theme="minimal"]) .ai-run-btn { background-color: #047f94; }   /* 2.43 */
 :root:not([data-theme="minimal"]) .ai-search-btn { background-color: #047f94; }   /* 2.43 */
 :root:not([data-theme="minimal"]) .ai-task-lock-btn { color: #828282; }   /* 1.18 */
-:root:not([data-theme="minimal"]) .ai-task-owner { color: #3683d9; }   /* 2.15 */
 :root:not([data-theme="minimal"]) .aia-fab-label { background-color: #047f94; }   /* 2.43 */
 :root:not([data-theme="minimal"]) .bill-addon-badge { color: #385af8; }   /* 1.81 */
 :root:not([data-theme="minimal"]) .bill-addon-per { color: #5558f0; }   /* 4.06 */
@@ -7011,20 +7010,15 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root:not([data-theme="minimal"]) .brd-btn { background-color: #17843f; }   /* 2.28 */
 :root:not([data-theme="minimal"]) .brd-role { color: #3e916c; }   /* 2.79 */
 :root:not([data-theme="minimal"]) .btn-export { background-color: #047f94; }   /* 2.43 */
-:root:not([data-theme="minimal"]) .city-card-ico { color: #7a7a7a; }   /* 1.04 */
-:root:not([data-theme="minimal"]) .city-tier-name { color: #697c99; }   /* 1.96 */
 :root:not([data-theme="minimal"]) .clv-city-badge { color: #996206; }   /* 1.94 */
 :root:not([data-theme="minimal"]) .clv-era-new { color: #996206; }   /* 1.94 */
 :root:not([data-theme="minimal"]) .clv-eyebrow { color: #996206; }   /* 1.94 */
 :root:not([data-theme="minimal"]) .clv-tag { background-color: #2072dc; }   /* 4.08 */
 :root:not([data-theme="minimal"]) .clv-tbtn { color: #996206; }   /* 1.94 */
 :root:not([data-theme="minimal"]) .clw-empty { color: #7682b2; }   /* 4.40 */
-:root:not([data-theme="minimal"]) .cs-badge { color: #778de6; }   /* 2.58 */
 :root:not([data-theme="minimal"]) .cs-empty { color: #7682b2; }   /* 4.40 */
-:root:not([data-theme="minimal"]) .cs-keylesson-label { color: #5571e0; }   /* 3.56 */
 :root:not([data-theme="minimal"]) .cs-tab-tag { color: #5496df; }   /* 1.76 */
 :root:not([data-theme="minimal"]) .db-a-label { color: #bc4829; }   /* 4.39 */
-:root:not([data-theme="minimal"]) .db-cp-chip { color: #937e69; }   /* 1.01 */
 :root:not([data-theme="minimal"]) .db-cta-btn { background-color: #047f94; }   /* 2.43 */
 :root:not([data-theme="minimal"]) .db-export-btn { background-color: #047f94; }   /* 2.43 */
 :root:not([data-theme="minimal"]) .devmap-toggle { background-color: #047f94; }   /* 2.43 */
@@ -7035,7 +7029,6 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root:not([data-theme="minimal"]) .finx-hint { color: #7682b2; }   /* 4.40 */
 :root:not([data-theme="minimal"]) .intake-send { background-color: #047f94; }   /* 2.43 */
 :root:not([data-theme="minimal"]) .inv-cat-tab { background-color: #047f94; }   /* 2.43 */
-:root:not([data-theme="minimal"]) .iso-hm-pct { color: #e03c3c; }   /* 4.18 */
 :root:not([data-theme="minimal"]) .iso-kpi-val { color: #e24e4e; }   /* 3.70 */
 :root:not([data-theme="minimal"]) .lean-tab { background-color: #047f94; }   /* 2.43 */
 :root:not([data-theme="minimal"]) .mk-filter { background-color: #047f94; }   /* 2.43 */
@@ -7050,7 +7043,6 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root:not([data-theme="minimal"]) .sadv-official { color: #d55e3e; }   /* 3.73 */
 :root:not([data-theme="minimal"]) .sidebar-plan-badge { color: #73839a; }   /* 3.75 */
 :root:not([data-theme="minimal"]) .skm-btn { background-color: #196cf4; }   /* 3.68 */
-:root:not([data-theme="minimal"]) .skm-card-cat { color: #72849f; }   /* 1.73 */
 :root:not([data-theme="minimal"]) .skm-tier-badge { color: #bc4829; }   /* 4.39 */
 :root:not([data-theme="minimal"]) .start-cmp-them { color: #6a7b94; }   /* 4.24 */
 
@@ -7208,3 +7200,11 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .start-roi-punch b { color: #047857; }
 :root[data-theme="minimal"] .start-plan-price b,
 :root[data-theme="minimal"] .start-price-note b { color: #047857; }
+
+/* 🔴 ลิงก์ข้อกำหนด/นโยบาย เดิมไม่มีคลาสของตัวเอง ⇒ สืบทอดสีไซแอนอ่อนจากบล็อกแม่
+   บนพื้นสว่างวัดได้ 1.39 = มองไม่เห็น · ให้คลาสของตัวเองแล้วผูกกับโทเคนธีม */
+.legal-link { color: var(--accent-text); text-decoration: underline; }
+:root[data-theme="minimal"] .legal-link { color: #0e7490; }
+
+/* ตัวนับความคืบหน้าใน sidebar — พื้นเปลี่ยนตามธีม สีจึงต้องมาจากโทเคน */
+.progress-count { color: var(--ink3); }

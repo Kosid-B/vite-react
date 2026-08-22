@@ -31,7 +31,7 @@ export default function LegalLinks({
       {LEGAL_LINKS.map((l, i) => (
         <span key={l.href}>
           {i > 0 && <span aria-hidden="true">{sep}</span>}
-          <a href={l.href} className={linkClassName} style={linkStyle}>{l.label}</a>
+          <a href={l.href} className={linkClassName ?? 'legal-link'} style={linkStyle}>{l.label}</a>
         </span>
       ))}
     </span>
