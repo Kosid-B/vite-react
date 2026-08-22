@@ -77,6 +77,14 @@ describe('theme-safe-color — เครื่องมือตรวจต้�
     expect(audit).toMatch(/scrollHeight/);
   });
 
+  it('🔴 ตัวตรวจต้องลบ overlay ที่บังการคลิกก่อนเดินเมนู', () => {
+    /* CLAUDE.md GOTCHA #2 เขียนไว้ตั้งแต่ ก.ค. ว่า "ต้องลบ .onb-overlay/.goal-overlay ก่อน"
+       แต่ตัวตรวจไม่ได้ถูกเขียนตามนั้น ⇒ ทุกการคลิก timeout เงียบ ๆ ใน catch
+       ⇒ เดินได้ 6 หน้าจาก 30 แล้วรายงานเขียว · คำตอบอยู่ในเอกสารของเราเองมาตลอด */
+    expect(audit).toMatch(/onb-overlay/);
+    expect(audit).toMatch(/goal-overlay/);
+  });
+
   it('ตัวตรวจต้องไม่อ่าน gradient โปร่งใสเป็นสีพื้นทึบ', () => {
     // เคยพลาด: อ่าน rgba(52,211,153,.08) เป็นเขียวทึบ ⇒ รายงาน "เขียวบนเขียว" ผิด ๆ
     expect(audit).toMatch(/g\.a > 0\.5/);

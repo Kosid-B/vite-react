@@ -74,6 +74,16 @@ async function openAllNav(page) {
   await page.waitForTimeout(400);
   await page.evaluate(() => { document.querySelector('.focus-unlock')?.click(); });   // เลิกโหมดโฟกัส
   await page.waitForTimeout(400);
+  // 🔴 ลบ overlay ที่บังการคลิก — CLAUDE.md GOTCHA #2 เขียนเรื่องนี้ไว้แล้ว
+  //    ("ต้องลบ .onb-overlay/.goal-overlay ก่อน hover")
+  //    ไม่ลบ = ทุกการคลิก timeout เงียบ ๆ ⇒ ตัวตรวจเดินได้ 6 หน้าแล้วรายงานเขียว
+  //    ⇒ คำตอบอยู่ในเอกสารของโปรเจกต์เองมาตลอด แต่ตัวตรวจไม่ได้ถูกเขียนตามนั้น
+  await page.evaluate(() => {
+    for (const sel of ['.onb-overlay', '.goal-overlay', '.modal-backdrop', '[class*="overlay"]']) {
+      for (const el of document.querySelectorAll(sel)) el.remove();
+    }
+  });
+  await page.waitForTimeout(200);
   // กางทุกกลุ่มที่ยุบอยู่ (วนหลายรอบ เพราะกางกลุ่มหนึ่งอาจเผยกลุ่มถัดไป)
   for (let i = 0; i < 4; i++) {
     const opened = await page.evaluate(() => {
@@ -142,7 +152,10 @@ for (const theme of ['minimal', 'dark']) {
       for (const f of await app.evaluate(SCAN, THRESHOLD)) findings.push({ ...f, page: label, theme });
       pagesScanned++;
       // กลุ่มเมนูอาจยุบกลับหลังเปลี่ยนหน้า — กางใหม่ให้ปุ่มถัดไปยังกดได้
-      await app.evaluate(() => { for (const b of document.querySelectorAll('button.nav-group-toggle:not(.open)')) b.click(); });
+      await app.evaluate(() => {
+        for (const sel of ['.onb-overlay', '.goal-overlay', '.modal-backdrop']) for (const el of document.querySelectorAll(sel)) el.remove();
+        for (const b of document.querySelectorAll('button.nav-group-toggle:not(.open)')) b.click();
+      });
       await app.waitForTimeout(250);
     } catch { /* กดไม่ได้ (ล็อกตามแพ็ก/ปุ่มเป็นตัวยุบกลุ่ม) */ }
   }
