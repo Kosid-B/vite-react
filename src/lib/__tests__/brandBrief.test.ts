@@ -162,3 +162,42 @@ describe('ต่อสายจริงหรือยัง (ไม่ใช�
     expect(p).toContain('การันตี');
   });
 });
+
+describe('ช่องทางทางการ — ต้องถูกส่งถึง Google/AI จริง ไม่ใช่แค่เก็บไว้ใน config', () => {
+  it('YouTube URL อยู่ใน sameAs ของ Organization JSON-LD', () => {
+    const org = organizationJsonLd('https://ceoaithailand.org') as Record<string, unknown>;
+    const same = (org.sameAs as string[]) ?? [];
+    expect(same, 'ใส่ URL ไว้ใน config เฉย ๆ = search engine ไม่รู้ว่าช่องนี้เป็นของเรา')
+      .toContain('https://www.youtube.com/@CEOAIThailand');
+  });
+
+  it('sameAs ต้องยังมีเว็บบริษัทแม่อยู่ด้วย (ห้ามเผลอทับ)', () => {
+    const org = organizationJsonLd('https://ceoaithailand.org') as Record<string, unknown>;
+    expect((org.sameAs as string[]) ?? []).toContain('https://www.b-tctraining.com/');
+  });
+
+  it('sameAs ห้ามมีค่าว่าง — ช่องที่ยังไม่มีต้องถูกกรองทิ้ง ไม่ใช่ส่งสตริงว่างไป', () => {
+    const org = organizationJsonLd('https://ceoaithailand.org') as Record<string, unknown>;
+    expect(((org.sameAs as string[]) ?? []).filter((u) => !u || !u.trim())).toEqual([]);
+  });
+});
+
+describe('Pilot ฿1,990 — เจ้าของสั่งเปิดขาย ต้องขายได้จริงโดยไม่ติดค้างรอ Stripe', () => {
+  const pricing = readFileSync(resolve(__dirname, '../../pages/PublicPricing.tsx'), 'utf8')
+    .replace(/\r\n/g, '\n');
+
+  it('การ์ด Pilot ต้องไม่ถูกซ่อนทั้งใบเมื่อยังไม่มีลิงก์จ่ายเงิน', () => {
+    // ของเดิม: {PAYMENT.stripePaymentLinkPilot && ( <div className="pp-pilot"> ... )}
+    // = ยังไม่มีลิงก์ ⇒ ไม่มีใครรู้ว่ามีข้อเสนอนี้อยู่เลย
+    expect(pricing).not.toMatch(/\{PAYMENT\.stripePaymentLinkPilot\s*&&\s*\(\s*\n?\s*<div className="pp-pilot"/);
+    expect(pricing).toContain('className="pp-pilot"');
+  });
+
+  it('ไม่มีลิงก์จ่ายเงิน = ต้องมีทางติดต่อแทน (โทร) ไม่ใช่ทางตัน', () => {
+    expect(pricing).toMatch(/href=\{`tel:/);
+  });
+
+  it('เบอร์โทรต้องมาจาก config ไม่ใช่พิมพ์ตายตัว (แก้ที่เดียว)', () => {
+    expect(pricing).toContain('COMPANY.tel');
+  });
+});

@@ -3,6 +3,7 @@
  * client (src/lib/seo.ts) inject ตอน render — ทั้งคู่เรียกฟังก์ชันในไฟล์นี้เพื่อให้ผลตรงกัน.
  * ห้าม import อะไรที่แตะ DOM/browser — ต้องรันได้ทั้งใน Cloudflare Worker และเบราว์เซอร์. */
 import { utmForwardScript } from './utmForward';
+import { SOCIAL } from '../config';
 
 
 import { DBD_SECTORS } from '../data/dbd';
@@ -299,7 +300,10 @@ export function organizationJsonLd(origin: string): object {
       legalName: 'บริษัท บี. เทรนนิ่ง คอนซัลแทนท์ จำกัด',
       url: 'https://www.b-tctraining.com/',
     },
-    sameAs: ['https://www.b-tctraining.com/'],
+    // sameAs = บอก Google/AI ว่าโปรไฟล์เหล่านี้คือ entity เดียวกับเว็บนี้
+    //   ⇒ ช่วยแยกเราออกจากบริษัทชื่อคล้ายกัน และผูกสัญญาณจากช่อง YouTube กลับมาที่แบรนด์
+    //   ⚠️ ใส่เฉพาะช่องที่ "เราเป็นเจ้าของจริง" เท่านั้น — ใส่ของคนอื่นคือให้ข้อมูลเท็จกับ search engine
+    sameAs: ['https://www.b-tctraining.com/', SOCIAL.youtubeUrl].filter(Boolean),
   };
 }
 

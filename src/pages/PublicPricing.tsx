@@ -98,8 +98,12 @@ export default function PublicPricing() {
           </table>
         </div>
 
-        {PAYMENT.stripePaymentLinkPilot && (
-          <div className="pp-pilot">
+        {/* 🎯 Pilot — เจ้าของสั่งเปิดขาย 22 ส.ค. 2569
+            ⚠️ เดิมการ์ดทั้งใบซ่อนเมื่อ stripePaymentLinkPilot ว่าง ⇒ "เปิดขาย" ติดค้างรอ Stripe
+               ทั้งที่ข้อเสนอราคา ฿1,990 แบบมีที่ปรึกษาช่วย **ปิดการขายด้วยการคุยกัน** เป็นปกติอยู่แล้ว
+               และปัญหาจริงของเราคือ **ไม่เคยเก็บ lead ได้เลยสักราย** (platform_leads = 0)
+            ⇒ แสดงการ์ดเสมอ · ถ้ามีลิงก์จ่ายเงินให้กดจ่ายได้เลย · ถ้ายังไม่มีให้โทรคุย (ปิดการขายได้เหมือนกัน) */}
+        <div className="pp-pilot">
             <span className="pp-pilot-badge">สำหรับโรงงาน/SME ที่ต้องทำ ISO/มอก.</span>
             <h3>🎯 ISO Readiness Pilot — {PAYMENT.pilotPrice} <small>(จ่ายครั้งเดียว)</small></h3>
             <p>
@@ -107,14 +111,27 @@ export default function PublicPricing() {
               ให้โดยตรง</b> (บอกว่าพร้อมกี่ % + ขาดเอกสารอะไรก่อน audit) <b>+ ใช้ระบบเต็ม 1 เดือน</b>
               — ออกแบบจากประสบการณ์ที่ปรึกษาไทยจริงกว่า 20 ปี
             </p>
-            <a className="pp-pilot-cta"
-               href={`${PAYMENT.stripePaymentLinkPilot}?utm_source=pricing&utm_medium=pilot&utm_campaign=iso_beachhead`}
-               target="_blank" rel="noreferrer">
-              เริ่ม Pilot — {PAYMENT.pilotPrice} →
-            </a>
-            <p className="pp-pilot-note">หรือโทรคุยก่อน 081-781-7773 · เหมาะกับคนที่มี audit ใกล้เข้ามา</p>
-          </div>
-        )}
+            {PAYMENT.stripePaymentLinkPilot ? (
+              <>
+                <a className="pp-pilot-cta"
+                   href={`${PAYMENT.stripePaymentLinkPilot}?utm_source=pricing&utm_medium=pilot&utm_campaign=iso_beachhead`}
+                   target="_blank" rel="noreferrer">
+                  เริ่ม Pilot — {PAYMENT.pilotPrice} →
+                </a>
+                <p className="pp-pilot-note">หรือโทรคุยก่อน {COMPANY.tel} · เหมาะกับคนที่มี audit ใกล้เข้ามา</p>
+              </>
+            ) : (
+              <>
+                <a className="pp-pilot-cta" href={`tel:${COMPANY.tel.replace(/[^0-9+]/g, '')}`}>
+                  โทรคุยเรื่อง Pilot — {COMPANY.tel} →
+                </a>
+                <p className="pp-pilot-note">
+                  คุยก่อนได้ว่าเหมาะกับโรงงาน/ธุรกิจของคุณไหม แล้วค่อยตัดสินใจ ·
+                  เหมาะกับคนที่มี audit ใกล้เข้ามา
+                </p>
+              </>
+            )}
+        </div>
 
         <p className="legal-note">
           เริ่มใช้งาน/ดูรายละเอียดแพ็กเกจแบบเต็มได้ที่ <a href={`${SITE}/`}>{SITE.replace('https://', '')}</a> →

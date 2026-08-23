@@ -126,6 +126,11 @@ export const TOKENS = {
 export const SOCIAL = {
   lineCommunityUrl: '',      // ลิงก์เชิญเข้า LINE OpenChat / LINE OA community (เช่น https://line.me/ti/g2/...)
   facebookGroupUrl: '',      // ลิงก์กลุ่ม Facebook (ถ้ามี)
+  // ช่อง YouTube ทางการ (ยืนยันโดยเจ้าของ 22 ส.ค. 2569) — ใช้ใน JSON-LD `sameAs`
+  //   ⇒ บอก Google/AI ว่าช่องนี้กับเว็บนี้เป็น entity เดียวกัน (แก้ปัญหาสับสนกับ Siam AI ได้อีกชั้น)
+  //   🟡 คลิปที่เคยลงได้ 942 วิว · คงผู้ชม 89% · แต่ผู้ติดตาม 0 และแทบไม่มีใครกดออกมาเว็บ
+  //      ⇒ มี demand ต่อ "ความรู้" ยังไม่มีหลักฐานว่ามี demand ต่อ "เครื่องมือ"
+  youtubeUrl: 'https://www.youtube.com/@CEOAIThailand',
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
