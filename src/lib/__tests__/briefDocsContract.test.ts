@@ -122,6 +122,17 @@ describe('เอกสารบรีฟ/ปฏิทิน — ห้ามย�
     expect(ISO_ENTERS_AT_STEP).toBe(7);
   });
 
+  it('⑫ ลิงก์ทุกบรรทัดใน LINKS-TO-POST ต้องประกอบจากของจริง (เรื่อง + ตัวย่อแพลตฟอร์ม)', () => {
+    const doc = read('docs/marketing/LINKS-TO-POST.md');
+    const links = read('src/lib/shortLinks.ts');
+    const found = [...doc.matchAll(/ceoaithailand\.org(\/[^/`\s?]+)\/([a-z]+)/g)];
+    expect(found.length, 'ไม่เจอลิงก์สักบรรทัดในเอกสาร').toBeGreaterThan(10);
+    for (const [full, topic, src] of found) {
+      expect(links.includes(`'${topic}'`), `${full}: SHORT_LINKS ไม่มีเรื่อง ${topic}`).toBe(true);
+      expect(links.includes(`  ${src}:`), `${full}: SOURCE_PRESETS ไม่มีตัวย่อ ${src}`).toBe(true);
+    }
+  });
+
   it('⑥ ปฏิทินฉบับเก่าต้องชี้ไปฉบับใหม่ (กันคนหยิบแผนที่มี 4 ข้อผิดไปใช้)', () => {
     expect(read('docs/review/WEEKLY-CALENDAR-2026-08-22.md')).toContain('WEEKLY-CALENDAR-2026-08-23.md');
   });

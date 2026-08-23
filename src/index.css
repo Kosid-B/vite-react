@@ -7212,3 +7212,68 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 
 /* ตัวนับความคืบหน้าใน sidebar — พื้นเปลี่ยนตามธีม สีจึงต้องมาจากโทเคน */
 .progress-count { color: var(--ink3); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   /start — ดันปุ่มหลักขึ้นเหนือขอบจอบนมือถือ (23 ส.ค. 2569)
+   ══════════════════════════════════════════════════════════════════════════
+   🔴 ปัญหาที่วัดได้จริงก่อนแก้ (Playwright · ab-B · worst case):
+       iPhone SE 320 → ปุ่มจบที่ 939px จอมีแค่ 568px = **เกิน 371px**
+       Android 360 = เกิน 247 · iPhone 8 375 = เกิน 220 · iPhone 13 390 = เกิน 193
+   ⇒ ทุกลิงก์สั้นชี้มาที่หน้านี้ และ **ไม่มีใครเห็นปุ่มเลยสักเครื่อง**
+
+   ทำไมถึงเกิด: `StartLanding.tsx` ไม่มี `@media` สักอัน — งานบีบจอแคบทั้งหมด
+   เคยทำไว้ใน `LandingPage` เท่านั้น (audit 22 ส.ค.)
+
+   ⚠️ ตัวเลขทุกตัวในบล็อกนี้มาจากการวัดในเบราว์เซอร์จริง ไม่ใช่การอ่าน CSS
+      แก้ค่าเมื่อไร ต้องรันสคริปต์วัดซ้ำ — `.start-cta-row` ต้องจบก่อน `innerHeight`
+      ครบทั้ง 4 ความกว้าง (320 · 360 · 375 · 390) ที่ seg ยาวสุด
+   ⚠️ ห้ามลบชิปทิ้งเพื่อประหยัดที่ — ชิปตอบ "ได้อะไร" ใน 3–6 วิ · ให้ย่อ ไม่ใช่ตัด
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* 80px ของเดิมกินพื้นที่จอแรกไปเปล่า ๆ — เงา radial ยังอยู่ ไม่ได้เสียความสวย */
+  .start-hero { padding: 16px 16px 40px; }
+  .start-badge {
+    font-size: 11.5px; padding: 4px 11px; margin-bottom: 10px; letter-spacing: .02em;
+  }
+  /* clamp เดิม min = 30px ⇒ ที่ 320px ได้ 30px เสมอ · ลด min ลงเฉพาะจอแคบ */
+  .start-h1 { font-size: clamp(23px, 6.4vw, 30px); line-height: 1.24; margin: 0 0 10px; }
+  .start-sub { font-size: 14px; line-height: 1.45; margin: 0 0 14px; }
+  .start-vchips { gap: 6px; margin: 8px 0 4px; }
+  .start-vchip { font-size: 11.5px; padding: 4px 9px; }
+  .start-cta-row { gap: 10px; }
+}
+
+/* ชั้นที่สอง — เฉพาะจอกลุ่ม 320px (iPhone SE/mini)
+   หลังบีบชั้นแรกแล้ว 3 จาก 4 ขนาดผ่านหมด เหลือ SE ที่พาดหัวค่าตั้งต้นใหม่
+   ("อยากมีธุรกิจ แต่ไม่รู้จะเริ่มจากอะไร") ตกบรรทัดมากที่สุด → เกินอยู่ 16px
+   ⚠️ ความกว้างสำคัญกว่าความสูง — จอแคบลง ตัวอักษรตกบรรทัดมากขึ้น hero จึงสูงขึ้น (ledger #27) */
+@media (max-width: 340px) {
+  .start-h1 { font-size: clamp(21px, 6.4vw, 30px); line-height: 1.2; }
+  .start-sub { line-height: 1.35; margin-bottom: 12px; }
+  .start-hero { padding-top: 12px; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   เครื่องคำนวณ (ProductQuickCheck) — ดันช่องกรอกแรกขึ้นเหนือขอบจอ (23 ส.ค. 2569)
+   ══════════════════════════════════════════════════════════════════════════
+   🔴 วัดจริงก่อนแก้: ช่องกรอกแรกจบที่ SE 612 (จอ 568 = เกิน 44px) · iPhone 13 680 (จอ 664 = เกิน 16px)
+      360 และ 375 ผ่านอยู่แล้ว ⇒ ปัญหาอยู่ที่ **จอแคบสุดกับจอที่พาดหัว hero ตกบรรทัดเยอะ**
+   ⇒ นี่คือเหตุผลตรง ๆ ที่ `quickcheck_submissions` = 0 แถว: **ไม่มีใครเห็นช่องกรอก**
+
+   ⚠️ ค่าพวกนี้เคยอยู่ใน inline style ของ ProductQuickCheck.tsx — ย้ายออกมาแล้ว
+      เพราะ inline ชนะ CSS เสมอ (GOTCHA #3) ⇒ เขียน @media ไว้ก็ไม่มีผล
+   ────────────────────────────────────────────────────────────────────────── */
+.pqc-card { max-width: 720px; margin: 0 auto; border-radius: 18px; padding: 28px 24px; }
+.pqc-intro { text-align: center; margin-bottom: 20px; }
+.pqc-badge { display: inline-block; padding: 5px 14px; border-radius: 999px;
+             font-size: 12.5px; font-weight: 700; margin-bottom: 12px; }
+.pqc-h2 { font-size: clamp(21px, 3vw, 27px); font-weight: 800; margin: 0 0 6px; }
+.pqc-lead { font-size: 14px; margin: 0; line-height: 1.7; }
+
+@media (max-width: 480px) {
+  .pqc-card { padding: 16px 14px; }
+  .pqc-intro { margin-bottom: 10px; }
+  .pqc-badge { font-size: 11px; padding: 3px 10px; margin-bottom: 6px; }
+  .pqc-h2 { font-size: clamp(18px, 5.4vw, 21px); margin: 0 0 4px; }
+  .pqc-lead { font-size: 12.5px; line-height: 1.4; }
+}

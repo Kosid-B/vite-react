@@ -143,15 +143,18 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
        วัดจริง iPhone 390×844: ด้วย padding 64px พาดหัว "สินค้าของคุณ กำไรจริงเท่าไหร่?"
        ตกอยู่ที่ 854px = **เกินขอบจอไป 10px** ⇒ คนเห็นแค่ที่ว่าง ไม่รู้ว่ามีเครื่องมืออยู่ */
     <section className="pqc-section" style={{ padding: '64px 24px', background: C.bg, borderTop: `1px solid ${C.border}` }}>
-      <div style={{ maxWidth: 720, margin: '0 auto', border: `1px solid ${C.border}`, borderRadius: 18, background: C.panel, padding: '28px 24px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ display: 'inline-block', padding: '5px 14px', borderRadius: 999, border: `1px solid ${C.cyan}`, color: C.cyan, fontSize: 12.5, fontWeight: 700, marginBottom: 12 }}>
+      {/* 🔴 ขนาด/ระยะห่างย้ายออกจาก inline style มาอยู่ใน class (23 ส.ค. 2569)
+          เหตุผล: inline style ชนะ CSS เสมอ ⇒ เขียน @media ในไฟล์ CSS แล้วไม่ขยับ (GOTCHA #3)
+          สีที่ยังอยู่ inline คือค่าที่มาจากโทเคนธีม (C.*) ซึ่งเปลี่ยนตามธีมจริง */}
+      <div className="pqc-card" style={{ border: `1px solid ${C.border}`, background: C.panel }}>
+        <div className="pqc-intro">
+          <div className="pqc-badge" style={{ border: `1px solid ${C.cyan}`, color: C.cyan }}>
             ⚡ ตอบทันที · ไม่ต้องสมัคร · ไม่ต้องรอ AI
           </div>
-          <h2 style={{ fontSize: 'clamp(21px, 3vw, 27px)', fontWeight: 800, color: C.ink, margin: '0 0 6px' }}>
+          <h2 className="pqc-h2" style={{ color: C.ink }}>
             สินค้าของคุณ กำไรจริงเท่าไหร่?
           </h2>
-          <p style={{ color: C.sub, fontSize: 14, margin: 0, lineHeight: 1.7 }}>
+          <p className="pqc-lead" style={{ color: C.sub }}>
             {touched
               ? 'คำนวณจากตัวเลขของคุณเอง ไม่ใช่ตัวเลขที่เราเดาให้'
               : 'ด้านล่างคือตัวอย่างที่คำนวณเสร็จแล้ว — แก้ตัวเลขให้เป็นของคุณได้เลย ไม่ต้องสมัคร'}

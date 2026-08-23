@@ -171,3 +171,102 @@ describe('จอแคบกว่า 390px ต้องมีชั้นบี
     expect(landing).toMatch(/aria-label=\{`สลับธีม/);
   });
 });
+
+/* ===== /start และเครื่องคำนวณ — จอแรกบนมือถือ (เพิ่ม 23 ส.ค. 2569) =====
+ *
+ * 🔴 วัดจริงด้วย Playwright ก่อนแก้ (ab-B · worst-case seg):
+ *     /start ปุ่มหลัก      SE 320 เกิน 371px · 360 เกิน 247 · 375 เกิน 220 · 390 เกิน 193
+ *     เครื่องคำนวณ ช่องแรก SE 320 เกิน  44px · 390 เกิน 16px
+ *   หลังแก้: อยู่เหนือขอบจอครบทั้ง 4 ความกว้าง (เหลือน้อยสุด 11px ที่ SE)
+ *
+ * ⚠️ เทสต์นี้ตรวจ "ค่าที่ทำให้มันพอดี" ไม่ได้ตรวจพิกเซลจริง (ต้องใช้เบราว์เซอร์)
+ *    ⇒ หน้าที่ของมันคือ **กันไม่ให้ค่าถูกถอยกลับโดยไม่มีใครวัดซ้ำ**
+ *    แก้ค่าเมื่อไร ต้องรันสคริปต์วัดจริงใหม่ทุกครั้ง (scratchpad/fold.mjs)
+ */
+describe('/start — ปุ่มหลักต้องอยู่เหนือขอบจอบนมือถือ', () => {
+  const css = readFileSync(resolve(root, 'src/index.css'), 'utf8');
+  const startLanding = readFileSync(resolve(root, 'src/pages/StartLanding.tsx'), 'utf8');
+
+  /** ดึงเนื้อในบล็อก @media ที่มี selector ตัวหนึ่งอยู่ */
+  const blockWith = (width: number, needle: string): string => {
+    let from = 0;
+    for (;;) {
+      const i = css.indexOf(`@media (max-width: ${width}px)`, from);
+      if (i < 0) return '';
+      const open = css.indexOf('{', i);
+      let depth = 0;
+      for (let j = open; j < css.length; j++) {
+        if (css[j] === '{') depth++;
+        else if (css[j] === '}') {
+          depth--;
+          if (depth === 0) {
+            const body = css.slice(open, j + 1);
+            if (body.includes(needle)) return body;
+            from = j;
+            break;
+          }
+        }
+      }
+    }
+  };
+
+  it('ต้องมีบล็อกมือถือของ /start จริง — เดิมไม่มี @media สักอันเลย', () => {
+    expect(blockWith(480, '.start-hero'), 'ไม่มี @media 480 ที่บีบ .start-hero').not.toBe('');
+    expect(blockWith(340, '.start-h1'), 'ไม่มีชั้นที่สองสำหรับจอ 320px').not.toBe('');
+  });
+
+  it('padding-top ของ hero ต้องไม่กินจอแรกเกินเพดาน (เดิม 80px)', () => {
+    const m = blockWith(480, '.start-hero').match(/\.start-hero\s*\{[^}]*padding:\s*(\d+)px/);
+    expect(m, '.start-hero ในบล็อกมือถือต้องกำหนด padding').toBeTruthy();
+    expect(Number(m![1]), 'padding-top บนมือถือเกินเพดาน 24px').toBeLessThanOrEqual(24);
+  });
+
+  it('พาดหัวต้องเล็กลงจริงบนจอแคบ — clamp ตัวล่างต้องต่ำกว่าค่าเดสก์ท็อป (30px)', () => {
+    const min = (body: string) => Number(body.match(/\.start-h1\s*\{[^}]*clamp\((\d+)px/)![1]);
+    const at480 = min(blockWith(480, '.start-h1'));
+    const at340 = min(blockWith(340, '.start-h1'));
+    expect(at480).toBeLessThanOrEqual(24);
+    expect(at340, 'จอ 320px ต้องเล็กกว่าจอ 480px (ยิ่งแคบ ยิ่งตกบรรทัด)').toBeLessThan(at480);
+  });
+
+  it('ห้ามใส่ inline <style> ใน StartLanding — จะทับ index.css แล้วแก้ไม่ขึ้น (GOTCHA #3)', () => {
+    expect(startLanding.includes('<style')).toBe(false);
+  });
+
+  it('🔴 ความยาวคำโฆษณามีเพดาน — พาดหัวยาวขึ้น = ปุ่มหลุดขอบจอ', () => {
+    const hero = readFileSync(resolve(root, 'src/lib/startHero.ts'), 'utf8');
+    const blocks = [...hero.matchAll(/^ {2}(\w+): \{([\s\S]*?)\n {2}\},/gm)];
+    expect(blocks.length, 'อ่าน START_HEROES ไม่ออก').toBeGreaterThan(3);
+    for (const b of blocks) {
+      const seg = b[1];
+      const body = b[2];
+      const one = (k: string) => (body.match(new RegExp(`${k}: '([^']*)'`)) ?? ['', ''])[1];
+      const headline = one('h1') + one('h1hl');
+      const chips = (body.match(/chips: \[([^\]]*)\]/)?.[1].match(/'/g)?.length ?? 0) / 2;
+      // เพดานมาจากของจริง: default = 90 ตัวอักษร + 4 ชิป → เหลือ 11px บน SE 320
+      expect(headline.length, `${seg}: พาดหัวยาว ${headline.length} ตัว — เกินเพดานที่วัดมาว่าพอดีจอ`).toBeLessThanOrEqual(96);
+      expect(chips, `${seg}: ชิปเยอะเกินไป (${chips}) — ชิปกินความสูงมากที่สุดบนจอแคบ`).toBeLessThanOrEqual(4);
+    }
+  });
+});
+
+describe('เครื่องคำนวณ — ช่องกรอกแรกต้องอยู่เหนือขอบจอ', () => {
+  const css = readFileSync(resolve(root, 'src/index.css'), 'utf8');
+  const qc = readFileSync(resolve(root, 'src/components/ProductQuickCheck.tsx'), 'utf8');
+
+  it('ขนาด/ระยะห่างของหัวเครื่องคำนวณต้องอยู่ใน CSS ไม่ใช่ inline (ไม่งั้น @media ไม่มีผล)', () => {
+    for (const cls of ['pqc-card', 'pqc-intro', 'pqc-badge', 'pqc-h2', 'pqc-lead']) {
+      expect(qc.includes(`className="${cls}"`), `JSX ไม่มี .${cls}`).toBe(true);
+      expect(css.includes(`.${cls}`), `CSS ไม่มี .${cls}`).toBe(true);
+    }
+    // ค่าที่ย้ายออกไปแล้ว ห้ามกลับมาอยู่ inline อีก
+    expect(qc, 'padding ของการ์ดกลับไปอยู่ inline').not.toMatch(/padding: '28px 24px'/);
+    expect(qc, 'ขนาดพาดหัวกลับไปอยู่ inline').not.toMatch(/fontSize: 'clamp\(21px/);
+  });
+
+  it('ต้องมี @media ที่บีบหัวเครื่องคำนวณบนมือถือจริง', () => {
+    const i = css.indexOf('.pqc-card { padding: 16px');
+    expect(i, 'ไม่มีค่าบีบของ .pqc-card บนมือถือ').toBeGreaterThan(-1);
+    expect(css.slice(0, i).lastIndexOf('@media (max-width: 480px)'), 'ค่าบีบต้องอยู่ในบล็อกมือถือ').toBeGreaterThan(-1);
+  });
+});
