@@ -14,6 +14,7 @@
  */
 
 import { MIN_SAMPLE, type LandingAgg } from './landingFunnel';
+import { brandBriefBlock } from './brandBrief';
 
 /* ── ความสนใจรายส่วนของหน้า ─────────────────────────────────────────── */
 
@@ -192,9 +193,13 @@ export function buildGrowthBrief(
   return { facts, cannotConclude: cannot, enough: total >= MIN_SAMPLE };
 }
 
-/** พรอมป์ตสำหรับ AI — ข้อห้ามอยู่ในพรอมป์ตเอง ไม่ใช่หวังให้ AI มีมารยาทเอง */
+/** พรอมป์ตสำหรับ AI — ข้อห้ามอยู่ในพรอมป์ตเอง ไม่ใช่หวังให้ AI มีมารยาทเอง
+ *  แปะ Brand Brief ไว้บนสุด (brandBrief.ts) ⇒ AI รู้ว่ากำลังพูดแทนใคร กับใคร และห้ามอ้างอะไร
+ *  โดยเฉพาะ HONEST_STATE ที่กันไม่ให้ AI เขียนอ้างจำนวนลูกค้าที่เรายังไม่มี */
 export function growthPrompt(brief: GrowthBrief): string {
   return [
+    brandBriefBlock({ forPublicCopy: true }),
+    '',
     'คุณคือนักวิเคราะห์การเติบโตของ CEO AI Thailand กำลังอ่านข้อมูลพฤติกรรมผู้เยี่ยมชมของเราเอง',
     '',
     '## ข้อเท็จจริงที่คำนวณมาแล้ว (ห้ามคำนวณใหม่ ห้ามเพิ่มตัวเลขที่ไม่มีในนี้)',

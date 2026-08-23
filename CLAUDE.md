@@ -292,6 +292,13 @@ src/lib/growthPdca.ts          — วงจร PDCA ของ "การเต�
                                  bottleneckOf() ตอบ 'unknown' อย่างซื่อสัตย์เมื่อคนน้อยเกินฟันธง (MIN_FOR_RATE=100)
                                  REACH_FLOOR_PER_WEEK=100 — ต่ำกว่านี้คอขวดคือ "ไม่มีคนมา" ห้ามไปแก้หน้าเว็บ
                                  Tracker.receiving: true/false/**null(=ตรวจไม่ได้)** → blindSpots 🔴/🟡 (pure/tested 16 เทสต์)
+src/lib/brandBrief.ts          — Brand Brief เป็นโค้ด: "บริษัท · ปัญหา · ความต้องการ · ผลลัพธ์" ที่ต้องเข้าไปอยู่ใน prompt
+                                 `brandBriefBlock({forPublicCopy})` → บล็อกบริบทแปะหน้า prompt (ใช้แล้วใน `growthAnalysis.growthPrompt`)
+                                 `violatesBrand(text)` → ตรวจคำต้องห้ามก่อนปล่อยคอนเทนต์
+                                 🔴 ช่องที่ brief ทั่วไปไม่มี = **HONEST_STATE** (ยังไม่มีลูกค้าจ่ายจริง · ผู้เข้าชมหลักสิบ)
+                                    ⇒ กัน AI เขียนอ้างการยอมรับที่ยังไม่มี ซึ่งเป็นคำโกหกที่จับยากที่สุดเพราะฟังดูปกติ
+                                 ห้ามเขียนคำโฆษณาใหม่ในไฟล์นี้ — ทุกข้อผูกกับแหล่งจริง (seoData/ctaContext/landingClaims)
+                                 เทสต์เทียบทีละตัว ⇒ แก้ราคาในเว็บแล้วไม่แก้ brief = แดง · doc: docs/marketing/BRAND-BRIEF.md
 src/lib/stageFit.ts            — "งานชิ้นนี้ถึงเวลาของมันหรือยัง" (skill `case-study-stage-fit` ในรูปโค้ด)
                                  stageOf() หาเฟสจากตัวเลขจริง: reach → convert → retain → scale (ข้ามไม่ได้)
                                  ใช้ REACH_FLOOR_PER_WEEK + MIN_FOR_RATE ตัวเดียวกับ growthPdca (ห้ามเขียนเลขซ้ำ)
