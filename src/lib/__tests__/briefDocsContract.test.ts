@@ -20,6 +20,7 @@ const BRIEF = 'docs/marketing/BRAND-BRIEF-FORM.md';
 const CALENDAR = 'docs/review/WEEKLY-CALENDAR-2026-08-23.md';
 const SKILL = '.claude/skills/marketing-instruction/SKILL.md';
 const START_LANDING = 'src/pages/StartLanding.tsx';
+const STRATEGY = 'docs/marketing/AWARENESS-STRATEGY-2026-08-23.md';
 
 describe('เอกสารบรีฟ/ปฏิทิน — ห้ามย้อนกลับไปพูดสิ่งที่พิสูจน์แล้วว่าผิด', () => {
   it('① Search Console: ห้ามเขียนว่า "ยังไม่ได้ยืนยัน" — ยืนยันแล้วตั้งแต่ ~20 ก.ค. 2569', () => {
@@ -69,6 +70,34 @@ describe('เอกสารบรีฟ/ปฏิทิน — ห้ามย�
     // เหตุผลที่ลืมง่ายที่สุดและแพงที่สุด — ต้องอยู่ในบรีฟ ไม่ใช่อยู่แต่ในโค้ด
     expect(text, 'บรีฟไม่ได้บอกว่าทำไมห้ามนำด้วย ISO').toContain('50,000');
     expect(MESSAGE_HIERARCHY.whyNotSwap).toContain('50,000');
+  });
+
+  it('⑦ กลยุทธ์การรับรู้: ต้องประกาศว่าตัวเลขชุด 80 คน "วัดบั๊กเรา ไม่ได้วัดตลาด"', () => {
+    const text = read(STRATEGY);
+    // ทั้ง 4 ตัวเลขที่เคยถูกตีความผิด ต้องมีคำอธิบายว่าอะไรทำให้มันเป็นแบบนั้น
+    for (const n of ['quickcheck = 0', 'search = 0', 'utm', 'MIN_FOR_RATE']) {
+      expect(text, `กลยุทธ์ไม่ได้อธิบายที่มาของ "${n}"`).toContain(n);
+    }
+    expect(text).toMatch(/วัด.*(บั๊ก|คุณภาพการทำงาน).*ไม่ได้วัด.*ตลาด|ไม่ได้วัด "?ความต้องการของตลาด/);
+  });
+
+  it('⑧ กลยุทธ์ต้องยึด invisible-influence — 39% เงียบ + ห้ามวัด Be Remembered รายสัปดาห์', () => {
+    const text = read(STRATEGY);
+    expect(text, 'ไม่มีตัวเลขกลุ่มพลังเงียบ').toContain('39%');
+    expect(text, 'ไม่ได้ห้ามวัดรายสัปดาห์').toMatch(/ห้ามวัดผลรายสัปดาห์|ห้ามดูผลลัพธ์/);
+    // branded search = ตัวชี้วัดการรับรู้ตัวจริง ต้องอยู่ทั้งในกลยุทธ์และในบรีฟ
+    for (const f of [STRATEGY, BRIEF]) {
+      expect(read(f), `${f} ไม่มี branded search`).toMatch(/branded search/i);
+    }
+  });
+
+  it('⑨ ทุกลิงก์สั้นที่กลยุทธ์สั่งใช้ ต้องมีอยู่จริงใน SHORT_LINKS', () => {
+    const links = read('src/lib/shortLinks.ts');
+    for (const l of ['/ราคา', '/ปาล์ม', '/ทุน', '/ลูกค้า']) {
+      expect(links.includes(`'${l}'`), `SHORT_LINKS ไม่มี ${l} แต่กลยุทธ์สั่งให้ใช้`).toBe(true);
+      // ต้องเป็น code span พอดีเป๊ะ — `toContain(l)` เฉย ๆ ยอมให้ `/ปาล์มxx` ผ่านได้ (พิสูจน์แล้ว)
+      expect(read(STRATEGY).includes(`\`${l}\``), `กลยุทธ์ไม่ได้สั่งใช้ ${l}`).toBe(true);
+    }
   });
 
   it('⑥ ปฏิทินฉบับเก่าต้องชี้ไปฉบับใหม่ (กันคนหยิบแผนที่มี 4 ข้อผิดไปใช้)', () => {
