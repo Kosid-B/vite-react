@@ -101,17 +101,23 @@ export default function StartLanding() {
     track('theme_changed', { theme: nx, where: 'start' });
   };
 
-  // เวอร์ชัน hero: ISO/โรงงาน (มาจากสะพานเว็บบริษัท ?ref=btctraining หรือ utm_campaign มี 'iso')
-  // → ส่งต่อความคาดหวังตรงกลุ่มที่คลิกมาจากบทความ ISO
-  const isIso = useMemo(() => {
-    const p = new URLSearchParams(window.location.search);
-    return p.get('ref') === 'btctraining' || (p.get('utm_campaign') || '').toLowerCase().includes('iso');
-  }, []);
-
   // Dynamic PLG: หน้านี้ต้องพูดกับ "คนคนนี้" ไม่ใช่พูดกับทุกคนเหมือนกันหมด
   // seg มาจากลิงก์ที่พาเขามา (CTA ท้ายบทความติด ?seg= ให้ตามหมวดของบทความนั้น)
   // ISO ยังชนะทุกอย่างเพราะเป็นสะพานจากเว็บบริษัท = คนละกลุ่มกันชัดเจน
   const seg = useMemo(() => segmentFor(window.location.search, document.referrer), []);
+  /* เวอร์ชัน hero: ISO/โรงงาน — กลุ่มที่ "มีวันตรวจรออยู่"
+   *
+   * 🔴 รวมกลไกเป็นตัวเดียว 22 ส.ค. 2569: เดิมหน้านี้มี matcher ของตัวเอง
+   *    (`utm_campaign` ที่มีคำว่า 'iso' เท่านั้น) แยกจาก `segmentFor()`
+   *    ⇒ คนที่พิมพ์ **audit · มอก · pdpa · ตรวจประเมิน · ต่ออายุ · ไอเอสโอ** ไม่เข้าประตูนี้เลย
+   *    ทั้งที่เป็นกลุ่มเดียวกันและเป็นกลุ่มที่ **จ่ายเงินอยู่แล้ว** (จ่ายที่ปรึกษาหลักหมื่น–แสน)
+   *    ตอนนี้ให้ `segmentFor()` เป็นคนตัดสินที่เดียว — เพิ่มคำใหม่ที่ heroVariant.ts ที่เดียวจบ
+   * ⚠️ `ref=btctraining` = สะพานจากเว็บบริษัท คงไว้ (ไม่ได้มาทาง utm) */
+  const isIso = useMemo(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get('ref') === 'btctraining' || seg === 'audit';
+  }, [seg]);
+
   const segHero = isIso ? null : startHeroFor(seg);
 
   useEffect(() => {

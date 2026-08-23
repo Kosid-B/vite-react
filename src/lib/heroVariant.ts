@@ -9,7 +9,7 @@
 
 import type { OnboardGoal, PageId } from '../types';
 
-export type HeroSeg = 'default' | 'seller' | 'newbie' | 'owner' | 'palm' | 'food';
+export type HeroSeg = 'default' | 'seller' | 'newbie' | 'owner' | 'palm' | 'food' | 'audit';
 
 export interface HeroVariant {
   seg: HeroSeg;
@@ -39,6 +39,30 @@ export const HERO_VARIANTS: Record<HeroSeg, HeroVariant> = {
     ctaLabel: '', // ใช้ label เริ่มต้นของปุ่ม (guest/สมัคร) ตามโหมด
     goal: null,
     page: null,
+  },
+  /* 🔴 กลุ่ม "มีวันตรวจรออยู่" — เพิ่ม 22 ส.ค. 2569
+   *
+   * ทำไมต้องมี: ทุก seg ที่มีอยู่เดิมพูดกับคนที่ **ยังไม่รู้ว่าตัวเองมีปัญหา** (ต้องสร้าง demand)
+   *   แต่กลุ่มที่ **จ่ายเงินอยู่แล้ว** คือคนที่มี audit/ต่ออายุ cert/โดนคู่ค้าบังคับ
+   *   — เขารู้ปัญหาแล้ว มีกำหนดเวลา มีงบ และ **ค้นหาอยู่แล้ว**
+   *   (MARKET-SIZING-2026: 50,000–100,000 ราย · จ่ายที่ปรึกษาหลักหมื่น–แสน/โปรเจกต์)
+   *
+   * ⚠️ นี่คือ seg เดียวที่ **พูดคำว่า ISO/มาตรฐานตรง ๆ ได้** — กฎ "ห้ามขึ้นต้นด้วยคำว่า ISO"
+   *   เป็นกฎของกลุ่มคนเพิ่งเริ่มธุรกิจ **ไม่ใช่กฎของคนที่กำลังพิมพ์คำนั้นค้นหาอยู่**
+   *
+   * ⚠️ ห้ามสัญญาว่า "ได้ใบรับรอง" — การรับรองเป็นอำนาจของหน่วยรับรอง ไม่ใช่ของเรา
+   *   สิ่งที่เราให้ได้จริงคือ **เห็นว่าตอนนี้ขาดอะไร** ก่อนวันตรวจ
+   */
+  audit: {
+    seg: 'audit',
+    badge: '✦  สำหรับคนที่มีวันตรวจรออยู่  ✦',
+    h1a: 'เหลืออีกไม่กี่สัปดาห์ก่อนวันตรวจ',
+    h1bLines: ['รู้ก่อนว่าผู้ตรวจ', 'จะเจออะไรในระบบคุณ'],
+    subLead: 'ปัญหาไม่ใช่เอกสารไม่ครบ — แต่คือไม่รู้ว่าอันไหนที่ยังตอบผู้ตรวจไม่ได้',
+    subRest: 'ทะเบียนกระบวนการ + ตัววัดที่ผูกกับความเสี่ยงจริง · เห็นจุดที่ยังขาดเป็นรายข้อ · เริ่มฟรี',
+    ctaLabel: 'ดูว่าตอนนี้ขาดอะไรบ้าง',
+    goal: null,
+    page: 'process',
   },
   // คนมีของขายอยู่แล้ว → ดันเข้า "เปิดหน้าร้าน" (loss aversion: ลูกค้าหาไม่เจอ)
   seller: {
@@ -116,7 +140,8 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
 
   // 1) ระบุตรง ๆ (?seg=seller|newbie|owner|palm) — ใช้ในลิงก์แคมเปญของเราเอง
   const seg = get('seg');
-  if (seg === 'seller' || seg === 'newbie' || seg === 'owner' || seg === 'palm' || seg === 'food') return seg;
+  if (seg === 'seller' || seg === 'newbie' || seg === 'owner' || seg === 'palm'
+      || seg === 'food' || seg === 'audit') return seg;
 
   // 2) ?goal= (เผื่อสะพานจากเว็บบริษัท)
   const goal = get('goal');
@@ -126,6 +151,10 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
 
   // 3) utm keyword (content/campaign/term รวมกัน)
   const utm = [get('utm_content'), get('utm_campaign'), get('utm_term')].join(' ');
+  // 🔴 'audit' ต้องมาก่อนทุกตัว — คนที่พิมพ์คำพวกนี้ "รู้ปัญหาแล้ว มีกำหนดเวลา และมีงบ"
+  //    ถ้าปล่อยให้ตกไปเข้า 'owner' (คำว่า 'ระบบ' ชนกัน) เขาจะเจอพาดหัวที่พูดกับคนยังไม่รู้ตัว
+  if (hit(utm, ['audit', 'ออดิท', 'ตรวจประเมิน', 'iso', 'ไอเอสโอ', 'มอก', 'pdpa',
+                'certification', 'ใบรับรอง', 'ต่ออายุ', 'surveillance'])) return 'audit';
   if (hit(utm, ['palm', 'ปาล์ม', 'biodiesel', 'ไบโอดีเซล', 'เกษตรแปรรูป'])) return 'palm';
   if (hit(utm, ['food', 'อาหาร', 'แกงถุง', 'ตามสั่ง', 'แม่ค้า', 'ต้นทุนอาหาร'])) return 'food';
   if (hit(utm, ['seller', 'shop', 'store', 'ร้าน', 'ขายของ'])) return 'seller';
