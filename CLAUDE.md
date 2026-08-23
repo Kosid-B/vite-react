@@ -292,6 +292,15 @@ src/lib/growthPdca.ts          — วงจร PDCA ของ "การเต�
                                  bottleneckOf() ตอบ 'unknown' อย่างซื่อสัตย์เมื่อคนน้อยเกินฟันธง (MIN_FOR_RATE=100)
                                  REACH_FLOOR_PER_WEEK=100 — ต่ำกว่านี้คอขวดคือ "ไม่มีคนมา" ห้ามไปแก้หน้าเว็บ
                                  Tracker.receiving: true/false/**null(=ตรวจไม่ได้)** → blindSpots 🔴/🟡 (pure/tested 16 เทสต์)
+src/lib/videoBrief.ts          — Brand Brief แปลงเป็น "บรีฟทำคลิป 1 ชิ้น" (pure/tested 24 เทสต์)
+                                 **ประกอบจากของที่มีอยู่ ไม่เขียนซ้ำ**: brandBrief (ครึ่งหน้า) + commentReply.videoEnding (ครึ่งหลัง)
+                                 สิ่งที่เติมคือชั้นกลางที่ยังไม่มี: CLIP_STRUCTURE 5 ช่วง · PROOF · VIDEO_DONT
+                                 🔴 หน้าที่ของคลิป = ทำให้เขารู้ตัวว่า "ไม่รู้ตัวเลขของตัวเอง"
+                                    **ไม่ใช่** อธิบายว่าผลิตภัณฑ์เราทำอะไรได้ (คนที่ยังไม่รู้จักเราไม่มีเหตุผลจะดู)
+                                 ⚠️ PROOF.banned — เรายังไม่มีลูกค้าจ่ายจริง ⇒ ห้ามใช้รีวิว/จำนวนผู้ใช้/เคสความสำเร็จ
+                                    ใช้แทนด้วย: โชว์เครื่องมือคำนวณ**สด ๆ** + เครดิต B.Training 20+ ปี + ตัวเลขที่ผู้ชมกรอกเอง
+                                 `videoScriptPrompt()` = Brand Brief → PROMPT → AI (แผนภาพในรูปที่ใช้งานได้จริง)
+                                 `checkVideoScript()` ตรวจสคริปต์ก่อนถ่าย (คำต้องห้าม · อ้างรีวิว · ขึ้นต้นด้วยทักทาย)
 src/lib/brandBrief.ts          — Brand Brief เป็นโค้ด: "บริษัท · ปัญหา · ความต้องการ · ผลลัพธ์" ที่ต้องเข้าไปอยู่ใน prompt
                                  `brandBriefBlock({forPublicCopy})` → บล็อกบริบทแปะหน้า prompt (ใช้แล้วใน `growthAnalysis.growthPrompt`)
                                  `violatesBrand(text)` → ตรวจคำต้องห้ามก่อนปล่อยคอนเทนต์
