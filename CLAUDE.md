@@ -244,7 +244,11 @@ GOTCHA #6 — แท็ก utm ตายกลางทาง ระหว่า
     campaign/content) + `utmForwardScript()` ฝังท้ายทุกหน้า server-rendered (ต้องทำฝั่ง browser
     เพราะหน้าพวกนี้ cache 1 ชม. — ฝังฝั่ง server = คนถัดไปได้เครดิตของคนก่อน)
     · `attributionContract.test.ts` รันสคริปต์ตัวจริงใน jsdom + บังคับว่า JS กับ TS ใช้ชื่อคีย์เดียวกัน
-  • 🟡 `landing_funnel` ยังไม่มีคอลัมน์ `utm_medium` ⇒ ตอบไม่ได้ว่า "คอมเมนต์ปักหมุด vs ไบโอ" อันไหนดีกว่า
+  • 🔁 **แก้ 23 ส.ค. 2569** — เดิมเขียนว่า *"`landing_funnel` ยังไม่มีคอลัมน์ `utm_medium`"* → 🟢 **มีแล้ว**
+    (ตรวจสด: `information_schema.columns` มี `utm_source/utm_medium/utm_campaign/utm_content` ครบ)
+  • 🔴 **ปัญหาจริงอยู่คนละที่**: 80 ผู้เข้าชมตลอดกาล มี utm แค่ **2 session** (tiktok 1 · facebook/comment 1)
+    ⇒ **78 คน = 97.5% ระบุแพลตฟอร์มไม่ได้** — ไม่ใช่เพราะระบบไม่เก็บ **แต่เพราะลิงก์ที่เราปล่อยออกไปไม่ได้ติดแท็ก**
+    ⇒ คำถาม "แพลตฟอร์มไหนได้ผล" ตอบไม่ได้ทุกข้อ จนกว่าลิงก์ทุกตัวจะติด `utm_source`+`utm_medium`
 ```
 
 ## Key Source Files
