@@ -9,7 +9,7 @@
 
 import type { OnboardGoal, PageId } from '../types';
 
-export type HeroSeg = 'default' | 'seller' | 'newbie' | 'owner' | 'palm' | 'food' | 'audit';
+export type HeroSeg = 'default' | 'seller' | 'newbie' | 'sidebiz' | 'owner' | 'palm' | 'food' | 'audit';
 
 export interface HeroVariant {
   seg: HeroSeg;
@@ -37,6 +37,19 @@ export const HERO_VARIANTS: Record<HeroSeg, HeroVariant> = {
     subLead: 'เริ่มจากตัวเลขของคุณเอง — รู้ว่าขายแล้วกำไรจริงไหม ก่อนลงเงินสักบาท',
     subRest: 'แล้วเดินต่อทีละขั้นพร้อมทีม AI: หาลูกค้า → เปิดร้าน → วางระบบ · ฟรี 15 วัน ไม่ต้องใช้บัตร',
     ctaLabel: '', // ใช้ label เริ่มต้นของปุ่ม (guest/สมัคร) ตามโหมด
+    goal: null,
+    page: null,
+  },
+  /* 🎯 Primary ใหม่ 23 ส.ค. 2569 — คนทำงานประจำที่อยากมีรายได้เพิ่ม
+   * ต่างจาก newbie ตรง **ข้อจำกัดเรื่องเวลา** และ **กลัวเสียเงินที่หามาได้** ⇒ สารต้องรับสองข้อนี้ */
+  sidebiz: {
+    seg: 'sidebiz',
+    badge: '✦  สำหรับคนทำงานประจำที่อยากมีรายได้อีกทาง  ✦',
+    h1a: 'อยากมีธุรกิจของตัวเอง แต่ยังไม่กล้าลาออก?',
+    h1bLines: ['เริ่มจากพิสูจน์ว่ามีคนซื้อ', 'ก่อนลงเงินสักบาท'],
+    subLead: 'ไม่ต้องมีเวลาว่างทั้งวัน — ตอบให้ได้ก่อนว่าขายอะไร ให้ใคร แล้วเขายอมจ่ายเท่าไร',
+    subRest: 'ทีม AI พาไปทีละขั้นตามจังหวะที่คุณมี · ฟรี 15 วัน ไม่ต้องใช้บัตร',
+    ctaLabel: '🧪 เริ่มจากทดสอบว่ามีคนซื้อไหม',
     goal: null,
     page: null,
   },
@@ -140,7 +153,7 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
 
   // 1) ระบุตรง ๆ (?seg=seller|newbie|owner|palm) — ใช้ในลิงก์แคมเปญของเราเอง
   const seg = get('seg');
-  if (seg === 'seller' || seg === 'newbie' || seg === 'owner' || seg === 'palm'
+  if (seg === 'seller' || seg === 'newbie' || seg === 'sidebiz' || seg === 'owner' || seg === 'palm'
       || seg === 'food' || seg === 'audit') return seg;
 
   // 2) ?goal= (เผื่อสะพานจากเว็บบริษัท)
@@ -159,7 +172,10 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
   if (hit(utm, ['food', 'อาหาร', 'แกงถุง', 'ตามสั่ง', 'แม่ค้า', 'ต้นทุนอาหาร'])) return 'food';
   if (hit(utm, ['seller', 'shop', 'store', 'ร้าน', 'ขายของ'])) return 'seller';
   if (hit(utm, ['owner', 'sme', 'scale', 'system', 'ระบบ', 'เจ้าของ'])) return 'owner';
-  if (hit(utm, ['newbie', 'idea', 'start', 'เริ่ม', 'ไอเดีย', 'มือใหม่'])) return 'newbie';
+  // sidebiz ต้องมาก่อน newbie — คนทำงานประจำก็คือ "มือใหม่" ด้วย แต่มีข้อจำกัดเวลาที่ต่างออกไป
+  if (hit(utm, ['sidebiz', 'side', 'อาชีพเสริม', 'รายได้เสริม', 'งานประจำ', 'มนุษย์เงินเดือน',
+                'ลาออก', 'ทำควบ'])) return 'sidebiz';
+  if (hit(utm, ['newbie', 'idea', 'start', 'เริ่ม', 'ไอเดีย', 'มือใหม่', 'จบใหม่', 'นักศึกษา'])) return 'newbie';
 
   // 4) referrer/utm_source heuristic (เบา ๆ) — TikTok/IG = มือใหม่วัยเริ่ม · LinkedIn = เจ้าของ/B2B
   const src = (get('utm_source') + ' ' + (referrer || '').toLowerCase());

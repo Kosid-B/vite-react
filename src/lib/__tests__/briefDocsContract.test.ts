@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { MESSAGE_HIERARCHY } from '../brandBrief';
+import { MESSAGE_HIERARCHY, AUDIENCE, CUSTOMER_JOURNEY, ISO_ENTERS_AT_STEP } from '../brandBrief';
 
 /**
  * กลไกกัน "ความเข้าใจผิดที่แก้ไปแล้ว กลับมาใหม่" (ตั้ง 23 ส.ค. 2569)
@@ -98,6 +98,28 @@ describe('เอกสารบรีฟ/ปฏิทิน — ห้ามย�
       // ต้องเป็น code span พอดีเป๊ะ — `toContain(l)` เฉย ๆ ยอมให้ `/ปาล์มxx` ผ่านได้ (พิสูจน์แล้ว)
       expect(read(STRATEGY).includes(`\`${l}\``), `กลยุทธ์ไม่ได้สั่งใช้ ${l}`).toBe(true);
     }
+  });
+
+  it('⑩ บรีฟต้องแยก Current Audience ออกจาก Target Market และมี Journey 10 ขั้น', () => {
+    const text = read(BRIEF);
+    expect(text).toContain('Current Audience');
+    expect(text).toContain('Target Market');
+    // persona ต้องเป็นเชิงสถานะ — ห้ามกลับไปผูกกับช่วงอายุอีก
+    expect(text, 'บรีฟยังใช้ persona เชิงอายุ').not.toMatch(/Core Persona[\s\S]{0,200}อายุ 40–55/);
+    for (const step of ['Idea', 'ลูกค้าที่ใช่', 'ลูกค้ารายแรก', 'Scale']) {
+      expect(text, `Journey ขาดขั้น ${step}`).toContain(step);
+    }
+    // ISO ต้องถูกกำกับว่าอยู่ขั้นหลัง ไม่ใช่ประตูหน้า
+    expect(text).toMatch(/ISO[^\n]*ขั้น 7|ขั้น 7[^\n]*ISO/);
+  });
+
+  it('⑪ โค้ดกับบรีฟต้องพูดตรงกันเรื่องกลุ่มเป้าหมาย (แก้ที่เดียวไม่พอ = แดง)', () => {
+    const brief = read(BRIEF);
+    for (const v of [AUDIENCE.primary, AUDIENCE.secondary, AUDIENCE.growth]) {
+      expect(brief, `บรีฟไม่มีกลุ่ม "${v}" ที่โค้ดประกาศไว้`).toContain(v);
+    }
+    expect(CUSTOMER_JOURNEY).toHaveLength(10);
+    expect(ISO_ENTERS_AT_STEP).toBe(7);
   });
 
   it('⑥ ปฏิทินฉบับเก่าต้องชี้ไปฉบับใหม่ (กันคนหยิบแผนที่มี 4 ข้อผิดไปใช้)', () => {

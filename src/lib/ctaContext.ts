@@ -31,9 +31,12 @@ export const CATEGORY_SEG: Record<string, HeroSeg> = {
 };
 
 /** seg ที่ใช้เมื่อยังไม่รู้จักหมวดนั้น
- *  เปลี่ยนจาก 'newbie' → 'seller' 16 ส.ค. 2569 ตามผู้ชมที่วัดได้จริง
+ *  🔁 เปลี่ยนกลับเป็น 'newbie' 23 ส.ค. 2569 (เจ้าของตัดสินใจระดับกลุ่มเป้าหมาย)
+ *  16 ส.ค. เคยเปลี่ยนเป็น 'seller' เพราะอ่านสถิติผู้ชม YouTube — **นั่นคือ Current Audience
+ *  ไม่ใช่ Target Market** · ค่าตั้งต้นต้องพูดกับ Broad Market = คนที่อยากเริ่มธุรกิจ
+ *  คนที่ขายอยู่แล้วยังมี seg ของตัวเอง ('seller'/'owner') เมื่อมาจากคอนเทนต์เรื่องต้นทุน/ระบบ
  *  (YouTube คลิป 942 วิว: อายุ 18-24 = 0.0% · 45 ปีขึ้นไป = 58.1% → ส่วนใหญ่มีธุรกิจอยู่แล้ว) */
-export const FALLBACK_SEG: HeroSeg = 'seller';
+export const FALLBACK_SEG: HeroSeg = 'newbie';
 
 export function segForCategory(category: string): HeroSeg {
   return CATEGORY_SEG[category] ?? FALLBACK_SEG;

@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import {
   WHO, AUDIENCE, PROBLEM, OUTCOME, VOICE, HONEST_STATE,
   FORBIDDEN_PHRASES, brandBriefBlock, violatesBrand, MESSAGE_HIERARCHY,
+  CUSTOMER_JOURNEY, ISO_ENTERS_AT_STEP,
 } from '../brandBrief';
 import { organizationJsonLd } from '../seoData';
 import { FALLBACK_SEG } from '../ctaContext';
@@ -55,17 +56,51 @@ describe('brief ต้องตรงกับราคาที่ประก�
 });
 
 describe('กลุ่มเป้าหมายต้องตรงกับที่โค้ดใช้จริง ไม่ใช่ที่อยากให้เป็น', () => {
-  it("ค่าตั้งต้นของระบบคือ 'seller' = เจ้าของธุรกิจที่ขายอยู่แล้ว", () => {
-    expect(FALLBACK_SEG).toBe('seller');
-    expect(AUDIENCE.primary).toContain('ขายอยู่แล้ว');
+  /* 🔁 แก้ระดับโครงสร้าง 23 ส.ค. 2569 — เดิมเทสต์ล็อกว่า FALLBACK_SEG ต้องเป็น 'seller'
+   * ซึ่งมาจากการอ่านสถิติผู้ชม YouTube แล้วเข้าใจผิดว่าเป็นตลาดเป้าหมาย */
+  it("ค่าตั้งต้นต้องพูดกับ Broad Market (คนที่อยากเริ่มธุรกิจ) ไม่ใช่คนที่ขายอยู่แล้ว", () => {
+    expect(FALLBACK_SEG).toBe('newbie');
+    expect(AUDIENCE.broad).toMatch(/เริ่มต้น|สร้างธุรกิจ/);
   });
 
-  it('ต้องมีหลักฐานตัวเลขกำกับ ไม่ใช่บอกลอย ๆ ว่ากลุ่มนี้', () => {
-    expect(AUDIENCE.evidence).toMatch(/\d/);
+  it('🔴 ต้องแยก Current Audience ออกจาก Target Market ให้ชัด — ห้ามเอามาปนกันอีก', () => {
+    expect(AUDIENCE.currentAudience).toMatch(/\d/);
+    expect(AUDIENCE.currentAudience).toMatch(/ไม่ใช่ตลาดเป้าหมาย/);
+    expect(AUDIENCE.targetMarket).not.toMatch(/\d\d–\d\d|อายุ/);
   });
 
-  it('ห้ามตัดมือใหม่ทิ้ง — ต้องยังมีกลุ่มรอง', () => {
-    expect(AUDIENCE.secondary).toContain('newbie');
+  it('persona ต้องเป็นเชิงสถานะ ไม่ใช่เชิงอายุ (สถานะเปลี่ยนได้ อายุเปลี่ยนไม่ได้)', () => {
+    expect(AUDIENCE.persona).not.toMatch(/\d\d–\d\d|วัย \d/);
+    expect(AUDIENCE.persona).toMatch(/ยังไม่รู้ว่าควรเริ่มจากอะไร/);
+  });
+
+  it('ห้ามทิ้งกลุ่มที่ขายอยู่แล้ว — ต้องอยู่ใน Journey ขั้นถัดไป', () => {
+    expect(AUDIENCE.growth).toMatch(/ขายแล้ว|ขายอยู่แล้ว|เริ่มขาย/);
+    expect(AUDIENCE.sideDoor).toContain('audit');
+  });
+
+  it('⚠️ ความเสี่ยงของการเปลี่ยนกลุ่มต้องถูกเขียนไว้ ไม่ใช่ซ่อน', () => {
+    expect(AUDIENCE.risk).toMatch(/0\.0%/);
+    expect(AUDIENCE.risk).toMatch(/สร้างการเข้าถึงใหม่/);
+  });
+});
+
+describe('เส้นทางลูกค้า — ตัวที่ตัดสินว่าสารไหนพูดกับใครตอนไหน', () => {
+  it('ต้องเริ่มที่ Idea และจบที่ Scale · 10 ขั้น ไม่ข้าม', () => {
+    expect(CUSTOMER_JOURNEY).toHaveLength(10);
+    expect(CUSTOMER_JOURNEY[0].name).toBe('Idea');
+    expect(CUSTOMER_JOURNEY[CUSTOMER_JOURNEY.length - 1].name).toBe('Scale');
+    CUSTOMER_JOURNEY.forEach((j, i) => expect(j.step).toBe(i + 1));
+  });
+
+  it('ทุกขั้นต้องมีคำถามของลูกค้ากำกับ — ไม่ใช่ชื่อขั้นลอย ๆ', () => {
+    for (const j of CUSTOMER_JOURNEY) expect(j.question.length).toBeGreaterThan(8);
+  });
+
+  it('🔴 ISO ต้องเข้ามาช่วง Systemize ไม่ใช่ประตูหน้า', () => {
+    expect(ISO_ENTERS_AT_STEP).toBeGreaterThanOrEqual(7);
+    const at = CUSTOMER_JOURNEY.find((j) => j.step === ISO_ENTERS_AT_STEP);
+    expect(at?.name).toBe('กระบวนการ');
   });
 });
 
