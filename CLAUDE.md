@@ -76,7 +76,7 @@ skill อื่นคุม "กฎรายข้อ" · ตัวนี้ค�
 **ขั้น 0 บังคับ: ตรวจเฟสก่อนเสมอ** (แผง 🎯 / `stageFit`) — **เฟสเปลี่ยน = คำสั่งทั้งแผ่นเปลี่ยน**
 ลำดับงานเฟส `reach` (ห้ามสลับ · ห้ามเริ่มที่ ④ · ห้ามข้าม ①):
    ① ลูกค้าจ่ายเงินรายแรกผ่าน **Pilot ฿1,990** (ขายให้คนที่ demand มีอยู่แล้ว — ปิดด้วยการโทรคุย)
-   ② ยืนยัน Google Search Console  ③ ปล่อยคอนเทนต์ที่มีปลายทางจริง  ④ ยิงแอดงบเล็ก "ซื้อคำตอบ"
+   ② อ่านผลจาก Search Console (ยืนยันแล้ว) ว่าคนค้นคำอะไร  ③ ปล่อยคอนเทนต์ที่มีปลายทางจริง  ④ ยิงแอดงบเล็ก "ซื้อคำตอบ"
 🔴 **ห้ามพูดชื่อหมวดหมู่สินค้าขึ้นหน้า** (AI Business OS · ISO) — **ให้พูด "ปัญหา" ขึ้นหน้า**
    เพราะ **คนที่ไม่รู้ว่าตัวเองมีปัญหา ไม่ค้นหา** (สาเหตุรากที่ทำให้ search traffic = 0)
 กลไก: `marketingInstruction.test.ts` ผูก instruction เข้ากับ `growthPdca` + `stageFit` + `SHORT_LINKS`
@@ -418,7 +418,12 @@ title/meta/canonical/OG + JSON-LD (LocalBusiness/BreadcrumbList/ItemList) ลง
 seoData.ts = source of truth เดียว (escape กัน XSS). Deploy: merge → Cloudflare auto-deploy (ไม่ต้อง manual).
 ⚠️ กัน thin page: MIN_STOREFRONTS_TO_INDEX=5 — ร้านน้อยกว่านี้ /b จะ noindex,follow + ไม่ถูกลิสต์ใน sitemap
    (ทั้ง server + client applySeo ต้องพูดตรงกัน · ตรวจ 16 ส.ค. 2569: ร้านจริง = 0)
-🔴 งานคนที่ยังค้าง (สาเหตุอันดับ 1 ที่ search traffic = 0): ยืนยัน Google Search Console + ส่ง sitemap.xml
+🟢 **Google Search Console ยืนยันแล้ว** (เจ้าของยืนยันด้วยภาพหน้าจอ 22 ส.ค. 2569 · เก็บข้อมูลตั้งแต่ ~20 ก.ค.)
+   สถานะ: **จัดทำดัชนีแล้ว 12 หน้า** · ไม่ได้จัดทำดัชนี 21 หน้า (4 เหตุผล)
+   ⚠️ 10 หน้าที่ขึ้นว่า "หน้าเว็บสำรองที่มีแท็กตามรูปแบบบัญญัติที่ถูกต้อง" = **URL ทับสแลช `/blog/x/`**
+      ไม่ใช่ error — server.ts redirect 301 ไป `/blog/x` + canonical ตรงกัน = **ระบบทำงานถูกแล้ว**
+   🔴 **ยังไม่รู้ 3 เหตุผลที่เหลือ (11 หน้า)** — ต้องเปิด GSC ดู (ผู้ช่วยเข้าไม่ได้ ต้องให้เจ้าของส่งมา)
+   ⚠️ **บทเรียน ledger #39**: ห้ามเขียนว่างานที่ "ตรวจเองไม่ได้" เป็น "ยังไม่ได้ทำ" — ให้เขียนว่า **ตรวจไม่ได้ ต้องถาม**
    ตั้งค่า GOOGLE_SITE_VERIFICATION ใน Cloudflare vars → ขั้นตอนเต็มที่ docs/marketing/SEARCH-CONSOLE-SETUP.md
 ```
 

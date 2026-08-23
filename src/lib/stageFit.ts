@@ -81,9 +81,9 @@ export interface Initiative {
 export const INITIATIVES: Initiative[] = [
   {
     id: 'search-console',
-    label: 'ยืนยัน Google Search Console + ส่ง sitemap.xml',
+    label: 'อ่านผล Search Console — คนค้นคำอะไรแล้วเจอเรา',
     needs: 'reach',
-    why: 'สาเหตุอันดับ 1 ที่ traffic จากการค้นหา = 0 · เป็นงานที่ทำได้โดยไม่ต้องมีลูกค้าเลย',
+    why: '🟢 ยืนยัน GSC แล้ว (22 ส.ค. 2569) และ index แล้ว 12 หน้า ⇒ งานที่เหลือคือ **อ่านผล** ไม่ใช่ตั้งค่า · คำที่คนค้นจริงคือข้อมูลที่กำหนดว่าจะเขียนคอนเทนต์อะไรต่อ',
   },
   {
     id: 'content-shortlinks',
