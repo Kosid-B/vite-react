@@ -61,8 +61,11 @@ export default function FoundingBanner({ data, onUpdate, wsId, onPickStarter }: 
   }
 
   const isStarter = plan === 'starter';
+  /* 🔴 gradient ต้องวางทับพื้นทึบ ไม่ใช่แทนที่ (23 ส.ค. 2569)
+     เดิมเขียน `background:` ทับ ⇒ พื้นทึบของ card หายไป · ในธีมสว่างพื้นจึงกลายเป็นขาว
+     แต่ตัวอักษรยังเป็น C.white ตายตัว = ขาวบนขาว (วัดได้ 1.05 = มองไม่เห็นเลย) */
   return (
-    <div style={{ ...card, background: 'linear-gradient(135deg, rgba(6,182,212,0.10), rgba(245,158,11,0.08))', borderColor: C.amber }}>
+    <div style={{ ...card, backgroundImage: 'linear-gradient(135deg, rgba(6,182,212,0.10), rgba(245,158,11,0.08))', borderColor: C.amber }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <span style={{ background: C.amber, color: '#0f172a', fontWeight: 800, fontSize: 11, padding: '3px 10px', borderRadius: 999 }}>
           {elite ? '🔥 100 คนแรก · ตลอดชีพ' : '⭐ Founding Member'}

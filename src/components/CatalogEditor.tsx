@@ -91,7 +91,9 @@ export default function CatalogEditor({ items, onChange, onUpload }: { items: Ca
             onKeyDown={e => { if (e.key === 'Enter') add(); }} />
           <input style={box} value={draft.price || ''} inputMode="numeric" placeholder="ราคา" onChange={e => setDraft(d => ({ ...d, price: Number(e.target.value) || 0 }))} />
           <input style={box} value={draft.unit ?? ''} placeholder="ต่อ" onChange={e => setDraft(d => ({ ...d, unit: e.target.value }))} />
-          <button onClick={add} disabled={!draft.name.trim()} style={{ border: 0, background: draft.name.trim() ? 'var(--accent)' : 'var(--sand)', color: '#fff', borderRadius: 8, padding: '7px 14px', cursor: draft.name.trim() ? 'pointer' : 'default', fontFamily: 'inherit', fontWeight: 700 }}>เพิ่ม</button>
+          <button onClick={add} disabled={!draft.name.trim()} style={{ border: 0, background: draft.name.trim() ? 'var(--accent)' : 'var(--sand)',
+            /* ตอนปิดใช้งาน พื้นเป็น --sand ซึ่งสว่างในธีมสว่าง ⇒ ตัวอักษรขาวหายไปเลย (1.23) */
+            color: draft.name.trim() ? '#fff' : 'var(--ink4)', borderRadius: 8, padding: '7px 14px', cursor: draft.name.trim() ? 'pointer' : 'default', fontFamily: 'inherit', fontWeight: 700 }}>เพิ่ม</button>
         </div>
       </div>
       <div style={{ fontSize: 11.5, color: 'var(--ink3)' }}>💡 เว้นราคาว่าง = แสดง “สอบถามราคา”</div>

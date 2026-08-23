@@ -28,7 +28,9 @@ const ISMS_CSS = `
 
 /* 🔴 ธีมสว่าง: สีไซแอนอ่อนข้างบนอ่านไม่ออกบนพื้นขาว (วัดได้ 1.19–1.39 = มองไม่เห็น)
    กติกา skill \`theme-safe-color\`: เขียนสีตัวอักษรตายตัวเมื่อไร ต้องเขียนคู่กับพื้นหลังเสมอ */
-:root[data-theme="minimal"] .isms-badge{ color:#0e7490; border-color:rgba(6,182,212,.5); background:rgba(6,182,212,.10); }
+/* พื้นหลังต้อง **ทึบ** — ป้ายนี้ถูกวางบนพื้นเข้มของหน้า Landing ด้วย ทั้งที่ธีมเป็นสว่าง
+   พื้นโปร่งใส = ตัวอักษรเข้มไปเจอพื้นเข้ม (วัดได้ 1.95 = มองไม่เห็น) */
+:root[data-theme="minimal"] .isms-badge{ color:#0e7490; border-color:rgba(8,145,178,.45); background:#ecfeff; }
 :root[data-theme="minimal"] .isms-badge strong{ color:#0b4f5e; }
 :root[data-theme="minimal"] .isms-badge-sub{ color:#0e6072; }
 :root[data-theme="minimal"] .isms-badge a{ color:#0e7490; }

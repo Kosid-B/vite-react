@@ -1801,7 +1801,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ai-control-side { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .ai-hb { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink4); }
 .ai-hb select { font-family: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); color: #fff; outline: none; cursor: pointer; }
-.ai-switch { display: flex; align-items: center; gap: 7px; font-size: 13px; color: rgba(255,255,255,.78); cursor: pointer; max-width: 130px; line-height: 1.3; }
+.ai-switch { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink2); cursor: pointer; max-width: 130px; line-height: 1.3; }
 .ai-switch input { width: 15px; height: 15px; accent-color: var(--rust); cursor: pointer; flex-shrink: 0; }
 .ai-run-btn { display: inline-flex; align-items: center; gap: 9px; padding: 12px 20px; min-height: 46px; background: var(--rust); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; transition: background .15s, transform .1s; white-space: nowrap; }
 .ai-run-btn:hover { background: #0891b2; }
@@ -6250,7 +6250,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .brd-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .brd-btn{ background:#7c3aed; color:#fff; border:0; border-radius:8px; padding:9px 14px; font-weight:600; cursor:pointer; font-size:14px; }
 .brd-btn.approve{ background:#22c55e; }
-.brd-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); }
+.brd-btn.ghost{ background:transparent; border:1px solid var(--sand); color:var(--ink); }
 .brd-btn:disabled{ opacity:.5; cursor:default; }
 .brd-msg{ margin-top:10px; font-size:14px; color:#a5b4fc; }
 
@@ -6331,9 +6331,9 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .sip-tabs button.on{ background:#f59e0b; color:#1a1206; border-color:#f59e0b; }
 .sip-stages{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 @media (max-width:820px){ .sip-stages{ grid-template-columns:1fr; } }
-.sip-stage{ background:var(--bg,#0f172a); border:1px solid var(--border,#1f2937); border-radius:10px; padding:11px 13px; }
+.sip-stage{ background:var(--cream2); border:1px solid var(--border,#1f2937); border-radius:10px; padding:11px 13px; }
 .sip-stage.now{ border-color:#f59e0b; box-shadow:0 0 0 1px #f59e0b55; }
-.sip-stage-hd{ font-weight:700; font-size:14.5px; } .sip-stage-hd span{ color:#fbbf24; font-weight:600; font-size:12.5px; }
+.sip-stage-hd{ font-weight:700; font-size:14.5px; } .sip-stage-hd span{ color:var(--amber-text); font-weight:600; font-size:12.5px; }
 .sip-stage-focus{ font-size:13px; color:var(--muted,#94a3b8); margin:3px 0 6px; }
 .sip-stage ul{ margin:0; padding-left:16px; } .sip-stage li{ font-size:13px; margin:3px 0; line-height:1.45; }
 .sip-note,.sip-promo-hd,.sip-edge-hd{ font-size:13.5px; color:var(--muted,#94a3b8); margin:4px 0 10px; }
@@ -6379,7 +6379,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .pb-tag li{ font-size:13px; font-style:italic; color:#ffcf5c; line-height:1.6; }
 .pb-actions{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
 .pb-btn{ background:#a855f7; color:#fff; border:0; border-radius:8px; padding:8px 14px; font-weight:700; font-size:13.5px; cursor:pointer; }
-.pb-btn.ghost{ background:transparent; border:1px solid var(--card-border,#334155); color:var(--text,#e5e7eb); }
+.pb-btn.ghost{ background:transparent; border:1px solid var(--sand); color:var(--ink); }
 .pb-msg{ margin-top:10px; font-size:13.5px; color:#5fd0a8; }
 .pb-refined-hd{ margin-top:14px; font-weight:700; font-size:13.5px; color:#e5e7eb; }
 @media (max-width:640px){ .pb-grid{ grid-template-columns:1fr; } }
@@ -7053,7 +7053,6 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .aha-time { color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .ai-approval-impact { color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .ai-badge { color: #0c855d; }   /* 2.54 */
-:root[data-theme="minimal"] .ai-board-col-hd { color: #a36907; }   /* 2.15 */
 :root[data-theme="minimal"] .ai-btn-approve { background-color: #0c855d; }   /* 2.54 */
 :root[data-theme="minimal"] .ai-case-banner-btn { color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .ai-co-lbl { color: #646b78; }   /* 4.16 */
@@ -7063,7 +7062,6 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .ai-search-btn { background-color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .aia-fab-label { background-color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .an-card-sub { color: #e71414; }   /* 3.76 */
-:root[data-theme="minimal"] .an-card-value { color: #996206; }   /* 2.00 */
 :root[data-theme="minimal"] .app-footer__link { color: #047a8f; }   /* 2.26 */
 :root[data-theme="minimal"] .bill-addon-badge { color: #385af8; }   /* 1.81 */
 :root[data-theme="minimal"] .bill-addon-per { color: #5558f0; }   /* 4.06 */
@@ -7077,7 +7075,6 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .br-goto { color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .br-goto-sm { color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .br-prop-xp { color: #047f94; }   /* 2.43 */
-:root[data-theme="minimal"] .brd-btn { color: #6a758a; }   /* 1.24 */
 :root[data-theme="minimal"] .brd-count { color: #7957fa; }   /* 1.85 */
 :root[data-theme="minimal"] .brd-role { color: #3e916c; }   /* 2.79 */
 :root[data-theme="minimal"] .brd-sub { color: #627793; }   /* 2.56 */
@@ -7111,9 +7108,6 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .dbd-link { color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .devmap-toggle { background-color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .edge-ring-lbl { color: #394454; }   /* 3.54 */
-:root[data-theme="minimal"] .factory-kpi-val { color: #945f06; }   /* 1.85 */
-:root[data-theme="minimal"] .factory-oee-component-val { color: #945f06; }   /* 1.85 */
-:root[data-theme="minimal"] .factory-status-badge { color: #945f06; }   /* 1.85 */
 :root[data-theme="minimal"] .finx-hint { color: #7682b2; }   /* 4.40 */
 :root[data-theme="minimal"] .goal-brand { color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .goal-opt-go { color: #047a8f; }   /* 2.26 */
@@ -7126,10 +7120,8 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .ict-rev { color: #17843f; }   /* 2.28 */
 :root[data-theme="minimal"] .intake-send { background-color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .intg-badge { color: #916f05; }   /* 1.92 */
-:root[data-theme="minimal"] .inv-alert-item { color: #a36907; }   /* 2.15 */
 :root[data-theme="minimal"] .inv-cat-tab { background-color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .inv-fefo-chip { color: #17843f; }   /* 2.28 */
-:root[data-theme="minimal"] .inv-kpi-box-val { color: #047285; }   /* 2.09 */
 :root[data-theme="minimal"] .isms-badge { color: #118eb1; }   /* 3.33 */
 :root[data-theme="minimal"] .isms-badge-sub { color: #118eb1; }   /* 3.33 */
 :root[data-theme="minimal"] .iso-adv-badge { color: #df0b0b; }   /* 2.58 */
@@ -7144,18 +7136,15 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .mk-filter { background-color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .mk-match-btn { background-color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .mk-rating { color: #a36907; }   /* 2.15 */
-:root[data-theme="minimal"] .mk-stat-lbl { background-color: #0c855d; }   /* 2.54 */
 :root[data-theme="minimal"] .mk-stat-num { background-color: #0c855d; }   /* 2.54 */
 :root[data-theme="minimal"] .mk-verified { color: #0c855d; }   /* 2.54 */
 :root[data-theme="minimal"] .mreq-btn { color: #737373; }   /* 1.00 */
 :root[data-theme="minimal"] .mval-empty { color: #5b6fc0; }   /* 2.38 */
 :root[data-theme="minimal"] .mval-sub { color: #5b6fc0; }   /* 2.38 */
-:root[data-theme="minimal"] .ops-score { color: #a36907; }   /* 2.15 */
 :root[data-theme="minimal"] .ops-sub { color: #627793; }   /* 2.56 */
 :root[data-theme="minimal"] .org-model-tag { color: #047a8f; }   /* 2.26 */
 :root[data-theme="minimal"] .page-nav-label { color: #067baf; }   /* 2.14 */
 :root[data-theme="minimal"] .pb-arch { color: #5b6fc0; }   /* 2.38 */
-:root[data-theme="minimal"] .pb-btn { color: #6a758a; }   /* 1.24 */
 :root[data-theme="minimal"] .pb-pos { color: #6a758a; }   /* 1.24 */
 :root[data-theme="minimal"] .pls-eyebrow { color: #047f94; }   /* 2.43 */
 :root[data-theme="minimal"] .pls-hl { color: #047f94; }   /* 2.43 */
@@ -7166,8 +7155,6 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 :root[data-theme="minimal"] .sidebar-plan-badge { color: #73839a; }   /* 3.75 */
 :root[data-theme="minimal"] .sip-btn { color: #6a758a; }   /* 1.24 */
 :root[data-theme="minimal"] .sip-cur { color: #627793; }   /* 2.56 */
-:root[data-theme="minimal"] .sip-stage-hd { color: #6280c7; }   /* 1.00 */
-:root[data-theme="minimal"] .skm-btn { color: #0b7c56; }   /* 2.37 */
 :root[data-theme="minimal"] .skm-official-badge { color: #8b6f02; }   /* 1.25 */
 :root[data-theme="minimal"] .skm-owned-badge { color: #0c855d; }   /* 2.54 */
 :root[data-theme="minimal"] .skm-price-xp { color: #076eed; }   /* 2.54 */
@@ -7294,3 +7281,41 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   .start-theme-btn { font-size: 0; padding: 6px 8px; }
   .start-theme-btn > [aria-hidden='true'] { font-size: 15px; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   แก้ contrast ธีมสว่าง 13 จุดที่ "มองไม่เห็นเลย" (23 ส.ค. 2569)
+   ══════════════════════════════════════════════════════════════════════════
+   🔴 สาเหตุร่วมของทั้ง 13 จุด — ไม่ใช่ 13 บั๊กแยกกัน:
+      บล็อกที่สร้างอัตโนมัติด้านบนทำให้ตัวอักษร "เข้มขึ้นเทียบพื้นหน้าเว็บ"
+      แต่ของพวกนี้อยู่บน **ปุ่ม/การ์ดที่มีพื้นหลังสีตายตัว** (ม่วง/น้ำเงิน/เขียว/ดำ)
+      ⇒ ยิ่งแก้ยิ่งแย่ · และคอมเมนต์ในไฟล์บันทึกไว้เองว่าได้ 1.24 แล้วยังปล่อยผ่าน
+
+   🧭 กติกาที่ใช้แก้ (skill `theme-safe-color` · GOTCHA #4b):
+      **เขียนสีตัวอักษรตายตัวเมื่อไร ต้องเขียนพื้นหลังตายตัวคู่กันใน selector เดียวกัน
+      ไม่งั้นใช้โทเคนทั้งคู่** — ห้ามผสม (ตัวอักษรพลิกตามธีม + พื้นหลังตายตัว)
+
+   ⚠️ สีที่มาจาก **ข้อมูล** (สถานะเครื่องจักร/KPI) แก้ที่ CSS ไม่ได้ เพราะถูกเขียนเป็น
+      inline style ⇒ inline ชนะ CSS เสมอ · จึงเปลี่ยนให้ข้อมูลถือ **ชื่อโทเคน** แทนค่าสี
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* โทเคนสีสถานะ — ใช้แทนเลขฐานสิบหกที่เขียนตายตัวใน .tsx
+   ค่าธีมเข้มคือของเดิม · ค่าธีมสว่างเข้มพอให้อ่านออกบนพื้น #eceef2 ขึ้นไป */
+:root            { --st-ok:#22c55e; --st-warn:#f59e0b; --st-info:#3b82f6; --st-bad:#ef4444; --st-mute:#64748b; }
+:root[data-theme="minimal"] { --st-ok:#15803d; --st-warn:#a15c07; --st-info:#1d4ed8; --st-bad:#b91c1c; --st-mute:#475569; }
+
+/* ปุ่มที่มีพื้นหลังสีตายตัว — ตัวอักษรต้องขาวตายตัวคู่กัน ห้ามพลิกตามธีม */
+:root[data-theme="minimal"] .pb-btn:not(.ghost),
+:root[data-theme="minimal"] .brd-btn:not(.ghost),
+:root[data-theme="minimal"] .skm-btn:not(.owned):not(.cancel) { color: #fff; }
+
+/* การ์ดสถิติสีเขียว — ป้ายกำกับต้องสว่างคู่กับพื้นเขียว (กฎเดิมมีอยู่แล้ว ธีมสว่างต้องไม่ไปทับ) */
+:root[data-theme="minimal"] .mk-stat.hi .mk-stat-lbl { color: rgba(255,255,255,.85); }
+:root[data-theme="minimal"] .mk-stat.hi .mk-stat-num { color: #fff; }
+
+/* ป้าย ISMS วางบนพื้นหลังเข้มของหน้า Landing ทั้งที่ธีมเป็นสว่าง
+   ⇒ พื้นหลังโปร่งใสทำให้ "ตัวอักษรเข้มบนพื้นเข้ม" · ให้ป้ายถือพื้นหลังทึบของตัวเอง */
+:root[data-theme="minimal"] .isms-badge { background: #ecfeff; border-color: rgba(8,145,178,.45); }
+
+/* ปุ่มในฟอร์มหน้าร้าน — ตัวอักษรขาวแต่ไม่มีพื้นหลังของตัวเอง ⇒ ขาวบนขาว */
+.sf-form button:not([class]) { background: var(--rust); color: #fff; border: none;
+  border-radius: var(--r); padding: 8px 14px; font-family: inherit; font-weight: 600; cursor: pointer; }
