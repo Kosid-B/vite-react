@@ -7277,3 +7277,20 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   .pqc-h2 { font-size: clamp(18px, 5.4vw, 21px); margin: 0 0 4px; }
   .pqc-lead { font-size: 12.5px; line-height: 1.4; }
 }
+
+/* แถบหัว /start บนมือถือ — ชื่อแบรนด์และปุ่มธีมตกบรรทัด (แก้ 23 ส.ค. 2569)
+   เห็นจากภาพหน้าจอจริงหลังแก้จอแรก: "CEO AI Thailand" แตก 2 บรรทัด
+   และป้ายปุ่มสลับธีมแตกกลางคำ — เป็นสิ่งแรกที่ทุกคนเห็นบนหน้าที่ลิงก์ทุกตัวชี้มา
+   ⚠️ ห้ามแก้ด้วยการบังคับความสูงแถบ — ต้องแก้ที่เนื้อหาในแถบ (กติกาเดียวกับ nav ของ LandingPage) */
+@media (max-width: 480px) {
+  .start-head { padding: 0 12px; gap: 8px; }
+  .start-brand { font-size: 15px; white-space: nowrap; }
+  .start-theme-btn { font-size: 12px; padding: 6px 9px; gap: 4px; white-space: nowrap; }
+  .start-head-cta { font-size: 13px; padding: 6px 12px; white-space: nowrap; }
+}
+@media (max-width: 340px) {
+  /* จอ 320: ป้ายปุ่มธีมยาวเกิน — เหลือแต่ไอคอน แต่ยังต้องบอกได้ว่าปุ่มนี้คืออะไร
+     (aria-label ใน StartLanding.tsx บอกอยู่แล้วว่า "สลับธีม ปัจจุบัน …") */
+  .start-theme-btn { font-size: 0; padding: 6px 8px; }
+  .start-theme-btn > [aria-hidden='true'] { font-size: 15px; }
+}
