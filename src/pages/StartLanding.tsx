@@ -197,7 +197,10 @@ export default function StartLanding() {
       <section className="start-hero">
         {isIso ? (
           <>
-            <div className="start-badge">✦ &nbsp;สำหรับโรงงาน/SME ที่ต้องทำ ISO · เขต EEC&nbsp; ✦</div>
+            {/* 🔁 แก้ 23 ส.ค. 2569 — เดิมเขียน "เขต EEC" ซึ่งขัดกับขอบเขตที่เจ้าของยืนยันไว้ว่า
+                 **ทั่วประเทศ (ออกจากฐานเดิมของ B.Training)** · ป้ายที่ระบุพื้นที่ = ตัดคนนอกพื้นที่ทิ้งตั้งแต่บรรทัดแรก
+                 ทั้งที่สินค้าเป็น SaaS ใช้ได้ทุกจังหวัด ⇒ เอาพื้นที่ออก เหลือเกณฑ์ที่ใช้คัดจริง (มีวันตรวจรออยู่) */}
+            <div className="start-badge">✦ &nbsp;สำหรับโรงงาน/SME ที่มีวันตรวจ ISO รออยู่ · ทั่วประเทศ&nbsp; ✦</div>
             <h1 className="start-h1">
               ทำ ISO เสียเวลาเป็นอาทิตย์?<br />
               <span className="start-h1-hl">ให้ทีม AI ประเมิน + บอกสิ่งที่ต้องทำก่อน audit</span>
@@ -210,7 +213,7 @@ export default function StartLanding() {
             <div className="start-vchips">
               <span className="start-vchip">⚡ ประเมินเสร็จใน 5 นาที</span>
               <span className="start-vchip">🆓 เริ่มฟรี ไม่ต้องใช้บัตร</span>
-              <span className="start-vchip">🏭 ตรงกลุ่มโรงงาน EEC</span>
+              <span className="start-vchip">🏭 ใช้ได้ทุกจังหวัด</span>
             </div>
           </>
         ) : segHero ? (
