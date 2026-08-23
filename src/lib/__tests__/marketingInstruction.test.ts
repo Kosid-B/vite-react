@@ -65,12 +65,20 @@ describe('ลำดับงาน — ต้องตรงกับงาน�
     }
   });
 
-  it('ลำดับต้องเริ่มที่ "ไปหากลุ่มที่มีทริกเกอร์" ไม่ใช่เริ่มที่แอด', () => {
+  it('🔴 ลำดับต้องเริ่มที่คอนเทนต์ "ธุรกิจ" ไม่ใช่ ISO และไม่ใช่แอด', () => {
+    // 🔁 แก้ 22 ส.ค. 2569 (เจ้าของยืนยัน): ของเดิมให้ "ไปหากลุ่มทริกเกอร์ (ISO)" เป็น ①
+    //    ผิด เพราะนำด้วย ISO = แข่งกับงานที่ปรึกษา ฿50,000–85,000 ของ B.Training เอง
     expect(text).toMatch(/ห้ามสลับ ①②/);
-    const trigger = text.indexOf('ไปหากลุ่มที่มีทริกเกอร์');
+    const biz = text.indexOf('ปล่อยคอนเทนต์ "ธุรกิจ"');
+    const pilot = text.indexOf('ปิดการขาย Pilot');
     const ads = text.indexOf('ยิงแอดงบเล็กใส่คำค้น');
-    expect(trigger).toBeGreaterThan(-1);
-    expect(trigger, 'งานหากลุ่มที่มีเงินต้องมาก่อนงานยิงแอด').toBeLessThan(ads);
+    expect(biz, 'ต้องมีงานคอนเทนต์ธุรกิจเป็นลำดับแรก').toBeGreaterThan(-1);
+    expect(biz, 'คอนเทนต์ธุรกิจต้องมาก่อนงานปิดการขายกลุ่ม ISO').toBeLessThan(pilot);
+    expect(biz, 'คอนเทนต์ธุรกิจต้องมาก่อนงานยิงแอด').toBeLessThan(ads);
+  });
+
+  it('ห้ามเอางานกลุ่ม ISO ขึ้นมาเป็นสารหลักบนหน้าเว็บ', () => {
+    expect(text).toMatch(/ห้ามเอา ③ ขึ้นมาเป็นสารหลัก/);
   });
 });
 
@@ -169,14 +177,29 @@ describe('🔴 กฎแม่ — ต้องยึด Demand ไม่ใช�
     expect(text).toContain('B.Training');
   });
 
-  it('มีตารางแยก "กลุ่มที่ demand มีอยู่แล้ว" ออกจาก "กลุ่มที่ต้องสร้าง demand"', () => {
+  it('มีตารางแยก "กลุ่มที่ demand มีอยู่แล้ว" ออกจากสารหลัก', () => {
     expect(text).toContain('กลุ่มที่ demand มีอยู่แล้ว');
-    expect(text).toContain('ต้องสร้าง demand');
     expect(text).toMatch(/audit/);
   });
+});
 
-  it('บันทึกช่องว่างที่ยังไม่ได้แก้: ไม่มี seg สำหรับคนที่มี audit รออยู่', () => {
-    expect(text).toContain('START_HEROES');
-    expect(text).toMatch(/ไม่มี seg สำหรับคนที่มี audit/);
+describe('🔴 ลำดับของสาร — "ธุรกิจ" นำ · "ISO" ตาม', () => {
+  it('เขียนกฎไว้ชัดในคำสั่ง', () => {
+    expect(text).toMatch(/"ธุรกิจ" นำ.*"ISO" ตาม/);
+  });
+
+  it('🔴 ต้องเก็บเหตุผลที่แพงที่สุด: นำด้วย ISO = แข่งกับบริษัทแม่เอง', () => {
+    expect(text).toMatch(/แข่งกับบริษัทแม่/);
+    expect(text).toMatch(/50,000|85,000/);
+  });
+
+  it('ต้องเก็บเหตุผลเรื่องขนาดตลาดที่ต่างกัน ~30 เท่า', () => {
+    expect(text).toMatch(/3\.2 ล้าน/);
+    expect(text).toMatch(/50,000–100,000|50,000-100,000/);
+  });
+
+  it('ไม่ได้ห้ามพูด ISO เด็ดขาด — ต้องระบุว่าเป็น "ประตูข้าง"', () => {
+    expect(text).toContain('ประตูข้าง');
+    expect(text).toContain('seg=audit');
   });
 });

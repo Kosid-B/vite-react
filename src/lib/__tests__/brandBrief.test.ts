@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   WHO, AUDIENCE, PROBLEM, OUTCOME, VOICE, HONEST_STATE,
-  FORBIDDEN_PHRASES, brandBriefBlock, violatesBrand,
+  FORBIDDEN_PHRASES, brandBriefBlock, violatesBrand, MESSAGE_HIERARCHY,
 } from '../brandBrief';
 import { organizationJsonLd } from '../seoData';
 import { FALLBACK_SEG } from '../ctaContext';
@@ -199,5 +199,39 @@ describe('Pilot ฿1,990 — เจ้าของสั่งเปิดขา
 
   it('เบอร์โทรต้องมาจาก config ไม่ใช่พิมพ์ตายตัว (แก้ที่เดียว)', () => {
     expect(pricing).toContain('COMPANY.tel');
+  });
+});
+
+describe('🔴 ลำดับของสาร — "ธุรกิจ" นำ · "ISO" ตาม (เจ้าของยืนยัน 22 ส.ค. 2569)', () => {
+  it('สารหลักต้องเป็นเรื่องธุรกิจ ไม่ใช่มาตรฐาน', () => {
+    expect(MESSAGE_HIERARCHY.lead).toContain('ธุรกิจ');
+    expect(MESSAGE_HIERARCHY.lead).not.toMatch(/ISO|มอก|PDPA/);
+  });
+
+  it('มาตรฐานอยู่ชั้นรอง และระบุว่าเป็น "ผลพลอยได้" ไม่ใช่เหตุผลที่ซื้อ', () => {
+    expect(MESSAGE_HIERARCHY.secondary).toMatch(/ISO/);
+    expect(MESSAGE_HIERARCHY.secondary).toMatch(/ผลพลอยได้|ไม่ใช่เหตุผลที่ซื้อ/);
+  });
+
+  it('ต้องเขียนไว้ว่าเงื่อนไขเดียวที่พูด ISO ขึ้นหน้าได้คืออะไร (ไม่ใช่ห้ามเด็ดขาด)', () => {
+    expect(MESSAGE_HIERARCHY.isoLeadAllowedWhen).toContain('seg=audit');
+  });
+
+  it('🔴 ต้องเก็บเหตุผล "แข่งกับบริษัทแม่" ไว้ — เหตุผลที่คนลืมง่ายที่สุดและแพงที่สุด', () => {
+    expect(MESSAGE_HIERARCHY.whyNotSwap).toMatch(/50,000|85,000/);
+    expect(MESSAGE_HIERARCHY.whyNotSwap).toMatch(/ที่ปรึกษา/);
+  });
+
+  it('ลำดับสารถูกส่งเข้า prompt จริง (ไม่ใช่ค่าคงที่ที่ไม่มีใครใช้)', () => {
+    const block = brandBriefBlock();
+    expect(block).toContain('ลำดับของสาร');
+    expect(block).toContain(MESSAGE_HIERARCHY.lead);
+    expect(block).toContain(MESSAGE_HIERARCHY.whyNotSwap);
+  });
+
+  it('ในบล็อก prompt สารเรื่องธุรกิจต้องมาก่อนสารเรื่องมาตรฐาน', () => {
+    const block = brandBriefBlock();
+    expect(block.indexOf(MESSAGE_HIERARCHY.lead))
+      .toBeLessThan(block.indexOf(MESSAGE_HIERARCHY.secondary));
   });
 });
