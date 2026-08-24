@@ -24,7 +24,10 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
    ตัวอย่างที่เจ้าของให้: *"อยากยิง Ads 100,000 บาท"* ที่ยังไม่มีหลักฐาน ⇒ **กั้น** + คืนขั้นต่อไปที่ทำได้จริง (สัมภาษณ์ลูกค้าเป้าหมาย 10 คน)
    ⚠️ **`REQUIRED_BY_INTENT.validate = []` — ห้ามกั้นการพิสูจน์** · ยิ่งใช้เงิน/ยิ่งขยาย ยิ่งต้องผ่านด่านมากขึ้น
    ⇒ **ห้ามรีบทำตามที่ผู้ใช้ขอ · Validation ก่อน Scale เสมอ**
-กลไก: `constitutionBlock()` + `founderMindsetBlock()` ต่อเข้า `brandBriefBlock()` ⇒ **Vision เดินทางไปกับทุก prompt**
+กลไก: `constitutionBlock()` + `founderMindsetBlock()` ต่อเข้า `brandBriefBlock()`
+   🔴 **แต่ยังไปไม่ถึง AI ตัวจริง** (ตรวจ 24 ส.ค. 2569): 15 จุดในโค้ดที่ส่งคำสั่งเข้า AI มี **1 จุด** ที่ได้รับ
+   · `CeoAiAgent` (ตัวที่ผู้ใช้คุยด้วย) + `ai-assist`/`ai-plan`/`agent-run` = **ไม่ได้รับเลย**
+   ⇒ ห้ามพูดว่า "เดินทางไปกับทุก prompt" · แผนที่เต็ม: [ARCHITECTURE-CONSOLIDATION-AUDIT.md](docs/product/ARCHITECTURE-CONSOLIDATION-AUDIT.md) · กลไกเฝ้า: `constitutionReach.test.ts`
    · `founderMindset.test.ts` (24 เทสต์) บังคับว่ารัฐธรรมนูญถูกเรียกใช้จริง ไม่ใช่แค่เขียนไว้ (ledger #47)
 
 🔧 **วิธีทำงานที่บังคับใช้ — skill `growth-mindset`** (อ่านก่อนส่งมอบทุกครั้ง)
@@ -46,7 +49,7 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 ⏱️ **ของที่รู้ผลใน 14 วัน ชนะของที่ผลใหญ่กว่าแต่ต้องรอ** — เร็วที่จะรู้ว่าผิด = ต้นทุนต่ำที่สุด (ผลใหญ่ที่ต้องรอ 90 วัน = เดิมพัน ไม่ใช่การพัฒนา)
 📤 **บรรทัดแรกของคำตอบต้องเป็นข้อเสนอ ไม่ใช่ที่มา** — ที่มาคือของที่เปิดดูเมื่ออยากตรวจ ไม่ใช่ของที่ต้องอ่านผ่านก่อน
 กลไก: `src/lib/dmaic.ts` (`dmaicGate()` คืน `stuckAt` = เฟสแรกที่ยังไม่ผ่าน · `chooseBest()` คืนข้อเสนอ ไม่ใช่ตาราง)
-   · ต่อเข้า `brandBriefBlock()` แล้ว ⇒ เดินทางไปกับทุก prompt · `dmaic.test.ts` (28 เทสต์) ผูก SKILL.md เข้ากับค่าคงที่จริง
+   · ต่อเข้า `brandBriefBlock()` แล้ว (ครอบคลุมเท่ากับรัฐธรรมนูญ — ดูข้อจำกัดด้านบน) · `dmaic.test.ts` (28 เทสต์) ผูก SKILL.md เข้ากับค่าคงที่จริง
    · ⚠️ **กฎสูงสุด (ความถูกต้องมาก่อน) ยังอยู่เหนือ skill นี้** — ตรวจไม่ได้ยังต้องบอกว่าตรวจไม่ได้ **แต่ต้องบอกต่อว่าแล้วจะทำยังไง**
 
 🚢 **ก่อนบอกว่า "เสร็จ" ทุกครั้ง — skill `shipped-not-written`** (บทเรียนรวม 17–18 ส.ค. 2569)
