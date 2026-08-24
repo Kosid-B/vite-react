@@ -16,12 +16,18 @@
  * pure ทั้งไฟล์ · ไม่เรียก network · ไม่มี side effect
  */
 
+import { strategyBlock } from './competitiveStrategy';
+
 /** ① บริษัท — เราคือใคร (ตรงกับ organizationJsonLd ใน seoData.ts) */
 export const WHO = {
   name: 'CEO AI Thailand',
   /** ประโยคเดียวที่ต้องใช้เหมือนกันทุกที่ */
   oneLiner: 'ระบบสร้างธุรกิจด้วย AI สำหรับ SME ไทย',
-  positioning: 'AI Business Operating System',
+  /* 🔁 แก้ 23 ส.ค. 2569 — เดิม 'AI Business Operating System'
+   * เจ้าของเปลี่ยนเป็น AI Business Builder เพราะ OS สื่อว่า "ระบบเดินธุรกิจที่มีอยู่แล้ว"
+   * แต่ผลิตภัณฑ์เราเริ่มตั้งแต่ยังไม่มีธุรกิจ · ⚠️ นี่คือ **ป้ายภายนอก ไม่ใช่พาดหัว**
+   * พาดหัวใช้ปัญหาเสมอ (competitiveStrategy.CATEGORY.publicHook) */
+  positioning: 'AI Business Builder สำหรับคนไทย',
   parent: 'B. Training Consultant',
   /** 2 เสาที่ผสมกัน — ห้ามเล่าเสาเดียว */
   pillars: [
@@ -234,6 +240,8 @@ export function brandBriefBlock(opts: { forPublicCopy?: boolean } = {}): string 
     `**เส้นทางลูกค้า** (สารต้องตรงกับขั้นที่เขาอยู่):`,
     `  ${CUSTOMER_JOURNEY.map((j) => `${j.step}.${j.name}`).join(' → ')}`,
     `  🔴 ISO/SOP/KPI เริ่มมีความหมายที่ขั้น ${ISO_ENTERS_AT_STEP} — พูดกับคนขั้น 1–3 = พูดเรื่องที่เขายังไม่มีปัญหา`,
+    '',
+    strategyBlock(),
     '',
     `**ลำดับของสาร (ห้ามสลับ)**: นำด้วย → ${MESSAGE_HIERARCHY.lead}`,
     `  ตามด้วย (เฉพาะเมื่อรู้ว่าเขาอยู่กลุ่มไหนแล้ว) → ${MESSAGE_HIERARCHY.secondary}`,
