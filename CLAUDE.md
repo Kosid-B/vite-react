@@ -96,6 +96,26 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 ⚠️ **ตรวจ "ตำแหน่ง" ก่อนโทษ "กลยุทธ์"** — 15 จาก 19 บล็อกบนหน้า Landing มีคนเห็น 0 คน (เวลาที่ทุกคนเคยใช้กับเนื้อหาเรารวมกัน = 86 วินาที)
    ⇒ ที่ดูเหมือน "สื่อสารกว้างเกินไป" จริง ๆ คือ "ความกว้างถูกวางในที่ที่ไม่มีใครเห็น" · ห้ามเสนอตัดเนื้อหาที่ยังไม่เคยถูกเห็น
 
+🏰 **ก่อนออกแบบฟีเจอร์/ตาราง/agent ใหม่ทุกครั้ง — skill `moat-architecture`** (เจ้าของ freeze 23 ส.ค. 2569)
+**North Star (ป้ายภายใน)**: *AI Business Validation-to-Scale Operating System สำหรับคนไทย*
+คำถามเดียวที่ต้องตอบ: **"ฟีเจอร์นี้เพิ่ม moat หรือเพิ่มแค่จำนวนฟีเจอร์"**
+   ⇒ เพิ่ม moat ได้ก็ต่อเมื่อ ① จีโนมสมบูรณ์ขึ้น ② กฎตัดสินใจแม่นขึ้น ③ ผลลัพธ์ไหลกลับเข้าระบบ
+🔗 **ห่วงโซ่ห้ามข้ามขั้น** (`NORTH_STAR.chain`): POD → Workflow → Decision Rules → Structured Data
+   → Outcome Learning → Benchmark → Data Network Effect → MOAT
+🧬 **Business Genome = หัวใจ** (`src/lib/businessGenome.ts` · 8 กิ่ง · เทสต์บังคับว่า Journey ขั้น 1–7 มีกิ่งรองรับครบ)
+   🔴 **ประวัติแชต/prompt/ไฟล์อัปโหลด ไม่ใช่จีโนม** — ลอกได้ทันทีที่เปลี่ยน LLM
+   `stuckBranch()` ตอบว่าธุรกิจติดกิ่งไหน = วัตถุดิบของ Next Best Action
+🔬 **Evidence Graph**: Claim → Hypothesis → Experiment → Observed → Outcome → **Learning** → Confidence
+   ⚠️ **ผลจริงอย่างเดียวไม่พอ ต้องมีบทเรียนด้วยถึงเป็น `validated`** (ผลที่ไม่ถูกสรุป = ไม่ไหลกลับเข้าจีโนม)
+🥊 **ก่อนพูดว่าอะไร "ต่าง"** ต้องผ่าน `assessDifferentiation()` เทียบ `KNOWN_MARKET`
+   (รวม **"Excel / จดมือ / ไม่ทำอะไรเลย"** = คู่แข่งที่ชนะบ่อยที่สุดและมักถูกลืม)
+📊 **VRIO Engine** (`VRIO_ASSETS` + `vrioVerdict`) — **R และ I เป็นตัวชี้ขาด ไม่ใช่ V** · V=5 แต่ R/I ต่ำ = POP เสมอ
+🪜 **ปลดล็อกตามจำนวนผู้ใช้จริง** (`moatReadiness`): 0 → Genome + Playbook · 1 → Experiment Memory
+   · 5 → Decision Engine · 30 → Benchmark + Learning Loop · ⚠️ **กฎ ≠ เอนจิน** (เขียนกฎได้วันนี้ · เอนจินที่เรียนรู้ต้องรอ)
+🔒 **ห้ามแตะ schema/migration** จนกว่า Gate B ปิด → Phase 1 Acceptance #2 → freeze baseline
+   🔴 **Gate B ไม่ปรากฏในรีโปนี้** — ต้องถามเจ้าของ ห้ามสันนิษฐานว่าปิดแล้ว
+สถาปัตยกรรมเต็ม: [MOAT-ARCHITECTURE-V1.md](docs/product/MOAT-ARCHITECTURE-V1.md)
+
 🚦 **ด่านกลยุทธ์ที่ block ได้จริง — `src/lib/positioningEngine.ts`** (ยกระดับ 23 ส.ค. 2569)
 เจ้าของยก POP/POD/VRIO จาก "แนวคิดการตลาด" เป็น **กฎหลักของ AI Marketing OS**
 **หลักการแม่**: *"อย่าใช้ AI เพื่อสร้าง Content ให้มากขึ้น — ใช้ AI เพื่อค้นหาว่าอะไรควรพูด กับใคร เพราะอะไร และเรียนรู้อะไรจากผลลัพธ์"*

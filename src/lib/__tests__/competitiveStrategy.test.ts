@@ -32,8 +32,8 @@ describe('POD — 5 ชั้นที่ชนะได้', () => {
     POD.forEach((p, i) => expect(p.layer).toBe(i + 1));
   });
 
-  it('ชั้นที่ 3 ต้องเป็น Journey เดียวกับ brandBrief — ห้ามมีสองแหล่งความจริง', () => {
-    const os = POD.find((p) => p.name === 'Business Operating System')!;
+  it('ชั้น Journey ต้องเป็น Journey เดียวกับ brandBrief — ห้ามมีสองแหล่งความจริง', () => {
+    const os = POD.find((p) => p.name === 'Idea to Scale Journey')!;
     // ปลายทั้งสองของ Journey ต้องตรงกัน (ต้นน้ำ = Idea · ปลายน้ำ = Scale)
     expect(os.claim).toContain('Idea');
     expect(os.claim).toContain('Scale');
@@ -42,7 +42,7 @@ describe('POD — 5 ชั้นที่ชนะได้', () => {
   });
 
   it('ชั้น Evidence-Based AI ต้องบังคับให้แยกระดับความแน่นอน', () => {
-    const ev = POD.find((p) => p.name === 'Evidence-Based AI')!;
+    const ev = POD.find((p) => p.name === 'Evidence-Based Business Building')!;
     expect(ev.claim).toMatch(/สมมติฐาน/);
     expect(ev.claim).toMatch(/พิสูจน์แล้ว/);
   });

@@ -125,7 +125,7 @@ describe('ตัวจำแนก POP / POD', () => {
 
   it('ประโยคที่ยึดชั้น POD ต้องไม่ถูกจับว่าเป็น POP แม้จะมีคำว่า AI', () => {
     expect(isPopOnly('Validation Before Spending — ให้ AI ช่วยทดสอบก่อนลงเงิน')).toBe(false);
-    expect(podLayerFor('Validation Before Spending')!.layer).toBe(2);
+    expect(podLayerFor('Validation Before Spending')!.layer).toBe(1);
   });
 
   it('ทุกชั้น POD ต้องถูกจำแนกกลับมาได้จากชื่อของตัวเอง', () => {

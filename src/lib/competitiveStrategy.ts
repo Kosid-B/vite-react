@@ -45,35 +45,55 @@ export const WHY_POP_CANT_WIN =
 export const POD = [
   {
     layer: 1,
-    name: 'Business Journey',
-    claim: 'ไม่เริ่มจาก AI แต่เริ่มจาก "ฉันควรทำธุรกิจอะไร · ลูกค้าคือใคร"',
-    keywords: ['business journey', 'ควรทำธุรกิจอะไร', 'ลูกค้าคือใคร', 'จะเริ่มจากอะไร'],
-  },
-  {
-    layer: 2,
     name: 'Validation Before Spending',
-    claim: 'ทดสอบลูกค้า/ปัญหา/ข้อเสนอ ก่อนใช้เงินก้อน',
+    claim: 'อย่าเพิ่งลงทุน จนกว่าจะมีหลักฐานว่าลูกค้าต้องการ',
+    /** สิ่งที่คู่แข่ง copy ยากขึ้นเมื่อชั้นนี้แข็ง */
+    hardens: 'Workflow',
     keywords: ['validation', 'ก่อนลงทุน', 'ก่อนใช้เงิน', 'ก่อนลงเงิน', 'ก่อนเสียเงิน', 'ทดสอบก่อน'],
   },
   {
+    layer: 2,
+    name: 'Next Best Business Action',
+    claim: 'ไม่ตอบว่า "มี 10 วิธี" แต่ตอบว่า "ตอนนี้ยังไม่ควรทำ Ads เพราะ Customer Validation ยังไม่ผ่าน — ขั้นต่อไปคือสัมภาษณ์ลูกค้า 10 คน"',
+    hardens: 'Decision Rules',
+    keywords: ['next best action', 'ควรทำอะไรต่อ', 'ขั้นต่อไปคือ', 'ยังไม่ควรทำ'],
+  },
+  {
     layer: 3,
-    name: 'Business Operating System',
-    claim: 'Idea → ลูกค้า → ทดสอบ → ข้อเสนอ → ราคา → ลูกค้ารายแรก → กำไร → กระบวนการ → KPI → ระบบ → Scale',
-    keywords: ['business operating system', 'operating system', 'ทีละขั้น', 'ครบเส้นทาง'],
+    name: 'Idea to Scale Journey',
+    claim: 'Idea → ลูกค้า → ปัญหา → ทดสอบ → ข้อเสนอ → ลูกค้ารายแรก → กำไร → กระบวนการ → KPI → ระบบ → Scale',
+    hardens: 'Structured proprietary data',
+    keywords: ['idea to scale', 'ครบเส้นทาง', 'ทีละขั้นจนขยาย', 'from first customer'],
   },
   {
     layer: 4,
-    name: 'Evidence-Based AI',
-    claim: 'AI ต้องบอกว่าอะไรคือ สมมติฐาน / สังเกตได้ / พิสูจน์แล้ว — ห้ามปั้นความจริง',
+    name: 'Evidence-Based Business Building',
+    claim: 'ทุกคำแนะนำมีที่มา — สมมติฐาน / สังเกตได้ / พิสูจน์แล้ว · ห้ามปั้นความจริง',
+    hardens: 'Learning dataset',
     keywords: ['evidence-based', 'สมมติฐาน', 'พิสูจน์แล้ว', 'ไม่ปั้น', 'ระบุหลักฐาน'],
   },
   {
     layer: 5,
-    name: 'Scale with System',
-    claim: 'ขายได้ก่อน แล้วค่อยสร้าง Process / KPI / SOP — ไม่ใช่เอาระบบไปขวางตั้งแต่วันแรก',
-    keywords: ['scale with system', 'ขายได้ก่อน', 'sop', 'วางระบบทีหลัง'],
+    name: 'Business Systemization',
+    claim: 'ขายได้ก่อน แล้วค่อยสร้าง Process / KPI / SOP เพื่อให้ขยายได้โดยไม่พัง',
+    hardens: 'Network/Data moat',
+    keywords: ['systemization', 'ขายได้ก่อน', 'sop', 'วางระบบทีหลัง', 'ขยายได้โดยไม่พัง'],
   },
 ] as const;
+
+/** 🎯 Strategic North Star ที่เจ้าของสั่ง freeze (23 ส.ค. 2569)
+ *  ⚠️ เป็น **ป้ายภายใน** — ห้ามเอาขึ้นเป็นพาดหัว (ดู CATEGORY.whyNotLeadWithCategory) */
+export const NORTH_STAR = {
+  label: 'AI Business Validation-to-Scale Operating System สำหรับคนไทย',
+  promise:
+    'ช่วยคนไทยเปลี่ยนไอเดียให้เป็นธุรกิจที่มีลูกค้า มีหลักฐาน มีระบบ และขยายได้ ' +
+    'โดย AI แนะนำ Next Best Business Action จาก Business Genome, Experiment Evidence และ Learning Loop',
+  /** ห่วงโซ่ที่เปลี่ยน POD → moat · ลำดับนี้ห้ามข้ามขั้น */
+  chain: [
+    'POD', 'Workflow', 'Proprietary Decision Rules', 'Structured Business Data',
+    'Outcome Learning', 'Benchmark', 'Data Network Effect', 'MOAT',
+  ],
+} as const;
 
 /** บันไดสู่ moat — เรียงตามลำดับที่ต้องสร้าง
  *
@@ -198,3 +218,34 @@ export function strategyBlock(): string {
     `  เพราะ: ${MOAT_CLAIM.whyNot}`,
   ].join('\n');
 }
+
+/* ── VRIO Engine — ให้คะแนนสินทรัพย์เชิงกลยุทธ์เป็นตัวเลข (MOAT Architecture v1 §9)
+ *    V=Valuable · R=Rare · I=Inimitable · O=Organized (1–5)
+ *    ⚠️ คะแนนนี้เป็น **การประเมินของเรา** ไม่ใช่ผลวัด — ห้ามเอาไปอ้างกับลูกค้าว่าเป็นข้อเท็จจริง
+ * ──────────────────────────────────────────────────────────────────────── */
+
+export interface VrioScore { v: number; r: number; i: number; o: number }
+
+export type VrioVerdict =
+  | 'POP' | 'Temporary POD' | 'Strong POD' | 'Emerging Moat' | 'Potential Moat' | 'Strong Moat';
+
+/** ตัดสินจากคะแนน — R และ I คือตัวชี้ขาด (V สูงอย่างเดียวได้แค่ POP) */
+export function vrioVerdict(s: VrioScore): VrioVerdict {
+  const { r, i, o } = s;
+  if (r <= 1 || i <= 1) return 'POP';
+  if (r >= 5 && i >= 5) return o >= 5 ? 'Strong Moat' : 'Potential Moat';
+  if (r >= 4 && i >= 4) return 'Emerging Moat';
+  if (r >= 4 || i >= 3) return 'Strong POD';
+  return 'Temporary POD';
+}
+
+/** สินทรัพย์เชิงกลยุทธ์ + คะแนนที่ประเมินไว้ 23 ส.ค. 2569
+ *  ⚠️ `o` (Organized) ของหลายตัวยังต่ำ **โดยตั้งใจ** — เพราะยังไม่ได้สร้าง ไม่ใช่ประเมินให้ดูดี */
+export const VRIO_ASSETS = [
+  { asset: 'AI Content',              score: { v: 5, r: 1, i: 1, o: 5 } },
+  { asset: 'MIT Workflow',            score: { v: 5, r: 3, i: 2, o: 4 } },
+  { asset: 'Decision Engine',         score: { v: 5, r: 4, i: 3, o: 4 } },
+  { asset: 'Business Genome',         score: { v: 5, r: 4, i: 4, o: 4 } },
+  { asset: 'Thai Outcome Dataset',    score: { v: 5, r: 5, i: 5, o: 4 } },
+  { asset: 'Benchmark Network',       score: { v: 5, r: 5, i: 5, o: 5 } },
+] as const;
