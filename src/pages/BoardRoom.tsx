@@ -7,6 +7,7 @@ import {
 } from '../lib/boardRoom';
 import { bigPendingRequests, approveResourceRequest, rejectResourceRequest, requestCost, RESOURCE_BOARD_XP } from '../lib/resourceBridge';
 import { RESOURCE_CATEGORIES } from '../lib/resources';
+import FounderReadiness from '../components/FounderReadiness';
 
 interface Props {
   data: AppData;
@@ -61,6 +62,12 @@ export default function BoardRoom({ data, onUpdate, onNavigate }: Props) {
         CEO เสนอ "วาระ" ให้บอร์ด (คุณ) อนุมัติทีละเรื่อง — แต่ละเรื่องมี <strong>มินิบทเรียน</strong> พออนุมัติแล้ว
         คุณจะได้ <strong>สะสมทักษะบริหารธุรกิจ + การตลาด</strong> ไปในตัว (ตัดสินใจอย่างมีหลักการ ไม่ใช่เดา)
       </p>
+
+      {/*
+        ด่านความพร้อมอยู่ก่อนวาระโดยตั้งใจ — บอร์ดควรเห็น "เรามีหลักฐานแค่ไหน"
+        ก่อนอนุมัติอะไรก็ตาม ไม่ใช่เห็นทีหลัง
+      */}
+      <FounderReadiness data={data} onNavigate={onNavigate} />
 
       {/* ทักษะ 2 สาย */}
       <div className="br-skills">

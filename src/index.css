@@ -6915,3 +6915,105 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ss-bundle strong { color: #fbbf24; font-size: 17px; }
 .ss-bundle s { color: #64748b; }
 .ss-credit { font-size: 11px !important; color: #94a3b8 !important; font-style: italic; margin-top: auto !important; padding-top: 8px; }
+
+/* ===== ด่านความพร้อมก่อนเร่งเครื่อง (Founder Mindset Engine) =====
+   อยู่บนสุดของห้องบอร์ด — ทุกข้ออ่านจากข้อมูลจริง ไม่มีช่องให้ติ๊กเอง
+   สีถูกใช้สื่อสถานะเท่านั้น: ผ่าน=เขียว · ยังไม่ผ่าน=เทา (ไม่ใช่แดง เพราะไม่ได้ห้าม) */
+.fr {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+.fr-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.fr-title { font-weight: 700; font-size: 1.02rem; }
+.fr-sub { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+.fr-stage {
+  flex: 0 0 auto;
+  font-size: .78rem;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.fr-stage-validate { color: #fbbf24; border-color: #fbbf2455; background: #fbbf2412; }
+.fr-stage-build { color: #60a5fa; border-color: #60a5fa55; background: #60a5fa12; }
+.fr-stage-scale { color: #34d399; border-color: #34d39955; background: #34d39912; }
+
+.fr-gates { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+.fr-gate { display: flex; gap: 10px; align-items: flex-start; }
+.fr-mark {
+  flex: 0 0 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .72rem;
+  display: grid;
+  place-items: center;
+  margin-top: 2px;
+}
+.fr-pass .fr-mark { color: #34d399; border-color: #34d39966; background: #34d39912; }
+.fr-gate-q { font-size: .9rem; line-height: 1.45; }
+.fr-gate-ev { color: var(--muted); font-size: .8rem; margin-top: 1px; }
+
+.fr-next {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--bg);
+}
+.fr-next-label { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
+.fr-next-title { font-weight: 700; margin-top: 3px; }
+.fr-next-why { color: var(--muted); font-size: .84rem; margin: 3px 0 11px; line-height: 1.5; }
+
+.fr-scale { margin-top: 16px; }
+.fr-scale-label { font-size: .85rem; font-weight: 600; }
+.fr-scale-btns { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.fr-chip {
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: inherit;
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: .83rem;
+  cursor: pointer;
+}
+.fr-chip:hover { border-color: var(--muted); }
+.fr-chip-on { border-color: currentColor; background: var(--surface-2, var(--surface)); font-weight: 600; }
+
+.fr-verdict {
+  margin-top: 11px;
+  padding: 12px 14px;
+  border: 1px solid #fbbf2455;
+  border-radius: 10px;
+  background: #fbbf240d;
+}
+.fr-verdict-ok { border-color: #34d39955; background: #34d3990d; }
+.fr-verdict-msg { font-size: .88rem; line-height: 1.5; }
+.fr-blockers { list-style: none; margin: 9px 0 0; padding: 0; display: grid; gap: 5px; }
+.fr-blocker {
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  font-size: .84rem;
+  cursor: pointer;
+  opacity: .85;
+}
+.fr-blocker:hover { opacity: 1; text-decoration: underline; }
+.fr-blocker-go { color: var(--muted); }
+
+.fr-golden {
+  margin: 16px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.55;
+  font-style: italic;
+}
