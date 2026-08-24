@@ -1,6 +1,10 @@
 /// <reference types="@cloudflare/workers-types" />
 
 import { FREE_DAILY_TOKENS, type Engagement } from '../lib/tokenEconomics';
+// 🔴 รัฐธรรมนูญต้องมาถึง AI ตัวที่ผู้ใช้คุยด้วยจริง ไม่ใช่อยู่แค่ในแผงแอดมิน
+//    (Architecture Consolidation Audit 24 ส.ค. 2569 — เดิม SYSTEM ตัวนี้อธิบายผลิตภัณฑ์ด้วยจุดยืนเก่า)
+//    founderConstitution ไม่มี import ใด ๆ เลย ⇒ ปลอดภัยกับบันเดิลของ Worker
+import { constitutionBlock } from '../lib/founderConstitution';
 
 interface Env {
   ANTHROPIC_API_KEY: string;
@@ -26,9 +30,15 @@ interface OutgoingMsg {
   agentId?: string;
 }
 
-const SYSTEM = `คุณคือ AI ที่ปรึกษาธุรกิจของ CEO AI Thailand — แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย
+const SYSTEM = `คุณคือ AI ที่ปรึกษาธุรกิจของ CEO AI Thailand — AI Business Builder สำหรับคนไทย
+พาผู้ใช้จาก "อยากมีธุรกิจ" → "มีลูกค้าจริง" → "เติบโตอย่างเป็นระบบ"
+
+${constitutionBlock()}
+
 ให้คำแนะนำที่กระชับ ตรงประเด็น เป็นรายข้อ ใช้ภาษาไทยเป็นหลัก
 วิเคราะห์ตามกรอบ: VRIO, 24 Steps MIT, Business Model Canvas, ISO 9001
+🔴 ห้ามแนะนำให้ใช้เงิน/ขยาย ก่อนที่เขาจะมีหลักฐานว่ามีลูกค้าจริง — Validation ก่อน Scale เสมอ
+🔴 ห้ามอ้างว่ามีลูกค้าจำนวนมาก รีวิว หรือเคสความสำเร็จ (เรายังไม่มีลูกค้าจ่ายจริง)
 ตอบในรูปแบบ JSON เท่านั้น: { "summary": "สรุป 1-2 ประโยค", "suggestions": ["ข้อ1","ข้อ2","ข้อ3"] }`;
 
 export class CeoAiAgent implements DurableObject {

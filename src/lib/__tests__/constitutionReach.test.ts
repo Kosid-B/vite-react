@@ -81,11 +81,26 @@ describe('🔴 รัฐธรรมนูญไปถึง AI ตัวไห�
     }
   });
 
-  it('🔴 AI ที่ผู้ใช้คุยด้วยจริง (CeoAiAgent) — บันทึกไว้ว่ายังไม่ได้รับ', () => {
+  it('🟢 AI ที่ผู้ใช้คุยด้วยจริง (CeoAiAgent) ต้องได้รับรัฐธรรมนูญ — ต่อสายแล้ว 24 ส.ค. 2569', () => {
     const agent = readFileSync(resolve(SRC, 'agent/CeoAiAgent.ts'), 'utf8');
-    const carries = /brandBriefBlock|constitutionBlock/.test(agent);
-    // เทสต์นี้จะกลายเป็นสีเขียวอีกแบบเมื่อต่อสายแล้ว — ตอนนั้นให้กลับมาแก้เป็น toBe(true)
-    expect(carries, 'CeoAiAgent รับรัฐธรรมนูญแล้ว → อัปเดตเทสต์นี้และเอกสาร audit').toBe(false);
+    expect(/constitutionBlock\(\)/.test(agent), 'CeoAiAgent หลุดรัฐธรรมนูญ').toBe(true);
+    // 🔴 จุดยืนเก่าที่เจ้าของเปลี่ยนแล้ว ห้ามกลับมาอยู่ในปากของ AI ที่ผู้ใช้คุยด้วย
+    expect(agent).not.toMatch(/แพลตฟอร์มสร้างบริษัท AI อัตโนมัติ/);
+    expect(agent).toMatch(/AI Business Builder สำหรับคนไทย/);
+    expect(agent).toMatch(/Validation ก่อน Scale/);
+  });
+
+
+  it('🔴 ต้องบันทึกไว้ว่า production มีตาราง marketing_* ที่รีโปนี้ไม่ได้เป็นเจ้าของ', () => {
+    const doc = readFileSync(resolve(SRC, '../docs/product/ARCHITECTURE-CONSOLIDATION-AUDIT.md'), 'utf8');
+    // ตรวจสด 24 ส.ค. 2569: 10 migration ใน production ที่ไม่มีในรีโป (23 ส.ค. 07:38–08:36)
+    expect(doc).toMatch(/20260823073854/);
+    expect(doc).toMatch(/20260823083627/);
+    expect(doc).toMatch(/marketing_\* .{0,20}33 ตาราง|33 ตาราง/);
+    // ถ้ารีโปเริ่มเป็นเจ้าของ schema นี้เมื่อไร เทสต์นี้ต้องถูกแก้พร้อมกับ migration ที่เพิ่มเข้ามา
+    const owns = readdirSync(resolve(SRC, '../supabase/migrations'))
+      .some((f) => /marketing/.test(f));
+    expect(owns, 'รีโปเริ่มมี migration marketing_* แล้ว → อัปเดต audit §0').toBe(false);
   });
 
   it('เอกสาร audit ต้องมีอยู่และรายงานตัวเลขความครอบคลุมจริง', () => {
