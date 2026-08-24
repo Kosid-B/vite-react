@@ -86,10 +86,34 @@ supabase_migrations.schema_migrations — 10 รายการที่ไม�
 3. ⚠️ **กฎ "ห้ามแตะ schema เพราะ Gate B ยังไม่ปิด" ถูกใช้กับรีโปนี้เท่านั้น** — schema ของ production ถูกเปลี่ยนไปแล้ว 10 ครั้งเมื่อ 23 ส.ค. โดยอีกระบบหนึ่ง
    ⇒ ผมจึงยังยึดกฎเดิมต่อ (ไม่แตะ) แต่เจ้าของควรรู้ว่ากฎนี้กันได้แค่ครึ่งเดียว
 
-### 🔴 สิ่งเดียวที่ต้องให้เจ้าของตัดสิน (ผมตัดสินแทนไม่ได้)
+### ✅ เจ้าของตัดสินแล้ว (24 ส.ค. 2569): **"อีกระบบ" เป็นเจ้าของ Marketing OS**
 
-**ระบบไหนเป็นเจ้าของ Marketing OS** — รีโปนี้ (`vite-react`) หรือระบบที่สร้างตาราง `marketing_*`
-ตอบข้อนี้ก่อน แล้วงานที่เหลือทั้งหมดจะชัดทันที · ตอบไม่ได้ = **ทุกฟีเจอร์ที่สร้างต่อจากนี้เสี่ยงถูกสร้างซ้ำสองที่**
+⇒ เส้นแบ่งความเป็นเจ้าของ **ตรึงแล้ว** — ห้ามข้ามโดยไม่มีคำสั่งใหม่จากเจ้าของ
+
+| | **อีกระบบ** เป็นเจ้าของ | **รีโปนี้ (`vite-react`)** เป็นเจ้าของ |
+|---|---|---|
+| **ข้อมูล** | ตาราง `marketing_*` ทั้ง 33 ตาราง | `workspace_state` · `landing_funnel` · `quickcheck_submissions` · `client_errors` · billing/marketplace |
+| **หน้าที่** | **การตลาดของเราเอง** — แคมเปญ · ข้อเสนอ · คอนเทนต์ · ปฏิทิน · brand rules · segment · pillar · attribution · approval | **ตัวผลิตภัณฑ์** — แอปที่ผู้ใช้ล็อกอิน · หน้า Landing/`/start` · Worker (SEO · ลิงก์สั้น · guest AI) · billing · marketplace |
+| **สมอง** | Marketing OS · Instruction Profiles | **Founder Constitution · Founder Mindset · DMAIC · Business Genome · VRIO/Moat** (สมองที่ทำงานให้ *ธุรกิจของผู้ใช้*) |
+
+**กติกาที่ตามมา 3 ข้อ**
+
+1. 🔴 **รีโปนี้ห้ามสร้าง migration `marketing_*` และห้ามอ่าน/เขียนตาราง `marketing_*`** — มีเทสต์บังคับ (`ownershipBoundary.test.ts`)
+2. 🔴 **ของที่ซ้ำกัน ให้ถืออีกระบบเป็นแหล่งจริง** — โมดูลด้านล่างนี้ในรีโปนี้ **ห้ามพัฒนาต่อ** (แก้บั๊กได้ · เพิ่มความสามารถไม่ได้):
+
+   | โมดูลในรีโปนี้ | ซ้ำกับของอีกระบบ |
+   |---|---|
+   | `brandBrief.MESSAGE_HIERARCHY` · `violatesBrand()` | `marketing_brand_rules` (10 ข้อ — **เนื้อหาตรงกันแทบทุกข้อ**) |
+   | `brandBrief.AUDIENCE` (5 ชั้น) | `marketing_audience_segments` (5 แถว) |
+   | `positioningEngine.reviewCampaign()` | ด่านตรวจแคมเปญของ Marketing OS |
+   | `videoBrief.ts` · skill `content-link-contract` | `marketing_content_items` + `marketing_content_schedule` |
+   | `competitorMemory.ts` (ไม่มีใครเรียกอยู่แล้ว) | — ยกให้อีกระบบ |
+
+3. 🟢 **สิ่งที่รีโปนี้ยังเป็นเจ้าของเต็มตัวและควรลงแรงต่อ**: รัฐธรรมนูญ → Business Genome → Decision Engine
+   เพราะมันทำงานให้ **ธุรกิจของผู้ใช้** ไม่ใช่การตลาดของเรา — และเป็นตัวที่ผูกกับ POD/Moat โดยตรง
+
+⚠️ **ผลข้างเคียงที่ยอมรับแล้ว**: `growthPdca` · `stageFit` · แผงในหน้าแอดมิน อ่านตัวเลขจาก `landing_funnel` (ของเรา)
+แต่ **ไม่เห็นข้อมูลแคมเปญของอีกระบบ** ⇒ มันจะบอกคอขวดจากครึ่งเดียวของภาพเสมอ — ห้ามอ่านผลมันเป็น "ภาพรวมการตลาด"
 
 ---
 

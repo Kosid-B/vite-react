@@ -11,6 +11,18 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 ⚠️ วันที่ 17–19 ส.ค. 2569 ผิดกฎนี้ 5 ครั้งใน 2 วัน (ledger ข้อ 10–17) — ทุกครั้งรูปแบบเดียวกัน:
    **รายงานว่าจริง/เสร็จ ก่อนไปดูของจริง** ทั้งที่หลักฐานอยู่ในมือแล้ว (ไฟล์ · config · CI · ข้อมูลใน DB)
 
+🧱 **เส้นแบ่งความเป็นเจ้าของ — Marketing OS = อีกระบบ** (เจ้าของตัดสิน 24 ส.ค. 2569 · ห้ามข้ามโดยไม่มีคำสั่งใหม่)
+🔴 **production `waigsnxhrlwtiotspaim` มีสองระบบเขียนลง** — ตาราง `marketing_*` **33 ตาราง** จาก 10 migration (23 ส.ค.) **ไม่มีในรีโปนี้**
+   ⇒ รีโปนี้ **ห้ามสร้าง migration `marketing_*` · ห้ามอ่าน/เขียนตาราง `marketing_*`** (กลไก: `ownershipBoundary.test.ts`)
+| อีกระบบเป็นเจ้าของ | รีโปนี้เป็นเจ้าของ |
+|---|---|
+| การตลาดของเราเอง — แคมเปญ · ข้อเสนอ · คอนเทนต์ · brand rules · segment · pillar · attribution | ตัวผลิตภัณฑ์ — แอปที่ผู้ใช้ล็อกอิน · Landing/`/start` · Worker · billing · marketplace |
+| Marketing OS · Instruction Profiles | **รัฐธรรมนูญ · Founder Mindset · DMAIC · Business Genome · VRIO/Moat** (สมองที่ทำงานให้ *ธุรกิจของผู้ใช้*) |
+⚠️ **ของที่ซ้ำ ให้ถืออีกระบบเป็นแหล่งจริง — แก้บั๊กได้ เพิ่มความสามารถไม่ได้**: `brandBrief.MESSAGE_HIERARCHY`/`violatesBrand()` (ซ้ำ `marketing_brand_rules` 10 ข้อ) · `brandBrief.AUDIENCE` (ซ้ำ `marketing_audience_segments`) · `positioningEngine.reviewCampaign()` · `videoBrief.ts` · `competitorMemory.ts`
+⚠️ **`growthPdca`/`stageFit` เห็นแค่ `landing_funnel` ของเรา ไม่เห็นแคมเปญของอีกระบบ** ⇒ ห้ามอ่านผลมันเป็น "ภาพรวมการตลาด"
+🔴 **กฎ "ห้ามแตะ schema เพราะ Gate B ยังไม่ปิด" กันได้แค่รีโปนี้** — schema ของ production ถูกเปลี่ยนไปแล้ว 10 ครั้งโดยอีกระบบ
+แผนที่เต็ม: [ARCHITECTURE-CONSOLIDATION-AUDIT.md](docs/product/ARCHITECTURE-CONSOLIDATION-AUDIT.md) §0
+
 📜 **รัฐธรรมนูญผู้ก่อตั้ง — `src/lib/founderConstitution.ts` + [AGENTS.md](AGENTS.md)** (เจ้าของ freeze 23 ส.ค. 2569)
 **VISION**: ทำให้คนไทยทุกคนสามารถเปลี่ยนไอเดียให้เป็นธุรกิจที่มีลูกค้า มีหลักฐาน มีระบบ และขยายได้ ด้วย AI
 **MOONSHOT**: *Build Thailand's Business Intelligence Infrastructure* — ⚠️ **วิสัยทัศน์ไม่ใช่พาดหัว** (พาดหัวยังเป็นปัญหาของลูกค้าเสมอ)
