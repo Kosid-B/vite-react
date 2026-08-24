@@ -18,6 +18,8 @@
 
 import { strategyBlock } from './competitiveStrategy';
 import { positioningBlock } from './positioningEngine';
+import { constitutionBlock } from './founderConstitution';
+import { founderMindsetBlock } from './founderMindset';
 
 /** ① บริษัท — เราคือใคร (ตรงกับ organizationJsonLd ใน seoData.ts) */
 export const WHO = {
@@ -241,6 +243,10 @@ export function brandBriefBlock(opts: { forPublicCopy?: boolean } = {}): string 
     `**เส้นทางลูกค้า** (สารต้องตรงกับขั้นที่เขาอยู่):`,
     `  ${CUSTOMER_JOURNEY.map((j) => `${j.step}.${j.name}`).join(' → ')}`,
     `  🔴 ISO/SOP/KPI เริ่มมีความหมายที่ขั้น ${ISO_ENTERS_AT_STEP} — พูดกับคนขั้น 1–3 = พูดเรื่องที่เขายังไม่มีปัญหา`,
+    '',
+    constitutionBlock(),
+    '',
+    founderMindsetBlock(),
     '',
     strategyBlock(),
     '',

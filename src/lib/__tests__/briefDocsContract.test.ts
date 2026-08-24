@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { MESSAGE_HIERARCHY, AUDIENCE, CUSTOMER_JOURNEY, ISO_ENTERS_AT_STEP } from '../brandBrief';
+import { VISION, GOLDEN_QUESTION, PRODUCT_DNA, MISSION_CHAIN, MINDSET } from '../founderConstitution';
+import { READINESS_CHECKS, REQUIRED_BY_INTENT } from '../founderMindset';
 
 /**
  * กลไกกัน "ความเข้าใจผิดที่แก้ไปแล้ว กลับมาใหม่" (ตั้ง 23 ส.ค. 2569)
@@ -135,5 +137,44 @@ describe('เอกสารบรีฟ/ปฏิทิน — ห้ามย�
 
   it('⑥ ปฏิทินฉบับเก่าต้องชี้ไปฉบับใหม่ (กันคนหยิบแผนที่มี 4 ข้อผิดไปใช้)', () => {
     expect(read('docs/review/WEEKLY-CALENDAR-2026-08-22.md')).toContain('WEEKLY-CALENDAR-2026-08-23.md');
+  });
+});
+
+/* ── รัฐธรรมนูญผู้ก่อตั้ง ต้องอยู่ในเอกสารที่คนอ่านจริง ไม่ใช่แค่ในโค้ด ─────────
+ * ledger #41: การแก้ในบทสนทนาไม่ใช่การแก้ — เอกสารคือสิ่งที่รอบถัดไปจะอ่านแล้วเชื่อ
+ * ⇒ ค่าคงที่ในโค้ดกับข้อความใน CLAUDE.md / AGENTS.md ต้องตรงกันคำต่อคำ
+ * ──────────────────────────────────────────────────────────────────────── */
+describe('🔴 รัฐธรรมนูญผู้ก่อตั้ง — โค้ดกับเอกสารต้องพูดตรงกัน', () => {
+  const AGENTS = 'AGENTS.md';
+  const CLAUDEMD = 'CLAUDE.md';
+
+  it('⑬ AGENTS.md ต้องมี Vision · Golden Question · Product DNA ตรงกับโค้ด', () => {
+    const doc = read(AGENTS);
+    expect(doc).toContain(VISION.core);
+    expect(doc).toContain(GOLDEN_QUESTION);
+    expect(doc).toContain(PRODUCT_DNA.th);
+    expect(doc).toContain(MISSION_CHAIN.join(' → '));
+    for (const m of MINDSET) expect(doc, `AGENTS.md ขาดหลักคิด ${m.name}`).toContain(m.name);
+  });
+
+  it('⑭ AGENTS.md ต้องเขียนครบทั้ง 6 ด่านความพร้อม — ห้ามเหลือแค่บางด่าน', () => {
+    const doc = read(AGENTS);
+    for (const c of READINESS_CHECKS) expect(doc, `AGENTS.md ขาดด่าน ${c.key}`).toContain(c.q);
+  });
+
+  it('⑮ CLAUDE.md ต้องมี Golden Question และกฎ "ห้ามกั้นการพิสูจน์"', () => {
+    const doc = read(CLAUDEMD);
+    expect(doc).toContain(GOLDEN_QUESTION);
+    expect(doc).toContain(VISION.core);
+    expect(doc).toMatch(/ห้ามกั้นการพิสูจน์/);
+    // กฎที่เขียนใน CLAUDE.md ต้องเป็นความจริงในโค้ดด้วย ไม่ใช่คำสวย ๆ
+    expect(REQUIRED_BY_INTENT.validate).toEqual([]);
+  });
+
+  it('⑯ 🔴 ห้ามเอาวิสัยทัศน์ไปเป็นพาดหัวสาธารณะ — เอกสารต้องเตือนไว้', () => {
+    expect(VISION.notAHeadline).toBe(true);
+    expect(read(CLAUDEMD)).toMatch(/วิสัยทัศน์ไม่ใช่พาดหัว/);
+    // พาดหัวจริงยังต้องเป็น "ปัญหา" ตามที่ competitiveStrategy กำหนดไว้
+    expect(read(CLAUDEMD)).toMatch(/พาดหัว = ปัญหา/);
   });
 });
