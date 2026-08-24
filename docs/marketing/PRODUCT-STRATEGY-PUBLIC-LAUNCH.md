@@ -154,3 +154,80 @@ AI Chat · สร้างคอนเทนต์ · สร้างภาพ/�
 
 ⚠️ ตัวเลข 🟡 **ใช้ตั้งทิศทางได้ แต่ห้ามยกไปอ้างในคอนเทนต์สาธารณะจนกว่าจะเปิดแหล่งต้นทางอ่านเอง**
 (กฎ `data-verification-10-rules` ของโปรเจกต์: ต้องมีลิงก์ + ปี + ผู้จัดทำ ก่อนอ้างตัวเลขของคนอื่น)
+
+---
+
+## 9. 🚦 ยกระดับเป็นกฎของ AI Marketing OS (23 ส.ค. 2569 · รอบที่ 2)
+
+เจ้าของสั่งยก POP/POD/VRIO จาก "แนวคิดการตลาด" เป็น **กฎหลักของระบบ**
+⇒ ทำเป็นด่านที่ **block ได้จริง** ไม่ใช่ prompt: [`src/lib/positioningEngine.ts`](../../src/lib/positioningEngine.ts) (23 เทสต์)
+
+> **หลักการแม่**: *อย่าใช้ AI เพื่อสร้าง Content ให้มากขึ้น —
+> ใช้ AI เพื่อค้นหาว่าอะไรควรพูด กับใคร เพราะอะไร และเรียนรู้อะไรจากผลลัพธ์*
+
+### ทำไมต้องเป็นด่าน ไม่ใช่ prompt
+
+| | prompt | ด่าน |
+|---|---|---|
+| ผลเมื่อ AI ไม่ทำตาม | ผ่านไปเงียบ ๆ ไม่มีใครรู้ | **สร้างไม่ได้** |
+| ตรวจย้อนหลังได้ไหม | ไม่ได้ | ได้ — `reviewCampaign()` คืนเหตุผลรายข้อ |
+
+### Marketing Brain — Positioning Engine อยู่ **ก่อน** Message/Content
+
+```
+Business Context → Audience/JTBD → Problem Validation
+      → 🚦 POSITIONING ENGINE ←  (POP · POD · VRIO · Proof · Alternatives)
+      → Offer → Campaign Hypothesis → Message/Content
+      → Compliance+Evidence → Human Approval → Tracking → Outcome
+      → Learning Loop → VRIO Strengthens
+```
+
+### Content DNA — ห้ามสลับ
+
+| เดิม (ขายเครื่องมือ) | ใหม่ (ขับ Business Journey) |
+|---|---|
+| AI → Feature → Content → CTA | **Customer Problem → Business Insight → POD → Proof → AI-enabled Action → Experiment → Measurement → Learning** |
+
+⇒ AI ถูกย้ายไป **กลางสาย** ในฐานะ *กลไก* ไม่ใช่ *หัวเรื่อง* (เทสต์บังคับตำแหน่ง)
+
+### 10 คำถามที่ต้องตอบก่อนสร้าง — ตอบไม่ครบ = สร้างไม่ได้
+
+Target segment · JTBD · Problem · POP ที่เขาคาดหวังอยู่แล้ว · POD ที่ต่างจริง ·
+ระดับ Evidence ของ POD · VRIO asset ที่รองรับ · experiment ที่อยากให้ลูกค้าทำ ·
+success metric · **ถ้าผลไม่เป็นไปตามสมมติฐานจะเรียนรู้อะไร**
+
+### 4 กฎบังคับ
+
+| กฎ | ผลเมื่อติด |
+|---|---|
+| **NO POD** → NO STRONG DIFFERENTIATION CLAIM | ความแรงข้ออ้างลดเหลือ `inform` |
+| **NO EVIDENCE** → CLAIM MUST REMAIN HYPOTHESIS | เหลือ `hypothesis` · **งานวิจัยของคนอื่นยังไม่พอ ต้องถึง observed** |
+| **LOW SAMPLE** → NO STRONG PERFORMANCE CONCLUSION | ใช้ `MIN_FOR_RATE` ตัวเดียวกับ `growthPdca` — ห้ามตั้งเลขใหม่ |
+| **POP ONLY** → MAY INFORM, MUST NOT CLAIM ADVANTAGE | เหลือ `inform` + บอกทางออกว่าให้ย้ายไปยึด POD ชั้นไหน |
+
+### ระดับความแน่นอนของข้ออ้าง (ต้องติดป้ายทุกครั้ง)
+
+`hypothesis` → `research` → `observed` → `validated`
+⚠️ **research (งานวิจัยของคนอื่น) ยังไม่พอให้พูดเป็นข้อเท็จจริง** — ต้องเป็นข้อมูลของเราเองระดับ observed ขึ้นไป
+
+### ทางเลือกที่ลูกค้าใช้อยู่แล้วแทนเรา (ต้องระบุเสมอ)
+
+ChatGPT/Gemini/Claude · เครื่องมือ AI ทั่วไป · เอเจนซี · ที่ปรึกษา · **Excel / จดมือ / ไม่ทำอะไรเลย**
+
+### 🔒 ข้อจำกัดที่เคารพ
+
+**ไม่แตะ schema/migration** ตามที่เจ้าของสั่ง (Gate B ยังไม่ปิด · การเพิ่ม table/FK/RPC/RLS ตอนนี้
+จะทำให้ security evidence ที่กำลังเก็บต้อง regression ใหม่) ⇒ ทั้งหมดเป็น **pure logic** เสียบเข้า agent ได้ทันที
+⚠️ ผู้ช่วยมองไม่เห็น Gate B / Phase 1 Acceptance ในรีโปนี้ — ปฏิบัติตามคำสั่งโดยไม่ตรวจสอบเอง (🔴 ตรวจไม่ได้)
+
+### 🔴 บั๊กที่เจอระหว่างสร้าง — และเหตุผลที่เขียนไว้ในโค้ด
+
+ตัวจำแนก POP/POD เวอร์ชันแรกใช้วิธี **ตัดคำจากประโยค** แล้วพัง 2 ทาง:
+
+| อินพุต | ผลที่ผิด | เพราะ |
+|---|---|---|
+| `"AI Chat ตอบลูกค้าให้คุณ"` | ถูกนับเป็น **POD** | ไปชนคำว่า "ลูกค้า" ในชั้น 1 |
+| `"Scale with System"` | จำแนกเป็นชั้น 3 | ไปชนคำว่า "Scale" ในประโยคของชั้น 3 |
+
+⇒ เปลี่ยนเป็น `POD[].keywords` ที่ประกาศชัด + ชื่อชั้นแบบเป๊ะมาก่อนเสมอ · เทสต์ล็อกทั้งสองเคส
+

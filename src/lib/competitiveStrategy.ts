@@ -36,32 +36,42 @@ export const WHY_POP_CANT_WIN =
   'ทุกข้อในรายการนี้เป็นของที่ตลาดมีแล้ว — AIS×Microsoft เริ่มแจก AI Agent สำเร็จรูปให้ SME ไทยแล้ว ' +
   'ถ้าเราขึ้นหน้าด้วยข้อใดข้อหนึ่ง ลูกค้าจะถามทันทีว่า "แล้วต่างจาก ChatGPT + Canva ยังไง"';
 
-/** 5 ชั้นที่เราชนะได้ — เรียงจากชั้นนอกสุดที่ลูกค้าเจอก่อน */
+/** 5 ชั้นที่เราชนะได้ — เรียงจากชั้นนอกสุดที่ลูกค้าเจอก่อน
+ *
+ *  ⚠️ `keywords` มีไว้ให้ `positioningEngine.podLayerFor()` จำแนกได้แบบ **กำหนดผลได้แน่นอน**
+ *     ห้ามกลับไปใช้วิธี "ตัดคำจากประโยค claim" — เคยทำแล้วพัง 2 ทาง (23 ส.ค. 2569):
+ *       ① "AI Chat ตอบลูกค้าให้คุณ" ไปชนคำว่า "ลูกค้า" ในชั้น 1 ⇒ POP กลายเป็น POD
+ *       ② "Scale with System" ไปชนคำว่า "Scale" ในชั้น 3 ⇒ จำแนกผิดชั้น */
 export const POD = [
   {
     layer: 1,
     name: 'Business Journey',
     claim: 'ไม่เริ่มจาก AI แต่เริ่มจาก "ฉันควรทำธุรกิจอะไร · ลูกค้าคือใคร"',
+    keywords: ['business journey', 'ควรทำธุรกิจอะไร', 'ลูกค้าคือใคร', 'จะเริ่มจากอะไร'],
   },
   {
     layer: 2,
     name: 'Validation Before Spending',
     claim: 'ทดสอบลูกค้า/ปัญหา/ข้อเสนอ ก่อนใช้เงินก้อน',
+    keywords: ['validation', 'ก่อนลงทุน', 'ก่อนใช้เงิน', 'ก่อนลงเงิน', 'ก่อนเสียเงิน', 'ทดสอบก่อน'],
   },
   {
     layer: 3,
     name: 'Business Operating System',
     claim: 'Idea → ลูกค้า → ทดสอบ → ข้อเสนอ → ราคา → ลูกค้ารายแรก → กำไร → กระบวนการ → KPI → ระบบ → Scale',
+    keywords: ['business operating system', 'operating system', 'ทีละขั้น', 'ครบเส้นทาง'],
   },
   {
     layer: 4,
     name: 'Evidence-Based AI',
     claim: 'AI ต้องบอกว่าอะไรคือ สมมติฐาน / สังเกตได้ / พิสูจน์แล้ว — ห้ามปั้นความจริง',
+    keywords: ['evidence-based', 'สมมติฐาน', 'พิสูจน์แล้ว', 'ไม่ปั้น', 'ระบุหลักฐาน'],
   },
   {
     layer: 5,
     name: 'Scale with System',
     claim: 'ขายได้ก่อน แล้วค่อยสร้าง Process / KPI / SOP — ไม่ใช่เอาระบบไปขวางตั้งแต่วันแรก',
+    keywords: ['scale with system', 'ขายได้ก่อน', 'sop', 'วางระบบทีหลัง'],
   },
 ] as const;
 

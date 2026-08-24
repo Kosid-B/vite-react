@@ -17,6 +17,7 @@
  */
 
 import { strategyBlock } from './competitiveStrategy';
+import { positioningBlock } from './positioningEngine';
 
 /** ① บริษัท — เราคือใคร (ตรงกับ organizationJsonLd ใน seoData.ts) */
 export const WHO = {
@@ -242,6 +243,8 @@ export function brandBriefBlock(opts: { forPublicCopy?: boolean } = {}): string 
     `  🔴 ISO/SOP/KPI เริ่มมีความหมายที่ขั้น ${ISO_ENTERS_AT_STEP} — พูดกับคนขั้น 1–3 = พูดเรื่องที่เขายังไม่มีปัญหา`,
     '',
     strategyBlock(),
+    '',
+    positioningBlock(),
     '',
     `**ลำดับของสาร (ห้ามสลับ)**: นำด้วย → ${MESSAGE_HIERARCHY.lead}`,
     `  ตามด้วย (เฉพาะเมื่อรู้ว่าเขาอยู่กลุ่มไหนแล้ว) → ${MESSAGE_HIERARCHY.secondary}`,

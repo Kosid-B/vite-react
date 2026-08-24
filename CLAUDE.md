@@ -96,6 +96,19 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 ⚠️ **ตรวจ "ตำแหน่ง" ก่อนโทษ "กลยุทธ์"** — 15 จาก 19 บล็อกบนหน้า Landing มีคนเห็น 0 คน (เวลาที่ทุกคนเคยใช้กับเนื้อหาเรารวมกัน = 86 วินาที)
    ⇒ ที่ดูเหมือน "สื่อสารกว้างเกินไป" จริง ๆ คือ "ความกว้างถูกวางในที่ที่ไม่มีใครเห็น" · ห้ามเสนอตัดเนื้อหาที่ยังไม่เคยถูกเห็น
 
+🚦 **ด่านกลยุทธ์ที่ block ได้จริง — `src/lib/positioningEngine.ts`** (ยกระดับ 23 ส.ค. 2569)
+เจ้าของยก POP/POD/VRIO จาก "แนวคิดการตลาด" เป็น **กฎหลักของ AI Marketing OS**
+**หลักการแม่**: *"อย่าใช้ AI เพื่อสร้าง Content ให้มากขึ้น — ใช้ AI เพื่อค้นหาว่าอะไรควรพูด กับใคร เพราะอะไร และเรียนรู้อะไรจากผลลัพธ์"*
+🧬 **CONTENT_DNA (ห้ามสลับ)**: Customer Problem → Business Insight → POD → Proof → AI-enabled Action → Experiment → Measurement → Learning
+   (ของเดิม AI → Feature → Content → CTA = ขายเครื่องมือ · AI ต้องอยู่**กลางสาย** ในฐานะกลไก ไม่ใช่หัวเรื่อง)
+🧠 **MARKETING_BRAIN**: Positioning Engine อยู่ **ก่อน** Message/Content — ไม่ใช่ตรวจทีหลัง · วงจรปิดที่ VRIO Strengthens
+✅ **10 คำถามต้องตอบครบก่อนสร้าง** (`STRATEGY_GATE_QUESTIONS`) — ตอบไม่ครบ = `pass:false` **สร้างไม่ได้ ไม่ใช่แค่เตือน**
+🔴 **4 กฎบังคับ** (`reviewCampaign`) — NO POD → ห้ามอ้างความต่าง · NO EVIDENCE → คงเป็นสมมติฐาน ·
+   LOW SAMPLE (< `MIN_FOR_RATE` ตัวเดียวกับ growthPdca) → ห้ามสรุปผลงาน · POP ONLY → บอกเล่าได้ ห้ามอ้างความได้เปรียบ
+🏷️ **ClaimStatus 4 ระดับ**: hypothesis → research → observed → validated · **งานวิจัยของคนอื่นยังไม่พอ** ต้องถึง observed
+⚠️ **ห้ามใช้วิธี "ตัดคำจากประโยค" จำแนก POP/POD** — เคยพัง 2 ทาง (POP กลายเป็น POD · จำแนกผิดชั้น) ⇒ ใช้ `POD[].keywords`
+🔒 **ไม่แตะ schema/migration** ตามที่เจ้าของสั่ง (Gate B ยังไม่ปิด) — ทั้งหมดเป็น pure logic
+
 🏁 **แกนการแข่งขันก่อนเปิด Public — `src/lib/competitiveStrategy.ts`** (เจ้าของกำหนด 23 ส.ค. 2569)
 **POP = ความสามารถ AI · POD = วิธีสร้างธุรกิจ · VRIO = ระบบเรียนรู้ธุรกิจที่สะสมเอง**
 ⇒ เปลี่ยน LLM ได้โดยความได้เปรียบไม่หาย — model คือเครื่องยนต์ · ข้อมูลธุรกิจที่สะสมคือสินทรัพย์
