@@ -20,6 +20,7 @@ import { strategyBlock } from './competitiveStrategy';
 import { positioningBlock } from './positioningEngine';
 import { constitutionBlock } from './founderConstitution';
 import { founderMindsetBlock } from './founderMindset';
+import { dmaicBlock } from './dmaic';
 
 /** ① บริษัท — เราคือใคร (ตรงกับ organizationJsonLd ใน seoData.ts) */
 export const WHO = {
@@ -247,6 +248,8 @@ export function brandBriefBlock(opts: { forPublicCopy?: boolean } = {}): string 
     constitutionBlock(),
     '',
     founderMindsetBlock(),
+    '',
+    dmaicBlock(),
     '',
     strategyBlock(),
     '',
