@@ -37,8 +37,8 @@ function proven(): AppData {
       { id: '1', label: 'ลูกค้า A', amount: 15000, kind: 'revenue', date: '2026-01-05' },
       { id: '2', label: 'ลูกค้า B', amount: 15000, kind: 'revenue', date: '2026-01-12' },
       { id: '3', label: 'ลูกค้า C', amount: 20000, kind: 'revenue', date: '2026-01-20' },
+      { id: '4', label: 'ค่าเดินทางหาลูกค้า', amount: 4000, kind: 'expense', date: '2026-01-22' },
     ],
-    growthEco: { arpu: 1490, lifetimeMonths: 12, currentMRR: 45000, weeks: [] },
     funnelSource: 'real',
   };
 }
@@ -82,7 +82,7 @@ describe('แต่ละด่านแยกกันจริง', () => {
     const customer = assessReadiness(d).find((g) => g.id === 'customer');
 
     expect(customer?.passed).toBe(false);
-    expect(customer?.evidence).toMatch(/B2B|B2C/);
+    expect(customer?.evidence).toMatch(/ธุรกิจ|ลูกค้าทั่วไป/);
   });
 
   /** ขายได้ครั้งเดียวกับขายได้ซ้ำ เป็นคนละเรื่อง — ด่านจึงต้องแยกกัน */
@@ -133,15 +133,41 @@ describe('แต่ละด่านแยกกันจริง', () => {
     expect(assessReadiness(d).find((g) => g.id === 'tracking')?.passed).toBe(false);
   });
 
-  it('กรอก LTV แล้วแต่ยังไม่มีรายรับต่อเดือน ต้องไม่ผ่านด่านต้นทุน', () => {
+  it('บันทึกแต่รายรับ ยังไม่บันทึกรายจ่าย ต้องไม่ผ่านด่านกำไร', () => {
     const d: AppData = {
       ...blank(),
-      growthEco: { arpu: 1490, lifetimeMonths: 12, currentMRR: 0, weeks: [] },
+      finance: [{ id: '1', label: 'ลูกค้า A', amount: 30000, kind: 'revenue', date: '2026-01-05' }],
     };
     const eco = assessReadiness(d).find((g) => g.id === 'economics');
 
     expect(eco?.passed).toBe(false);
-    expect(eco?.evidence).toMatch(/รายรับต่อเดือน/);
+    expect(eco?.evidence).toMatch(/รายจ่าย/);
+  });
+
+  /**
+   * ⚠️ autoEntries() ใส่ "ค่าแพ็กเกจ CEO AI Thailand" เป็นรายจ่ายให้อัตโนมัติเมื่อจ่ายแพ็ก
+   * นับรวมด้วยเมื่อไร ด่านนี้จะผ่านเองทันทีที่จ่ายค่าแพ็ก ทั้งที่ผู้ใช้ยังไม่เคย
+   * บันทึกต้นทุนธุรกิจตัวเองสักบาท — ซึ่งเป็นการหลอกตัวเองที่ระบบเป็นคนสร้างให้
+   */
+  it('ค่าแพ็กเกจที่ระบบใส่ให้อัตโนมัติ ต้องไม่นับเป็นรายจ่ายของธุรกิจ', () => {
+    const d = {
+      ...blank(),
+      subscription: { plan: 'scale' } as AppData['subscription'],
+      finance: [{ id: '1', label: 'ลูกค้า A', amount: 30000, kind: 'revenue', date: '2026-01-05' }],
+    } as AppData;
+
+    expect(assessReadiness(d).find((g) => g.id === 'economics')?.passed).toBe(false);
+  });
+
+  /**
+   * ⚠️ ด่านนี้เคยอ่านจาก growthEco ซึ่งกรอกได้เฉพาะในหน้าผู้ดูแลระบบ
+   * ผู้ใช้ทั่วไปจึงผ่านไม่ได้ตลอดกาล และถูก nextBestAction() จอดไว้ที่งานที่ตัวเองทำไม่ได้
+   * เทสต์นี้กันไม่ให้ใครเผลอย้ายกลับไปอ่านข้อมูลที่ผู้ใช้แตะไม่ได้
+   */
+  it('ด่านกำไรต้องพาไปหน้าที่ผู้ใช้ทั่วไปกรอกเองได้', () => {
+    const eco = assessReadiness(blank()).find((g) => g.id === 'economics');
+    expect(eco?.goto).toBe('city');
+    expect(eco?.goto).not.toBe('admin');
   });
 });
 
@@ -223,5 +249,42 @@ describe('Golden Question', () => {
     expect(GOLDEN_QUESTION).toMatch(/หลักฐาน/);
     expect(GOLDEN_QUESTION).toMatch(/กำไร/);
     expect(GOLDEN_QUESTION).toMatch(/Scale/);
+  });
+});
+
+/**
+ * ⚠️ กลุ่มเป้าหมายคือเจ้าของ SME ไทยที่ไม่ได้เรียนการตลาดมา
+ *
+ * ข้อความในการ์ดนี้เคยเขียนว่า "กรอก ARPU กับอายุเฉลี่ยลูกค้า แล้วดู LTV ÷ CAC"
+ * ซึ่งเป็นบรรทัดที่ทั้งการ์ดพุ่งไปหา (งานถัดไปงานเดียว) — จุดที่แย่ที่สุดที่จะใส่ศัพท์
+ * เจ้าของโรงงานอ่านแล้วไม่รู้ว่าต้องทำอะไร ก็ไม่ทำ แล้วด่านนี้ก็ไม่มีวันผ่าน
+ *
+ * แอปนี้มีคำไทยของตัวเองอยู่แล้ว (sidebar: "กรวยลูกค้า (Funnel)" ·
+ * "ลูกค้าเป้าหมาย (Personas)") การ์ดนี้ต้องพูดภาษาเดียวกัน ไม่ใช่ภาษาใหม่
+ */
+describe('ภาษาที่ผู้ใช้เห็นต้องเป็นภาษาที่เจ้าของ SME ใช้', () => {
+  const JARGON = ['ARPU', 'LTV', 'CAC', 'MRR', 'churn', 'persona', 'funnel', 'unit economics'];
+
+  it('ไม่มีศัพท์การตลาดภาษาอังกฤษหลุดไปอยู่ในข้อความที่ผู้ใช้อ่าน', () => {
+    const texts = [...assessReadiness(blank()), ...assessReadiness(proven())].flatMap((g) => [
+      g.question,
+      g.evidence,
+      g.action,
+    ]);
+
+    for (const text of texts) {
+      for (const word of JARGON) {
+        expect(text.toLowerCase()).not.toContain(word.toLowerCase());
+      }
+    }
+  });
+
+  it('ข้อความตรวจก่อนใช้เงินก็ต้องไม่มีศัพท์เช่นกัน', () => {
+    for (const action of SCALE_ACTIONS) {
+      const verdict = scaleCheck(action.id, assessReadiness(blank()));
+      for (const word of JARGON) {
+        expect(verdict.message.toLowerCase()).not.toContain(word.toLowerCase());
+      }
+    }
   });
 });

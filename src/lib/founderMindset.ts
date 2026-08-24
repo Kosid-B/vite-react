@@ -20,7 +20,6 @@
 // pure + tested · ไม่เรียกเน็ต ไม่อ่านเวลา (deterministic)
 
 import type { AppData, PageId } from '../types';
-import { ltvOf } from './growthEconomics';
 
 /**
  * คำถามที่ทุกฟีเจอร์/คอนเทนต์/แคมเปญต้องตอบให้ได้ก่อนสร้าง
@@ -66,8 +65,17 @@ export function assessReadiness(d: AppData): Gate[] {
   const revenueEntries = (d.finance ?? []).filter((e) => e.kind === 'revenue');
   const closedDeals = (d.marketplace?.deals ?? []).filter((x) => x.status === 'closed');
   const personas = d.personas ?? [];
-  const eco = d.growthEco;
-  const ltv = eco ? ltvOf(eco) : 0;
+
+  /**
+   * นับเฉพาะรายการที่ผู้ใช้กรอกเอง ไม่รวมรายการอัตโนมัติ
+   *
+   * autoEntries() ใส่ "ค่าแพ็กเกจ CEO AI Thailand" เป็นรายจ่ายให้อัตโนมัติเมื่อจ่ายแพ็ก
+   * นับรวมด้วยเมื่อไร ด่าน "รู้กำไรจริง" จะผ่านเองทันทีที่จ่ายค่าแพ็ก
+   * ทั้งที่ผู้ใช้ยังไม่เคยบันทึกต้นทุนธุรกิจตัวเองสักบาท
+   */
+  const manual = d.finance ?? [];
+  const revenue = manual.filter((e) => e.kind === 'revenue').reduce((s2, e) => s2 + e.amount, 0);
+  const expense = manual.filter((e) => e.kind === 'expense').reduce((s2, e) => s2 + e.amount, 0);
 
   // ── 1. ปัญหาจริงหรือเราคิดไปเอง ──
   const research = d.marketInsight;
@@ -80,8 +88,8 @@ export function assessReadiness(d: AppData): Gate[] {
   // ── 3. มีคนจ่ายจริงแล้วหรือยัง ──
   const paidOnce = revenueEntries.length > 0 || closedDeals.length > 0;
 
-  // ── 4. รู้ไหมว่าได้ลูกค้าหนึ่งคนต้นทุนเท่าไร ──
-  const economicsPassed = ltv > 0 && (eco?.currentMRR ?? 0) > 0;
+  // ── 4. ขายแล้วเหลือเท่าไร ──
+  const economicsPassed = revenue > 0 && expense > 0;
 
   // ── 5. วัดผลได้จริงไหม ──
   const trackingPassed = d.funnelSource === 'real';
@@ -108,11 +116,11 @@ export function assessReadiness(d: AppData): Gate[] {
       question: 'ระบุได้ไหมว่าลูกค้าคนแรกคือใคร',
       passed: customerPassed,
       evidence: customerPassed
-        ? `มี ${personas.length} persona และเลือกแล้วว่าขายแบบ ${d.audienceType === 'b2b' ? 'B2B' : 'B2C'}`
+        ? `ตั้งลูกค้าเป้าหมายไว้ ${personas.length} แบบ · ขายให้${d.audienceType === 'b2b' ? 'ธุรกิจ' : 'ลูกค้าทั่วไป'}`
         : personas.length === 0
-          ? 'ยังไม่มี persona สักคน'
-          : 'ยังไม่ได้เลือกว่าขาย B2B หรือ B2C',
-      action: 'สร้าง persona ให้เจาะจงจนนึกหน้าออก',
+          ? 'ยังไม่ได้ตั้งลูกค้าเป้าหมายสักแบบ'
+          : 'ยังไม่ได้เลือกว่าขายให้ธุรกิจหรือขายให้ลูกค้าทั่วไป',
+      action: 'ตั้งลูกค้าเป้าหมายให้เจาะจงจนนึกหน้าออก',
       goto: 'personas',
     },
     {
@@ -126,25 +134,34 @@ export function assessReadiness(d: AppData): Gate[] {
       goto: 'storefront',
     },
     {
+      /**
+       * ⚠️ ด่านนี้เคยอ่านจาก growthEco (ARPU/LTV/MRR) ซึ่งกรอกได้เฉพาะในหน้าผู้ดูแลระบบ
+       * ผู้ใช้ทั่วไปจึงผ่านไม่ได้ตลอดกาล และเพราะ nextBestAction() คืนด่านแรกที่ยังไม่ผ่าน
+       * ทุกคนที่ผ่านสามด่านแรกจะถูกจอดอยู่ที่งานที่ตัวเองทำไม่ได้ — ทางตันที่ไม่มีอะไรฟ้อง
+       *
+       * ย้ายมาอ่านจากรายรับ-รายจ่ายที่ผู้ใช้กรอกเองในคลังเมือง ซึ่งเป็นตัวเลขเดียวกัน
+       * ที่เจ้าของ SME คิดอยู่แล้วทุกวัน: ขายได้เท่าไร จ่ายไปเท่าไร เหลือเท่าไร
+       */
       id: 'economics',
-      question: 'รู้ไหมว่าได้ลูกค้าหนึ่งคนต้นทุนเท่าไร และเขาอยู่กับเรานานแค่ไหน',
+      question: 'ขายแล้วเหลือกำไรเท่าไร รู้ตัวเลขจริงหรือเดาเอา',
       passed: economicsPassed,
       evidence: economicsPassed
-        ? `LTV ${ltv.toLocaleString('th-TH')} บาท · MRR ${(eco?.currentMRR ?? 0).toLocaleString('th-TH')} บาท/เดือน`
-        : ltv > 0
-          ? 'มี LTV แล้วแต่ยังไม่มีรายรับต่อเดือน'
-          : 'ยังไม่ได้กรอกรายได้เฉลี่ยต่อลูกค้าและอายุลูกค้า',
-      action: 'กรอก ARPU กับอายุเฉลี่ยลูกค้า แล้วดู LTV ÷ CAC',
-      goto: 'analytics',
+        ? `รายรับ ${revenue.toLocaleString('th-TH')} บาท · รายจ่าย ${expense.toLocaleString('th-TH')} บาท · ` +
+          `เหลือ ${(revenue - expense).toLocaleString('th-TH')} บาท`
+        : revenue > 0
+          ? 'บันทึกรายรับแล้ว แต่ยังไม่ได้บันทึกรายจ่าย จึงยังไม่รู้ว่าเหลือเท่าไร'
+          : 'ยังไม่ได้บันทึกรายรับกับรายจ่ายจริง',
+      action: 'บันทึกรายรับกับรายจ่ายจริง แล้วดูว่าขายแล้วเหลือเท่าไร',
+      goto: 'city',
     },
     {
       id: 'tracking',
       question: 'ถ้ายิงเงินออกไป จะรู้ไหมว่าอันไหนได้ผล',
       passed: trackingPassed,
       evidence: trackingPassed
-        ? 'ต่อข้อมูล funnel จริงแล้ว'
-        : 'funnel ยังเป็นตัวเลขตัวอย่าง ไม่ใช่ข้อมูลจริง',
-      action: 'ต่อข้อมูลจริงเข้า funnel ก่อน ไม่งั้นจ่ายไปก็ไม่รู้ว่าคุ้มไหม',
+        ? 'ใส่ตัวเลขจริงในกรวยลูกค้าแล้ว'
+        : 'กรวยลูกค้ายังเป็นตัวเลขตัวอย่าง ไม่ใช่ของจริง',
+      action: 'ใส่ตัวเลขจริงลงกรวยลูกค้าก่อน ไม่งั้นจ่ายไปก็ไม่รู้ว่าอันไหนได้ผล',
       goto: 'funnel',
     },
     {
