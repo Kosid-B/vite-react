@@ -20,6 +20,7 @@
 // pure + tested · ไม่เรียกเน็ต ไม่อ่านเวลา (deterministic)
 
 import type { AppData, PageId } from '../types';
+import { DEFAULT_DATA } from '../data';
 
 /**
  * คำถามที่ทุกฟีเจอร์/คอนเทนต์/แคมเปญต้องตอบให้ได้ก่อนสร้าง
@@ -53,6 +54,9 @@ export const STAGE_LABEL: Record<Stage, string> = {
   scale: 'พร้อมขยาย',
 };
 
+/** id ของดีลสาธิตที่มากับแอป — ห้ามนับเป็นหลักฐานว่ามีคนจ่ายเงินจริง */
+const DEMO_DEAL_IDS = new Set((DEFAULT_DATA.marketplace?.deals ?? []).map((x) => x.id));
+
 /** จำนวนครั้งที่รายได้ต้องเกิดซ้ำ ถึงจะนับว่าไม่ใช่ลูกค้ารายเดียวบังเอิญ */
 const REPEAT_THRESHOLD = 3;
 
@@ -63,7 +67,20 @@ const REPEAT_THRESHOLD = 3;
  */
 export function assessReadiness(d: AppData): Gate[] {
   const revenueEntries = (d.finance ?? []).filter((e) => e.kind === 'revenue');
-  const closedDeals = (d.marketplace?.deals ?? []).filter((x) => x.status === 'closed');
+  /**
+   * ⚠️ ตัดดีลตัวอย่างที่มากับแอปออกก่อนเสมอ
+   *
+   * DEFAULT_DATA มีดีลสาธิต 'dl1' สถานะ closed มูลค่า 45,000 บาทติดมาด้วย
+   * นับรวมเมื่อไร ผู้ใช้ที่เพิ่งเปิดแอปวินาทีแรกจะถูกบอกว่า "มีคนจ่ายเงินให้เราแล้ว"
+   * ทั้งที่ยังไม่มีใครจ่ายสักบาท — เป็นการหลอกตัวเองที่ระบบเป็นคนสร้างให้
+   * ซึ่งตรงข้ามกับเหตุผลทั้งหมดที่ด่านชุดนี้มีอยู่
+   *
+   * เทียบกับ id ของ DEFAULT_DATA แทนการเขียน id ไว้ตรง ๆ เพื่อให้เปลี่ยนข้อมูลสาธิต
+   * เมื่อไร ตัวกรองก็ตามไปเอง (เขียนไว้ตรง ๆ แล้ววันหนึ่งจะหลุดโดยไม่มีใครรู้)
+   */
+  const closedDeals = (d.marketplace?.deals ?? []).filter(
+    (x) => x.status === 'closed' && !DEMO_DEAL_IDS.has(x.id),
+  );
   const personas = d.personas ?? [];
 
   /**

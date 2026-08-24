@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { AppData } from '../../types';
 import { PAGE_MIN_PLAN } from '../access';
+import { DEFAULT_DATA } from '../../data';
 import {
   GOLDEN_QUESTION,
   assessReadiness,
@@ -311,5 +312,43 @@ describe('ทุกด่านต้องไปทำต่อได้จร�
 
   it('งานถัดไปของธุรกิจที่ยังไม่มีอะไรเลย ต้องไปหน้าที่ทำได้ทันที', () => {
     expect(PAGE_MIN_PLAN[nextBestAction(assessReadiness(blank())).goto]).toBeUndefined();
+  });
+});
+
+/**
+ * ⚠️ ข้อมูลสาธิตที่มากับแอป ห้ามนับเป็นหลักฐาน
+ *
+ * เจอตอนถ่ายภาพหน้าจอสถานะ "ผู้ใช้ใหม่เอี่ยม" แล้วเห็นเครื่องหมายถูกขึ้นที่ด่าน
+ * "มีคนจ่ายเงินให้เราแล้วหรือยัง" พร้อมข้อความ "มีรายรับ 0 รายการ · ดีลที่ปิดได้ 1 ดีล"
+ * — DEFAULT_DATA มีดีลสาธิตสถานะ closed ติดมาด้วย
+ *
+ * ผู้ใช้ที่เพิ่งเปิดแอปวินาทีแรกจึงถูกบอกว่ามีลูกค้าจ่ายเงินแล้ว ทั้งที่ยังไม่มีใครจ่ายสักบาท
+ * เป็นการหลอกตัวเองที่ระบบเป็นคนสร้างให้ ซึ่งตรงข้ามกับเหตุผลทั้งหมดที่ด่านชุดนี้มีอยู่
+ */
+describe('ข้อมูลสาธิตที่มากับแอป', () => {
+  it('ผู้ใช้ที่เพิ่งเปิดแอปครั้งแรกต้องไม่ผ่านด่านไหนเลย', () => {
+    const gates = assessReadiness(DEFAULT_DATA);
+    const passedIds = gates.filter((g) => g.passed).map((g) => g.id);
+
+    expect(passedIds).toEqual([]);
+  });
+
+  it('ดีลสาธิตที่ปิดแล้วต้องไม่นับ แต่ดีลที่ผู้ใช้สร้างเองต้องนับ', () => {
+    const demoId = DEFAULT_DATA.marketplace.deals[0].id;
+    const d: AppData = {
+      ...blank(),
+      marketplace: {
+        feePct: 3,
+        partners: [],
+        deals: [
+          { id: demoId, partnerId: 'mp1', title: 'ดีลสาธิต', amount: 45000, status: 'closed' },
+          { id: 'ของผู้ใช้เอง', partnerId: 'mp1', title: 'ดีลจริง', amount: 9000, status: 'closed' },
+        ],
+      },
+    };
+
+    const offer = assessReadiness(d).find((g) => g.id === 'offer');
+    expect(offer?.passed).toBe(true);
+    expect(offer?.evidence).toMatch(/1 ดีล/);
   });
 });
