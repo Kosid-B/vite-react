@@ -336,6 +336,21 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 กติกา: ห้ามใช้ secret ข้ามกล่อง · ห้าม commit .env · anon/publishable key = public โดยดีไซน์
 ```
 
+## ⚠️ ก่อนสร้างไฟล์ที่เป็น "แกนของระบบ"
+
+```bash
+git fetch origin && git log --oneline origin/main -10
+git ls-tree -r --name-only origin/main | grep -i "<ชื่อที่จะสร้าง>"
+```
+
+**ต้องทำก่อนเสมอ** — ledger #50: สร้าง `src/lib/founderMindset.ts` ขึ้นใหม่ทั้งไฟล์
+พร้อมเทสต์ 25 ข้อ ทั้งที่ `main` มีอยู่แล้ว ชื่อเดียวกัน เจตนาเดียวกัน กติกาตรงข้ามกัน
+เพราะ branch ตามหลัง `main` 137 คอมมิตและไม่ได้ fetch ก่อน
+ต้นทุนการค้น 10 วินาที · ต้นทุนการไม่ค้นคือรัฐธรรมนูญฉบับที่สามที่ใช้ไม่ได้
+
+ของซ้ำ "ในรีโป" มี `src/lib/__tests__/spineOwner.test.ts` เฝ้าให้แล้ว
+ของซ้ำ "คนละ branch" เทสต์กันไม่ได้ — กันด้วยคำสั่งข้างบนเท่านั้น
+
 ## Dev Commands
 ```bash
 npm install          # install deps
