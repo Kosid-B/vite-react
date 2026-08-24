@@ -28,7 +28,7 @@ import type { AppData, PageId } from '../types';
  * ระบบทำได้แค่บังคับให้มีคำตอบ ส่วนคำตอบดีพอไหมเป็นงานของคนหรือของบอร์ด
  */
 export const GOLDEN_QUESTION =
-  'สิ่งที่กำลังทำนี้ช่วยให้ธุรกิจเข้าใกล้ลูกค้า หลักฐาน กำไร หรือ Scale มากขึ้นอย่างไร?';
+  'สิ่งที่กำลังทำนี้ช่วยให้ธุรกิจเข้าใกล้ลูกค้า หลักฐาน กำไร หรือขยายได้ มากขึ้นอย่างไร?';
 
 export type GateId = 'problem' | 'customer' | 'offer' | 'economics' | 'tracking' | 'evidence';
 
@@ -109,7 +109,9 @@ export function assessReadiness(d: AppData): Gate[] {
           ? 'ผ่านการพิสูจน์ไอเดียของ CMO แล้ว (GO)'
           : 'ยังไม่มีผลวิจัยตลาดหรือผลพิสูจน์ไอเดียในระบบ',
       action: 'ทำวิจัยตลาดให้จบก่อน — ยังไม่ต้องสร้างอะไร',
-      goto: 'market',
+      // 'marketing' คือหน้าที่มีเครื่องมือประเมินขนาดตลาด (MarketSizingPanel)
+      // ไม่ใช่ 'market' ซึ่งเป็น Marketplace ตลาด B2B และยังต้องใช้แพ็ก growth ด้วย
+      goto: 'marketing',
     },
     {
       id: 'customer',

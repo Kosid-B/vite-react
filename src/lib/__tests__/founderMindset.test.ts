@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AppData } from '../../types';
+import { PAGE_MIN_PLAN } from '../access';
 import {
   GOLDEN_QUESTION,
   assessReadiness,
@@ -219,7 +220,7 @@ describe('งานถัดไป', () => {
     const next = nextBestAction(assessReadiness(blank()));
 
     expect(next.isValidation).toBe(true);
-    expect(next.goto).toBe('market');
+    expect(next.goto).toBe('marketing');
   });
 
   it('ผ่านครบแล้วถึงจะบอกให้เร่งเครื่อง', () => {
@@ -235,7 +236,7 @@ describe('งานถัดไป', () => {
       funnelSource: 'seed',
     };
     // ทั้งด่านปัญหาและด่านวัดผลไม่ผ่าน — ต้องได้ด่านปัญหาซึ่งมาก่อน
-    expect(nextBestAction(assessReadiness(d)).goto).toBe('market');
+    expect(nextBestAction(assessReadiness(d)).goto).toBe('marketing');
   });
 });
 
@@ -248,7 +249,7 @@ describe('Golden Question', () => {
     expect(GOLDEN_QUESTION).toMatch(/ลูกค้า/);
     expect(GOLDEN_QUESTION).toMatch(/หลักฐาน/);
     expect(GOLDEN_QUESTION).toMatch(/กำไร/);
-    expect(GOLDEN_QUESTION).toMatch(/Scale/);
+    expect(GOLDEN_QUESTION).toMatch(/ขยาย/);
   });
 });
 
@@ -286,5 +287,29 @@ describe('ภาษาที่ผู้ใช้เห็นต้องเป�
         expect(verdict.message.toLowerCase()).not.toContain(word.toLowerCase());
       }
     }
+  });
+});
+
+/**
+ * ⚠️ ด่านที่ผู้ใช้ไปทำต่อไม่ได้ ไม่ใช่ด่าน มันคือกำแพง
+ *
+ * เจอมาแล้วสองแบบในไฟล์นี้:
+ *   1. ด่านอ่านข้อมูลที่กรอกได้เฉพาะหน้าผู้ดูแลระบบ (growthEco) → ไม่มีวันผ่าน
+ *   2. ปุ่มพาไปหน้าที่ต้องใช้แพ็กเสียเงิน หรือหน้าที่ไม่ได้มีเครื่องมือนั้นอยู่จริง
+ *
+ * ทั้งสองแบบโค้ดทำงานถูกต้องทุกบรรทัด ไม่มี error ไม่มีเทสต์แดง —
+ * ผู้ใช้แค่ติดอยู่ตรงนั้นเงียบ ๆ · เทสต์ชุดนี้กันไว้ที่ระดับโครงสร้าง
+ */
+describe('ทุกด่านต้องไปทำต่อได้จริงด้วยแพ็กฟรี', () => {
+  it('ปุ่มของทุกด่านต้องไม่พาไปหน้าที่ต้องใช้แพ็กเสียเงิน', () => {
+    const blocked = assessReadiness(blank())
+      .filter((g) => PAGE_MIN_PLAN[g.goto])
+      .map((g) => `${g.id} → ${g.goto} (ต้องใช้แพ็ก ${PAGE_MIN_PLAN[g.goto]})`);
+
+    expect(blocked).toEqual([]);
+  });
+
+  it('งานถัดไปของธุรกิจที่ยังไม่มีอะไรเลย ต้องไปหน้าที่ทำได้ทันที', () => {
+    expect(PAGE_MIN_PLAN[nextBestAction(assessReadiness(blank())).goto]).toBeUndefined();
   });
 });
