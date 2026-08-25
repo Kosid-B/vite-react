@@ -1,3 +1,4 @@
+import { governingBlock } from './aiGuardrails';
 /** Decision Logic ของ Skill ที่บริษัทซื้อแล้ว — ถูก inject เข้า prompt (mandate)
  *  ทุกครั้งที่เอเจนต์ทำงานจริงผ่าน agent-run เพื่อให้เอเจนต์ปฏิบัติตามกติกาของ skill */
 
@@ -48,8 +49,12 @@ export function skillDirectives(purchasedSkills: string[] | undefined): string {
 }
 
 /** ต่อ directive ท้าย mandate ก่อนส่งเข้า agent-run
- *  — PLG เป็นหลักการออกแบบระดับระบบ ใส่ให้เสมอ · skill อื่นใส่เมื่อซื้อแล้ว */
+ *  — PLG เป็นหลักการออกแบบระดับระบบ ใส่ให้เสมอ · skill อื่นใส่เมื่อซื้อแล้ว
+ *
+ *  🔴 24 ส.ค. 2569: เติม `governingBlock()` ด้วย — นี่คือ **คอขวดเดียว** ของ mandate
+ *     ที่ส่งเข้า `agent-run` ⇒ เอเจนต์ทุกตัวได้รับกติกาโดยไม่ต้อง deploy edge function
+ *     (ผมเคยบอกเจ้าของว่าต้อง deploy มือถึงจะทำได้ — **ไม่จริง** เพราะคำสั่งประกอบฝั่ง client) */
 export function withSkillDirectives(mandate: string, purchasedSkills: string[] | undefined): string {
-  const parts = [mandate, SYSTEM_DESIGN_DIRECTIVE, skillDirectives(purchasedSkills)].filter(Boolean);
+  const parts = [mandate, governingBlock(), SYSTEM_DESIGN_DIRECTIVE, skillDirectives(purchasedSkills)].filter(Boolean);
   return parts.join('\n\n');
 }

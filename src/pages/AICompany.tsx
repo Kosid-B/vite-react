@@ -1,3 +1,4 @@
+import { governingBlock } from '../lib/aiGuardrails';
 import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { trackAiCall } from '../lib/usage';
 import type { AppData, Agent, ApprovalStatus, TaskStatus, SkillPlanItem, CustomSkill, RoleCompetency } from '../types';
@@ -235,7 +236,9 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
       if (!supabase) { applyPlan(localPlan(localArgs), 'local'); return; }
       trackAiCall();
       const { data: res, error } = await supabase.functions.invoke('ai-plan', {
-        body: { goal: c.goal, industry: c.industry, agents: c.agents.map(a => ({ role: a.role, mandate: a.mandate })) },
+        // กติกาเดินทางไปกับแผนด้วย — CEO วางแผนโดยไม่รู้กติกา = แผนที่ต้องมาแก้ทีหลัง
+        body: { goal: c.goal, industry: c.industry, guardrails: governingBlock(),
+          agents: c.agents.map(a => ({ role: a.role, mandate: a.mandate })) },
       });
       if (error) throw error;
       if (!res?.tasks?.length && !res?.approvals?.length) throw new Error('empty plan');

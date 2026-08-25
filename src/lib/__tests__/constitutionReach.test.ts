@@ -110,3 +110,30 @@ describe('🔴 เส้นแบ่งเจ้าของ + เอกสา�
     expect(doc).toMatch(/33 ตาราง/);
   });
 });
+
+/* ── agent-run / ai-plan — เดิมบันทึกว่า "ต้อง deploy edge function ถึงจะทำได้"
+ * ตรวจซ้ำแล้วพบว่า **ไม่จริง**: คำสั่งประกอบฝั่ง client ทั้งหมด
+ * ⇒ เติมกติกาที่คอขวดฝั่ง client ได้เลย ไม่ต้อง deploy
+ * ──────────────────────────────────────────────────────────────────────── */
+describe('🔴 เอเจนต์ (agent-run) และแผนของ CEO (ai-plan) ต้องได้รับกติกาด้วย', () => {
+  it('ทุก mandate ที่ส่งเข้า agent-run ผ่าน withSkillDirectives ต้องมีกติกาติดไป', async () => {
+    const { withSkillDirectives } = await import('../skillDirectives');
+    const out = withSkillDirectives('คุณคือ CMO', []);
+    expect(out).toContain('คุณคือ CMO');
+    expect(out).toContain(GOLDEN_QUESTION);
+    expect(out).toMatch(/Validation ก่อน Scale/);
+  });
+
+  it('ai-plan ต้องส่ง guardrails ไปด้วย — CEO วางแผนโดยไม่รู้กติกา = แผนที่ต้องมาแก้ทีหลัง', () => {
+    const src = readFileSync(resolve(SRC, 'pages/AICompany.tsx'), 'utf8');
+    expect(src).toMatch(/guardrails:\s*governingBlock\(\)/);
+  });
+
+  it('🔴 mandate ที่ไม่ผ่าน withSkillDirectives = ช่องโหว่ — ต้องนับไว้ว่ามีกี่จุด', () => {
+    const ai = readFileSync(resolve(SRC, 'pages/AICompany.tsx'), 'utf8');
+    const guarded = (ai.match(/withSkillDirectives\(/g) ?? []).length;
+    // 8 จุด = สถานะจริง ณ 24 ส.ค. 2569 (นับ call site ไม่ใช่บรรทัดที่มีคำนี้ — import ก็ติดมาด้วย)
+    // ลดลงเมื่อไรแปลว่ามีคนถอดกติกาออกจากเอเจนต์
+    expect(guarded).toBeGreaterThanOrEqual(8);
+  });
+});
