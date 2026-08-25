@@ -70,23 +70,60 @@ export type ReadinessKey = typeof READINESS_CHECKS[number]['key'];
 
 /** สิ่งที่ผู้ใช้ขอให้ทำ — จำแนกเพื่อรู้ว่าต้องผ่านด่านไหนบ้าง */
 export type AskIntent =
-  | 'paid-acquisition'   // ยิงแอด · ซื้อวิว · จ้างอินฟลูฯ
+  /** 🔬 ซื้อสื่อ **เพื่อหาคำตอบ** — งบเล็ก · สมมติฐานเดียว · segment เดียว · offer เดียว · มีเงื่อนไขหยุด
+   *  เจ้าของแก้ถูก 24 ส.ค. 2569: เดิมรวมเป็น 'paid-acquisition' ก้อนเดียวแล้วกั้นหมด
+   *  ⇒ กลายเป็น hard-block ที่ขัด Growth Mindset เพราะ **paid ก้อนเล็กคือเครื่องมือหาหลักฐาน** */
+  | 'paid-validation'
+  /** 💸 เพิ่มงบเพื่อ **ขยายผลที่พิสูจน์แล้ว** — ต้องผ่าน evidence gate ก่อนเสมอ */
+  | 'paid-scale'
   | 'scale'              // ขยายสาขา · จ้างทีม · เพิ่มกำลังผลิต
   | 'content'            // ทำคอนเทนต์ · โพสต์ · คลิป
   | 'build'              // สร้างฟีเจอร์ · ทำเว็บ · ทำระบบ
   | 'validate'           // สัมภาษณ์ · ทดสอบ · หาลูกค้ารายแรก
   | 'other';
 
-const INTENT_WORDS: Record<Exclude<AskIntent, 'other'>, string[]> = {
-  'paid-acquisition': ['ยิงแอด', 'ยิง ads', 'ads', 'โฆษณา', 'บูสต์', 'boost', 'ซื้อวิว', 'อินฟลู'],
+/** คำที่บอกว่าเป็นการ **ขยายผล** ไม่ใช่การทดลอง — ตรวจก่อน paid-validation เสมอ */
+const PAID_SCALE_WORDS = [
+  'เพิ่มงบ', 'เพิ่มงบประมาณ', 'ขยายงบ', 'อัดงบ', 'ทุ่มงบ', 'scale ad', 'สเกลแอด',
+  'ยิงเต็มที่', 'ยิงหนัก', 'เร่งยอด', 'เร่งยอดขาย', 'เร่งสมัคร',
+];
+
+const INTENT_WORDS: Record<Exclude<AskIntent, 'other' | 'paid-scale'>, string[]> = {
+  'paid-validation': ['ยิงแอด', 'ยิง ads', 'ads', 'แอด', 'โฆษณา', 'บูสต์', 'boost', 'ซื้อวิว', 'อินฟลู'],
   scale: ['ขยาย', 'เปิดสาขา', 'จ้างทีม', 'จ้างพนักงาน', 'เพิ่มกำลังผลิต', 'scale'],
   content: ['คอนเทนต์', 'content', 'โพสต์', 'คลิป', 'รีล', 'บทความ', 'แคปชัน'],
   build: ['สร้างฟีเจอร์', 'ทำเว็บ', 'ทำระบบ', 'ทำแอป', 'feature', 'พัฒนาระบบ'],
   validate: ['สัมภาษณ์', 'ทดสอบตลาด', 'หาลูกค้ารายแรก', 'validate', 'พิสูจน์'],
 };
 
+/** งบที่ยังถือว่าเป็น "การทดลอง" ไม่ใช่ "การขยายผล" (บาท/รอบ)
+ *  เหนือกว่านี้ ต่อให้พูดเหมือนทดลอง ก็ต้องผ่านด่านของ paid-scale
+ *  🏷️ POLICY — ตั้งจากนโยบาย ยังไม่ใช่ค่าที่พิสูจน์จากผลจริง (ดู `THRESHOLD_STATUS`) */
+export const PAID_VALIDATION_BUDGET_CEILING = 5_000;
+
+/** ดึงจำนวนเงินจากประโยค — รองรับ "100,000" · "100000 บาท" · "5พัน" · "1 หมื่น" */
+export function budgetInAsk(raw: string): number | null {
+  const t = raw.replace(/,/g, '');
+  // ⚠️ ห้ามใช้ \b ท้ายหน่วยไทย — อักษรไทยไม่ใช่ word char ของ JS regex ⇒ ขอบเขตไม่เกิด
+  const unit = t.match(/(\d+(?:\.\d+)?)\s*(หมื่น|พัน|แสน|ล้าน|k|m)/i);
+  if (unit) {
+    const mult: Record<string, number> = { พัน: 1e3, หมื่น: 1e4, แสน: 1e5, ล้าน: 1e6, k: 1e3, m: 1e6 };
+    return Number(unit[1]) * mult[unit[2].toLowerCase()];
+  }
+  const plain = t.match(/(\d{3,})\s*(?:บาท|฿)?/);
+  return plain ? Number(plain[1]) : null;
+}
+
 export function classifyAsk(raw: string): AskIntent {
   const r = raw.toLowerCase();
+  // คำที่บอกว่า "ขยายผล" ชัดเจนอยู่แล้ว ตัดสินก่อน — "เพิ่มงบ" ไม่ต้องมีคำว่าแอดก็รู้ว่าคืออะไร
+  if (PAID_SCALE_WORDS.some((w) => r.includes(w.toLowerCase()))) return 'paid-scale';
+  const isPaid = INTENT_WORDS['paid-validation'].some((w) => r.includes(w.toLowerCase()));
+  if (isPaid) {
+    // ขยายผลหรือทดลอง? งบเป็นตัวตัดสิน — งบใหญ่ไม่ใช่การทดลองไม่ว่าจะเรียกว่าอะไร
+    const b = budgetInAsk(raw);
+    return b != null && b > PAID_VALIDATION_BUDGET_CEILING ? 'paid-scale' : 'paid-validation';
+  }
   for (const [intent, words] of Object.entries(INTENT_WORDS)) {
     if (words.some((w) => r.includes(w.toLowerCase()))) return intent as AskIntent;
   }
@@ -95,7 +132,12 @@ export function classifyAsk(raw: string): AskIntent {
 
 /** ด่านที่แต่ละเจตนาต้องผ่าน — ยิ่งใช้เงิน/ยิ่งขยาย ยิ่งต้องผ่านครบ */
 export const REQUIRED_BY_INTENT: Record<AskIntent, ReadinessKey[]> = {
-  'paid-acquisition': ['problem', 'customer', 'offer', 'unitEconomics', 'tracking'],
+  /** 🔬 ทดลองด้วยงบเล็ก — ต้องการแค่ **วัดผลได้** กับ **รู้ว่าคุยกับใคร**
+   *  ไม่บังคับ offer/unitEconomics/evidence เพราะนั่นคือสิ่งที่การทดลองนี้กำลังจะไปหา
+   *  (กั้นตรงนี้ = กั้นการพิสูจน์ ซึ่งเป็นสิ่งเดียวกับที่ `validate: []` ห้ามไว้) */
+  'paid-validation': ['customer', 'tracking'],
+  /** 💸 ขยายผล — ต้องผ่านครบรวม evidence เพราะกำลังเอาเงินไปคูณสิ่งที่เชื่อว่าได้ผลแล้ว */
+  'paid-scale': ['problem', 'customer', 'offer', 'unitEconomics', 'tracking', 'evidence'],
   scale: ['problem', 'customer', 'offer', 'unitEconomics', 'tracking', 'evidence'],
   content: ['problem', 'customer'],
   build: ['problem', 'customer'],

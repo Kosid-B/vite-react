@@ -52,6 +52,19 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
    กลไก: `briefDocsContract.test.ts` **อ่านไฟล์ .md ตัวจริง** (เทสต์ที่ตรวจแต่โค้ดจับความผิดในเอกสารไม่ได้เลยสักข้อ)
 📄 **ทำเอกสารเป็น PDF**: `node scripts/md-to-pdf.mjs <in.md> <out.pdf> ["หัวเรื่อง"]` — ใช้ Chromium (HarfBuzz) เพราะไลบรารี PDF ทั่วไปวางวรรณยุกต์ไทยผิด
 
+🧠 **กฎการตัดสินใจ — `src/lib/decisionRules.ts`** (เจ้าของ freeze 24 ส.ค. 2569 จาก Case #001)
+**POD ที่ไฟล์นี้ทำให้เกิดจริง**: ระบบทั่วไปตอบ *"สร้างคอนเทนต์อะไรดี"* · CEO AI ต้อง **วินิจฉัยก่อน** แล้วตอบว่า *"ตอนนี้ยังไม่ควรทำคอนเทนต์เพิ่ม เพราะ X"*
+**ลำดับคอขวด (ห้ามข้ามขั้น)**: Measurement readiness → Lead capture → Segment routing → Message/Offer experiment → Organic distribution → Evidence accumulation → Paid validation → Scale
+🔬 **`paid_validation` ≠ `paid_scale`** (เจ้าของแก้ถูก — กฎเดิมของผมกั้นการใช้เงินทุกกรณี = hard-block ที่ขัด Growth Mindset)
+   ทดลอง (งบเล็ก · สมมติฐานเดียว · กลุ่มเดียว · มีเงื่อนไขหยุด) ต้องผ่านแค่ **customer + tracking** · เพิ่มงบต้องผ่านครบ 6 ด่านรวม evidence
+   ⚠️ **จำนวนเงินเป็นตัวตัดสิน ไม่ใช่คำพูด** — "ขอทดสอบยิงแอด 100,000 บาท" = `paid-scale`
+🔴 **นับได้ ≠ อัตราจริง** — `0/32` แปลว่า *"ยังไม่พบ"* **ไม่ใช่** *"อัตราจริงเป็นศูนย์"* (`stateSafely()` · `zeroIsNotProof()`)
+   ⇒ เลิกใช้ประโยค *"ศูนย์ไม่ต้องรอ sample"* · observed count ยืนยันได้ทันที · inferred rate ต้องมี `MIN_SAMPLE_FOR_RATE`
+🏷️ **ทุกเกณฑ์ติดป้าย `THRESHOLD_STATUS`** = `policy`/`hypothesis` เท่านั้น — **ห้ามมีตัวไหนเป็น `validated`** จนกว่าจะมีผลจริง
+   (เช่น "lead ≥ 50 ก่อนเพิ่มงบ" = **hypothesis** ไม่ใช่ข้อเท็จจริง · Learning Engine ต้องปรับค่านี้จาก outcome ภายหลัง)
+เคสต้นทาง: [CEOAI-MKT-CASE-001.md](docs/product/CEOAI-MKT-CASE-001.md) — dogfooding case แรก (ธุรกิจตัวอย่าง = เราเอง)
+   · เทสต์ `decisionRules.test.ts` (18) อ่านเอกสารจริง บังคับว่า Observed/Hypothesis/ยังพิสูจน์ไม่ได้ ต้องแยกกันเสมอ
+
 ⚗️ **ทุกครั้งที่เจอปัญหา — skill `dmaic`** (เจ้าของสั่ง 24 ส.ค. 2569: *"คุณหมกมุ่นแต่ปัญหา ๆ ต้องหาวิธีพัฒนาแล้วประเมินผล แล้วหาทางเลือกที่ดีที่สุดเลย · ผมอายุ 50 ปีแล้ว อย่าให้ผมเสียเวลาเยอะ"*)
 🔴 **ความผิดที่กันคือ "หยุดอยู่ที่ Analyze"** — รายงานว่าอะไรพัง ทำไมพัง มีจุดบอดอะไร แล้วส่งให้เจ้าของตัดสินใจเอง
    = **โยนงานที่หนักที่สุด (การเลือก) กลับไปให้คนที่มีเวลาน้อยที่สุด** · รายการปัญหายาว ๆ ดูเหมือนทำงานเยอะ ทั้งที่ยังไม่ได้ตัดสินใจอะไรเลย

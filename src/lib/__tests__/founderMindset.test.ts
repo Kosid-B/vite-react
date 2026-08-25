@@ -4,7 +4,7 @@ import {
   GOLDEN_QUESTION, VALID_OUTCOMES, answersGoldenQuestion, constitutionBlock,
 } from '../founderConstitution';
 import {
-  READINESS_CHECKS, REQUIRED_BY_INTENT, classifyAsk, founderGate,
+  READINESS_CHECKS, REQUIRED_BY_INTENT, classifyAsk, founderGate, budgetInAsk,
   readinessFromGenome, missionStage, founderMindsetBlock,
   type ReadinessKey,
 } from '../founderMindset';
@@ -81,8 +81,8 @@ describe('🔴 Golden Question — "AI ทำได้" ไม่ใช่เห
 });
 
 describe('🔴 Founder Mindset Engine — "อยากยิง Ads 100,000 บาท"', () => {
-  it('จำแนกเจตนาได้ถูก', () => {
-    expect(classifyAsk('อยากยิง Ads 100,000 บาท')).toBe('paid-acquisition');
+  it('จำแนกเจตนาได้ถูก — งบใหญ่ = ขยายผล ไม่ใช่การทดลอง', () => {
+    expect(classifyAsk('อยากยิง Ads 100,000 บาท')).toBe('paid-scale');
     expect(classifyAsk('อยากขยายสาขาที่ 2')).toBe('scale');
     expect(classifyAsk('ช่วยเขียนคอนเทนต์ให้หน่อย')).toBe('content');
     expect(classifyAsk('อยากสัมภาษณ์ลูกค้า')).toBe('validate');
@@ -91,16 +91,48 @@ describe('🔴 Founder Mindset Engine — "อยากยิง Ads 100,000 บ
   it('ธุรกิจที่ยังไม่พร้อม ขอยิงแอด → ต้องถูกกั้น และได้ขั้นต่อไปที่ทำได้จริง', () => {
     const v = founderGate('อยากยิง Ads 100,000 บาท', {});
     expect(v.allow).toBe(false);
-    expect(v.intent).toBe('paid-acquisition');
+    expect(v.intent).toBe('paid-scale');
     expect(v.missing[0].q).toBe('Problem validated?');
     expect(v.nextBestAction).toMatch(/สัมภาษณ์ลูกค้าเป้าหมาย 10 คน/);
     expect(v.why).toMatch(/ยังไม่ควรทำ/);
   });
 
   it('บอกครบว่าเหลืออีกกี่ด่าน ไม่ใช่บอกทีละข้อแล้วให้เดา', () => {
-    const v = founderGate('ยิงแอด', {});
-    expect(v.missing.length).toBe(REQUIRED_BY_INTENT['paid-acquisition'].length);
-    expect(v.why).toMatch(/เหลืออีก 5 ด่าน/);
+    const v = founderGate('ยิงแอด 300,000 บาท', {});
+    expect(v.intent).toBe('paid-scale');
+    expect(v.missing.length).toBe(REQUIRED_BY_INTENT['paid-scale'].length);
+    expect(v.why).toMatch(/เหลืออีก 6 ด่าน/);
+  });
+
+  /* ── เจ้าของแก้ถูก 24 ส.ค. 2569: paid_validation ≠ paid_scale ─────────────
+   * เดิมผมรวมเป็น 'paid-acquisition' ก้อนเดียวแล้วกั้นหมด = hard-block ทุกกรณี
+   * ซึ่งขัด Growth Mindset เพราะ **paid ก้อนเล็กคือเครื่องมือหาหลักฐาน**
+   * ─────────────────────────────────────────────────────────────────────── */
+  it('🔬 ยิงแอดงบเล็กเพื่อหาคำตอบ = การทดลอง ต้องไม่ถูกกั้นแบบเดียวกับการขยายผล', () => {
+    expect(classifyAsk('อยากยิงแอด 2,000 บาท ทดสอบพาดหัว')).toBe('paid-validation');
+    expect(REQUIRED_BY_INTENT['paid-validation'].length)
+      .toBeLessThan(REQUIRED_BY_INTENT['paid-scale'].length);
+    // ต้องการแค่ "รู้ว่าคุยกับใคร" + "วัดผลได้" — ไม่บังคับ offer/economics/evidence
+    expect(REQUIRED_BY_INTENT['paid-validation']).toEqual(['customer', 'tracking']);
+  });
+
+  it('🔬 พร้อม customer + tracking แล้ว ยิงทดลองได้เลย ไม่ต้องรอ evidence', () => {
+    const ready = { ...ALL_READY, problem: false, offer: false, unitEconomics: false, evidence: false };
+    const v = founderGate('ยิงแอด 3,000 บาท ทดสอบสาร', ready, 'เพื่อเก็บหลักฐานว่าสารไหนทำให้คนกรอก');
+    expect(v.intent).toBe('paid-validation');
+    expect(v.allow).toBe(true);
+  });
+
+  it('🔴 งบใหญ่ต่อให้บอกว่า "ทดสอบ" ก็ยังเป็นการขยายผล — เงินตัดสิน ไม่ใช่คำพูด', () => {
+    expect(classifyAsk('ขอทดสอบยิงแอด 100,000 บาท')).toBe('paid-scale');
+    expect(classifyAsk('เพิ่มงบแอดอีกหน่อย')).toBe('paid-scale');
+  });
+
+  it('อ่านงบจากประโยคได้ทั้งเลขเต็มและหน่วยไทย', () => {
+    expect(budgetInAsk('ยิงแอด 100,000 บาท')).toBe(100000);
+    expect(budgetInAsk('ยิงแอด 5พัน')).toBe(5000);
+    expect(budgetInAsk('ยิงแอด 1 หมื่น')).toBe(10000);
+    expect(budgetInAsk('ยิงแอดหน่อย')).toBeNull();   // ไม่ระบุงบ = ไม่เดา
   });
 
   it('พร้อมครบแล้ว แต่ตอบ Golden Question ไม่ได้ → ยังไม่ให้ทำ', () => {
@@ -123,8 +155,9 @@ describe('🔴 Founder Mindset Engine — "อยากยิง Ads 100,000 บ
   });
 
   it('ยิ่งใช้เงิน/ยิ่งขยาย ยิ่งต้องผ่านด่านมากขึ้น', () => {
-    expect(REQUIRED_BY_INTENT.scale.length).toBeGreaterThan(REQUIRED_BY_INTENT['paid-acquisition'].length);
-    expect(REQUIRED_BY_INTENT.content.length).toBeLessThan(REQUIRED_BY_INTENT['paid-acquisition'].length);
+    expect(REQUIRED_BY_INTENT.scale.length).toBeGreaterThan(REQUIRED_BY_INTENT['paid-validation'].length);
+    expect(REQUIRED_BY_INTENT['paid-scale'].length).toBeGreaterThan(REQUIRED_BY_INTENT['paid-validation'].length);
+    expect(REQUIRED_BY_INTENT.content.length).toBeLessThanOrEqual(REQUIRED_BY_INTENT['paid-scale'].length);
   });
 
   it('ทุกด่านต้องบอกทั้งเหตุผลและขั้นต่อไป — ห้ามห้ามเฉย ๆ', () => {
