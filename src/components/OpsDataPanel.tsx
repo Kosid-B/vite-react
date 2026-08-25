@@ -66,7 +66,9 @@ export default function OpsDataPanel({ data, onUpdate }: { data: AppData; onUpda
     reader.readAsText(file);
   }
 
-  const scoreColor = report.score >= 70 ? '#22c55e' : report.score >= 50 ? '#f59e0b' : '#ef4444';
+  // 🔴 score = null แปลว่า "ยังประเมินไม่ได้" ห้ามระบายสีให้ดูเหมือนมีคำตอบ
+  const scoreColor = report.score == null ? 'var(--st-mute,#94a3b8)'
+    : report.score >= 70 ? '#22c55e' : report.score >= 50 ? '#f59e0b' : '#ef4444';
 
   return (
     <div className="ops-card">
@@ -102,7 +104,11 @@ export default function OpsDataPanel({ data, onUpdate }: { data: AppData; onUpda
       <div className="ops-report">
         <div className="ops-report-hd">
           <span>สมรรถนะธุรกิจ</span>
-          <span className="ops-score" style={{ color: scoreColor }}>{report.score}<small>/100</small></span>
+          {report.score == null
+            ? <span className="ops-score ops-score-na" style={{ color: scoreColor }}>
+                ยังประเมินไม่ได้<small>บันทึกอีก {report.needMoreEntries} ครั้ง</small>
+              </span>
+            : <span className="ops-score" style={{ color: scoreColor }}>{report.score}<small>/100</small></span>}
         </div>
         <ul className="ops-summary">
           {report.summary.map((s, i) => <li key={i}>{s}</li>)}
@@ -113,7 +119,10 @@ export default function OpsDataPanel({ data, onUpdate }: { data: AppData; onUpda
               <div key={m.key} className="ops-metric">
                 <span className="ops-m-label">{m.label}</span>
                 <span className="ops-m-val">{m.latest?.toLocaleString()} <small>{m.unit}</small></span>
-                <span className={`ops-m-trend ${m.dir}`}>{m.dir === 'up' ? '▲' : m.dir === 'down' ? '▼' : '—'} {m.trendPct !== 0 ? Math.abs(m.trendPct) + '%' : ''}</span>
+                <span className={`ops-m-trend ${m.dir}`} title={m.whyFromShort}>
+                  {m.dir === 'unknown' ? '·' : m.dir === 'up' ? '▲' : m.dir === 'down' ? '▼' : '—'}
+                  {m.trendPct != null && m.trendPct !== 0 ? ' ' + Math.abs(m.trendPct) + '%' : ''}
+                </span>
               </div>
             ))}
           </div>

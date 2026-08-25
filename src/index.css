@@ -7319,3 +7319,10 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 /* ปุ่มในฟอร์มหน้าร้าน — ตัวอักษรขาวแต่ไม่มีพื้นหลังของตัวเอง ⇒ ขาวบนขาว */
 .sf-form button:not([class]) { background: var(--rust); color: #fff; border: none;
   border-radius: var(--r); padding: 8px 14px; font-family: inherit; font-weight: 600; cursor: pointer; }
+
+/* สถานะ "ยังประเมินไม่ได้" ของแผงสมรรถนะ (24 ส.ค. 2569)
+   ต้องดูต่างจากคะแนนจริงชัดเจน — ตัวเลขปลอมที่ดูเหมือนคำตอบ แย่กว่าไม่มีคำตอบ
+   ⚠️ ใช้โทเคน --st-mute คู่กับ fallback (GOTCHA #4b: สีตัวอักษรไม่มีความหมายถ้าไม่รู้พื้นหลัง) */
+.ops-score-na { font-size: .95rem; font-weight: 600; text-align: right; line-height: 1.25; }
+.ops-score-na small { display: block; font-size: .72rem; font-weight: 400; opacity: .8; }
+.ops-m-trend.unknown { opacity: .5; }
