@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useMemo, useState } from 'react';
 import { supabase, isSupabaseEnabled } from '../lib/supabase';
 import type { LandingAgg } from '../lib/landingFunnel';
@@ -38,15 +39,13 @@ export default function GrowthAiPanel({ landing }: { landing: LandingAgg | null 
     if (!isSupabaseEnabled || !supabase) { setMsg('โหมดออฟไลน์ — ต่อ Supabase ก่อนถึงเรียก AI ได้'); return; }
     setBusy(true); setMsg(null); setAnswer(null);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
-          page: 'admin',
-          pageLabel: 'วิเคราะห์พฤติกรรมผู้เยี่ยมชม (first-party)',
-          instruction: growthPrompt(brief),
-          context: `ข้อมูลรวมนิรนาม ไม่มีข้อมูลส่วนบุคคล · ผู้เข้าชม ${landing?.total ?? 0} คน`,
-        },
-      });
-      if (error) throw error;
+      // `growthPrompt()` พา brandBriefBlock เต็มก้อนมาอยู่แล้ว ⇒ ไม่ต้องเติมกติกาย่อซ้ำ
+      const data = await callAiAssist({
+        page: 'admin',
+        pageLabel: 'วิเคราะห์พฤติกรรมผู้เยี่ยมชม (first-party)',
+        instruction: growthPrompt(brief),
+        context: `ข้อมูลรวมนิรนาม ไม่มีข้อมูลส่วนบุคคล · ผู้เข้าชม ${landing?.total ?? 0} คน`,
+      }, { ungoverned: 'fullBriefAlready' });
       const out = Array.isArray(data?.suggestions) ? data.suggestions.join('\n') : (data?.text ?? data?.answer ?? '');
       setAnswer(String(out || '').trim() || null);
       if (!out) setMsg('AI ตอบกลับว่างเปล่า — ลองใหม่อีกครั้ง');

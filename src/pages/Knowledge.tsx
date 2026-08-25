@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useState } from 'react';
 import { track } from '../lib/analytics';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
@@ -53,14 +54,11 @@ export default function Knowledge() {
 
     setLoading(true);
     try {
-      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
+      const res = await callAiAssist({
           page: 'knowledge', pageLabel: 'คลังความรู้ ISO/PDPA',
           instruction: ragInstruction(query),
           context: buildContext(chunks),
-        },
-      });
-      if (error) throw new Error(error.message || 'ai_error');
+        });
       const a = res?.summary || (res?.suggestions?.length ? res.suggestions.join('\n• ') : '');
       setAnswer(a || 'AI ไม่ได้ส่งคำตอบกลับมา — ดูข้อกำหนดที่เกี่ยวข้องด้านล่าง');
       track('kb_query', { topic, hit: 1, mode: 'ai' });

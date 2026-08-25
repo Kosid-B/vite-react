@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useState } from 'react';
 import type { AppData } from '../types';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
@@ -39,13 +40,10 @@ export default function TrustContent({ data }: { data: AppData }) {
     setBusy(true); setMsg(''); setDraft(null); setSummary(null);
     try {
       trackAiCall();
-      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
+      const res = await callAiAssist({
           page: 'trust', pageLabel: 'สร้างคอนเทนต์ T.R.U.S.T.',
           instruction: buildTrustPrompt(brief),
-        },
-      });
-      if (error) throw error;
+        });
       const items = (res?.suggestions ?? []).map((s: string) => String(s));
       setSummary(res?.summary ? String(res.summary) : null);
       setDraft(items.length ? items : null);

@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useRef, useState } from 'react';
 import type { AppData } from '../types';
 import { routeIntake, type RoutedTask } from '../lib/intakeRouter';
@@ -110,17 +111,14 @@ export default function IntakePanel({ data, onUpdate }: { data: AppData; onUpdat
       const bmcSnap = bmc
         ? `ลูกค้า: ${(bmc.segments ?? []).join(', ') || '-'} · คุณค่า: ${(bmc.value ?? []).join(', ') || '-'} · รายได้: ${(bmc.revenue ?? []).join(', ') || '-'} · ต้นทุน: ${(bmc.costs ?? []).join(', ') || '-'}`
         : '(ยังไม่มี BMC)';
-      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
+      const res = await callAiAssist({
           page: 'aicompany',
           pageLabel: 'CEO วิเคราะห์ข้อมูลที่รับเข้า',
           instruction:
             'คุณคือ CEO วิเคราะห์ข้อมูลธุรกิจที่ผู้ใช้ส่งเข้ามาแบบเชิงลึก ตอบเป็นภาษาไทยแบบ bullet สั้นกระชับใน summary: ' +
             '(1) สรุปสถานการณ์/ปัญหาหลัก (2) ควรมอบงานให้ตำแหน่งใดบ้าง และทำอะไรเป็นลำดับแรก (3) กระทบ Business Model (BMC) หรือแผน 24 ขั้นอย่างไร ควรปรับจุดใด',
           context: `ทีมงาน AI ที่มี:\n${roster || '(ยังไม่มีทีม)'}\n\nBMC ปัจจุบัน: ${bmcSnap}\n\nข้อมูลที่ผู้ใช้ส่ง:\n${text.slice(0, 1500)}`,
-        },
-      });
-      if (error) throw error;
+        });
       const out = (res?.summary ?? '').trim();
       setAiSummary(out || '⚠️ AI ไม่ได้ส่งผลวิเคราะห์กลับมา — ลองใหม่อีกครั้ง');
     } catch {

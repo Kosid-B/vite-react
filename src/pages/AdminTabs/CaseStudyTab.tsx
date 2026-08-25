@@ -1,3 +1,4 @@
+import { callAiAssist } from '../../lib/aiAssist';
 import { useState } from 'react';
 import type { AppData, CaseStudy, CaseStudyLesson } from '../../types';
 import { isSupabaseEnabled, supabase } from '../../lib/supabase';
@@ -236,17 +237,14 @@ export default function CaseStudyTab({ data, onUpdate }: Props) {
     }
     setAiBusy(true);
     try {
-      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
+      const res = await callAiAssist({
           page: 'cases',
           pageLabel: 'Case Study',
           instruction:
             'สรุปข้อความต่อไปนี้ให้เป็นบทเรียนธุรกิจสำหรับ SME ไทย — summary = บทเรียนสำคัญ 1 ประโยค, ' +
             'suggestions = บทเรียน/ข้อคิดที่นำไปใช้ได้ 3-5 ข้อ (แต่ละข้อสั้น กระชับ ลงมือทำได้)',
           context: aiText.trim(),
-        },
-      });
-      if (error) throw error;
+        });
       const lessons: CaseStudyLesson[] = (res?.suggestions ?? [])
         .map((s: string) => ({ icon: '💡', body: String(s).trim() }))
         .filter((l: CaseStudyLesson) => l.body);

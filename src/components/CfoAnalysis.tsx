@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useState } from 'react';
 import type { AppData } from '../types';
 import { cfoMetrics, cfoFlags, cfoLocalAdvice, cfoPrompt } from '../lib/cfoAnalysis';
@@ -35,14 +36,11 @@ export default function CfoAnalysis({ data }: { data: AppData }) {
     }
     setBusy(true); setErr(null);
     try {
-      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
+      const res = await callAiAssist({
           page: 'cfo', pageLabel: 'CFO วิเคราะห์การเงิน',
           instruction: cfoPrompt(data),
           context: bridge.days > 0 ? `ผลการดำเนินงานจริงจากหน้าโรงงาน: ${bridge.note}` : '',
-        },
-      });
-      if (error) throw error;
+        }, { ungoverned: 'userNumbers' });
       const suggestions = (res?.suggestions ?? []).map((s: string) => String(s));
       setAiSummary(res?.summary ? String(res.summary) : null);
       setAiAdvice(suggestions.length ? suggestions : localAdvice);

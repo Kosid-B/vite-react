@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useState } from 'react';
 import type { Storefront } from '../lib/storefront';
 import type { Rfq } from '../lib/trade';
@@ -44,17 +45,14 @@ export default function MarketAgent({ mySf, openJobs, stores, onQuote }: Props) 
     if (isSupabaseEnabled && supabase && (rm.length > 0 || pm.length > 0)) {
       try {
         trackAiCall();
-        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-          body: {
+        const res = await callAiAssist({
             page: 'trade',
             pageLabel: 'Marketplace Agent',
             instruction: 'คุณคือเอเจนต์บริหารตลาด แนะนำเจ้าของร้านสั้นๆ (2-3 ประโยค ภาษาไทย) ว่าควรทำอะไรก่อนเพื่อปิดดีล จากผลจับคู่นี้ — ตอบเฉพาะคำแนะนำใน summary',
             context: `ร้านของฉัน: ${mySf.name} (${mySf.dbd}) ขาย: ${mySf.services.join(', ')}\n` +
               `งานที่จับคู่ได้: ${rm.map(m => `"${m.rfq.title}" งบ${baht(m.rfq.budget)} เหตุผล: ${m.reasons.join('/')}`).join(' | ') || 'ไม่มี'}\n` +
               `คู่ค้าที่จับคู่ได้: ${pm.map(m => `"${m.sf.name}" เหตุผล: ${m.reasons.join('/')}`).join(' | ') || 'ไม่มี'}`,
-          },
-        });
-        if (error) throw error;
+          });
         setSummary((res?.summary ?? '').trim() || fallback);
       } catch {
         setSummary(fallback);

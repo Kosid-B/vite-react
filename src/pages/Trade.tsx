@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useEffect, useState } from 'react';
 import type { AppData } from '../types';
 import { listStorefronts, getMyStorefront, type Storefront } from '../lib/storefront';
@@ -103,10 +104,7 @@ export default function Trade({ data, wsId }: Props) {
     if (isSupabaseEnabled && supabase) {
       try {
         trackAiCall();
-        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-          body: { page: 'trade', pageLabel: 'ซื้อขาย B2B', instruction, context },
-        });
-        if (error) throw error;
+        const res = await callAiAssist({ page: 'trade', pageLabel: 'ซื้อขาย B2B', instruction, context }, { ungoverned: 'userContent' });
         const t = (res?.summary ?? '').trim();
         if (t) return t;
       } catch { /* ตกไป fallback */ }

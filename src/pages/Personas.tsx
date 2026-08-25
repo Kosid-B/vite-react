@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useRef, useState } from 'react';
 import type { AppData, Persona, PageId } from '../types';
 import EditableList from '../components/EditableList';
@@ -90,8 +91,7 @@ export default function Personas({ data, onUpdate, onNavigate }: Props) {
     setAiBusy(true);
     try {
       const b2b = isB2b;
-      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-        body: {
+      const res = await callAiAssist({
           page: 'personas', pageLabel: 'Persona',
           instruction: b2b
             ? `จากข้อมูล Market Research (ตลาด B2B) สร้างโปรไฟล์ผู้มีส่วนตัดสินใจซื้อในองค์กรสำหรับบทบาท "${seg.role}" (${seg.committeeRole ?? ''}) — ` +
@@ -101,9 +101,7 @@ export default function Personas({ data, onUpdate, onNavigate }: Props) {
               'summary = quote 1 ประโยคที่ลูกค้ากลุ่มนี้น่าจะพูด (สะท้อนความเจ็บปวดจริง), ' +
               'suggestions = Pain Points 3-5 ข้อ (สั้น กระชับ เจาะจง)',
           context: [researchPrefill, aiText.trim()].filter(Boolean).join('\n\n'),
-        },
-      });
-      if (error) throw error;
+        });
       const merged = personaFromResearch(base, {
         quote: res?.summary ? String(res.summary) : undefined,
         pains: (res?.suggestions ?? []).map((s: string) => String(s)),

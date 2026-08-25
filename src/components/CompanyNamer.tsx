@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useState } from 'react';
 import type { AppData } from '../types';
 import { isSupabaseEnabled, supabase } from '../lib/supabase';
@@ -25,14 +26,11 @@ export default function CompanyNamer({ data, onUpdate }: { data: AppData; onUpda
     if (isSupabaseEnabled && supabase) {
       try {
         trackAiCall();
-        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-          body: {
+        const res = await callAiAssist({
             page: 'aicompany', pageLabel: 'CEO เสนอชื่อบริษัท (Corporate Identity)',
             instruction: nameProposalPrompt(ctx),
             context: `ธุรกิจ: ${c.industry || '-'} · เป้าหมาย: ${c.goal || '-'}${hint ? ' · คำใบ้: ' + hint : ''}`,
-          },
-        });
-        if (error) throw error;
+          }, { ungoverned: 'userContent' });
         list = parseAiNameSuggestions(res?.suggestions ?? [], ctx);
       } catch {
         setMsg('ℹ️ ใช้ตัวเสนอชื่อในแอป (AI ไม่พร้อม)');

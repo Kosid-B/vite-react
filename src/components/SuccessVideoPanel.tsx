@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useMemo, useState } from 'react';
 import type { AppData } from '../types';
 import { track } from '../lib/analytics';
@@ -36,10 +37,7 @@ export default function SuccessVideoPanel({ data }: { data: AppData }) {
     }
     setBusy(true);
     try {
-      const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-        body: { page: 'video_script', pageLabel: 'ขัดเกลาสคริปต์วิดีโอ', instruction: polishInstruction(base) },
-      });
-      if (error) throw error;
+      const res = await callAiAssist({ page: 'video_script', pageLabel: 'ขัดเกลาสคริปต์วิดีโอ', instruction: polishInstruction(base) });
       const suggestions = (res?.suggestions ?? []).map((s: string) => String(s));
       const out = applyPolish(base, suggestions);
       if (out === base) {

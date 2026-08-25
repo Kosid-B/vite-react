@@ -1,3 +1,4 @@
+import { callAiAssist } from '../lib/aiAssist';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AppData, PageId } from '../types';
 import { getMyStorefront, saveStorefront, setFeatured, uploadShopImage, MAX_SHOP_IMAGES, type Storefront } from '../lib/storefront';
@@ -144,10 +145,8 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
       if (isSupabaseEnabled && supabase) {
         trackAiCall();
         const { instruction, context } = openShopPrompt(goal);
-        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-          body: { page: 'storefront', pageLabel: 'หน้าร้านของฉัน', instruction, context },
-        });
-        if (!error) draft = parseShopDraft(res?.summary ?? '');
+        const res = await callAiAssist({ page: 'storefront', pageLabel: 'หน้าร้านของฉัน', instruction, context }, { ungoverned: 'userContent' });
+        draft = parseShopDraft(res?.summary ?? '');
       }
     } catch { /* ตกไป fallback */ }
     const mode = draft ? 'ai' : 'local';
@@ -173,15 +172,12 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
     try {
       if (isSupabaseEnabled && supabase) {
         trackAiCall();
-        const { data: res, error } = await supabase.functions.invoke('ai-assist', {
-          body: {
+        const res = await callAiAssist({
             page: 'storefront',
             pageLabel: 'หน้าร้านของฉัน',
             instruction: 'เขียน Value Proposition หนึ่งประโยค (ไม่เกิน 160 ตัวอักษร ภาษาไทย) ตามโครง: ช่วย[ลูกค้ากลุ่มไหน] แก้[ปัญหาอะไร] ด้วย[สิ่งที่เราให้] ต่างจากคู่แข่งตรง[จุดแข็ง] — ตอบเฉพาะประโยค VP ใน summary',
             context: `ธุรกิจ: ${sf.name} · หมวด DBD: ${sf.dbd} · คำอธิบาย: ${sf.description} · บริการ: ${sf.services.join(', ')}`,
-          },
-        });
-        if (error) throw error;
+          }, { ungoverned: 'userContent' });
         const vp = (res?.summary ?? '').trim().replace(/^["']|["']$/g, '');
         if (!vp) throw new Error('AI ไม่ตอบกลับ');
         patch({ vp: vp.slice(0, 200) });
