@@ -14,6 +14,7 @@ import EcosystemFlow from '../components/EcosystemFlow';
 import { de24Journey } from '../lib/de24Journey';
 import { track } from '../lib/analytics';
 import { readableOn } from '../lib/readableColor';
+import NextBestActionCard from '../components/NextBestActionCard';
 
 interface Props {
   data: AppData;
@@ -378,6 +379,10 @@ export default function Dashboard({ data, onNavigate, onUpdate, wsId = null }: P
           </button>
         </div>
       </div>
+
+      {/* 🎯 "ตอนนี้ควรทำอะไรต่อ" — ปลายทางของ Vision → Constitution → Genome → Decision Engine
+          วางบนสุดโดยตั้งใจ: ผู้ใช้ต้องเห็นข้อเสนอก่อนเห็นตัวเลข (ไม่งั้นอ่านตัวเลขแล้วสรุปเอง) */}
+      <NextBestActionCard data={data} onNavigate={onNavigate} />
 
       {/* ===== Aha Moment ใน 5 นาที (activation ผู้ใช้ใหม่) — path เดียวตอน first-run ===== */}
       <AhaMoment data={data} onUpdate={onUpdate} onNavigate={onNavigate} />

@@ -148,6 +148,13 @@ supabase_migrations.schema_migrations — 10 รายการที่ไม�
 นี่คือจุดที่ทำให้ห่วงโซ่ขาด: **Constitution → Genome → Decision Engine**
 ข้อ 3 ยังไม่มีสายป้อนเข้า ⇒ ข้อ 4 จึงตัดสินใจจากอะไรไม่ได้
 
+🟢 **แก้แล้ว 24 ส.ค. 2569** — `src/lib/genomeFromApp.ts` map `AppData` → `GenomeData`
+และ `src/lib/nextBestAction.ts` เป็น **ตัวบน** ที่รวมผลของเอนจินทั้งหมดให้เหลือคำตอบเดียว
+· แสดงผ่าน `components/NextBestActionCard.tsx` บนสุดของ Dashboard (มีเทสต์ยืนยันว่าถูกวางจริง)
+· ผลจริงของ mapper: เติมได้ครบ **business · problem · offer · experiment**
+  ยังเติมไม่ได้ **customer.buyingTrigger · acquisition.cac · economics.cac · scale ทั้งกิ่ง**
+  ⇒ นี่คือรายการช่องที่ "แบบเช็ก 6 ข้อ" ต้องถาม เพราะแอปยังไม่มีที่เก็บ
+
 ⚠️ **ทางแก้ที่ห้ามทำตอนนี้**: ทำเป็นตาราง DB — **Gate B ยังไม่ปิด** (เจ้าของสั่งห้ามแตะ schema)
 ⇒ ทางที่ทำได้คือ **map จาก `AppData` ที่มีอยู่แล้ว** (`bmc` · `finance` · `personas` · `de24`) เป็น `GenomeData`
 เป็น pure function ตัวเดียว — ไม่แตะ schema เลย และ retrofit เป็นตารางทีหลังได้
@@ -170,7 +177,10 @@ supabase_migrations.schema_migrations — 10 รายการที่ไม�
 | `trialRoadmap.nextStep()` | ขั้นถัดไปในแผน 15 วัน | `trialRoadmap.ts` |
 
 `NORTH_STAR.promise` สัญญาว่าระบบจะบอก **"Next Best Business Action"**
-แต่ **ไม่มีฟังก์ชันไหนชื่อนั้น และไม่มีตัวไหนอ่านผลของตัวอื่น** — ทั้ง 10 ตัวตอบขนานกัน
+🟢 **มีแล้ว 24 ส.ค. 2569**: `nextBestAction()` เป็นตัวบนที่อ่านผลของ Genome + Founder Mindset
++ Decision Rules แล้วคืน **ข้อเดียว** พร้อมเหตุผล · ลำดับที่ยึด: **ความพร้อมของธุรกิจมาก่อนคอขวดช่องทาง**
+(ซ่อมช่องทางให้ดีแค่ไหน ก็ไม่ช่วยธุรกิจที่ยังไม่รู้ว่าขายใคร)
+⚠️ อีก 9 ตัวยังอยู่และยังตอบขนานกัน — ตัวบนอ่านแค่ 3 ตัว ที่เหลือยังไม่ถูกรวม
 
 ⇒ ผู้ใช้คนเดียวกันจะถูกบอกพร้อมกันว่าอยู่ *"ขั้นที่ 3"* · *"เฟส reach"* · *"ไอเดีย"* · *"Define"* · *"ขั้น 7 จาก 24"*
 โดยไม่มีตัวแปลงระหว่างกันสักคู่

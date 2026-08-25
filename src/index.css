@@ -7300,8 +7300,22 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 
 /* โทเคนสีสถานะ — ใช้แทนเลขฐานสิบหกที่เขียนตายตัวใน .tsx
    ค่าธีมเข้มคือของเดิม · ค่าธีมสว่างเข้มพอให้อ่านออกบนพื้น #eceef2 ขึ้นไป */
-:root            { --st-ok:#22c55e; --st-warn:#f59e0b; --st-info:#3b82f6; --st-bad:#ef4444; --st-mute:#64748b; }
-:root[data-theme="minimal"] { --st-ok:#15803d; --st-warn:#a15c07; --st-info:#1d4ed8; --st-bad:#b91c1c; --st-mute:#475569; }
+/* ⚠️ ประกาศทีละบรรทัด โดยตั้งใจ — `themeSafeColor.test.ts` หาชื่อโทเคนจากต้นบรรทัด
+   ถ้าเขียนรวมบรรทัดเดียว ตัวตรวจจะมองไม่เห็นว่าประกาศแล้ว แล้วรายงานผิดว่า "โทเคนใหม่ที่ไม่ได้ประกาศ" */
+:root {
+  --st-ok: #22c55e;
+  --st-warn: #f59e0b;
+  --st-info: #3b82f6;
+  --st-bad: #ef4444;
+  --st-mute: #64748b;
+}
+:root[data-theme="minimal"] {
+  --st-ok: #15803d;
+  --st-warn: #a15c07;
+  --st-info: #1d4ed8;
+  --st-bad: #b91c1c;
+  --st-mute: #475569;
+}
 
 /* ปุ่มที่มีพื้นหลังสีตายตัว — ตัวอักษรต้องขาวตายตัวคู่กัน ห้ามพลิกตามธีม */
 :root[data-theme="minimal"] .pb-btn:not(.ghost),
@@ -7326,3 +7340,21 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ops-score-na { font-size: .95rem; font-weight: 600; text-align: right; line-height: 1.25; }
 .ops-score-na small { display: block; font-size: .72rem; font-weight: 400; opacity: .8; }
 .ops-m-trend.unknown { opacity: .5; }
+
+/* 🎯 การ์ด "ตอนนี้ควรทำอะไรต่อ" (Next Best Action · 24 ส.ค. 2569)
+   ⚠️ ใช้โทเคนทั้งสีตัวอักษรและพื้นหลังคู่กันเสมอ (GOTCHA #4b) */
+.nba-card { background: var(--card); border: 1px solid var(--line); border-left: 3px solid #a855f7;
+  border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
+.nba-hd { display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  flex-wrap: wrap; margin-bottom: 8px; }
+.nba-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .02em; color: var(--ink3); }
+.nba-pct { font-size: 12px; color: var(--ink3); }
+.nba-action { margin: 0 0 10px; font-size: 17px; font-weight: 700; line-height: 1.45; color: var(--ink); }
+.nba-why { font-size: 13px; color: var(--ink2); }
+.nba-why summary { cursor: pointer; color: var(--ink3); }
+.nba-why p { margin: 8px 0 0; }
+.nba-gaps { margin: 8px 0 0; padding-left: 18px; }
+.nba-blind { color: var(--st-warn, #f59e0b); }
+.nba-go { margin-top: 12px; background: #a855f7; color: #fff; border: 0; border-radius: 8px;
+  padding: 9px 16px; font-weight: 700; cursor: pointer; }
+@media (max-width: 480px) { .nba-action { font-size: 15px; } }
