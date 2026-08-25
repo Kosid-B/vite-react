@@ -11,6 +11,16 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 ⚠️ วันที่ 17–19 ส.ค. 2569 ผิดกฎนี้ 5 ครั้งใน 2 วัน (ledger ข้อ 10–17) — ทุกครั้งรูปแบบเดียวกัน:
    **รายงานว่าจริง/เสร็จ ก่อนไปดูของจริง** ทั้งที่หลักฐานอยู่ในมือแล้ว (ไฟล์ · config · CI · ข้อมูลใน DB)
 
+📚 **skill ภายนอกที่ sync มา (`thai-*`) — ของรีโปนี้ชนะเสมอเมื่อขัดกัน** (`src/lib/skillOverrides.ts` · 24 ส.ค. 2569)
+เรียกใช้ได้จริง 4 ตัว: `thai-marketing-strategy` · `thai-content-social` · `thai-performance-ads` · `thai-seo`
+(อีก 11 ตัว `*-th` เชิงวิชาการ **ยังไม่ถูก sync** ⇒ เรียกไม่ได้ · งานของเจ้าของถ้าต้องการ)
+🔴 **`thai-marketing-strategy` สั่งให้สร้าง `BRAND.md` แล้วเรียกมันว่า "แหล่งความจริงเดียว"** (SKILL.md บรรทัด 19–21)
+   ⇒ ทำตาม = ได้แหล่งความจริงเรื่องแบรนด์ **ตัวที่สาม** ซ้อนกับ `brandBrief.ts` และ `marketing_brand_rules` ของอีกระบบ
+   ⇒ **แหล่งความจริงคือ `src/lib/brandBrief.ts` เสมอ · ห้ามสร้าง `BRAND.md`/`brand-profile.md` ในรีโปนี้** (เทสต์เฝ้า · ยืนยันแดงจริง)
+⚠️ เกณฑ์ตัวเลขในคลังภายนอกเป็นค่ากลางของตลาด **ไม่ใช่ค่าที่พิสูจน์จากธุรกิจของผู้ใช้** — อ่านเป็น `policy` ห้ามเป็น `validated`
+   (`thai-performance-ads` เขียน "ผลต่าง ≥ 20% = มีนัย · ขยายงบเมื่อ conversion ≥ 30" ⇒ ใช้ `MIN_SAMPLE_FOR_RATE` + ด่าน `paid-scale` ของเราแทน)
+⚠️ **ไม่ได้ห้ามใช้** — ใช้ได้และมีประโยชน์ แต่ต้องผ่าน `violatesBrand()` + skill `content-link-contract` ก่อนปล่อยทุกชิ้น
+
 🧱 **เส้นแบ่งความเป็นเจ้าของ — Marketing OS = อีกระบบ** (เจ้าของตัดสิน 24 ส.ค. 2569 · ห้ามข้ามโดยไม่มีคำสั่งใหม่)
 🔴 **production `waigsnxhrlwtiotspaim` มีสองระบบเขียนลง** — ตาราง `marketing_*` **33 ตาราง** จาก 10 migration (23 ส.ค.) **ไม่มีในรีโปนี้**
    ⇒ รีโปนี้ **ห้ามสร้าง migration `marketing_*` · ห้ามอ่าน/เขียนตาราง `marketing_*`** (กลไก: `ownershipBoundary.test.ts`)
