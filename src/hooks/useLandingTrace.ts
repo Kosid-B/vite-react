@@ -3,7 +3,7 @@ import { track } from '../lib/analytics';
 import { scrollPct, crossedMilestones, createRageDetector, sectionInView, SECTION_THRESHOLDS } from '../lib/funnelTrace';
 import {
   initLandingFunnel, markLandingScroll, markLandingDwell, flush,
-  markSectionEnter, markSectionExit, closeOpenSections,
+  markSectionEnter, markSectionExit, closeOpenSections, settleOpenSections,
 } from '../lib/landingFunnel';
 
 /* ===== useLandingTrace — วัดความลึกของความสนใจบน Landing (PDPA-safe) =====
@@ -15,6 +15,9 @@ import {
 
 const SCROLL_MS = [25, 50, 75, 90];
 const DWELL_SEC = [10, 30, 60];
+/** ทยอยปิดบัญชีเวลาของบล็อกที่ยังอยู่ในจอ ทุกกี่วินาที
+ *  ห้ามพึ่ง exit event อย่างเดียว — บนมือถือระบบฆ่าแท็บได้โดยไม่ยิงอะไรเลย */
+const SETTLE_SEC = 10;
 
 export function useLandingTrace(
   seg = 'default',
@@ -61,7 +64,18 @@ export function useLandingTrace(
     /** ผูก IntersectionObserver ใหม่หลังกลับมาดูต่อ — กำหนดค่าจริงหลังสร้าง observer ด้านล่าง */
     let reobserve = () => {};
 
-    const clearTimers = () => { timers.forEach((t) => window.clearTimeout(t)); timers = []; };
+    let settleTimer: number | null = null;
+    const clearTimers = () => {
+      timers.forEach((t) => window.clearTimeout(t)); timers = [];
+      if (settleTimer !== null) { window.clearInterval(settleTimer); settleTimer = null; }
+    };
+    const armSettle = () => {
+      if (settleTimer !== null) return;
+      settleTimer = window.setInterval(() => {
+        if (ended || document.visibilityState !== 'visible') return;
+        settleOpenSections();
+      }, SETTLE_SEC * 1000);
+    };
 
     /** ตั้งตัวจับเวลาที่ "เหลือ" โดยคิดจากเวลาที่ดูจริงสะสม ไม่ใช่เวลานาฬิกา */
     const armTimers = () => {
@@ -74,6 +88,7 @@ export function useLandingTrace(
           track('landing_dwell', { sec });
           markLandingDwell(sec);
         }, Math.max(0, sec * 1000 - visibleMs)));
+      armSettle();
     };
 
     const visibleSec = () => Math.round((visibleMs + (ended ? 0 : Date.now() - lastVisibleAt)) / 1000);

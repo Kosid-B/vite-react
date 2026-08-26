@@ -10,6 +10,7 @@ import { renderHook } from '@testing-library/react';
  */
 
 const markDwell = vi.fn();
+const settle = vi.fn();
 vi.mock('../../lib/landingFunnel', () => ({
   initLandingFunnel: vi.fn(),
   markLandingScroll: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock('../../lib/landingFunnel', () => ({
   markSectionEnter: vi.fn(),
   markSectionExit: vi.fn(),
   closeOpenSections: vi.fn(),
+  settleOpenSections: (...a: unknown[]) => settle(...a),
 }));
 vi.mock('../../lib/analytics', () => ({ track: vi.fn() }));
 
@@ -29,7 +31,7 @@ function setVisibility(v: 'visible' | 'hidden') {
 }
 
 describe('useLandingTrace — เวลาที่บันทึกต้องเป็นเวลาที่เขาดูจริง', () => {
-  beforeEach(() => { markDwell.mockClear(); vi.useFakeTimers(); setVisibility('visible'); });
+  beforeEach(() => { markDwell.mockClear(); settle.mockClear(); vi.useFakeTimers(); setVisibility('visible'); });
   afterEach(() => { vi.useRealTimers(); });
 
   it('อยู่ดูจริงครบ 30 วิ → บันทึก 10 และ 30', () => {
@@ -77,6 +79,25 @@ describe('useLandingTrace — เวลาที่บันทึกต้อ�
 
     const recorded = markDwell.mock.calls.map(c => c[0] as number);
     expect(Math.max(0, ...recorded), 'เวลาที่อยู่เบื้องหลังรั่วเข้ามา').toBeLessThan(10);
+  });
+
+  /* 🔴 ยืนยันจาก production 26 ส.ค. 2569: 41 session อยู่ ≥10 วิ แต่ `sections` ว่างเปล่า
+   *    (34 ในนั้นไม่เลื่อนเลย) ทั้งที่ max_dwell ของคนกลุ่มเดียวกันบันทึกได้ปกติ
+   *    ⇒ เวลาของบล็อกถูกบวกเข้าบัญชีเฉพาะตอน "ออกจากจอ" — บล็อกที่อยู่ในจอตลอดจึงไม่เคยถูกบันทึก
+   *    exit event บนมือถือเชื่อถือไม่ได้ ⇒ ต้องทยอยปิดบัญชีระหว่างทาง */
+  it('🔴 อยู่บนหน้าโดยไม่เลื่อน เวลาของบล็อกต้องถูกบันทึกระหว่างทาง ไม่ใช่รอตอนออก', () => {
+    renderHook(() => useLandingTrace('seller', true));
+    vi.advanceTimersByTime(35_000); // อยู่ 35 วิ ไม่ทำอะไรเลย ไม่ปิดหน้า
+    expect(settle.mock.calls.length, 'ไม่มีการปิดบัญชีระหว่างทางเลย').toBeGreaterThanOrEqual(3);
+  });
+
+  it('อยู่เบื้องหลังต้องไม่ปิดบัญชีเพิ่ม (ไม่งั้นเวลานอกสายตาจะถูกนับ)', () => {
+    renderHook(() => useLandingTrace('seller', true));
+    vi.advanceTimersByTime(11_000);
+    const before = settle.mock.calls.length;
+    setVisibility('hidden');
+    vi.advanceTimersByTime(120_000);
+    expect(settle.mock.calls.length).toBe(before);
   });
 
   it('unmount แล้ว timer ต้องไม่ยิงตามมาทีหลัง', () => {

@@ -363,6 +363,30 @@ export function closeOpenSections(now = Date.now()): void {
   for (const k of Object.keys(sectionSince)) markSectionExit(k, now);
 }
 
+/** บันทึกเวลาของส่วนที่ "ยังอยู่ในจอ" ลงบัญชี แล้วเริ่มนับต่อทันที (ไม่ถือว่าออกจากจอ)
+ *
+ * 🔴 บั๊กที่แก้ (ยืนยันจาก production 26 ส.ค. 2569):
+ *   เวลาของบล็อกถูกบวกเข้าบัญชี **เฉพาะตอนบล็อกนั้นออกจากจอ** (`markSectionExit`)
+ *   ⇒ บล็อกที่อยู่ในจอ **ตลอดการเยี่ยมชม** (= คนที่ไม่เลื่อนเลย ซึ่งคือ 80 จาก 93 คน)
+ *      จะถูกบันทึกก็ต่อเมื่อมี exit event สะอาด ๆ ยิงตอนออกจากหน้าเท่านั้น
+ *   ข้อมูลจริง: **41 session อยู่ ≥10 วินาที แต่ `sections` ว่างเปล่า** (34 ในนั้นไม่เลื่อนเลย)
+ *      ทั้งที่ `max_dwell` ของคนกลุ่มเดียวกันถูกบันทึกได้ปกติ
+ *      ⇒ ท่อส่งข้อมูลไม่ได้พัง · สิ่งที่หายคือ "เวลาที่ยังไม่ถูกปิดบัญชี"
+ *   ⚠️ exit event บนมือถือเชื่อถือไม่ได้ (ระบบฆ่าแท็บเบื้องหลังได้โดยไม่ยิงอะไรเลย)
+ *      ⇒ ห้ามออกแบบให้ข้อมูลทั้งก้อนขึ้นกับ event ที่อาจไม่เกิด — ต้องทยอยปิดบัญชีระหว่างทาง
+ */
+export function settleOpenSections(now = Date.now()): void {
+  if (!state) return;
+  for (const k of Object.keys(sectionSince)) {
+    const since = sectionSince[k];
+    const sec = Math.floor((now - since) / 1000);
+    if (sec < 1) continue;
+    sectionSince[k] = now; // เริ่มนับรอบใหม่จากตรงนี้ — บล็อกยังอยู่ในจอ ไม่ใช่ออกไปแล้ว
+    sectionSec[k] = Math.min(3600, (sectionSec[k] ?? 0) + sec);
+  }
+  scheduleFlush();
+}
+
 /** อ่านค่าปัจจุบัน (ใช้ในเทสต์และดีบัก) */
 export function currentSections(): Record<string, number> {
   return { ...sectionSec };

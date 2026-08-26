@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   refKind, landingFunnelSteps, biggestLeak, dwellLabel,
   funnelCaveats, funnelTrustworthy, MIN_SAMPLE, type LandingAgg,
+  initLandingFunnel, markSectionEnter, markSectionExit, settleOpenSections,
+  closeOpenSections, currentSections,
 } from '../landingFunnel';
 
 const ORIGIN = 'https://ceoaithailand.org';
@@ -122,4 +124,44 @@ describe('dwellLabel', () => {
   it('< 60 วิ', () => { expect(dwellLabel(8)).toBe('8 วิ'); expect(dwellLabel(0)).toBe('0 วิ'); });
   it('≥ 60 วิ', () => { expect(dwellLabel(85)).toBe('1 น 25 วิ'); expect(dwellLabel(120)).toBe('2 น'); });
   it('กันค่าเพี้ยน', () => { expect(dwellLabel(-5)).toBe('0 วิ'); });
+});
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 🔴 ยืนยันจาก production 26 ส.ค. 2569: 93 session · `sections` ว่างเปล่า 78
+ *    และ **41 session อยู่ ≥10 วินาทีแต่ไม่มีข้อมูลรายบล็อกเลย** (34 ในนั้นไม่เลื่อน)
+ *    ทั้งที่ `max_dwell` ของคนกลุ่มเดียวกันบันทึกได้ปกติ ⇒ ท่อส่งข้อมูลไม่ได้พัง
+ *    สาเหตุราก: เวลาถูกบวกเข้าบัญชี **เฉพาะตอนบล็อกออกจากจอ**
+ *    ⇒ บล็อกที่อยู่ในจอตลอดการเยี่ยมชม (คนไม่เลื่อน = 80 จาก 93) ไม่เคยถูกบันทึก
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('เวลาของบล็อก ต้องไม่ขึ้นกับ exit event อย่างเดียว', () => {
+  const t0 = 1_700_000_000_000;
+  /* ⚠️ `sectionSec` เป็น state ระดับโมดูล (อายุเท่ากับการเยี่ยมชม 1 ครั้ง) และไม่มี API ล้างค่า
+   *    ⇒ ใช้ชื่อบล็อกคนละตัวในแต่ละเทสต์ แทนการเพิ่มฟังก์ชันล้างค่าที่มีไว้เพื่อเทสต์อย่างเดียว
+   *    (เคยพลาดจริงตอนเขียนเทสต์ชุดนี้: ค่าจากเทสต์ก่อนหน้าไหลมาบวกทบ) */
+  const start = () => { closeOpenSections(t0); initLandingFunnel('seller', '', ORIGIN); };
+
+  it('บล็อกที่ยังอยู่ในจอ ต้องถูกบันทึกเวลาระหว่างทาง', () => {
+    start();
+    markSectionEnter('sec_a', t0);
+    settleOpenSections(t0 + 12_000);
+    expect(currentSections().sec_a, 'อยู่ในจอ 12 วิ แต่ยังไม่ถูกบันทึก').toBe(12);
+  });
+
+  it('ปิดบัญชีระหว่างทางแล้ว ต้องนับต่อ ไม่ใช่เริ่มใหม่หรือนับซ้ำ', () => {
+    start();
+    markSectionEnter('sec_b', t0);
+    settleOpenSections(t0 + 10_000);
+    settleOpenSections(t0 + 20_000);
+    markSectionExit('sec_b', t0 + 25_000);
+    expect(currentSections().sec_b, 'รวมต้องเป็น 25 วิ ไม่ใช่นับซ้ำหรือรีเซ็ต').toBe(25);
+  });
+
+  it('บล็อกที่ออกจากจอไปแล้ว ต้องไม่ถูกปิดบัญชีซ้ำ', () => {
+    start();
+    markSectionEnter('sec_c', t0);
+    markSectionExit('sec_c', t0 + 5_000);
+    settleOpenSections(t0 + 60_000);
+    expect(currentSections().sec_c).toBe(5);
+  });
 });
