@@ -31,9 +31,11 @@ describe('ห่วงโซ่ด่าน', () => {
     ]);
   });
 
-  it('🔴 ด่านที่ปิดแล้วต้องบอกได้ว่าใครยืนยันเมื่อไร — ปิดโดยไม่มีที่มา = เดา', () => {
-    for (const g of GATE_CHAIN.filter((x) => x.status === 'closed')) {
-      expect(g.confirmedBy, `${g.key} ปิดแล้วแต่ไม่มีที่มา`).toBeTruthy();
+  it('🔴 ด่านที่ "รู้สถานะ" ต้องบอกได้ว่าใครยืนยันเมื่อไร — ทั้ง closed และ open', () => {
+    /* ไม่ใช่แค่ closed: การประกาศว่า "ยังไม่ผ่าน" ก็เป็นการอ้างความรู้เหมือนกัน
+     * ถ้าไม่มีที่มา แปลว่าเราเดา แล้วเราจะแยกไม่ออกจาก unknown ในรอบถัดไป */
+    for (const g of GATE_CHAIN.filter((x) => x.status !== 'unknown')) {
+      expect(g.confirmedBy, `${g.key} = ${g.status} แต่ไม่มีที่มา`).toBeTruthy();
       expect(g.confirmedBy!).toMatch(/25\d\d|256\d/);
     }
   });
@@ -83,6 +85,12 @@ describe('การตัดสินว่าแตะ schema ได้ไห�
   it('สถานะจริง: Gate B ปิดแล้ว แต่ด่านที่กั้นอยู่ต้องไม่ใช่ Gate B', () => {
     expect(GATE_CHAIN[0].status).toBe('closed');
     expect(schemaChangeAllowed().blockedBy?.key).not.toBe('gate-b');
+  });
+
+  it('🔴 ปิดด่านแรกแล้วห้ามเหมาว่าทั้งห่วงโซ่เปิด', () => {
+    // ความเสี่ยงจริงหลัง 26 ส.ค. 2569: "Gate B ปิดแล้ว" ถูกอ่านเป็น "แตะ schema ได้แล้ว"
+    expect(schemaChangeAllowed().allowed).toBe(false);
+    expect(GATE_CHAIN.filter((g) => g.status !== 'closed').length).toBeGreaterThan(0);
   });
 });
 

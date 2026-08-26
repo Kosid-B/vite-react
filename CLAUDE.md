@@ -216,9 +216,11 @@ CEO AI Thailand (ผลิตภัณฑ์ · Growth & Technology Engine) — 
    · 5 → Decision Engine · 30 → Benchmark + Learning Loop · ⚠️ **กฎ ≠ เอนจิน** (เขียนกฎได้วันนี้ · เอนจินที่เรียนรู้ต้องรอ)
 🔒 **ด่านปล่อยของ = `src/lib/releaseGates.ts` (แหล่งเดียว · ห้ามเขียนสถานะซ้ำที่อื่น)**
    ห่วงโซ่: `Gate B` → `Phase 1 Acceptance #2` → `Freeze Phase 1 baseline` → Strategy Layer (controlled iteration)
-   🟢 **Gate B ปิดแล้ว** (เจ้าของยืนยัน 26 ส.ค. 2569) · 🔴 **สองด่านที่เหลือ = `unknown` — ตรวจจากรีโปนี้ไม่ได้**
-   ⇒ `schemaChangeAllowed()` ยัง **กั้นอยู่** · **`unknown` ไม่ใช่ `closed`** (fail-closed แบบเดียวกับ `stageFit`)
-   ⇒ ถามเจ้าของข้อเดียว: *Phase 1 Acceptance #2 ผ่านแล้วหรือยัง* · ระหว่างรอ งานที่ไม่แตะ schema ทำได้ทั้งหมด
+   🟢 **Gate B ปิดแล้ว** · 🟡 **Phase 1 Acceptance #2 ยังไม่ผ่าน** (เจ้าของยืนยันทั้งสองข้อ 26 ส.ค. 2569)
+   ⇒ `schemaChangeAllowed()` **ยังกั้นอยู่** — ปิดด่านแรกแล้วห้ามเหมาว่าทั้งห่วงโซ่เปิด (เทสต์ล็อกไว้)
+   ⚠️ **`unknown` (ตรวจไม่ได้) ≠ `open` (รู้ว่ายังไม่ผ่าน)** — ทั้งคู่กั้นเหมือนกัน แต่ทางออกคนละทาง: unknown ต้องถาม · open ต้องทำ
+   🔴 **จุดบอดที่ยังเหลือ: เกณฑ์ผ่านของ Acceptance #2 ไม่มีเขียนไว้ที่ไหนในรีโปนี้** ⇒ วันที่มันผ่าน ผู้ช่วยรู้ได้ทางเดียวคือเจ้าของบอก
+   ⇒ ระหว่างรอ งานที่ไม่แตะ schema ทำได้ทั้งหมด
 สถาปัตยกรรมเต็ม: [MOAT-ARCHITECTURE-V1.md](docs/product/MOAT-ARCHITECTURE-V1.md)
 
 🚦 **ด่านกลยุทธ์ที่ block ได้จริง — `src/lib/positioningEngine.ts`** (ยกระดับ 23 ส.ค. 2569)

@@ -45,19 +45,22 @@ export const GATE_CHAIN: ReleaseGate[] = [
   {
     key: 'phase1-acceptance-2',
     name: 'Phase 1 Acceptance #2',
-    status: 'unknown',
+    status: 'open',
     verifiable: 'owner-only',
-    whyUnknown:
-      'ไม่มีไฟล์/เทสต์/CI ใดในรีโปนี้ที่นิยามหรือบันทึกผลของ Acceptance #2 — grep แล้วไม่พบ ' +
-      'เกณฑ์ผ่านคืออะไรก็ยังไม่รู้ ⇒ ตรวจไม่ได้ ต้องให้เจ้าของยืนยัน',
+    confirmedBy: 'เจ้าของยืนยัน 26 ส.ค. 2569 ว่า "ยังไม่ผ่าน"',
+    /* ⚠️ เคยตั้งเป็น 'unknown' เพราะรีโปนี้ไม่มีไฟล์/เทสต์/CI ที่นิยามหรือบันทึกผลของ Acceptance #2
+     *    (grep แล้วไม่พบ) — พอถามแล้วได้คำตอบ จึงเป็น 'open' = **รู้ว่ายังไม่ผ่าน**
+     *    ความต่างสำคัญ: 'unknown' แปลว่าเราไม่รู้ · 'open' แปลว่าเรารู้ว่ายัง
+     *    🔴 แต่ยังเหลือจุดบอดอยู่: **เกณฑ์ผ่านคืออะไร ยังไม่มีที่ไหนเขียนไว้ในรีโปนี้**
+     *       ⇒ วันที่มันผ่าน ผู้ช่วยจะรู้ได้ทางเดียวคือเจ้าของบอก (ไม่ใช่จากการตรวจ) */
     unlocks: 'freeze baseline ของ Phase 1 ได้',
   },
   {
     key: 'freeze-phase1-baseline',
     name: 'Freeze Phase 1 baseline',
-    status: 'unknown',
+    status: 'open',
     verifiable: 'owner-only',
-    whyUnknown: 'ขึ้นกับด่านก่อนหน้า และยังไม่มีจุดอ้างอิง baseline ที่บันทึกไว้ในรีโปนี้',
+    confirmedBy: 'อนุมานจากลำดับ 26 ส.ค. 2569 — ด่านก่อนหน้ายังไม่ผ่าน จึงยังเกิดขึ้นไม่ได้',
     unlocks: 'เพิ่ม VRIO/POP/POD Strategy Layer เป็น controlled next iteration ได้',
   },
 ];
@@ -93,9 +96,11 @@ export function schemaChangeAllowed(chain: ReleaseGate[] = GATE_CHAIN): GateVerd
     reason: isUnknown
       ? `🔴 ตรวจไม่ได้ว่า "${blocked.name}" ผ่านหรือยัง — ${blocked.whyUnknown ?? ''}`
       : `ยังติดด่าน "${blocked.name}"`,
+    /* 🔴 ห้ามคืน "ทำไม่ได้" เปล่า ๆ — ด่านที่กั้นแค่ schema ต้องไม่หยุดงานอย่างอื่นทั้งโปรเจกต์
+     *    (skill growth-mindset: พูดว่า "ยังทำไม่ได้เพราะขาด X" ไม่ใช่ "ทำไม่ได้") */
     nextAction: isUnknown
       ? `ถามเจ้าของข้อเดียว: "${blocked.name}" ผ่านแล้วหรือยัง · ระหว่างรอ ทำงานที่ไม่แตะ schema ต่อได้ทั้งหมด`
-      : `ปิด "${blocked.name}" ก่อน — ${blocked.unlocks}`,
+      : `ปิด "${blocked.name}" ก่อน — ${blocked.unlocks} · ระหว่างรอ ทำงานที่ไม่แตะ schema ต่อได้ทั้งหมด`,
   };
 }
 
