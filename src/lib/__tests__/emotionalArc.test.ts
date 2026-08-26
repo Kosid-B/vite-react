@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { BEATS, FORBIDDEN_TRIGGERS, arcIssues, emotionalArcBlock, type Phase } from '../emotionalArc';
+import { BEATS, FORBIDDEN_TRIGGERS, MID_PAGE_MAX_RELIEF_RUN, arcIssues, flatnessDebt, emotionalArcBlock, type Phase } from '../emotionalArc';
 
 /* ══════════════════════════════════════════════════════════════════════════
  * ⚠️ ที่มาของหลักการ: skill `ai-dark-marketing` ที่ sync มา **ไม่มีเนื้อหาฮอร์โมน**
@@ -11,11 +11,44 @@ import { BEATS, FORBIDDEN_TRIGGERS, arcIssues, emotionalArcBlock, type Phase } f
  *    ⇒ ทุกจังหวะต้องบอกได้ว่า "ซื่อสัตย์ได้เพราะอะไร" และทุกข้อห้ามต้องมีของแทนที่
  * ══════════════════════════════════════════════════════════════════════════ */
 
-/** ลำดับ section จริงบนหน้า Landing — อ่านจากไฟล์ ไม่ใช่จากความจำ */
+const LANDING = () => readFileSync(resolve(__dirname, '../../pages/LandingPage.tsx'), 'utf8');
+
+/** ลำดับ section ตาม "ลำดับในไฟล์" — อ่านจากไฟล์ ไม่ใช่จากความจำ
+ *  🔴 ตัวคัดต้องยอมตัวเลขด้วย: ชื่อจริงมี `how_30s` — regex เดิม `[a-z_]+` มองข้ามมันทั้งบล็อก
+ *     (อ่านได้ 34 จาก 35 แล้วรายงานว่า "ครบ") = ตัวตรวจที่เดินไม่ครบ ตระกูลเดียวกับ ledger #35 */
 function realOrder(): string[] {
-  const tsx = readFileSync(resolve(__dirname, '../../pages/LandingPage.tsx'), 'utf8');
-  return [...tsx.matchAll(/data-sec="([a-z_]+)"/g)].map((m) => m[1]);
+  return [...LANDING().matchAll(/data-sec="([a-z0-9_]+)"/g)].map((m) => m[1]);
 }
+
+/* ══ ② หน้าเดียวกันแสดงได้ 8 แบบ — ตรวจแบบเดียวคือตรวจไม่ครบ ═════════════════
+ *   · abShowNew  (A/B holdout)      → try_ai + why_trust_ai แสดง/ไม่แสดง
+ *   · layoutAb   ('proof_first')    → สลับก้อน explain ↔ proof
+ *   · persona    (มีข้อมูลพอไหม)     → persona_banner แสดง/ไม่แสดง
+ *   ⇒ baseline ต้องเป็น **แบบที่แย่ที่สุด** ไม่ใช่แบบที่บังเอิญเรียงอยู่ในไฟล์
+ * ══════════════════════════════════════════════════════════════════════════ */
+const OPTIONAL_AB = ['try_ai', 'why_trust_ai'];
+const OPTIONAL_PERSONA = ['persona_banner'];
+const EXPLAIN_GROUP = ['compare', 'trust_bar', 'how_30s', 'gain_points', 'skills'];
+const PROOF_GROUP = ['market_demand', 'pricing_calc', 'roi_calc', 'instant_preview', 'credibility_bar'];
+
+/** ลำดับที่ผู้ใช้เห็นจริงในแต่ละกรณี */
+function renderedOrder(o: { abNew: boolean; proofFirst: boolean; persona: boolean }): string[] {
+  const base = realOrder().filter(
+    (s) => (o.abNew || !OPTIONAL_AB.includes(s)) && (o.persona || !OPTIONAL_PERSONA.includes(s)),
+  );
+  if (!o.proofFirst) return base;
+  const grouped = new Set([...EXPLAIN_GROUP, ...PROOF_GROUP]);
+  const at = base.findIndex((s) => grouped.has(s));
+  const rest = base.filter((s) => !grouped.has(s));
+  return [...rest.slice(0, at), ...PROOF_GROUP, ...EXPLAIN_GROUP, ...rest.slice(at)];
+}
+
+const VARIANTS = [true, false].flatMap((abNew) =>
+  [true, false].flatMap((proofFirst) => [true, false].map((persona) => ({ abNew, proofFirst, persona }))),
+);
+const label = (v: { abNew: boolean; proofFirst: boolean; persona: boolean }) =>
+  `abNew=${+v.abNew} proofFirst=${+v.proofFirst} persona=${+v.persona}`;
+const withPhase = (order: string[]) => order.map((sec) => ({ sec, phase: PHASE[sec] }));
 
 /** ป้ายว่าแต่ละ section เป็นความตึงหรือความโล่ง (ตัดสินจากหน้าที่ของมัน) */
 const PHASE: Record<string, Phase> = {
@@ -116,6 +149,39 @@ describe('ตัวตรวจจังหวะ', () => {
   });
 });
 
+describe('ตัววัดต้องชี้ทางถูก (ไม่ใช่แค่มีตัวเลข)', () => {
+  /* 🔴 ความผิดที่กัน: ตัวนับเดิม `run === MAX แล้วรีเซ็ต` = floor(run/MAX)
+   *    ⇒ "กองรวมกันยาว ๆ ครั้งเดียว" ได้คะแนนดีกว่า "กระจายพอดี ๆ หลายช่วง"
+   *    ถ้าเราไล่ลดตัวเลขนั้น เราจะดันหน้าเว็บไปในทางที่แย่ลง โดยที่ตัวเลขบอกว่าดีขึ้น */
+  const seq = (pattern: number[]) =>
+    pattern.flatMap((gap, i) => [
+      { sec: `t${i}`, phase: 'tension' as Phase },
+      ...Array.from({ length: gap }, (_, j) => ({ sec: `r${i}_${j}`, phase: 'relief' as Phase })),
+    ]).concat({ sec: 'end', phase: 'tension' as Phase });
+
+  it('กองรวมกันต้องแพงกว่ากระจาย เมื่อจำนวนบล็อกเท่ากัน', () => {
+    const spread = seq([4, 4, 4, 5, 5]);   // รวม 22 โล่ง
+    const piled = seq([3, 3, 3, 3, 10]);   // รวม 22 โล่ง เท่ากันเป๊ะ
+    const oldCount = (o: ReturnType<typeof seq>) =>
+      arcIssues(o).filter((i) => i.what.includes('โล่งติดกัน')).length;
+    expect(oldCount(piled), 'จำนวน warn ยังนับแบบเก่าอยู่').toBeLessThanOrEqual(oldCount(spread));
+    expect(flatnessDebt(piled)).toBeGreaterThan(flatnessDebt(spread));
+  });
+
+  it('หนี้ = จำนวนบล็อกที่ล้นเพดาน — แปลเป็น "ต้องเพิ่มจุดตึงกี่จุด" ได้', () => {
+    expect(flatnessDebt(seq([4, 4]))).toBe(0);
+    expect(flatnessDebt(seq([6]))).toBe(2);
+    expect(Math.ceil(flatnessDebt(seq([12])) / MID_PAGE_MAX_RELIEF_RUN)).toBe(2);
+  });
+
+  it('ช่วงปิดท้ายไม่ถูกนับเป็นหนี้ (ตั้งใจให้คลาย)', () => {
+    expect(flatnessDebt([
+      { sec: 'h', phase: 'tension' },
+      ...Array.from({ length: 9 }, (_, j) => ({ sec: `c${j}`, phase: 'relief' as Phase })),
+    ])).toBe(0);
+  });
+});
+
 describe('🔴 หน้า Landing ของเราเองผ่านจังหวะนี้ไหม', () => {
   it('อ่านลำดับ section จริงได้ (กันเทสต์ผ่านเพราะ regex พัง)', () => {
     expect(realOrder().length).toBeGreaterThanOrEqual(12);
@@ -126,20 +192,76 @@ describe('🔴 หน้า Landing ของเราเองผ่านจ�
     expect(un, `section ที่ยังไม่ถูกจัดจังหวะ: ${un.join(', ')}`).toEqual([]);
   });
 
-  /* 🟡 สถานะจริงหลังติดป้ายครบ 26 ส.ค. 2569 — ต้องบันทึกให้ตรง ไม่ใช่ให้ผ่าน
-   *
-   * 🔴 ตัวเลข "warn 1 ข้อ = ดีที่สุดที่เป็นไปได้" ที่บันทึกไว้เมื่อ 24 ส.ค. **ผิด**
-   *    เพราะตอนนั้นมีป้ายแค่ 20 บล็อก ทั้งที่หน้าจริงมี 34 (46% ของหน้าไม่ติดป้าย)
-   *    ⇒ เป็นการวัดจากเครื่องมือที่เดินไม่ครบ — ความผิดตระกูลเดียวกับ contrast-audit (ledger #35)
-   *
-   * ติดป้ายครบแล้วเห็นของจริง: **warn 5 ข้อ** (ราบกลางหน้า 4 ช่วง + ปิดท้ายยาว 6)
-   * นี่คือค่าตั้งต้นที่ต้องลด ไม่ใช่ค่าที่ยอมรับ — ห้ามขยับเพดานนี้ขึ้นเพื่อให้ผ่าน */
-  const BASELINE_WARNS = 5;
+  it('🔴 ป้ายที่จัดไว้ต้องมีอยู่จริงบนหน้า — ป้ายค้างที่ไม่มีบล็อกแล้ว = แผนที่ผิด', () => {
+    const real = new Set(realOrder());
+    const stale = Object.keys(PHASE).filter((s) => !real.has(s));
+    expect(stale, `ป้ายที่ไม่มีบล็อกรองรับ: ${stale.join(', ')}`).toEqual([]);
+  });
 
-  it('ต้องไม่มี blocker และ warn ต้องไม่เพิ่มจากค่าตั้งต้น', () => {
-    const issues = arcIssues(realOrder().map((sec) => ({ sec, phase: PHASE[sec] })));
-    expect(issues.filter((i) => i.level === 'blocker'), JSON.stringify(issues)).toEqual([]);
-    expect(issues.length, JSON.stringify(issues)).toBeLessThanOrEqual(BASELINE_WARNS);
+  it('🔴 โครงที่ใช้จำลองตัวแปร ต้องตรงกับไฟล์จริง — ไฟล์เปลี่ยนแล้วไม่แก้ = จำลองผิด', () => {
+    const tsx = LANDING();
+    expect(tsx, 'A/B holdout หายไปจากหน้า').toMatch(/abShowNew\s*&&/);
+    expect(tsx, "A/B ลำดับบล็อกหายไปจากหน้า").toMatch(/layoutAb === 'proof_first'/);
+    expect(tsx, 'persona banner ไม่ได้อยู่หลังเงื่อนไขแล้ว').toMatch(/persona &&/);
+    // ทั้งสองก้อนต้องยังติดกันจริงในไฟล์ ไม่งั้นการสลับก้อนที่จำลองไว้ = เรื่องแต่ง
+    const order = realOrder();
+    const idx = (s: string) => order.indexOf(s);
+    for (const g of [EXPLAIN_GROUP, PROOF_GROUP]) {
+      expect(g.map(idx).every((v) => v >= 0), `ก้อนหาย: ${g.join(',')}`).toBe(true);
+      expect(Math.max(...g.map(idx)) - Math.min(...g.map(idx)), `ก้อนไม่ติดกัน: ${g.join(',')}`).toBe(g.length - 1);
+    }
+  });
+
+  /* 🟡 ค่าตั้งต้นจริง (26 ส.ค. 2569) — วัดใหม่ทั้งหมดหลังซ่อมตัววัด 3 จุด
+   *   ① regex มองข้าม `how_30s` (อ่าน 34 จาก 35)
+   *   ② นับ warn แบบ floor(run/4) ⇒ กองรวมกันได้คะแนนดีกว่ากระจาย (ชี้ทางผิด)
+   *   ③ ตรวจแค่ลำดับในไฟล์ ทั้งที่หน้าเดียวกันแสดงได้ 8 แบบ
+   *
+   * 🔴 ตัวเลขที่เคยบันทึกไว้ (warn 1 เมื่อ 24 ส.ค. · warn 5 เมื่อ 26 ส.ค.) **ใช้ไม่ได้ทั้งคู่**
+   *    — วัดด้วยเครื่องมือที่ยังผิดอยู่ทั้งสองรอบ
+   *
+   * เลขคณิตของหน้านี้ (พิสูจน์ในเทสต์ถัดไป · ไม่ใช่ความเห็น):
+   *   จุดตึง 6 จุด → ความจุกลางหน้า = 5 ช่อง × 4 = 20 บล็อกโล่ง
+   *   แต่กลางหน้ามีโล่งจริง 24 ⇒ ล้น 4 เป็นอย่างน้อย **ไม่ว่าจะเรียงยังไง**
+   *   ⇒ ตอนนี้อยู่ที่ค่าต่ำสุดทางคณิตศาสตร์แล้ว (เทสต์ถัดไปพิสูจน์)
+   *      จะลดต่อจากนี้ต้อง "เพิ่มจุดตึงจริง 1 จุด" (งานเนื้อหา) ไม่ใช่สลับบล็อกอีกแล้ว
+   *      เพิ่ม 1 จุด → ความจุ 24 = พอดีกับที่มี ⇒ หนี้เป็น 0 ได้จริง
+   *
+   * ⚠️ อีกครึ่งของการแก้รอบนี้: ก้อน explain/proof เดิม "ยาวไม่เท่ากัน" (4 vs 2)
+   *    ⇒ ก้อนไหนถูกสลับไปอยู่ท้าย จะพาหางของตัวเองไปต่อกับช่วงถัดไป = หนี้ต่างกันตามกลุ่ม A/B
+   *    ย้าย instant_preview + credibility_bar เข้าก้อน proof (ทั้งคู่เป็น "หลักฐาน" อยู่แล้ว)
+   *    ⇒ ก้อนยาวเท่ากัน 4/4 ⇒ หนี้เท่ากันทุกกลุ่ม = เทียบผล A/B ได้จริง
+   *
+   * 🔒 เพดานนี้เป็นบันไดลง ห้ามขยับขึ้นเพื่อให้ผ่าน (8 → 4 เมื่อ 26 ส.ค. 2569)
+   */
+  const BASELINE_DEBT = 4;
+
+  it('ทุกแบบที่ผู้ใช้เห็นได้ ต้องไม่มี blocker และหนี้ความราบต้องไม่เพิ่ม', () => {
+    for (const v of VARIANTS) {
+      const order = withPhase(renderedOrder(v));
+      const issues = arcIssues(order);
+      expect(issues.filter((i) => i.level === 'blocker'), `${label(v)} → ${JSON.stringify(issues)}`).toEqual([]);
+      expect(flatnessDebt(order), `${label(v)} → ${JSON.stringify(issues)}`).toBeLessThanOrEqual(BASELINE_DEBT);
+    }
+  });
+
+  it('🔴 ช่วงปิดท้ายต้องไม่ยาวเกินเพดาน ในทุกแบบ', () => {
+    for (const v of VARIANTS) {
+      const long = arcIssues(withPhase(renderedOrder(v))).filter((i) => i.what.includes('ปิดท้ายยาว'));
+      expect(long, label(v)).toEqual([]);
+    }
+  });
+
+  it('🔴 หนี้ที่เหลือต้องอธิบายได้ด้วยความจุ — ไม่ใช่เพราะเรียงมั่ว', () => {
+    const order = withPhase(renderedOrder({ abNew: true, proofFirst: false, persona: true }));
+    const lastT = order.map((b) => b.phase).lastIndexOf('tension');
+    const anchors = order.slice(0, lastT).filter((b) => b.phase === 'tension').length;
+    const midRelief = order.slice(0, lastT).filter((b) => b.phase === 'relief').length;
+    const floorDebt = Math.max(0, midRelief - anchors * MID_PAGE_MAX_RELIEF_RUN);
+    expect(floorDebt, `กลางหน้ามีโล่ง ${midRelief} · ความจุ ${anchors * MID_PAGE_MAX_RELIEF_RUN}`).toBeGreaterThan(0);
+    // 🔴 ต้อง "เท่ากัน" ไม่ใช่ "ไม่เกิน" — พิสูจน์ว่าหนี้ที่เหลืออธิบายด้วยความจุได้ทั้งก้อน
+    //    ⇒ ใครเสนอให้ "ลองสลับบล็อกดูอีกที" จะเห็นทันทีว่าสลับยังไงก็ไม่ลง
+    expect(BASELINE_DEBT, 'เรียงใหม่ลงต่ำกว่านี้ไม่ได้ — ต้องเพิ่มจุดตึงจริง').toBe(floorDebt);
   });
 
   it('จังหวะตึงต้องกระจาย ไม่กระจุกหัวหน้า', () => {
@@ -151,7 +273,10 @@ describe('🔴 หน้า Landing ของเราเองผ่านจ�
   });
 
   it('🔴 ป้ายต้องครอบคลุมทั้งหน้า — บล็อกที่ไม่ติดป้ายคือจุดที่เรามองไม่เห็น', () => {
-    expect(realOrder().length).toBeGreaterThanOrEqual(30);
+    const tsx = LANDING();
+    const all = [...tsx.matchAll(/data-sec="([^"]+)"/g)].length;
+    expect(realOrder().length, 'ตัวคัดอ่านได้ไม่ครบทุกป้าย').toBe(all);
+    expect(all).toBeGreaterThanOrEqual(30);
   });
 });
 

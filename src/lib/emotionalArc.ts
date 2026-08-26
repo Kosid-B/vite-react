@@ -139,6 +139,31 @@ export interface ArcIssue {
   why: string;
 }
 
+/** "หนี้ความราบ" = จำนวนบล็อกโล่งที่ล้นความจุของหน้า (ตัวเลขเดียวที่ใช้ตัดสินว่าดีขึ้นหรือแย่ลง)
+ *
+ * 🔴 ทำไมไม่นับ "จำนวน warn" อีกต่อไป — ตัวนับเดิมชี้ทางผิด:
+ *   เดิมนับแบบ `run === 4 แล้วรีเซ็ต` ⇒ ได้ floor(run/4)
+ *     · โล่งติดกัน 4,4,4,5,5 (กระจาย) = **5 warn**
+ *     · โล่งติดกัน 3,3,3,3,10 (กองรวม) = **2 warn**
+ *   ⇒ การเรียงที่แย่กว่าได้คะแนน "ดีกว่า" — ถ้าเราปรับหน้าเว็บตามตัวเลขนั้น หน้าจะแย่ลงจริง ๆ
+ *   ตัวนี้คิดจาก **ส่วนที่ล้นเพดาน** (Σ max(0, run − MAX)) ⇒ กองรวมกันแพงกว่าเสมอ
+ *
+ * และตีความได้ตรง ๆ: หนี้ N = ต้องการจุดตึงเพิ่มอีก ceil(N / MID_PAGE_MAX_RELIEF_RUN) จุด
+ *   ⇒ ตอบได้ทันทีว่า "เรียงใหม่พอไหม" หรือ "ต้องเพิ่มจังหวะตึงจริง ๆ"
+ */
+export function flatnessDebt(order: Array<{ sec: string; phase: Phase }>): number {
+  const lastTension = order.map((b) => b.phase).lastIndexOf('tension');
+  const closingFrom = lastTension < 0 ? 0 : lastTension + 1;
+  let debt = 0;
+  let run = 0;
+  for (let i = 0; i < closingFrom; i++) {
+    if (order[i].phase === 'relief') { run++; continue; }
+    debt += Math.max(0, run - MID_PAGE_MAX_RELIEF_RUN);
+    run = 0;
+  }
+  return debt + Math.max(0, run - MID_PAGE_MAX_RELIEF_RUN);
+}
+
 /** ตรวจว่าลำดับบล็อกบนหน้าเว็บสร้างจังหวะจริงไหม
  *  รับ "ชื่อ section ตามลำดับที่แสดงจริง" + ป้ายว่าแต่ละอันเป็นตึงหรือโล่ง */
 export function arcIssues(order: Array<{ sec: string; phase: Phase }>): ArcIssue[] {
@@ -163,17 +188,22 @@ export function arcIssues(order: Array<{ sec: string; phase: Phase }>): ArcIssue
   const closingFrom = lastTension < 0 ? 0 : lastTension + 1;
 
   let run = 0;
-  for (let i = 0; i < closingFrom; i++) {
-    run = order[i].phase === 'relief' ? run + 1 : 0;
-    if (run === MID_PAGE_MAX_RELIEF_RUN) {
+  let runStart = 0;
+  const flush = (endIdx: number) => {
+    if (run > MID_PAGE_MAX_RELIEF_RUN) {
       out.push({
         level: 'warn',
-        what: `มีบล็อกโล่งติดกัน ${run} อันกลางหน้า (จบที่ "${order[i].sec}")`,
+        what: `โล่งติดกัน ${run} อันกลางหน้า ("${order[runStart].sec}" → "${order[endIdx].sec}") — เกินเพดาน ${run - MID_PAGE_MAX_RELIEF_RUN}`,
         why: 'ยิ่งอ่านยิ่งเรียบ — ความสนใจตกโดยไม่มีอะไรดึงกลับ',
       });
-      run = 0;
     }
+    run = 0;
+  };
+  for (let i = 0; i < closingFrom; i++) {
+    if (order[i].phase === 'relief') { if (run === 0) runStart = i; run++; continue; }
+    flush(i - 1);
   }
+  if (run > 0) flush(closingFrom - 1);
 
   const closingLen = order.length - closingFrom;
   if (closingLen > CLOSING_MAX) {

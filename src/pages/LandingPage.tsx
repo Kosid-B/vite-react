@@ -598,32 +598,33 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       {(() => {
         const explainBlock = (
           <>
+            {/* ─── ทำไมต้องเป็นเรา (Differentiation) ─── */}
+            <section data-sec="compare" style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ maxWidth: 900, margin: '0 auto' }}>
+                <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
+                  ทำไมต้อง <span style={{ color: C.cyan4 }}>CEO AI Thailand</span> — ไม่ใช่ AI ทั่วไป?
+                </h2>
+                <p style={{ textAlign: 'center', color: C.slate4, marginBottom: 44, fontSize: 16, maxWidth: 640, margin: '0 auto 44px' }}>
+                  AI ทั่วไปตอบคำถามได้ แต่ไม่รู้จักธุรกิจไทยและไม่ลงมือทำงานให้ — เราต่างตรงนี้
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
+                  {differentiators.map(d => (
+                    <div key={d.title} style={{ padding: 28, borderRadius: 14, border: `1px solid ${C.border2}`, backgroundColor: C.bg3 }}>
+                      <div style={{ fontSize: 36, marginBottom: 14 }}>{d.icon}</div>
+                      <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 10, color: C.white }}>{d.title}</h3>
+                      <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7 }}>{d.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
             {/* Trust bar (Dark AI Marketing #17) — authority/PDPA/risk-reversal ของจริง */}
             <div data-sec="trust_bar"><TrustBar /></div>
             {/* "ระบบทำงานยังไงใน 30 วินาที" (explainer เคลื่อนไหว) — เข้าใจภาพรวมเร็ว */}
             <div data-sec="how_30s"><HowItWorks30 onGetStarted={onGetStarted} /></div>
             {/* คุณจะได้อะไร (pain → gain): แก้ "คนไม่เข้าใจระบบ → ไม่กล้าสมัคร" */}
             <div data-sec="gain_points"><GainPointsPanel seg={hero.seg} onGetStarted={onGetStarted} /></div>
-      {/* ─── ทำไมต้องเป็นเรา (Differentiation) ─── */}
-      <section data-sec="compare" style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
-            ทำไมต้อง <span style={{ color: C.cyan4 }}>CEO AI Thailand</span> — ไม่ใช่ AI ทั่วไป?
-          </h2>
-          <p style={{ textAlign: 'center', color: C.slate4, marginBottom: 44, fontSize: 16, maxWidth: 640, margin: '0 auto 44px' }}>
-            AI ทั่วไปตอบคำถามได้ แต่ไม่รู้จักธุรกิจไทยและไม่ลงมือทำงานให้ — เราต่างตรงนี้
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
-            {differentiators.map(d => (
-              <div key={d.title} style={{ padding: 28, borderRadius: 14, border: `1px solid ${C.border2}`, backgroundColor: C.bg3 }}>
-                <div style={{ fontSize: 36, marginBottom: 14 }}>{d.icon}</div>
-                <h3 style={{ fontWeight: 700, fontSize: 18, marginBottom: 10, color: C.white }}>{d.title}</h3>
-                <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7 }}>{d.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
             {/* สารบัญทักษะที่ปรึกษา: มีอะไรบ้าง · เหมาะกับธุรกิจไหน · ขั้นตอนไหน · ราคาเท่าไร */}
             <div data-sec="skills"><SkillShowcase onGetStarted={onGetStarted} /></div>
@@ -637,6 +638,20 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
             <div data-sec="pricing_calc"><PricingCalcPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedRoi')} /></div>
             {/* ROI อย่างง่าย: กรอกตัวเลข → เทียบค่าสมัคร + บทวิเคราะห์ */}
             <div data-sec="roi_calc"><RoiCalculatorPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedRoi')} /></div>
+            {/* ─── Instant Proof (Black Hole: เห็นค่าก่อนสมัคร) — ย้ายเข้าก้อน "หลักฐาน" 26 ส.ค. 2569 ─── */}
+            <div data-sec="instant_preview"><InstantPreview onGetStarted={onGetStarted} /></div>
+            {/* ─── Stats ─── */}
+            {/* ─── Stats ─── */}
+            <section data-sec="credibility_bar" style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, backgroundColor: C.bg2, padding: '48px 24px' }}>
+              <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 32, textAlign: 'center' }}>
+                {stats.map(s => (
+                  <div key={s.label}>
+                    <div style={{ fontSize: 36, fontWeight: 700, color: C.cyan4, marginBottom: 6 }}>{s.value}</div>
+                    <div style={{ fontSize: 14, color: C.slate4 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
           </>
         );
         return layoutAb === 'proof_first'
@@ -644,20 +659,15 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           : <>{explainBlock}{proofBlock}</>;
       })()}
 
-      {/* ─── Instant Proof (Black Hole: เห็นค่าก่อนสมัคร) ─── */}
-      <div data-sec="instant_preview"><InstantPreview onGetStarted={onGetStarted} /></div>
 
-      {/* ─── Stats ─── */}
-      <section data-sec="credibility_bar" style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, backgroundColor: C.bg2, padding: '48px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 32, textAlign: 'center' }}>
-          {stats.map(s => (
-            <div key={s.label}>
-              <div style={{ fontSize: 36, fontWeight: 700, color: C.cyan4, marginBottom: 6 }}>{s.value}</div>
-              <div style={{ fontSize: 14, color: C.slate4 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+
+
+
+      {/* ─── เทียบชัด: ทำเอง vs จ้างคน vs CEO AI (ลดความลังเล — Dark AI Marketing #2/#16) ─── */}
+      <div data-sec="value_compare"><ValueCompare onGetStarted={onGetStarted} /></div>
+
+      {/* ─── เส้นทางเห็นผล วันที่ 1/3/7/15 (time-to-value จับต้องได้ — บทวิเคราะห์ item #3) ─── */}
+      <div data-sec="value_timeline"><ValueTimeline onGetStarted={onGetStarted} /></div>
 
       {/* ─── Social Proof (ซื่อสัตย์: track record ที่ปรึกษาจริง ไม่อ้างจำนวนผู้ใช้ AI) ─── */}
       <section data-sec="consultant_proof" style={{ padding: '64px 24px', textAlign: 'center' }}>
@@ -770,11 +780,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
 
-      {/* ─── เทียบชัด: ทำเอง vs จ้างคน vs CEO AI (ลดความลังเล — Dark AI Marketing #2/#16) ─── */}
-      <div data-sec="value_compare"><ValueCompare onGetStarted={onGetStarted} /></div>
 
-      {/* ─── เส้นทางเห็นผล วันที่ 1/3/7/15 (time-to-value จับต้องได้ — บทวิเคราะห์ item #3) ─── */}
-      <div data-sec="value_timeline"><ValueTimeline onGetStarted={onGetStarted} /></div>
 
       {/* ─── AI Skills ที่โตไปกับธุรกิจ — ระบบพัฒนา Skill ให้ + มี Skill ใหม่ตามระดับ ─── */}
       <section data-sec="team" style={{ padding: '80px 24px' }}>
@@ -820,6 +826,24 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
                 อ่านเพิ่ม: AI Skills ที่โตไปกับธุรกิจ →
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 2 ชั้น: แอปทำเองได้ (เข้าถึงง่าย) · ที่ปรึกษาลึกส่งต่อ B.Training (คลาย correlational: มืออาชีพ↔ถูก) ─── */}
+      <section data-sec="self_serve" style={{ padding: '56px 24px' }}>
+        <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          <div style={{ padding: '24px 26px', borderRadius: 16, border: `1px solid ${C.cyan5}`, backgroundColor: C.bg2 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.cyan4, letterSpacing: '0.05em', marginBottom: 8 }}>เริ่มเองในแอป · ฿0–1,490/เดือน</div>
+            <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7, margin: 0 }}>
+              ลงมือสร้างธุรกิจเองทั้งหมดในราคาที่ SME ไทยเอื้อมถึง — เริ่มฟรี ไม่ต้องผูกบัตร ทำเป็นขั้น ๆ ด้วยตัวเอง
+            </p>
+          </div>
+          <div style={{ padding: '24px 26px', borderRadius: 16, border: `1px solid ${C.border2}`, backgroundColor: C.bg3 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.amber4, letterSpacing: '0.05em', marginBottom: 8 }}>อยากได้ที่ปรึกษาลงลึก?</div>
+            <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7, margin: 0 }}>
+              งานที่ต้องมืออาชีพลงมือ (วางระบบ ISO เชิงลึก · ที่ปรึกษาเฉพาะทาง) ส่งต่อผู้เชี่ยวชาญ B. Training 20+ ปี — แยกจากแอป จ่ายเฉพาะเมื่อต้องการ
+            </p>
           </div>
         </div>
       </section>
@@ -886,23 +910,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         </div>
       </section>
 
-      {/* ─── 2 ชั้น: แอปทำเองได้ (เข้าถึงง่าย) · ที่ปรึกษาลึกส่งต่อ B.Training (คลาย correlational: มืออาชีพ↔ถูก) ─── */}
-      <section data-sec="self_serve" style={{ padding: '56px 24px' }}>
-        <div style={{ maxWidth: 820, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
-          <div style={{ padding: '24px 26px', borderRadius: 16, border: `1px solid ${C.cyan5}`, backgroundColor: C.bg2 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.cyan4, letterSpacing: '0.05em', marginBottom: 8 }}>เริ่มเองในแอป · ฿0–1,490/เดือน</div>
-            <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7, margin: 0 }}>
-              ลงมือสร้างธุรกิจเองทั้งหมดในราคาที่ SME ไทยเอื้อมถึง — เริ่มฟรี ไม่ต้องผูกบัตร ทำเป็นขั้น ๆ ด้วยตัวเอง
-            </p>
-          </div>
-          <div style={{ padding: '24px 26px', borderRadius: 16, border: `1px solid ${C.border2}`, backgroundColor: C.bg3 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.amber4, letterSpacing: '0.05em', marginBottom: 8 }}>อยากได้ที่ปรึกษาลงลึก?</div>
-            <p style={{ color: C.slate4, fontSize: 14.5, lineHeight: 1.7, margin: 0 }}>
-              งานที่ต้องมืออาชีพลงมือ (วางระบบ ISO เชิงลึก · ที่ปรึกษาเฉพาะทาง) ส่งต่อผู้เชี่ยวชาญ B. Training 20+ ปี — แยกจากแอป จ่ายเฉพาะเมื่อต้องการ
-            </p>
-          </div>
-        </div>
-      </section>
+
 
       {/* ─── ผลลัพธ์ที่คุณจะได้ (Outcomes) ─── */}
       <section data-sec="outcomes" style={{ padding: '80px 24px' }}>
