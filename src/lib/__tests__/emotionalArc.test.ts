@@ -63,7 +63,10 @@ const PHASE: Record<string, Phase> = {
   // เครื่องมือที่ "ตอบคำถามให้" = โล่ง · การเทียบที่ "ทำให้เห็นช่องว่าง" = ตึง
   returning: 'relief',
   why_trust_ai: 'relief',
-  market_sizer: 'relief',        // เครื่องมือ → ได้คำตอบ
+  // 🔀 26 ส.ค. 2569: เปลี่ยนเป็น "ตึง" เพราะบล็อกนี้ปิดด้วยคำถามที่เขาตอบเองไม่ได้
+  //    ("ปีที่ผ่านมาคุณได้ไปเท่าไหร่จากก้อนนี้") แทนคำสัญญาเดิม "โอกาสนี้คว้าได้จริง"
+  //    ⇒ เทสต์ด้านล่างอ่าน MarketSizerPanel.tsx ตัวจริง กันไม่ให้ป้ายกับของจริงหลุดจากกัน
+  market_sizer: 'tension',
   persona_banner: 'relief',
   trust_bar: 'relief',
   how_30s: 'relief',
@@ -111,6 +114,15 @@ describe('จังหวะอารมณ์ — โครงสร้าง',
     expect(src('nextProblems.ts')).toMatch(/nextProblemsFor/);
     expect(src('trialRoadmap.ts')).toMatch(/nextStep/);
     expect(src('brandBrief.ts')).toMatch(/CUSTOMER_JOURNEY/);
+  });
+
+  /* 🔴 ป้าย 'tension' เป็น "คำกล่าวอ้าง" — ต้องมีของจริงรองรับ ไม่งั้นเราจะจัดจังหวะบนแผนที่ปลอม
+   *    บล็อกที่เราบอกว่าสร้างความตึง ต้อง **ปิดด้วยคำถามที่ผู้อ่านตอบเองไม่ได้** จริง ๆ ในโค้ด
+   *    (เงื่อนไขเดียวกับ commentReply.videoEnding: ตอนจบต้อง "ค้าง" ไม่ใช่ "อิ่ม") */
+  it('🔴 บล็อกที่ติดป้ายว่าตึง ต้องมีคำถามจริงในโค้ด ไม่ใช่แค่ป้าย', () => {
+    const sizer = readFileSync(resolve(__dirname, '../../components/MarketSizerPanel.tsx'), 'utf8');
+    expect(sizer, 'เครื่องประเมินตลาดไม่มีคำถามปิดท้าย = ไม่ใช่จุดตึง').toMatch(/❓[^<]*คุณได้ไปเท่าไหร่/);
+    expect(sizer, 'ยังมีคำสัญญาผลลัพธ์ที่เราไม่มีหลักฐานอยู่').not.toMatch(/คว้าได้จริง/);
   });
 
   it('🔴 ทุกข้อห้ามต้องมี "ใช้อะไรแทน" — กฎที่ห้ามเฉย ๆ จะถูกละเมิดตอนยอดไม่เข้าเป้า', () => {
@@ -234,7 +246,7 @@ describe('🔴 หน้า Landing ของเราเองผ่านจ�
    *
    * 🔒 เพดานนี้เป็นบันไดลง ห้ามขยับขึ้นเพื่อให้ผ่าน (8 → 4 เมื่อ 26 ส.ค. 2569)
    */
-  const BASELINE_DEBT = 4;
+  const BASELINE_DEBT = 0;
 
   it('ทุกแบบที่ผู้ใช้เห็นได้ ต้องไม่มี blocker และหนี้ความราบต้องไม่เพิ่ม', () => {
     for (const v of VARIANTS) {
@@ -258,10 +270,11 @@ describe('🔴 หน้า Landing ของเราเองผ่านจ�
     const anchors = order.slice(0, lastT).filter((b) => b.phase === 'tension').length;
     const midRelief = order.slice(0, lastT).filter((b) => b.phase === 'relief').length;
     const floorDebt = Math.max(0, midRelief - anchors * MID_PAGE_MAX_RELIEF_RUN);
-    expect(floorDebt, `กลางหน้ามีโล่ง ${midRelief} · ความจุ ${anchors * MID_PAGE_MAX_RELIEF_RUN}`).toBeGreaterThan(0);
-    // 🔴 ต้อง "เท่ากัน" ไม่ใช่ "ไม่เกิน" — พิสูจน์ว่าหนี้ที่เหลืออธิบายด้วยความจุได้ทั้งก้อน
-    //    ⇒ ใครเสนอให้ "ลองสลับบล็อกดูอีกที" จะเห็นทันทีว่าสลับยังไงก็ไม่ลง
-    expect(BASELINE_DEBT, 'เรียงใหม่ลงต่ำกว่านี้ไม่ได้ — ต้องเพิ่มจุดตึงจริง').toBe(floorDebt);
+    // 🔴 ต้อง "เท่ากัน" ไม่ใช่ "ไม่เกิน" — เพดานต้องอธิบายด้วยความจุได้ทั้งก้อนเสมอ
+    //    ⇒ ใครเสนอให้ "ลองสลับบล็อกดูอีกที" จะเห็นทันทีว่าเหลือหรือไม่เหลือช่องให้สลับ
+    expect(BASELINE_DEBT, `กลางหน้ามีโล่ง ${midRelief} · ความจุ ${anchors * MID_PAGE_MAX_RELIEF_RUN}`).toBe(floorDebt);
+    // ความจุต้องไม่เกินความจำเป็นมาก — เหลือช่องว่างเยอะ = จุดตึงถี่เกินไป (กดดัน ไม่ใช่จังหวะ)
+    expect(anchors * MID_PAGE_MAX_RELIEF_RUN - midRelief).toBeLessThanOrEqual(MID_PAGE_MAX_RELIEF_RUN);
   });
 
   it('จังหวะตึงต้องกระจาย ไม่กระจุกหัวหน้า', () => {

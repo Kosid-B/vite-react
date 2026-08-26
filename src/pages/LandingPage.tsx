@@ -587,11 +587,105 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         </>
       )}
 
+      {/* 🔀 ย้ายขึ้นมาจากท้ายหน้า 26 ส.ค. 2569 — "อธิบายว่าทำงานยังไง" ควรอยู่ต่อจาก "ทำไมไม่ใช่ ChatGPT"
+           ไม่ใช่ไปโผล่หลังราคา · และช่วยไม่ให้ช่วงกลางหน้าโล่งติดกันยาว (emotionalArc.flatnessDebt) */}
+      {/* ─── Steps ─── */}
+      <section data-sec="how_it_works" style={{ padding: '64px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12, color: C.white }}>
+            เริ่มต้น <span style={{ color: C.cyan4 }}>3 ขั้นตอน</span>
+          </h2>
+          <p style={{ textAlign: 'center', color: C.slate4, fontSize: 15, maxWidth: 560, margin: '0 auto 44px', lineHeight: 1.6 }}>
+            ไม่ต้องตั้งค่าซับซ้อน — เริ่มใน 2 นาที ตอบไม่กี่คำถาม แล้วลงลึกทีละขั้นได้เมื่อพร้อม
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 32 }}>
+            {steps.map(s => (
+              <div key={s.n} style={{ borderLeft: `3px solid ${C.cyan5}`, paddingLeft: 24 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.cyan5, letterSpacing: '0.1em', marginBottom: 8 }}>STEP {s.n}</div>
+                <h3 style={{ fontSize: 28, fontWeight: 700, color: C.cyan3, marginBottom: 10 }}>{s.title}</h3>
+                <p style={{ color: C.slate4, lineHeight: 1.65, fontSize: 15 }}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Features ─── */}
+      <section data-sec="features" style={{ padding: '80px 24px' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 48 }}>
+            ทุกอย่างที่ธุรกิจ<span style={{ color: C.cyan4 }}>ต้องการ</span> — อยู่ที่เดียว
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24 }}>
+            {features.map(f => (
+              <div key={f.title} style={{ padding: 24, borderRadius: 12, border: `1px solid ${C.border}`, backgroundColor: C.bg2, transition: 'border-color .2s' }}>
+                <div style={{ fontSize: 32, marginBottom: 12 }}>{f.icon}</div>
+                <h3 style={{ fontWeight: 600, fontSize: 16, marginBottom: 8, color: C.white }}>{f.title}</h3>
+                <p style={{ color: C.slate4, fontSize: 14, lineHeight: 1.6 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── เครื่องมือประเมินตลาดฟรี (interactive · dopamine) — วางใกล้ hero ให้เห็นทันที ─── */}
       <div data-sec="market_sizer"><MarketSizerPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} /></div>
 
       {/* ─── Dynamic Persona banner — ปรับตามพฤติกรรมจริง (โปร่งใส/ปิดได้/ลบข้อมูลได้) ─── */}
       {persona && <div data-sec="persona_banner"><PersonaBanner persona={persona} onGetStarted={onGetStarted} onClose={() => setPersona(null)} /></div>}
+
+      {/* 🔀 ย้ายขึ้นมา 26 ส.ค. 2569 — วางต่อจากคำถาม "ปีที่ผ่านมาคุณได้ไปเท่าไหร่" ของเครื่องประเมินตลาด
+           คำถามสร้างความตึง → สองบล็อกนี้คือคำตอบว่า "ถ้าเริ่มวันนี้ เห็นอะไรเมื่อไร" (emotionalArc: ตึงแล้วต้องมีของคลาย) */}
+      {/* ─── เส้นทางเห็นผล วันที่ 1/3/7/15 (time-to-value จับต้องได้ — บทวิเคราะห์ item #3) ─── */}
+      <div data-sec="value_timeline"><ValueTimeline onGetStarted={onGetStarted} /></div>
+
+      {/* ─── AI Skills ที่โตไปกับธุรกิจ — ระบบพัฒนา Skill ให้ + มี Skill ใหม่ตามระดับ ─── */}
+      <section data-sec="team" style={{ padding: '80px 24px' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', color: C.cyan4, fontSize: 12.5, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 12 }}>
+            AI Skills ที่โตไปกับคุณ
+          </div>
+          <h2 style={{ textAlign: 'center', fontSize: 'clamp(24px, 3.4vw, 32px)', fontWeight: 700, marginBottom: 12 }}>
+            ทีม AI <span style={{ color: C.cyan4 }}>เก่งขึ้นเรื่อย ๆ</span> — ปลดล็อก Skill ใหม่ตามระดับธุรกิจคุณ
+          </h2>
+          <p style={{ textAlign: 'center', color: C.slate4, fontSize: 16, lineHeight: 1.7, maxWidth: 660, margin: '0 auto 44px' }}>
+            ระบบ<strong style={{ color: C.white }}>พัฒนา Skill ให้ต่อเนื่อง</strong> แล้วเสนอให้เลือกตามจุดที่ธุรกิจคุณไปถึง —
+            ไม่ใช่จ่ายแล้วจบ แต่มี "ทักษะถัดไป" รอเสมอเมื่อคุณพร้อม
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
+            {SKILL_STAGES.map((s, i) => (
+              <div key={s.stage} style={{ position: 'relative', padding: '26px 22px', borderRadius: 16, border: `1px solid ${i === 1 ? C.cyan5 : C.border2}`, backgroundColor: i === 1 ? 'rgba(6,182,212,0.06)' : C.bg3 }}>
+                <div style={{ fontSize: 34, marginBottom: 10 }}>{s.icon}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan4, letterSpacing: '0.08em', marginBottom: 2 }}>ระดับ {i + 1}</div>
+                <div style={{ fontWeight: 800, fontSize: 19, color: C.white, marginBottom: 2 }}>{s.stage}</div>
+                <div style={{ color: C.slate5, fontSize: 13, marginBottom: 14 }}>{s.desc}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {s.skills.map(sk => (
+                    <div key={sk} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: C.slate4, lineHeight: 1.5 }}>
+                      <span style={{ color: C.cyan4, fontWeight: 700, flexShrink: 0 }}>✦</span> {sk}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ textAlign: 'center', color: C.slate5, fontSize: 13.5, marginTop: 26, lineHeight: 1.6 }}>
+            มี Skill ใหม่เพิ่มเข้ามาต่อเนื่อง — เลือกใช้เฉพาะที่ธุรกิจคุณต้องการ "ตอนนี้" ไม่ต้องเก่งทุกอย่างเอง
+          </p>
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <button onClick={() => { track('landing_cta_click', { cta: 'skills_section', layout: layoutAb }); onGetStarted(); }}
+              style={{ background: C.amber5, color: C.dark, border: 0, borderRadius: 12, padding: '13px 30px', fontWeight: 800, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
+              เริ่มจาก Skill แรกของคุณ — ฟรี
+            </button>
+            <div style={{ marginTop: 14 }}>
+              <a href="/skills" onClick={() => track('landing_cta_click', { cta: 'skills_learn_more' })}
+                style={{ color: C.cyan4, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
+                อ่านเพิ่ม: AI Skills ที่โตไปกับธุรกิจ →
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* ─── A/B ลำดับบล็อก (layoutAb) — เนื้อหาครบเท่ากันทั้งคู่ ต่างแค่ลำดับ ─── */}
       {/* explainBlock: อธิบายระบบ (TrustBar → วิธีใช้ 30 วิ → สิ่งที่ได้) · proofBlock: ดีมานด์/ROI ของจริง */}
@@ -666,8 +760,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       {/* ─── เทียบชัด: ทำเอง vs จ้างคน vs CEO AI (ลดความลังเล — Dark AI Marketing #2/#16) ─── */}
       <div data-sec="value_compare"><ValueCompare onGetStarted={onGetStarted} /></div>
 
-      {/* ─── เส้นทางเห็นผล วันที่ 1/3/7/15 (time-to-value จับต้องได้ — บทวิเคราะห์ item #3) ─── */}
-      <div data-sec="value_timeline"><ValueTimeline onGetStarted={onGetStarted} /></div>
+
 
       {/* ─── Social Proof (ซื่อสัตย์: track record ที่ปรึกษาจริง ไม่อ้างจำนวนผู้ใช้ AI) ─── */}
       <section data-sec="consultant_proof" style={{ padding: '64px 24px', textAlign: 'center' }}>
@@ -740,95 +833,14 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       {/* ─── Lead capture: ดักคนสนใจที่ยังไม่พร้อมสมัคร (First-party data + PDPA) ─── */}
       <div data-sec="lead_capture"><LeadCapture /></div>
 
-      {/* ─── Steps ─── */}
-      <section data-sec="how_it_works" style={{ padding: '64px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 12, color: C.white }}>
-            เริ่มต้น <span style={{ color: C.cyan4 }}>3 ขั้นตอน</span>
-          </h2>
-          <p style={{ textAlign: 'center', color: C.slate4, fontSize: 15, maxWidth: 560, margin: '0 auto 44px', lineHeight: 1.6 }}>
-            ไม่ต้องตั้งค่าซับซ้อน — เริ่มใน 2 นาที ตอบไม่กี่คำถาม แล้วลงลึกทีละขั้นได้เมื่อพร้อม
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 32 }}>
-            {steps.map(s => (
-              <div key={s.n} style={{ borderLeft: `3px solid ${C.cyan5}`, paddingLeft: 24 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.cyan5, letterSpacing: '0.1em', marginBottom: 8 }}>STEP {s.n}</div>
-                <h3 style={{ fontSize: 28, fontWeight: 700, color: C.cyan3, marginBottom: 10 }}>{s.title}</h3>
-                <p style={{ color: C.slate4, lineHeight: 1.65, fontSize: 15 }}>{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Features ─── */}
-      <section data-sec="features" style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', fontSize: 32, fontWeight: 700, marginBottom: 48 }}>
-            ทุกอย่างที่ธุรกิจ<span style={{ color: C.cyan4 }}>ต้องการ</span> — อยู่ที่เดียว
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 24 }}>
-            {features.map(f => (
-              <div key={f.title} style={{ padding: 24, borderRadius: 12, border: `1px solid ${C.border}`, backgroundColor: C.bg2, transition: 'border-color .2s' }}>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>{f.icon}</div>
-                <h3 style={{ fontWeight: 600, fontSize: 16, marginBottom: 8, color: C.white }}>{f.title}</h3>
-                <p style={{ color: C.slate4, fontSize: 14, lineHeight: 1.6 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
 
 
 
-      {/* ─── AI Skills ที่โตไปกับธุรกิจ — ระบบพัฒนา Skill ให้ + มี Skill ใหม่ตามระดับ ─── */}
-      <section data-sec="team" style={{ padding: '80px 24px' }}>
-        <div style={{ maxWidth: 960, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', color: C.cyan4, fontSize: 12.5, fontWeight: 600, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 12 }}>
-            AI Skills ที่โตไปกับคุณ
-          </div>
-          <h2 style={{ textAlign: 'center', fontSize: 'clamp(24px, 3.4vw, 32px)', fontWeight: 700, marginBottom: 12 }}>
-            ทีม AI <span style={{ color: C.cyan4 }}>เก่งขึ้นเรื่อย ๆ</span> — ปลดล็อก Skill ใหม่ตามระดับธุรกิจคุณ
-          </h2>
-          <p style={{ textAlign: 'center', color: C.slate4, fontSize: 16, lineHeight: 1.7, maxWidth: 660, margin: '0 auto 44px' }}>
-            ระบบ<strong style={{ color: C.white }}>พัฒนา Skill ให้ต่อเนื่อง</strong> แล้วเสนอให้เลือกตามจุดที่ธุรกิจคุณไปถึง —
-            ไม่ใช่จ่ายแล้วจบ แต่มี "ทักษะถัดไป" รอเสมอเมื่อคุณพร้อม
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-            {SKILL_STAGES.map((s, i) => (
-              <div key={s.stage} style={{ position: 'relative', padding: '26px 22px', borderRadius: 16, border: `1px solid ${i === 1 ? C.cyan5 : C.border2}`, backgroundColor: i === 1 ? 'rgba(6,182,212,0.06)' : C.bg3 }}>
-                <div style={{ fontSize: 34, marginBottom: 10 }}>{s.icon}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: C.cyan4, letterSpacing: '0.08em', marginBottom: 2 }}>ระดับ {i + 1}</div>
-                <div style={{ fontWeight: 800, fontSize: 19, color: C.white, marginBottom: 2 }}>{s.stage}</div>
-                <div style={{ color: C.slate5, fontSize: 13, marginBottom: 14 }}>{s.desc}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {s.skills.map(sk => (
-                    <div key={sk} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 14, color: C.slate4, lineHeight: 1.5 }}>
-                      <span style={{ color: C.cyan4, fontWeight: 700, flexShrink: 0 }}>✦</span> {sk}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-          <p style={{ textAlign: 'center', color: C.slate5, fontSize: 13.5, marginTop: 26, lineHeight: 1.6 }}>
-            มี Skill ใหม่เพิ่มเข้ามาต่อเนื่อง — เลือกใช้เฉพาะที่ธุรกิจคุณต้องการ "ตอนนี้" ไม่ต้องเก่งทุกอย่างเอง
-          </p>
-          <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <button onClick={() => { track('landing_cta_click', { cta: 'skills_section', layout: layoutAb }); onGetStarted(); }}
-              style={{ background: C.amber5, color: C.dark, border: 0, borderRadius: 12, padding: '13px 30px', fontWeight: 800, fontSize: 16, cursor: 'pointer', fontFamily: 'inherit' }}>
-              เริ่มจาก Skill แรกของคุณ — ฟรี
-            </button>
-            <div style={{ marginTop: 14 }}>
-              <a href="/skills" onClick={() => track('landing_cta_click', { cta: 'skills_learn_more' })}
-                style={{ color: C.cyan4, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
-                อ่านเพิ่ม: AI Skills ที่โตไปกับธุรกิจ →
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+
+
+
+
 
       {/* ─── 2 ชั้น: แอปทำเองได้ (เข้าถึงง่าย) · ที่ปรึกษาลึกส่งต่อ B.Training (คลาย correlational: มืออาชีพ↔ถูก) ─── */}
       <section data-sec="self_serve" style={{ padding: '56px 24px' }}>
