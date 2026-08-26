@@ -23,6 +23,7 @@ export const SYNCED_EXTERNAL_SKILLS = [
   'thai-content-social',
   'thai-performance-ads',
   'thai-seo',
+  'ai-dark-marketing',
 ] as const;
 export type SyncedSkill = typeof SYNCED_EXTERNAL_SKILLS[number];
 
@@ -58,6 +59,15 @@ export const SKILL_OVERRIDES: SkillOverride[] = [
     theySay: 'ผลิตคอนเทนต์ตาม pillar/hook ที่กำหนด',
     weDo: 'ทุกชิ้นต้องผ่าน `violatesBrand()` และ skill `content-link-contract` (ต้องมีปลายทางจริง)',
     why: 'คอนเทนต์ที่ไม่มีปลายทาง = เสียของทั้งหมด · ปลายทางที่ไม่มีเนื้อหาจริง = เสียความไว้ใจถาวร',
+  },
+  {
+    skill: 'ai-dark-marketing',
+    theySay: 'ความเร่งด่วนและ social proof เป็นแรงผลักดันการตัดสินใจซื้อ (บทเรียนข้อ 16–17)',
+    weDo: 'สร้างความตึงจาก **ตัวเลขของผู้ใช้เองที่เขาตอบไม่ได้** ตาม `emotionalArc.BEATS` — ' +
+      'ห้ามนับถอยหลัง/จำนวนจำกัด/รีวิวที่ยังไม่มีจริง (`FORBIDDEN_TRIGGERS` มีของแทนที่ให้ทุกข้อ)',
+    why: 'กฎแบรนด์ระดับ block ห้าม dark pattern อยู่แล้ว และเรายังไม่มีลูกค้าจ่ายจริงสักราย ' +
+      '⇒ social proof ที่ปั้นตอนนี้คือคำโกหกที่จับได้ง่ายที่สุด · ' +
+      '⚠️ skill นี้ description เขียนว่าเรื่องฮอร์โมน แต่เนื้อในไม่มีเลย — ห้ามอ้างว่าหลักการมาจากที่นี่',
   },
   {
     skill: 'thai-marketing-strategy',
