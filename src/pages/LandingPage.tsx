@@ -567,7 +567,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       {/* ─── ประตูหน้า: กรอกตัวเลขสินค้า → เห็นกำไรจริงทันที (ไม่เรียก AI · ไม่ต้องสมัคร) ───
            วางสูงที่สุดโดยตั้งใจ — ข้อมูลจริง 11–15 ส.ค. 2569 บอกว่าผู้เข้าชมจากโซเชียล 28 คน
            มี max_scroll = 0 ทั้ง 28 คน · อะไรที่อยู่ล่าง fold เท่ากับไม่มี */}
-      <ReturningGreeting onGetStarted={onGetStarted} />
+      <div data-sec="returning"><ReturningGreeting onGetStarted={onGetStarted} /></div>
 
       {/* ─── 15 วันฟรีจะเกิดอะไรขึ้น — ตอบข้อกังวลจริง "เสียเวลาแล้วไม่ได้อะไร" ───
            วางต่อจากประตูหน้าทันที: เห็นตัวเลขของตัวเองแล้ว → เห็นว่าเดินต่อยังไง → ค่อยกดเริ่ม */}
@@ -583,15 +583,15 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           {/* ลองใช้ AI จริงทันที (ไม่ต้องสมัคร) — แก้ pain "คิดว่าต้องสมัครถึงใช้ AI ได้" (PLG aha) */}
           <div data-sec="try_ai"><GuestAiTry onGetStarted={onGetStarted} /></div>
           {/* objection handling: จัดการความกลัว AI (ใช้ไม่เป็น/ถูกต้องไหม/ไม่เคยใช้) */}
-          <WhyTrustAi onGetStarted={onGetStarted} />
+          <div data-sec="why_trust_ai"><WhyTrustAi onGetStarted={onGetStarted} /></div>
         </>
       )}
 
       {/* ─── เครื่องมือประเมินตลาดฟรี (interactive · dopamine) — วางใกล้ hero ให้เห็นทันที ─── */}
-      <MarketSizerPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} />
+      <div data-sec="market_sizer"><MarketSizerPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} /></div>
 
       {/* ─── Dynamic Persona banner — ปรับตามพฤติกรรมจริง (โปร่งใส/ปิดได้/ลบข้อมูลได้) ─── */}
-      {persona && <PersonaBanner persona={persona} onGetStarted={onGetStarted} onClose={() => setPersona(null)} />}
+      {persona && <div data-sec="persona_banner"><PersonaBanner persona={persona} onGetStarted={onGetStarted} onClose={() => setPersona(null)} /></div>}
 
       {/* ─── A/B ลำดับบล็อก (layoutAb) — เนื้อหาครบเท่ากันทั้งคู่ ต่างแค่ลำดับ ─── */}
       {/* explainBlock: อธิบายระบบ (TrustBar → วิธีใช้ 30 วิ → สิ่งที่ได้) · proofBlock: ดีมานด์/ROI ของจริง */}
@@ -599,11 +599,11 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         const explainBlock = (
           <>
             {/* Trust bar (Dark AI Marketing #17) — authority/PDPA/risk-reversal ของจริง */}
-            <TrustBar />
+            <div data-sec="trust_bar"><TrustBar /></div>
             {/* "ระบบทำงานยังไงใน 30 วินาที" (explainer เคลื่อนไหว) — เข้าใจภาพรวมเร็ว */}
-            <HowItWorks30 onGetStarted={onGetStarted} />
+            <div data-sec="how_30s"><HowItWorks30 onGetStarted={onGetStarted} /></div>
             {/* คุณจะได้อะไร (pain → gain): แก้ "คนไม่เข้าใจระบบ → ไม่กล้าสมัคร" */}
-            <GainPointsPanel seg={hero.seg} onGetStarted={onGetStarted} />
+            <div data-sec="gain_points"><GainPointsPanel seg={hero.seg} onGetStarted={onGetStarted} /></div>
       {/* ─── ทำไมต้องเป็นเรา (Differentiation) ─── */}
       <section data-sec="compare" style={{ padding: '80px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -632,11 +632,11 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         const proofBlock = (
           <>
             {/* Demand/Supply Board (first-party จริง): พิมพ์ธุรกิจ → เห็นดีมานด์ในระบบ */}
-            <MarketDemandPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} />
+            <div data-sec="market_demand"><MarketDemandPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedDemand')} /></div>
             {/* ตั้งราคาขาย+กำไร (lead magnet): ต้นทุน+กำไร% → ราคาที่ควรตั้ง */}
-            <PricingCalcPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedRoi')} />
+            <div data-sec="pricing_calc"><PricingCalcPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedRoi')} /></div>
             {/* ROI อย่างง่าย: กรอกตัวเลข → เทียบค่าสมัคร + บทวิเคราะห์ */}
-            <RoiCalculatorPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedRoi')} />
+            <div data-sec="roi_calc"><RoiCalculatorPanel onGetStarted={onGetStarted} onEngage={() => persistSignal('usedRoi')} /></div>
           </>
         );
         return layoutAb === 'proof_first'
@@ -645,7 +645,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       })()}
 
       {/* ─── Instant Proof (Black Hole: เห็นค่าก่อนสมัคร) ─── */}
-      <InstantPreview onGetStarted={onGetStarted} />
+      <div data-sec="instant_preview"><InstantPreview onGetStarted={onGetStarted} /></div>
 
       {/* ─── Stats ─── */}
       <section data-sec="credibility_bar" style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, backgroundColor: C.bg2, padding: '48px 24px' }}>
@@ -728,7 +728,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── Lead capture: ดักคนสนใจที่ยังไม่พร้อมสมัคร (First-party data + PDPA) ─── */}
-      <LeadCapture />
+      <div data-sec="lead_capture"><LeadCapture /></div>
 
       {/* ─── Steps ─── */}
       <section data-sec="how_it_works" style={{ padding: '64px 24px', backgroundColor: C.bg2, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
@@ -771,10 +771,10 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
 
 
       {/* ─── เทียบชัด: ทำเอง vs จ้างคน vs CEO AI (ลดความลังเล — Dark AI Marketing #2/#16) ─── */}
-      <ValueCompare onGetStarted={onGetStarted} />
+      <div data-sec="value_compare"><ValueCompare onGetStarted={onGetStarted} /></div>
 
       {/* ─── เส้นทางเห็นผล วันที่ 1/3/7/15 (time-to-value จับต้องได้ — บทวิเคราะห์ item #3) ─── */}
-      <ValueTimeline onGetStarted={onGetStarted} />
+      <div data-sec="value_timeline"><ValueTimeline onGetStarted={onGetStarted} /></div>
 
       {/* ─── AI Skills ที่โตไปกับธุรกิจ — ระบบพัฒนา Skill ให้ + มี Skill ใหม่ตามระดับ ─── */}
       <section data-sec="team" style={{ padding: '80px 24px' }}>
@@ -991,7 +991,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
       </section>
 
       {/* ─── ชุมชน LINE/Facebook (โชว์เมื่อมี URL จริงใน config — บทวิเคราะห์ item #5) ─── */}
-      <CommunityJoin />
+      <div data-sec="community"><CommunityJoin /></div>
 
       {/* ─── Footer ─── */}
       <footer style={{ borderTop: `1px solid ${C.border}`, padding: '24px', textAlign: 'center', color: C.slate5, fontSize: 13, lineHeight: 1.9 }}>

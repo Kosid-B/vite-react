@@ -81,6 +81,7 @@ export function useLandingTrace(
      * 🔴 เดิมใช้ threshold 0.5 ล้วน ⇒ บล็อกที่สูงเกิน 2 เท่าของจอ (quickcheck/pricing/roadmap
      *    บนมือถือ) เข้าเกณฑ์ไม่ได้เลยแม้แต่ครั้งเดียว = เวลาที่คนใช้กับสองบล็อกนั้นเป็น 0 ตลอด */
     let io: IntersectionObserver | null = null;
+    let mo: MutationObserver | null = null;
     if ('IntersectionObserver' in window) {
       io = new IntersectionObserver((entries) => {
         const vh = window.innerHeight;
@@ -91,7 +92,21 @@ export function useLandingTrace(
           else markSectionExit(key);
         }
       }, { threshold: SECTION_THRESHOLDS });
-      document.querySelectorAll('[data-sec]').forEach((el) => io!.observe(el));
+      /* 🔴 เดิมสแกนครั้งเดียวตอน mount ⇒ บล็อกที่เรนเดอร์ทีหลัง (A/B holdout · persona banner ·
+       *    เนื้อหาที่โผล่ตามเงื่อนไข) **ไม่เคยถูกสังเกตเลย**
+       *    ตรวจจริง 26 ส.ค. 2569: 50 จาก 91 session อยู่บนหน้า ≥1 วินาที แต่ไม่มีข้อมูลรายบล็อกสักตัว
+       *    ⇒ เฝ้า DOM แล้วผูกตัวใหม่ที่โผล่มาทีหลังด้วย */
+      const observed = new WeakSet<Element>();
+      const observeAll = () => {
+        document.querySelectorAll('[data-sec]').forEach((el) => {
+          if (observed.has(el)) return;
+          observed.add(el);
+          io!.observe(el);
+        });
+      };
+      observeAll();
+      mo = new MutationObserver(observeAll);
+      mo.observe(document.body, { childList: true, subtree: true });
     }
 
     measure(); // วัดจุดเริ่มต้น (เผื่อหน้าสั้น = 100 ทันที)
@@ -102,6 +117,7 @@ export function useLandingTrace(
 
     return () => {
       io?.disconnect();
+      mo?.disconnect();
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('click', onClick);
       document.removeEventListener('visibilitychange', onVisibility);
