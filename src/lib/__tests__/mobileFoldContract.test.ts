@@ -270,3 +270,37 @@ describe('เครื่องคำนวณ — ช่องกรอกแ�
     expect(css.slice(0, i).lastIndexOf('@media (max-width: 480px)'), 'ค่าบีบต้องอยู่ในบล็อกมือถือ').toBeGreaterThan(-1);
   });
 });
+
+/* ── ทางแยกสำหรับ growth (เจ้าของตัดสิน 24 ส.ค. 2569: growth = ตัวทำรายได้) ──
+ * 🔴 81/87 session เห็นหน้า default ซึ่งพูดกับคนที่ยังไม่มีธุรกิจ
+ *    เจ้าของที่ขายอยู่แล้วอ่านแล้วรู้ว่าไม่ใช่ปัญหาของเขา แล้วออกโดยไม่มีทางไปต่อ
+ * ⚠️ ต้องอยู่ **ใต้ปุ่มหลักเสมอ** — วางเหนือปุ่มจะดันปุ่มหลุดขอบจอ (วัดจริง: SE เหลือ +11px)
+ * ──────────────────────────────────────────────────────────────────────── */
+describe('🎯 ทางแยกไปกลุ่มที่ทำรายได้ ต้องมี และต้องไม่เบียดปุ่มหลัก', () => {
+  const tsx = readFileSync(resolve(__dirname, '../../pages/StartLanding.tsx'), 'utf8');
+
+  it('มีทางแยกอยู่จริงในหน้า /start', () => {
+    expect(tsx).toContain('start-segswitch');
+    expect(tsx).toMatch(/ขายอยู่แล้ว\?/);
+  });
+
+  it('🔴 ต้องอยู่ใต้ปุ่มหลัก — ไม่งั้นปุ่มหลุดขอบจอบนเครื่องแคบ', () => {
+    expect(tsx.indexOf('start-cta-row')).toBeLessThan(tsx.indexOf('start-segswitch'));
+  });
+
+  it('ชี้ไป seg ที่มีอยู่จริงใน START_HEROES เท่านั้น', () => {
+    const heroes = readFileSync(resolve(__dirname, '../startHero.ts'), 'utf8');
+    for (const m of tsx.matchAll(/\/start\?seg=([a-z]+)/g)) {
+      expect(heroes, `seg=${m[1]} ไม่มีใน START_HEROES`).toMatch(new RegExp(`\\n  ${m[1]}: \\{`));
+    }
+  });
+
+  it('ทางแยกทำงานสองทาง — คนที่มาผิดกลุ่มต้องกลับได้', () => {
+    expect(tsx).toMatch(/seg === 'seller' \|\| seg === 'owner'/);
+    expect(tsx).toMatch(/ยังไม่ได้เริ่มขาย\?/);
+  });
+
+  it('ต้องติดตามได้ว่ามีคนกดจริงไหม (ไม่งั้นวัดผลไม่ได้)', () => {
+    expect(tsx).toMatch(/track\('start_seg_switch'/);
+  });
+});

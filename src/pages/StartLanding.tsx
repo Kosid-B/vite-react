@@ -238,6 +238,23 @@ export default function StartLanding() {
             {isIso ? 'ประเมิน ISO ฟรี — ไม่ต้องใช้บัตรเครดิต' : 'เริ่มใช้ฟรี — ไม่ต้องใช้บัตรเครดิต'}</a>
           <a className="start-cta-sub" href="/b">ดูธุรกิจที่เปิดแล้วในระบบ →</a>
         </div>
+        {/* 🎯 ทางแยกสำหรับคนที่ "ขายอยู่แล้ว" (เจ้าของตัดสิน 24 ส.ค. 2569: growth = ตัวทำรายได้)
+            ⚠️ วางไว้ **ใต้ปุ่ม** โดยตั้งใจ — วางเหนือปุ่มจะดันปุ่มหลุดขอบจอ (GOTCHA #4)
+            เหตุผล: 81/87 session เห็นหน้า default ซึ่งพูดกับคนที่ยังไม่มีธุรกิจ
+            ⇒ เจ้าของที่ขายอยู่แล้วอ่านแล้วไม่ใช่ปัญหาของเขา แล้วออกไปโดยไม่มีทางแยก */}
+        {!isIso && (
+          <p className="start-segswitch">
+            {seg === 'seller' || seg === 'owner' ? (
+              <a href="/start?seg=newbie" onClick={() => track('start_seg_switch', { to: 'newbie', from: seg })}>
+                ยังไม่ได้เริ่มขาย? ดูวิธีหาลูกค้ารายแรก →
+              </a>
+            ) : (
+              <a href="/start?seg=seller" onClick={() => track('start_seg_switch', { to: 'seller', from: seg || 'default' })}>
+                ขายอยู่แล้ว? ดูกำไรต่อชิ้นจริงของคุณใน 1 นาที →
+              </a>
+            )}
+          </p>
+        )}
       </section>
 
       {/* Market timing — AI หลอมรวมชีวิตคนไทยแล้ว (ปลุก "จังหวะนี้แหละ") + ย้ำจุดแข็งภาษาไทย */}

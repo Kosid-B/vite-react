@@ -7363,3 +7363,11 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .nba-go { margin-top: 12px; background: #9333ea; color: #fff; border: 0; border-radius: 8px;
   padding: 9px 16px; font-weight: 700; cursor: pointer; }
 @media (max-width: 480px) { .nba-action { font-size: 15px; } }
+
+/* ทางแยกสำหรับคนที่ขายอยู่แล้ว บนหน้า /start (24 ส.ค. 2569)
+   วางใต้ปุ่มหลักเสมอ — เหนือปุ่มจะดันปุ่มหลุดขอบจอบนมือถือ (GOTCHA #4)
+   ใช้โทเคนที่ประกาศจริงทั้งสีตัวอักษรและพื้นหลัง (GOTCHA #4b) */
+.start-segswitch { margin: 10px 0 0; text-align: center; font-size: 14px; }
+.start-segswitch a { color: var(--ink3); text-decoration: underline; text-underline-offset: 3px; }
+.start-segswitch a:hover { color: var(--ink); }
+@media (max-width: 480px) { .start-segswitch { font-size: 13px; margin-top: 8px; } }
