@@ -9,7 +9,7 @@
 
 import type { OnboardGoal, PageId } from '../types';
 
-export type HeroSeg = 'default' | 'seller' | 'newbie' | 'sidebiz' | 'owner' | 'palm' | 'food' | 'audit';
+export type HeroSeg = 'default' | 'seller' | 'newbie' | 'sidebiz' | 'owner' | 'palm' | 'food' | 'audit' | 'btc';
 
 export interface HeroVariant {
   seg: HeroSeg;
@@ -66,6 +66,20 @@ export const HERO_VARIANTS: Record<HeroSeg, HeroVariant> = {
    * ⚠️ ห้ามสัญญาว่า "ได้ใบรับรอง" — การรับรองเป็นอำนาจของหน่วยรับรอง ไม่ใช่ของเรา
    *   สิ่งที่เราให้ได้จริงคือ **เห็นว่าตอนนี้ขาดอะไร** ก่อนวันตรวจ
    */
+  /* 🏢 ช่องทางจากบริษัทแม่ (B.TC) — เขาเชื่อเรื่องระบบอยู่แล้ว ไม่ต้องพิสูจน์ซ้ำ
+   *    ⚠️ สารต้องเป็น **การเติบโต** ไม่ใช่ ISO (ISO = ชั้น GOVERN ชั้นสุดท้าย)
+   *    ⇒ ช่องทาง ≠ จุดยืน · brandArchitecture.DISTRIBUTION_SEG */
+  btc: {
+    seg: 'btc',
+    badge: '✦  สำหรับลูกค้าและศิษย์เก่า B.TC  ✦',
+    h1a: 'ระบบที่วางไว้แล้ว',
+    h1bLines: ['ตอนนี้ทำงานเองได้แค่ไหน', 'และขั้นต่อไปคืออะไร'],
+    subLead: 'คุณผ่านการวางระบบมาแล้ว — สิ่งที่มักหายไปคือคนที่อ่านตัวเลขให้ทุกวันว่าอะไรกำลังจะพัง',
+    subRest: 'ทีม AI อ่านตัวเลขธุรกิจของคุณเอง แล้วบอกขั้นต่อไป · ไม่ใช่แค่เก็บเอกสารให้ครบ · เริ่มฟรี',
+    ctaLabel: 'ดูว่าขั้นต่อไปคืออะไร',
+    goal: null,
+    page: null,
+  },
   audit: {
     seg: 'audit',
     badge: '✦  สำหรับคนที่มีวันตรวจรออยู่  ✦',
@@ -154,7 +168,7 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
   // 1) ระบุตรง ๆ (?seg=seller|newbie|owner|palm) — ใช้ในลิงก์แคมเปญของเราเอง
   const seg = get('seg');
   if (seg === 'seller' || seg === 'newbie' || seg === 'sidebiz' || seg === 'owner' || seg === 'palm'
-      || seg === 'food' || seg === 'audit') return seg;
+      || seg === 'food' || seg === 'audit' || seg === 'btc') return seg;
 
   // 2) ?goal= (เผื่อสะพานจากเว็บบริษัท)
   const goal = get('goal');

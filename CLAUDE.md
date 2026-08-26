@@ -33,6 +33,23 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 🔴 **กฎ "ห้ามแตะ schema เพราะ Gate B ยังไม่ปิด" กันได้แค่รีโปนี้** — schema ของ production ถูกเปลี่ยนไปแล้ว 10 ครั้งโดยอีกระบบ
 แผนที่เต็ม: [ARCHITECTURE-CONSOLIDATION-AUDIT.md](docs/product/ARCHITECTURE-CONSOLIDATION-AUDIT.md) §0
 
+🏢 **โครงสร้างแบรนด์ — `src/lib/brandArchitecture.ts`** (เจ้าของกำหนด 26 ส.ค. 2569)
+```
+B.TC (บริษัทแม่ · Credibility Engine) — ตอบ "ทำไมเราถึงมีสิทธิ์สอนเรื่องการสร้างระบบธุรกิจ"
+   ↓ powered by
+CEO AI Thailand (ผลิตภัณฑ์ · Growth & Technology Engine) — ตอบ "AI จะทำให้ SME เริ่ม โต Scale ได้ยังไง"
+   ↓  START (Business Fit/MIT24) → GROW (Marketing OS) → SCALE (Ops/KPI) → GOVERN (ISO/TIS/PDPA)
+```
+**ทิศทาง**: *AI Growth Platform backed by B.TC Management-System Expertise*
+🔴 **ไม่ใช่**: *ISO SaaS ที่เพิ่ม Marketing เข้าไป*
+🔴 **ห้ามขึ้นพาดหัวด้วย ISO/มอก./PDPA กับกลุ่มทั่วไป** — GOVERN เป็น**ชั้นสุดท้าย** ไม่ใช่ปัญหาแรกของลูกค้า
+   พาดหัวหลัก = **เริ่มธุรกิจ → โต → วัดผล → สร้างระบบ → Scale ด้วย AI**
+🔴 **ห้ามเขียนให้เข้าใจว่า CEO AI Thailand คือ B.TC เปลี่ยนชื่อเป็นบริษัท AI** — รวมกันแล้วเสียทั้งสองแบรนด์
+✅ ข้อความรับรองที่ใช้ได้ (วางหนุนหลัง ไม่ใช่พาดหัว): *"สร้างโดยทีมที่ปรึกษาธุรกิจและระบบบริหารจาก B.TC ซึ่งมีประสบการณ์กว่า 20 ปี"*
+🚪 **B.TC = ช่องทางกระจาย ไม่ใช่จุดยืน** — ลูกค้าเดิมเข้าทาง `seg=btc` ได้ แต่ **ต้องเจอสารการเติบโตเดียวกับทุกคน**
+   (ผมเคยเสนอผิด 24 ส.ค. ให้เอาฐาน ISO ของ B.TC เป็นเครื่องยนต์รายได้ — เจ้าของค้านถูก)
+กลไก: `brandIssues()` จับพาดหัวที่นำด้วย compliance/รวมสองแบรนด์ = blocker · `brandArchitecture.test.ts` (17 เทสต์ · ยืนยันแดงจริง)
+
 📜 **รัฐธรรมนูญผู้ก่อตั้ง — `src/lib/founderConstitution.ts` + [AGENTS.md](AGENTS.md)** (เจ้าของ freeze 23 ส.ค. 2569)
 **VISION**: ทำให้คนไทยทุกคนสามารถเปลี่ยนไอเดียให้เป็นธุรกิจที่มีลูกค้า มีหลักฐาน มีระบบ และขยายได้ ด้วย AI
 **MOONSHOT**: *Build Thailand's Business Intelligence Infrastructure* — ⚠️ **วิสัยทัศน์ไม่ใช่พาดหัว** (พาดหัวยังเป็นปัญหาของลูกค้าเสมอ)
