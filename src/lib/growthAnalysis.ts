@@ -40,6 +40,7 @@ export const SECTION_LABEL: Record<string, string> = {
   roadmap: 'แผน 15 วัน',
   why_not_chatgpt: 'ต่างจาก ChatGPT ยังไง',
   try_ai: 'ลอง AI จริงก่อนสมัคร',
+  skills: 'ทักษะที่ปรึกษาในระบบ',
   credibility_bar: 'แถบความน่าเชื่อถือ',
   consultant_proof: 'เบื้องหลังคือที่ปรึกษาจริง',
   testimonials: 'เสียงจากผู้ใช้',

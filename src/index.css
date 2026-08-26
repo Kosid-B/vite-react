@@ -7371,3 +7371,10 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .start-segswitch a { color: var(--ink3); text-decoration: underline; text-underline-offset: 3px; }
 .start-segswitch a:hover { color: var(--ink); }
 @media (max-width: 480px) { .start-segswitch { font-size: 13px; margin-top: 8px; } }
+
+/* ปุ่ม "ดูทักษะที่เหลือ" — ย่อรายการ 127 ทักษะ (เดิมสูง 8,442px = 13 จอ)
+   ใช้โทเคนที่ประกาศจริงทั้งสีตัวอักษรและพื้นหลัง (GOTCHA #4b) */
+.ss-more { display: block; margin: 18px auto 0; padding: 11px 22px; border-radius: 999px;
+  background: var(--white); color: var(--ink); border: 1px solid var(--sand);
+  font-weight: 700; font-size: 14.5px; cursor: pointer; }
+.ss-more:hover { border-color: var(--accent, #9333ea); }

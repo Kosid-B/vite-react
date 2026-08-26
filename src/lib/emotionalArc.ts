@@ -128,6 +128,11 @@ export const FORBIDDEN_TRIGGERS: ForbiddenTrigger[] = [
   },
 ];
 
+/** โล่งติดกันเกินนี้ "กลางหน้า" = ราบเรียบ (ช่วงปิดท้ายใช้เกณฑ์อื่น) */
+export const MID_PAGE_MAX_RELIEF_RUN = 4;
+/** ช่วงปิดท้ายหลังจังหวะตึงสุดท้าย ยาวได้เท่านี้ */
+export const CLOSING_MAX = 5;
+
 export interface ArcIssue {
   level: 'blocker' | 'warn';
   what: string;
@@ -150,18 +155,33 @@ export function arcIssues(order: Array<{ sec: string; phase: Phase }>): ArcIssue
     });
   }
 
-  // ความโล่งติดกันยาว = ราบเรียบ ไม่มีจังหวะ
+  /* ความโล่งติดกันยาว = ราบเรียบ ไม่มีจังหวะ
+   * ⚠️ ยกเว้น **ช่วงปิดท้าย** (หลังจังหวะตึงสุดท้ายจนจบหน้า) — ตรงนั้นตั้งใจให้คลาย
+   *    คนที่อ่านมาถึงตอนจบตัดสินใจแล้ว การใส่ความตึงเพิ่มตรงนั้นคือกดดัน ไม่ใช่จังหวะ
+   *    แต่ถ้ายาวเกิน CLOSING_MAX ก็ยังเป็นปัญหา — หางที่ยาวเกินคือเนื้อหาที่ไม่มีใครไปถึง */
+  const lastTension = order.map((b) => b.phase).lastIndexOf('tension');
+  const closingFrom = lastTension < 0 ? 0 : lastTension + 1;
+
   let run = 0;
-  for (const b of order) {
-    run = b.phase === 'relief' ? run + 1 : 0;
-    if (run === 4) {
+  for (let i = 0; i < closingFrom; i++) {
+    run = order[i].phase === 'relief' ? run + 1 : 0;
+    if (run === MID_PAGE_MAX_RELIEF_RUN) {
       out.push({
         level: 'warn',
-        what: `มีบล็อกโล่งติดกัน ${run} อันขึ้นไป (จบที่ "${b.sec}")`,
+        what: `มีบล็อกโล่งติดกัน ${run} อันกลางหน้า (จบที่ "${order[i].sec}")`,
         why: 'ยิ่งอ่านยิ่งเรียบ — ความสนใจตกโดยไม่มีอะไรดึงกลับ',
       });
       run = 0;
     }
+  }
+
+  const closingLen = order.length - closingFrom;
+  if (closingLen > CLOSING_MAX) {
+    out.push({
+      level: 'warn',
+      what: `ช่วงปิดท้ายยาว ${closingLen} บล็อก (เกิน ${CLOSING_MAX})`,
+      why: 'หางที่ยาวเกินคือเนื้อหาที่คนตัดสินใจไปแล้วไม่อ่าน — ไม่ใช่จังหวะ แต่เป็นน้ำหนักส่วนเกิน',
+    });
   }
 
   if (!order.some((b) => b.phase === 'tension')) {

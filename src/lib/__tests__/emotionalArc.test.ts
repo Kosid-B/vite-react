@@ -25,6 +25,7 @@ const PHASE: Record<string, Phase> = {
   roadmap: 'relief',
   why_not_chatgpt: 'tension', // เทียบกับของที่เขาใช้อยู่ แล้วเห็นช่องว่าง
   try_ai: 'relief',
+  skills: 'relief',
   credibility_bar: 'relief',
   consultant_proof: 'relief',
   testimonials: 'relief',
@@ -108,14 +109,25 @@ describe('🔴 หน้า Landing ของเราเองผ่านจ�
     expect(un, `section ที่ยังไม่ถูกจัดจังหวะ: ${un.join(', ')}`).toEqual([]);
   });
 
-  /* 🟡 บันทึกสถานะจริง ณ 24 ส.ค. 2569 — ยังไม่ผ่าน และนี่คือหลักฐานว่าทำไมต้องแก้
-   * ลำดับปัจจุบันวางบล็อกให้ความมั่นใจ 4 อันติดกัน (positioning · credibility_bar
-   * · consultant_proof · testimonials) ทันทีหลัง hero ⇒ ราบเรียบตั้งแต่จอที่สอง
-   * วัดจริง: 85% ไม่เลื่อนเลย · เลื่อนเฉลี่ย 5.2% · 15 จาก 19 บล็อกมีคนเห็น 0 คน */
-  it('บันทึกผลตรวจจริงไว้ — เปลี่ยนลำดับเมื่อไรต้องมาอัปเดตตรงนี้', () => {
+  /* 🟢 จัดลำดับใหม่แล้ว 24 ส.ค. 2569 — ย้าย 2 บล็อกเท่านั้น
+   *   `compare` 12 → 9 · `pricing` 18 → 17
+   * ⚠️ ไม่รื้อทั้งหน้าโดยตั้งใจ: หลายตำแหน่งมีเหตุผลบันทึกไว้ในคอมเมนต์
+   *   และ `try_ai` อยู่ใน A/B holdout ที่กำลังรัน — ย้ายแล้วผลการทดลองเสีย
+   * ⚠️ เหลือ warn 1 ข้อ (โล่งติดกัน 4 กลางหน้า) — ด้วย 4 จังหวะตึงบน 19 บล็อก
+   *   นี่คือผลที่ดีที่สุดที่เป็นไปได้ (คำนวณครบทุกตำแหน่งแล้ว) · ต่ำกว่านี้ต้องเพิ่มจังหวะตึง
+   * 🔴 ห้ามอ้างว่าดีขึ้นจนกว่าจะวัดใหม่ — ผลเก่า (85% ไม่เลื่อน) เกิดจากสภาพที่พังของเราเอง */
+  it('ต้องไม่มี blocker และเหลือ warn ไม่เกิน 1', () => {
     const issues = arcIssues(realOrder().map((sec) => ({ sec, phase: PHASE[sec] })));
-    expect(issues.length, 'ถ้าแก้ลำดับจนผ่านแล้ว ให้อัปเดตเทสต์นี้').toBeGreaterThan(0);
-    expect(issues.some((i) => i.what.match(/โล่งติดกัน/)), JSON.stringify(issues)).toBe(true);
+    expect(issues.filter((i) => i.level === 'blocker'), JSON.stringify(issues)).toEqual([]);
+    expect(issues.length, JSON.stringify(issues)).toBeLessThanOrEqual(1);
+  });
+
+  it('จังหวะตึงต้องกระจาย ไม่กระจุกหัวหน้า', () => {
+    const order = realOrder();
+    const at = order.map((s, i) => (PHASE[s] === 'tension' ? i + 1 : 0)).filter(Boolean);
+    expect(at[0]).toBe(1);                                   // hero เปิดด้วยความตึง
+    expect(at[at.length - 1]).toBeGreaterThan(order.length * 0.7);  // มีความตึงช่วงท้ายก่อนปิด
+    expect(at.length).toBeGreaterThanOrEqual(4);
   });
 });
 

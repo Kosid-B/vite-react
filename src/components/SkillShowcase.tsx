@@ -20,6 +20,12 @@ const baht = (n: number) => '฿' + n.toLocaleString('th-TH');
 export default function SkillShowcase({ onGetStarted }: { onGetStarted: () => void }) {
   const [stage, setStage] = useState<SkillStage>('validate');
   const [biz, setBiz] = useState<SkillBiz>('all');
+  /* 🔴 วัดจริงบน iPhone 13 (24 ส.ค. 2569): บล็อกนี้สูง **8,442px = 13 จอ**
+   *    คิดเป็น 21% ของหน้าทั้งหน้า (39,514px = 60 จอ) และดันทุกอย่างหลังจากนี้
+   *    ไปอยู่จอที่ 36+ — รวมถึงราคา ที่ไปอยู่จอที่ 53
+   *    ⇒ ย่อรายการโดย **ไม่ตัดเนื้อหาทิ้ง** (ห้ามตัดของที่ยังไม่เคยมีใครเห็น)
+   *      ใครอยากดูครบกดเปิดได้ · GA บอกได้ว่ามีคนอยากดูจริงกี่คน */
+  const [showAll, setShowAll] = useState(false);
 
   const summary = useMemo(() => catalogSummary(), []);
   const items = useMemo(() => {
@@ -28,6 +34,10 @@ export default function SkillShowcase({ onGetStarted }: { onGetStarted: () => vo
   }, [stage, biz]);
 
   const bizOptions: SkillBiz[] = ['all', 'food', 'service', 'online', 'manufacture', 'property'];
+  /** แสดงกี่ใบก่อนต้องกดดูเพิ่ม — พอให้เห็นว่ามีของจริง แต่ไม่กลืนทั้งหน้า */
+  const VISIBLE = 6;
+  const shown = showAll ? items : items.slice(0, VISIBLE);
+  const hidden = items.length - shown.length;
   const quote = useMemo(() => bundleQuote(stage), [stage]);
 
   return (
@@ -53,7 +63,7 @@ export default function SkillShowcase({ onGetStarted }: { onGetStarted: () => vo
               type="button"
               className={'ss-stage' + (stage === st.id ? ' active' : '')}
               aria-pressed={stage === st.id}
-              onClick={() => { setStage(st.id); track('skill_stage_view', { stage: st.id }); }}
+              onClick={() => { setStage(st.id); setShowAll(false); track('skill_stage_view', { stage: st.id }); }}
             >
               <span className="ss-stage-n">{st.order}</span>
               <span className="ss-stage-icon" aria-hidden="true">{st.icon}</span>
@@ -73,7 +83,7 @@ export default function SkillShowcase({ onGetStarted }: { onGetStarted: () => vo
             type="button"
             className={'ss-chip' + (biz === b ? ' active' : '')}
             aria-pressed={biz === b}
-            onClick={() => { setBiz(b); track('skill_biz_filter', { biz: b }); }}
+            onClick={() => { setBiz(b); setShowAll(false); track('skill_biz_filter', { biz: b }); }}
           >
             {BIZ_LABEL[b]}
           </button>
@@ -81,7 +91,7 @@ export default function SkillShowcase({ onGetStarted }: { onGetStarted: () => vo
       </div>
 
       <ul className="ss-grid">
-        {items.map((s) => (
+        {shown.map((s) => (
           <li key={s.id} className="ss-card">
             <div className="ss-card-top">
               {s.origin === 'signature' ? (
@@ -107,6 +117,16 @@ export default function SkillShowcase({ onGetStarted }: { onGetStarted: () => vo
           </li>
         ))}
       </ul>
+
+      {hidden > 0 && (
+        <button
+          type="button"
+          className="ss-more"
+          onClick={() => { setShowAll(true); track('skill_show_all', { stage, biz, hidden }); }}
+        >
+          ดูทักษะที่เหลืออีก {hidden} รายการ →
+        </button>
+      )}
 
       <div className="ss-foot">
         {quote.items.length >= 2 && (
