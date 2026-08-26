@@ -1,7 +1,8 @@
 # CEO AI Thailand — MOAT Architecture v1
 
 > **23 ส.ค. 2569 · เจ้าของ freeze Strategic North Star** — เอกสารนี้คือ **สถาปัตยกรรม** ไม่ใช่คอนเทนต์
-> 🔒 **ไม่มี migration และไม่แตะฐานข้อมูลในเอกสารนี้** (Gate B ยังไม่ปิด) — ทั้งหมดเป็น **สัญญาของโครงสร้าง**
+> 🔒 **ไม่มี migration และไม่แตะฐานข้อมูลในเอกสารนี้** — ทั้งหมดเป็น **สัญญาของโครงสร้าง**
+> (สถานะด่านปล่อยของอยู่ที่ `src/lib/releaseGates.ts` ที่เดียว — เอกสารนี้ไม่บันทึกสถานะซ้ำ)
 > ที่ schema จริงต้องเคารพเมื่อถึงเวลาสร้าง ⇒ ตอนสร้างตารางจริงให้ derive จากที่นี่ ไม่ใช่คิดใหม่
 
 ---
@@ -139,8 +140,9 @@ Gate B PASS/FROZEN → Phase 1 Acceptance #2 → Freeze Phase 1 baseline
   → เพิ่ม VRIO/POP/POD Strategy Layer เป็น controlled next iteration
   → เปิด regression gates เฉพาะส่วนที่ได้รับผลกระทบ
 ```
-🔴 **ผู้ช่วยมองไม่เห็น Gate B / Phase 1 Acceptance ในรีโปนี้** (grep แล้วไม่พบ)
-⇒ ปฏิบัติตามคำสั่งโดยไม่ได้ตรวจสอบเอง — **ตรวจไม่ได้ ไม่ใช่ตรวจแล้วผ่าน**
+🔴 **สถานะจริงของแต่ละด่านอยู่ใน `src/lib/releaseGates.ts` เท่านั้น** — เอกสารนี้เก็บแค่ "ลำดับ"
+⇒ เขียนสถานะลงเอกสารเมื่อไร วันที่มันเปลี่ยนจะไม่มีอะไรบังคับให้ไล่แก้ครบ (เกิดมาแล้ว · ledger #41, #53)
+⇒ ด่านที่ผู้ช่วยตรวจไม่ได้จะเป็น `unknown` และ **`unknown` กั้นเท่ากับ `open`** — ตรวจไม่ได้ ไม่ใช่ตรวจแล้วผ่าน
 
 ### 6.2 Agent Architecture
 
@@ -215,7 +217,7 @@ THEN recommend SOP/process_design BEFORE aggressive_scaling
 |---|---|
 | ประกาศว่ามี moat ที่ยั่งยืนแล้ว | R/I ที่แข็งเกิดหลังมีข้อมูลผลลัพธ์จริง · วันนี้ 4 บัญชี · จ่ายจริง 0 ราย |
 | อ้าง "data network effect" | ยังไม่มีผู้ใช้ให้เกิด network |
-| แตะ schema/migration ก่อน Gate B ปิด | security evidence ที่กำลังเก็บจะต้อง regression ใหม่ |
+| แตะ schema/migration ก่อน `schemaChangeAllowed()` คืน true (`releaseGates.ts`) | security evidence ที่กำลังเก็บจะต้อง regression ใหม่ |
 | สร้าง Decision Engine ที่ "เรียนรู้" ตอนนี้ | กฎที่ไม่เคยถูกทดสอบ = ความมั่นใจปลอม |
 | เอา North Star ขึ้นเป็นพาดหัว | ไม่มีใครค้นหาชื่อหมวดหมู่ |
 

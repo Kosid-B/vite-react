@@ -63,12 +63,12 @@ describe('การให้คะแนน — เร็วที่จะร�
 
   it('🔴 ของที่ติดกฎโปรเจกต์ ต้องได้ 0 และตกท้ายแถวเสมอ แม้จะดูดีที่สุด', () => {
     const ranked = rankOptions([
-      opt({ name: 'ทำตารางใหม่ใน DB', impact: 5, effort: 1, evidence: 'validated', daysToSignal: 1, blockedBy: 'Gate B ยังไม่ปิด' }),
+      opt({ name: 'ทำตารางใหม่ใน DB', impact: 5, effort: 1, evidence: 'validated', daysToSignal: 1, blockedBy: 'ด่านปล่อยของยังกั้นอยู่ (releaseGates)' }),
       opt({ name: 'แก้ CSS', impact: 2, daysToSignal: 7 }),
     ]);
     expect(ranked[0].name).toBe('แก้ CSS');
     expect(ranked[1].score).toBe(0);
-    expect(ranked[1].why).toContain('Gate B');
+    expect(ranked[1].why).toContain('ด่านปล่อยของ');
   });
 });
 
@@ -84,12 +84,12 @@ describe('🔴 การเลือก — ต้องคืนข้อเส
   });
 
   it('ทางที่ติดกฎต้องถูกบอกว่า "พักไว้" ไม่ใช่หายไปเงียบ ๆ', () => {
-    const r = chooseBest([...CASE.options!, opt({ name: 'เพิ่มตาราง', blockedBy: 'Gate B ยังไม่ปิด' })]);
+    const r = chooseBest([...CASE.options!, opt({ name: 'เพิ่มตาราง', blockedBy: 'ด่านปล่อยของยังกั้นอยู่ (releaseGates)' })]);
     expect(r.parked.map((p) => p.name)).toContain('เพิ่มตาราง');
   });
 
   it('ทุกทางติดกฎ = บอกตรง ๆ ว่าเลือกไม่ได้ ห้ามฝืนเลือก', () => {
-    const r = chooseBest([opt({ name: 'x', blockedBy: 'Gate B' }), opt({ name: 'y', blockedBy: 'Gate B' })]);
+    const r = chooseBest([opt({ name: 'x', blockedBy: 'ด่านปล่อยของ (releaseGates)' }), opt({ name: 'y', blockedBy: 'ด่านปล่อยของ (releaseGates)' })]);
     expect(r.best).toBeNull();
     expect(r.line).toMatch(/ยังเลือกไม่ได้/);
   });

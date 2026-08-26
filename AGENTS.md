@@ -93,7 +93,7 @@ BIG VISION → FIRST PRINCIPLES → HYPOTHESIS → BUILD MINIMUM EXPERIMENT
 ## เส้นที่ห้ามข้าม
 
 - ห้ามประกาศว่ามี moat ที่ยั่งยืน (จ่ายเงินจริง 0 ราย)
-- ห้ามแตะ schema/migration จนกว่า Gate B ปิด
+- ห้ามแตะ schema/migration จนกว่า `schemaChangeAllowed()` จะคืน `allowed: true` — สถานะด่านอยู่ที่ `src/lib/releaseGates.ts` ที่เดียว (ห้ามเขียนสถานะซ้ำที่อื่น)
 - ห้ามเอา Vision / ชื่อหมวดหมู่ ขึ้นเป็นพาดหัว
 - ห้ามสร้างเพราะ "AI ทำได้"
 

@@ -48,7 +48,7 @@ export interface Option {
   reversible: boolean;
   /** กี่วันถึงจะรู้ว่าได้ผลหรือไม่ (ไม่ใช่กี่วันถึงจะเสร็จ) */
   daysToSignal: number;
-  /** ทำแล้วยังผิดกฎของโปรเจกต์ไหม (เช่น แตะ schema ตอน Gate B ยังไม่ปิด) */
+  /** ทำแล้วยังผิดกฎของโปรเจกต์ไหม (เช่น แตะ schema ตอนที่ `releaseGates.schemaChangeAllowed()` ยังกั้นอยู่) */
   blockedBy?: string;
 }
 

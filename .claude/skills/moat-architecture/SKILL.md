@@ -80,8 +80,9 @@ moatReadiness(activeUsers)   // ผู้ใช้ภายนอกที่ใ
 
 ## 5️⃣ 🔒 เส้นที่ห้ามข้าม
 
-- **ห้ามแตะ schema/migration** จนกว่า Gate B ปิด → Phase 1 Acceptance #2 → freeze baseline
-  (⚠️ Gate B ไม่ปรากฏในรีโปนี้ — ต้องถามเจ้าของ ห้ามสันนิษฐานว่าปิดแล้ว)
+- **ห้ามแตะ schema/migration** จนกว่า `schemaChangeAllowed()` ใน `src/lib/releaseGates.ts` จะคืน `allowed: true`
+  ห่วงโซ่: `Gate B` → `Phase 1 Acceptance #2` → `Freeze Phase 1 baseline` → Strategy Layer
+  (⚠️ สถานะสดอยู่ในไฟล์นั้นที่เดียว — ห้ามอ่านสถานะจากเอกสาร/สคิลล์ · `unknown` กั้นเท่ากับ `open`)
 - **ห้ามประกาศว่ามี moat ที่ยั่งยืน** — วันนี้ 4 บัญชี · จ่ายเงินจริง 0 ราย
 - **ห้ามเอา North Star ขึ้นเป็นพาดหัว** — ไม่มีใครค้นหาชื่อหมวดหมู่ · พาดหัว = ปัญหา
 - **ประวัติแชต/prompt ไม่ใช่จีโนม** — ลอกได้ทันทีที่เปลี่ยน LLM

@@ -30,7 +30,7 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 | Marketing OS · Instruction Profiles | **รัฐธรรมนูญ · Founder Mindset · DMAIC · Business Genome · VRIO/Moat** (สมองที่ทำงานให้ *ธุรกิจของผู้ใช้*) |
 ⚠️ **ของที่ซ้ำ ให้ถืออีกระบบเป็นแหล่งจริง — แก้บั๊กได้ เพิ่มความสามารถไม่ได้**: `brandBrief.MESSAGE_HIERARCHY`/`violatesBrand()` (ซ้ำ `marketing_brand_rules` 10 ข้อ) · `brandBrief.AUDIENCE` (ซ้ำ `marketing_audience_segments`) · `positioningEngine.reviewCampaign()` · `videoBrief.ts` · `competitorMemory.ts`
 ⚠️ **`growthPdca`/`stageFit` เห็นแค่ `landing_funnel` ของเรา ไม่เห็นแคมเปญของอีกระบบ** ⇒ ห้ามอ่านผลมันเป็น "ภาพรวมการตลาด"
-🔴 **กฎ "ห้ามแตะ schema เพราะ Gate B ยังไม่ปิด" กันได้แค่รีโปนี้** — schema ของ production ถูกเปลี่ยนไปแล้ว 10 ครั้งโดยอีกระบบ
+🔴 **กฎห้ามแตะ schema (ด่านปล่อยของ · `src/lib/releaseGates.ts`) กันได้แค่รีโปนี้** — schema ของ production ถูกเปลี่ยนไปแล้ว 10 ครั้งโดยอีกระบบ
 แผนที่เต็ม: [ARCHITECTURE-CONSOLIDATION-AUDIT.md](docs/product/ARCHITECTURE-CONSOLIDATION-AUDIT.md) §0
 
 🏢 **โครงสร้างแบรนด์ — `src/lib/brandArchitecture.ts`** (เจ้าของกำหนด 26 ส.ค. 2569)
@@ -214,8 +214,11 @@ CEO AI Thailand (ผลิตภัณฑ์ · Growth & Technology Engine) — 
 📊 **VRIO Engine** (`VRIO_ASSETS` + `vrioVerdict`) — **R และ I เป็นตัวชี้ขาด ไม่ใช่ V** · V=5 แต่ R/I ต่ำ = POP เสมอ
 🪜 **ปลดล็อกตามจำนวนผู้ใช้จริง** (`moatReadiness`): 0 → Genome + Playbook · 1 → Experiment Memory
    · 5 → Decision Engine · 30 → Benchmark + Learning Loop · ⚠️ **กฎ ≠ เอนจิน** (เขียนกฎได้วันนี้ · เอนจินที่เรียนรู้ต้องรอ)
-🔒 **ห้ามแตะ schema/migration** จนกว่า Gate B ปิด → Phase 1 Acceptance #2 → freeze baseline
-   🔴 **Gate B ไม่ปรากฏในรีโปนี้** — ต้องถามเจ้าของ ห้ามสันนิษฐานว่าปิดแล้ว
+🔒 **ด่านปล่อยของ = `src/lib/releaseGates.ts` (แหล่งเดียว · ห้ามเขียนสถานะซ้ำที่อื่น)**
+   ห่วงโซ่: `Gate B` → `Phase 1 Acceptance #2` → `Freeze Phase 1 baseline` → Strategy Layer (controlled iteration)
+   🟢 **Gate B ปิดแล้ว** (เจ้าของยืนยัน 26 ส.ค. 2569) · 🔴 **สองด่านที่เหลือ = `unknown` — ตรวจจากรีโปนี้ไม่ได้**
+   ⇒ `schemaChangeAllowed()` ยัง **กั้นอยู่** · **`unknown` ไม่ใช่ `closed`** (fail-closed แบบเดียวกับ `stageFit`)
+   ⇒ ถามเจ้าของข้อเดียว: *Phase 1 Acceptance #2 ผ่านแล้วหรือยัง* · ระหว่างรอ งานที่ไม่แตะ schema ทำได้ทั้งหมด
 สถาปัตยกรรมเต็ม: [MOAT-ARCHITECTURE-V1.md](docs/product/MOAT-ARCHITECTURE-V1.md)
 
 🚦 **ด่านกลยุทธ์ที่ block ได้จริง — `src/lib/positioningEngine.ts`** (ยกระดับ 23 ส.ค. 2569)
@@ -229,7 +232,7 @@ CEO AI Thailand (ผลิตภัณฑ์ · Growth & Technology Engine) — 
    LOW SAMPLE (< `MIN_FOR_RATE` ตัวเดียวกับ growthPdca) → ห้ามสรุปผลงาน · POP ONLY → บอกเล่าได้ ห้ามอ้างความได้เปรียบ
 🏷️ **ClaimStatus 4 ระดับ**: hypothesis → research → observed → validated · **งานวิจัยของคนอื่นยังไม่พอ** ต้องถึง observed
 ⚠️ **ห้ามใช้วิธี "ตัดคำจากประโยค" จำแนก POP/POD** — เคยพัง 2 ทาง (POP กลายเป็น POD · จำแนกผิดชั้น) ⇒ ใช้ `POD[].keywords`
-🔒 **ไม่แตะ schema/migration** ตามที่เจ้าของสั่ง (Gate B ยังไม่ปิด) — ทั้งหมดเป็น pure logic
+🔒 **ไม่แตะ schema/migration** — ทั้งหมดเป็น pure logic (ด่านปล่อยของ: `src/lib/releaseGates.ts`)
 
 🏁 **แกนการแข่งขันก่อนเปิด Public — `src/lib/competitiveStrategy.ts`** (เจ้าของกำหนด 23 ส.ค. 2569)
 **POP = ความสามารถ AI · POD = วิธีสร้างธุรกิจ · VRIO = ระบบเรียนรู้ธุรกิจที่สะสมเอง**
