@@ -31,8 +31,11 @@ export function useLandingTrace(
     try { initLandingFunnel(seg, document.referrer, window.location.origin, { heroAb, layoutAb }); } catch { /* noop */ }
 
     let maxPct = 0;
-    let exited = false;
-    const startedAt = Date.now();
+    /** จบแล้วจริง ๆ (ปิดหน้า / unmount) — ต่างจาก "สลับแอปชั่วคราว" ซึ่งกลับมาได้ */
+    let ended = false;
+    /** เวลาที่หน้านี้ **อยู่ในสายตาจริง** (ไม่นับตอนอยู่เบื้องหลัง) */
+    let visibleMs = 0;
+    let lastVisibleAt = Date.now();
     const rage = createRageDetector();
 
     const measure = () => {
@@ -54,27 +57,64 @@ export function useLandingTrace(
      *   → ค่าเฉลี่ย "หยุดดู 38 วิ" บนแผงแอดมินจึงสูงกว่าความจริง
      * แก้: เคลียร์ตัวจับเวลาตอนออก + ไม่บันทึกถ้าหน้าไม่ได้อยู่ในสายตาแล้ว */
     let timers: number[] = [];
+    const fired = new Set<number>();
+    /** ผูก IntersectionObserver ใหม่หลังกลับมาดูต่อ — กำหนดค่าจริงหลังสร้าง observer ด้านล่าง */
+    let reobserve = () => {};
+
+    const clearTimers = () => { timers.forEach((t) => window.clearTimeout(t)); timers = []; };
+
+    /** ตั้งตัวจับเวลาที่ "เหลือ" โดยคิดจากเวลาที่ดูจริงสะสม ไม่ใช่เวลานาฬิกา */
+    const armTimers = () => {
+      clearTimers();
+      timers = DWELL_SEC.filter((sec) => !fired.has(sec)).map((sec) =>
+        window.setTimeout(() => {
+          // เบราว์เซอร์หน่วง timer ในแท็บพื้นหลังแทนที่จะยกเลิก — ต้องกันซ้ำอีกชั้น
+          if (ended || document.visibilityState !== 'visible') return;
+          fired.add(sec);
+          track('landing_dwell', { sec });
+          markLandingDwell(sec);
+        }, Math.max(0, sec * 1000 - visibleMs)));
+    };
+
+    const visibleSec = () => Math.round((visibleMs + (ended ? 0 : Date.now() - lastVisibleAt)) / 1000);
+
+    /* ── สลับแอป = "พัก" ไม่ใช่ "จบ" ────────────────────────────────────────
+     * บั๊กที่แก้รอบนี้ (26 ส.ค. 2569): ของเดิมตั้ง exited = true ตั้งแต่ครั้งแรกที่แท็บถูกซ่อน
+     *   ⇒ คนที่สลับไปแอปอื่นแล้ว **กลับมาอ่านต่อ** (พฤติกรรมปกติที่สุดบนมือถือ)
+     *      จะไม่ถูกบันทึกเวลาเพิ่มอีกเลย และตอนออกจากหน้าจริงก็ไม่มีการปิดท้าย
+     *   ⇒ เวลาที่บันทึกได้ **ต่ำกว่าความจริง** สำหรับคนที่สนใจมากที่สุด
+     * นี่คือการแก้ที่เกินเลยของรอบก่อน (ledger #12 แก้ปัญหา "สูงเกินจริง" แล้วเลยไปอีกด้าน)
+     * ทางที่ถูก: พัก/เดินต่อ และนับ **เวลาที่อยู่ในสายตาจริง** ไม่ใช่เวลานาฬิกา
+     *   ⇒ แก้ทั้งสองทิศพร้อมกัน: ไม่นับตอนอยู่เบื้องหลัง และไม่ทิ้งเวลาตอนกลับมา */
+    const pause = () => {
+      if (ended) return;
+      visibleMs += Date.now() - lastVisibleAt;
+      clearTimers();
+      markLandingDwell(Math.round(visibleMs / 1000));
+      closeOpenSections(); // ปิดส่วนที่ค้างอยู่ในจอ — ไม่งั้นเวลาตอนอยู่เบื้องหลังจะถูกนับให้บล็อกนั้น
+      flush(true, true);   // keepalive: แท็บที่อยู่เบื้องหลังอาจถูกระบบฆ่าโดยไม่มี pagehide
+    };
+    const resume = () => {
+      if (ended) return;
+      lastVisibleAt = Date.now();
+      armTimers();
+      reobserve(); // closeOpenSections() ตัดการนับไปแล้ว · observer จะไม่ยิงเองถ้าบล็อกยังอยู่ในจอเดิม
+    };
 
     const fireExit = () => {
-      if (exited) return;
-      exited = true;
-      timers.forEach((t) => window.clearTimeout(t));
-      timers = [];
+      if (ended) return;
+      if (document.visibilityState === 'visible') visibleMs += Date.now() - lastVisibleAt;
+      ended = true;
+      clearTimers();
       measure(); // วัด scroll ครั้งสุดท้ายก่อนส่ง — กันกรณีเลื่อนแล้วปิดทันทีก่อน debounce ทำงาน
       track('landing_exit_depth', { pct: maxPct });
-      markLandingDwell(Math.round((Date.now() - startedAt) / 1000)); // เวลารวมบนหน้า
+      markLandingDwell(visibleSec()); // เวลาที่ดูจริง (ไม่รวมตอนอยู่เบื้องหลัง)
       closeOpenSections(); // ปิดส่วนที่ยังอยู่ในจอ ไม่งั้นส่วนที่เขาค้างอ่านอยู่ตอนปิดหน้าจะนับเป็น 0
       flush(true, true); // ปิดท้าย: ส่งแบบ keepalive (ไม่งั้นเบราว์เซอร์ยกเลิกคำขอตอนปิดหน้า)
     };
-    const onVisibility = () => { if (document.visibilityState === 'hidden') fireExit(); };
+    const onVisibility = () => { if (document.visibilityState === 'hidden') pause(); else resume(); };
 
-    timers = DWELL_SEC.map((sec) =>
-      window.setTimeout(() => {
-        // เบราว์เซอร์หน่วง timer ในแท็บพื้นหลังแทนที่จะยกเลิก — ต้องกันซ้ำอีกชั้น
-        if (exited || document.visibilityState !== 'visible') return;
-        track('landing_dwell', { sec });
-        markLandingDwell(sec);
-      }, sec * 1000));
+    armTimers();
 
     /* ส่วนไหนอยู่ในจอบ้าง — อ่านจาก data-sec="<key>" ที่ LandingPage ติดไว้
      * เกณฑ์อยู่ใน sectionInView (funnelTrace.ts) — เห็นครึ่งบล็อก "หรือ" บล็อกกินครึ่งจอ
@@ -96,7 +136,7 @@ export function useLandingTrace(
        *    เนื้อหาที่โผล่ตามเงื่อนไข) **ไม่เคยถูกสังเกตเลย**
        *    ตรวจจริง 26 ส.ค. 2569: 50 จาก 91 session อยู่บนหน้า ≥1 วินาที แต่ไม่มีข้อมูลรายบล็อกสักตัว
        *    ⇒ เฝ้า DOM แล้วผูกตัวใหม่ที่โผล่มาทีหลังด้วย */
-      const observed = new WeakSet<Element>();
+      let observed = new WeakSet<Element>();
       const observeAll = () => {
         document.querySelectorAll('[data-sec]').forEach((el) => {
           if (observed.has(el)) return;
@@ -105,6 +145,10 @@ export function useLandingTrace(
         });
       };
       observeAll();
+      /* กลับมาดูต่อ → ต้องผูกใหม่ทั้งหมด เพราะ IntersectionObserver ยิง callback เฉพาะตอน
+       * "สถานะการมองเห็นเปลี่ยน" — บล็อกที่ยังอยู่ในจอเดิมจะไม่ยิงอะไรเลย
+       * ⇒ ถ้าไม่ผูกใหม่ เวลาที่เขาอ่านต่อหลังกลับมาจะหายไปทั้งก้อน */
+      reobserve = () => { io!.disconnect(); observed = new WeakSet<Element>(); observeAll(); };
       mo = new MutationObserver(observeAll);
       mo.observe(document.body, { childList: true, subtree: true });
     }

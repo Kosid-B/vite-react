@@ -50,6 +50,35 @@ describe('useLandingTrace — เวลาที่บันทึกต้อ�
     expect(recorded).not.toContain(60);
   });
 
+  /* 🔴 อีกด้านของบั๊กเดียวกัน (26 ส.ค. 2569): ของเดิม "ซ่อนแท็บครั้งแรก = จบถาวร"
+   *    ⇒ คนที่สลับไปแอปอื่นแล้วกลับมาอ่านต่อ — ซึ่งคือคนที่สนใจมากที่สุด — ถูกบันทึกเวลาต่ำกว่าจริง
+   *    การแก้รอบก่อน (ledger #12) แก้ทิศ "สูงเกินจริง" แล้วเลยไปอีกด้าน */
+  it('สลับแอปแล้วกลับมาอ่านต่อ → เวลาที่ดูจริงต้องเดินต่อ ไม่ใช่หยุดถาวร', () => {
+    renderHook(() => useLandingTrace('seller', true));
+    vi.advanceTimersByTime(5_000);
+    setVisibility('hidden');
+    vi.advanceTimersByTime(600_000); // ไปทำอย่างอื่น 10 นาที
+    setVisibility('visible');        // กลับมาอ่านต่อ
+    vi.advanceTimersByTime(25_000);  // ดูจริงอีก 25 วิ → รวมเวลาที่ดูจริง = 30 วิ
+
+    const recorded = markDwell.mock.calls.map(c => c[0] as number);
+    expect(recorded, 'กลับมาแล้วเวลาไม่เดินต่อ').toContain(10);
+    expect(recorded, 'เวลาที่ดูจริงครบ 30 แล้วแต่ไม่ถูกบันทึก').toContain(30);
+    expect(recorded, '10 นาทีที่อยู่เบื้องหลังถูกนับเป็นเวลาดู').not.toContain(60);
+  });
+
+  it('🔴 เวลาที่อยู่เบื้องหลังต้องไม่ถูกนับ แม้จะกลับมาแล้ว', () => {
+    renderHook(() => useLandingTrace('seller', true));
+    vi.advanceTimersByTime(2_000);
+    setVisibility('hidden');
+    vi.advanceTimersByTime(3_600_000); // หายไป 1 ชั่วโมง
+    setVisibility('visible');
+    vi.advanceTimersByTime(1_000);     // กลับมาดูอีก 1 วิ (รวมดูจริง 3 วิ)
+
+    const recorded = markDwell.mock.calls.map(c => c[0] as number);
+    expect(Math.max(0, ...recorded), 'เวลาที่อยู่เบื้องหลังรั่วเข้ามา').toBeLessThan(10);
+  });
+
   it('unmount แล้ว timer ต้องไม่ยิงตามมาทีหลัง', () => {
     const { unmount } = renderHook(() => useLandingTrace('seller', true));
     unmount();
