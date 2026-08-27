@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { AppData, PageId } from '../types';
 import { nextBestAction } from '../lib/nextBestAction';
 import { openLoopFor } from '../lib/appArc';
+import { track } from '../lib/analytics';
 
 /* การ์ด "ตอนนี้ควรทำอะไรต่อ" — ปลายทางของห่วงโซ่ Vision → Constitution → Genome → Decision Engine
  *
@@ -39,6 +40,17 @@ export default function NextBestActionCard({
   const loop = useMemo(() => openLoopFor(data), [data]);
   const goto = r.stuck ? BRANCH_PAGE[r.stuck.key] : null;
 
+  /* 🔴 วัดว่าจุดตึงพาคนเดินต่อจริงไหม — ไม่งั้นเราจะเถียงกันด้วยความรู้สึก
+   *    `nba_loop_shown` คือ **ตัวหาร** ที่ถูกต้อง: นับเฉพาะคนที่เห็นคำถามจริง
+   *    ไม่ใช่ผู้ใช้ทั้งหมด (skill experiment-reality-check — เคยหลอกตาแล้ว: 60 คน เห็นจริง 1)
+   *    ส่งเฉพาะ "คีย์ของด่าน" ซึ่งเป็นค่าจากรายการปิด — ไม่มีข้อมูลของผู้ใช้ติดไป */
+  const shownFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!loop || shownFor.current === loop.key) return;
+    shownFor.current = loop.key;
+    track('nba_loop_shown', { gap: loop.key, stage: r.stage });
+  }, [loop, r.stage]);
+
   return (
     <div className="nba-card">
       {/* ① ความตึงมาก่อนความโล่ง — คำถามที่เขาตอบเองไม่ได้ ก่อนสถานะและก่อนข้อเสนอ */}
@@ -60,7 +72,8 @@ export default function NextBestActionCard({
       <p className="nba-action">{r.action}</p>
 
       {/* ② ที่มา — ตรวจสอบได้ แต่ไม่บังคับให้อ่านก่อน */}
-      <details className="nba-why">
+      <details className="nba-why"
+        onToggle={(e) => { if ((e.currentTarget as HTMLDetailsElement).open) track('nba_why_open', { gap: loop?.key ?? 'none' }); }}>
         <summary>ทำไมถึงเป็นข้อนี้</summary>
         <p>{r.because}</p>
         {r.gaps.length > 0 && (
@@ -72,7 +85,7 @@ export default function NextBestActionCard({
       </details>
 
       {goto && (
-        <button className="nba-go" onClick={() => onNavigate(goto)}>
+        <button className="nba-go" onClick={() => { track('nba_go_click', { gap: loop?.key ?? 'none', to: goto }); onNavigate(goto); }}>
           ไปกรอกข้อมูลส่วนนี้ →
         </button>
       )}
