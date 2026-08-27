@@ -59,6 +59,8 @@ export interface BrandVisibilityInput {
   brandedCtr?: number | null;
   /** จำนวนหน้าที่ถูกจัดทำดัชนี */
   indexedPages?: number | null;
+  /** ใน 10 ผลแรกของการค้นชื่อแบรนด์ เป็นของเรากี่ส่วน (0–1) */
+  ownedSerpCoverage?: number | null;
   /** จำนวนเว็บอื่นที่พูดถึงแบรนด์เราในความหมายเดียวกัน */
   externalMentions?: number | null;
   /** ส่วนแบ่งการค้นหาเทียบชื่อที่สับสนกัน (0–1) */
@@ -83,6 +85,7 @@ export const BRAND_TARGETS = {
   entityConsistency: { target: 1, status: 'policy' as ThresholdStatus },
   indexedPages: { target: 30, status: 'hypothesis' as ThresholdStatus },
   brandedRank: { target: 1, status: 'policy' as ThresholdStatus },
+  ownedSerpCoverage: { target: 0.7, status: 'policy' as ThresholdStatus },
   externalMentions: { target: 5, status: 'hypothesis' as ThresholdStatus },
   shareOfSearch: { target: 0.5, status: 'hypothesis' as ThresholdStatus },
 } as const;
@@ -111,6 +114,13 @@ export function brandMetrics(inp: BrandVisibilityInput = {}): BrandMetric[] {
       target: BRAND_TARGETS.brandedRank.target, direction: 'down',
       thresholdStatus: BRAND_TARGETS.brandedRank.status,
       howToGet: 'Search Console → Performance → กรองคำค้น "ceoaithailand" → ดู Position',
+    },
+    {
+      key: 'ownedSerpCoverage', label: 'ส่วนของผลค้นหาชื่อแบรนด์ที่เป็นของเรา', value: n(inp.ownedSerpCoverage), unit: 'สัดส่วน',
+      source: 'ค้นชื่อแบรนด์แล้วนับเอง', readableBy: 'owner-only', minSample: null,
+      target: BRAND_TARGETS.ownedSerpCoverage.target, direction: 'up',
+      thresholdStatus: BRAND_TARGETS.ownedSerpCoverage.status,
+      howToGet: 'ค้น "CEO AI Thailand" ในหน้าต่างส่วนตัว → นับว่าใน 10 ผลแรก เป็นเว็บ/โปรไฟล์ของเรากี่อัน',
     },
     {
       key: 'externalMentions', label: 'เว็บอื่นที่พูดถึงเราในความหมายเดียวกัน', value: n(inp.externalMentions), unit: 'แหล่ง',
@@ -188,6 +198,7 @@ export const BRAND_BOTTLENECK_ORDER: readonly string[] = [
   'entityConsistency',   // เราพูดตรงกันเองหรือยัง
   'indexedPages',        // Google เห็นหน้าเราหรือยัง
   'brandedRank',         // ค้นชื่อเราแล้วเจอเราไหม
+  'ownedSerpCoverage',   // เจอแล้ว...แต่ครองทั้งหน้าหรือแค่อันเดียว
   'externalMentions',    // มีคนอื่นยืนยันไหม
   'shareOfSearch',       // คนเริ่มค้นชื่อเรามากขึ้นไหม
 ];
@@ -285,4 +296,22 @@ export function reachLeakNote(inp: BrandVisibilityInput = {}): ReachLeakNote | n
       `จาก ${ec.total} ช่องทาง ⇒ คนที่จำชื่อได้แล้วไปค้น อาจไปเจอองค์กรอื่นที่ชื่อคล้ายกันแทน · ${sizeNote} · ` +
       'ซ่อมได้ในไม่กี่นาทีและ**ไม่ต้องหยุดงานคอนเทนต์** — ทำคู่ขนานกันได้',
   };
+}
+
+/** ป้าย "ความสับสนของ entity" ที่เจ้าของขอไว้ (Entity Confusion Index)
+ *
+ * 🔴 **เป็นค่าที่ derive มา ไม่ใช่ตัวชี้วัดแยก** — ความสับสนคือด้านกลับของ
+ *   "ผลค้นหาชื่อแบรนด์เป็นของเรากี่ส่วน" ⇒ ถ้าเก็บเป็นอีกช่องให้กรอกเอง
+ *   จะกลายเป็นการนับเรื่องเดียวกันสองครั้ง แล้วคะแนนรวมจะเอียงโดยไม่มีใครรู้
+ *
+ * 🔴 `null` = ตรวจไม่ได้ ≠ "ไม่สับสน" — ต้องคืน 'ตรวจไม่ได้' ตรง ๆ
+ */
+export type ConfusionLabel = 'ตรวจไม่ได้' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+export function entityConfusionLabel(inp: BrandVisibilityInput = {}): ConfusionLabel {
+  const owned = inp.ownedSerpCoverage ?? null;
+  if (owned === null) return 'ตรวจไม่ได้';
+  if (owned >= BRAND_TARGETS.ownedSerpCoverage.target) return 'LOW';
+  if (owned >= 0.4) return 'MEDIUM';
+  return 'HIGH';
 }

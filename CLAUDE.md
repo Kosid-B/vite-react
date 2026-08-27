@@ -514,6 +514,18 @@ src/lib/brandEntity.ts         — "CEO AI Thailand คือใคร" ใน�
                                  ⚠️ **พูดกับเครื่องเท่านั้น** — ห้ามเอา SEARCH_CATEGORY ไปเป็นพาดหัวบนหน้าเว็บ
                                     (พาดหัวยังต้องเป็น "ปัญหา" เสมอ · คนที่ไม่รู้ว่าตัวเองมีปัญหา ไม่ค้นชื่อหมวดหมู่)
                                  `entityIssues()` = blocker เมื่อโปรไฟล์ที่ต้องมี URL ยังว่าง · **ห้ามเดา URL เอง** (เทสต์กัน)
+src/lib/searchOwnership.ts     — "ยึดพื้นที่ค้นหาตามลำดับ ห้ามข้ามขั้น" (เจ้าของตัดสิน 27 ส.ค. 2569: **PROCEED WITH CONTROLS**)
+                                 🎯 มองเป็น **โอกาสยึดพื้นที่** ไม่ใช่การหนีคำว่า CEO อื่น — Google ยังไม่มีเจ้าของ semantic space นี้
+                                 **3 Rings** (fail-closed · ตรวจไม่ได้ = อยู่วง 1): ① ยึดชื่อตัวเอง (ownedSerpCoverage ≥ 70%)
+                                   → ② ยึดหมวดหมู่ + ปัญหา (คำหมวดหมู่พาคนมา ≥ MIN_FOR_RATE) → ③ คำข้างเคียง
+                                 🔴 `declaredNameIssues()` — ทุกที่ที่ **ประกาศชื่อ** ให้เครื่องอ่านต้องเป็นชื่อ canonical เป๊ะ
+                                    (`<title>` · `og:site_name` · `apple-mobile-web-app-title` · `application-name`)
+                                    ⇒ เจอบั๊กจริงทันที: iOS home-screen title เขียนว่า "CEO AI" (แก้แล้ว)
+                                 ⚠️ **ห้ามเอา `nameFormIssues` ไปสแกนโค้ดทั้งรีโป** — ลองแล้วได้ผลบวกปลอม 20 จุด
+                                    เส้นแบ่ง: **ที่ประกาศชื่อต้องเต็ม · เอ่ยถึงกลางประโยคไทยสั้นได้**
+                                 🚦 `trafficVerdict()` คนเข้า +200% แต่ตรงกลุ่ม +0% = `not-a-win` · วัดไม่ได้ = `unknown` ห้ามเดาว่าชนะ
+                                 📝 `checkComparison()` บทความเทียบต้องมี 4 หัวข้อ + ห้ามถ้อยคำตัดสินว่าใครดีกว่า
+                                 🏭 `CONTENT_CHAIN` = Evidence → Unique Insight → Useful Content (ห้ามขึ้นต้นด้วย Keyword)
 src/lib/brandVisibility.ts     — "ตลาดและ Search Engine เริ่มจำแบรนด์เราถูกหรือยัง" (pure/tested 18 เทสต์)
                                  ลำดับคอขวด (ห้ามข้ามขั้น): entityConsistency → indexedPages → brandedRank
                                    → externalMentions → shareOfSearch · คืน **คอขวดข้อเดียว** ไม่ใช่รายการงานยาว

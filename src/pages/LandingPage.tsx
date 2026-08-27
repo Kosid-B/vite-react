@@ -1030,6 +1030,17 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
         <a href="/b" style={{ color: C.cyan4, textDecoration: 'none' }}>สารบัญธุรกิจ</a> ·{' '}
         <AiTransparency linkStyle={{ color: C.cyan4, textDecoration: 'none' }} />
         <br />
+        {/* 🔎 ประโยคนิยาม entity ที่ **มองเห็นได้จริง** — เครื่องอ่าน title/schema ได้ก็จริง
+            แต่ข้อความที่แสดงบนหน้าเป็นสัญญาณคนละชั้น และก่อนหน้านี้คำว่า
+            "AI Business Operating System" ไม่ปรากฏในเนื้อหาที่มองเห็นเลยสักที่
+            ⚠️ วางที่ footer โดยตั้งใจ — พาดหัวยังต้องเป็น "ปัญหา" ตามกฎที่เจ้าของ freeze ไว้
+               (คนที่ไม่รู้ว่าตัวเองมีปัญหา ไม่ค้นชื่อหมวดหมู่) ⇒ พูดกับเครื่องได้โดยไม่แย่งที่พูดกับคน */}
+        <p style={{ maxWidth: 720, margin: '0 auto 14px', lineHeight: 1.8 }}>
+          <b style={{ color: C.slate4 }}>CEO AI Thailand</b> คือ <b style={{ color: C.slate4 }}>AI Business
+          Operating System</b> สำหรับผู้เริ่มต้นธุรกิจและ SME ไทย — ช่วยวางกลยุทธ์ การตลาด คอนเทนต์
+          การวัดผล และขั้นต่อไปที่ควรทำ ในระบบเดียว ·{' '}
+          <a href="/about" style={{ color: C.cyan4, textDecoration: 'none' }}>เกี่ยวกับเรา</a>
+        </p>
         © 2026 CEO AI Thailand · ceoaithailand.org · B. Training Consultant Co., Ltd.
         <br />
         <LegalLinks linkStyle={{ color: C.slate5, textDecoration: 'none' }} />

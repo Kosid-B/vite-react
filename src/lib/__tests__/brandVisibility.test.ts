@@ -13,7 +13,7 @@ const SRC = readFileSync(join(process.cwd(), 'src/lib/brandVisibility.ts'), 'utf
 
 /** ค่าที่ทำให้ทุกตัวที่เข้าคะแนน "อ่านได้" — ใช้เป็นฐานของเทสต์ที่ต้องการคะแนนจริง */
 const ALL_READ = {
-  indexedPages: 30, brandedRank: 1, externalMentions: 5, shareOfSearch: 0.5,
+  indexedPages: 30, brandedRank: 1, externalMentions: 5, shareOfSearch: 0.5, ownedSerpCoverage: 0.7,
 };
 
 describe('brandVisibility — null คือ "ตรวจไม่ได้" ไม่ใช่ 0', () => {
@@ -57,16 +57,16 @@ describe('brandVisibility — ห้ามให้คะแนนรวมต�
     expect(h.score).not.toBeNull();
     // ยังไม่ถึง 100 เพราะสัญญาณ entity ของเราเองยังขาด — คะแนนต้องสะท้อนช่องว่างจริง
     const ec = entityConsistency();
-    expect(h.score).toBe(Math.round(((ec.value + 4) / 5) * 100));
+    expect(h.score).toBe(Math.round(((ec.value + 5) / 6) * 100));
     expect(h.score).toBeLessThan(100);
   });
 
   it('เส้นแบ่งคือ MAX_BLIND_RATIO จริง — ตาบอดพอดีครึ่งยังให้คะแนนได้ · เกินครึ่งห้าม', () => {
     const scoredKeys = brandMetrics(ALL_READ).filter((m) => m.target !== null).map((m) => m.key);
-    expect(scoredKeys.length).toBe(5);
-    // entityConsistency อ่านได้เสมอ ⇒ กรอกเพิ่มอีก 1 ตัว = อ่านได้ 2/5 (ตาบอด 60% > 50%)
+    expect(scoredKeys.length).toBe(6);
+    // entityConsistency อ่านได้เสมอ ⇒ กรอกเพิ่มอีก 1 ตัว = อ่านได้ 2/6 (ตาบอด 67% > 50%)
     expect(brandHealth({ indexedPages: 30 }).score).toBeNull();
-    // อ่านได้ 3/5 ⇒ ตาบอด 40% ≤ 50%
+    // อ่านได้ 3/6 ⇒ ตาบอด 50% ≤ 50% (เส้นแบ่งพอดี)
     expect(brandHealth({ indexedPages: 30, brandedRank: 1 }).score).not.toBeNull();
     expect(MAX_BLIND_RATIO).toBe(0.5);
   });

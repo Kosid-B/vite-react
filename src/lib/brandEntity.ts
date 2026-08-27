@@ -31,6 +31,7 @@ export const BRAND_NAME = 'CEO AI Thailand';
 export const ALTERNATE_NAMES: readonly string[] = [
   'ceoaithailand',
   'CEOAIThailand',
+  'CEO AI ไทย',
   'ซีอีโอ เอไอ ไทยแลนด์',
 ];
 
