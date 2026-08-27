@@ -4,6 +4,7 @@ import ClientErrorsPanel from '../../components/ClientErrorsPanel';
 import ContentPerformancePanel from '../../components/ContentPerformancePanel';
 import GrowthPdcaPanel from '../../components/GrowthPdcaPanel';
 import PaymentReadinessPanel from '../../components/PaymentReadinessPanel';
+import BrandVisibilityPanel from '../../components/BrandVisibilityPanel';
 import ReachFunnelPanel from '../../components/ReachFunnelPanel';
 import StageFitPanel from '../../components/StageFitPanel';
 import type { AppData } from '../../types';
@@ -488,6 +489,10 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
       {/* 📡 ขั้นที่หายไปของ funnel: วิวบนแพลตฟอร์ม → คนมาถึงเว็บ
           วางก่อน ContentPerformance เพราะถ้าเพดานอยู่ก่อนถึงเว็บ การเทียบคอนเทนต์ยังไม่มีความหมาย */}
       <ReachFunnelPanel landing={landing} />
+
+      {/* 🔎 ก่อนถามว่า "คอนเทนต์ชิ้นไหนพาคนมา" ต้องรู้ก่อนว่า **ค้นชื่อเราแล้วเจอเราไหม**
+          ถ้าเครื่องยังไม่รู้ว่าเราคือใคร คนที่จำชื่อเราได้จากคลิปก็ยังหาเราไม่เจออยู่ดี */}
+      <BrandVisibilityPanel />
 
       {/* คอนเทนต์ชิ้นไหนพาคนมา (0062) — วางก่อนแผง error เพราะเป็นคำถามหลักของการตลาด */}
       <ContentPerformancePanel landing={landing} />

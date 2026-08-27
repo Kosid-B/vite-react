@@ -506,6 +506,26 @@ src/pages/ProcessRegister.tsx  — หน้า 'process' ทะเบียน�
                                  (ข้อที่กระบวนการอื่นถือแล้วจะจาง) + แถบสุขภาพ + รายการ "สิ่งที่ผู้ตรวจจะเจอ"
                                  · demoRegister() = "อาฮ่า 10 วินาที" โหมดพรีวิว (ไม่บันทึกลง AppData · save() ปิดตายตอน demo)
                                    จงใจใส่ตัววัดที่ไม่มี whyFrom 1 ตัว ให้เห็นระบบจับได้สด ๆ
+src/lib/brandEntity.ts         — "CEO AI Thailand คือใคร" ในภาษาที่ **เครื่อง** อ่าน (Entity SEO)
+                                 🔴 ปัญหาที่แก้: Google AI Overview แตกคำ `ceoaithailand` เป็น "CEO และ AI ในประเทศไทย"
+                                    แล้วอ้าง CEO THAILAND / Thailand Top CEO / Digital CEO (depa) / CEO Idol
+                                    ⇒ แต่ต้นเหตุอยู่ที่บ้านเรา: รีโปเคยมีคำอธิบายแบรนด์ **4 แบบ** ที่ขัดกันเอง
+                                 BRAND_NAME/ALTERNATE_NAMES/SEARCH_CATEGORY = แหล่งเดียวของ title+schema
+                                 ⚠️ **พูดกับเครื่องเท่านั้น** — ห้ามเอา SEARCH_CATEGORY ไปเป็นพาดหัวบนหน้าเว็บ
+                                    (พาดหัวยังต้องเป็น "ปัญหา" เสมอ · คนที่ไม่รู้ว่าตัวเองมีปัญหา ไม่ค้นชื่อหมวดหมู่)
+                                 `entityIssues()` = blocker เมื่อโปรไฟล์ที่ต้องมี URL ยังว่าง · **ห้ามเดา URL เอง** (เทสต์กัน)
+src/lib/brandVisibility.ts     — "ตลาดและ Search Engine เริ่มจำแบรนด์เราถูกหรือยัง" (pure/tested 18 เทสต์)
+                                 ลำดับคอขวด (ห้ามข้ามขั้น): entityConsistency → indexedPages → brandedRank
+                                   → externalMentions → shareOfSearch · คืน **คอขวดข้อเดียว** ไม่ใช่รายการงานยาว
+                                 🔴 `null` = ตรวจไม่ได้ ≠ 0 · เว้นช่องว่างในแผงต้องกลับเป็น undefined ห้ามเป็น 0
+                                 🔴 **ตาบอดเกินครึ่ง (`MAX_BLIND_RATIO=0.5`) = ห้ามให้คะแนนรวม**
+                                    "Brand Entity Health: 41/100" ที่คำนวณจากช่องว่าง = ตัวเลขที่อันตรายที่สุด
+                                 🔴 **ไม่มี `target` = ตัวประกอบบริบท ห้ามเข้าคะแนน** (ledger #61 — ของเดิมเฉลี่ย
+                                    `min(1,value)` ข้ามหน่วย ⇒ จัดทำดัชนี 1 หน้า ได้คะแนนเท่ากับ 30 หน้า)
+                                 ทุก target ติดป้าย `ThresholdStatus` — 🔴 ห้ามมีตัวไหนเป็น `validated`
+                                 components/BrandVisibilityPanel.tsx (แท็บเวิร์กสเปซ ต่อจาก ReachFunnelPanel)
+                                 ⚠️ ค่าที่กรอกเก็บ **localStorage** ไม่ขึ้น DB — ด่านปล่อยของยังกั้น schema
+                                 ⚠️ สถานะจริง 27 ส.ค. 69: คะแนน = null · คอขวด = entityConsistency (มี URL 2/4)
 src/lib/growthPdca.ts          — วงจร PDCA ของ "การเติบโต" (คนละวงจรกับ eqms.ts ที่เป็น PDCA ของคุณภาพ/ISO)
                                  growthPdca() คืน stuckAt = เฟสแรกที่ยังไม่ผ่าน · canAct = false เมื่อ Check ยังไม่ ok
                                  shippedPieces() นับ Do จาก "คนเข้าจริงต่อแคมเปญ" ไม่ใช่จำนวนโพสต์ที่เราบอกว่าโพสต์แล้ว
