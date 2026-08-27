@@ -2,9 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  brandMetrics, brandHealth, metricScore, entityConsistency,
+  brandMetrics, brandHealth, metricScore, entityConsistency, reachLeakNote,
   BRAND_BOTTLENECK_ORDER, BRAND_TARGETS, MAX_BLIND_RATIO,
 } from '../brandVisibility';
+import { INITIATIVES } from '../stageFit';
 import { entityProfiles } from '../brandEntity';
 import { MIN_FOR_RATE } from '../growthPdca';
 
@@ -155,5 +156,52 @@ describe('brandVisibility — ผูกกับแหล่งจริง ห�
 
   it('ไม่แตะ schema/ฐานข้อมูล — ไฟล์นี้ pure (ด่านปล่อยของยังกั้น migration อยู่)', () => {
     expect(SRC).not.toMatch(/supabase|from\s*\(|\.rpc\(/);
+  });
+});
+
+describe('brandVisibility — เชื่อมกลับเข้า Growth Loop เดียวกัน', () => {
+  const PANEL = readFileSync(join(process.cwd(), 'src/components/StageFitPanel.tsx'), 'utf8');
+
+  it('สัญญาณ entity ยังไม่ครบ ⇒ เตือนว่างานเฟส reach มีรอยรั่วที่ปลายทาง', () => {
+    expect(entityConsistency().missing).toBeGreaterThan(0);
+    const n = reachLeakNote();
+    expect(n).not.toBeNull();
+    expect(n!.level).toBe('warn');
+    expect(n!.text).toMatch(/จำชื่อเราได้/);
+  });
+
+  it('🔴 เป็นคำเตือน ห้ามเป็นด่านกั้นงานพิสูจน์ (founderMindset: validate ต้องไม่ถูกกั้น)', () => {
+    const n = reachLeakNote()!;
+    expect(n.blocks).toBe(false);
+    expect(n.text).toMatch(/ไม่ต้องหยุดงานคอนเทนต์/);
+  });
+
+  it('🔴 วัดขนาดไม่ได้ ต้องพูดว่าวัดไม่ได้ — ห้ามเล่าเหมือนเป็นความสูญเสียที่พิสูจน์แล้ว', () => {
+    const blind = reachLeakNote()!;
+    expect(blind.measurable).toBe(false);
+    expect(blind.text).toMatch(/วัดไม่ได้/);
+    expect(blind.text).toMatch(/ยังไม่ได้วัด/);
+    // พอมีตัวเลขจริงทั้งสองตัว ถึงจะบอกว่าวัดขนาดได้
+    const seen = reachLeakNote({ brandedRank: 8, shareOfSearch: 0.2 })!;
+    expect(seen.measurable).toBe(true);
+    expect(seen.text).not.toMatch(/วัดไม่ได้/);
+  });
+
+  it('สัญญาณครบเมื่อไร คำเตือนต้องหายไปเอง (ไม่ใช่ค้างอยู่ตลอดกาล)', () => {
+    // ผูกกับสถานะจริง: เมื่อ missing = 0 ต้องคืน null — พิสูจน์ผ่านโค้ดที่อ่านได้
+    expect(SRC).toMatch(/if \(ec\.missing === 0\) return null;/);
+  });
+
+  it('งานซ่อม entity อยู่ในรายการงานจริงของเฟส reach — ไม่ใช่คำเตือนลอย ๆ', () => {
+    const init = INITIATIVES.find((i) => i.id === 'brand-entity');
+    expect(init).toBeTruthy();
+    expect(init!.needs).toBe('reach');
+    expect(init!.why.length).toBeGreaterThan(20);
+  });
+
+  it('คำเตือนถูกแสดงจริงในแผงที่บอกว่า "ทำอะไรต่อ" (ไม่ใช่ค้างอยู่ใน lib)', () => {
+    expect(PANEL).toMatch(/import\s*\{\s*reachLeakNote\s*\}\s*from\s*'\.\.\/lib\/brandVisibility'/);
+    expect(PANEL).toMatch(/reachLeakNote\(\)/);
+    expect(PANEL).toMatch(/leak\.text/);
   });
 });

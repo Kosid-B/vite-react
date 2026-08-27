@@ -525,6 +525,11 @@ src/lib/brandVisibility.ts     — "ตลาดและ Search Engine เร�
                                  ทุก target ติดป้าย `ThresholdStatus` — 🔴 ห้ามมีตัวไหนเป็น `validated`
                                  components/BrandVisibilityPanel.tsx (แท็บเวิร์กสเปซ ต่อจาก ReachFunnelPanel)
                                  ⚠️ ค่าที่กรอกเก็บ **localStorage** ไม่ขึ้น DB — ด่านปล่อยของยังกั้น schema
+                                 🔗 `reachLeakNote()` เชื่อมกลับเข้า **วงจรเดียวกัน** — แสดงใน `StageFitPanel`
+                                    (งานเฟส reach ผลิต "คนที่จำชื่อเราได้" · ค้นแล้วเจอองค์กรอื่น = แรงหายที่ปลายทาง
+                                     ซึ่ง growthPdca มองไม่เห็นเพราะรับแต่ตัวเลขฝั่งเว็บ) + งาน `brand-entity` ใน `stageFit.INITIATIVES`
+                                    🔴 `blocks: false` เสมอ — **คำเตือน ไม่ใช่ด่านกั้น** (ห้ามกั้นงานพิสูจน์)
+                                    🔴 `measurable:false` ต้องพูดว่า "วัดไม่ได้" ห้ามเล่าเหมือนเป็นความสูญเสียที่พิสูจน์แล้ว
                                  ⚠️ สถานะจริง 27 ส.ค. 69: คะแนน = null · คอขวด = entityConsistency (มี URL 2/4)
 src/lib/growthPdca.ts          — วงจร PDCA ของ "การเติบโต" (คนละวงจรกับ eqms.ts ที่เป็น PDCA ของคุณภาพ/ISO)
                                  growthPdca() คืน stuckAt = เฟสแรกที่ยังไม่ผ่าน · canAct = false เมื่อ Check ยังไม่ ok

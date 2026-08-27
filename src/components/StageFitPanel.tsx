@@ -4,6 +4,7 @@ import { payingCustomerCount } from '../lib/payments';
 import {
   stageFitReport, STAGE_LABEL, type FittedInitiative, type StageFitReport,
 } from '../lib/stageFit';
+import { reachLeakNote } from '../lib/brandVisibility';
 
 /* แผง "งานชิ้นนี้ถึงเวลาของมันหรือยัง" — skill `case-study-stage-fit` ในรูปโค้ด
  *
@@ -59,6 +60,11 @@ export default function StageFitPanel({ landing }: { landing: LandingAgg | null 
     payingCustomers: unreadable ? 0 : paying,
   });
 
+  // 🔗 เชื่อมสถานะแบรนด์กลับเข้าวงจรเดียวกัน — งาน reach ผลิต "คนที่จำชื่อเราได้"
+  //    ถ้าคนที่จำได้ไปค้นแล้วเจอองค์กรอื่น แรงที่ลงไปหายที่ปลายทาง
+  //    ⚠️ เป็นคำเตือน ไม่ใช่ด่านกั้น — งานคอนเทนต์ยังต้องเดินต่อคู่ขนาน
+  const leak = r.stage === 'reach' ? reachLeakNote() : null;
+
   const sections: Array<[('now' | 'later' | 'never'), FittedInitiative[]]> = [
     ['now', r.now], ['later', r.later], ['never', r.never],
   ];
@@ -89,6 +95,13 @@ export default function StageFitPanel({ landing }: { landing: LandingAgg | null 
                       borderRadius: 8, padding: '8px 10px', marginBottom: 10, lineHeight: 1.6 }}>
           🔴 <b>อ่านจำนวนลูกค้าที่จ่ายจริงไม่ได้</b> (ไม่ใช่แปลว่าเป็น 0) — ระบบถือเป็น 0 ไว้ก่อน
           เพื่อไม่ปลดล็อกงานเฟสหลังโดยที่ยังไม่มีหลักฐาน
+        </div>
+      )}
+
+      {leak && (
+        <div style={{ fontSize: 12.5, color: '#b45309', background: '#fffbeb', border: '1px dashed #f59e0b',
+                      borderRadius: 8, padding: '8px 10px', marginBottom: 10, lineHeight: 1.6 }}>
+          🔗 <b>รอยรั่วปลายทางของงานเฟสนี้</b> — {leak.text}
         </div>
       )}
 
