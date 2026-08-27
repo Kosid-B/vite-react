@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { APP_BEATS, FAKE_RELIEF, OPEN_LOOP_QUESTIONS, openLoopFor, appArcBlock } from '../appArc';
+import { APP_BEATS, FAKE_RELIEF, OPEN_LOOP_QUESTIONS, openLoopFor, appArcBlock, gapProgress } from '../appArc';
 import { arcIssues, flatnessDebt } from '../emotionalArc';
 import { READINESS_CHECKS } from '../founderMindset';
 import { violatesBrand } from '../brandBrief';
@@ -37,6 +37,9 @@ describe('จังหวะในระบบ — โครงสร้าง',
     expect(src('nextBestAction.ts')).toMatch(/action:/);
     expect(src('businessGenome.ts')).toMatch(/stuckBranch/);
     expect(src('opsMetrics.ts')).toMatch(/evaluatePerformance|MIN_ENTRIES_FOR_SCORE/);
+    // 🔴 จังหวะ next-gap ต้องมี "ของบนหน้าจอ" จริง ไม่ใช่แค่ฟังก์ชัน
+    expect(file('components/NextBestActionCard.tsx'), 'ไม่มีป้าย "ปิดได้แล้ว" บนการ์ด').toMatch(/nba-closed/);
+    expect(file('components/NextBestActionCard.tsx')).toMatch(/gapProgress/);
   });
 });
 
@@ -128,5 +131,38 @@ describe('จังหวะในระบบต้องเดินทาง�
     for (const beat of APP_BEATS) expect(b).toContain(beat.key);
     for (const f of FAKE_RELIEF) expect(b).toContain(f.insteadUse);
     expect(b).toMatch(/รางวัลทุกชิ้นต้องผูกกับสิ่งที่ผู้ใช้สร้างขึ้นจริง/);
+  });
+});
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * จังหวะ `next-gap` — "ปิดได้แล้ว → แต่ยังเหลืออีก" (คือจังหวะที่ทำให้กลับมาใช้ซ้ำ)
+ * 🔴 สิ่งที่กัน: อ้างว่าผู้ใช้ "เพิ่งทำอะไรสำเร็จ" ทั้งที่เราแค่ไม่มีค่าเทียบ
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('ความคืบหน้าของด่าน', () => {
+  const d = DEFAULT_DATA as AppData;
+
+  it('ตัวหารต้องเท่ากับจำนวนด่านจริง — เพิ่มด่านแล้วตัวเลขต้องขยับเอง', () => {
+    expect(gapProgress(d, null).total).toBe(READINESS_CHECKS.length);
+  });
+
+  it('ปิด + เหลือ ต้องรวมกันได้เท่าทั้งหมดเสมอ', () => {
+    const g = gapProgress(d, null);
+    expect(g.closed + g.remaining).toBe(g.total);
+  });
+
+  it('🔴 ไม่มีค่าเทียบ = ห้ามอ้างว่าเพิ่งปิดอะไร (fail-closed)', () => {
+    expect(gapProgress(d, null).justClosed).toBe(0);
+    expect(gapProgress(d, Number.NaN).justClosed).toBe(0);
+  });
+
+  it('ผ่านเพิ่มขึ้นจริง → บอกจำนวนที่เพิ่ม', () => {
+    const g = gapProgress(d, null);
+    expect(gapProgress(d, g.closed - 2).justClosed).toBe(2);
+  });
+
+  it('🔴 ข้อมูลถูกลบจนถอยหลัง → 0 ไม่ใช่ค่าติดลบ (ห้ามโชว์ "ปิดเพิ่ม -1")', () => {
+    const g = gapProgress(d, null);
+    expect(gapProgress(d, g.closed + 3).justClosed).toBe(0);
   });
 });

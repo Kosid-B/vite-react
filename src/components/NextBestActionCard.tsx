@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { AppData, PageId } from '../types';
 import { nextBestAction } from '../lib/nextBestAction';
-import { openLoopFor } from '../lib/appArc';
+import { openLoopFor, gapProgress, CLOSED_STORE_KEY } from '../lib/appArc';
 import { track } from '../lib/analytics';
 
 /* การ์ด "ตอนนี้ควรทำอะไรต่อ" — ปลายทางของห่วงโซ่ Vision → Constitution → Genome → Decision Engine
@@ -44,6 +44,27 @@ export default function NextBestActionCard({
    *    `nba_loop_shown` คือ **ตัวหาร** ที่ถูกต้อง: นับเฉพาะคนที่เห็นคำถามจริง
    *    ไม่ใช่ผู้ใช้ทั้งหมด (skill experiment-reality-check — เคยหลอกตาแล้ว: 60 คน เห็นจริง 1)
    *    ส่งเฉพาะ "คีย์ของด่าน" ซึ่งเป็นค่าจากรายการปิด — ไม่มีข้อมูลของผู้ใช้ติดไป */
+  /* จังหวะ `next-gap` — "ปิดได้แล้ว → แต่ยังเหลืออีก" คือจังหวะที่ทำให้กลับมาใช้ซ้ำ
+   * ค่าที่จำไว้อยู่ใน localStorage ต่อเครื่อง (ไม่แตะ schema · ไม่ขึ้นฐานข้อมูล)
+   * 🔴 อ่านไม่ได้ (โหมดส่วนตัว/ล้างข้อมูล) ⇒ `null` ⇒ `justClosed = 0` ⇒ ไม่อ้างอะไรเลย */
+  const prevClosed = useRef<number | null | undefined>(undefined);
+  if (prevClosed.current === undefined) {
+    try {
+      const raw = localStorage.getItem(CLOSED_STORE_KEY);
+      prevClosed.current = raw === null ? null : Number(raw);
+    } catch { prevClosed.current = null; }
+  }
+  const progress = useMemo(() => gapProgress(data, prevClosed.current ?? null), [data]);
+
+  /* บันทึกค่าใหม่หลังแสดงผล ⇒ ป้าย "ปิดเพิ่ม" โผล่ครั้งเดียว ไม่ค้างทุกครั้งที่เปิดแอป */
+  const savedFor = useRef<number | null>(null);
+  useEffect(() => {
+    if (savedFor.current === progress.closed) return;
+    savedFor.current = progress.closed;
+    try { localStorage.setItem(CLOSED_STORE_KEY, String(progress.closed)); } catch { /* โหมดส่วนตัว */ }
+    if (progress.justClosed > 0) track('nba_gap_closed', { closed: progress.closed, remaining: progress.remaining });
+  }, [progress.closed, progress.justClosed, progress.remaining]);
+
   const shownFor = useRef<string | null>(null);
   useEffect(() => {
     if (!loop || shownFor.current === loop.key) return;
@@ -56,6 +77,13 @@ export default function NextBestActionCard({
       {/* ① ความตึงมาก่อนความโล่ง — คำถามที่เขาตอบเองไม่ได้ ก่อนสถานะและก่อนข้อเสนอ */}
       {loop && (
         <div className="nba-loop">
+          {/* ปิดได้แล้ว → แต่ยังเหลืออีก · อยู่ในก้อนเดียวกับคำถาม เพราะมันคือจังหวะเดียวกัน
+              (ความโล่งของเรื่องที่จบ ต่อด้วยความตึงของเรื่องถัดไปทันที) */}
+          {progress.justClosed > 0 && (
+            <p className="nba-closed">
+              ✅ ผ่านเพิ่มอีก {progress.justClosed} ด่านตั้งแต่ครั้งก่อน — เหลืออีก {progress.remaining} จาก {progress.total}
+            </p>
+          )}
           <p className="nba-q">❓ {loop.question}</p>
           <p className="nba-q-why">{loop.why}</p>
         </div>

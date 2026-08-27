@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import NextBestActionCard from '../NextBestActionCard';
-import { OPEN_LOOP_QUESTIONS } from '../../lib/appArc';
+import { OPEN_LOOP_QUESTIONS, CLOSED_STORE_KEY, gapProgress } from '../../lib/appArc';
 import { DEFAULT_DATA } from '../../data';
 import type { AppData } from '../../types';
 
@@ -77,5 +77,63 @@ describe('การ์ด "ควรทำอะไรต่อ" — จุด�
     render(<NextBestActionCard data={data} onNavigate={() => {}} />);
     expect(document.querySelectorAll('.nba-action')).toHaveLength(1);
     expect(screen.getByText(/ทำไมถึงเป็นข้อนี้/)).toBeTruthy();
+  });
+});
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * จังหวะ "ปิดได้แล้ว → ยังเหลืออีก" — ต้องโผล่เฉพาะตอนที่จริงเท่านั้น
+ * 🔴 ป้ายที่โผล่ทั้งที่ไม่มีอะไรเกิดขึ้น = ความโล่งปลอม (appArc.FAKE_RELIEF)
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('จังหวะ next-gap บนการ์ด', () => {
+  const now = () => gapProgress(data, null).closed;
+
+  it('🔴 เปิดครั้งแรก (ยังไม่เคยจำ) ต้องไม่ขึ้นป้าย "ปิดเพิ่ม" — เราแค่ไม่มีค่าเทียบ', () => {
+    localStorage.removeItem(CLOSED_STORE_KEY);
+    render(<NextBestActionCard data={data} onNavigate={() => {}} />);
+    expect(document.querySelector('.nba-closed')).toBeNull();
+    expect(names()).not.toContain('nba_gap_closed');
+  });
+
+  it('ผ่านด่านเพิ่มจริง → ขึ้นป้าย + ยิง nba_gap_closed', () => {
+    localStorage.setItem(CLOSED_STORE_KEY, String(now() - 1));
+    render(<NextBestActionCard data={data} onNavigate={() => {}} />);
+    const el = document.querySelector('.nba-closed');
+    expect(el, 'ผ่านเพิ่มแล้วแต่ไม่ขึ้นป้าย').toBeTruthy();
+    expect(el!.textContent).toMatch(/ผ่านเพิ่มอีก 1 ด่าน/);
+    expect(names()).toContain('nba_gap_closed');
+  });
+
+  it('🔴 ป้ายต้องอยู่ในก้อนจุดตึง ไม่ใช่ก้อนใหม่ที่แทรกก่อนคำถาม', () => {
+    localStorage.setItem(CLOSED_STORE_KEY, String(now() - 1));
+    render(<NextBestActionCard data={data} onNavigate={() => {}} />);
+    expect(document.querySelector('.nba-loop > .nba-closed'), 'ป้ายหลุดออกนอกก้อนจุดตึง').toBeTruthy();
+    const nodes = [...document.querySelectorAll('.nba-loop, .nba-hd, .nba-action')].map((e) => e.className.split(' ')[0]);
+    expect(nodes[0], `ลำดับจริง: ${nodes.join(' → ')}`).toBe('nba-loop');
+  });
+
+  it('🔴 จำค่าใหม่แล้วต้องไม่ขึ้นซ้ำรอบหน้า (ไม่งั้นป้ายค้างถาวร = ความโล่งปลอม)', () => {
+    localStorage.setItem(CLOSED_STORE_KEY, String(now() - 1));
+    render(<NextBestActionCard data={data} onNavigate={() => {}} />);
+    expect(localStorage.getItem(CLOSED_STORE_KEY)).toBe(String(now()));
+    cleanup();
+    trackMock.mockClear();
+    render(<NextBestActionCard data={data} onNavigate={() => {}} />);
+    expect(document.querySelector('.nba-closed'), 'ป้ายยังค้างอยู่รอบถัดไป').toBeNull();
+  });
+
+  it('อ่าน localStorage ไม่ได้ (โหมดส่วนตัว) ต้องไม่พังและไม่อ้างอะไร', () => {
+    const orig = Object.getOwnPropertyDescriptor(window, 'localStorage')!;
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get() { throw new Error('blocked'); },
+    });
+    try {
+      render(<NextBestActionCard data={data} onNavigate={() => {}} />);
+      expect(document.querySelector('.nba-closed')).toBeNull();
+      expect(document.querySelector('.nba-q'), 'การ์ดต้องยังทำงานได้').toBeTruthy();
+    } finally {
+      Object.defineProperty(window, 'localStorage', orig);
+    }
   });
 });

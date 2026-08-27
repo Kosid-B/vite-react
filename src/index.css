@@ -7387,6 +7387,10 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
       ที่นี่ใช้โทเคนทั้งคู่ ⇒ ธีมสว่าง/มืดอ่านออกทั้งสองแบบ */
 .nba-loop { border: 1px solid var(--st-warn, #f59e0b); background: rgba(245,158,11,.08);
   border-radius: 10px; padding: 11px 13px; margin: 0 0 12px; }
+/* "ปิดได้แล้ว" — ความโล่งที่ได้มาจากของจริง (ผ่านด่านเพิ่ม) ไม่ใช่รางวัลแจกฟรี
+   โทเคนทั้งสีตัวหนังสือและพื้นหลัง ⇒ พลิกตามธีมทั้งคู่ (GOTCHA #4b) */
+.nba-closed { margin: 0 0 7px; font-size: 12.5px; font-weight: 700; line-height: 1.5;
+  color: var(--green-text); background: var(--green-bg); border-radius: 8px; padding: 6px 9px; }
 .nba-q { margin: 0; font-size: 16px; font-weight: 800; line-height: 1.5; color: var(--ink); }
 .nba-q-why { margin: 5px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--ink2); }
 .nba-hd { display: flex; justify-content: space-between; align-items: baseline; gap: 12px;

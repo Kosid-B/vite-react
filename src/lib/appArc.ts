@@ -22,7 +22,7 @@
 import type { AppData } from '../types';
 import type { Phase } from './emotionalArc';
 import { nextBestAction } from './nextBestAction';
-import type { ReadinessKey } from './founderMindset';
+import { READINESS_CHECKS, type ReadinessKey } from './founderMindset';
 
 export interface AppBeat {
   key: string;
@@ -72,8 +72,8 @@ export const APP_BEATS: AppBeat[] = [
     when: 'ทันทีที่ปิดเรื่องหนึ่งได้',
     driver: 'cortisol (ช่องว่างถัดไปที่เพิ่งเห็น)',
     feels: 'เรื่องนี้จบแล้ว แต่เพิ่งรู้ว่ายังมีอีกกิ่งที่ยังว่าง',
-    deliveredBy: 'stuckBranch() — กิ่งจีโนมถัดไปที่ยังไม่ครบ',
-    honestBecause: 'กิ่งที่ว่างคือช่องข้อมูลที่ว่างจริง ไม่ใช่ขั้นที่เราตั้งขึ้นเพื่อให้เขาเดินต่อ',
+    deliveredBy: 'gapProgress() + ป้าย .nba-closed บนการ์ด — "ผ่านเพิ่ม N ด่าน · เหลืออีก M"',
+    honestBecause: 'อ้างได้แค่ "จำนวนด่านที่ผ่านเพิ่มขึ้น" · ไม่มีค่าเทียบ = ไม่อ้างอะไรเลย (fail-closed)',
   },
   {
     key: 'earned-status',
@@ -162,6 +162,41 @@ export function openLoopFor(d: AppData): OpenLoop | null {
   const question = OPEN_LOOP_QUESTIONS[key];
   if (!question) return null;
   return { key, question, why: first.why };
+}
+
+
+/* ── จังหวะ `next-gap`: "ปิดได้แล้ว → แต่ยังเหลืออีก" ────────────────────────
+ * นี่คือจังหวะที่ทำให้ **กลับมาใช้ซ้ำ** — ปิดเรื่องหนึ่งแล้วเห็นว่ายังมีอีก
+ * ⚠️ ต้องเป็นความจริงเสมอ: เราอ้างได้แค่ "จำนวนด่านที่ผ่านเพิ่มขึ้นตั้งแต่ครั้งก่อน"
+ *    ไม่ใช่ "คุณเพิ่งปิดข้อ X" เพราะถ้าปิดหนึ่งเปิดหนึ่งพร้อมกัน จำนวนจะเท่าเดิม
+ * 🔴 ครั้งแรกที่เปิด (ยังไม่เคยจำ) ⇒ `justClosed = 0` เสมอ — ห้ามอ้างว่าเขาเพิ่งทำอะไร
+ *    ทั้งที่เราแค่ไม่มีค่าเทียบ (fail-closed แบบเดียวกับ `receiving: null`)
+ * ไฟล์นี้ยัง pure — ค่าที่จำไว้ถูกส่งเข้ามาเป็นพารามิเตอร์ ไม่ได้อ่าน localStorage เอง
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+/** คีย์ที่คอมโพเนนต์ใช้จำจำนวนด่านที่ผ่าน (ต่อเครื่อง · ไม่ขึ้นฐานข้อมูล) */
+export const CLOSED_STORE_KEY = 'ceo_ai_gaps_closed';
+
+export interface GapProgress {
+  /** ด่านที่ผ่านแล้ว */
+  closed: number;
+  /** ด่านทั้งหมด */
+  total: number;
+  /** ยังเหลือ */
+  remaining: number;
+  /** ผ่านเพิ่มกี่ด่านตั้งแต่ครั้งก่อน — 0 เมื่อไม่มีค่าเทียบ หรือไม่มีอะไรเพิ่ม */
+  justClosed: number;
+}
+
+export function gapProgress(d: AppData, previousClosed: number | null): GapProgress {
+  const total = READINESS_CHECKS.length;
+  const remaining = nextBestAction(d).gaps.length;
+  const closed = total - remaining;
+  const justClosed =
+    previousClosed === null || !Number.isFinite(previousClosed)
+      ? 0                                        // ไม่มีค่าเทียบ = ไม่รู้ ห้ามเดา
+      : Math.max(0, closed - previousClosed);    // ข้อมูลถูกลบจนถอยหลัง ⇒ 0 ไม่ใช่ค่าติดลบ
+  return { closed, total, remaining, justClosed };
 }
 
 /** บล็อกที่แปะเข้า prompt เวลาสั่งให้ AI ออกแบบหน้าจอ/ฟีเจอร์ในระบบ */
