@@ -143,9 +143,13 @@ describe('theme-safe-color — เครื่องมือตรวจต้�
 describe('โทเคน CSS ที่มีค่าสำรอง ต้องมีอยู่จริง (ไม่งั้นไม่พลิกตามธีม)', () => {
   /** หนี้ที่มีอยู่ ณ 23 ส.ค. 2569 — ห้ามเพิ่ม · ลบออกได้เมื่อแก้แล้ว */
   const KNOWN_DEBT = new Set([
-    '--active-border', '--bg', '--bg2', '--border', '--brand', '--card', '--card-border',
-    '--card-color', '--card2', '--gold', '--ink-mut', '--line-soft', '--mono', '--muted',
-    '--panel', '--paper', '--rust-light', '--tab-color', '--text', '--text-soft',
+    /* 🟢 ปลดหนี้แล้ว 27 ส.ค. 2569 (8 ตัว): --muted · --panel · --border · --card
+     *    · --text · --text-soft · --gold · --card-border
+     *    ทั้งหมดเป็นตัวที่ทำให้ตัวหนังสือ "อ่านไม่ออกจริง" ในธีมสว่าง (contrast 1.18–1.83)
+     *    ⚠️ 4 ตัวหลังถูกประกาศไว้ใน scope ของ CityscapeHero เท่านั้น ⇒ นอกนั้นไม่มีอยู่จริง */
+    '--active-border', '--bg', '--bg2', '--brand',
+    '--card-color', '--card2', '--ink-mut', '--line-soft', '--mono',
+    '--paper', '--rust-light', '--tab-color',
   ]);
 
   const referenced = [...css.matchAll(/var\((--[a-z0-9-]+)\s*,/g)].map((m) => m[1]);
@@ -163,7 +167,8 @@ describe('โทเคน CSS ที่มีค่าสำรอง ต้อ�
 
   it('หนี้ที่บันทึกไว้ต้องไม่โตขึ้น (แก้แล้วให้ลบออกจากรายการ)', () => {
     const stillUndeclared = [...KNOWN_DEBT].filter((v) => !declared.has(v));
-    expect(stillUndeclared.length, 'หนี้โตขึ้น — มีโทเคนใหม่ถูกเพิ่มเข้ารายการ').toBeLessThanOrEqual(20);
+    // 🔒 เพดานนี้เป็นบันไดลง — ลดได้ ห้ามเพิ่ม (20 → 12 เมื่อ 27 ส.ค. 2569)
+    expect(stillUndeclared.length, 'หนี้โตขึ้น — มีโทเคนใหม่ถูกเพิ่มเข้ารายการ').toBeLessThanOrEqual(12);
   });
 });
 

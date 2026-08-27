@@ -15,7 +15,11 @@ interface Props {
   onPickStarter?: () => void;
 }
 
-const C = { cyan: '#06b6d4', cyan3: '#67e8f9', amber: '#f59e0b', bg: '#0f172a', border: '#1e293b', slate: '#94a3b8', white: '#f8fafc' };
+/* 🔴 เดิมเป็นชุดสีตายตัวของธีมเข้มชุดเดียว ⇒ ในธีมสว่างทั้งแผงเป็นสีเข้มบนพื้นขาว
+ *    (วัดจริง 27 ส.ค. 2569 ด้วย scripts/contrast-audit.mjs ที่เพิ่งซ่อมให้ผสมชั้นโปร่งแสง)
+ *    ⇒ ใช้โทเคนธีมแทน · ธีมเข้มได้ค่าเดิม เพราะโทเคนถูกประกาศให้ตรงกับค่าสำรองเดิม
+ *    ⚠️ สีที่ใช้เป็น "ตัวหนังสือ" ต้องใช้ตัวแปร `-text` — สีสดบนพื้นขาวได้ contrast 1.3–2.4 */
+const C = { cyan: 'var(--accent-text)', cyan3: 'var(--accent-text)', amber: 'var(--amber-text)', bg: 'var(--panel)', border: 'var(--sand)', slate: 'var(--muted)', white: 'var(--ink1)' };
 
 export default function FoundingBanner({ data, onUpdate, wsId, onPickStarter }: Props) {
   const [count, setCount] = useState<number | null>(null);

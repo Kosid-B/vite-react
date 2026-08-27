@@ -12,7 +12,11 @@ import {
  * ที่ personalize จากธุรกิจเขาเอง เพื่อสร้างความเชื่อมั่นว่า "ระบบพาไปสำเร็จได้"
  * โปร่งใส: เป็นแผน/วิสัยทัศน์ ไม่ใช่การรับประกัน · คัดลอก/ดาวน์โหลดไปพากย์ AI ต่อได้ */
 
-const C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.5)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', green: '#4ade80', amber: '#f59e0b', dark: '#020617' };
+/* 🔴 เดิมเป็นชุดสีตายตัวของธีมเข้มชุดเดียว ⇒ ในธีมสว่างทั้งแผงเป็นสีเข้มบนพื้นขาว
+ *    (วัดจริง 27 ส.ค. 2569 ด้วย scripts/contrast-audit.mjs ที่เพิ่งซ่อมให้ผสมชั้นโปร่งแสง)
+ *    ⇒ ใช้โทเคนธีมแทน · ธีมเข้มได้ค่าเดิม เพราะโทเคนถูกประกาศให้ตรงกับค่าสำรองเดิม
+ *    ⚠️ สีที่ใช้เป็น "ตัวหนังสือ" ต้องใช้ตัวแปร `-text` — สีสดบนพื้นขาวได้ contrast 1.3–2.4 */
+const C = { border: 'var(--sand)', panel: 'var(--panel)', card: 'var(--card)', white: 'var(--ink1)', slate: 'var(--muted)', cyan: 'var(--accent-text)', green: 'var(--green-text)', amber: 'var(--amber-text)', dark: '#020617' };
 
 export default function SuccessVideoPanel({ data }: { data: AppData }) {
   const [open, setOpen] = useState(false);
@@ -89,7 +93,7 @@ export default function SuccessVideoPanel({ data }: { data: AppData }) {
         ชุดผลิต “จบในตัว” จากข้อมูลธุรกิจ {info.company || 'ของคุณ'} — บทพากย์ + Google Flow prompt + คิวอัดจอระบบจริง + title/ทัมเนล ตามหลัก <b style={{ color: C.white }}>AI Dark Marketing เชิงจริยธรรม</b>
       </div>
       <div style={{ fontSize: 11.5, color: C.slate, marginBottom: 12, lineHeight: 1.6 }}>
-        🔐 ฝัง <b style={{ color: '#a78bfa' }}>จริยธรรม + Data Governance (PDPA)</b> ไว้ในไฟล์: ไม่แต่งตัวเลข · ไม่การันตีรายได้ · ไม่มี fake scarcity · ข้อมูลอยู่ใน workspace คุณเอง
+        🔐 ฝัง <b style={{ color: 'var(--violet-text)' }}>จริยธรรม + Data Governance (PDPA)</b> ไว้ในไฟล์: ไม่แต่งตัวเลข · ไม่การันตีรายได้ · ไม่มี fake scarcity · ข้อมูลอยู่ใน workspace คุณเอง
       </div>
 
       {/* Readiness */}
@@ -140,7 +144,7 @@ export default function SuccessVideoPanel({ data }: { data: AppData }) {
                   <div style={{ fontSize: 12, color: C.cyan, fontWeight: 700 }}>บทที่ {ch.no} · {ch.time}</div>
                   <div style={{ fontSize: 14, color: C.white, fontWeight: 700, margin: '2px 0 6px' }}>{ch.heading}</div>
                   <div style={{ fontSize: 11.5, color: C.slate, fontStyle: 'italic', marginBottom: 6 }}>{ch.visual}</div>
-                  {ch.lever && <div style={{ fontSize: 11, color: '#a78bfa', marginBottom: 4 }}>🧠 เลเวอร์: {ch.lever}</div>}
+                  {ch.lever && <div style={{ fontSize: 11, color: 'var(--violet-text)', marginBottom: 4 }}>🧠 เลเวอร์: {ch.lever}</div>}
                   <div style={{ fontSize: 13.5, color: '#cbd5e1', lineHeight: 1.7 }}>{ch.narration}</div>
                   {ch.points.length > 0 && (
                     <ul style={{ margin: '8px 0 0', paddingLeft: 18, color: C.slate, fontSize: 12.5, lineHeight: 1.7 }}>
@@ -154,7 +158,7 @@ export default function SuccessVideoPanel({ data }: { data: AppData }) {
 
               {/* Governance footer */}
               <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: '12px 14px', background: C.card }}>
-                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#a78bfa', marginBottom: 6 }}>🔐 จริยธรรม + Data Governance (อยู่ในไฟล์ที่คัดลอก/ดาวน์โหลด)</div>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--violet-text)', marginBottom: 6 }}>🔐 จริยธรรม + Data Governance (อยู่ในไฟล์ที่คัดลอก/ดาวน์โหลด)</div>
                 <ul style={{ margin: 0, paddingLeft: 18, color: C.slate, fontSize: 12, lineHeight: 1.7 }}>
                   {script.darkMarketing.slice(0, 2).map((t, i) => <li key={'d' + i}>{t}</li>)}
                   {script.ethics.slice(0, 1).map((t, i) => <li key={'e' + i}>{t}</li>)}

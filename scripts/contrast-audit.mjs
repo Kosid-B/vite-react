@@ -74,8 +74,20 @@ const SCAN = (threshold) => {
     const ratio = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
     if (ratio >= threshold) continue;
     const key = el.tagName + '.' + String(el.className).split(' ')[0];
+    /* 🔴 ของที่ไม่มีคลาส (inline style) จะได้ key เป็น "LI." เฉย ๆ ⇒ หาไม่เจอด้วย grep
+     *    ตัวตรวจที่บอกว่า "มีปัญหา" แต่บอกไม่ได้ว่าอยู่ตรงไหน = ยังทำงานไม่จบ
+     *    ⇒ แนบเส้นทางพ่อแม่ที่มีคลาสมาให้ด้วย (วัดจริง 27 ส.ค. 2569: ใช้ตามหาตัวสุดท้ายที่หาไม่เจอ) */
+    const path = (() => {
+      const out = []; let n = el.parentElement;
+      while (n && out.length < 3) {
+        const c = String(n.className || '').split(' ').filter(Boolean)[0];
+        if (c) out.push(n.tagName.toLowerCase() + '.' + c);
+        n = n.parentElement;
+      }
+      return out.join(' < ');
+    })();
     if (!out[key] || out[key].ratio > ratio) {
-      out[key] = { key, ratio: Math.round(ratio * 100) / 100, color: cs.color, bg: `rgb(${bg.join(',')})`, txt: txt.slice(0, 40), size: cs.fontSize };
+      out[key] = { key, path, ratio: Math.round(ratio * 100) / 100, color: cs.color, bg: `rgb(${bg.join(',')})`, txt: txt.slice(0, 40), size: cs.fontSize };
     }
   }
   return Object.values(out);
@@ -206,7 +218,7 @@ const INVISIBLE = list.filter((f) => f.ratio < 2);
 if (INVISIBLE.length) console.log(`\n🔴 มองไม่เห็นเลย (< 2.0) — ${INVISIBLE.length} คลาส`);
 for (const f of list) {
   const tag = f.ratio < 2 ? '🔴' : f.ratio < 3 ? '🟠' : '🟡';
-  console.log(`${tag} ${String(f.ratio).padStart(5)}  [${f.theme}] ${f.color} บน ${f.bg}  <${f.key}>  [${f.page}]  ${JSON.stringify(f.txt)}`);
+  console.log(`${tag} ${String(f.ratio).padStart(5)}  [${f.theme}] ${f.color} บน ${f.bg}  <${f.key}>  [${f.page}]  ${JSON.stringify(f.txt)}${f.ratio < 2 && f.path ? `\n        ↳ อยู่ใน: ${f.path}` : ''}`);
 }
 console.log(`\nพบ ${list.length} คลาส — แก้โดยใช้โทเคนธีม (var(--ink)/--ink3/--accent-text) แทนสีตายตัว`);
 process.exit(INVISIBLE.length ? 1 : 0);

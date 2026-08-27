@@ -57,7 +57,7 @@ export default function MatchmakerPanel({ data }: { data: AppData }) {
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '6px 0' }}>
                   <span style={{ fontSize: 11.5, fontWeight: 700, color: badge.c, border: `1px solid ${badge.c}`, borderRadius: 6, padding: '2px 8px' }}>{badge.t}</span>
                   {m.biz.location && <span style={{ fontSize: 11.5, color: 'var(--muted, #94a3b8)' }}>📍 {m.biz.location}</span>}
-                  {m.needsInvite && <span style={{ fontSize: 11.5, color: '#f59e0b', fontWeight: 700 }}>✉️ ต้องเชิญ</span>}
+                  {m.needsInvite && <span style={{ fontSize: 11.5, color: 'var(--amber-text)', fontWeight: 700 }}>✉️ ต้องเชิญ</span>}
                 </div>
                 <ul style={{ margin: '4px 0 10px', paddingLeft: 16, fontSize: 12, color: 'var(--muted, #94a3b8)', lineHeight: 1.55 }}>
                   {m.reasons.slice(0, 3).map((r, i) => <li key={i}>{r}</li>)}
@@ -82,11 +82,11 @@ export default function MatchmakerPanel({ data }: { data: AppData }) {
               <div key={i} style={{ border: '1px solid var(--border, #1e293b)', borderRadius: 10, padding: '12px 14px', background: 'var(--card, rgba(2,6,23,0.4))' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
                   <span style={{ fontSize: 13.5, fontWeight: 800 }}>{a.segment}</span>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: '#0891b2', flex: 'none' }}>{a.fit}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--accent-text)', flex: 'none' }}>{a.fit}</span>
                 </div>
                 <div style={{ fontSize: 12, color: 'var(--muted, #94a3b8)', marginTop: 5 }}>💡 {a.why}</div>
                 <div style={{ fontSize: 12, color: 'var(--muted, #94a3b8)', marginTop: 4 }}>📣 หาเจอที่: {a.channels.join(' · ')}</div>
-                <div style={{ fontSize: 12, color: '#15803d', marginTop: 4, fontWeight: 600 }}>มุมข้อความ: {a.angle}</div>
+                <div style={{ fontSize: 12, color: 'var(--green-text)', marginTop: 4, fontWeight: 600 }}>มุมข้อความ: {a.angle}</div>
               </div>
             ))}
           </div>

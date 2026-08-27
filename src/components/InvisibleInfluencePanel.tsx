@@ -6,7 +6,11 @@ import { assessInvisibleInfluence } from '../lib/invisibleInfluence';
  * จากผลศึกษา MI GROUP: 3 เสา Be Found / Be Remembered / Be Recommended
  * ให้คะแนนจากข้อมูลจริง + ช่องว่างที่กดไปปิดในระบบได้ (นำ insight มาพัฒนาระบบเรา) */
 
-const C = { border: '#1e293b', panel: 'rgba(15,23,42,0.6)', card: 'rgba(2,6,23,0.5)', white: '#fff', slate: '#94a3b8', violet: '#8b5cf6', green: '#4ade80', amber: '#f59e0b', red: '#fca5a5' };
+/* 🔴 เดิมเป็นชุดสีตายตัวของธีมเข้มชุดเดียว ⇒ ในธีมสว่างทั้งแผงเป็นสีเข้มบนพื้นขาว
+ *    (วัดจริง 27 ส.ค. 2569 ด้วย scripts/contrast-audit.mjs ที่เพิ่งซ่อมให้ผสมชั้นโปร่งแสง)
+ *    ⇒ ใช้โทเคนธีมแทน · ธีมเข้มได้ค่าเดิม เพราะโทเคนถูกประกาศให้ตรงกับค่าสำรองเดิม
+ *    ⚠️ สีที่ใช้เป็น "ตัวหนังสือ" ต้องใช้ตัวแปร `-text` — สีสดบนพื้นขาวได้ contrast 1.3–2.4 */
+const C = { border: 'var(--sand)', panel: 'var(--panel)', card: 'var(--card)', white: 'var(--ink1)', slate: 'var(--muted)', violet: 'var(--violet-text)', green: 'var(--green-text)', amber: 'var(--amber-text)', red: 'var(--red-text)' };
 const barColor = (s: string) => (s === 'strong' ? C.green : s === 'partial' ? C.amber : C.red);
 
 export default function InvisibleInfluencePanel({ data, onNavigate }: { data: AppData; onNavigate?: (p: PageId) => void }) {

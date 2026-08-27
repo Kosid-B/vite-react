@@ -7,7 +7,17 @@ import { track } from '../lib/analytics';
 /* FillHoursPanel — "เติมชั่วโมงว่าง" แก้ pain ร้านรอ walk-in (จากภาพจริง: สเต็กลุงใหญ่ · คาร์แคร์)
  * (A) หาดีมานด์ประจำ (B2B ใกล้ตัว) + สคริปต์ทัก · (B) โปรฯ ช่วงว่าง + ลูกค้าเก่ากลับ */
 
-const C = { border: '#1e293b', panel: 'rgba(15,23,42,0.55)', card: 'rgba(2,6,23,0.45)', white: '#fff', slate: '#94a3b8', cyan: '#22d3ee', green: '#4ade80', amber: '#f59e0b', dark: '#020617', line: '#06C755', fb: '#1877F2' };
+/* 🔴 เดิมชุดสีนี้เป็นค่าตายตัวของธีมเข้มชุดเดียว ⇒ ในธีมสว่างทั้งแผงเป็นสีเข้มบนพื้นขาว
+ *    วัดจริง 27 ส.ค. 2569: ปุ่มแท็บที่ไม่ถูกเลือกได้ **contrast 1.56** = อ่านไม่ออก
+ *    ⇒ เปลี่ยนเป็นโทเคนธีม ⇒ พลิกเองทั้งสองธีม โดยธีมเข้มได้ค่าเดิม (โทเคนถูกประกาศให้ตรงกัน)
+ *    ⚠️ สีที่ใช้เป็น "ตัวหนังสือ" ต้องใช้ตัวแปร `-text` ไม่ใช่สีสด — สีสดบนพื้นขาวได้ contrast 1.3–2.4 */
+const C = {
+  border: 'var(--sand)', panel: 'var(--white)', card: 'var(--white)',
+  white: 'var(--ink1)', slate: 'var(--muted)',
+  cyan: 'var(--accent-text)', green: 'var(--green-text)', amber: 'var(--amber-text)',
+  dark: '#020617',            // ใช้เป็น "ตัวหนังสือบนพื้นสีสดตายตัว" เท่านั้น จึงคงไว้
+  line: '#06C755', fb: '#1877F2', // สีแบรนด์ภายนอก — ห้ามพลิกตามธีม
+};
 
 function copy(text: string, done: () => void) {
   navigator.clipboard?.writeText(text).then(done).catch(() => {});

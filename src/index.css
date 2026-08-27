@@ -35,6 +35,23 @@
   --amber-text:  #ffd7c7;
   --green-text:  #10b981;
   --white:    #0f172a;
+  /* 🔴 3 โทเคนนี้ถูกอ้าง 28 จุด (index.css 25 · MatchmakerPanel 3) แต่ **ไม่เคยถูกประกาศเลย**
+     ⇒ ค่าสำรองชนะทั้งสองธีม · MatchmakerPanel ทั้งแผงจึงเป็นสีธีมเข้มบนพื้นขาว
+     วัดจริง 27 ส.ค. 2569: ตัวหนังสือ #94a3b8 บนพื้นที่ผสมแล้วเป็นเทากลาง = **contrast 1.33**
+     ประกาศตรงนี้ = แก้ทุกจุดพร้อมกัน และไม่เปลี่ยนหน้าตาธีมเข้ม (ค่าที่ประกาศ = ค่าสำรองเดิม) */
+  --muted:    #94a3b8;
+  --panel:    #0f172a;
+  --border:   #334155;
+  --card:     #0b1220;
+  /* ตระกูลโทเคนที่ CityscapeHero ประกาศไว้ "ในขอบเขตของตัวเอง" เท่านั้น
+     ⇒ นอกคอมโพเนนต์นั้นมันไม่มีอยู่จริง ค่าสำรอง (ธีมเข้ม) จึงชนะทั้งสองธีม
+     ประกาศให้ครบทั้งสองธีมตรงนี้ = ของในขอบเขตของ CityscapeHero ยังชนะเหมือนเดิม (specificity สูงกว่า) */
+  --text:        #e5e7eb;
+  --text-soft:   #9aa6d8;
+  --gold:        #ffcf5c;
+  --card-border: rgba(120,140,220,.16);
+  --violet-text: #a78bfa;
+  --red-text:    #fca5a5;
   --r:        8px;
   --r-lg:     14px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,.30), 0 1px 2px rgba(0,0,0,.20);
@@ -57,6 +74,16 @@
   --ink4:     #6b7280;
   --sand:     #e2e8f0;   /* เส้นขอบ */
   --white:    #ffffff;   /* พื้นการ์ด (เดิมเป็นดำ) */
+  --muted:    #475569;   /* ตัวหนังสือรอง — เข้มพอให้อ่านออกบนพื้นสว่าง */
+  --panel:    #ffffff;
+  --border:   #e2e8f0;
+  --card:     #f8fafc;
+  --text:        #0f172a;
+  --text-soft:   #475569;
+  --gold:        #b45309;   /* ทองบนพื้นสว่างต้องเข้ม ไม่งั้นได้ contrast 1.4 */
+  --card-border: #e2e8f0;
+  --violet-text: #6d28d9;
+  --red-text:    #b91c1c;
   --rust-bg:  rgba(6,182,212,0.10);
   --green-bg: rgba(16,185,129,0.12);
   --blue-bg:  rgba(59,130,246,0.10);
@@ -2023,7 +2050,10 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ai-task-title { font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4; margin-bottom: 3px; padding-right: 14px; }
 .ai-task-detail { font-size: 12px; color: var(--ink3); line-height: 1.45; margin-bottom: 7px; }
 .ai-task-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
-.ai-task-owner { font-size: 12.5px; font-weight: 600; color: var(--blue); background: var(--blue-bg); padding: 2px 7px; border-radius: 8px; }
+.ai-task-owner { font-size: 12.5px; font-weight: 600; color: var(--blue-text); background: var(--blue-bg); padding: 2px 7px; border-radius: 8px;
+  display: inline-flex; align-items: center; gap: 5px; }
+/* จุดสีประจำเอเจนต์ — เอกลักษณ์อยู่ที่จุด ไม่ใช่ที่สีตัวหนังสือ (ตัวหนังสือต้องอ่านออกเสมอ) */
+.ai-task-dot { width: 7px; height: 7px; border-radius: 999px; flex: 0 0 auto; }
 .ai-task-move { font-family: inherit; font-size: 12.5px; padding: 3px 4px; border: 1px solid var(--sand); border-radius: 5px; background: var(--white); color: var(--ink2); outline: none; cursor: pointer; max-width: 80px; }
 .ai-task-exec { display: flex; align-items: center; gap: 5px; width: 100%; font-family: var(--font); font-size: 12px; font-weight: 600; padding: 5px 10px; margin-bottom: 6px; border: 1.5px solid var(--sand); border-left-width: 3px; border-radius: 6px; background: var(--cream); color: var(--ink2); cursor: pointer; transition: background .15s; }
 .ai-task-exec:hover:not(:disabled) { background: var(--cream2); }
@@ -6166,7 +6196,9 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ops-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 .ops-btn{ background:#7c3aed; color:#fff; border:0; border-radius:8px; padding:8px 14px; font-weight:600; cursor:pointer; font-size:14px; }
 .ops-btn:disabled{ opacity:.6; cursor:default; }
-.ops-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); }
+/* 🔴 พื้นหลังของพ่อเป็นสีเข้มตายตัว (#0f172a) ⇒ ตัวหนังสือต้องตายตัวคู่กัน ห้ามใช้โทเคนที่พลิกตามธีม
+   (เคยใช้ var(--text) แล้วพอ --text ถูกประกาศให้พลิกจริง ปุ่มพวกนี้กลายเป็นเข้มบนเข้ม contrast 1.00) */
+.ops-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:#e5e7eb; }
 .ops-sub{ color:var(--muted,#94a3b8); font-size:13.5px; margin-top:6px; }
 .ops-msg{ margin-top:10px; font-size:14px; color:#a5b4fc; }
 .ops-kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:10px; margin:14px 0; }
@@ -6284,7 +6316,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .cs-kpi-v{ font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .cs-actions{ display:flex; gap:7px; flex-wrap:wrap; margin-top:6px; }
 .cs-btn{ background:#0ea5b7; color:#022; border:0; border-radius:8px; padding:7px 12px; font-weight:600; font-size:13.5px; cursor:pointer; }
-.cs-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:var(--text,#e5e7eb); }
+.cs-btn.ghost{ background:transparent; border:1px solid var(--border,#334155); color:#e5e7eb; }
 .cs-btn:disabled{ opacity:.55; cursor:default; }
 .cs-report{ white-space:pre-wrap; word-break:break-word; font-family:inherit; font-size:13px; line-height:1.55;
   background:#0b1020; border:1px solid var(--border,#1f2937); border-radius:8px; padding:11px 12px; margin-top:10px; max-height:320px; overflow:auto; color:#cbd5e1; }
@@ -6313,7 +6345,7 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .finx-in.amt{ flex:0 0 110px; } .finx-in.kind{ flex:0 0 92px; } .finx-in.date{ flex:0 0 140px; }
 .finx-add{ background:#0ea5b7; color:#022; border:0; border-radius:7px; padding:7px 12px; font-weight:700; font-size:13.5px; cursor:pointer; }
 .finx-upload{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:9px; }
-.finx-file-btn{ background:transparent; border:1px dashed var(--border,#475569); color:var(--text,#e5e7eb); border-radius:8px; padding:7px 12px; font-size:13.5px; cursor:pointer; }
+.finx-file-btn{ background:transparent; border:1px dashed var(--border,#475569); color:#e5e7eb; border-radius:8px; padding:7px 12px; font-size:13.5px; cursor:pointer; }
 .finx-hint{ font-size:12px; color:#6f7cae; flex:1 1 200px; }
 .finx-msg{ margin-top:9px; font-size:13.5px; color:#a5b4fc; }
 .finx-list{ margin-top:10px; display:flex; flex-direction:column; gap:4px; }
@@ -6368,20 +6400,20 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .pb-box-hd{ font-weight:700; font-size:13.5px; margin-bottom:8px; color:var(--text,#e5e7eb); }
 .pb-box ul{ margin:0; padding-left:0; list-style:none; }
 .pb-box li{ font-size:13px; line-height:1.55; color:var(--text-soft,#9aa6d8); }
-.pb-do li{ color:#5fd0a8; }
-.pb-dont li{ color:#e0879a; }
+.pb-do li{ color:var(--green-text); }
+.pb-dont li{ color:var(--red-text); }
 .pb-pillars li, .pb-ch li{ margin-bottom:6px; color:var(--text-soft,#9aa6d8); }
 .pb-pillars li b, .pb-ch li b{ color:var(--text,#e5e7eb); display:block; }
 .pb-ch li span{ font-size:12.5px; }
 .pb-bio{ font-size:13px; line-height:1.55; color:var(--text-soft,#9aa6d8); margin-bottom:6px; }
 .pb-bio b{ color:var(--text,#e5e7eb); }
 .pb-tag{ margin:0; padding-left:0; list-style:none; }
-.pb-tag li{ font-size:13px; font-style:italic; color:#ffcf5c; line-height:1.6; }
+.pb-tag li{ font-size:13px; font-style:italic; color:var(--gold); line-height:1.6; }
 .pb-actions{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
 .pb-btn{ background:#a855f7; color:#fff; border:0; border-radius:8px; padding:8px 14px; font-weight:700; font-size:13.5px; cursor:pointer; }
 .pb-btn.ghost{ background:transparent; border:1px solid var(--sand); color:var(--ink); }
-.pb-msg{ margin-top:10px; font-size:13.5px; color:#5fd0a8; }
-.pb-refined-hd{ margin-top:14px; font-weight:700; font-size:13.5px; color:#e5e7eb; }
+.pb-msg{ margin-top:10px; font-size:13.5px; color:var(--green-text); }
+.pb-refined-hd{ margin-top:14px; font-weight:700; font-size:13.5px; color:var(--text); }
 @media (max-width:640px){ .pb-grid{ grid-template-columns:1fr; } }
 
 .sip-ob-pick{ display:inline-block; font-size:13.5px; color:var(--text,#e5e7eb); margin:2px 0 10px; }

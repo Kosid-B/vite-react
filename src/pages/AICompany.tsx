@@ -2020,7 +2020,12 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
                       </div>
                     )}
                     <div className="ai-task-foot">
-                      <span className="ai-task-owner" style={{ color: ag?.color }}>{agentName(t.agentId)}</span>
+                      {/* 🔴 เดิมทับสีตัวหนังสือด้วยสีประจำเอเจนต์ (เช่น #1a4f8a) ⇒ น้ำเงินเข้มบนพื้นเข้ม contrast 1.91
+                          สีประจำตัวยังอยู่ แต่ย้ายไปเป็น "จุด" แทน — ได้เอกลักษณ์เหมือนเดิมโดยไม่แลกกับการอ่านออก */}
+                      <span className="ai-task-owner">
+                        {ag?.color && <i className="ai-task-dot" style={{ background: ag.color }} />}
+                        {agentName(t.agentId)}
+                      </span>
                       <select className="ai-task-move" value={t.status} onChange={e => moveTask(t.id, e.target.value as TaskStatus)}>
                         <option value="queued">ต้องทำ</option>
                         <option value="in_progress">กำลังทำ</option>
