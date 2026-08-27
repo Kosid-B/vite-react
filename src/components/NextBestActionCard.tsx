@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { AppData, PageId } from '../types';
 import { nextBestAction } from '../lib/nextBestAction';
+import { openLoopFor } from '../lib/appArc';
 
 /* การ์ด "ตอนนี้ควรทำอะไรต่อ" — ปลายทางของห่วงโซ่ Vision → Constitution → Genome → Decision Engine
  *
@@ -10,6 +11,13 @@ import { nextBestAction } from '../lib/nextBestAction';
  *
  * แสดง **ข้อเดียว** ตามกฎ DMAIC: ขึ้นต้นด้วยข้อเสนอ ไม่ใช่ด้วยที่มา
  * ที่มาอยู่ข้างล่างให้กดดูได้ ไม่ใช่บังคับให้อ่าน
+ *
+ * 🔴 แก้ 27 ส.ค. 2569 — จังหวะอารมณ์ (`appArc.ts`):
+ *    เดิมการ์ดนี้เปิดด้วย **สถานะ** ("ขั้นตอนนี้ของธุรกิจคุณ · จีโนม X%")
+ *    = ให้ความมั่นใจก่อนที่ผู้ใช้จะรู้สึกว่ามีอะไรขาด ⇒ ไม่มีอะไรให้คลาย ⇒ ไม่มีเหตุผลจะทำต่อ
+ *    (ความผิดตระกูลเดียวกับที่เพิ่งแก้บนหน้า Landing — `emotionalArc.arcIssues` เรียกว่า blocker)
+ *    ตอนนี้เปิดด้วย **คำถามที่เขาตอบเองไม่ได้ถ้าไม่รู้ตัวเลขของตัวเอง** แล้วค่อยตามด้วยขั้นต่อไป
+ *    ⚠️ คำถามมาจากช่องว่างจริงในจีโนม — ไม่มีช่องว่าง = ไม่มีคำถาม (ห้ามแต่งขึ้นมาเพื่อให้มีความตึง)
  */
 
 /** กิ่งจีโนม → หน้าที่ไปกรอกต่อได้จริง (ต้องเป็น PageId ที่มีอยู่จริงเท่านั้น) */
@@ -28,10 +36,19 @@ export default function NextBestActionCard({
   data, onNavigate,
 }: { data: AppData; onNavigate: (p: PageId) => void }) {
   const r = useMemo(() => nextBestAction(data), [data]);
+  const loop = useMemo(() => openLoopFor(data), [data]);
   const goto = r.stuck ? BRANCH_PAGE[r.stuck.key] : null;
 
   return (
     <div className="nba-card">
+      {/* ① ความตึงมาก่อนความโล่ง — คำถามที่เขาตอบเองไม่ได้ ก่อนสถานะและก่อนข้อเสนอ */}
+      {loop && (
+        <div className="nba-loop">
+          <p className="nba-q">❓ {loop.question}</p>
+          <p className="nba-q-why">{loop.why}</p>
+        </div>
+      )}
+
       <div className="nba-hd">
         <span className="nba-eyebrow">ขั้นตอนนี้ของธุรกิจคุณ · {r.stage}</span>
         <span className="nba-pct" title="ความครบของข้อมูลธุรกิจที่ระบบใช้ตัดสินใจ">
@@ -39,7 +56,7 @@ export default function NextBestActionCard({
         </span>
       </div>
 
-      {/* ① ข้อเสนอมาก่อนเสมอ */}
+      {/* ② ข้อเสนอ — ทางออกของคำถามข้างบน (ความโล่งที่เป็นของจริง) */}
       <p className="nba-action">{r.action}</p>
 
       {/* ② ที่มา — ตรวจสอบได้ แต่ไม่บังคับให้อ่านก่อน */}

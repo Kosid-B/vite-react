@@ -30,21 +30,30 @@ const SCAN = (threshold) => {
     const p = m[1].split(',').map((x) => parseFloat(x));
     return { rgb: [p[0], p[1], p[2]], a: p.length > 3 ? p[3] : 1 };
   };
-  // พื้นหลัง "ที่ตาเห็นจริง" = ไล่ขึ้นไปหาแม่ตัวแรกที่ทึบพอ (gradient นับด้วย — ใช้สีกลางโดยประมาณ)
+  /* พื้นหลัง "ที่ตาเห็นจริง" = **ผสมทุกชั้นโปร่งแสงลงบนชั้นทึบ** ตามลำดับที่เบราว์เซอร์วาดจริง
+   *
+   * 🔴 เคยพลาด 2 แบบ และทั้งคู่ทำให้ตัวตรวจรายงานผิด:
+   *   ① อ่าน rgba(52,211,153,.08) เป็นเขียวทึบ ⇒ รายงาน "เขียวบนเขียว" ทั้งที่พื้นจริงเข้ม
+   *   ② แก้ ① ด้วยการ **ข้ามชั้นโปร่งไปเลย** (รับเฉพาะ a > 0.5) ⇒ ชั้นที่ a = 0.5 ถูกนับเป็นทึบ
+   *      และชั้นที่ a = 0.45 ถูกทิ้งทั้งที่เปลี่ยนสีพื้นไปมาก — ผิดคนละทางแต่ผิดเหมือนกัน
+   *   ⇒ ทางที่ถูกคือทำสิ่งที่เบราว์เซอร์ทำ: ผสม ไม่ใช่เลือกข้าง
+   *      (ยืนยันจริง 27 ส.ค. 2569: amber .08 บน #0f172a ⇒ rgb(33,34,40) ไม่ใช่ #0f172a) */
+  const overlay = (fg, bg) => [0, 1, 2].map((i) => fg.rgb[i] * fg.a + bg[i] * (1 - fg.a));
   const bgOf = (el) => {
+    const layers = [];
     let e = el;
     while (e) {
       const cs = getComputedStyle(e);
       const c = parse(cs.backgroundColor);
-      if (c && c.a > 0.5) return c.rgb;
-      // gradient: รับเฉพาะที่ทึบพอ — ของโปร่ง (เช่น rgba(...,.08)) แทบไม่เปลี่ยนสีพื้นจริง
-      // 🔴 เคยพลาด: อ่าน rgba(52,211,153,.08) เป็นเขียวทึบ ⇒ รายงาน "เขียวบนเขียว" ทั้งที่พื้นจริงเป็นสีเข้ม
-      //    ตัวตรวจที่รายงานผิด ทำให้คนเลิกเชื่อผลของมัน = แย่พอ ๆ กับไม่มีเครื่องมือ
+      if (c && c.a > 0) { layers.push(c); if (c.a >= 1) break; }
+      // gradient: ประมาณด้วยสีแรกที่อ่านได้ — ใช้เฉพาะตอนที่ทึบพอจะเป็นชั้นล่างสุด
       const gi = cs.backgroundImage;
-      if (gi && gi !== 'none') { const g = parse(gi); if (g && g.a > 0.5) return g.rgb; }
+      if (gi && gi !== 'none') { const g = parse(gi); if (g && g.a >= 0.9) { layers.push({ rgb: g.rgb, a: 1 }); break; } }
       e = e.parentElement;
     }
-    return [255, 255, 255];
+    let bg = [255, 255, 255];
+    for (let i = layers.length - 1; i >= 0; i--) bg = overlay(layers[i], bg);
+    return bg;
   };
   const out = {};
   for (const el of document.querySelectorAll('body *')) {

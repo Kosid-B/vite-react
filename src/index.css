@@ -7348,6 +7348,13 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
    (อ่านไฟล์ CSS เห็นแค่ "สิ่งที่เราเขียน" · getComputedStyle เห็น "สิ่งที่เบราว์เซอร์ใช้จริง") */
 .nba-card { background: var(--white); border: 1px solid var(--sand); border-left: 3px solid #a855f7;
   border-radius: var(--r-lg); padding: 16px 18px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+/* จุดตึงบนสุดของการ์ด — คำถามที่ผู้ใช้ตอบเองไม่ได้ (appArc.ts)
+   ⚠️ เขียนสีตัวอักษรตายตัวเมื่อไร ต้องเขียนพื้นหลังตายตัวคู่กันเสมอ (GOTCHA #4b)
+      ที่นี่ใช้โทเคนทั้งคู่ ⇒ ธีมสว่าง/มืดอ่านออกทั้งสองแบบ */
+.nba-loop { border: 1px solid var(--st-warn, #f59e0b); background: rgba(245,158,11,.08);
+  border-radius: 10px; padding: 11px 13px; margin: 0 0 12px; }
+.nba-q { margin: 0; font-size: 16px; font-weight: 800; line-height: 1.5; color: var(--ink); }
+.nba-q-why { margin: 5px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--ink2); }
 .nba-hd { display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
   flex-wrap: wrap; margin-bottom: 8px; }
 .nba-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .02em; color: var(--ink3); }
