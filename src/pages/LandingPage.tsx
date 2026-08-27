@@ -17,6 +17,7 @@ import GainPointsPanel from '../components/GainPointsPanel';
 import HowItWorks30 from '../components/HowItWorks30';
 import TrustBar from '../components/TrustBar';
 import { currentChallenger } from '../lib/challengerRotation';
+import SimNotice from '../components/SimNotice';
 import { listApprovedTestimonials, aggregateRating, starString, type Testimonial } from '../lib/testimonials';
 import LandingReviewWidget from '../components/LandingReviewWidget';
 import LeadCapture from '../components/LeadCapture';
@@ -434,6 +435,10 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
           .pqc-section > div { padding-top: 4px !important; }
           .pqc-section h2 { font-size: 18.5px !important; margin-bottom: 4px !important; }
         }`}</style>
+
+      {/* ⏰ ประกาศชั่วคราว (หายเองหลัง 30 ส.ค. 2569) — เหนือ hero และ **ไม่ติด data-sec**
+          เพื่อไม่ให้ไปแทรกระหว่าง hero กับเครื่องคำนวณ และไม่รบกวนจังหวะอารมณ์ของหน้า */}
+      <SimNotice />
 
       {/* ─── Hero ─── */}
       <section data-sec="hero" className="lp-hero" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(90vh - 60px)', padding: '80px 24px', textAlign: 'center' }}>

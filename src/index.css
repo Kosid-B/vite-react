@@ -7389,6 +7389,17 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   border-radius: 10px; padding: 11px 13px; margin: 0 0 12px; }
 /* "ปิดได้แล้ว" — ความโล่งที่ได้มาจากของจริง (ผ่านด่านเพิ่ม) ไม่ใช่รางวัลแจกฟรี
    โทเคนทั้งสีตัวหนังสือและพื้นหลัง ⇒ พลิกตามธีมทั้งคู่ (GOTCHA #4b) */
+/* แถบประกาศชั่วคราวบน Landing — โทเคนทั้งสีตัวหนังสือและพื้นหลัง (GOTCHA #4b)
+   สูงบรรทัดเดียวบนเดสก์ท็อป · บนมือถือซ้อนสองบรรทัดแต่ยังเตี้ย เพราะจอแรกแพงที่สุด */
+/* แถบประกาศชั่วคราวบน Landing — **สีมาจาก useLandingTheme() ในคอมโพเนนต์** ไม่ใช่โทเคนที่นี่
+   เพราะหน้า Landing คุมธีมด้วย React context ไม่ใช่ data-theme (วัดจริง: ใช้โทเคนได้ contrast 1.02)
+   ที่นี่เหลือแค่ "รูปทรง" ซึ่งไม่ขึ้นกับธีม */
+.lp-sim-notice { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center;
+  gap: 2px 10px; padding: 6px 16px; text-decoration: none; line-height: 1.4; font-size: 12.5px; }
+.lp-sim-notice strong { font-weight: 800; }
+@media (max-width: 640px) {
+  .lp-sim-notice { font-size: 11.5px; padding: 5px 12px; gap: 1px 8px; }
+}
 .nba-closed { margin: 0 0 7px; font-size: 12.5px; font-weight: 700; line-height: 1.5;
   color: var(--green-text); background: var(--green-bg); border-radius: 8px; padding: 6px 9px; }
 .nba-q { margin: 0; font-size: 16px; font-weight: 800; line-height: 1.5; color: var(--ink); }

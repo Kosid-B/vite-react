@@ -62,7 +62,8 @@ describe('สัญญาจอแรกบนมือถือ — ห้า�
   });
 
   it('เครื่องคำนวณต้องเป็นส่วนถัดจาก hero ทันที (data-sec="quickcheck")', () => {
-    const secs = [...landing.matchAll(/data-sec="([a-z_]+)"/g)].map(m => m[1]);
+    // ตัวคัดต้องยอมตัวเลขด้วย — ชื่อจริงมี how_30s (บทเรียนเดียวกับ emotionalArc · ledger #53)
+    const secs = [...landing.matchAll(/data-sec="([a-z0-9_]+)"/g)].map(m => m[1]);
     expect(secs[0]).toBe('hero');
     expect(secs[1], 'เครื่องคำนวณต้องอยู่ติดใต้ hero — 85% ของผู้เข้าชมไม่เลื่อนหน้าเลย').toBe('quickcheck');
   });
