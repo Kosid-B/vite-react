@@ -17,6 +17,7 @@
  */
 
 import { strategyBlock } from './competitiveStrategy';
+import { isComparisonContent, checkComparison } from './searchOwnership';
 import { positioningBlock } from './positioningEngine';
 import { constitutionBlock } from './founderConstitution';
 import { founderMindsetBlock } from './founderMindset';
@@ -325,5 +326,20 @@ export function brandBriefBlock(opts: { forPublicCopy?: boolean } = {}): string 
  *  คืนรายการคำที่เจอ (ว่าง = ผ่าน) */
 export function violatesBrand(text: string): string[] {
   const t = (text || '').replace(/\s+/g, ' ');
-  return FORBIDDEN_PHRASES.filter((p) => t.includes(p));
+  const out = FORBIDDEN_PHRASES.filter((p) => t.includes(p));
+
+  /* 🔗 Risk 4 (เจ้าของระบุ 27 ส.ค. 2569) — คอนเทนต์เปรียบเทียบต้องเป็นกลาง
+   *
+   * ทำไมต่อตรงนี้: กฎที่ไม่มีใครเรียก = กฎที่ไม่มีผล (`shipped-not-written`)
+   *   และจุดที่ทุกชิ้นต้องผ่านก่อนปล่อยอยู่แล้วคือ `violatesBrand()`
+   *
+   * 🔴 บังคับเฉพาะเมื่อข้อความ **เอ่ยชื่อองค์กรที่ถูกเอามาปนกับเรา** — ไม่ใช่ทุกชิ้น
+   *   (ไม่งั้นจะไปเรียกร้อง 4 หัวข้อจากโพสต์สั้น ๆ ที่ไม่ได้เปรียบเทียบอะไรเลย)
+   */
+  if (isComparisonContent(t)) {
+    const c = checkComparison(t);
+    for (const b of c.banned) out.push(`คอนเทนต์เปรียบเทียบใช้ถ้อยคำตัดสิน: "${b}"`);
+    for (const m of c.missing) out.push(`คอนเทนต์เปรียบเทียบยังขาดหัวข้อ: "${m}"`);
+  }
+  return out;
 }

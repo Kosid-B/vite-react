@@ -52,3 +52,31 @@ describe('BrandVisibilityPanel — ยังไม่ได้ตรวจ ต�
     expect(JSON.parse(localStorage.getItem('ceoai_brand_visibility') || '{}')).toHaveProperty('indexedPages', 0);
   });
 });
+
+describe('BrandVisibilityPanel — กฎที่เขียนไว้ต้องถูกเรียกใช้จริง (shipped-not-written)', () => {
+  it('แสดง "วงที่เปิดได้ตอนนี้" — ไม่ใช่แค่มีฟังก์ชันอยู่ใน lib', () => {
+    render(<BrandVisibilityPanel />);
+    expect(screen.getByText(/วงที่ 1/)).toBeTruthy();
+    expect(screen.getByText(/ยังไม่ถึงเวลา/)).toBeTruthy();
+  });
+
+  it('ยังไม่กรอกค่า ⇒ fail-closed อยู่วง 1 และประกาศว่าตรวจไม่ได้', () => {
+    render(<BrandVisibilityPanel />);
+    expect(screen.getByText(/ถือว่าอยู่วงแรกไว้ก่อน/)).toBeTruthy();
+    expect(screen.getAllByText(/ตรวจไม่ได้/).length).toBeGreaterThan(0);
+  });
+
+  it('กรอกส่วนแบ่งผลค้นหาถึงเป้า ⇒ ปลดวง 2 และป้ายความสับสนเปลี่ยนเอง', () => {
+    localStorage.setItem('ceoai_brand_visibility', JSON.stringify({ ownedSerpCoverage: 0.8 }));
+    render(<BrandVisibilityPanel />);
+    expect(screen.getByText(/วงที่ 2/)).toBeTruthy();
+    expect(screen.getByText(/LOW/)).toBeTruthy();
+  });
+
+  it('ต่ำกว่าเป้า ⇒ ยังอยู่วง 1 และป้ายความสับสน = HIGH', () => {
+    localStorage.setItem('ceoai_brand_visibility', JSON.stringify({ ownedSerpCoverage: 0.2 }));
+    render(<BrandVisibilityPanel />);
+    expect(screen.getByText(/วงที่ 1/)).toBeTruthy();
+    expect(screen.getByText(/HIGH/)).toBeTruthy();
+  });
+});

@@ -5,8 +5,9 @@ import {
   FORBIDDEN_NAME_FORMS, nameFormIssues, declaredNameIssues, NAME_DECLARING_METAS,
   KEYWORD_LAYERS, RINGS, RING1_OWNED_SERP_TARGET,
   ringVerdict, trafficVerdict, checkComparison, COMPARISON_REQUIRED, COMPARISON_BANNED,
-  CONTENT_CHAIN,
+  CONTENT_CHAIN, isComparisonContent, CONFUSABLE_ORGS,
 } from '../searchOwnership';
+import { violatesBrand } from '../brandBrief';
 import { BRAND_NAME, ALTERNATE_NAMES } from '../brandEntity';
 import { MIN_FOR_RATE } from '../growthPdca';
 
@@ -173,5 +174,30 @@ describe('Risk 5 — โรงงานคอนเทนต์ห้ามก�
     expect(CONTENT_CHAIN[0]).toBe('Evidence');
     expect(CONTENT_CHAIN[CONTENT_CHAIN.length - 1]).toMatch(/Content/);
     expect(CONTENT_CHAIN).not.toContain('Keyword');
+  });
+});
+
+describe('กฎต้องถูกเรียกใช้จริง — ไม่ใช่แค่เขียนไว้ใน lib', () => {
+  it('ชื่อของเราเองต้องไม่ถูกจับว่าเป็นคอนเทนต์เปรียบเทียบ', () => {
+    expect(isComparisonContent(`${BRAND_NAME} ช่วย SME ไทยวางกลยุทธ์`)).toBe(false);
+  });
+
+  it('เอ่ยชื่อองค์กรที่ถูกเอามาปนกับเรา = เข้าข่ายเปรียบเทียบทันที', () => {
+    for (const org of CONFUSABLE_ORGS) expect(isComparisonContent(`เราต่างจาก ${org}`)).toBe(true);
+  });
+
+  it('🔗 ต่อเข้า violatesBrand แล้ว — ด่านที่คอนเทนต์ทุกชิ้นผ่านอยู่แล้ว', () => {
+    const judged = violatesBrand('เราต่างจาก Digital CEO เพราะของเราดีกว่า');
+    expect(judged.join(' ')).toMatch(/ถ้อยคำตัดสิน/);
+    expect(judged.join(' ')).toMatch(/ขาดหัวข้อ/);
+  });
+
+  it('คอนเทนต์ปกติที่ไม่ได้เปรียบเทียบ ต้องไม่ถูกเรียกร้อง 4 หัวข้อ', () => {
+    expect(violatesBrand('ตั้งราคายังไงไม่ให้ขาดทุน — ลองคำนวณดู')).toEqual([]);
+  });
+
+  it('บทความเปรียบเทียบที่เขียนถูกรูปแบบ ต้องผ่าน', () => {
+    const ok = `เทียบกับ Digital CEO · วัตถุประสงค์ · กลุ่มเป้าหมาย · รูปแบบบริการ · use case`;
+    expect(violatesBrand(ok)).toEqual([]);
   });
 });

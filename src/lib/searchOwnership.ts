@@ -287,6 +287,19 @@ export const COMPARISON_BANNED: readonly string[] = [
   'ดีกว่า', 'แย่กว่า', 'ล้าสมัย', 'เหนือกว่า', 'ด้อยกว่า', 'ไม่คุ้ม', 'หลอก', 'สู้ไม่ได้',
 ];
 
+/** ชื่อองค์กร/หลักสูตรที่ Google เอามาปนกับเรา — เอ่ยถึงเมื่อไร ข้อความนั้นกลายเป็น
+ *  "คอนเทนต์เปรียบเทียบ" ทันที ไม่ว่าจะตั้งใจหรือไม่ ⇒ ต้องเข้าสัญญาข้างบน
+ *  ⚠️ ระบุเพื่อ **จำแนกว่าเมื่อไรกฎนี้ทำงาน** เท่านั้น — ไม่ได้บอกว่าใครดีกว่าใคร */
+export const CONFUSABLE_ORGS: readonly string[] = [
+  'CEO Thailand', 'Digital CEO', 'CEO Idol', 'Thailand Top CEO',
+];
+
+/** ข้อความนี้เข้าข่าย "คอนเทนต์เปรียบเทียบ" หรือยัง — ใช้ตัดสินว่ากฎ Risk 4 ต้องบังคับใหม
+ *  🔴 ต้องไม่ติดกับชื่อของเราเอง (`CEO AI Thailand` ไม่มีคำว่า CEO Thailand ติดกัน — แต่ระวังไว้) */
+export function isComparisonContent(text: string): boolean {
+  return CONFUSABLE_ORGS.some((org) => text.includes(org));
+}
+
 export function checkComparison(text: string): { ok: boolean; missing: string[]; banned: string[] } {
   const low = text.toLowerCase();
   const missing = COMPARISON_REQUIRED.filter((s) => !low.includes(s.toLowerCase()));

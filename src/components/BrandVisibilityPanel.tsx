@@ -3,7 +3,9 @@ import {
   brandHealth, brandMetrics, metricScore, entityConsistency,
   type BrandVisibilityInput, type BrandMetric,
 } from '../lib/brandVisibility';
+import { entityConfusionLabel } from '../lib/brandVisibility';
 import { BRAND_NAME, entityIssues } from '../lib/brandEntity';
+import { ringVerdict, RINGS, KEYWORD_LAYERS } from '../lib/searchOwnership';
 
 /* แผง "ตลาดและ Search Engine เริ่มจำแบรนด์เราถูกหรือยัง"
  *
@@ -28,6 +30,7 @@ function readSaved(): BrandVisibilityInput {
 
 const FIELDS: { key: keyof BrandVisibilityInput; label: string; step?: string }[] = [
   { key: 'indexedPages', label: 'หน้าที่จัดทำดัชนีแล้ว' },
+  { key: 'ownedSerpCoverage', label: 'ส่วนของผลค้นหาที่เป็นของเรา (0–1)', step: '0.1' },
   { key: 'brandedRank', label: 'อันดับเมื่อค้นชื่อแบรนด์' },
   { key: 'externalMentions', label: 'เว็บอื่นที่พูดถึงเรา' },
   { key: 'shareOfSearch', label: 'ส่วนแบ่งการค้นหา (0–1)', step: '0.01' },
@@ -60,6 +63,11 @@ export default function BrandVisibilityPanel() {
   const metrics = useMemo(() => brandMetrics(inp), [inp]);
   const ec = entityConsistency();
   const blockers = entityIssues().filter((i) => i.level === 'blocker');
+  // 🔗 วงที่เปิดได้ตอนนี้ — categoryArrivals ยัง null โดยตั้งใจ (ต้องใช้ข้อมูล Search Console
+  //    ที่ผู้ช่วยอ่านเองไม่ได้) ⇒ ระบบจะไม่เปิดวง 3 ให้ จนกว่าจะมีตัวเลขจริง (fail-closed)
+  const ring = useMemo(() => ringVerdict({ ownedSerpCoverage: inp.ownedSerpCoverage ?? null }), [inp]);
+  const confusion = entityConfusionLabel(inp);
+  const layerLabel = (k: string) => KEYWORD_LAYERS.find((l) => l.key === k)?.label ?? k;
 
   return (
     <div style={{ border: '1px solid var(--sand)', borderRadius: 12, padding: '16px 18px', background: 'var(--cream2)' }}>
@@ -81,6 +89,28 @@ export default function BrandVisibilityPanel() {
           {health.score === null ? '🟡 ยังให้คะแนนรวมไม่ได้' : `📊 คะแนนการถูกจำถูกตัว ${health.score}/100`}
         </div>
         <div style={{ fontSize: 11.5, color: 'var(--ink3)', marginTop: 4, lineHeight: 1.65 }}>{health.why}</div>
+      </div>
+
+      {/* 🎯 วงที่เปิดได้ตอนนี้ — ยึดพื้นที่ค้นหาทีละวง ห้ามข้ามขั้น */}
+      <div style={{
+        border: '1px solid var(--sand)', borderRadius: 10, padding: '10px 12px',
+        background: 'var(--cream)', marginBottom: 12,
+      }}>
+        <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--ink)' }}>
+          🎯 วงที่ {ring.ring} — {RINGS.find((r) => r.n === ring.ring)?.label}
+          {ring.blind && <span style={{ color: '#d97706' }}> · 🟡 ยังตรวจไม่ได้ จึงถือว่าอยู่วงแรกไว้ก่อน</span>}
+        </div>
+        <div style={{ fontSize: 11.5, color: 'var(--ink3)', marginTop: 4, lineHeight: 1.65 }}>{ring.why}</div>
+        <div style={{ fontSize: 11.5, color: 'var(--ink)', marginTop: 6, lineHeight: 1.65 }}>
+          ✅ ทำได้ตอนนี้: {ring.openLayers.map(layerLabel).join(' · ')}
+          {ring.lockedLayers.length > 0 && (
+            <><br />⏳ ยังไม่ถึงเวลา: {ring.lockedLayers.map(layerLabel).join(' · ')}</>
+          )}
+        </div>
+        <div style={{ fontSize: 11.5, color: 'var(--ink3)', marginTop: 6 }}>
+          ความสับสนของ entity: <b style={{ color: confusion === 'ตรวจไม่ได้' ? '#d97706' : 'var(--ink)' }}>{confusion}</b>
+          {confusion === 'ตรวจไม่ได้' && ' — กรอก "ส่วนของผลค้นหาที่เป็นของเรา" ด้านล่างแล้วค่านี้จะคำนวณเอง'}
+        </div>
       </div>
 
       {/* คอขวด + งานถัดไป — บรรทัดแรกต้องเป็นข้อเสนอ ไม่ใช่ที่มา */}
