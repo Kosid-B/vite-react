@@ -52,6 +52,7 @@
   --card-border: rgba(120,140,220,.16);
   --violet-text: #a78bfa;
   --red-text:    #fca5a5;
+  --danger:      #dc2626;   /* ใช้เป็นทั้งพื้นปุ่ม (ตัวหนังสือขาว) และสีตัวหนังสือ — ค่าเดิมของค่าสำรอง */
   --r:        8px;
   --r-lg:     14px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,.30), 0 1px 2px rgba(0,0,0,.20);
@@ -84,6 +85,7 @@
   --card-border: #e2e8f0;
   --violet-text: #6d28d9;
   --red-text:    #b91c1c;
+  --danger:      #b91c1c;
   --rust-bg:  rgba(6,182,212,0.10);
   --green-bg: rgba(16,185,129,0.12);
   --blue-bg:  rgba(59,130,246,0.10);

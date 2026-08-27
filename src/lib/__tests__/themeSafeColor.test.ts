@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { resolve, join } from 'node:path';
 
 /* ══════════════════════════════════════════════════════════════════════
  * skill `theme-safe-color` — ตัวอักษรกลืนพื้นหลัง
@@ -197,5 +197,111 @@ describe('ปุ่มที่พื้นหลังเป็นสีตา�
     for (const tok of ['--st-warn', '--st-ok', '--st-bad', '--st-info']) {
       expect(css.includes(`${tok}:`), `index.css ไม่ได้ประกาศ ${tok}`).toBe(true);
     }
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * 🔴 กันที่ "ต้นเหตุ" ไม่ใช่ที่ "อาการ" (27 ส.ค. 2569 · ledger #57)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * `scripts/contrast-audit.mjs` จับอาการได้แม่นแล้ว แต่ต้องมีเบราว์เซอร์ + dev server
+ * ⇒ เอาเข้า CI = ช้าและมีโอกาส flake ซึ่งจบด้วยการถูกปิด แล้วเราจะไม่เหลืออะไรเลย
+ * ⇒ เทสต์ชุดนี้กัน **สองต้นเหตุที่ทำให้เกิดอาการทั้ง 13 จุด** แบบสถิต:
+ *    ① โทเคนที่ถูกอ้างในไฟล์ .tsx แต่ไม่เคยถูกประกาศ (ค่าสำรองชนะทั้งสองธีม)
+ *    ② คอมโพเนนต์ที่มีชุดสีตายตัวชุดเดียว (ไม่พลิกตามธีมเลย)
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('🔴 ต้นเหตุของ "ตัวหนังสือกลืนพื้นหลัง" — กันแบบสถิต', () => {
+  const SRC = resolve(__dirname, '../..');
+  const walk = (dir: string, out: string[] = []): string[] => {
+    for (const n of readdirSync(dir)) {
+      const p = join(dir, n);
+      if (statSync(p).isDirectory()) { if (n !== '__tests__') walk(p, out); }
+      else if (/\.tsx?$/.test(n)) out.push(p);
+    }
+    return out;
+  };
+  const files = walk(SRC);
+  const declaredInCss = new Set([...css.matchAll(/^\s*(--[a-z0-9-]+)\s*:/gm)].map((m) => m[1]));
+
+  it('อ่านไฟล์ได้จริง (กันเทสต์ผ่านเพราะเดินไม่เจออะไรเลย)', () => {
+    expect(files.length).toBeGreaterThan(100);
+  });
+
+  /** เป็น "สี" ไหม — ตัวกันนี้เป็นเรื่องธีมสี ไม่ใช่เรื่องโทเคนทุกชนิด
+   *  `var(--dur, 12s)` (ระยะเวลาแอนิเมชัน) ไม่เกี่ยวกับธีม ⇒ ไม่ต้องบังคับให้ประกาศ
+   *  คัดด้วย "ค่าสำรองเป็นสีหรือเปล่า" แทนการทำรายชื่อยกเว้น — รายชื่อจะบวมและถูกใช้เป็นทางหนี */
+  const isColor = (v: string) => /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|color-mix\()/i.test(v.trim());
+
+  it('🔴 ห้ามอ้างโทเคน "สี" ในไฟล์ .tsx ที่ไม่เคยถูกประกาศ — ค่าสำรองจะชนะทั้งสองธีม', () => {
+    const bad: string[] = [];
+    for (const f of files) {
+      const s = readFileSync(f, 'utf8');
+      for (const m of s.matchAll(/var\((--[a-z0-9-]+)\s*,\s*([^)]+)\)/g)) {
+        const [, t, fallback] = m;
+        if (declaredInCss.has(t) || !isColor(fallback)) continue;
+        // ยอมได้ถ้าไฟล์นั้น "ตั้งค่าเอง" — ประกาศใน CSS ที่ฝังมากับคอมโพเนนต์ หรือส่งผ่าน style prop
+        if (new RegExp(`${t}\\s*:`).test(s) || s.includes(`'${t}'`)) continue;
+        bad.push(`${f.slice(SRC.length + 1)} → ${t}`);
+      }
+    }
+    expect([...new Set(bad)], `โทเคนสีที่ไม่ได้ประกาศ: ${[...new Set(bad)].join(' · ')}`).toEqual([]);
+  });
+
+  /* ② ของจริงที่เกิด: FillHoursPanel · SuccessVideoPanel · InvisibleInfluencePanel · FoundingBanner
+   *    ประกาศ `const C = { panel: 'rgba(15,23,42,0.6)', slate: '#94a3b8', … }` ชุดเดียว
+   *    ⇒ ในธีมสว่างทั้งแผงเป็นสีเข้มบนพื้นขาว (วัดจริงได้ contrast 1.56–1.83)
+   *    คอมโพเนนต์ของหน้า Landing มีคู่สว่าง (LIGHT_C + useLandingTheme) จึงไม่เข้าข่าย */
+  it('🔴 ห้ามมีคอมโพเนนต์ที่ตั้งชุดสีเข้มตายตัวชุดเดียว โดยไม่มีทางพลิกตามธีม', () => {
+    const DARKISH = /(?:panel|card|bg)\s*:\s*'(?:rgba\((?:15,\s*23,\s*42|2,\s*6,\s*23)|#0f172a|#020617)/;
+    const bad = files.filter((f) => {
+      const s = readFileSync(f, 'utf8');
+      if (!DARKISH.test(s)) return false;
+      // มีทางพลิกได้ = ใช้โทเคน หรือมีชุดสีสว่างคู่กัน
+      if (/LIGHT_C|useLandingTheme|var\(--/.test(s)) return false;
+      /* ⚠️ ยกเว้น "หน้าเต็มหน้าที่ทาสีพื้นของตัวเอง" (เช่น /checkup) — นั่นคือหน้าที่ตั้งใจให้เข้ม
+       *    และเข้ากฎ GOTCHA #4b อยู่แล้ว (พื้นหลังตายตัว + ตัวหนังสือตายตัว อยู่ในชุดเดียวกัน)
+       *    ต่างจาก "แผงที่ไปวางอยู่ในหน้าที่พลิกธีมได้" ซึ่งเป็นเคสที่พังจริงทั้ง 4 ตัว
+       *    🔴 นี่เป็นตัวแทน (proxy) ไม่ใช่ข้อพิสูจน์ — `scripts/contrast-audit.mjs` ยังเป็นตัวตัดสินสุดท้าย */
+      return !/minHeight:\s*'100vh'/.test(s);
+    }).map((f) => f.slice(SRC.length + 1));
+    expect(bad, `ชุดสีตายตัวชุดเดียว: ${bad.join(' · ')}`).toEqual([]);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * หนี้ที่วัดแล้ว: ใช้ "สีสด" เป็นสีตัวหนังสือ (27 ส.ค. 2569)
+ * ═══════════════════════════════════════════════════════════════════════════
+ * `--accent --blue --green --amber --red --rust` ตั้งใจ **ไม่พลิกตามธีม** (เป็นสีแบรนด์)
+ * รีโปจึงมีคู่ `-text` แยกไว้สำหรับตัวหนังสือโดยเฉพาะ (`--accent-text` ฯลฯ)
+ * ⇒ ใช้สีสดเป็น `color:` = ตัวหนังสือสีเดียวกันทั้งสองธีม ⇒ บนพื้นสว่างได้ contrast 1.3–2.4
+ *
+ * 🟡 ของเดิมมีอยู่ **318 จุด** (tsx 47 · css 271) — ใหญ่เกินกว่าจะแก้รวดเดียวอย่างปลอดภัย
+ *    ⚠️ ตัวเลขแรกที่ผมนับได้คือ 260 ซึ่ง**ผิด** เพราะ `grep -c` นับ "บรรทัดที่มี" ไม่ใช่ "จำนวนครั้ง"
+ *       ⇒ เพดานที่ตั้งจากตัวเลขนั้นจะแดงทันทีทั้งที่ไม่มีใครเพิ่มอะไร — ตัวนับผิดทำให้ด่านผิด
+ *    จึงบันทึกเป็น **หนี้ที่วัดแล้ว** พร้อมเพดานกันโต — ไม่ใช่ปล่อยเงียบ
+ *    นี่คือของที่เหลืออยู่เกือบทั้งหมดใน 113 คลาสที่ `contrast-audit` เรียกว่า "จาง"
+ *    (ต่างจาก "อ่านไม่ออกจริง" ซึ่งตอนนี้เหลือ 0)
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('หนี้: สีสดถูกใช้เป็นสีตัวหนังสือ (เพดานกันโต)', () => {
+  const VIVID = /color:\s*var\((--(?:accent|blue|green|amber|red|rust))\)/g;
+  const SRC = resolve(__dirname, '../..');
+  const walk2 = (dir: string, out: string[] = []): string[] => {
+    for (const n of readdirSync(dir)) {
+      const p = join(dir, n);
+      if (statSync(p).isDirectory()) { if (n !== '__tests__') walk2(p, out); }
+      else if (/\.tsx$/.test(n)) out.push(p);
+    }
+    return out;
+  };
+  const inTsx = walk2(SRC).reduce((s, f) => s + [...readFileSync(f, 'utf8').matchAll(VIVID)].length, 0);
+  const inCss = [...css.matchAll(VIVID)].length;
+
+  it('อ่านนับได้จริง (กันเทสต์ผ่านเพราะ regex พัง)', () => {
+    expect(inTsx + inCss).toBeGreaterThan(50);
+  });
+
+  /* 🔒 บันไดลง — ลดได้ ห้ามเพิ่ม · แก้เมื่อไรให้ลดตัวเลขนี้ลงด้วย */
+  it('🔴 หนี้ต้องไม่โตขึ้น', () => {
+    expect(inTsx, 'ใน .tsx เพิ่มขึ้น — ให้ใช้ตัวแปร -text แทนสีสด').toBeLessThanOrEqual(47);
+    expect(inCss, 'ใน index.css เพิ่มขึ้น — ให้ใช้ตัวแปร -text แทนสีสด').toBeLessThanOrEqual(271);
   });
 });
