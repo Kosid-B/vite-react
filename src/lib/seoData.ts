@@ -3,7 +3,7 @@
  * client (src/lib/seo.ts) inject ตอน render — ทั้งคู่เรียกฟังก์ชันในไฟล์นี้เพื่อให้ผลตรงกัน.
  * ห้าม import อะไรที่แตะ DOM/browser — ต้องรันได้ทั้งใน Cloudflare Worker และเบราว์เซอร์. */
 import { utmForwardScript } from './utmForward';
-import { SOCIAL } from '../config';
+import { BRAND_NAME, ALTERNATE_NAMES, SEARCH_CATEGORY, HOME_TITLE_ENTITY, HOME_DESC_ENTITY, sameAsUrls } from './brandEntity';
 
 
 import { DBD_SECTORS } from '../data/dbd';
@@ -288,8 +288,7 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
 export function organizationJsonLd(origin: string): object {
   return {
     '@context': 'https://schema.org', '@type': 'Organization',
-    name: 'CEO AI Thailand',
-    alternateName: ['ซีอีโอ เอไอ ไทยแลนด์', 'CEO AI Thailand by B.Training'],
+    name: BRAND_NAME,
     url: origin, logo: `${origin}/og-image.png`,
     description: 'ระบบสร้างธุรกิจด้วย AI สำหรับ SME ไทย — ผสาน MIT 24 Steps กับระบบบริหาร/ISO 20+ ปี สร้างธุรกิจตั้งแต่ต้นน้ำให้พร้อมเติบโต',
     // disambiguatingDescription = ช่อง schema.org เฉพาะสำหรับแยกแยะ entity ที่ชื่อคล้ายกัน
@@ -300,10 +299,27 @@ export function organizationJsonLd(origin: string): object {
       legalName: 'บริษัท บี. เทรนนิ่ง คอนซัลแทนท์ จำกัด',
       url: 'https://www.b-tctraining.com/',
     },
-    // sameAs = บอก Google/AI ว่าโปรไฟล์เหล่านี้คือ entity เดียวกับเว็บนี้
-    //   ⇒ ช่วยแยกเราออกจากบริษัทชื่อคล้ายกัน และผูกสัญญาณจากช่อง YouTube กลับมาที่แบรนด์
-    //   ⚠️ ใส่เฉพาะช่องที่ "เราเป็นเจ้าของจริง" เท่านั้น — ใส่ของคนอื่นคือให้ข้อมูลเท็จกับ search engine
-    sameAs: ['https://www.b-tctraining.com/', SOCIAL.youtubeUrl].filter(Boolean),
+    /* alternateName = คำที่คนพิมพ์จริงเวลาค้นหาเรา ("ceoaithailand" ติดกัน)
+       ⇒ ช่วยให้ Google ผูกคำค้นแบรนด์เข้ากับ entity นี้ แทนที่จะเดาว่าเป็นหัวข้อกว้าง ๆ */
+    alternateName: [...ALTERNATE_NAMES],
+    /* sameAs = บอก Google/AI ว่าโปรไฟล์เหล่านี้คือ entity เดียวกับเว็บนี้
+       ⚠️ ใส่เฉพาะช่องที่ "เราเป็นเจ้าของจริง" — ใส่ของคนอื่น = ให้ข้อมูลเท็จกับ search engine
+       ว่างอยู่ = ยังไม่มี URL ที่ยืนยัน · `brandEntity.entityIssues()` รายงานเป็น blocker ไม่ปล่อยเงียบ */
+    sameAs: sameAsUrls(),
+  };
+}
+
+/** JSON-LD: WebSite — ผูก "ชื่อเว็บ" เข้ากับ entity เดียวกัน
+ *  ⇒ เวลาคนค้นชื่อแบรนด์ Google มีสัญญาณเพิ่มว่าเว็บนี้คือเว็บทางการของชื่อนั้น */
+export function webSiteJsonLd(origin: string): object {
+  return {
+    '@context': 'https://schema.org', '@type': 'WebSite',
+    name: BRAND_NAME,
+    alternateName: [...ALTERNATE_NAMES],
+    url: origin,
+    description: SEARCH_CATEGORY,
+    publisher: { '@type': 'Organization', name: BRAND_NAME, url: origin },
+    inLanguage: 'th-TH',
   };
 }
 
@@ -363,8 +379,13 @@ export function faqPageJsonLd(): object {
 }
 
 /** SEO หน้าแรก (/) — title/desc canonical + schema ครบ (Organization + SoftwareApplication + FAQPage) */
-const HOME_TITLE = 'CEO AI Thailand — สร้างและเดินธุรกิจด้วยทีมผู้บริหาร AI';
-const HOME_DESC = 'แพลตฟอร์มไทยสำหรับผู้ประกอบการ SME: สร้างบริษัท AI อัตโนมัติ เปิดหน้าร้านขายของ และ validate ไอเดียธุรกิจ ในที่เดียว เริ่มฟรี พัฒนาโดย B. Training';
+/* 🔴 เปลี่ยน 27 ส.ค. 2569 — ของเดิมคือ "สารเก่า" ที่เจ้าของยกเลิกไปแล้ว
+ *   เดิม: 'CEO AI Thailand — สร้างและเดินธุรกิจด้วยทีมผู้บริหาร AI'
+ *   CLAUDE.md เขียนชัดว่า *สารหลัก **ไม่ใช่** "จ้างทีม AI ทั้งบริษัท"*
+ *   ⇒ สิ่งที่ Google อ่านอยู่ทุกวัน คือสารที่เราเลิกใช้ไปแล้ว (ledger #41 ซ้ำ)
+ *   ตอนนี้ดึงจาก `brandEntity` ที่เดียว ⇒ ชื่อ/หมวดตรงกันทุกพื้นผิวที่พูดกับเครื่อง */
+const HOME_TITLE = HOME_TITLE_ENTITY;
+const HOME_DESC = HOME_DESC_ENTITY;
 
 /** OG image ต่อแคมเปญ (1200×630 ใน public/og/) — seg ที่มีรูปเฉพาะ · seg อื่น = รูปกลาง */
 const SEG_OG: Partial<Record<HeroSeg, string>> = {
@@ -386,7 +407,7 @@ export function homeSeo(origin: string, agg?: ReviewAggregate, seg?: string): Se
     description,
     canonicalUrl: origin + '/',
     imageUrl: origin + ogPath,
-    jsonLd: [organizationJsonLd(origin), softwareApplicationJsonLd(origin, agg), faqPageJsonLd()],
+    jsonLd: [organizationJsonLd(origin), webSiteJsonLd(origin), softwareApplicationJsonLd(origin, agg), faqPageJsonLd()],
   };
 }
 

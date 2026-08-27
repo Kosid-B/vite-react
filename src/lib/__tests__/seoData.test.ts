@@ -389,10 +389,14 @@ describe('schema JSON-LD (GEO/AEO)', () => {
     expect(items[0]['@type']).toBe('Question');
     expect((items[0].acceptedAnswer as Record<string, unknown>).text).toBe(FAQ_ITEMS[0].a);
   });
-  it('homeSeo มี schema ครบ 3 ชนิด + canonical หน้าแรก', () => {
+  /* ตรวจ "ชนิดของ schema" แทนการนับจำนวน — การนับบอกไม่ได้ว่าอันไหนหาย
+   * (เพิ่ม WebSite เมื่อ 27 ส.ค. 2569 เพื่อผูกชื่อเว็บเข้ากับ entity เดียวกัน) */
+  it('homeSeo มี schema ครบทุกชนิดที่ต้องมี + canonical หน้าแรก', () => {
     const seo = homeSeo(ORIGIN);
     expect(seo.canonicalUrl).toBe(ORIGIN + '/');
-    expect(seo.jsonLd).toHaveLength(3);
+    expect(seo.jsonLd.map(o => (o as { '@type': string })['@type'])).toEqual(
+      ['Organization', 'WebSite', 'SoftwareApplication', 'FAQPage'],
+    );
     expect(seo.title).toContain('CEO AI Thailand');
   });
 
@@ -433,7 +437,9 @@ describe('schema JSON-LD (GEO/AEO)', () => {
     expect(food.title).toContain('อาหาร');
     // canonical คง / เสมอ (กัน duplicate content) + schema ครบ
     expect(palm.canonicalUrl).toBe(ORIGIN + '/');
-    expect(palm.jsonLd).toHaveLength(3);
+    // schema ชุดเดียวกับหน้าแรกเสมอ — seg เปลี่ยนแค่ข้อความ/รูป ไม่เปลี่ยน entity
+    expect(palm.jsonLd.map(o => (o as { '@type': string })['@type']))
+      .toEqual(['Organization', 'WebSite', 'SoftwareApplication', 'FAQPage']);
     // รูป OG preview ต่างตามแคมเปญ
     expect(palm.imageUrl).toBe(ORIGIN + '/og/palm.png');
     expect(food.imageUrl).toBe(ORIGIN + '/og/food.png');

@@ -131,6 +131,12 @@ export const SOCIAL = {
   //   🟡 คลิปที่เคยลงได้ 942 วิว · คงผู้ชม 89% · แต่ผู้ติดตาม 0 และแทบไม่มีใครกดออกมาเว็บ
   //      ⇒ มี demand ต่อ "ความรู้" ยังไม่มีหลักฐานว่ามี demand ต่อ "เครื่องมือ"
   youtubeUrl: 'https://www.youtube.com/@CEOAIThailand',
+  /* 🔴 sameAs ของ Organization schema — บอก Google ว่าโปรไฟล์เหล่านี้คือ "entity เดียวกัน" กับเว็บนี้
+   *    ปล่อยว่างไว้เพราะ **ยังไม่มี URL ที่ยืนยันแล้ว** — เดา URL แล้วใส่ = บอก Google ผิดเรื่อง entity
+   *    ซึ่งแก้ยากกว่าไม่ใส่เลย · `brandEntity.entityIssues()` จะรายงานเป็น blocker จนกว่าจะกรอก
+   *    ⚠️ ชื่อบนโปรไฟล์ต้องสะกดว่า "CEO AI Thailand" ให้ตรงกันทุกที่ ไม่งั้น Google ผูกไม่ติด */
+  facebookPageUrl: '',
+  linkedinUrl: '',
 };
 
 // การเชื่อมต่อที่ User ทำเอง (OAuth) — gate จนกว่าจะตั้งค่า + deploy ครบ (ดู supabase/README.md)
