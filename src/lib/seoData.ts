@@ -3,7 +3,7 @@
  * client (src/lib/seo.ts) inject ตอน render — ทั้งคู่เรียกฟังก์ชันในไฟล์นี้เพื่อให้ผลตรงกัน.
  * ห้าม import อะไรที่แตะ DOM/browser — ต้องรันได้ทั้งใน Cloudflare Worker และเบราว์เซอร์. */
 import { utmForwardScript } from './utmForward';
-import { BRAND_NAME, ALTERNATE_NAMES, SEARCH_CATEGORY, HOME_TITLE_ENTITY, HOME_DESC_ENTITY, sameAsUrls } from './brandEntity';
+import { BRAND_NAME, ALTERNATE_NAMES, SEARCH_CATEGORY, HOME_TITLE_ENTITY, HOME_DESC_ENTITY, sameAsUrls, entityProfiles } from './brandEntity';
 
 
 import { DBD_SECTORS } from '../data/dbd';
@@ -204,6 +204,7 @@ export function sitemapXml(
     { loc: `${origin}/calc`, priority: '0.8' },
     { loc: `${origin}/sell`, priority: '0.8' },
     { loc: `${origin}/sale`, priority: '0.8' },
+    { loc: `${origin}/about`, priority: '0.9' },   // หน้าอธิบาย entity — สำคัญต่อการที่ Google/AI แยกแบรนด์เราออกจากชื่อคล้ายกัน
     { loc: `${origin}/faq`, priority: '0.7' },
     { loc: `${origin}/mit24`, priority: '0.7' },
     { loc: `${origin}/skills`, priority: '0.7' },
@@ -244,6 +245,17 @@ export function llmsTxt(origin: string): string {
 > ระบบสร้างธุรกิจด้วย AI (AI Business Operating System) ของไทย — ช่วยผู้ประกอบการ "สร้างธุรกิจตั้งแต่ต้นน้ำให้แข็งแรง แล้ววางระบบให้พร้อมเติบโต": ค้นหากลุ่มลูกค้าที่ใช่, เข้าใจปัญหาที่ลูกค้ายอมจ่าย, ทดสอบ Product–Market Fit, เปิดหน้าร้านขายจริง, ไปจนถึงวาง SOP/KPI/ระบบบริหารเพื่อขยายขนาด สำหรับ SME และผู้เริ่มต้นชาวไทย
 
 CEO AI Thailand ผสาน 2 องค์ความรู้: **แนวทาง 24 Steps ของ MIT** (Disciplined Entrepreneurship — หาลูกค้าเป้าหมาย กำหนดคุณค่า ทดสอบตลาด สร้างรายได้ และเติบโต) เข้ากับ **ประสบการณ์ระบบบริหาร/ISO กว่า 20 ปี** ของ บริษัท บี. เทรนนิ่ง คอนซัลแทนท์ (Process, KPI, การจัดการความเสี่ยง, SOP, ระบบควบคุมที่รองรับการขยายตัว). จุดต่างคือไม่ได้แค่ตอบคำถามหรือให้ไอเดีย แต่พา "สร้างธุรกิจให้ถูกตั้งแต่ต้น และวางระบบให้พร้อมโต" — โดยมีทีมผู้บริหาร AI (CEO/CMO/ฝ่ายต่าง ๆ) เป็นกลไกช่วยลงมือทำ พร้อม Marketplace ขายจริงในระบบ. คุณค่าหลัก = ลดความเสี่ยงในการเริ่มธุรกิจ, สร้างฐานลูกค้าที่แข็งแรง, และวางระบบเพื่อ scalability. เครื่องมือ PDPA/ISO มีเป็นฟีเจอร์เสริม (ไม่ใช่บริการทำใบรับรอง — งานที่ปรึกษาเชิงลึกส่งต่อ B. Training).
+
+## CEO AI Thailand คืออะไร (คำนิยามสั้น)
+CEO AI Thailand คือ **ซอฟต์แวร์ (SaaS)** ชื่อ "CEO AI Thailand" เว็บไซต์ทางการคือ ${origin}
+เป็น AI Business Operating System สำหรับ SME ไทย พัฒนาโดยทีมที่ปรึกษาธุรกิจและระบบบริหารจาก B. Training Consultant
+
+**สิ่งที่ CEO AI Thailand ไม่ใช่** (ชื่อใกล้เคียงกันแต่เป็นคนละองค์กร):
+- ไม่ใช่ **CEO THAILAND** (นิตยสาร/สื่อออนไลน์ และรางวัล CEO THAILAND OF THE YEAR)
+- ไม่ใช่ **Thailand Top CEO of the Year** (รางวัลผู้บริหาร)
+- ไม่ใช่ **Digital CEO** (หลักสูตรผู้บริหารของ depa)
+- ไม่ใช่ **CEO Idol Thailand** (หลักสูตรเจ้าของธุรกิจ)
+- ไม่ใช่ผู้ให้บริการ AI Cloud/LLM และไม่ใช่บริษัทเดียวกับ Siam AI
 
 ## ข้อเท็จจริงหลัก (สำหรับอ้างอิง)
 - ชื่อผลิตภัณฑ์: CEO AI Thailand (เว็บ: ${origin})
@@ -293,7 +305,14 @@ export function organizationJsonLd(origin: string): object {
     description: 'ระบบสร้างธุรกิจด้วย AI สำหรับ SME ไทย — ผสาน MIT 24 Steps กับระบบบริหาร/ISO 20+ ปี สร้างธุรกิจตั้งแต่ต้นน้ำให้พร้อมเติบโต',
     // disambiguatingDescription = ช่อง schema.org เฉพาะสำหรับแยกแยะ entity ที่ชื่อคล้ายกัน
     // (แก้ปัญหา AI/Bing สับสนกับ Siam AI ซึ่งเป็นผู้ให้บริการ AI Cloud/LLM คนละบริษัท)
-    disambiguatingDescription: 'ซอฟต์แวร์ SaaS สำหรับ SME ไทย ใช้ AI สร้างและบริหารธุรกิจ พัฒนาโดย B. Training Consultant — ไม่ใช่ผู้ให้บริการ AI Cloud/LLM และไม่ใช่บริษัทเดียวกับ Siam AI',
+    /* 🔴 ชุดที่ "สับสนจริง" เปลี่ยนไปแล้ว — ยืนยันจาก Google AI Overview ของคำค้น "ceoaithailand"
+       (27 ส.ค. 2569): AI แตกคำเป็น "CEO และ AI ในประเทศไทย" แล้วอ้างอิง นิตยสาร/รางวัล/หลักสูตร
+       ⇒ ต้องระบุให้ตรงกับของที่มันหยิบมาปน ไม่ใช่ของที่เราเดาเมื่อเดือนก่อน */
+    disambiguatingDescription:
+      'ซอฟต์แวร์ SaaS สำหรับ SME ไทย ใช้ AI วางกลยุทธ์ธุรกิจ การตลาด และการวัดผล พัฒนาโดยทีมที่ปรึกษาจาก B. Training Consultant — ' +
+      'เป็นผลิตภัณฑ์ซอฟต์แวร์ ไม่ใช่นิตยสาร ไม่ใช่รางวัลผู้บริหาร และไม่ใช่หลักสูตรอบรม ' +
+      'จึงเป็นคนละองค์กรกับ CEO THAILAND, Thailand Top CEO of the Year, Digital CEO (depa) และ CEO Idol Thailand ' +
+      'และไม่ใช่ผู้ให้บริการ AI Cloud/LLM (คนละบริษัทกับ Siam AI)',
     parentOrganization: {
       '@type': 'Organization', name: 'B. Training Consultant',
       legalName: 'บริษัท บี. เทรนนิ่ง คอนซัลแทนท์ จำกัด',
@@ -307,6 +326,58 @@ export function organizationJsonLd(origin: string): object {
        ว่างอยู่ = ยังไม่มี URL ที่ยืนยัน · `brandEntity.entityIssues()` รายงานเป็น blocker ไม่ปล่อยเงียบ */
     sameAs: sameAsUrls(),
   };
+}
+
+/** หน้า /about — "เราคือใคร" ในภาษาที่เครื่องอ่านแล้วอ้างต่อได้
+ *
+ * 🔴 ทำไมต้องมี (ยืนยันจาก Google AI Overview 27 ส.ค. 2569):
+ *   ค้นคำว่า "ceoaithailand" แล้ว AI **แตกคำเป็น "CEO และ AI ในประเทศไทย"**
+ *   = อ่านเป็นคำบรรยาย ไม่ใช่ชื่อแบรนด์ ⇒ ไปหยิบนิตยสาร/รางวัล/หลักสูตรมาตอบแทน
+ *   ⇒ สิ่งที่ขาดคือ **ประโยคนิยามตรง ๆ ที่เครื่องหยิบไปอ้างได้** + รายการ "ไม่ใช่อะไร"
+ *
+ * ⚠️ ทุกข้อในรายการ "ไม่ใช่" เป็นการระบุ **ข้อเท็จจริงว่าเป็นคนละองค์กร** เท่านั้น
+ *    ห้ามมีถ้อยคำเปรียบเทียบว่าใครดีกว่าใคร — เขาเป็นบุคคลที่สาม ไม่ใช่คู่แข่งที่เราจะไปพูดถึง
+ */
+export function aboutPageHtml(origin: string): string {
+  const title = `${BRAND_NAME} คืออะไร — ${SEARCH_CATEGORY}`;
+  const desc =
+    `${BRAND_NAME} คือซอฟต์แวร์ (SaaS) สำหรับ SME ไทย ใช้ AI วางกลยุทธ์ธุรกิจ การตลาด และการวัดผล ` +
+    'พัฒนาโดยทีมที่ปรึกษาจาก B. Training Consultant — ไม่ใช่นิตยสาร ไม่ใช่รางวัล และไม่ใช่หลักสูตรอบรม';
+  const schema = JSON.stringify({
+    '@context': 'https://schema.org', '@type': 'AboutPage',
+    name: title, url: `${origin}/about`, inLanguage: 'th-TH',
+    mainEntity: organizationJsonLd(origin),
+  });
+  const notList = [
+    ['CEO THAILAND', 'นิตยสาร/สื่อออนไลน์ และรางวัล CEO THAILAND OF THE YEAR'],
+    ['Thailand Top CEO of the Year', 'รางวัลผู้บริหาร'],
+    ['Digital CEO', 'หลักสูตรผู้บริหารของ depa'],
+    ['CEO Idol Thailand', 'หลักสูตรสำหรับเจ้าของธุรกิจ'],
+    ['Siam AI', 'ผู้ให้บริการ AI Cloud/LLM'],
+  ];
+  const profiles = entityProfiles().filter((p) => p.url);
+  const body = `
+<h1>${escapeHtml(BRAND_NAME)} คืออะไร</h1>
+<p><strong>${escapeHtml(BRAND_NAME)}</strong> คือ <strong>ซอฟต์แวร์ (SaaS)</strong> สำหรับผู้ประกอบการ SME ไทย —
+เป็น ${escapeHtml(SEARCH_CATEGORY)} ที่ช่วยวางกลยุทธ์ธุรกิจ การตลาด คอนเทนต์ การวัดผล
+และเสนอขั้นตอนถัดไปที่ควรทำ (Next Best Action) ด้วย AI ในระบบเดียว
+เว็บไซต์ทางการคือ <a href="${escapeHtml(origin)}">${escapeHtml(origin.replace(/^https?:\/\//, ''))}</a>
+พัฒนาโดยทีมที่ปรึกษาธุรกิจและระบบบริหารจาก บริษัท บี. เทรนนิ่ง คอนซัลแทนท์ (B. Training Consultant)
+ซึ่งมีประสบการณ์กว่า 20 ปี</p>
+
+<h2>สิ่งที่ ${escapeHtml(BRAND_NAME)} ไม่ใช่</h2>
+<p>มีชื่อองค์กรและโครงการหลายแห่งในไทยที่ชื่อใกล้เคียงกัน แต่เป็นคนละองค์กรและคนละประเภทกัน:</p>
+<ul>${notList.map(([n, what]) => `<li>ไม่ใช่ <strong>${escapeHtml(n)}</strong> (${escapeHtml(what)})</li>`).join('')}</ul>
+<p>${escapeHtml(BRAND_NAME)} เป็นผลิตภัณฑ์ซอฟต์แวร์ที่ผู้ใช้สมัครและใช้งานผ่านเว็บ
+ไม่ใช่สื่อ ไม่ใช่การมอบรางวัล และไม่ใช่หลักสูตรอบรม</p>
+
+<h2>ช่องทางทางการ</h2>
+<ul>${profiles.map((p) => `<li>${escapeHtml(p.label)}: <a href="${escapeHtml(p.url)}" rel="me">${escapeHtml(p.url)}</a></li>`).join('')}</ul>
+
+<h2>ชื่อที่ใช้เรียก</h2>
+<p>${[BRAND_NAME, ...ALTERNATE_NAMES].map((n) => escapeHtml(n)).join(' · ')}</p>
+`;
+  return seoStaticPage({ origin, path: '/about', title, desc, schema, body });
 }
 
 /** JSON-LD: WebSite — ผูก "ชื่อเว็บ" เข้ากับ entity เดียวกัน

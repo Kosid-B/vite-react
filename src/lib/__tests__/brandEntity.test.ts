@@ -5,7 +5,7 @@ import {
   BRAND_NAME, ALTERNATE_NAMES, SEARCH_CATEGORY, HOME_TITLE_ENTITY, HOME_DESC_ENTITY,
   entityProfiles, sameAsUrls, entityIssues,
 } from '../brandEntity';
-import { organizationJsonLd, webSiteJsonLd, homeSeo } from '../seoData';
+import { organizationJsonLd, webSiteJsonLd, homeSeo, aboutPageHtml, llmsTxt, sitemapXml } from '../seoData';
 import { CATEGORY } from '../competitiveStrategy';
 
 const ROOT = resolve(__dirname, '../../..');
@@ -113,5 +113,56 @@ describe('🔴 พูดกับคน กับ พูดกับเครื
     expect(HOME_DESC_ENTITY).toContain('SME');
     expect(HOME_DESC_ENTITY.length).toBeGreaterThan(80);
     expect(HOME_DESC_ENTITY.length, 'ยาวเกิน Google จะตัดกลางประโยค').toBeLessThan(320);
+  });
+});
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 🔴 หน้า /about — เกิดจากหลักฐานจริง ไม่ใช่จากทฤษฎี SEO
+ *    Google AI Overview ของคำค้น "ceoaithailand" (27 ส.ค. 2569) แตกคำเป็น
+ *    "CEO และ AI ในประเทศไทย" แล้วอ้างอิงนิตยสาร/รางวัล/หลักสูตร 4 แห่ง โดยไม่มีเราเลย
+ *    ⇒ เครื่องต้องมี "ประโยคนิยาม" กับ "รายการไม่ใช่อะไร" ให้หยิบไปอ้าง
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('หน้า /about — ให้เครื่องอ้างเราได้ถูกตัว', () => {
+  const ORIGIN2 = 'https://ceoaithailand.org';
+  const html = aboutPageHtml(ORIGIN2);
+
+  it('ต้องขึ้นต้นด้วยประโยคนิยาม ไม่ใช่คำโฆษณา', () => {
+    expect(html).toMatch(/<h1>CEO AI Thailand คืออะไร<\/h1>/);
+    expect(html).toMatch(/คือ <strong>ซอฟต์แวร์ \(SaaS\)<\/strong>/);
+  });
+
+  it('🔴 ต้องระบุชุดที่ "สับสนจริง" ตามที่เห็นใน AI Overview ครบทุกตัว', () => {
+    for (const n of ['CEO THAILAND', 'Thailand Top CEO of the Year', 'Digital CEO', 'CEO Idol Thailand']) {
+      expect(html, `ไม่ได้แยกตัวเองออกจาก ${n}`).toContain(n);
+    }
+  });
+
+  it('🔴 ต้องเป็นการบอกว่า "คนละองค์กร" เท่านั้น ห้ามเปรียบเทียบว่าใครดีกว่า', () => {
+    expect(html).not.toMatch(/ดีกว่า|เหนือกว่า|แย่กว่า|ไม่ดีเท่า/);
+  });
+
+  it('canonical + schema ชี้ที่ /about และผูกกับ Organization เดียวกัน', () => {
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN2}/about">`);
+    expect(html).toContain('"@type":"AboutPage"');
+    expect(html).toContain(`"name":"${BRAND_NAME}"`);
+  });
+
+  it('ต้องลิงก์ออกไปทุกโปรไฟล์ที่มี URL จริง (rel=me)', () => {
+    for (const p of entityProfiles().filter((x) => x.url)) {
+      expect(html, `ไม่ได้ลิงก์ไป ${p.label}`).toContain(p.url);
+    }
+    expect(html).toContain('rel="me"');
+  });
+
+  it('🔴 ต้องอยู่ใน sitemap — ไม่งั้น Google ไม่รู้ว่ามีหน้านี้', () => {
+    expect(sitemapXml([], ORIGIN2)).toContain(`${ORIGIN2}/about`);
+  });
+
+  it('llms.txt ต้องมีบล็อกนิยาม + รายการ "ไม่ใช่" ชุดเดียวกัน', () => {
+    const t = llmsTxt(ORIGIN2);
+    expect(t).toMatch(/CEO AI Thailand คืออะไร/);
+    expect(t).toContain('CEO Idol Thailand');
+    expect(t).toContain('Digital CEO');
   });
 });

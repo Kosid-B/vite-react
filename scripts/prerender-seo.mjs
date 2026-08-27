@@ -3,7 +3,7 @@
  * (เช่น GitHub Pages / Cloudflare Pages) — ใช้ builder ตัวเดียวกับ Worker (single source ไม่ drift)
  * รันด้วย vite-node (รองรับ import .ts) · best-effort: ไม่ทำให้ build ล้ม */
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { llmsTxt, sitemapXml, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml, blogIndexHtml, blogPostHtml } from '../src/lib/seoData.ts';
+import { llmsTxt, sitemapXml, aboutPageHtml, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml, blogIndexHtml, blogPostHtml } from '../src/lib/seoData.ts';
 import { BLOG_POSTS } from '../src/lib/blogData.ts';
 
 const ORIGIN = process.env.SITE_ORIGIN || 'https://ceoaithailand.org';
@@ -12,6 +12,8 @@ const OUT = 'dist';
 try {
   writeFileSync(`${OUT}/llms.txt`, llmsTxt(ORIGIN));
   writeFileSync(`${OUT}/sitemap.xml`, sitemapXml([], ORIGIN));   // static routes (Worker เสิร์ฟตัว dynamic เมื่อ fronting)
+  mkdirSync(`${OUT}/about`, { recursive: true });
+  writeFileSync(`${OUT}/about/index.html`, aboutPageHtml(ORIGIN));
   mkdirSync(`${OUT}/faq`, { recursive: true });
   writeFileSync(`${OUT}/faq/index.html`, faqPageHtml(ORIGIN));
   mkdirSync(`${OUT}/mit24`, { recursive: true });
@@ -31,7 +33,7 @@ try {
     mkdirSync(`${OUT}/blog/${p.slug}`, { recursive: true });
     writeFileSync(`${OUT}/blog/${p.slug}/index.html`, blogPostHtml(ORIGIN, p.slug));
   }
-  console.log(`[prerender-seo] ✓ llms.txt · sitemap.xml · faq · mit24 · skills · trust · sell · security · blog (${BLOG_POSTS.length} posts)`);
+  console.log(`[prerender-seo] ✓ llms.txt · sitemap.xml · about · faq · mit24 · skills · trust · sell · security · blog (${BLOG_POSTS.length} posts)`);
 } catch (e) {
   console.error('[prerender-seo] skipped (non-fatal):', e && e.message);
 }

@@ -2,7 +2,7 @@
 
 import {
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, jsonLdScript, llmsTxt, escapeHtml,
-  homeSeo, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml, aggregateFromRatings,
+  homeSeo, aboutPageHtml, faqPageHtml, mit24PageHtml, skillsPageHtml, trustPageHtml, sellPageHtml, securityPageHtml, aggregateFromRatings,
   blogIndexHtml, blogPostHtml, clientPageSeo,
   type SeoData, type SeoStorefront, type ReviewAggregate,
 } from './lib/seoData';
@@ -254,6 +254,16 @@ async function handle(request: Request, env: Env): Promise<Response> {
       if (url.pathname === '/llms.txt') {
         return new Response(llmsTxt(origin), {
           headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
+        });
+      }
+
+      /* /about → หน้าอธิบาย entity แบบ static HTML
+         🔴 มีเพราะ Google AI Overview ของคำค้น "ceoaithailand" แตกคำเป็น "CEO และ AI ในประเทศไทย"
+            แล้วไปหยิบนิตยสาร/รางวัล/หลักสูตรมาตอบแทน (ยืนยันจากภาพจริง 27 ส.ค. 2569)
+            ⇒ ต้องมีประโยคนิยามตรง ๆ ที่เครื่องหยิบไปอ้างได้ + รายการ "ไม่ใช่อะไร" */
+      if (url.pathname === '/about' || url.pathname === '/about/') {
+        return new Response(aboutPageHtml(origin), {
+          headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' },
         });
       }
 
