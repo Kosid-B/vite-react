@@ -190,7 +190,11 @@ export interface AgentTask {
   detail: string;
   status: TaskStatus;
   output?: string;           // ผลลัพธ์จาก AI Agent (หลังดำเนินงานจริง)
-  executedAt?: string;       // เวลาที่ AI Agent ดำเนินงานสำเร็จ
+  executedAt?: string;       // เวลาที่ AI Agent ดำเนินงานสำเร็จ (ยังไม่ได้แปลว่าส่งมอบแล้ว)
+  /** เวลาที่บอร์ดอนุมัติจนงาน "เสร็จจริง" — 🔴 คนละเวลากับ executedAt เสมอเมื่อคิวอนุมัติยาว
+   *  ก่อนมีช่องนี้ รายงานรายสัปดาห์นับ "งานเสร็จสัปดาห์นี้" จาก executedAt
+   *  ⇒ งานที่รออนุมัติเกิน 7 วัน จะไม่ถูกนับในสัปดาห์ไหนเลยตลอดกาล (ledger #66) */
+  doneAt?: string;
   requiresApproval?: boolean; // ต้องได้รับการอนุมัติจากมนุษย์ก่อน heartbeat จะรัน
   useWebSearch?: boolean;    // เปิดใช้ Serper.dev (Google Search) เพื่อดึงข้อมูล real-time
   searchQuery?: string;      // custom search query (ถ้าไม่ระบุ ใช้ title + industry)

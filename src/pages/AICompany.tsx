@@ -1030,7 +1030,7 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
           patch({
             approvals: c.approvals.map(a => a.id === id ? { ...a, status } : a),
             tasks: c.tasks.map(t => idSet.has(t.id) && t.status === 'review'
-              ? { ...t, status: 'done' as const } : t),
+              ? { ...t, status: 'done' as const, doneAt: new Date().toISOString() } : t),
           });
           setFeed(prev => [
             { id: ++counter.current, time: nowTime(), text: `✅ บอร์ดอนุมัติผลการดำเนินงาน ${ids.length} งาน — ดำเนินการขั้นตอนถัดไป`, color: AGENT_PALETTE[0] },
@@ -1088,7 +1088,8 @@ export default function AICompany({ data, onUpdate, wsId }: Props) {
   function boardApproveAllReview() {
     const rev = reviewTasks(c);
     if (rev.length === 0) { setBoardReportMsg('ไม่มีงานสถานะ "ตรวจสอบ" ให้อนุมัติ'); return; }
-    patch({ tasks: c.tasks.map(t => t.status === 'review' ? { ...t, status: 'done' as const } : t) });
+    const doneAt = new Date().toISOString();
+    patch({ tasks: c.tasks.map(t => t.status === 'review' ? { ...t, status: 'done' as const, doneAt } : t) });
     setBoardReportMsg(`✅ บอร์ดอนุมัติผลทั้งหมด ${rev.length} งาน → เสร็จสมบูรณ์`);
     setFeed(prev => [
       { id: ++counter.current, time: nowTime(), text: `✅ บอร์ดอนุมัติผลทั้งหมด ${rev.length} งาน — ดำเนินการขั้นตอนถัดไป`, color: AGENT_PALETTE[0] },
