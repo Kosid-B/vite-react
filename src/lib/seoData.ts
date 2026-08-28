@@ -297,11 +297,17 @@ export const FAQ_ITEMS: { q: string; a: string }[] = [
 ];
 
 /** JSON-LD: Organization (บริษัท) — ให้ AI/Google รู้จัก entity + ผูกกับ B. Training */
+/** เส้นทางโลโก้ขององค์กร — **แหล่งเดียว** · index.html ต้องประกาศค่าเดียวกันนี้ (เทสต์บังคับ) */
+export const ORG_LOGO_PATH = '/icon-512.png';
+
 export function organizationJsonLd(origin: string): object {
   return {
     '@context': 'https://schema.org', '@type': 'Organization',
     name: BRAND_NAME,
-    url: origin, logo: `${origin}/og-image.png`,
+    // 🔴 ต้องเป็นไฟล์เดียวกับที่ index.html ประกาศ — เดิมชี้คนละที่ (og-image.png vs icon-512.png)
+    //    Google ใช้ `logo` ใน Knowledge Panel ⇒ ประกาศสองค่า = สัญญาณ entity ขัดกันเอง
+    //    และ og-image เป็นแบนเนอร์ 1200×630 ไม่ใช่โลโก้ ⇒ ใช้ไฟล์จัตุรัสถูกต้องกว่า
+    url: origin, logo: `${origin}${ORG_LOGO_PATH}`,
     description: 'ระบบสร้างธุรกิจด้วย AI สำหรับ SME ไทย — ผสาน MIT 24 Steps กับระบบบริหาร/ISO 20+ ปี สร้างธุรกิจตั้งแต่ต้นน้ำให้พร้อมเติบโต',
     // disambiguatingDescription = ช่อง schema.org เฉพาะสำหรับแยกแยะ entity ที่ชื่อคล้ายกัน
     // (แก้ปัญหา AI/Bing สับสนกับ Siam AI ซึ่งเป็นผู้ให้บริการ AI Cloud/LLM คนละบริษัท)

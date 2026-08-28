@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
+import { join } from 'node:path';
 import {
   escapeHtml, jsonLdScript, sectorLabel,
   storefrontSeo, directorySeo, directoryItemList, sitemapXml, llmsTxt, MIN_STOREFRONTS_TO_INDEX,
   homeSeo, faqPageHtml, faqPageJsonLd, organizationJsonLd, softwareApplicationJsonLd, FAQ_ITEMS,
-  aggregateFromRatings, MIN_HOME_REVIEWS,
+  aggregateFromRatings, MIN_HOME_REVIEWS, ORG_LOGO_PATH,
   mit24PageHtml, mit24FaqJsonLd, mit24ArticleJsonLd, MIT24_FAQ,
   skillsPageHtml, skillsFaqJsonLd, skillsArticleJsonLd,
   sellPageHtml, sellFaqJsonLd, sellArticleJsonLd,
@@ -517,5 +518,23 @@ describe('sitemap ต้องไม่เชิญ Google มาที่หน
     expect(clientPageSeo('/start', ORIGIN2)?.canonicalUrl).toBe(`${ORIGIN2}/start`);
     expect(clientPageSeo('/start/', ORIGIN2)?.canonicalUrl).toBe(`${ORIGIN2}/start`);
     expect(clientPageSeo('/ไม่มีหน้านี้', ORIGIN2)).toBeNull();
+  });
+});
+
+describe('โลโก้องค์กร — ห้ามประกาศคนละค่าสองที่', () => {
+  const HTML = readFileSync(join(process.cwd(), 'index.html'), 'utf8');
+
+  it('index.html กับ organizationJsonLd ต้องชี้ไฟล์โลโก้เดียวกัน', () => {
+    // 🔴 บั๊กจริง 27 ส.ค. 2569: index.html = icon-512.png · seoData = og-image.png
+    //    Google ใช้ค่านี้ใน Knowledge Panel ⇒ สองค่า = สัญญาณ entity ขัดกันเอง
+    const inHtml = /"logo"\s*:\s*"([^"]+)"/.exec(HTML)?.[1];
+    expect(inHtml).toBeTruthy();
+    const fromCode = (organizationJsonLd('https://ceoaithailand.org') as { logo: string }).logo;
+    expect(inHtml).toBe(fromCode);
+  });
+
+  it('โลโก้ต้องเป็นไฟล์จัตุรัส ไม่ใช่แบนเนอร์ OG (Google ขอโลโก้ ไม่ใช่ภาพแชร์)', () => {
+    expect(ORG_LOGO_PATH).not.toMatch(/og-image/);
+    expect(ORG_LOGO_PATH).toMatch(/^\/[\w.-]+\.(png|svg)$/);
   });
 });

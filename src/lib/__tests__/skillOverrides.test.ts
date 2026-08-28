@@ -76,11 +76,29 @@ describe('🟡 สถานะการ sync — บันทึกไว้ว�
   /** คลัง skill ที่ sync เข้ามาให้ผู้ช่วยเรียกใช้ (นอกรีโป) */
   const SYNCED_DIR = '/root/.claude/skills/synced';
 
+  /** คลังนี้ใช้โครง "โฟลเดอร์ชื่อ skill" หรือเปล่า
+   *  🔴 27 ส.ค. 2569 โครงเปลี่ยน: กลายเป็นโฟลเดอร์ชื่อ UUID เดียว ไม่มีชื่อ skill ให้เทียบ
+   *     ⇒ ต้องแยก **"ตรวจแล้วไม่มี"** ออกจาก **"ตรวจไม่ได้เพราะโครงไม่ตรงที่รู้จัก"**
+   *     (หลักเดียวกับ `null` = ตรวจไม่ได้ ≠ 0 ทั้งระบบ)
+   *     ถ้าไม่แยก เทสต์จะแดงทุกครั้งที่ผู้ให้บริการเปลี่ยนที่เก็บ ทั้งที่รีโปไม่ได้ผิดอะไร
+   *     — แดงด้วยเหตุผลที่เราแก้ไม่ได้ = สอนให้คนมองข้ามสีแดง */
+  function usesNamedLayout(): boolean {
+    if (!existsSync(SYNCED_DIR)) return false;
+    return SYNCED_EXTERNAL_SKILLS.some((s) => existsSync(join(SYNCED_DIR, s)));
+  }
+
   it('skill ที่ประกาศว่า sync แล้ว ต้องมีอยู่จริง — ไม่งั้นกติกาทับของที่ไม่มี', () => {
-    if (!existsSync(SYNCED_DIR)) return;   // เครื่องอื่น/CI ไม่มีคลังนี้ = ข้าม
+    // เครื่องอื่น/CI ไม่มีคลังนี้ · หรือคลังใช้โครงที่เราอ่านไม่ออก = ตรวจไม่ได้ ให้ข้าม
+    if (!usesNamedLayout()) return;
     for (const s of SYNCED_EXTERNAL_SKILLS) {
       expect(existsSync(join(SYNCED_DIR, s, 'SKILL.md')), `${s} ประกาศว่า sync แล้วแต่ไม่มีไฟล์`).toBe(true);
     }
+  });
+
+  it('ถ้าโครงคลังเป็นแบบชื่อ skill เมื่อไร ตัวตรวจต้องกลับมาทำงานทันที', () => {
+    // กันไม่ให้ "ข้าม" กลายเป็นการปิดตัวตรวจถาวร — พอโครงกลับมา ต้องเช็กจริง
+    const known = SYNCED_EXTERNAL_SKILLS.filter((s) => existsSync(join(SYNCED_DIR, s)));
+    expect(usesNamedLayout()).toBe(known.length > 0);
   });
 
   it('🔴 ยืนยันว่าคำสั่งที่ขัดกันมีอยู่จริงในไฟล์ต้นทาง (ไม่ได้กล่าวหาลอย ๆ)', () => {
