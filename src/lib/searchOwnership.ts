@@ -129,6 +129,32 @@ export function declaredNameIssues(html: string): DeclaredNameIssue[] {
   return out;
 }
 
+/** พื้นผิวใน `manifest.json` ที่ประกาศชื่อ — `short_name` คือป้ายใต้ไอคอนบนหน้าจอ Android
+ *  🔴 เจอเขียนผิดจริง 28 ส.ค. 2569: `short_name` = "CEO AI"
+ *     ช่องนี้ **มีไว้ให้ย่อ** จึงเป็นที่ที่รูปชื่อที่ห้ามใช้จะแอบเข้ามาได้ง่ายที่สุด
+ *     — แต่ "ย่อได้" เป็นหน้าที่ของ OS ที่จะตัดคำ ไม่ใช่หน้าที่ของเราที่จะประกาศชื่ออื่น */
+export const MANIFEST_NAME_FIELDS: readonly string[] = ['name', 'short_name'];
+
+/** ตรวจ manifest.json — ทุกช่องที่ประกาศชื่อต้องเป็นชื่อ canonical เป๊ะ */
+export function manifestNameIssues(json: string): DeclaredNameIssue[] {
+  let m: Record<string, unknown>;
+  try { m = JSON.parse(json) as Record<string, unknown>; }
+  catch { return [{ where: 'manifest.json', found: '(อ่านไม่ออก)', expected: BRAND_NAME, why: 'ไฟล์ไม่ใช่ JSON ที่ถูกต้อง' }]; }
+  const out: DeclaredNameIssue[] = [];
+  for (const f of MANIFEST_NAME_FIELDS) {
+    const v = m[f];
+    if (typeof v === 'string' && v.trim() !== BRAND_NAME) {
+      out.push({
+        where: `manifest.${f}`, found: v.trim(), expected: BRAND_NAME,
+        why: f === 'short_name'
+          ? 'ป้ายใต้ไอคอนบนหน้าจอ Android — ให้ OS ตัดคำเอง ห้ามเราประกาศชื่อย่อ'
+          : 'ชื่อแอปที่ระบบปฏิบัติการอ่าน',
+      });
+    }
+  }
+  return out;
+}
+
 /* ══════════════════════════════════════════════════════════════════
  * ชั้นของคำค้น — 4 ชั้นตามที่เจ้าของแบ่ง
  * ══════════════════════════════════════════════════════════════════ */

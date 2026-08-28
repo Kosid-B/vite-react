@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   FORBIDDEN_NAME_FORMS, nameFormIssues, declaredNameIssues, NAME_DECLARING_METAS,
+  manifestNameIssues, MANIFEST_NAME_FIELDS,
   KEYWORD_LAYERS, RINGS, RING1_OWNED_SERP_TARGET,
   ringVerdict, trafficVerdict, checkComparison, COMPARISON_REQUIRED, COMPARISON_BANNED,
   CONTENT_CHAIN, isComparisonContent, CONFUSABLE_ORGS,
@@ -70,6 +71,18 @@ describe('Risk 1 — พื้นผิวที่ "ประกาศชื่
     );
     const found = declaredNameIssues(broken);
     expect(found.map((i) => i.where)).toContain('apple-mobile-web-app-title');
+  });
+
+  it('manifest.json — ทุกช่องที่ประกาศชื่อต้องเป็นชื่อ canonical', () => {
+    const mf = readFileSync(join(process.cwd(), 'public/manifest.json'), 'utf8');
+    expect(manifestNameIssues(mf)).toEqual([]);
+  });
+
+  it('🔴 short_name เป็นที่ที่ชื่อย่อแอบเข้ามาง่ายที่สุด — ต้องจับได้', () => {
+    expect(MANIFEST_NAME_FIELDS).toContain('short_name');
+    // จำลองของเดิมที่เขียนผิดจริง 28 ส.ค. 2569
+    const broken = JSON.stringify({ name: BRAND_NAME, short_name: BRAND_NAME.split(' ').slice(0, 2).join(' ') });
+    expect(manifestNameIssues(broken).map((i) => i.where)).toContain('manifest.short_name');
   });
 
   it('title ที่ไม่ได้ขึ้นต้นด้วยชื่อแบรนด์ = ฟ้อง', () => {

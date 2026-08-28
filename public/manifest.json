@@ -1,42 +1,45 @@
 {
   "name": "CEO AI Thailand",
-  "short_name": "CEO AI",
-  "description": "แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย",
+  "short_name": "CEO AI Thailand",
+  "description": "AI Business Operating System สำหรับ SME ไทย — วางกลยุทธ์ การตลาด การวัดผล และขั้นต่อไปที่ควรทำ ในระบบเดียว",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#f9f7f4",
-  "theme_color": "#c44b2b",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
   "lang": "th",
   "icons": [
-    {
-      "src": "/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
+      "purpose": "any"
+    },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "form_factor": "narrow"
+      "purpose": "maskable"
     }
   ],
-  "categories": ["business", "productivity"],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "prefer_related_applications": false
 }
