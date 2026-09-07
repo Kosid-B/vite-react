@@ -135,7 +135,9 @@ export const SOCIAL = {
    *    ปล่อยว่างไว้เพราะ **ยังไม่มี URL ที่ยืนยันแล้ว** — เดา URL แล้วใส่ = บอก Google ผิดเรื่อง entity
    *    ซึ่งแก้ยากกว่าไม่ใส่เลย · `brandEntity.entityIssues()` จะรายงานเป็น blocker จนกว่าจะกรอก
    *    ⚠️ ชื่อบนโปรไฟล์ต้องสะกดว่า "CEO AI Thailand" ให้ตรงกันทุกที่ ไม่งั้น Google ผูกไม่ติด */
-  facebookPageUrl: '',
+  /* เจ้าของส่งมา 7 ก.ย. 2569 — รูปแบบ `profile.php?id=` เป็น URL ที่ Facebook ใช้จริง
+   * ⚠️ ผมเปิดดูเองไม่ได้ (ต้องล็อกอิน) ⇒ ยืนยันได้แค่ว่า **เจ้าของเป็นคนส่งมา** ไม่ได้เดา */
+  facebookPageUrl: 'https://www.facebook.com/profile.php?id=100071678962770',
   linkedinUrl: '',
 };
 
