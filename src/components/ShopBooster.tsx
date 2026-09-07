@@ -4,7 +4,7 @@ import type { Storefront } from '../lib/storefront';
 import { track } from '../lib/analytics';
 
 /** 🚀 Shop Booster — สะพานจากตลาด → บริษัท AI
- *  ร้าน/ธุรกิจสมาชิกที่มาใช้หน้าร้าน/ตลาด กดปุ่มเดียว "จ้างทีม AI ทำงานให้ร้านนี้"
+ *  ร้าน/ธุรกิจสมาชิกที่มาใช้หน้าร้าน/ตลาด กดปุ่มเดียว "ให้ AI ลงมือทำงานให้ร้านนี้"
  *  → สร้างงานจริงใน บริษัท AI (มอบให้ CMO/CEO agent) → พาไปดูทีมทำงาน
  *  = ได้สัมผัสคุณค่าแกนหลักของระบบจากบริบทร้านตัวเอง โดยไม่ต้องเริ่มจากศูนย์ */
 
@@ -89,7 +89,7 @@ export default function ShopBooster({ data, sf, onUpdate, onNavigate }: Props) {
     <div className="booster">
       <div className="booster-hd">
         <div>
-          <div className="booster-title">🚀 จ้างทีม AI ทำงานให้ร้านนี้</div>
+          <div className="booster-title">🚀 ให้ AI ลงมือทำงานให้ร้านนี้</div>
           <div className="booster-sub">
             ทีม AI ของบริษัทคุณ (เช่น {cmo.avatar} {cmo.name} — {cmo.role}) พร้อมรับงานการตลาดของร้านทันที
             — งานจะเข้าคิวใน "บริษัท AI" และรันอัตโนมัติ

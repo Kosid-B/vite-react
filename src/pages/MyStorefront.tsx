@@ -519,7 +519,7 @@ export default function MyStorefront({ data, wsId, onUpdate, onNavigate }: Props
       {/* 🧪 พิสูจน์ไอเดียก่อนลงทุนสร้าง — วัดจากลูกค้าที่ทิ้งช่องทางติดต่อจริง */}
       <IdeaValidation slug={sf.slug} publicUrl={publicUrl} />
 
-      {/* 🚀 สะพานสู่ บริษัท AI — จ้างทีม AI ทำการตลาดให้ร้านนี้ */}
+      {/* 🚀 สะพานสู่ บริษัท AI — ให้ AI ลงมือทำการตลาดให้ร้านนี้ */}
       {onUpdate && onNavigate && (
         <ShopBooster data={data} sf={sf} onUpdate={onUpdate} onNavigate={onNavigate} />
       )}

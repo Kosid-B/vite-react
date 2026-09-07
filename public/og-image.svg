@@ -29,10 +29,10 @@
   <text x="80" y="330" font-family="Arial, sans-serif" font-size="52" font-weight="bold" fill="white">CEO AI Thailand</text>
 
   <!-- Tagline TH -->
-  <text x="80" y="390" font-family="Arial, sans-serif" font-size="30" fill="#94a3b8">จ้าง AI เป็นทีมงานบริษัทคุณ — 24 ชม. ไม่มีวันหยุด</text>
+  <text x="80" y="390" font-family="Arial, sans-serif" font-size="30" fill="#94a3b8">ใส่ราคากับต้นทุน แล้วเห็นกำไรต่อชิ้นทันที</text>
 
   <!-- Sub tagline EN -->
-  <text x="80" y="435" font-family="Arial, sans-serif" font-size="22" fill="#64748b">Automated AI Company for Thai SMEs</text>
+  <text x="80" y="435" font-family="Arial, sans-serif" font-size="22" fill="#64748b">AI Business Operating System for Thai SMEs</text>
 
   <!-- Stats row -->
   <rect x="80" y="490" width="200" height="70" rx="12" fill="#1e293b"/>
@@ -60,12 +60,12 @@
 
   <!-- Metric cards inside dashboard -->
   <rect x="800" y="188" width="148" height="70" rx="8" fill="#1e293b"/>
-  <text x="874" y="212" font-family="Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">Monthly Revenue</text>
-  <text x="874" y="240" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#22c55e" text-anchor="middle">+32%</text>
+  <text x="874" y="212" font-family="Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">กำไรต่อชิ้น</text>
+  <text x="874" y="240" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#22c55e" text-anchor="middle">คำนวณสด</text>
 
   <rect x="972" y="188" width="148" height="70" rx="8" fill="#1e293b"/>
-  <text x="1046" y="212" font-family="Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">AI Tasks Done</text>
-  <text x="1046" y="240" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#22d3ee" text-anchor="middle">1,248</text>
+  <text x="1046" y="212" font-family="Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">จุดคุ้มทุน</text>
+  <text x="1046" y="240" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#22d3ee" text-anchor="middle">กี่ชิ้น?</text>
 
   <!-- Chart bars -->
   <rect x="800" y="278" width="320" height="100" rx="8" fill="#1e293b"/>
@@ -76,16 +76,16 @@
   <rect x="980" y="280" width="28" height="88" rx="3" fill="#3b82f6"/>
   <rect x="1020" y="270" width="28" height="98" rx="3" fill="#60a5fa"/>
   <rect x="1060" y="258" width="28" height="110" rx="3" fill="#22d3ee"/>
-  <text x="960" y="298" font-family="Arial, sans-serif" font-size="9" fill="#64748b" text-anchor="middle">Revenue Trend ↑</text>
+  <text x="960" y="298" font-family="Arial, sans-serif" font-size="9" fill="#64748b" text-anchor="middle">ตัวเลขของร้านคุณเอง</text>
 
   <!-- AI agents list -->
   <rect x="800" y="398" width="320" height="120" rx="8" fill="#1e293b"/>
   <circle cx="820" cy="420" r="8" fill="#22c55e"/>
-  <text x="840" y="424" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">🤖 ISO 9001 Compliance Agent</text>
+  <text x="840" y="424" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">🎯 GTM Strategy Agent</text>
   <circle cx="820" cy="448" r="8" fill="#22c55e"/>
   <text x="840" y="452" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">📊 Financial Forecast Agent</text>
   <circle cx="820" cy="476" r="8" fill="#f59e0b"/>
-  <text x="840" y="480" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">🎯 GTM Strategy Agent</text>
+  <text x="840" y="480" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">🤖 ISO 9001 Compliance Agent</text>
   <circle cx="820" cy="504" r="8" fill="#22c55e"/>
   <text x="840" y="508" font-family="Arial, sans-serif" font-size="11" fill="#e2e8f0">🔍 SEO Marketplace Agent</text>
 

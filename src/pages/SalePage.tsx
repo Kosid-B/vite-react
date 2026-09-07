@@ -261,7 +261,7 @@ export default function SalePage() {
       </section>
 
       <footer className="start-foot">
-        CEO AI Thailand — แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย ·{' '}
+        CEO AI Thailand — ระบบสร้างและเดินธุรกิจด้วย AI สำหรับ SME ไทย ·{' '}
         <a href="/start">ทำไมต้องเรา</a> ·{' '}
         <a href="/pricing">ทุกแพ็ก</a> ·{' '}
         <a href="/b">สารบัญธุรกิจ</a> ·{' '}

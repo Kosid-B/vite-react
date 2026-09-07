@@ -38,7 +38,7 @@ function PublicShell({ children, title, refSlug }: { children: React.ReactNode; 
           ⚡ สร้างด้วย CEO AI Thailand — สร้างหน้าร้าน + บริษัท AI ฟรี
         </a>
         <div style={{ marginTop: 6 }}>
-          แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย ·{' '}
+          ระบบสร้างและเดินธุรกิจด้วย AI สำหรับ SME ไทย ·{' '}
           โดย <a href="https://www.b-tctraining.com" target="_blank" rel="noreferrer">B. Training Consultant (M.E.A) Co., Ltd.</a>
         </div>
       </footer>

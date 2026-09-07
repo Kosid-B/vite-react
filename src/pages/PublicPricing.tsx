@@ -47,7 +47,7 @@ export default function PublicPricing() {
     const meta = document.querySelector('meta[name="description"]') ?? (() => {
       const m = document.createElement('meta'); m.setAttribute('name', 'description'); document.head.appendChild(m); return m;
     })();
-    meta.setAttribute('content', `${BRAND.product} — SaaS ให้ SME ไทยจ้างทีม AI บริหารธุรกิจ + ตลาด B2B. แพ็กเกจ Free / Starter ฿790 / Growth ฿1,490 / Scale ฿5,900 ต่อเดือน. ชำระผ่าน PromptPay/โอนบัญชี.`);
+    meta.setAttribute('content', `${BRAND.product} — SaaS ให้ SME ไทยใช้ AI วางกลยุทธ์และเดินธุรกิจ + ตลาด B2B. แพ็กเกจ Free / Starter ฿790 / Growth ฿1,490 / Scale ฿5,900 ต่อเดือน. ชำระผ่าน PromptPay/โอนบัญชี.`);
   }, []);
 
   return (
@@ -63,7 +63,7 @@ export default function PublicPricing() {
         <h2>1. บริการนี้คืออะไร</h2>
         <p>
           <b>{BRAND.product}</b> คือซอฟต์แวร์บริการ (SaaS) แบบสมัครสมาชิกรายเดือน/รายปี สำหรับผู้ประกอบการและ SME ไทย
-          ช่วยให้ธุรกิจ “จ้างทีม AI” มาช่วยวางแผนกลยุทธ์ ทำการตลาด จัดทำเอกสารมาตรฐาน (เช่น ISO 9001) วิเคราะห์ข้อมูล
+          ช่วยให้ธุรกิจใช้ AI วางแผนกลยุทธ์ ทำการตลาด จัดทำเอกสารมาตรฐาน (เช่น ISO 9001) วิเคราะห์ข้อมูล
           และเปิดหน้าร้าน/ซื้อขายแบบ B2B ในตลาดกลาง — ทั้งหมดผ่านเว็บแอปพลิเคชัน ไม่มีการจัดส่งสินค้าทางกายภาพ
         </p>
         <p><b>สิ่งที่ลูกค้าได้รับ (ดิจิทัล):</b></p>

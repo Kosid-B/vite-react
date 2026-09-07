@@ -28,7 +28,7 @@ const NUDGES: Record<NudgeAngle, AuthNudge> = {
   belief: {
     angle: 'belief', symbol: '🌱→👑',
     headline: 'โตได้ แม้เริ่มจากศูนย์',
-    body: 'จ้างทีม AI ทั้งบริษัทมาลงมือทำจริง — จากหมู่บ้านสตาร์ทอัป สู่มหานคร AI',
+    body: 'ให้ AI ลงมือทำจริง ไม่ใช่แค่ตอบคำถาม — จากหมู่บ้านสตาร์ทอัป สู่มหานคร AI',
     proof: REAL_PROOF, chip: REAL_OFFER,
   },
   // Authentic proof (ไม่ใช่ celebrity)

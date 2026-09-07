@@ -484,7 +484,7 @@ export default function StartLanding() {
       </section>
 
       <footer className="start-foot">
-        CEO AI Thailand — แพลตฟอร์มสร้างบริษัท AI อัตโนมัติสำหรับธุรกิจไทย ·{' '}
+        CEO AI Thailand — ระบบสร้างและเดินธุรกิจด้วย AI สำหรับ SME ไทย ·{' '}
         <a className="legal-link" href="/b">สารบัญธุรกิจ</a> ·{' '}
         <a className="legal-link" href="/mit24">MIT 24 Steps</a> ·{' '}
         <a className="legal-link" href="/faq">คำถามที่พบบ่อย</a> ·{' '}
