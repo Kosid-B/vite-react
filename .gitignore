@@ -37,3 +37,7 @@ content-prototype-seed.json
 # Cloudflare wrangler dev — สถานะ runtime ของ miniflare (sqlite ในเครื่อง สร้างใหม่ได้เสมอ)
 # ถูก track ไว้โดยไม่ตั้งใจ ทำให้ทุกครั้งที่รัน `wrangler dev` มี diff โผล่มาโดยไม่เกี่ยวกับโค้ด
 .wrangler/state/
+
+# Supabase CLI local state — แคชเช็คเวอร์ชัน/ลิงก์โปรเจกต์ ของเครื่องแต่ละคน
+# (สร้างเองเมื่อรัน `supabase` ครั้งแรก · ไม่ใช่ของโปรเจกต์ ห้าม commit)
+supabase/.temp/
