@@ -5,6 +5,7 @@ import ContentPerformancePanel from '../../components/ContentPerformancePanel';
 import GrowthPdcaPanel from '../../components/GrowthPdcaPanel';
 import PaymentReadinessPanel from '../../components/PaymentReadinessPanel';
 import BrandVisibilityPanel from '../../components/BrandVisibilityPanel';
+import FinancialTruthPanel from '../../components/FinancialTruthPanel';
 import ReachFunnelPanel from '../../components/ReachFunnelPanel';
 import StageFitPanel from '../../components/StageFitPanel';
 import type { AppData } from '../../types';
@@ -493,6 +494,10 @@ export default function GrowthDashboard({ data, onUpdate }: { data?: AppData; on
       {/* 🔎 ก่อนถามว่า "คอนเทนต์ชิ้นไหนพาคนมา" ต้องรู้ก่อนว่า **ค้นชื่อเราแล้วเจอเราไหม**
           ถ้าเครื่องยังไม่รู้ว่าเราคือใคร คนที่จำชื่อเราได้จากคลิปก็ยังหาเราไม่เจออยู่ดี */}
       <BrandVisibilityPanel />
+
+      {/* 💰 ก่อนถามว่า "จะหาคนเพิ่มยังไง" ต้องรู้ก่อนว่า **คนที่จ่ายมาแล้วเดินต่อถึงไหน**
+          เพิ่มงบตอนที่คนจ่ายแล้วไม่ไปต่อ = เร่งการขาดทุน ไม่ใช่เร่งการเติบโต */}
+      <FinancialTruthPanel />
 
       {/* คอนเทนต์ชิ้นไหนพาคนมา (0062) — วางก่อนแผง error เพราะเป็นคำถามหลักของการตลาด */}
       <ContentPerformancePanel landing={landing} />
