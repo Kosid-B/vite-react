@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { CATEGORY_SEG, FALLBACK_SEG, segForCategory, segForSlug, blogCtaHref } from '../ctaContext';
 import { START_HEROES, startHeroFor } from '../startHero';
-import { HERO_VARIANTS, segmentFor } from '../heroVariant';
+import { HERO_VARIANTS, segmentFor, homeHrefFor } from '../heroVariant';
 import { BLOG_POSTS } from '../blogData';
 import { blogPostHtml } from '../seoData';
 
@@ -17,6 +19,7 @@ import { blogPostHtml } from '../seoData';
  * ══════════════════════════════════════════════════════════════════════ */
 
 const ORIGIN = 'https://ceoaithailand.org';
+const HERO_SEGS = Object.keys(HERO_VARIANTS) as (keyof typeof HERO_VARIANTS)[];
 
 describe('บริบทต้องเดินทางไปกับผู้ใช้ (ไม่ตกหล่นระหว่างหน้า)', () => {
   it('ทุกบทความมี CTA ที่พก seg + from ไปด้วย', () => {
@@ -98,6 +101,34 @@ describe('พาดหัวที่เปลี่ยนตามคน ต้
       for (const bad of ['ISO', 'ข้อกำหนด', 'มาตรฐานสากล']) {
         expect(h!.h1, `${seg} พาดหัวมีคำว่า ${bad}`).not.toContain(bad);
       }
+    }
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 🔴 hop สุดท้ายที่ไม่มีใครเฝ้า: `/start` → `/`
+ *   `/start` ตัดสิน seg ได้ถูกต้องอยู่แล้ว แต่ปุ่มทุกปุ่มเขียนลิงก์ `/` เปล่า ๆ
+ *   และ `/` คือ **หน้าเดียวที่บันทึกลง `landing_funnel`** (`/start` ไม่บันทึกเลย)
+ *   ⇒ กลุ่มที่รู้แล้วถูกทิ้งที่ปุ่ม · ถูกบันทึกเป็น `default` · เห็นพาดหัวกลาง ๆ (ledger #74)
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('ปุ่มบน /start ต้องพากลุ่มไปถึงหน้าแรกด้วย', () => {
+  const startSrc = readFileSync(resolve(__dirname, '../../pages/StartLanding.tsx'), 'utf8');
+
+  it('🔴 ห้ามมีลิงก์ `/` เปล่า ๆ เหลืออยู่ในหน้า /start', () => {
+    expect(startSrc).not.toContain('href="/"');
+  });
+
+  it('ทุกลิงก์ที่พาไปหน้าแรก ใช้ homeHref ที่คำนวณจาก seg', () => {
+    expect(startSrc).toContain('homeHrefFor(seg)');
+    // นับให้ครบ — เหลือปุ่มเดียวที่ลืม ก็ยังทิ้งกลุ่มได้ทั้งกลุ่ม
+    expect((startSrc.match(/href=\{homeHref\}/g) ?? []).length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('seg ที่รู้แล้วต้องเดินทางต่อ · `default` ต้องไม่ถูกแต่งค่า', () => {
+    for (const s of HERO_SEGS) {
+      const href = homeHrefFor(s);
+      if (s === 'default') expect(href).toBe('/');       // ไม่รู้ = ต้องไม่เขียนว่ารู้
+      else expect(segmentFor(href.slice(1))).toBe(s);    // รู้ = ปลายทางต้องอ่านออกจริง
     }
   });
 });

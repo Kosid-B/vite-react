@@ -203,3 +203,17 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
 export function pickHeroVariant(search: string, referrer = ''): HeroVariant {
   return HERO_VARIANTS[segmentFor(search, referrer)];
 }
+
+/**
+ * ลิงก์กลับหน้าแรกที่ยัง "จำกลุ่ม" ไว้
+ *
+ * 🔴 ทำไมต้องมี (ตรวจโค้ด 10 ก.ย. 2569): `/start` คำนวณ seg ถูกต้องแล้ว แต่ปุ่ม CTA ทุกปุ่ม
+ *    เขียน `href="/"` **เปล่า ๆ** ⇒ พอกดเข้ามา หน้าแรกอ่าน `?seg=` ไม่เจอ กลับไปเป็น `default`
+ *    และหน้าแรกคือ **หน้าเดียวที่บันทึกลง `landing_funnel`** (`/start` ไม่บันทึกเลย)
+ *    ⇒ ทั้งกลุ่มที่เรารู้จักแล้ว **ถูกบันทึกเป็น `default` ทุกคน** และเห็นพาดหัวกลาง ๆ ทั้งที่ไม่ควร
+ *
+ * ⚠️ `default` ต้องคืน `/` เปล่า ๆ — เขียน `?seg=default` = แต่งค่าให้ดูเหมือนรู้ทั้งที่ไม่รู้
+ */
+export function homeHrefFor(seg: HeroSeg): string {
+  return seg === 'default' ? '/' : `/?seg=${encodeURIComponent(seg)}`;
+}

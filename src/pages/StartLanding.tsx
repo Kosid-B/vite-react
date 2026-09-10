@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { track } from '../lib/analytics';
 import { readTheme, setTheme, nextTheme, themeIcon, themeLabel, type ThemeId } from '../lib/theme';
 import { applySeo, siteOrigin } from '../lib/seo';
-import { segmentFor } from '../lib/heroVariant';
+import { segmentFor, homeHrefFor } from '../lib/heroVariant';
 import { startHeroFor } from '../lib/startHero';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
@@ -105,6 +105,10 @@ export default function StartLanding() {
   // seg มาจากลิงก์ที่พาเขามา (CTA ท้ายบทความติด ?seg= ให้ตามหมวดของบทความนั้น)
   // ISO ยังชนะทุกอย่างเพราะเป็นสะพานจากเว็บบริษัท = คนละกลุ่มกันชัดเจน
   const seg = useMemo(() => segmentFor(window.location.search, document.referrer), []);
+  /* 🔴 ทุกปุ่มที่พาไปหน้าแรกต้องพา seg ไปด้วย — เดิมเขียนเป็นลิงก์ `/` เปล่า ๆ ทั้ง 5 จุด
+   *    ⇒ กลุ่มที่หน้านี้อุตส่าห์ตัดสินได้ถูกทิ้งที่ปุ่ม และหน้าแรก (ที่เดียวที่บันทึก
+   *      `landing_funnel`) เห็นเป็น `default` เสมอ (ledger #74) */
+  const homeHref = useMemo(() => homeHrefFor(seg), [seg]);
   /* เวอร์ชัน hero: ISO/โรงงาน — กลุ่มที่ "มีวันตรวจรออยู่"
    *
    * 🔴 รวมกลไกเป็นตัวเดียว 22 ส.ค. 2569: เดิมหน้านี้มี matcher ของตัวเอง
@@ -189,7 +193,7 @@ export default function StartLanding() {
             aria-label={`สลับธีม ปัจจุบัน ${themeLabel(theme)}`}>
             <span aria-hidden="true">{themeIcon(nextTheme(theme))}</span> {themeLabel(nextTheme(theme))}
           </button>
-          <a className="start-head-cta" href="/">เข้าใช้ระบบ →</a>
+          <a className="start-head-cta" href={homeHref}>เข้าใช้ระบบ →</a>
         </div>
       </header>
 
@@ -234,7 +238,7 @@ export default function StartLanding() {
           </>
         ) : null}
         <div className="start-cta-row">
-          <a className="start-cta-main" href="/" onClick={() => track('start_cta_click', { cta: 'hero' })}>
+          <a className="start-cta-main" href={homeHref} onClick={() => track('start_cta_click', { cta: 'hero' })}>
             {isIso ? 'ประเมิน ISO ฟรี — ไม่ต้องใช้บัตรเครดิต' : 'เริ่มใช้ฟรี — ไม่ต้องใช้บัตรเครดิต'}</a>
           <a className="start-cta-sub" href="/b">ดูธุรกิจที่เปิดแล้วในระบบ →</a>
         </div>
@@ -444,7 +448,7 @@ export default function StartLanding() {
               <div className="start-plan-price">{p.price}<span>{p.per ?? ''}</span></div>
               <p>{p.desc}</p>
               <div className="start-plan-note">{p.note}</div>
-              {p.cta && <a className="start-plan-cta" href="/">เริ่มเลย →</a>}
+              {p.cta && <a className="start-plan-cta" href={homeHref}>เริ่มเลย →</a>}
             </div>
           ))}
         </div>
@@ -478,7 +482,7 @@ export default function StartLanding() {
           </button>
         </div>
         <div className="start-final-cta">
-          <a className="start-cta-main" href="/" onClick={() => track('start_cta_click', { cta: 'final' })}>
+          <a className="start-cta-main" href={homeHref} onClick={() => track('start_cta_click', { cta: 'final' })}>
             เริ่มวันนี้ ฟรี — อีก 5 นาทีคุณมีบริษัทแล้ว</a>
         </div>
       </section>
@@ -499,7 +503,7 @@ export default function StartLanding() {
       {/* Sticky CTA — โผล่ตอนเลื่อน (มือถือเห็นชัด) */}
       <div className={`start-sticky${showSticky ? ' show' : ''}`} aria-hidden={!showSticky}>
         <span className="start-sticky-txt">เริ่มฟรี ไม่ต้องใช้บัตร</span>
-        <a className="start-sticky-btn" href="/" onClick={() => track('start_cta_click', { cta: 'sticky' })}>
+        <a className="start-sticky-btn" href={homeHref} onClick={() => track('start_cta_click', { cta: 'sticky' })}>
           เปิดบริษัทของคุณ →
         </a>
       </div>
