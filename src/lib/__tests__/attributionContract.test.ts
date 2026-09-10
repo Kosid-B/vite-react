@@ -191,3 +191,116 @@ describe('เวลาที่คนใช้กับแต่ละบล็�
     expect(hook).toContain('sectionInView');
   });
 });
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 🔴 seg = "ปัญหาที่เขามาด้วย" — วัดจริงใน production 10 ก.ย. 2569:
+ *   `seg = default` **154 จาก 158 คน (97.5%)**
+ *   ⇒ พาดหัวที่พูดกับ pain เฉพาะกลุ่ม **9 แบบ** (มีเทสต์ครบแล้ว) แทบไม่เคยถูกส่งถึงใคร
+ *   รากของปัญหา: `seg` ไม่ได้อยู่ในคีย์ที่ส่งต่อ ⇒ ตายที่ hop บทความ → /start ทุกครั้ง
+ *   (ฝั่งรับพร้อมมานาน: `homeSeo(origin, agg, seg)` + `heroVariant` 9 แบบ)
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('seg ต้องเดินทางข้ามหน้าได้ ไม่งั้น Dynamic PLG ไม่มีวันทำงาน', () => {
+  beforeEach(() => { localStorage.clear(); document.body.innerHTML = ''; });
+  const O = () => window.location.origin;
+  const run = (search: string, camp = 'first_customers') => {
+    window.history.replaceState({}, '', '/blog/palm-price-what-you-control' + search);
+    new Function(utmForwardScript(camp))();
+  };
+
+  it('seg อยู่ในคีย์ที่ส่งต่อ แต่ไม่ใช่คีย์รายงานที่มา (คนละคำถาม)', async () => {
+    const m = await import('../utmForward');
+    expect(m.FORWARD_KEYS).toContain('seg');
+    expect(m.UTM_KEYS as readonly string[]).not.toContain('seg');
+  });
+
+  it('อ่าน seg จาก query ได้ และใส่กลับลง query string', async () => {
+    const { pickUtm, utmQuery, appendUtm } = await import('../utmForward');
+    const u = pickUtm('?utm_source=facebook&seg=seller');
+    expect(u.seg).toBe('seller');
+    expect(utmQuery(u)).toContain('seg=seller');
+    expect(appendUtm('/start', u)).toContain('seg=seller');
+  });
+
+  it('ค่าที่ไม่ผ่านกติกาถูกทิ้ง (กติกาเดียวกับ utm)', async () => {
+    const { pickUtm } = await import('../utmForward');
+    expect(pickUtm('?seg=<script>').seg).toBeUndefined();
+  });
+
+  it('🔴 href ที่ระบุ seg ของตัวเองไว้แล้ว ห้ามถูกทับ (เจตนาชัดกว่า)', async () => {
+    const { appendUtm, pickUtm } = await import('../utmForward');
+    const u = pickUtm('?seg=newbie');
+    expect(appendUtm('/start?seg=food', u)).toBe('/start?seg=food');
+  });
+
+  it('🔴 hop ①: ลิงก์สั้นต้องไม่ทิ้ง seg ตอน redirect (จุดที่มันตายจุดแรก)', async () => {
+    const { SHORT_LINKS, shortLinkTarget } = await import('../shortLinks');
+    // ของจริงที่แคปชั่นเราปล่อยออกไป: ceoaithailand.org/ราคา?s=ytc&seg=seller
+    const u = new URL(shortLinkTarget(SHORT_LINKS['/ราคา'], ORIGIN, '?s=ytc&seg=seller'));
+    expect(u.searchParams.get('seg')).toBe('seller');
+    expect(u.searchParams.get('utm_source')).toBe('youtube');   // ที่มายังต้องรอดเหมือนเดิม
+  });
+
+  it('ลิงก์สั้นที่รู้ว่าใครกด ส่ง seg ประจำลิงก์ให้เอง แม้ไม่ได้พิมพ์ ?seg=', async () => {
+    const { SHORT_LINKS, shortLinkTarget } = await import('../shortLinks');
+    const u = new URL(shortLinkTarget(SHORT_LINKS['/ปาล์ม'], ORIGIN, '?s=yt'));
+    expect(u.searchParams.get('seg')).toBe('palm');
+    // ค่าที่ผู้ใช้พามาเจาะจงกว่า ⇒ ต้องชนะค่าประจำลิงก์
+    const v = new URL(shortLinkTarget(SHORT_LINKS['/ปาล์ม'], ORIGIN, '?seg=owner'));
+    expect(v.searchParams.get('seg')).toBe('owner');
+  });
+
+  it('🔴 ลิงก์กลาง ๆ ห้ามเดา seg — ยัดพาดหัวผิดกลุ่ม แย่กว่าพาดหัวกลาง ๆ', async () => {
+    const { SHORT_LINKS, shortLinkTarget } = await import('../shortLinks');
+    for (const key of ['/ai', '/ตรวจ', '/ซิม']) {
+      expect(SHORT_LINKS[key].seg, key).toBeUndefined();
+      expect(new URL(shortLinkTarget(SHORT_LINKS[key], ORIGIN, '?s=yt')).searchParams.get('seg')).toBeNull();
+    }
+  });
+
+  it('🔒 seg ของลิงก์สั้น ต้องตรงกับ seg ที่คลิปสัญญาไว้ (VIDEO_TOPICS)', async () => {
+    const { SHORT_LINKS } = await import('../shortLinks');
+    const { VIDEO_TOPICS } = await import('../commentReply');
+    for (const t of VIDEO_TOPICS) {
+      // คลิปบอกว่าคุยเรื่องของกลุ่มนี้ แล้วลิงก์พาไปเจอพาดหัวอีกกลุ่ม = ผิดสัญญาเงียบ ๆ
+      expect(SHORT_LINKS[t.shortLink]?.seg, t.shortLink).toBe(t.seg);
+    }
+  });
+
+  it('🔴 hop ②: สคริปต์ในบทความต้องส่ง seg ต่อไป /start (รันของจริงใน jsdom)', () => {
+    document.body.innerHTML = `<a id="cta" href="${O()}/start">เริ่มฟรี</a>`;
+    run('?utm_source=youtube&seg=palm');
+    const u = new URL(document.getElementById('cta')!.getAttribute('href')!);
+    expect(u.searchParams.get('seg')).toBe('palm');
+  });
+
+  it('🔴 เส้นทางเต็ม: คลิป → ลิงก์สั้น → บทความ → บทความที่สอง → /start ต้องยังเป็น palm', async () => {
+    const { SHORT_LINKS, shortLinkTarget } = await import('../shortLinks');
+    // ① คนพิมพ์ ceoaithailand.org/ปาล์ม ตามที่เห็นในคลิป
+    const afterRedirect = new URL(shortLinkTarget(SHORT_LINKS['/ปาล์ม'], ORIGIN, '?s=yt'));
+    expect(afterRedirect.searchParams.get('seg')).toBe('palm');
+
+    // ② ลงบทความแรก — สคริปต์เก็บ first-touch
+    document.body.innerHTML = `<a id="cta" href="${O()}/start">x</a>`;
+    run(afterRedirect.search, 'palm_price');
+    expect(new URL(document.getElementById('cta')!.getAttribute('href')!).searchParams.get('seg')).toBe('palm');
+
+    // ③ เดินไปบทความที่สองโดยไม่มี query ติดมาเลย (ลิงก์ในเนื้อบทความไม่ถูกเติม seg)
+    document.body.innerHTML = `<a id="cta" href="${O()}/start">x</a>`;
+    run('', 'first_customers');
+    const final = new URL(document.getElementById('cta')!.getAttribute('href')!);
+    expect(final.searchParams.get('seg')).toBe('palm');          // ← first-touch ต้องจำไว้
+    expect(final.searchParams.get('utm_source')).toBe('youtube');
+
+    // ④ /start อ่านค่านั้นแล้วได้พาดหัวของชาวสวนปาล์มจริง ไม่ใช่พาดหัวกลาง ๆ
+    const { segmentFor, HERO_VARIANTS } = await import('../heroVariant');
+    expect(segmentFor(final.search)).toBe('palm');
+    expect(HERO_VARIANTS[segmentFor(final.search)].h1a).toContain('ปาล์ม');
+  });
+
+  it('🔴 สิ่งที่สคริปต์เก็บเป็น first-touch ต้องอ่านกลับได้ครบ รวม seg', () => {
+    document.body.innerHTML = `<a href="${O()}/start">x</a>`;
+    run('?utm_source=tiktok&seg=food');
+    expect(readFirstTouch(localStorage.getItem(UTM_FIRST_TOUCH_KEY), Date.now()))
+      .toEqual({ utm_source: 'tiktok', seg: 'food' });
+  });
+});

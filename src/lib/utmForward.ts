@@ -16,9 +16,31 @@
  *   สคริปต์นี้จึงอ่าน utm จาก URL ของแต่ละคนตอนรันในเบราว์เซอร์ = cache ปลอดภัยเสมอ
  */
 
-export interface Utm { utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string }
+export interface Utm {
+  utm_source?: string; utm_medium?: string; utm_campaign?: string; utm_content?: string;
+  /** 🔴 กลุ่ม/ปัญหาที่เขามาด้วย — **ไม่ใช่ utm** แต่ต้องเดินทางไปด้วยกัน
+   *
+   *  ปัญหาจริงที่วัดได้ (ตรวจ production 10 ก.ย. 2569):
+   *    `seg = default` **154 จาก 158 คน (97.5%)**
+   *    ⇒ พาดหัวที่พูดกับ pain เฉพาะกลุ่ม **9 แบบ** ที่สร้างเสร็จและมีเทสต์แล้ว
+   *      แทบไม่เคยถูกส่งถึงใครเลย · ทุกคนได้พาดหัวกลาง ๆ อันเดียว
+   *
+   *  รากของปัญหา: `seg` ตาย **สอง hop ติดกัน** ทั้งที่แคปชั่นของเราเขียน `?seg=` มาให้แล้ว
+   *    ① `shortLinks.shortLinkTarget` สร้าง URL ใหม่จาก path เปล่า ⇒ ทิ้ง seg ที่ redirect แรก
+   *    ② สคริปต์ตัวนี้ส่งต่อแค่ 4 คีย์ utm ⇒ ทิ้งอีกรอบที่ hop บทความ → /start
+   *  (ฝั่งรับพร้อมมานานแล้ว — `seoData.homeSeo(origin, agg, seg)` รองรับ `?seg=`
+   *   และ `startHero`/`heroVariant` มีพาดหัวครบ 9 แบบ · ขาดแค่ไม่มีใครส่งค่าไปให้)
+   *
+   *  ⚠️ อาการเดียวกับ GOTCHA #6 (utm ตายกลางทาง) แต่คนละคีย์ — จึงไม่ถูกจับโดยกลไกเดิม */
+  seg?: string;
+}
 
+/** คีย์ที่ตอบว่า "ใครส่งเขามา" — ใช้กับรายงานที่มา */
 export const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'] as const;
+
+/** คีย์ทั้งหมดที่ต้องเดินทางข้ามหน้า = ที่มา + **ปัญหาที่เขามาด้วย**
+ *  🔴 `seg` ต้องอยู่ในนี้ ไม่งั้น Dynamic PLG ไม่มีวันทำงาน (กฎ `dynamic-plg`) */
+export const FORWARD_KEYS = [...UTM_KEYS, 'seg'] as const;
 
 /** เก็บ "ที่มาแรก" ไว้ข้ามหน้า — คนอ่านบทความ 2-3 หน้าก่อนกด CTA ต้องไม่เสียเครดิตต้นทาง */
 export const UTM_FIRST_TOUCH_KEY = 'ceo_ai_utm_ft';
@@ -37,7 +59,7 @@ export function pickUtm(search: string): Utm {
   const out: Utm = {};
   try {
     const q = new URLSearchParams(search);
-    for (const k of UTM_KEYS) {
+    for (const k of FORWARD_KEYS) {
       const v = cleanUtmValue(q.get(k));
       if (v) out[k] = v;
     }
@@ -45,16 +67,17 @@ export function pickUtm(search: string): Utm {
   return out;
 }
 
-/** utm → query string (ไม่มี '?' นำหน้า) · เรียงตาม UTM_KEYS เสมอเพื่อให้ผลลัพธ์คงที่ */
+/** utm+seg → query string (ไม่มี '?' นำหน้า) · เรียงตาม FORWARD_KEYS เสมอเพื่อให้ผลลัพธ์คงที่ */
 export function utmQuery(u: Utm): string {
-  return UTM_KEYS.filter((k) => u[k]).map((k) => `${k}=${encodeURIComponent(u[k] as string)}`).join('&');
+  return FORWARD_KEYS.filter((k) => u[k]).map((k) => `${k}=${encodeURIComponent(u[k] as string)}`).join('&');
 }
 
 /** ต่อ utm เข้ากับ href — ไม่แตะ href ที่มี utm ของตัวเองอยู่แล้ว */
 export function appendUtm(href: string, u: Utm): string {
   const qs = utmQuery(u);
   if (!qs) return href;
-  if (href.includes('utm_')) return href;
+  // href ที่ระบุที่มา/กลุ่มของตัวเองไว้แล้ว = เจตนาชัด ห้ามทับ
+  if (href.includes('utm_') || /[?&]seg=/.test(href)) return href;
   return href + (href.includes('?') ? '&' : '?') + qs;
 }
 
@@ -91,14 +114,19 @@ export function shouldStoreFirstTouch(cur: Utm, stored: Utm | null): boolean {
   return !!cur.utm_source && cur.utm_source !== INTERNAL_SOURCE;
 }
 
-/** first-touch ที่เก็บไว้ยังใช้ได้ไหม (null = หมดอายุ/ไม่มี/พัง) */
+/** first-touch ที่เก็บไว้ยังใช้ได้ไหม (null = หมดอายุ/ไม่มี/พัง)
+ *
+ *  ⚠️ ต้องอ่านคีย์ชุดเดียวกับที่สคริปต์ฝังหน้า **เขียนลงไป** (FORWARD_KEYS) ไม่ใช่แค่ UTM_KEYS
+ *     สคริปต์เก็บ `seg` ด้วย เพราะเป็นสิ่งเดียวที่พา "ปัญหาที่เขามาด้วย" ข้ามบทความหลายหน้าได้
+ *     (สคริปต์เติม ?seg= ให้เฉพาะลิงก์ที่ชี้ไป TARGETS — เดินจากบทความ A ไป B ค่าจะหาย
+ *      ถ้าไม่มี first-touch คอยจำไว้) · อ่านไม่ครบ = เกิดบั๊ก "เก็บได้แต่ไม่มีใครอ่าน" ซ้ำรอบสอง */
 export function readFirstTouch(raw: string | null, now: number): Utm | null {
   if (!raw) return null;
   try {
     const o = JSON.parse(raw) as { t?: number; u?: Record<string, string> };
     if (!o || typeof o.t !== 'number' || now - o.t > UTM_FIRST_TOUCH_MS) return null;
     const out: Utm = {};
-    for (const k of UTM_KEYS) {
+    for (const k of FORWARD_KEYS) {
       const v = cleanUtmValue(o.u?.[k]);
       if (v) out[k] = v;
     }
@@ -120,7 +148,7 @@ export function readFirstTouch(raw: string | null, now: number): Utm | null {
 export function utmForwardScript(fallbackCampaign: string, siteOrigin = ''): string {
   const camp = cleanUtmValue(fallbackCampaign) ?? 'page';
   return `(function(){try{
-var K=${JSON.stringify(UTM_FIRST_TOUCH_KEY)},MAXAGE=${UTM_FIRST_TOUCH_MS},SITE=${JSON.stringify(INTERNAL_SOURCE)},KEYS=${JSON.stringify(UTM_KEYS)};
+var K=${JSON.stringify(UTM_FIRST_TOUCH_KEY)},MAXAGE=${UTM_FIRST_TOUCH_MS},SITE=${JSON.stringify(INTERNAL_SOURCE)},KEYS=${JSON.stringify(FORWARD_KEYS)};
 var TARGETS=['/start','/calc','/checkup'],CAMP=${JSON.stringify(camp)},SITE_ORIGIN=${JSON.stringify(siteOrigin)};
 var ok=/^[a-z0-9_-]{1,32}$/;
 function clean(v){if(!v)return'';v=String(v).trim().toLowerCase().slice(0,32);return ok.test(v)?v:'';}
@@ -136,6 +164,9 @@ var src=st.utm_source||cur.utm_source||SITE;
 var med=st.utm_medium||cur.utm_medium||(src===SITE?'internal':'');
 var camp=cur.utm_campaign||st.utm_campaign||CAMP;
 var cont=cur.utm_content||st.utm_content||'';
+// 🔴 seg = ปัญหาที่เขามาด้วย — ต้องเดินทางต่อ ไม่งั้นหน้า Landing พูดกลาง ๆ กับทุกคน
+//    วัดจริง 10 ก.ย. 2569: seg=default 154/158 (97.5%) เพราะค่านี้ตายที่ hop นี้ทุกครั้ง
+var seg=cur.seg||st.seg||'';
 var a=document.querySelectorAll('a[href]');
 for(var k=0;k<a.length;k++){
   var h=a[k].getAttribute('href')||'';var U;
@@ -150,6 +181,8 @@ for(var k=0;k<a.length;k++){
   if(med)U.searchParams.set('utm_medium',med);
   if(camp&&!U.searchParams.get('utm_campaign'))U.searchParams.set('utm_campaign',camp);
   if(cont&&!U.searchParams.get('utm_content'))U.searchParams.set('utm_content',cont);
+  // ปุ่มที่ระบุกลุ่มไว้เองชนะ (เจตนาชัดกว่า) — ไม่งั้นส่งต่อค่าที่พามา
+  if(seg&&!U.searchParams.get('seg'))U.searchParams.set('seg',seg);
   a[k].setAttribute('href',U.toString());
 }
 }catch(e){}})();`;

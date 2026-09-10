@@ -8,11 +8,25 @@
  * ติด utm ให้เองฝั่ง server → วัดผลได้โดยที่ผู้ใช้ไม่ต้องพิมพ์ query string
  */
 
+import type { HeroSeg } from './heroVariant';
+
 export interface ShortLink {
   /** ปลายทางจริงบนเว็บเรา (ขึ้นต้นด้วย /) */
   path: string;
   /** ใช้เป็น utm_campaign เพื่อแยกว่ามาจากคอนเทนต์ชิ้นไหน */
   campaign: string;
+  /** กลุ่ม/ปัญหาที่ลิงก์นี้ "สัญญาว่าจะคุยด้วย" — ส่งต่อเป็น ?seg= ให้หน้าปลายทาง
+   *
+   *  🔴 ทำไมต้องมี (วัดจริง production 10 ก.ย. 2569): `seg=default` **154 จาก 158 คน (97.5%)**
+   *     ⇒ พาดหัวที่พูดกับ pain เฉพาะกลุ่ม 9 แบบใน `heroVariant` แทบไม่เคยถูกส่งถึงใคร
+   *     ทั้งที่แคปชั่นของเราเอง (`reelsCaption` / `commentReply`) เขียน `?seg=` มาให้แล้ว
+   *     — แต่ `shortLinkTarget` เดิม **ทิ้งค่านี้ที่ hop แรก** เพราะสร้าง URL ใหม่จาก path เปล่า
+   *
+   *  ⚠️ ใส่ได้เฉพาะลิงก์ที่ "รู้จริงว่าใครกด" — ลิงก์กลาง ๆ (`/ai`, `/ตรวจ`, `/ซิม`) ต้องไม่ใส่
+   *     เดาแล้วใส่ = ยัดพาดหัวที่ไม่ใช่ปัญหาของเขา ซึ่งแย่กว่าพาดหัวกลาง ๆ
+   *  🔒 ต้องตรงกับ `commentReply.VIDEO_TOPICS[].seg` เสมอ (เทสต์บังคับ) — คลิปกับลิงก์สัญญาคนละอย่าง
+   *     = คนกดตามคลิปมาแล้วเจอคนละเรื่อง */
+  seg?: HeroSeg;
 }
 
 /** เพิ่มลิงก์ใหม่ = เพิ่มบรรทัดเดียวที่นี่ · คีย์ต้องขึ้นต้น '/' และเป็นตัวพิมพ์เล็ก
@@ -20,28 +34,28 @@ export interface ShortLink {
 export const SHORT_LINKS: Record<string, ShortLink> = {
   '/sms':      { path: '/blog/sim-update-scam-check',    campaign: 'sim_scam' },
   '/ซิม':      { path: '/blog/sim-update-scam-check',    campaign: 'sim_scam' },
-  '/tun':      { path: '/blog/start-business-no-capital', campaign: 'no_capital' },
-  '/ทุน':      { path: '/blog/start-business-no-capital', campaign: 'no_capital' },
+  '/tun':      { path: '/blog/start-business-no-capital', campaign: 'no_capital', seg: 'newbie' },
+  '/ทุน':      { path: '/blog/start-business-no-capital', campaign: 'no_capital', seg: 'newbie' },
   // 🔴 เปลี่ยนปลายทาง 19 ส.ค. 2569 จากบทความ → เครื่องคำนวณ
   //    GA4 (22 ก.ค.–18 ส.ค.): คนที่มาจากคลิปอยู่บนบทความ pricing-no-loss เฉลี่ย **2 วินาที**
   //    คลิปปิดท้ายด้วยคำว่า "คำนวณฟรี" แต่ปลายทางเป็นบทความให้อ่าน = ผิดสัญญาโดยไม่ตั้งใจ
   //    ลิงก์ไปบทความเต็มยังอยู่ท้ายหน้า /calc สำหรับคนที่อยากอ่านต่อ
-  '/price':    { path: '/calc',                           campaign: 'pricing' },
-  '/ราคา':     { path: '/calc',                           campaign: 'pricing' },
+  '/price':    { path: '/calc',                           campaign: 'pricing',  seg: 'seller' },
+  '/ราคา':     { path: '/calc',                           campaign: 'pricing',  seg: 'seller' },
   // ไม่เพิ่มชื่อพ้องอีก — ยิ่งมี alias ยิ่งทำให้ "campaign → ลิงก์ที่คนเห็น" ย้อนกลับไม่ตรง
   //   (เพิ่ม /คิด แล้วรายงานเปลี่ยนไปเรียกชิ้นนี้ว่า /คิด ทั้งที่ในคลิปเขียนว่า /ราคา)
-  '/customer': { path: '/blog/first-customers-no-ads',    campaign: 'first_customers' },
-  '/ลูกค้า':    { path: '/blog/first-customers-no-ads',    campaign: 'first_customers' },
-  '/plan':     { path: '/blog/business-plan-fast',        campaign: 'business_plan' },
-  '/แผน':      { path: '/blog/business-plan-fast',        campaign: 'business_plan' },
+  '/customer': { path: '/blog/first-customers-no-ads',    campaign: 'first_customers', seg: 'seller' },
+  '/ลูกค้า':    { path: '/blog/first-customers-no-ads',    campaign: 'first_customers', seg: 'seller' },
+  '/plan':     { path: '/blog/business-plan-fast',        campaign: 'business_plan', seg: 'newbie' },
+  '/แผน':      { path: '/blog/business-plan-fast',        campaign: 'business_plan', seg: 'newbie' },
   '/pc':       { path: '/blog/ai-era-hardware-cost',      campaign: 'hardware_cost' },
   '/คอม':      { path: '/blog/ai-era-hardware-cost',      campaign: 'hardware_cost' },
   '/aifind':   { path: '/blog/why-ai-doesnt-recommend-you', campaign: 'ai_discovery' },
   '/ค้นเจอ':    { path: '/blog/why-ai-doesnt-recommend-you', campaign: 'ai_discovery' },
-  '/palm':     { path: '/blog/palm-price-what-you-control', campaign: 'palm_price' },
-  '/ปาล์ม':    { path: '/blog/palm-price-what-you-control', campaign: 'palm_price' },
-  '/system':   { path: '/blog/ai-system-not-assistant',   campaign: 'ai_system' },
-  '/ระบบ':     { path: '/blog/ai-system-not-assistant',   campaign: 'ai_system' },
+  '/palm':     { path: '/blog/palm-price-what-you-control', campaign: 'palm_price', seg: 'palm' },
+  '/ปาล์ม':    { path: '/blog/palm-price-what-you-control', campaign: 'palm_price', seg: 'palm' },
+  '/system':   { path: '/blog/ai-system-not-assistant',   campaign: 'ai_system', seg: 'owner' },
+  '/ระบบ':     { path: '/blog/ai-system-not-assistant',   campaign: 'ai_system', seg: 'owner' },
   '/ready':    { path: '/blog/prepare-dont-predict',      campaign: 'resilience' },
   '/พร้อม':    { path: '/blog/prepare-dont-predict',      campaign: 'resilience' },
   '/check':    { path: '/checkup',                        campaign: 'checkup' },
@@ -150,5 +164,11 @@ export function shortLinkTarget(link: ShortLink, origin: string, search = '', pa
   to.searchParams.set('utm_medium', medium);
   to.searchParams.set('utm_campaign', cleanTag(q.get('utm_campaign')) ?? link.campaign);
   if (content) to.searchParams.set('utm_content', content);
+
+  // 🔴 seg = "ปัญหาที่เขามาด้วย" — ค่าที่ผู้ใช้พามาชนะค่าประจำลิงก์ (เจาะจงกว่า)
+  //    ถ้าไม่ส่งต่อตรงนี้ ค่าจะตายที่ hop แรกทันที และ heroVariant 9 แบบจะไม่มีวันถูกใช้
+  const seg = cleanTag(q.get('seg')) ?? link.seg;
+  if (seg) to.searchParams.set('seg', seg);
+
   return to.toString();
 }
