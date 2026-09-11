@@ -6,6 +6,8 @@ import {
 import {
   PLAN_PRICE, PLAN_PRICE_NUM, annualPrice, annualPerMonth, ANNUAL_MONTHS_CHARGED,
 } from '../access';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 /* ══════════════════════════════════════════════════════════════════════════
  * เจ้าของถาม 6 ก.ย. 2569: *"12,000/ปี คือแพ็กใหม่ หรือ growth ลดราคาเมื่อจ่ายรายปี"*
@@ -94,43 +96,42 @@ describe('ราคาต้องมีแหล่งเดียว — "ใ�
   });
 });
 
-describe('🔴 ราคารายปีที่ขายอยู่จริงวันนี้ ยังไม่ผ่านเกณฑ์กำไรของระบบเอง', () => {
-  /** แพ็กที่ราคารายปีปัจจุบัน margin < MIN_MARGIN_PCT (คิดที่เพดาน token เต็ม · worst case)
+describe('ราคารายปีที่ขายอยู่จริง ต้องผ่านเกณฑ์กำไรเหมือนรายเดือน', () => {
+  /** 🟢 **หนี้ปิดแล้ว 11 ก.ย. 2569** (เจ้าของอนุมัติ `ANNUAL_MONTHS_CHARGED` 10 → 11)
    *
-   *  🔴 นี่คือ **หนี้ที่ประกาศไว้ ไม่ใช่พฤติกรรมที่ยอมรับ** — วัดจริง 10 ก.ย. 2569 ที่
-   *     `ANNUAL_MONTHS_CHARGED = 10` (จ่าย 10 ใช้ 12 ≈ ลด 16.7%):
-   *       starter  7,900 → 31.1%   growth 14,900 → 27.0%   scale 59,000 → 26.2%
-   *     ค่าที่ผ่านครบทุกแพ็กคือ **11 เดือน** (ลด 8.3%): 37.3% / 33.6% / 32.9%
+   *  ประวัติที่ต้องไม่ลืม: ที่ 10 เดือน (ลด 16.7%) ราคารายปีหลุดเกณฑ์ **ทั้ง 3 แพ็ก**
+   *    starter 7,900 → 31.1%  ·  growth 14,900 → 27.0%  ·  scale 59,000 → 26.2%
+   *  ที่ 11 เดือน (ลด 8.3%) ⇒ 37.3 / 33.6 / 32.9% ผ่านครบ · **ราคารายเดือนไม่ถูกแตะ**
    *
-   *  ⚠️ **ห้ามแก้รายการนี้เพื่อให้เทสต์เขียว** — แก้ได้ทางเดียวคือ *ลบชื่อออก*
-   *     หลังเจ้าของอนุมัติราคาใหม่ (การเปลี่ยนราคาที่ขายอยู่ = คำตัดสินของเจ้าของ ไม่ใช่ของผู้ช่วย) */
-  const KNOWN_BELOW_GATE = ['starter', 'growth', 'scale'] as const;
+   *  ⚠️ รายการนี้ต้องว่างตลอดไป — มีชื่อโผล่มาเมื่อไร แปลว่ามีคนลดราคาจนกำไรหลุดเกณฑ์ */
+  const KNOWN_BELOW_GATE: readonly string[] = [];
 
   const belowGate = PAID.filter(
     (p) => !meetsMinMargin(annualPerMonth(p), PLAN_MONTHLY_TOKENS[p]),
   );
 
-  it('รายการหนี้ต้องตรงกับของจริงเป๊ะ — เพิ่มเองไม่ได้ และลืมลบก็ไม่ได้', () => {
+  it('ไม่มีแพ็กไหนขายรายปีต่ำกว่าเกณฑ์กำไร', () => {
     expect(belowGate).toEqual([...KNOWN_BELOW_GATE]);
   });
 
-  it('รายเดือนยังผ่านครบทุกแพ็ก — ปัญหาอยู่ที่ "ส่วนลดรายปี" ไม่ใช่ที่บันไดราคา', () => {
+  it('รายเดือนยังผ่านครบทุกแพ็ก — ส่วนลดรายปีห้ามลากกำไรลงไปด้วย', () => {
     for (const r of allPlanReports()) expect(r.ok, r.plan).toBe(true);
   });
 
-  it('ตัวเลขที่เสนอ (11 เดือน) ผ่านเกณฑ์ครบจริง — ไม่ใช่การเดา', () => {
-    for (const p of PAID) {
-      const perMonth = Math.round(PLAN_PRICE_THB[p] * 11 / 12);
-      expect(marginPct(perMonth, tokenCostThb(PLAN_MONTHLY_TOKENS[p])), p)
-        .toBeGreaterThanOrEqual(MIN_MARGIN_PCT);
-    }
+  it('🔴 ค่าที่ใช้อยู่ต้องเป็นค่าต่ำสุดที่ยังผ่านเกณฑ์ — ไม่ขี้เหนียวเกินจำเป็น', () => {
+    // ให้ส่วนลดลึกที่สุดเท่าที่กำไรยังผ่าน (ลูกค้าได้มากสุดโดยธุรกิจไม่เจ็บ)
+    const passes = (n: number) =>
+      PAID.every((p) => marginPct(Math.round(PLAN_PRICE_THB[p] * n / 12),
+        tokenCostThb(PLAN_MONTHLY_TOKENS[p])) >= MIN_MARGIN_PCT);
+    expect(passes(ANNUAL_MONTHS_CHARGED)).toBe(true);
+    expect(passes(ANNUAL_MONTHS_CHARGED - 1)).toBe(false);  // ต่ำกว่านี้ = หลุดเกณฑ์
   });
 
-  it('และ 10 เดือน (ค่าที่ใช้อยู่) ไม่ผ่าน — ยืนยันว่าเส้นแบ่งอยู่ตรงนั้นจริง', () => {
-    expect(ANNUAL_MONTHS_CHARGED).toBe(10);
+  it('🔒 ห้ามถอยกลับไป 10 เดือน — ค่าเดิมที่ทำให้หลุดเกณฑ์ทั้ง 3 แพ็ก', () => {
+    expect(ANNUAL_MONTHS_CHARGED).toBeGreaterThan(10);
     for (const p of PAID) {
-      const perMonth = Math.round(PLAN_PRICE_THB[p] * 10 / 12);
-      expect(marginPct(perMonth, tokenCostThb(PLAN_MONTHLY_TOKENS[p])), p)
+      const perMonthAt10 = Math.round(PLAN_PRICE_THB[p] * 10 / 12);
+      expect(marginPct(perMonthAt10, tokenCostThb(PLAN_MONTHLY_TOKENS[p])), p)
         .toBeLessThan(MIN_MARGIN_PCT);
     }
   });
@@ -139,5 +140,15 @@ describe('🔴 ราคารายปีที่ขายอยู่จร�
     for (const p of PAID) {
       expect(annualPrice(p), p).toBe(PLAN_PRICE_NUM[p] * ANNUAL_MONTHS_CHARGED);
     }
+  });
+
+  it('🔴 หน้าขาย (SalePage) ต้องคำนวณราคาจาก access.ts ห้าม hardcode', () => {
+    // เดิมหน้านี้ "mirror" ราคาเป็นเลขตายตัว 5 ตัว ⇒ แก้ต้นทางแล้วหน้าขายยังโฆษณาราคาเก่า
+    const sale = readFileSync(resolve(__dirname, '../../pages/SalePage.tsx'), 'utf8');
+    for (const stale of ['14900', '1242', '2980', '17880']) {
+      expect(sale, `SalePage ยังมีเลขตายตัว ${stale}`).not.toContain(stale);
+    }
+    expect(sale).toContain("annualPrice('growth')");
+    expect(sale).toContain('ANNUAL_MONTHS_CHARGED');
   });
 });

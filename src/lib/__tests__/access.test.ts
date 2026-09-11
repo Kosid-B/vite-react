@@ -153,24 +153,27 @@ describe('discountedMonthly — ราคาหลังหักคูปอง
   });
 });
 
-describe('billing รายปี (2 เดือนฟรี)', () => {
-  it('annualPrice = รายเดือน × 10 (จ่าย 10 ใช้ 12)', () => {
-    expect(annualPrice('starter')).toBe(7900);   // 790 × 10
-    expect(annualPrice('growth')).toBe(14900);   // 1490 × 10
-    expect(annualPrice('scale')).toBe(59000);    // 5900 × 10
+/* 🔴 แก้ 11 ก.ย. 2569: ส่วนลดรายปีเปลี่ยนจาก 2 เดือนฟรี → 1 เดือนฟรี
+ *    เพราะ 2 เดือนฟรีทำให้ margin รายปีหลุดเกณฑ์ทั้ง 3 แพ็ก (ledger #76)
+ *    เกณฑ์กำไรอยู่ใน annualPricing.test.ts — ไฟล์นี้ตรวจแค่ว่าเลขคำนวณถูก */
+describe('billing รายปี (1 เดือนฟรี)', () => {
+  it('annualPrice = รายเดือน × 11 (จ่าย 11 ใช้ 12)', () => {
+    expect(annualPrice('starter')).toBe(8690);   // 790 × 11
+    expect(annualPrice('growth')).toBe(16390);   // 1490 × 11
+    expect(annualPrice('scale')).toBe(64900);    // 5900 × 11
     expect(annualPrice('free')).toBe(0);
   });
 
   it('annualPerMonth ถูกกว่าราคารายเดือนเสมอ', () => {
-    expect(annualPerMonth('starter')).toBe(658); // 7900/12
+    expect(annualPerMonth('starter')).toBe(724); // 8690/12
     expect(annualPerMonth('starter')).toBeLessThan(790);
     expect(annualPerMonth('growth')).toBeLessThan(1490);
   });
 
-  it('annualSaving = ประหยัด 2 เดือน ≈ 17%', () => {
-    expect(annualSavingThb('starter')).toBe(1580); // 790 × 2
-    expect(annualSavingThb('growth')).toBe(2980);
-    expect(annualSavingPct('growth')).toBe(17);    // round(2/12 × 100)
+  it('annualSaving = ประหยัด 1 เดือน ≈ 8%', () => {
+    expect(annualSavingThb('starter')).toBe(790);  // 790 × 1
+    expect(annualSavingThb('growth')).toBe(1490);
+    expect(annualSavingPct('growth')).toBe(8);     // round(1/12 × 100)
     expect(annualSavingPct('free')).toBe(0);       // ไม่หารด้วยศูนย์
   });
 });

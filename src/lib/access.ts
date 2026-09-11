@@ -34,11 +34,18 @@ export const PLAN_PRICE_NUM: Record<PlanId, number> = {
   free: 0, starter: 790, growth: 1490, scale: 5900,
 };
 
-/* ===== Billing รายปี (จ่ายทีเดียว = ได้ 2 เดือนฟรี) =====
+/* ===== Billing รายปี (จ่ายทีเดียว = ได้ 1 เดือนฟรี) =====
  * เหตุผลเชิงธุรกิจ: ลูกค้า commit เร็วขึ้น + เงินสดล่วงหน้า + anchor ราคา
  * ไม่ตัดราคารายเดือน (รายเดือนคงเดิม) — รายปีคือ "ส่วนลดแลกกับการผูกพันยาว"
- * ดูที่มา: docs/marketing/PRICING-MARGIN-ANALYSIS.md §5 */
-export const ANNUAL_MONTHS_CHARGED = 10; // จ่าย 10 เดือน ใช้ 12 (2 เดือนฟรี ≈ ลด 16.7%)
+ * ดูที่มา: docs/marketing/PRICING-MARGIN-ANALYSIS.md §5
+ *
+ * 🔴 **แก้ 10 → 11 เมื่อ 11 ก.ย. 2569 (เจ้าของอนุมัติ)** — ค่าเดิม 10 เดือน (ลด 16.7%)
+ *    ทำให้ราคารายปี **หลุดเกณฑ์กำไรของระบบเอง ทั้ง 3 แพ็ก** เมื่อคิดที่เพดาน token เต็ม:
+ *      starter 7,900 = 31.1% · growth 14,900 = 27.0% · scale 59,000 = 26.2%
+ *    ต่ำกว่า `tokenEconomics.MIN_MARGIN_PCT` = 32% · ที่ 11 เดือน ⇒ 37.3 / 33.6 / 32.9% ผ่านครบ
+ *    ⚠️ **ราคารายเดือนไม่ถูกแตะเลยสักบาท** — ที่เปลี่ยนคือความลึกของส่วนลด (ledger #76)
+ *    🔒 ลดค่านี้ลงอีก = `annualPricing.test.ts` แดงทันที (ส่วนลดลึกขึ้น = กำไรหลุดเกณฑ์) */
+export const ANNUAL_MONTHS_CHARGED = 11; // จ่าย 11 เดือน ใช้ 12 (1 เดือนฟรี ≈ ลด 8.3%)
 
 /** ราคารายปี (บาท) = ราคารายเดือน × 10 — free = 0 · pure */
 export function annualPrice(plan: PlanId): number {
@@ -55,7 +62,7 @@ export function annualSavingThb(plan: PlanId): number {
   return (PLAN_PRICE_NUM[plan] ?? 0) * 12 - annualPrice(plan);
 }
 
-/** ส่วนลดรายปีเป็น % (คงที่ ~16.7% จาก 2/12 เดือนฟรี) — pure */
+/** ส่วนลดรายปีเป็น % (คิดจาก ANNUAL_MONTHS_CHARGED — ห้าม hardcode) — pure */
 export function annualSavingPct(plan: PlanId): number {
   const monthlyYear = (PLAN_PRICE_NUM[plan] ?? 0) * 12;
   return monthlyYear > 0 ? Math.round((annualSavingThb(plan) / monthlyYear) * 100) : 0;

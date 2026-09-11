@@ -6,6 +6,10 @@ import { applySeo, siteOrigin } from '../lib/seo';
 import LegalLinks from '../components/LegalLinks';
 import IsmsBadge from '../components/IsmsBadge';
 import FaqAccordion, { type FaqItem } from '../components/FaqAccordion';
+import {
+  PLAN_PRICE_NUM, annualPrice, annualPerMonth, annualSavingThb, annualSavingPct,
+  ANNUAL_MONTHS_CHARGED,
+} from '../lib/access';
 
 /* ===== Sale page (direct-response) — /sale (สาธารณะ ไม่ต้องล็อกอิน) =====
  * ต่างจาก /start (viral acquisition เน้นสมัครฟรี): หน้านี้ "ปิดการขาย" — พาไปเป็นลูกค้าจ่ายจริง
@@ -14,14 +18,17 @@ import FaqAccordion, { type FaqItem } from '../components/FaqAccordion';
  * ⚠️ ความซื่อสัตย์ (บังคับ):
  *  - ไม่มี testimonial ลูกค้าปลอม (ยังไม่มีลูกค้าจ่ายจริง) → ใช้ social proof จริง: playbook เคสระดับโลก + เครดิต B.Training 20 ปี
  *  - ไม่การันตีผลลัพธ์/ยอดขาย · ราคาตลาดที่อ้างอิงระบุชัดว่าเป็น "ราคาจ้างเอง"
- *  - ตัวเลขแพ็ก = mirror ของ src/lib/access.ts (source of truth) — ANNUAL_MONTHS_CHARGED=10 (จ่าย 10 ใช้ 12) */
+ *  - ตัวเลขแพ็ก **คำนวณจาก src/lib/access.ts สด ๆ** ห้าม hardcode ซ้ำ */
 
-// mirror src/lib/access.ts (จ่ายรายปี 10 เดือน ใช้ 12 = 2 เดือนฟรี ≈ ลด 17%)
-const GROWTH_MO = 1490;
-const GROWTH_YR = 14900;          // 1490 × 10
-const GROWTH_YR_PERMO = 1242;     // 14900 / 12 ปัดเต็ม
-const GROWTH_SAVE = 2980;         // 1490×12 − 14900
-const GROWTH_SAVE_PCT = 17;
+/* 🔴 เดิมหน้านี้ "mirror" ราคาไว้เป็นเลขตายตัว 5 ตัว พร้อมคอมเมนต์ว่า mirror ของ access.ts
+ *    ⇒ แก้ ANNUAL_MONTHS_CHARGED ที่ต้นทาง แล้วหน้านี้ยังโฆษณาราคาเก่าต่อโดยไม่มีอะไรส่งเสียง
+ *    **คำว่า "mirror" ในคอมเมนต์ ไม่ได้ทำให้มันเป็น mirror จริง** — ต้องคำนวณจากแหล่งเดียว (ledger #76) */
+const GROWTH_MO = PLAN_PRICE_NUM.growth;
+const GROWTH_YR = annualPrice('growth');
+const GROWTH_YR_PERMO = annualPerMonth('growth');
+const GROWTH_SAVE = annualSavingThb('growth');
+const GROWTH_SAVE_PCT = annualSavingPct('growth');
+const FREE_MONTHS = 12 - ANNUAL_MONTHS_CHARGED;
 
 // Offer stack — "ถ้าจ้างเอง/ซื้อแยก" ต้นทุนตลาด (อ้างอิง ไม่ใช่การันตี) vs รวมในแพ็กเดียว
 type StackRow = { item: string; worth: string };
@@ -37,7 +44,7 @@ const STACK: StackRow[] = [
 const FAQS: FaqItem[] = [
   { q: 'จ่ายยังไง มี PromptPay ไหม?', a: 'มี — จ่ายผ่าน PromptPay (โอน/สแกน) แล้วอัปสลิปในแอป ระบบตรวจสลิปกับธนาคารจริงและเปิดแพ็กให้อัตโนมัติ ไม่ต้องผูกบัตรเครดิต ไม่มีตัดเงินอัตโนมัติ' },
   { q: 'ทดลองก่อนได้ไหม ถ้าไม่ชอบยกเลิกยังไง?', a: 'ได้ — เริ่มทดลองฟรี 15 วัน ไม่ต้องใช้บัตร ใช้ฟีเจอร์เต็มก่อนตัดสินใจ ถ้าไม่ต่ออายุ ระบบไม่ตัดเงินคุณอยู่แล้ว (ไม่มี auto-charge) หยุดเมื่อไหร่ก็ได้' },
-  { q: 'รายปีถูกกว่าจริงเท่าไหร่?', a: `รายปีจ่าย 10 เดือน ใช้ได้ 12 เดือน = ฟรี 2 เดือน ประหยัด ~${GROWTH_SAVE_PCT}% เช่น Growth รายเดือนปีละ ฿17,880 → รายปีเหลือ ฿${GROWTH_YR.toLocaleString()} (ประหยัด ฿${GROWTH_SAVE.toLocaleString()}/ปี)` },
+  { q: 'รายปีถูกกว่าจริงเท่าไหร่?', a: `รายปีจ่าย ${ANNUAL_MONTHS_CHARGED} เดือน ใช้ได้ 12 เดือน = ฟรี ${FREE_MONTHS} เดือน ประหยัด ~${GROWTH_SAVE_PCT}% เช่น Growth รายเดือนปีละ ฿${(GROWTH_MO * 12).toLocaleString()} → รายปีเหลือ ฿${GROWTH_YR.toLocaleString()} (ประหยัด ฿${GROWTH_SAVE.toLocaleString()}/ปี)` },
   { q: 'AI ทำให้ยอดขายขึ้นเลยไหม?', a: 'พูดตรง ๆ: ไม่ใช่ปุ่มวิเศษ AI ช่วยให้ "เริ่ม + วางระบบ + การตลาด" เร็วและเป็นระบบขึ้นมาก ลดการเดาสุ่ม แต่การปิดการขายยังต้องคุณลงมือ — เราออกแบบให้คุณมีโอกาสสำเร็จสูงขึ้น ไม่ใช่รับประกันตัวเลข' },
   { q: 'ไม่เก่งเทคโนโลยี/ไม่เคยทำธุรกิจ ใช้ได้ไหม?', a: 'ได้ ออกแบบเพื่อมือใหม่ สั่งงานเป็นภาษาไทยธรรมชาติ CEO AI ถามสิ่งที่คุณถนัดแล้วพาทำทีละขั้นตามกรอบ MIT 24 Steps' },
   { q: 'ใครอยู่เบื้องหลังระบบนี้?', a: 'B. Training Consultant (M.E.A) — ที่ปรึกษาธุรกิจ/ระบบบริหาร/ISO ในไทยมากกว่า 20 ปี ระบบผสานประสบการณ์จริงเข้ากับ AI ไม่ใช่แค่ wrapper ของแชตบอตต่างชาติ' },
@@ -58,7 +65,7 @@ export default function SalePage() {
     const o = siteOrigin();
     applySeo({
       title: 'Growth — ทีม AI ทั้งบริษัทในราคาเดียว | CEO AI Thailand',
-      description: `เปิดบริษัทพร้อมทีม AI (CEO/การตลาด/วิจัยตลาด/CFO) + หน้าร้าน + รับงาน B2B + โครงระบบ ISO เริ่มทดลองฟรี 15 วัน ไม่ต้องใช้บัตร · รายปีประหยัด ~${GROWTH_SAVE_PCT}% (ฟรี 2 เดือน) จ่าย PromptPay`,
+      description: `เปิดบริษัทพร้อมทีม AI (CEO/การตลาด/วิจัยตลาด/CFO) + หน้าร้าน + รับงาน B2B + โครงระบบ ISO เริ่มทดลองฟรี 15 วัน ไม่ต้องใช้บัตร · รายปีประหยัด ~${GROWTH_SAVE_PCT}% (ฟรี ${FREE_MONTHS} เดือน) จ่าย PromptPay`,
       canonicalUrl: `${o}/sale`,
       imageUrl: `${o}/og-image.png`,
       jsonLd: [{
