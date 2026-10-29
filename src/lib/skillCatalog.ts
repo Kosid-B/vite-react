@@ -47,6 +47,66 @@ export interface SkillEntry {
   desc: string;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+ * ชื่อ + คำบรรยายที่ "คนไทยอ่าน" — ไม่ใช่ id ของเครื่อง
+ *
+ * 🔴 ปัญหาจริงที่เห็นบนหน้าเว็บ (วัด 29 ต.ค. 2569 · ภาพหน้าจอ 390×664):
+ *   หัวการ์ดคือ `id.replace(/-/g,' ')` + CSS `text-transform: capitalize`
+ *   ⇒ คนไทยที่เข้ามาดูสินค้าเห็นหัวข้อว่า **"Iso From Day One" · "Ai Dark Marketing"**
+ *     **"Pdpa" · "Kpi Dashboard" · "Saas Evaluation"** — เป็นสลักของเครื่อง
+ *     และ `capitalize` ยัง **ทำตัวย่อพัง** (ISO→Iso · AI→Ai · PDPA→Pdpa) รวม 18 รายการ
+ *
+ * ⚠️ สิ่งที่ "ไม่" ทำในไฟล์นี้: **ไม่แต่งชื่อไทยขึ้นเอง**
+ *   ชื่อที่ได้ต้องมาจากข้อความที่เขียนไว้แล้วเท่านั้น (ส่วนหน้า ' — ' ของ `desc`)
+ *   ที่ไม่มี ก็คืนชื่อจาก id โดยไม่ทำตัวย่อพัง — แปลงรูป ไม่ได้ประดิษฐ์ความหมาย
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/** ตัวย่อที่ต้องเป็นตัวพิมพ์ใหญ่เสมอ — `capitalize` ของ CSS ทำให้พังทุกตัว */
+export const SKILL_ACRONYMS: Record<string, string> = {
+  ab: 'A/B', ai: 'AI', bcms: 'BCMS', is: 'IS', iso: 'ISO', kpi: 'KPI',
+  pdpa: 'PDPA', rbv: 'RBV', saas: 'SaaS', seo: 'SEO', sop: 'SOP',
+};
+
+/** เพดานความยาวของหัวข้อที่ดึงจาก desc — ยาวกว่านี้ไม่ใช่ "ชื่อ" แล้ว แต่เป็นประโยค
+ *  🔎 เลือก 72 จากของจริง ไม่ใช่เลขกลม: หัวข้อไทยที่ยาวที่สุดซึ่งยัง "เป็นชื่อ" = **68 ตัว**
+ *     (`business-building-24-step`) · ถัดขึ้นไปกระโดดเป็น **89 · 94 · 111** ซึ่งเป็นประโยคเต็ม
+ *     ⇒ 72 อยู่ในช่องว่างระหว่างสองกลุ่ม · เทสต์ล็อกไว้ว่าต้องคัดสามตัวนั้นออกเสมอ */
+export const SKILL_TITLE_MAX = 72;
+
+const THAI = /[\u0e00-\u0e7f]/;
+
+/** id → ชื่ออ่านได้ (ไม่แตะความหมาย แค่เว้นวรรคและคืนตัวย่อให้ถูก) */
+export function humanizeSkillId(id: string): string {
+  return id.split('-')
+    .map((w) => SKILL_ACRONYMS[w] ?? (/^\d+$/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(' ');
+}
+
+/** ชื่อทักษะที่แสดงบนหัวการ์ด
+ *  ใช้ข้อความก่อน ' — ' เมื่อมันเป็นภาษาไทยและสั้นพอจะเป็นชื่อ · ไม่งั้นใช้ id ที่จัดรูปแล้ว */
+export function skillTitle(s: Pick<SkillEntry, 'id' | 'desc'>): string {
+  const head = s.desc.split(' — ')[0]?.trim() ?? '';
+  if (head && head !== s.desc && head.length <= SKILL_TITLE_MAX && THAI.test(head)) return head;
+  return humanizeSkillId(s.id);
+}
+
+/** คำบรรยายส่วนที่เหลือ หลังยกหัวข้อขึ้นไปเป็นชื่อแล้ว (กันข้อความซ้ำสองที่) */
+export function skillBody(s: Pick<SkillEntry, 'id' | 'desc'>): string {
+  const i = s.desc.indexOf(' — ');
+  if (i < 0) return s.desc;
+  const head = s.desc.slice(0, i).trim();
+  if (head.length <= SKILL_TITLE_MAX && THAI.test(head)) return s.desc.slice(i + 3).trim();
+  return s.desc;
+}
+
+/** 🔴 คำบรรยายยังเป็นภาษาอังกฤษอยู่ไหม — **หนี้ที่ประกาศไว้ ไม่ใช่สิ่งที่ยอมรับ**
+ *  วัด 29 ต.ค. 2569: **78 จาก 127 รายการ** (ทักษะที่มากับบันเดิลทั้งหมด) ยังเป็นอังกฤษ
+ *  ⇒ ผู้ใช้ไทยบนหน้าขายอ่านไม่ออก · แก้ได้ทางเดียวคือ **เขียนคำบรรยายไทยของจริง**
+ *    ห้ามให้ผู้ช่วยแปลเดาเอง เพราะจะกลายเป็นคำอธิบายสินค้าที่ไม่ตรงกับของที่ขาย */
+export function isUntranslated(s: Pick<SkillEntry, 'desc'>): boolean {
+  return !THAI.test(s.desc.slice(0, 40));
+}
+
 export interface StageMeta {
   id: SkillStage;
   order: number;

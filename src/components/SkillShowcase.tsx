@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   SKILL_STAGES, BIZ_LABEL, PLAN_LABEL, catalogSummary, skillsForStage, skillsForBiz,
-  priceOf, consultantEquivOf, bundleQuote, creditFor,
+  priceOf, consultantEquivOf, bundleQuote, creditFor, skillTitle, skillBody,
   TOTAL_SKILL_COUNT, FREE_SKILL_COUNT, SIGNATURE_COUNT,
   type SkillStage, type SkillBiz,
 } from '../lib/skillCatalog';
@@ -65,10 +65,15 @@ export default function SkillShowcase({ onGetStarted }: { onGetStarted: () => vo
               aria-pressed={stage === st.id}
               onClick={() => { setStage(st.id); setShowAll(false); track('skill_stage_view', { stage: st.id }); }}
             >
-              <span className="ss-stage-n">{st.order}</span>
-              <span className="ss-stage-icon" aria-hidden="true">{st.icon}</span>
+              <span className="ss-stage-top">
+                <span className="ss-stage-n">{st.order}</span>
+                <span className="ss-stage-icon" aria-hidden="true">{st.icon}</span>
+              </span>
               <span className="ss-stage-label">{st.label}</span>
-              <span className="ss-stage-meta">{total} ทักษะ · ฟรี {free}{signature > 0 && ` · เฉพาะ ${signature}`}</span>
+              {/* ช่องว่างแบบไม่ตัดบรรทัด (NBSP) กันตัวเลขหลุดไปขึ้นบรรทัดใหม่คนเดียว — ของจริงที่เห็น: "เฉพาะ" / "11" */}
+              <span className="ss-stage-meta">
+                {total}&nbsp;ทักษะ · ฟรี&nbsp;{free}{signature > 0 && ` · เฉพาะ\u00a0${signature}`}
+              </span>
             </button>
           </li>
         ))}
@@ -105,8 +110,8 @@ export default function SkillShowcase({ onGetStarted }: { onGetStarted: () => vo
               )}
               {s.biz !== 'all' && <span className="ss-biz">{BIZ_LABEL[s.biz]}</span>}
             </div>
-            <h3>{s.id.replace(/-/g, ' ')}</h3>
-            <p>{s.desc}</p>
+            <h3>{skillTitle(s)}</h3>
+            <p>{skillBody(s)}</p>
             {creditFor(s) && <p className="ss-credit">{creditFor(s)}</p>}
             {s.origin === 'signature' && (
               <div className="ss-price">

@@ -6974,7 +6974,11 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 /* ===== SkillShowcase — สารบัญทักษะที่ปรึกษาบน Landing ===== */
 .skill-showcase { max-width: 1080px; margin: 72px auto; padding: 0 20px; display: flex; flex-direction: column; gap: 22px; }
 .ss-head { display: flex; flex-direction: column; gap: 10px; text-align: center; }
-.ss-eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent, #38bdf8); font-weight: 700; }
+/* 🔴 ห้ามใส่ letter-spacing/text-transform กับข้อความไทย (แก้ 29 ต.ค. 2569)
+ *    เดิม: letter-spacing .18em + text-transform uppercase — ลอกมาจากดีไซน์ภาษาอังกฤษ
+ *    ไทยเป็นภาษาที่สระ/วรรณยุกต์เกาะตัวอักษร ⇒ ดึงห่างแล้ว "อ่านเป็นคำ" ไม่ได้
+ *    และ uppercase ไม่มีผลกับอักษรไทยเลยสักตัว = โค้ดตาย ที่หลอกให้คิดว่ามีดีไซน์ */
+.ss-eyebrow { font-size: 12px; color: var(--accent, #38bdf8); font-weight: 700; line-height: 1.6; }
 .ss-head h2 { font-size: clamp(24px, 4vw, 36px); margin: 0; line-height: 1.3; }
 .ss-head h2 strong { color: var(--accent, #38bdf8); }
 .ss-lead { color: #94a3b8; margin: 0; font-size: 16px; line-height: 1.7; }
@@ -6982,16 +6986,22 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ss-stages { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); }
 .ss-stage { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
   padding: 14px 16px; border-radius: 12px; border: 1px solid #1e293b; background: #0b1220; color: inherit;
+  gap: 6px;
   cursor: pointer; text-align: left; transition: border-color .15s, transform .15s; }
 .ss-stage:hover { border-color: #334155; transform: translateY(-2px); }
 .ss-stage.active { border-color: var(--accent, #38bdf8); background: #0d1a2b; }
 .ss-stage:focus-visible { outline: 2px solid var(--accent, #38bdf8); outline-offset: 2px; }
-.ss-stage-n { font-size: 11px; font-weight: 800; color: #475569; letter-spacing: .1em; }
+.ss-stage-top { display: flex; align-items: center; gap: 8px; }
+.ss-stage-n { font-size: 11px; font-weight: 800; color: #475569;
+  min-width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px; background: #111c2e; }
 .ss-stage.active .ss-stage-n { color: var(--accent, #38bdf8); }
 .ss-stage-icon { font-size: 20px; }
-.ss-stage-label { font-weight: 700; font-size: 15px; }
-.ss-stage-meta { font-size: 12px; color: #94a3b8; }
-.ss-question { text-align: center; font-size: 18px; color: #cbd5e1; font-style: italic; margin: 0; }
+.ss-stage-label { font-weight: 700; font-size: 15px; line-height: 1.5; }
+.ss-stage-meta { font-size: 12px; color: #94a3b8; line-height: 1.6; }
+/* 🔴 ฟอนต์ไทยไม่มีตัวเอียงจริง — เบราว์เซอร์เอียงให้เอง (synthetic oblique)
+ *    วรรณยุกต์จะเอียงไปชนตัวถัดไป ⇒ เน้นด้วยน้ำหนัก/สีแทน ไม่ใช่ความเอียง */
+.ss-question { text-align: center; font-size: 18px; line-height: 1.65; color: #e2e8f0; font-weight: 600; margin: 0; }
 .ss-filter { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .ss-chip { padding: 7px 15px; border-radius: 999px; border: 1px solid #1e293b; background: transparent;
   color: #94a3b8; font-size: 13px; cursor: pointer; transition: border-color .15s, color .15s; }
@@ -7004,8 +7014,10 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ss-card-top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .ss-tier { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; }
 .ss-biz { font-size: 11px; color: #94a3b8; }
-.ss-card h3 { margin: 0; font-size: 15px; font-weight: 700; text-transform: capitalize; line-height: 1.4; }
-.ss-card p { margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.65; }
+/* 🔴 ห้าม text-transform: capitalize — ทำตัวย่อพัง 18 รายการ (ISO→Iso · AI→Ai · PDPA→Pdpa)
+ *    ชื่อที่ถูกต้องมาจาก skillCatalog.skillTitle() แล้ว ไม่ต้องให้ CSS มาแปลงซ้ำ */
+.ss-card h3 { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.5; color: #e2e8f0; }
+.ss-card p { margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.75; }
 .ss-foot { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; margin-top: 8px; }
 .ss-foot p { margin: 0; color: #94a3b8; font-size: 14px; line-height: 1.75; }
 .ss-foot strong { color: #e2e8f0; }
@@ -7014,14 +7026,21 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
 .ss-cta:hover { filter: brightness(1.08); }
 .ss-cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .ss-stage { transition: none; } .ss-stage:hover { transform: none; } }
-.ss-sig-count { color: #fbbf24; }
+/* 🔴 ต้องเขียนให้ชนะ `.ss-lead strong` (specificity 0,1,1 > 0,1,0 ของคลาสเดี่ยว)
+ *    ของเดิม `.ss-sig-count { color:#fbbf24 }` **แพ้** ⇒ "49 ทักษะเฉพาะ" ขึ้นเป็น**สีเขียว**
+ *    ซึ่งในหน้านี้สีเขียว = "ฟรี" ⇒ บอกคนอ่านว่าของที่ขาย ฿1,500–2,490 เป็นของฟรี
+ *    (ยืนยันด้วย getComputedStyle บนเบราว์เซอร์จริง ไม่ใช่การอ่านไฟล์ CSS — GOTCHA #3) */
+.ss-lead strong.ss-sig-count { color: #fbbf24; }
 .ss-price { display: flex; flex-direction: column; gap: 2px; margin-top: auto; padding-top: 10px; border-top: 1px solid #1e293b; }
 .ss-price strong { color: #fbbf24; font-size: 18px; }
-.ss-price span { font-size: 11px; color: #64748b; }
+/* 🔴 เดิม #64748b บนพื้น #0b1220 = contrast 3.94:1 — ตกเกณฑ์ 4.5 ของ contrast-audit
+ *    และเป็นบรรทัดที่บอก "ราคาเทียบกับจ้างที่ปรึกษา" = ข้อความที่ต้องอ่านออกที่สุดในการ์ด */
+.ss-price span { font-size: 12px; color: #94a3b8; line-height: 1.6; }
 .ss-bundle { padding: 12px 18px; border: 1px dashed #fbbf24; border-radius: 10px; color: #cbd5e1 !important; font-size: 14px; }
 .ss-bundle strong { color: #fbbf24; font-size: 17px; }
-.ss-bundle s { color: #64748b; }
-.ss-credit { font-size: 11px !important; color: #94a3b8 !important; font-style: italic; margin-top: auto !important; padding-top: 8px; }
+/* ราคาก่อนลดต้องอ่านออกด้วย — #64748b บนพื้นเข้ม = 3.76:1 ตกเกณฑ์ 4.5 */
+.ss-bundle s { color: #94a3b8; }
+.ss-credit { font-size: 11px !important; color: #94a3b8 !important; margin-top: auto !important; padding-top: 8px; line-height: 1.6; }
 
 /* ══════════════════════════════════════════════════════════════════
  * แก้ contrast อัตโนมัติจากผลวัดจริง — 22 ส.ค. 2569
