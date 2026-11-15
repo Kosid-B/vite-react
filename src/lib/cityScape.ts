@@ -150,6 +150,34 @@ function gradient(stops: [string, string][], x1 = 0, y1 = 0, x2 = 0, y2 = 1): st
 const ROAD_ROW = 5, ROAD_COL = 6;
 const PARKS: [number, number][] = [[1, 7], [2, 7], [1, 8], [8, 1], [9, 2], [8, 8]];
 interface Bldg { x: number; y: number; w: number; d: number; h: number; type: string; c?: number; }
+/* ============================================================
+   ที่ดินที่ผูกกับ "ข้อมูลจริง" ของธุรกิจ
+   🔴 ก่อนหน้านี้ฉาก 3 มิติใช้ seed คงที่ (mulberry32(20260705)) = ทุกคนเห็นเมืองเหมือนกันเป๊ะ
+      ไม่ว่าธุรกิจจะโตแค่ไหน ⇒ ขัดกฎ `dynamic-plg` ที่ freeze ไว้เอง
+      ("ระบบรู้อะไรแล้วยังแสดงเหมือนไม่รู้ = ผิดกฎ")
+   ⚠️ ชนิดข้อมูลตรงนี้ตั้งใจให้เป็นรูปแบบกลาง ๆ **ไม่ import จาก companyCity/AppData**
+      เพื่อรักษาคำสัญญาที่หัวไฟล์เขียนไว้ว่า framework-agnostic
+   ============================================================ */
+export interface CityPlot {
+  /** ใช้เป็น data-plot บน <g> ให้ฝั่ง React ผูกคลิกได้ */
+  id: string;
+  /** ชื่อที่คนอ่าน (ขึ้นเป็น tooltip ของ SVG) */
+  label: string;
+  /** 0 = ยังไม่ได้ลงมือ → วาดเป็น "ที่ดินว่าง" ไม่ใช่ตึก */
+  level: number;
+  max: number;
+  locked?: boolean;
+}
+
+/** ความสูงของตึกเทียบกับผังเดิม ตามความคืบหน้าจริง (level/max)
+ *  พื้น 0.42 ไม่ใช่ 0 — ตึกที่เพิ่งเริ่มต้องยัง "เห็นว่ามีตึก" ไม่ใช่แบนติดพื้นจนอ่านไม่ออก
+ *  level 0 ไม่ได้ใช้สูตรนี้ (ไปเป็นที่ดินว่างแทน) */
+export function plotHeightRatio(level: number, max: number): number {
+  const m = Math.max(1, max);
+  const l = Math.max(0, Math.min(m, level));
+  return 0.42 + 0.58 * (l / m);
+}
+
 const BUILDINGS: Bldg[] = [
   { x: 4, y: 0, w: 1, d: 1, h: 275, type: 'hero' },
   { x: 1, y: 1, w: 1, d: 2, h: 180, type: 'glass', c: 0 },
@@ -253,13 +281,57 @@ function smallShadow(parent: Element, p: Pt, r: number) {
   el('ellipse', { cx: p.x + off.x, cy: p.y + off.y, rx: r, ry: r * 0.45, fill: T.shadow }, parent);
 }
 
-function drawBuilding(parent: Element, b0: Bldg) {
+/** ที่ดินว่าง — ยังไม่ได้ลงมือทำเรื่องนี้ (level 0)
+ *  วาดเป็นกรอบเส้นประ + ป้าย ไม่ใช่ตึกเตี้ย ๆ เพราะ "ยังไม่เริ่ม" กับ "เริ่มแล้วนิดเดียว"
+ *  เป็นคนละสถานะ และเป็นสถานะที่ผู้ใช้ต้องเห็นชัดที่สุดบนแดชบอร์ด */
+function drawEmptyLot(parent: Element, b: Bldg, plot: CityPlot) {
+  const A = iso(b.x, b.y), B = iso(b.x + b.w, b.y), C = iso(b.x + b.w, b.y + b.d), D = iso(b.x, b.y + b.d);
+  const g = el('g', { 'data-empty': plot.id, class: 'clv-plot-empty' }, parent);
+  // พื้นที่ดิน — เข้มกว่าพื้นถนนรอบ ๆ + เส้นประหนา ให้แยกออกจาก "พื้นเปล่า" ที่ไม่ใช่ช่องของใคร
+  el('polygon', {
+    points: P([A, B, C, D]), fill: hsl(42, 70, 30, 0.5),
+    stroke: hsl(48, 95, 64, 0.95), 'stroke-width': 3, 'stroke-dasharray': '10 6',
+  }, g);
+  // 🔴 โครงเส้นประของตึกที่ "ยังไม่ได้สร้าง" — เห็นทันทีว่าช่องนี้ควรมีอะไรอยู่ แต่ยังไม่มี
+  //    ที่ดินแบน ๆ กับตึกเตี้ย ๆ ดูเหมือนกันเกินไปเมื่ออยู่หลังตึกสูง (วัดจากภาพจริง ไม่ใช่เดา)
+  const gh = Math.min(b.h * ERA.floorScale, ERA.maxH) * 0.72;
+  const At = iso(b.x, b.y, gh), Bt = iso(b.x + b.w, b.y, gh);
+  const Ct = iso(b.x + b.w, b.y + b.d, gh), Dt = iso(b.x, b.y + b.d, gh);
+  const ghost = { fill: 'none', stroke: hsl(48, 95, 70, 0.55), 'stroke-width': 1.6, 'stroke-dasharray': '5 6' };
+  el('polygon', { ...ghost, points: P([At, Bt, Ct, Dt]) }, g);
+  ([[A, At], [B, Bt], [C, Ct], [D, Dt]] as const).forEach(([p0, p1]) => {
+    el('line', { ...ghost, x1: p0.x, y1: p0.y, x2: p1.x, y2: p1.y }, g);
+  });
+  // หมุด + กลางที่ดิน = "กดเพื่อเริ่ม" (ป้ายเดียวที่ผู้ใช้ต้องอ่านบนช่องว่าง)
+  const mid = iso(b.x + b.w / 2, b.y + b.d / 2);
+  el('circle', { cx: mid.x, cy: mid.y - 7, r: 9, fill: hsl(48, 95, 62, 0.95) }, g);
+  const pl = { stroke: hsl(28, 60, 16), 'stroke-width': 2.6, 'stroke-linecap': 'round' };
+  el('line', { ...pl, x1: mid.x - 4.5, y1: mid.y - 7, x2: mid.x + 4.5, y2: mid.y - 7 }, g);
+  el('line', { ...pl, x1: mid.x, y1: mid.y - 11.5, x2: mid.x, y2: mid.y - 2.5 }, g);
+  el('title', {}, g).textContent = `${plot.label} — ยังไม่ได้เริ่ม`;
+}
+
+function drawBuilding(parent: Element, b0: Bldg, plot?: CityPlot) {
   // ความสูงตามยุค — ยุคแรกเตี้ย/มินิมอล (เพดาน ERA.maxH), ยุคหลังสูงเสียดฟ้า (hero สูงกว่าเพดานเล็กน้อยเป็นแลนด์มาร์ก)
   const cap = b0.type === 'hero' ? ERA.maxH * 1.12 : ERA.maxH;
-  const b: Bldg = { ...b0, h: Math.min(b0.h * ERA.floorScale, cap) };
+  // 🔴 ความคืบหน้าจริงของธุรกิจคูณเข้ากับผังเดิม — ตึกเตี้ย = เพิ่งเริ่ม · ตึกสูง = ทำครบ
+  const ratio = plot ? plotHeightRatio(plot.level, plot.max) : 1;
+  const b: Bldg = { ...b0, h: Math.min(b0.h * ERA.floorScale * ratio, cap) };
+
+  if (plot && plot.level <= 0) { drawEmptyLot(parent, b0, plot); return; }
+
   const col = b.type === 'hero' ? T.hero : T.palette[(b.c ?? 0) % T.palette.length];
   castShadow(parent, b.x, b.y, b.w, b.d, b.h);
   const g = el('g', {}, parent);
+  if (plot) {
+    // ฝั่ง React อ่าน data-plot ไปเปิดหน้างานของอาคารนั้น (ดู CityLevelUp.tsx)
+    g.setAttribute('data-plot', plot.id);
+    g.setAttribute('data-level', String(plot.level));
+    g.setAttribute('class', 'clv-plot' + (plot.locked ? ' clv-plot-locked' : ''));
+    el('title', {}, g).textContent = plot.locked
+      ? `${plot.label} — ต้องอัปเกรดแพ็กก่อน`
+      : `${plot.label} — ระดับ ${plot.level}/${plot.max}`;
+  }
   if (b.type === 'step') {
     const tiers: [number, number][] = [[0, 0.52], [0.14, 0.32], [0.26, 0.18]];
     let z = 0;
@@ -540,7 +612,11 @@ function drawAgents(parent: Element) {
 }
 
 /** Render the whole cityscape into `target`. Deterministic per (time, season, era). */
-export function renderCityscape(target: SVGSVGElement, timeName: TimeName, seasonName: SeasonName, eraIndex = 4) {
+export function renderCityscape(
+  target: SVGSVGElement, timeName: TimeName, seasonName: SeasonName, eraIndex = 4,
+  /** ที่ดินที่ผูกข้อมูลจริง — ว่างไว้ = ฉากประดับเหมือนเดิม (ของเดิมยังเรียกได้ ไม่พัง) */
+  plots: CityPlot[] = [],
+) {
   svg = target;
   rnd = mulberry32(20260705);           // identical city layout for every combo
   T = TIMES[timeName]; S = SEASONS[seasonName];
@@ -569,8 +645,12 @@ export function renderCityscape(target: SVGSVGElement, timeName: TimeName, seaso
   PARKS.forEach(([px, py]) => drawPark(svg, px, py));
   if (ERA.greenBoost > 0) drawStreetTrees(svg, ERA.greenBoost * 2);
   drawLamps(svg);
+  // จับคู่ที่ดินจริงกับผังตามลำดับ — ผังมี 17 แปลง · ข้อมูลจริงมี 13 อาคาร
+  // ส่วนที่เหลือยังเป็นตึกประดับ (เมืองต้องดูเป็นเมือง ไม่ใช่กราฟ 13 แท่ง)
+  const plotOf = new Map<Bldg, CityPlot>();
+  BUILDINGS.forEach((b, i) => { if (plots[i]) plotOf.set(b, plots[i]); });
   const sorted = [...BUILDINGS].sort((a, b) => (a.x + a.y + a.w + a.d) - (b.x + b.y + b.w + b.d));
-  sorted.forEach(b => drawBuilding(svg, b));
+  sorted.forEach(b => drawBuilding(svg, b, plotOf.get(b)));
   drawAgents(el('g', { class: 'clv-agents' }));   // ผู้คน/รถ/รถไร้คนขับ/โดรน/humanoid (บนสุดของพื้น)
   drawWeather(svg);
 }
