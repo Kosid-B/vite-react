@@ -1,0 +1,119 @@
+import { describe, it, expect } from 'vitest';
+import { buildExport, describeSeg, toMarketingCode, type SegRow } from '../marketingExport';
+import { MIN_FOR_RATE } from '../growthPdca';
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * ทิศทาง: CEO AI Thailand ──export──▶ Marketing OS (เจ้าของยืนยัน 15 พ.ย. 2569)
+ *
+ * 🔴 สิ่งที่เทสต์ชุดนี้กัน ไม่ใช่ "ตัวเลขผิด" แต่คือ **อีกระบบสรุปผิดแทนเรา**
+ *    อีกระบบไม่รู้กฎของเรา (MIN_FOR_RATE · zeroIsNotProof · ledger #43)
+ *    ⇒ ถ้าส่งตัวเลขเปล่าไป 0/7 จะถูกอ่านเป็น "กลุ่มนี้ไม่เวิร์ก" แล้วถูกตัดทิ้ง
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/** ของจริงจาก production 15 พ.ย. 2569 (landing_funnel 361 แถว) */
+const REAL: SegRow[] = [
+  { seg: 'default', visitors: 342, cta: 8, signup: 4 },
+  { seg: 'newbie', visitors: 7, cta: 0, signup: 0 },
+  { seg: 'owner', visitors: 6, cta: 0, signup: 0 },
+  { seg: 'seller', visitors: 5, cta: 0, signup: 0 },
+  { seg: 'food', visitors: 1, cta: 1, signup: 0 },
+];
+
+describe('🔴 ห้ามส่งอัตราที่ยังสรุปไม่ได้ออกไป', () => {
+  it(`คนน้อยกว่า ${MIN_FOR_RATE} ⇒ signupRate ต้องเป็น null ห้ามเป็น 0`, () => {
+    const r = describeSeg({ seg: 'newbie', visitors: 7, cta: 0, signup: 0 });
+    expect(r.signupRate).toBeNull();
+    expect(r.signupRate).not.toBe(0);
+    expect(r.trust).toBe('not-found-yet');
+  });
+
+  it('0 จาก 7 ต้องอธิบายว่า "ยังไม่พบ" ไม่ใช่ "ไม่เวิร์ก"', () => {
+    const r = describeSeg({ seg: 'newbie', visitors: 7, cta: 0, signup: 0 });
+    expect(r.note).toContain('ยังไม่พบ');
+    expect(r.note).toContain(String(MIN_FOR_RATE));
+  });
+
+  it('มีคนสมัครจริงแต่ฐานน้อย = too-few · ยังต้องไม่ให้อัตรา', () => {
+    const r = describeSeg({ seg: 'x', visitors: 10, cta: 3, signup: 2 });
+    expect(r.trust).toBe('too-few');
+    expect(r.signupRate).toBeNull();
+    expect(r.note).toContain('ความบังเอิญ');
+  });
+
+  it(`ฐาน ≥ ${MIN_FOR_RATE} ⇒ ให้อัตราได้ และต้องคำนวณถูก`, () => {
+    const r = describeSeg({ seg: 'default', visitors: 342, cta: 8, signup: 4 });
+    expect(r.trust).toBe('conclusive');
+    expect(r.signupRate).toBeCloseTo(4 / 342, 10);
+  });
+
+  it('🔴 ของจริงวันนี้: มีแค่ default ที่สรุปได้ — อีก 4 กลุ่มห้ามมีอัตรา', () => {
+    const b = buildExport(REAL, '2026-11-15T00:00:00Z');
+    const withRate = b.segments.filter((s) => s.signupRate !== null).map((s) => s.seg);
+    expect(withRate).toEqual(['default']);
+  });
+});
+
+describe('แมปรหัสกลุ่มข้ามระบบ', () => {
+  it('รหัสฝั่งเรา → รหัสฝั่ง Marketing OS', () => {
+    expect(toMarketingCode('newbie').code).toBe('newbie');
+    expect(toMarketingCode('seller').code).toBe('growth');
+    expect(toMarketingCode('sidebiz').code).toBe('employee');
+    expect(toMarketingCode('audit').code).toBe('audit');
+  });
+
+  it('🔴 รหัสที่ทะเบียนของเขาไม่มี ต้องคืน null — ห้ามเดาให้ใกล้เคียง', () => {
+    expect(toMarketingCode('food').code).toBeNull();
+    expect(toMarketingCode('owner').code).toBeNull();
+    expect(toMarketingCode('palm').code).toBeNull();
+  });
+
+  it('🔴 รหัสที่แมปไม่ได้ ต้องถูกประกาศเป็นจุดบอด ไม่ใช่หายเงียบ', () => {
+    const b = buildExport(REAL, '2026-11-15T00:00:00Z');
+    const line = b.blindSpots.find((s) => s.includes('ทะเบียนของ Marketing OS ยังไม่มี'));
+    expect(line).toBeTruthy();
+    expect(line).toContain('owner');
+    expect(line).toContain('food');
+  });
+});
+
+describe('🔴 กติกาและจุดบอดต้องเดินทางไปกับข้อมูลเสมอ', () => {
+  const b = buildExport(REAL, '2026-11-15T00:00:00Z');
+
+  it('ต้องบอกกติกาเรื่อง MIN_FOR_RATE และ null ≠ 0', () => {
+    expect(b.rules.join(' ')).toContain(String(MIN_FOR_RATE));
+    expect(b.rules.some((r) => r.includes('null') && r.includes('0'))).toBe(true);
+  });
+
+  it('ต้องห้ามอีกระบบสร้างข้อมูลตัวอย่างเติมช่องว่าง', () => {
+    expect(b.rules.some((r) => r.includes('ห้ามสร้างข้อมูลตัวอย่าง'))).toBe(true);
+  });
+
+  it('ต้องเตือนว่า seg=default วัดบั๊กของเรา ไม่ได้วัดตลาด', () => {
+    const line = b.blindSpots.find((s) => s.includes('default'));
+    expect(line).toContain('ไม่ได้วัดตลาด');
+    expect(line).toContain('94.7');
+  });
+
+  it('ต้องเตือนว่าเห็นแค่หน้า / ไม่เห็นบทความ//start (ledger #74)', () => {
+    expect(b.blindSpots.some((s) => s.includes('/start'))).toBe(true);
+  });
+
+  it('บอกแหล่งที่มาให้ตรวจย้อนได้ และนับยอดรวมถูก', () => {
+    expect(b.source.project).toBe('waigsnxhrlwtiotspaim');
+    expect(b.source.totalRows).toBe(361);
+  });
+});
+
+describe('กรณีขอบ', () => {
+  it('ไม่มีข้อมูลเลย ต้องไม่พัง และยังต้องส่งกติกาไปด้วย', () => {
+    const b = buildExport([], '2026-11-15T00:00:00Z');
+    expect(b.segments).toEqual([]);
+    expect(b.rules.length).toBeGreaterThan(0);
+    expect(b.source.totalRows).toBe(0);
+  });
+
+  it('เรียงจากกลุ่มที่มีคนมากสุดก่อน', () => {
+    const b = buildExport(REAL, '2026-11-15T00:00:00Z');
+    expect(b.segments.map((s) => s.seg)).toEqual(['default', 'newbie', 'owner', 'seller', 'food']);
+  });
+});

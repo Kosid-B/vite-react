@@ -8,9 +8,18 @@ import { resolve, join } from 'node:path';
  *   Marketing OS (ตาราง marketing_* 33 ตาราง) = **อีกระบบเป็นเจ้าของ**
  *   รีโปนี้ = ตัวผลิตภัณฑ์ + สมองที่ทำงานให้ "ธุรกิจของผู้ใช้"
  *
- * ทำไมต้องมีเทสต์: ทั้งสองระบบเขียนลง production เดียวกัน (waigsnxhrlwtiotspaim)
+ * ทำไมต้องมีเทสต์: ของสองระบบอยู่ใน org Supabase เดียวกัน และ production (waigsnxhrlwtiotspaim)
+ *   มีตาราง marketing_* 33 ตารางค้างอยู่จริง (apply ไว้ แต่ 0 แถวทุกตาราง — ตรวจสด 15 พ.ย. 69)
+ *   ส่วนข้อมูลจริงของอีกระบบอยู่คนละ project: bjozpwdtqbpwcxnqguka "CEOAITHAILAND Marketing"
  *   ⇒ ถ้ารีโปนี้เผลอสร้างตาราง/อ่านตารางของอีกฝั่ง จะได้ของซ้ำสองที่ทันที
  *      ซึ่งเป็นความสิ้นเปลืองที่ Architecture Consolidation Audit ถูกสั่งให้มาหาพอดี
+ *
+ * 🔓 ข้อยกเว้นเดียวที่ได้รับอนุญาต (เจ้าของยืนยัน 15 พ.ย. 2569):
+ *    **อ่านอย่างเดียว** 3 ตารางของ project bjozpwdtqbpwcxnqguka —
+ *    marketing_brands · marketing_audience_segments · marketing_message_pillars
+ *    เพื่อจับว่าสำเนา brand truth ฝั่งเราเพี้ยนจากแหล่งจริงหรือยัง
+ *    ✅ ทำได้เฉพาะใน scripts/brand-sync-check.mjs  ❌ ห้ามเขียน ❌ ห้ามอยู่ในโค้ดแอป
+ *    (เหตุผลที่ไม่ให้อยู่ในแอป: ผลิตภัณฑ์ต้องทำงานได้แม้อีกระบบล่ม)
  *
  * ⚠️ ห้ามแก้เทสต์นี้ให้ผ่านโดยไม่มีคำสั่งใหม่จากเจ้าของ — ถ้าเส้นแบ่งเปลี่ยนจริง
  *    ให้แก้ทั้งเทสต์ + §0 ของเอกสาร audit + CLAUDE.md ในคอมมิตเดียวกัน
@@ -58,6 +67,42 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
       .filter((p) => /\.from\(\s*['"`]marketing_|rpc\(\s*['"`]marketing_/.test(readFileSync(p, 'utf8')))
       .map((p) => p.slice(ROOT.length + 1));
     expect(offenders, `ไฟล์ที่แตะตารางของอีกระบบ: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  /* ── ข้อยกเว้น 15 พ.ย. 2569 — อ่านอย่างเดียว 3 ตาราง ───────────────────
+   * 🔴 ข้อยกเว้นที่ไม่มีเทสต์ล้อม = ประตูที่เปิดแล้วลืมปิด
+   *    สามข้อล่างนี้บังคับว่า "เปิดแค่ที่เปิด" ไม่ใช่ "เปิดแล้วปล่อย" */
+  const SYNC_SCRIPT = 'scripts/brand-sync-check.mjs';
+
+  it('🔓 ข้อยกเว้นต้องอยู่ในสคริปต์เดียว และอ่านได้แค่ 3 ตารางที่เจ้าของอนุญาต', () => {
+    const js = readFileSync(resolve(ROOT, SYNC_SCRIPT), 'utf8');
+    const lib = readFileSync(resolve(ROOT, 'src/lib/brandSync.ts'), 'utf8');
+    for (const t of ['marketing_brands', 'marketing_audience_segments', 'marketing_message_pillars']) {
+      expect(js, `${SYNC_SCRIPT} ต้องประกาศ ${t} ไว้ในรายการที่อนุญาต`).toContain(t);
+      expect(lib).toContain(t);
+    }
+    // ตารางอื่นของอีกระบบต้องไม่โผล่ในสคริปต์เลย
+    const others = js.match(/marketing_[a-z_]+/g) ?? [];
+    const illegal = [...new Set(others)].filter(
+      (t) => !['marketing_brands', 'marketing_audience_segments', 'marketing_message_pillars'].includes(t),
+    );
+    expect(illegal, `สคริปต์แตะตารางนอกขอบเขต: ${illegal.join(', ')}`).toEqual([]);
+  });
+
+  it('🔴 ข้อยกเว้นเป็น "อ่าน" เท่านั้น — ห้ามมีคำสั่งเขียนในสคริปต์', () => {
+    const js = readFileSync(resolve(ROOT, SYNC_SCRIPT), 'utf8');
+    expect(/method:\s*['"`](POST|PATCH|PUT|DELETE)/i.test(js), 'พบ HTTP method ที่เขียนข้อมูล').toBe(false);
+    expect(/service[_-]?role/i.test(js) && !/ห้ามใช้ service-role/.test(js), 'ใช้ service-role key').toBe(false);
+  });
+
+  it('🔴 ห้ามแตะ production ของเราจากสคริปต์นี้ — คนละฐาน คนละเจ้าของ', () => {
+    const js = readFileSync(resolve(ROOT, SYNC_SCRIPT), 'utf8');
+    expect(js).toContain('bjozpwdtqbpwcxnqguka');
+    /* ⚠️ เจตนาคือห้าม **ใช้** production ไม่ใช่ห้าม **เอ่ยถึง** —
+     *    คอมเมนต์ที่เตือนว่า "ไม่แตะ production <ref>" คือสิ่งที่เราอยากให้มี ไม่ใช่สิ่งที่ต้องห้าม
+     *    (เทสต์เวอร์ชันแรกจับคอมเมนต์ตัวเองแล้วแดง — ตัดคอมเมนต์ออกก่อนตรวจ) */
+    const code = js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(code, 'สคริปต์ใช้ production หลักจริง = ข้ามเส้นคนละเส้น').not.toContain('waigsnxhrlwtiotspaim');
   });
 
   it('เอกสาร audit ต้องบันทึกคำตัดสินและเส้นแบ่งไว้ ไม่ใช่อยู่แค่ในแชต (ledger #41)', () => {
