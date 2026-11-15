@@ -56,26 +56,28 @@ describe('🔴 ห้ามส่งอัตราที่ยังสรุ�
 describe('แมปรหัสกลุ่มข้ามระบบ', () => {
   it('รหัสฝั่งเรา → รหัสฝั่ง Marketing OS', () => {
     expect(toMarketingCode('newbie').code).toBe('newbie');
-    expect(toMarketingCode('seller').code).toBe('growth');
+    expect(toMarketingCode('owner').code).toBe('growth');   // แก้ 15 พ.ย. 69 — เดิมแมป seller ผิด
     expect(toMarketingCode('sidebiz').code).toBe('employee');
     expect(toMarketingCode('audit').code).toBe('audit');
   });
 
   it('🔴 รหัสที่ทะเบียนของเขาไม่มี ต้องคืน null — ห้ามเดาให้ใกล้เคียง', () => {
     expect(toMarketingCode('food').code).toBeNull();
-    expect(toMarketingCode('owner').code).toBeNull();
+    expect(toMarketingCode('seller').code).toBeNull();   // ตกลงจะเพิ่ม แต่ยังไม่มีจริง
     expect(toMarketingCode('palm').code).toBeNull();
   });
 
   it('🔴 รหัสที่แมปไม่ได้ ต้องถูกประกาศเป็นจุดบอด ไม่ใช่หายเงียบ', () => {
     const b = buildExport(REAL, '2026-11-15T00:00:00Z');
-    const line = b.blindSpots.find((s) => s.includes('ทะเบียนของ Marketing OS ยังไม่มี'));
-    expect(line).toBeTruthy();
-    expect(line).toContain('owner');
-    expect(line).toContain('food');
+    // 🔴 แยก 3 กอง — ของที่ตัดสินใจไปแล้ว ต้องไม่จมปนกับของที่ยังไม่มีใครตัดสิน
+    const pending = b.blindSpots.find((s) => s.includes('ยังไม่ยืนยันว่ามีจริง'));
+    expect(pending, 'seller = ตกลงแล้วว่าเขาจะเพิ่ม').toContain('seller');
+    const bizType = b.blindSpots.find((s) => s.includes('ประเภทธุรกิจ ไม่ใช่กลุ่มเป้าหมาย'));
+    expect(bizType, 'food = คนละแกน ห้ามเข้าทะเบียน segment').toContain('food');
+    expect(pending, 'food ต้องไม่ปนอยู่ในกองที่รอเพิ่ม').not.toContain('food');
     // 🔴 `default` ไม่ใช่ "กลุ่มที่ทะเบียนขาด" แต่คือ "ยังไม่ติดแท็ก" — คนละปัญหา
     //    ถ้านับรวม จะมี 342/361 แถวติดธงจนคำเตือนจริงถูกกลบ
-    expect(line).not.toContain('default');
+    expect(b.blindSpots.join(' '), 'default ต้องไม่ถูกนับเป็นกลุ่มที่ทะเบียนขาด').not.toMatch(/ยังไม่มีใครตัดสินใจเลย:.*default/);
   });
 });
 

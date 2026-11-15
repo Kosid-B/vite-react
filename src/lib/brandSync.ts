@@ -42,9 +42,31 @@ export const SEG_CODE_MAP: Record<string, { layer: AudienceLayer; localSeg: Hero
   employee: { layer: 'primary', localSeg: 'sidebiz' },
   graduate: { layer: 'secondary', localSeg: null },
   newbie: { layer: 'broad', localSeg: 'newbie' },
-  growth: { layer: 'growth', localSeg: 'seller' },
+  /* 🔁 แก้ 15 พ.ย. 2569 — เดิมแมป growth → 'seller' ซึ่งผิด
+   *    เทียบพาดหัวจริงแล้ว: 'เจ้าของธุรกิจที่ต้องการเติบโต' (เขา)
+   *      ↔ owner  = "ถ้าคุณหยุดสักวัน ธุรกิจหยุดตามไหม?"  — โตแบบมีระบบ  ✅ ตรง
+   *      ↔ seller = "ของคุณดีกว่า แต่ร้านอื่นขายดีกว่า?"  — คนหาไม่เจอ   ❌ คนละ pain
+   *    อยู่ช่วงชีวิตธุรกิจเดียวกัน แต่มาด้วยปัญหาคนละข้อ ⇒ แมปผิดจะส่งพาดหัวผิดให้คนทั้งกลุ่ม */
+  growth: { layer: 'growth', localSeg: 'owner' },
   audit: { layer: 'sideDoor', localSeg: 'audit' },
 };
+
+/** 🤝 รหัสที่ **ตกลงกันแล้ว** ว่าฝั่ง Marketing OS จะเพิ่มเข้าทะเบียน แต่ยังไม่ยืนยันว่ามีจริง
+ *  🔴 ห้ามเอาไปใส่ SEG_CODE_MAP ก่อนที่มันจะมีจริง — ถ้าใส่ ระบบจะเลิกเตือนทั้งที่ join ยังพัง
+ *     "ตกลงแล้ว" ≠ "มีแล้ว" (หลักเดียวกับ unknown ≠ open ≠ closed)
+ *  `check:brand-sync` จะบอกเองเมื่อมันขึ้นจริงที่ปลายทาง */
+export const PENDING_UPSTREAM: Record<string, { localSeg: HeroSeg; layer: AudienceLayer; why: string }> = {
+  seller: {
+    localSeg: 'seller',
+    layer: 'growth',
+    why: 'มีของขายอยู่แล้วแต่คนหาไม่เจอ — คนละปัญหากับ growth ที่เป็นเรื่องโตแบบมีระบบ (เจ้าของตัดสิน 15 พ.ย. 2569)',
+  },
+};
+
+/** 🔴 seg ที่เป็น **ประเภทธุรกิจ ไม่ใช่กลุ่มเป้าหมาย** — คนละแกนกับทะเบียน segment
+ *  ยัดเข้าทะเบียนกลุ่มเป้าหมาย = ทะเบียนปนสองแกน แล้วจะงอกไม่จบ (ตอนนี้ 2 ตัว พรุ่งนี้มีอีก)
+ *  ที่ถูกคือไปอยู่ฟิลด์ "ประเภทธุรกิจ" แยกต่างหากฝั่ง Marketing OS (เจ้าของตัดสิน 15 พ.ย. 2569) */
+export const BUSINESS_TYPE_SEGS: readonly HeroSeg[] = ['food', 'palm'] as const;
 
 export interface RemoteSegment {
   code: string;
@@ -76,6 +98,8 @@ export interface SyncReport {
   filteredFixtures: string[];
   /** 🔴 เกณฑ์ที่ประกาศว่าพิสูจน์แล้วทั้งที่ยังไม่มีผลจริง — ห้ามมี */
   illegalValidated: string[];
+  /** 🟢 รหัสที่เคยค้างรอ และตอนนี้ปลายทางเพิ่มให้แล้ว ⇒ ย้ายเข้า SEG_CODE_MAP ได้ */
+  pendingLanded: string[];
 }
 
 const ALL_LAYERS: AudienceLayer[] = ['primary', 'secondary', 'broad', 'growth', 'sideDoor'];
@@ -107,7 +131,9 @@ export function compareSegments(remote: RemoteSegment[]): SyncReport {
       localSeg: m?.localSeg ?? null,
       fallsBackToDefault: true,
       why: !m
-        ? `อีกระบบมีรหัส '${r.code}' ที่เราไม่เคยแมปไว้เลย`
+        ? (r.code in PENDING_UPSTREAM
+            ? `รหัส '${r.code}' เพิ่งขึ้นที่ปลายทางตามที่ตกลงไว้ — ย้ายเข้า SEG_CODE_MAP ได้แล้ว`
+            : `อีกระบบมีรหัส '${r.code}' ที่เราไม่เคยแมปไว้เลย`)
         : m.localSeg === null
           ? `ชั้น ${m.layer} ยังไม่มี HeroSeg ของตัวเองที่ฝั่งเรา`
           : `ชั้น ${m.layer} ใช้คนละคำ — อีกระบบ '${r.code}' · ฝั่งเรา '${m.localSeg}'`,
@@ -120,6 +146,7 @@ export function compareSegments(remote: RemoteSegment[]): SyncReport {
     .map((r) => r.code);
 
   return {
+    pendingLanded: real.map((r) => r.code).filter((c) => c in PENDING_UPSTREAM).sort(),
     aligned: aligned.sort(),
     drift: drift.sort((a, b) => a.code.localeCompare(b.code)),
     missingUpstream: ALL_LAYERS.filter((l) => !seenLayers.has(l)),

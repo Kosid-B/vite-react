@@ -16,7 +16,7 @@
  *    (session uuid สุ่มฝั่ง client · ไม่เก็บ IP/user id/cursor path)
  * ══════════════════════════════════════════════════════════════════════════ */
 
-import { SEG_CODE_MAP, type AudienceLayer } from './brandSync';
+import { SEG_CODE_MAP, PENDING_UPSTREAM, BUSINESS_TYPE_SEGS, type AudienceLayer } from './brandSync';
 import { MIN_FOR_RATE } from './growthPdca';
 
 /** แถวดิบจาก landing_funnel ที่ aggregate มาแล้วฝั่ง SQL */
@@ -97,15 +97,32 @@ export function buildExport(rows: SegRow[], generatedAt: string): ExportBundle {
   const total = rows.reduce((s, r) => s + r.visitors, 0);
   const def = segments.find((s) => s.seg === 'default');
   const defPct = total ? Math.round(((def?.visitors ?? 0) / total) * 1000) / 10 : 0;
-  const unmapped = segments.filter((s) => s.marketingCode === null && s.seg !== 'default').map((s) => s.seg);
+  /* 🔴 "แมปไม่ได้" ไม่ได้แปลว่าเรื่องเดียวกันทั้งหมด — แยก 3 กองคนละทางออก
+   *    ถ้ากองรวมกัน คำเตือนที่ต้องลงมือ (trulyUnknown) จะจมอยู่กับของที่ตัดสินใจไปแล้ว */
+  const unmappedAll = segments.filter((s) => s.marketingCode === null && s.seg !== 'default').map((s) => s.seg);
+  const businessType = unmappedAll.filter((g) => (BUSINESS_TYPE_SEGS as readonly string[]).includes(g));
+  const pending = unmappedAll.filter((g) => g in PENDING_UPSTREAM);
+  const unmapped = unmappedAll.filter((g) => !businessType.includes(g) && !pending.includes(g));
 
   const blindSpots: string[] = [
     `seg=default ${defPct}% ของทั้งหมด — ตัวเลขนี้ **วัดการติดแท็กของเรา ไม่ได้วัดตลาด** (ledger #43/#73) ห้ามอ่านว่า "คนที่เข้ามาไม่มีกลุ่ม"`,
     'ข้อมูลนี้เห็นเฉพาะคนที่มาถึงหน้า `/` เท่านั้น — คนที่อ่านบทความหรือหน้า `/start` ไม่ถูกบันทึกที่นี่ (ledger #74)',
     'ไม่มีข้อมูลฝั่งแพลตฟอร์ม (ยอดเข้าถึง FB/YT) ⇒ คำนวณ "สะพาน" จากข้อมูลชุดนี้อย่างเดียวไม่ได้',
   ];
+  if (pending.length) {
+    blindSpots.push(
+      `🤝 ตกลงแล้วว่าฝั่ง Marketing OS จะเพิ่มเข้าทะเบียน แต่ **ยังไม่ยืนยันว่ามีจริง**: ${pending.join(', ')} ` +
+      '⇒ จนกว่าจะขึ้นจริง แถวเหล่านี้ยังหล่นตอน join ("ตกลงแล้ว" ≠ "มีแล้ว")',
+    );
+  }
+  if (businessType.length) {
+    blindSpots.push(
+      `📐 ${businessType.join(', ')} เป็น **ประเภทธุรกิจ ไม่ใช่กลุ่มเป้าหมาย** — คนละแกนกับทะเบียน segment ` +
+      '⇒ ห้ามยัดเข้าทะเบียนกลุ่ม (ทะเบียนจะปนสองแกนแล้วงอกไม่จบ) ให้ไปอยู่ฟิลด์ "ประเภทธุรกิจ" แยกต่างหาก',
+    );
+  }
   if (unmapped.length) {
-    blindSpots.push(`รหัสที่ทะเบียนของ Marketing OS ยังไม่มี: ${unmapped.join(', ')} ⇒ ถ้า join ด้วยทะเบียนเดิมจะทิ้งแถวเหล่านี้เงียบ ๆ`);
+    blindSpots.push(`🔴 รหัสที่ยังไม่มีใครตัดสินใจเลย: ${unmapped.join(', ')} ⇒ ถ้า join ด้วยทะเบียนเดิมจะทิ้งแถวเหล่านี้เงียบ ๆ`);
   }
 
   return {
