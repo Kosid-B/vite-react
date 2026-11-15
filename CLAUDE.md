@@ -22,8 +22,16 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 ⚠️ **ไม่ได้ห้ามใช้** — ใช้ได้และมีประโยชน์ แต่ต้องผ่าน `violatesBrand()` + skill `content-link-contract` ก่อนปล่อยทุกชิ้น
 
 🧱 **เส้นแบ่งความเป็นเจ้าของ — Marketing OS = อีกระบบ** (เจ้าของตัดสิน 24 ส.ค. 2569 · ห้ามข้ามโดยไม่มีคำสั่งใหม่)
-🔴 **production `waigsnxhrlwtiotspaim` มีสองระบบเขียนลง** — ตาราง `marketing_*` **33 ตาราง** จาก 10 migration (23 ส.ค.) **ไม่มีในรีโปนี้**
-   ⇒ รีโปนี้ **ห้ามสร้าง migration `marketing_*` · ห้ามอ่าน/เขียนตาราง `marketing_*`** (กลไก: `ownershipBoundary.test.ts`)
+🔴 **Marketing OS รันบน Supabase ของตัวเอง ไม่ใช่ production ของเรา** (ตรวจสดผ่าน MCP 15 พ.ย. 2569 · ledger #79)
+   · **ของอีกระบบ**: `bjozpwdtqbpwcxnqguka` = **"CEOAITHAILAND Marketing"** (org เดียวกัน · ap-northeast-1 · สร้าง 19 ส.ค. 69)
+     โค้ดอยู่เครื่องเจ้าของที่ `D:\CEOAITHAILAND Marketing-P1.0.2-baseline` · deploy เป็น Vercel project `ceo-ai-marketing`
+     **ข้อมูลการตลาดจริงทั้งหมดอยู่ที่นี่** (`marketing_brands` 1 · `audience_segments` 5 · `message_pillars` 7 · `brand_rules` 7)
+   · **ใน production `waigsnxhrlwtiotspaim`**: ตาราง `marketing_*` **33 ตาราง มีอยู่จริง แต่ 0 แถวทุกตาราง**
+   ⚠️ **แก้คำเดิมที่เขียนผิด**: บรรทัดนี้เคยเขียนว่า *"production มีสองระบบเขียนลง"* — **โครงสร้างถูก แต่ข้อมูลไม่จริง**
+     ไม่เคยมีใครเขียนข้อมูลลง `marketing_*` ของ production เลย ⇒ อ่านว่า "โครงเปล่าที่ apply ไว้" ไม่ใช่ "ระบบที่ทำงานอยู่"
+   ⚠️ **ตาราง `marketing_*` ของสองที่เป็นคนละชุด คนละชื่อ** — ของอีกระบบมี `marketing_behavior_*` · `marketing_personas` ·
+     `marketing_ctas` · `marketing_evidence` ที่ production ไม่มี ⇒ **ห้ามอ่าน schema ฝั่งหนึ่งแล้วเดาอีกฝั่ง**
+   ⇒ รีโปนี้ **ห้ามสร้าง migration `marketing_*` · ห้ามอ่าน/เขียนตาราง `marketing_*` ของทั้งสอง project** (กลไก: `ownershipBoundary.test.ts`)
 | อีกระบบเป็นเจ้าของ | รีโปนี้เป็นเจ้าของ |
 |---|---|
 | การตลาดของเราเอง — แคมเปญ · ข้อเสนอ · คอนเทนต์ · brand rules · segment · pillar · attribution | ตัวผลิตภัณฑ์ — แอปที่ผู้ใช้ล็อกอิน · Landing/`/start` · Worker · billing · marketplace |
@@ -897,6 +905,10 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 │ Pending           : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
 ├─ TIS Automate (แยก) ─────────────────────────────────────────────
 │ Supabase project  : galtbbkcddugnsfkgyqm — ไม่มี secret ฝั่ง client (publishable key ฝังได้)
+├─ Marketing OS = อีกระบบ (ห้ามแตะจากรีโปนี้) ─────────────────────
+│ Supabase project  : bjozpwdtqbpwcxnqguka "CEOAITHAILAND Marketing" (org เดียวกัน · ap-northeast-1)
+│ โค้ด/deploy       : D:\CEOAITHAILAND Marketing-P1.0.2-baseline (เครื่องเจ้าของ) → Vercel `ceo-ai-marketing`
+│ ⚠️ ไม่มี repo บน GitHub ⇒ เซสชันคลาวด์เข้าไม่ถึง · ต้องเปิด Claude Code ในโฟลเดอร์นั้นเอง
 ├─ Dev/local ──────────────────────────────────────────────────────
 │ ไม่มี .env — local mode ใช้ localStorage · Vercel PR preview build โดยไม่มี VITE_SUPABASE_*
 └──────────────────────────────────────────────────────────────────

@@ -44,6 +44,25 @@
 
 ตรวจสดจาก `waigsnxhrlwtiotspaim` (24 ส.ค. 2569):
 
+> ## 🔁 แก้ข้อสรุปของหัวข้อนี้ — 15 พ.ย. 2569 (ตรวจสดผ่าน Supabase MCP · ledger #79)
+>
+> หัวข้อนี้สรุปว่า **"มีสองระบบเขียนลง production เดียวกัน"** — **โครงสร้างถูก แต่ข้อสรุปเรื่องข้อมูลไม่จริง**
+>
+> | | ของจริงที่วัดได้ 15 พ.ย. 69 |
+> |---|---|
+> | `marketing_*` 33 ตารางใน `waigsnxhrlwtiotspaim` | **มีอยู่จริง · แต่ 0 แถวทุกตาราง** |
+> | Marketing OS เขียนข้อมูลลงที่ไหนจริง ๆ | **`bjozpwdtqbpwcxnqguka` = "CEOAITHAILAND Marketing"** (คนละ project · org เดียวกัน · ap-northeast-1 · สร้าง 19 ส.ค. 69) |
+> | ข้อมูลจริงที่มี | `marketing_brands` 1 · `marketing_audience_segments` 5 · `marketing_message_pillars` 7 · `marketing_brand_rules` 7 · `marketing_behavior_limits` 6 |
+>
+> ⇒ อ่าน 33 ตารางใน production ว่าเป็น **"โครงเปล่าที่ apply ไว้แล้วไม่ได้ใช้"** ไม่ใช่ *"ระบบที่กำลังทำงานอยู่"*
+> ⚠️ **ตาราง `marketing_*` ของสอง project เป็นคนละชุด คนละชื่อ** — ของอีกระบบมี `marketing_behavior_*` ·
+> `marketing_personas` · `marketing_ctas` · `marketing_evidence` ที่ production ไม่มี ⇒ **ห้ามอ่าน schema ฝั่งหนึ่งแล้วเดาอีกฝั่ง**
+> 🔒 **ข้อห้ามไม่เปลี่ยน** — รีโปนี้ยังห้ามสร้าง/อ่าน/เขียน `marketing_*` ของ **ทั้งสอง project**
+> (เจ้าของ freeze 24 ส.ค. · แก้ได้ด้วยคำสั่งใหม่เท่านั้น)
+> 📍 โค้ดของอีกระบบอยู่เครื่องเจ้าของที่ `D:\CEOAITHAILAND Marketing-P1.0.2-baseline` → Vercel project `ceo-ai-marketing`
+> **ไม่มี repo บน GitHub** ⇒ เซสชันคลาวด์เข้าไม่ถึง
+
+
 **มีตาราง `marketing_*` อยู่ใน production 33 ตาราง — ไม่มี migration ไหนในรีโปนี้สร้างมันเลย และไม่มีโค้ดในรีโปนี้อ่านมันเลยสักบรรทัด**
 
 ```
