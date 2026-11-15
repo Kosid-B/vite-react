@@ -73,6 +73,9 @@ describe('แมปรหัสกลุ่มข้ามระบบ', () => {
     expect(line).toBeTruthy();
     expect(line).toContain('owner');
     expect(line).toContain('food');
+    // 🔴 `default` ไม่ใช่ "กลุ่มที่ทะเบียนขาด" แต่คือ "ยังไม่ติดแท็ก" — คนละปัญหา
+    //    ถ้านับรวม จะมี 342/361 แถวติดธงจนคำเตือนจริงถูกกลบ
+    expect(line).not.toContain('default');
   });
 });
 

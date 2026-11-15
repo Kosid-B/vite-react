@@ -14,7 +14,9 @@
  * วิธีรัน:
  *    MARKETING_SUPABASE_URL=https://bjozpwdtqbpwcxnqguka.supabase.co \
  *    MARKETING_SUPABASE_ANON_KEY=<publishable key> \
- *    node scripts/brand-sync-check.mjs
+ *    npx vite-node scripts/brand-sync-check.mjs
+ *
+ * ⚠️ ต้อง `vite-node` ไม่ใช่ `node` เปล่า (เหตุผลเดียวกับ prerender-seo.mjs)
  *
  * ออก 0 = ตรงกัน · 1 = พบ drift (ใช้ใน CI ได้) · 2 = ตรวจไม่ได้ (คนละเรื่องกับ "ไม่ตรง")
  */

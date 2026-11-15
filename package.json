@@ -14,7 +14,9 @@
     "verify:landed": "bash scripts/verify-landed.sh",
     "typecheck": "tsc -b && tsc -p tsconfig.worker.json --noEmit",
     "typecheck:worker": "tsc -p tsconfig.worker.json --noEmit",
-    "contrast-audit": "node scripts/contrast-audit.mjs"
+    "contrast-audit": "node scripts/contrast-audit.mjs",
+    "export:marketing": "vite-node scripts/marketing-export.mjs",
+    "check:brand-sync": "vite-node scripts/brand-sync-check.mjs"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.45.5",
