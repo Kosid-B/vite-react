@@ -93,6 +93,10 @@ async function main() {
       const win = sum4(sc.v) > sum4(sc.c) ? "variant" : sum4(sc.v) < sum4(sc.c) ? "control" : "tie";
       rows.push({ c: sc.c, v: sc.v, win });
       console.log(`  [${i + 1}/${GOLDEN.length}] C=${sum4(sc.c)} V=${sum4(sc.v)} → ${win}${sc.v.critical ? " 🔴CRIT" : ""}`);
+      // 🔴 คะแนนรวมบอกแค่ "แพ้" · ต้องรู้ว่าแพ้ที่ "แกนไหน" ไม่งั้นตัดสินใจอะไรต่อไม่ได้
+      //    (เดิมสคริปต์ทิ้ง j.reason ของกรรมการไปทั้งหมด = วัดได้ว่าแพ้ แต่ไม่รู้ว่าเพราะอะไร)
+      console.log(`        แกน V: ถูกต้อง ${sc.v.accuracy} · ใช้ได้ ${sc.v.usefulness} · ภาษาไทย ${sc.v.thai} · ครบ ${sc.v.complete}`);
+      if (j.reason) console.log(`        กรรมการ: ${String(j.reason).replace(/\s+/g, " ").slice(0, 160)}`);
     } catch (e) { console.log(`  [${i + 1}] ❌ ${String(e).slice(0, 90)}`); }
   }
   if (!rows.length) { console.error("\n❌ ไม่มีผล"); process.exit(1); }
@@ -107,6 +111,14 @@ async function main() {
   console.log(`Claude  เฉลี่ย: ${cMean.toFixed(2)}/20`);
   console.log(`Variant เฉลี่ย: ${vMean.toFixed(2)}/20  (${(ratio * 100).toFixed(1)}% ของ Claude)`);
   console.log(`variant ชนะ/เสมอ/แพ้: ${rows.filter(r => r.win === "variant").length}/${rows.filter(r => r.win === "tie").length}/${rows.filter(r => r.win === "control").length} · loss ${(loss * 100).toFixed(0)}% · critical ${crit}`);
+  // แกนที่อ่อนที่สุดคือคำตอบว่า "ซ่อมได้ด้วย prompt" (ครบ/ใช้ได้) หรือ "เป็นเพดานของโมเดล" (ถูกต้อง/ภาษาไทย)
+  const AXES = [["ถูกต้อง", "accuracy"], ["ใช้ได้", "usefulness"], ["ภาษาไทย", "thai"], ["ครบ", "complete"]];
+  console.log(`\nแกนรายข้อ (เต็ม 5 · Claude → Variant):`);
+  for (const [label, k] of AXES) {
+    const cA = mean(rows.map(r => Number(r.c[k]) || 0)), vA = mean(rows.map(r => Number(r.v[k]) || 0));
+    console.log(`  ${label.padEnd(10)} ${cA.toFixed(2)} → ${vA.toFixed(2)}  (${cA > 0 ? ((vA / cA) * 100).toFixed(0) : "0"}%)`);
+  }
+
   console.log(`\nเกณฑ์: ratio≥90% (${(ratio * 100).toFixed(1)}%) · crit=0 (${crit}) · loss<25% (${(loss * 100).toFixed(0)}%)`);
   console.log(GO
     ? `\n✅ GO — เปิด ${VARIANT} กับงานไทยได้ (ตั้ง MODELS_THAI ในแอป) ต้นทุนลงมาก`

@@ -7453,3 +7453,27 @@ a.bill-guide-link:hover { background: rgba(56,189,248,.12); }
   background: var(--white); color: var(--ink); border: 1px solid var(--sand);
   font-weight: 700; font-size: 14.5px; cursor: pointer; }
 .ss-more:hover { border-color: var(--accent, #9333ea); }
+
+/* ===== เมือง 3 มิติ = แดชบอร์ดจริง (15 พ.ย. 2569) =====
+ * อาคารที่ผูกข้อมูลจริงกดได้ · ที่ดินว่าง = เรื่องที่ยังไม่ได้เริ่ม
+ * 🔴 ฉาก SVG ใช้คีย์บอร์ดไม่ได้ ⇒ ต้องมีตารางปุ่มข้างใต้เป็นทางเข้าที่สอง (ไม่ใช่ของประดับ) */
+.clv-plot { cursor: pointer; }
+.clv-plot:hover { filter: brightness(1.12); }
+.clv-plot-empty { cursor: pointer; transition: opacity .15s ease; }
+.clv-plot-empty:hover { opacity: .78; }
+.clv-plot-locked { cursor: not-allowed; opacity: .55; }
+
+.clv-plot-legend { list-style: none; margin: 14px 0 0; padding: 0;
+  display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.clv-plot-btn { width: 100%; display: grid; gap: 3px; text-align: left; cursor: pointer;
+  padding: 10px 12px; border-radius: 10px; border: 1px solid #1e293b; background: #0b1220; color: inherit;
+  grid-template-columns: auto 1fr; grid-template-areas: 'ico name' 'ico lv' 'hint hint'; }
+.clv-plot-btn:hover:not(:disabled) { border-color: #334155; }
+.clv-plot-btn:focus-visible { outline: 2px solid var(--accent, #38bdf8); outline-offset: 2px; }
+.clv-plot-btn:disabled { opacity: .5; cursor: not-allowed; }
+.clv-plot-btn.is-empty { border-style: dashed; border-color: #a16207; }
+.clv-plot-ico { grid-area: ico; font-size: 20px; align-self: center; }
+.clv-plot-name { grid-area: name; font-weight: 700; font-size: 14px; line-height: 1.5; }
+.clv-plot-lv { grid-area: lv; font-size: 12px; color: #94a3b8; line-height: 1.6; }
+.clv-plot-btn.is-empty .clv-plot-lv { color: #fbbf24; }
+.clv-plot-hint { grid-area: hint; font-size: 12px; color: #94a3b8; line-height: 1.6; margin-top: 4px; }

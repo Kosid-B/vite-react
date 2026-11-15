@@ -5,7 +5,7 @@ import { COMPANY_LEVELS } from '../lib/gamification';
 import { track } from '../lib/analytics';
 import {
   renderCityscape, detectTime, detectSeason,
-  TIME_LABEL, SEASON_LABEL, type TimeName, type SeasonName,
+  TIME_LABEL, SEASON_LABEL, type TimeName, type SeasonName, type CityPlot,
 } from '../lib/cityScape';
 import { ERAS, clampEra } from '../lib/cityEra';
 
@@ -41,7 +41,7 @@ function xpRange(min: number, max: number): string {
   return `${min.toLocaleString('th-TH')}–${max.toLocaleString('th-TH')} XP`;
 }
 
-export default function CityLevelUp({ data }: { data: AppData; onNavigate?: (p: PageId) => void; onUpdate?: (d: AppData) => void }) {
+export default function CityLevelUp({ data, onNavigate }: { data: AppData; onNavigate?: (p: PageId) => void; onUpdate?: (d: AppData) => void }) {
   const s = useMemo(() => cityStats(data), [data]);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -59,10 +59,31 @@ export default function CityLevelUp({ data }: { data: AppData; onNavigate?: (p: 
 
   useEffect(() => { track('city_viewed', { view: 'levelup', built: s.built, xp: s.xp }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // (re)render the cityscape whenever time/season/era changes
+  /* 🔴 ผูกฉาก 3 มิติเข้ากับผลงานจริง (29 ต.ค. → 15 พ.ย. 2569)
+   *    ของเดิมฉากใช้ seed คงที่ ⇒ ทุกคนเห็นเมืองเหมือนกันหมด แม้ธุรกิจจะต่างกันสุดขั้ว
+   *    ตอนนี้: อาคารเตี้ย/สูงตามระดับจริง · ยังไม่เริ่ม = ที่ดินว่าง · กดแล้วไปหน้างานนั้น */
+  const plots = useMemo<CityPlot[]>(
+    () => s.buildings.map((b) => ({ id: b.id, label: b.name, level: b.level, max: b.max, locked: b.locked })),
+    [s.buildings],
+  );
+
+  // (re)render the cityscape whenever time/season/era/ข้อมูลจริง changes
   useEffect(() => {
-    if (svgRef.current) renderCityscape(svgRef.current, time, season, eraView);
-  }, [time, season, eraView]);
+    if (svgRef.current) renderCityscape(svgRef.current, time, season, eraView, plots);
+  }, [time, season, eraView, plots]);
+
+  /** กดอาคาร → ไปหน้าที่พัฒนาอาคารนั้นได้จริง (ไม่ใช่ฉากที่กดไม่ได้) */
+  const onPlotClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    // 🔴 ที่ดินว่าง (data-empty) ต้องกดได้ด้วย — มันคือสถานะ "ยังไม่ได้เริ่ม"
+    //    ซึ่งเป็นช่องที่ผู้ใช้ควรกดมากที่สุด ไม่ใช่ช่องที่กดไม่ได้
+    const g = (e.target as Element).closest?.('[data-plot],[data-empty]');
+    const id = g?.getAttribute('data-plot') ?? g?.getAttribute('data-empty');
+    if (!id) return;
+    const b = s.buildings.find((x) => x.id === id);
+    if (!b || b.locked) return;
+    track('city_plot_click', { plot: id, level: b.level, page: b.page });
+    onNavigate?.(b.page);
+  };
 
   // auto mode: detect from real clock + Thai-climate month, re-check every minute
   useEffect(() => {
@@ -157,8 +178,23 @@ export default function CityLevelUp({ data }: { data: AppData; onNavigate?: (p: 
             )}
           </div>
           <div className="clv-city-badge">👑 ระดับปัจจุบัน · {s.tier.label}</div>
-          <svg ref={svgRef} className="clv-city" viewBox="0 0 1120 760" role="img"
-            aria-label="เมืองบริษัทแบบสามมิติมีชีวิต — ผู้คน รถยนต์ รถไร้คนขับ โดรน และหุ่นยนต์ AI เคลื่อนไหวตามยุคของเมือง เงาทอดตามช่วงเวลา สภาพอากาศตามฤดูกาล" />
+          <svg ref={svgRef} className="clv-city" viewBox="0 0 1120 760" role="img" onClick={onPlotClick}
+            aria-label="เมืองบริษัทแบบสามมิติมีชีวิต — ความสูงของอาคารแต่ละหลังคือความคืบหน้าจริงของงานด้านนั้น ที่ดินว่างคือเรื่องที่ยังไม่ได้เริ่ม กดอาคารเพื่อไปหน้างานนั้น" />
+          {/* ตารางข้างใต้ = ทางเข้าแบบไม่ต้องใช้สายตา/เมาส์ (ฉาก SVG อย่างเดียวใช้คีย์บอร์ดไม่ได้) */}
+          <ul className="clv-plot-legend">
+            {s.buildings.map((b) => (
+              <li key={b.id}>
+                <button type="button" className={'clv-plot-btn' + (b.level === 0 ? ' is-empty' : '')}
+                  disabled={b.locked}
+                  onClick={() => { track('city_plot_click', { plot: b.id, level: b.level, page: b.page, from: 'legend' }); onNavigate?.(b.page); }}>
+                  <span className="clv-plot-ico" aria-hidden="true">{b.icon}</span>
+                  <span className="clv-plot-name">{b.name}</span>
+                  <span className="clv-plot-lv">{b.locked ? '🔒 ต้องอัปเกรดแพ็ก' : b.level === 0 ? 'ยังไม่ได้เริ่ม' : `ระดับ ${b.level}/${b.max}`}</span>
+                  {b.hint && <span className="clv-plot-hint">{b.hint}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="clv-progress-card">

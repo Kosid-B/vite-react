@@ -913,6 +913,13 @@ npm run typecheck    # ⚠️ ตรวจ "ทั้งสองฝั่ง": 
 npm run build        # production build → dist/ (รวม typecheck ทั้งสองฝั่งแล้ว)
 npm run preview      # preview dist/ locally
 
+# วัดคุณภาพ AI ในเครื่อง (Ollama) เทียบ Claude — Windows
+.\scripts\eval-local.ps1                      # ตั้ง env ให้เอง + ตรวจว่า Ollama เปิด/มีโมเดลก่อนรัน
+                     #   ⚠️ $env: ตายทุกครั้งที่ปิดหน้าต่าง — เคยพลาด 3 รอบติดเพราะพิมพ์เอง
+                     #   ผลล่าสุด qwen2.5:7b = 46% ของ Claude · critical 5/8 ⇒ NO-GO กับงานที่ถึงลูกค้า
+                     #   🔴 local AI ใช้ในแอปไม่ได้โดยโครงสร้าง: Edge Function รันบนคลาวด์
+                     #      เรียก localhost ของเครื่องเจ้าของไม่ได้ + egressGuard อนุญาตแค่ 2 โฮสต์
+
 # Screenshot (requires dev server running)
 node .claude/skills/run-ceo-ai-thailand/driver.mjs --out /tmp/shot.png
 node .claude/skills/run-ceo-ai-thailand/driver.mjs --out /tmp/shot.png --nav "บริษัท AI"
