@@ -30,6 +30,19 @@ dist-ssr
 .env
 .env.local
 
+# 🔴 ความลับที่เคยหลุดมาอยู่ในโฟลเดอร์โปรเจกต์จริง (15 พ.ย. 2569 · ledger #78)
+#    เดิมกันแค่ `.env` กับ `.env.local` ⇒ ไฟล์ด้านล่างนี้ "โผล่ใน untracked" รอให้ `git add -A` เก็บขึ้น GitHub
+#    ของจริงที่เจอ: ไฟล์ .txt ที่ตั้งชื่อด้วยคีย์ Anthropic เต็ม ๆ + .deploy.env + .env.bak-<project-ref>
+#    ⚠️ บรรทัดพวกนี้กันแค่ "เผลอ commit" — ไม่ได้ทำให้คีย์ที่หลุดไปแล้วปลอดภัย ต้องเพิกถอนเสมอ
+.env.*
+!.env.example
+*.env
+sk-ant-*
+sk-*.txt
+*secret*.txt
+*.key
+*.pem
+
 # Claude Code agent worktrees (runtime artifacts)
 .claude/worktrees/
 content-prototype-seed.json
