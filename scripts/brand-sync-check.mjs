@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /* brand-sync-check.mjs — เทียบ "ความจริงเรื่องแบรนด์" ของผลิตภัณฑ์ กับแหล่งจริงใน Marketing OS
  *
  * 🧱 เส้นแบ่ง: Marketing OS = อีกระบบ (เจ้าของ freeze 24 ส.ค. 2569)
