@@ -18,6 +18,9 @@
     "export:marketing": "vite-node scripts/marketing-export.mjs",
     "check:brand-sync": "vite-node scripts/brand-sync-check.mjs"
   },
+  "engines": {
+    "node": ">=22 <23"
+  },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.45.5",
     "@amplitude/plugin-session-replay-browser": "^1.33.7",

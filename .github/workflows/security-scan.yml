@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm ci --legacy-peer-deps
       # gate: fail เฉพาะช่องโหว่ high/critical ใน dependency ที่ ship ถึงผู้ใช้จริง (prod)
       - name: Audit production dependencies (gate)

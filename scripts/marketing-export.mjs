@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /* marketing-export.mjs — ส่งข้อมูลหลังบ้าน CEO AI Thailand ให้ Marketing OS ใช้ทำการตลาด
  *
  * ทิศทาง (เจ้าของยืนยัน 15 พ.ย. 2569):
