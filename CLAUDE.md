@@ -46,6 +46,16 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
    ⚠️ **ตาราง `marketing_*` ของสองที่เป็นคนละชุด คนละชื่อ** — ของอีกระบบมี `marketing_behavior_*` · `marketing_personas` ·
      `marketing_ctas` · `marketing_evidence` ที่ production ไม่มี ⇒ **ห้ามอ่าน schema ฝั่งหนึ่งแล้วเดาอีกฝั่ง**
    ⇒ รีโปนี้ **ห้ามสร้าง migration `marketing_*` · ห้ามอ่าน/เขียนตาราง `marketing_*` ของทั้งสอง project** (กลไก: `ownershipBoundary.test.ts`)
+   🟢 **ข้อยกเว้นข้อเดียว เจ้าของอนุมัติ 20 พ.ย. 2569 ("ลุย A ต่อ B") — ส่ง event ออกได้ ผ่าน `marketing-track` เท่านั้น**
+     เหตุผลที่อนุมัติ (วัดสดจากตารางของเขาเอง): `marketing_measurement_health_live.score = 0` · `event_count = 0`
+     และ `marketing_measurement_config.block_strategic_recommendations_below_score = true`
+     ⇒ **OS ปฏิเสธการให้คำแนะนำกลยุทธ์ด้วยกลไกของตัวมันเอง** จนกว่าจะมี event ไหลเข้า ⇒ ต้องมีใครส่งให้
+     · ขอบเขต: **ไฟล์เดียว** `src/lib/marketingOs.ts` ถือชื่อปลายทาง + ยิง `POST /functions/v1/marketing-track`
+       (`src/config.ts` เหลือแค่สวิตช์ `MARKETING_OS.live` · ไม่รู้ชื่อปลายทาง)
+     · ยังห้ามเหมือนเดิมทุกข้อ: `.from('marketing_…')` · `rpc(…)` ของเขา · migration `marketing_*` · อ่านสคีมาฝั่งหนึ่งแล้วเดาอีกฝั่ง
+     🔴 **ช่องที่ด่านเดิมมองไม่เห็นและปิดแล้วในรอบนี้**: regex เดิมจับแค่ `rpc('marketing_…` แต่ rpc ตัวจริงของเขาชื่อ
+       **`ingest_marketing_event`** (ขึ้นต้นด้วย `ingest_`) ⇒ เลี่ยงด่านได้ฟรี · ตอนนี้ด่านจับชื่อนี้ตรง ๆ แล้ว
+     ⚠️ ด่านดู **โค้ดจริง** (ตัดคอมเมนต์ก่อน) ⇒ เอกสารพูดถึงชื่อตาราง/rpc ได้ แต่ **เรียกใช้ไม่ได้**
 | อีกระบบเป็นเจ้าของ | รีโปนี้เป็นเจ้าของ |
 |---|---|
 | การตลาดของเราเอง — แคมเปญ · ข้อเสนอ · คอนเทนต์ · brand rules · segment · pillar · attribution | ตัวผลิตภัณฑ์ — แอปที่ผู้ใช้ล็อกอิน · Landing/`/start` · Worker · billing · marketplace |

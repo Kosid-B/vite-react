@@ -2,6 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
+/** โค้ดจริงโดยไม่นับคอมเมนต์ — ด่านนี้ห้าม "การเรียกใช้" ไม่ใช่ห้าม "การเอ่ยถึงในเอกสาร"
+ *  (เอกสารต้องพูดถึง `.from('marketing_…')` ได้ ไม่งั้นเขียนกฎอธิบายตัวเองไม่ได้) */
+function codeOf(file: string): string {
+  return readFileSync(file, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
  * เส้นแบ่งความเป็นเจ้าของ (เจ้าของตัดสิน 24 ส.ค. 2569)
  *
@@ -63,9 +71,10 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
     }
   });
 
+
   it('โค้ดในรีโปนี้ต้องไม่อ่าน/เขียนตาราง marketing_* โดยตรง', () => {
     const offenders = [...walk(resolve(ROOT, 'src')), ...walk(resolve(ROOT, 'supabase/functions'))]
-      .filter((p) => /\.from\(\s*['"`]marketing_|rpc\(\s*['"`]marketing_/.test(readFileSync(p, 'utf8')))
+      .filter((p) => /\.from\(\s*['"`]marketing_|rpc\(\s*['"`]marketing_/.test(codeOf(p)))
       .map((p) => p.slice(ROOT.length + 1));
     expect(offenders, `ไฟล์ที่แตะตารางของอีกระบบ: ${offenders.join(', ')}`).toEqual([]);
   });
@@ -124,5 +133,67 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
     for (const f of ['founderConstitution.ts', 'founderMindset.ts', 'dmaic.ts', 'businessGenome.ts']) {
       expect(() => readFileSync(resolve(ROOT, 'src/lib', f), 'utf8'), f).not.toThrow();
     }
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+ * 🧱 เส้นแบ่งฉบับแก้ไข — เจ้าของอนุมัติให้ข้าม 20 พ.ย. 2569 ("ลุย A ต่อ B")
+ *
+ * เหตุผลที่อนุมัติ: `marketing_measurement_health_live.score = 0` · `event_count = 0`
+ *   และ `marketing_measurement_config.block_strategic_recommendations_below_score = true`
+ *   ⇒ OS ปฏิเสธการให้คำแนะนำกลยุทธ์เองจนกว่าจะมี event ⇒ ต้องมีใครส่งให้มัน
+ *
+ * ที่อนุญาต (แคบที่สุดเท่าที่ทำงานได้): **ส่ง event ผ่าน edge function `marketing-track`**
+ *   และต้องอยู่ใน **ไฟล์เดียว** คือ `src/lib/marketingOs.ts`
+ * ที่ยังห้ามเหมือนเดิม: แตะตาราง/สคีมา `marketing_*` · migration · เรียก rpc ของเขาตรง
+ *
+ * 🔴 ช่องที่ด่านเดิมมองไม่เห็นและปิดในรอบนี้: regex เดิมจับแค่ `rpc('marketing_…`
+ *    แต่ rpc ตัวจริงชื่อ **`ingest_marketing_event`** (ขึ้นต้นด้วย ingest_) ⇒ เลี่ยงได้ฟรี
+ * ══════════════════════════════════════════════════════════════════════ */
+describe('🧱 เส้นแบ่งฉบับ 20 พ.ย. 2569 — ส่ง event ได้ทางเดียว', () => {
+  const SRC = resolve(__dirname, '../..');
+  const ALLOWED_FILE = 'lib/marketingOs.ts';
+
+  /** ไฟล์ .ts/.tsx ทั้ง src/ (ไม่นับเทสต์) */
+  function walk(dir: string, out: string[] = []): string[] {
+    for (const e of readdirSync(dir)) {
+      const p = join(dir, e);
+      if (statSync(p).isDirectory()) { if (e !== '__tests__') walk(p, out); }
+      else if (/\.tsx?$/.test(e)) out.push(p);
+    }
+    return out;
+  }
+  const files = walk(SRC);
+
+  it('อ่านไฟล์เจอจริง (กันเทสต์ผ่านเพราะไม่เจออะไร)', () => {
+    expect(files.length).toBeGreaterThan(50);
+    expect(files.some((f) => f.endsWith(ALLOWED_FILE))).toBe(true);
+  });
+
+  it('🔴 มีไฟล์เดียวที่คุยกับ Marketing OS ได้ — ไฟล์อื่นห้ามเอ่ยถึงปลายทางเลย', () => {
+    const offenders = files
+      .filter((f) => !f.endsWith(ALLOWED_FILE))
+      .filter((f) => /marketing-track|ingest_marketing_event/.test(codeOf(f)))
+      .map((f) => f.replace(SRC + '/', ''));
+    expect(offenders, `ไฟล์ที่ยิงไป OS เองนอกสะพาน: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  it('🔴 ห้ามเรียก rpc ของเขาตรง ๆ จากรีโปนี้ (รวมชื่อที่ไม่ขึ้นต้นด้วย marketing_)', () => {
+    const offenders = files
+      .filter((f) => /rpc\(\s*['"`](ingest_marketing_event|marketing_)/.test(codeOf(f)))
+      .map((f) => f.replace(SRC + '/', ''));
+    expect(offenders, `เรียก rpc ของ OS ตรง: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  it('สะพานต้องยิงผ่าน edge function เท่านั้น ไม่ใช่ REST ตาราง', () => {
+    const bridge = readFileSync(resolve(SRC, ALLOWED_FILE), 'utf8');
+    expect(bridge).toContain('/functions/v1/');
+    expect(bridge, 'ห้ามยิง /rest/v1/ ไปที่ตารางของเขา').not.toContain('/rest/v1/');
+  });
+
+  it('CLAUDE.md ต้องบันทึกกฎใหม่ไว้ ไม่ใช่อยู่แค่ในแชต (ledger #41)', () => {
+    const md = readFileSync(resolve(SRC, '../CLAUDE.md'), 'utf8');
+    expect(md, 'ต้องบอกว่าอนุญาตอะไร').toMatch(/marketing-track/);
+    expect(md, 'ต้องบอกว่ายังห้ามอะไร').toMatch(/ห้ามสร้าง migration `marketing_\*`/);
   });
 });

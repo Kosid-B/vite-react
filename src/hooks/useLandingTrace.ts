@@ -5,6 +5,7 @@ import {
   initLandingFunnel, markLandingScroll, markLandingDwell, flush,
   markSectionEnter, markSectionExit, closeOpenSections, settleOpenSections,
 } from '../lib/landingFunnel';
+import { sendOsEvent } from '../lib/marketingOs';
 
 /* ===== useLandingTrace — วัดความลึกของความสนใจบน Landing (PDPA-safe) =====
  * ส่ง 2 ทาง (anonymous · ไม่เก็บ PII · ไม่บันทึก cursor path):
@@ -32,6 +33,9 @@ export function useLandingTrace(
 
     // first-party funnel — เริ่มเซสชัน (ส่ง "เข้าดู" ทันที) · ref จำแนกจาก referrer แบบ PDPA-safe
     try { initLandingFunnel(seg, document.referrer, window.location.origin, { heroAb, layoutAb }); } catch { /* noop */ }
+    // Marketing OS: "มีคนเข้าหน้า Landing" — event ขั้น exposure ตัวแรกที่ OS นิยามไว้
+    // once=true เพราะหน้าโหลดครั้งเดียวต่อ session (StrictMode รัน effect สองรอบ)
+    sendOsEvent('landing_view', { seg }, true);
 
     let maxPct = 0;
     /** จบแล้วจริง ๆ (ปิดหน้า / unmount) — ต่างจาก "สลับแอปชั่วคราว" ซึ่งกลับมาได้ */
