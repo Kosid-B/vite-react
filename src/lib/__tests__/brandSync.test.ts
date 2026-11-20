@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   MARKETING_SOURCE, SEG_CODE_MAP, isTestFixture, compareSegments, syncVerdict,
+  PENDING_UPSTREAM, UPSTREAM_SEG_ALIAS,
   type RemoteSegment,
 } from '../brandSync';
 import { HERO_VARIANTS } from '../heroVariant';
@@ -68,8 +69,12 @@ describe('🔴 รหัสกลุ่มของสองระบบ — ต
   });
 
   it('employee / graduate / growth = กับดักที่จะตกเป็นพาดหัว default', () => {
-    expect(r.drift.map((d) => d.code)).toEqual(['employee', 'graduate', 'growth']);
+    /* 🔁 แก้ 19 พ.ย. 2569 — employee/growth ย้ายไปชั้น `bridged` แล้ว (alias พาถึง)
+     *    เหลือ drift จริงแค่ graduate ที่ฝั่งเรายังไม่มีพาดหัวให้ */
+    expect(r.drift.map((d) => d.code)).toEqual(['graduate']);
     for (const d of r.drift) expect(d.fallsBackToDefault).toBe(true);
+    expect(r.bridged.map((d) => d.code)).toEqual(['employee', 'growth']);
+    for (const b of r.bridged) expect(b.fallsBackToDefault, 'alias พาถึงแล้ว ห้ามบอกว่าตกเป็น default').toBe(false);
   });
 
   it('ทุก drift ต้องบอกเหตุผล ไม่ใช่แค่ชี้ว่าไม่ตรง', () => {
@@ -92,8 +97,26 @@ describe('🔴 รหัสกลุ่มของสองระบบ — ต
 
   it('สรุปต้องบอกว่าไม่ผ่าน และบอกจำนวนตามจริง', () => {
     const v = syncVerdict(r);
-    expect(v.ok).toBe(false);
-    expect(v.line).toContain('3 จาก 5');
+    expect(v.ok, 'ยังมี graduate ที่ไม่มีอะไรพาถึง ⇒ ยังไม่ผ่าน').toBe(false);
+    // 🔁 19 พ.ย. 2569 — ฐานยังนับทุกรหัส แต่ตัวเศษนับเฉพาะ "ที่ยังไม่มีอะไรพาถึง"
+    //    (employee/growth มี alias แล้ว ⇒ ไม่ควรถูกนับเป็นของที่พัง)
+    expect(v.line).toContain('1 จาก 5');
+  });
+
+  /* 🔴 ด่านสำคัญ: `bridged` ต้องไม่กลายเป็นที่ซ่อนปัญหา
+   *    ถ้าวันหนึ่งมีคนยัดรหัสที่ยังไม่มี alias จริงเข้าไปในกอง bridged
+   *    ตัวตรวจจะขึ้นเขียวทั้งที่ลิงก์ยังพัง — เทสต์นี้กันไว้ */
+  it('🔴 ทุกตัวในกอง bridged ต้องมี alias จริงรองรับ ไม่ใช่แค่ถูกจัดกอง', () => {
+    for (const b of r.bridged) {
+      expect(UPSTREAM_SEG_ALIAS, `${b.code} อยู่ในกอง bridged แต่ไม่มี alias`).toHaveProperty(b.code);
+      expect(UPSTREAM_SEG_ALIAS[b.code], `alias ของ ${b.code} ชี้ผิดที่`).toBe(b.localSeg);
+    }
+    expect(r.bridged.length, 'ไม่มีอะไรในกองนี้ = เทสต์ไม่ได้ตรวจอะไร').toBeGreaterThan(0);
+  });
+
+  it('🔴 รหัสเดียวกันห้ามอยู่สองกอง — aligned/bridged/drift ต้องแยกขาด', () => {
+    const all = [...r.aligned, ...r.bridged.map((b) => b.code), ...r.drift.map((d) => d.code)];
+    expect(new Set(all).size, `มีรหัสซ้ำข้ามกอง: ${all.join(', ')}`).toBe(all.length);
   });
 });
 
@@ -122,5 +145,85 @@ describe('กรณีขอบ', () => {
     const r = compareSegments([{ code: 'unknown_seg', name: 'กลุ่มใหม่' }]);
     expect(r.drift[0].layer).toBeNull();
     expect(r.drift[0].why).toContain('ไม่เคยแมป');
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 🔀 alias รหัสกลุ่มของ Marketing OS → HeroSeg ของเรา (19 พ.ย. 2569)
+ *
+ * 🔴 ปัญหาที่กัน: ทะเบียนของเขาใช้ `growth`/`employee` ฝั่งเราใช้ `owner`/`sidebiz`
+ *    ⇒ ลิงก์แคมเปญ `/?seg=growth` ของเขาตกเป็นพาดหัว default ทั้งที่เรารู้กลุ่มเขาแล้ว
+ *    (บั๊กตระกูลเดียวกับ `landing_funnel.seg='default'` 97.5% — ledger #73/#74)
+ *
+ * ⚠️ เทสต์ชุดนี้บังคับ **ความสัมพันธ์** ไม่ใช่ค่า — alias ต้อง derive จาก SEG_CODE_MAP
+ *    เสมอ ⇒ แก้พจนานุกรมแล้วลืมแก้ alias เป็นไปไม่ได้โดยโครงสร้าง
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('🔀 alias รหัสของอีกระบบ', () => {
+  it('ต้อง derive จาก SEG_CODE_MAP ครบทุกตัวที่คำไม่ตรงกัน — ห้ามขาด', () => {
+    const should = Object.entries(SEG_CODE_MAP)
+      .filter(([code, m]) => m.localSeg !== null && m.localSeg !== code)
+      .map(([code]) => code)
+      .sort();
+    expect(Object.keys(UPSTREAM_SEG_ALIAS).sort()).toEqual(should);
+    expect(should.length, 'ไม่มีรหัสที่ต่างกันเลย = ตัวตรวจนี้ไม่ได้ตรวจอะไร').toBeGreaterThanOrEqual(2);
+  });
+
+  it('ของจริงวันนี้: growth→owner · employee→sidebiz', () => {
+    expect(UPSTREAM_SEG_ALIAS.growth).toBe('owner');
+    expect(UPSTREAM_SEG_ALIAS.employee).toBe('sidebiz');
+  });
+
+  it('🔴 รหัสที่ไม่มี HeroSeg รองรับ ห้ามอยู่ใน alias — เดาไป = ส่งพาดหัวผิดกลุ่ม', () => {
+    // graduate (นักศึกษาจบใหม่) ฝั่งเรายังไม่มีพาดหัวให้ ⇒ ต้องตกเป็น default อย่างซื่อสัตย์
+    expect(SEG_CODE_MAP.graduate.localSeg, 'ถ้าวันหนึ่งเพิ่ม HeroSeg ให้ graduate ให้แก้เทสต์นี้ด้วย').toBeNull();
+    expect(UPSTREAM_SEG_ALIAS).not.toHaveProperty('graduate');
+  });
+
+  it('🔴 alias ห้ามชนกับ HeroSeg ที่มีอยู่ — จะแย่งความหมายของ seg ตัวเอง', () => {
+    const ours: string[] = ['default', 'seller', 'newbie', 'sidebiz', 'owner', 'palm', 'food', 'audit', 'btc'];
+    const clash = Object.keys(UPSTREAM_SEG_ALIAS).filter((k) => ours.includes(k));
+    expect(clash, `รหัส alias ชนกับ HeroSeg ของเรา: ${clash.join(', ')}`).toEqual([]);
+  });
+
+  it('🔴 ค่าปลายทางของ alias ต้องเป็น HeroSeg จริงเท่านั้น', () => {
+    const ours: string[] = ['default', 'seller', 'newbie', 'sidebiz', 'owner', 'palm', 'food', 'audit', 'btc'];
+    for (const [code, target] of Object.entries(UPSTREAM_SEG_ALIAS)) {
+      expect(ours, `${code} → ${target} ไม่ใช่ HeroSeg`).toContain(target);
+    }
+  });
+});
+
+describe('🟢 seller ย้ายออกจากคิวรอแล้ว (19 พ.ย. 2569)', () => {
+  it('seller อยู่ใน SEG_CODE_MAP และชี้กลับมาที่ seller ของเรา', () => {
+    expect(SEG_CODE_MAP.seller?.localSeg).toBe('seller');
+    expect(SEG_CODE_MAP.seller?.layer).toBe('growth');
+  });
+
+  it('🔴 รหัสเดียวกันห้ามอยู่ทั้งสองที่ — อยู่ในคิวรอ = ยังไม่มีจริง', () => {
+    const both = Object.keys(SEG_CODE_MAP).filter((c) => c in PENDING_UPSTREAM);
+    expect(both, `อยู่ทั้ง SEG_CODE_MAP และ PENDING_UPSTREAM: ${both.join(', ')}`).toEqual([]);
+  });
+
+  it('🔴 ของในคิวรอ ต้องไม่ถูก alias — ปลายทางยังไม่มี ลิงก์ยังใช้ไม่ได้', () => {
+    for (const code of Object.keys(PENDING_UPSTREAM)) {
+      expect(UPSTREAM_SEG_ALIAS, `${code} ยังไม่มีจริงที่ปลายทาง แต่ถูก alias แล้ว`).not.toHaveProperty(code);
+    }
+  });
+
+  it('compareSegments กับทะเบียนสดจริง: seller = aligned · ไม่มีอะไรค้างรอ', () => {
+    /* ข้อมูลสดจาก bjozpwdtqbpwcxnqguka อ่านผ่าน MCP 19 พ.ย. 2569 */
+    const live = [
+      { code: 'audit', name: 'ISO / Audit intent' },
+      { code: 'employee', name: 'คนทำงานประจำที่ต้องการเริ่มธุรกิจ' },
+      { code: 'graduate', name: 'นักศึกษาจบใหม่ที่ต้องการเริ่มธุรกิจ' },
+      { code: 'growth', name: 'เจ้าของธุรกิจที่ต้องการเติบโต' },
+      { code: 'newbie', name: 'คนที่ต้องการเริ่มทำธุรกิจ' },
+      { code: 'seller', name: 'เจ้าของที่มีของขายแล้ว แต่ลูกค้าหาไม่เจอ' },
+    ].map((r) => ({ ...r, evidence_status: 'hypothesis', active: true }));
+    const r = compareSegments(live);
+    expect(r.aligned, 'seller ใช้คำเดียวกันทั้งสองฝั่งแล้ว').toContain('seller');
+    expect(r.pendingLanded, 'ไม่มีอะไรค้างในคิวรอแล้ว').toEqual([]);
+    expect(r.illegalValidated, 'ห้ามมีตัวไหนประกาศ validated').toEqual([]);
+    expect(r.filteredFixtures, 'ข้อมูลทดสอบถูกเก็บไปแล้ว').toEqual([]);
   });
 });

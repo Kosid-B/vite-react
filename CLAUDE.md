@@ -25,7 +25,11 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 🔴 **Marketing OS รันบน Supabase ของตัวเอง ไม่ใช่ production ของเรา** (ตรวจสดผ่าน MCP 15 พ.ย. 2569 · ledger #79)
    · **ของอีกระบบ**: `bjozpwdtqbpwcxnqguka` = **"CEOAITHAILAND Marketing"** (org เดียวกัน · ap-northeast-1 · สร้าง 19 ส.ค. 69)
      โค้ดอยู่เครื่องเจ้าของที่ `D:\CEOAITHAILAND Marketing-P1.0.2-baseline` · deploy เป็น Vercel project `ceo-ai-marketing`
-     **ข้อมูลการตลาดจริงทั้งหมดอยู่ที่นี่** (`marketing_brands` 1 · `audience_segments` 5 · `message_pillars` 7 · `brand_rules` 7)
+     **ข้อมูลการตลาดจริงทั้งหมดอยู่ที่นี่** (วัดสด 19 พ.ย. 69: `marketing_brands` 1 · `audience_segments` **6** · `message_pillars` 7)
+     🔀 **รหัสกลุ่มสองฝั่งใช้คนละคำ** — เขา `growth`/`employee` · เรา `owner`/`sidebiz` ⇒ ลิงก์ `?seg=growth` ของเขา
+        เคยตกเป็นพาดหัว default · แก้แล้วด้วย `brandSync.UPSTREAM_SEG_ALIAS` (derive จาก `SEG_CODE_MAP` ที่เดียว)
+        ⚠️ **`graduate` ไม่มี alias โดยเจตนา** — เรายังไม่มีพาดหัวให้นักศึกษาจบใหม่ ⇒ ตกเป็น default อย่างซื่อสัตย์
+        เครื่องมือ: `npm run check:brand-sync` (แยก `aligned` / `bridged` / `drift` — bridged = alias พาถึงแล้ว ไม่ใช่กับดัก)
    · **ใน production `waigsnxhrlwtiotspaim`**: ตาราง `marketing_*` **33 ตาราง มีอยู่จริง แต่ 0 แถวทุกตาราง**
    ⚠️ **แก้คำเดิมที่เขียนผิด**: บรรทัดนี้เคยเขียนว่า *"production มีสองระบบเขียนลง"* — **โครงสร้างถูก แต่ข้อมูลไม่จริง**
      ไม่เคยมีใครเขียนข้อมูลลง `marketing_*` ของ production เลย ⇒ อ่านว่า "โครงเปล่าที่ apply ไว้" ไม่ใช่ "ระบบที่ทำงานอยู่"

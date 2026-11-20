@@ -48,20 +48,47 @@ export const SEG_CODE_MAP: Record<string, { layer: AudienceLayer; localSeg: Hero
    *      ↔ seller = "ของคุณดีกว่า แต่ร้านอื่นขายดีกว่า?"  — คนหาไม่เจอ   ❌ คนละ pain
    *    อยู่ช่วงชีวิตธุรกิจเดียวกัน แต่มาด้วยปัญหาคนละข้อ ⇒ แมปผิดจะส่งพาดหัวผิดให้คนทั้งกลุ่ม */
   growth: { layer: 'growth', localSeg: 'owner' },
+  /* 🟢 ย้ายเข้ามาจาก PENDING_UPSTREAM เมื่อ 19 พ.ย. 2569 — ปลายทางเพิ่มให้แล้วจริง
+   *    ยืนยันสดผ่าน MCP: code='seller' · name='เจ้าของที่มีของขายแล้ว แต่ลูกค้าหาไม่เจอ'
+   *    · evidence_status='hypothesis' · active=true  ⇒ "ตกลงแล้ว" กลายเป็น "มีแล้ว" ตามกลไกที่วางไว้ */
+  seller: { layer: 'growth', localSeg: 'seller' },
   audit: { layer: 'sideDoor', localSeg: 'audit' },
 };
 
 /** 🤝 รหัสที่ **ตกลงกันแล้ว** ว่าฝั่ง Marketing OS จะเพิ่มเข้าทะเบียน แต่ยังไม่ยืนยันว่ามีจริง
  *  🔴 ห้ามเอาไปใส่ SEG_CODE_MAP ก่อนที่มันจะมีจริง — ถ้าใส่ ระบบจะเลิกเตือนทั้งที่ join ยังพัง
  *     "ตกลงแล้ว" ≠ "มีแล้ว" (หลักเดียวกับ unknown ≠ open ≠ closed)
- *  `check:brand-sync` จะบอกเองเมื่อมันขึ้นจริงที่ปลายทาง */
-export const PENDING_UPSTREAM: Record<string, { localSeg: HeroSeg; layer: AudienceLayer; why: string }> = {
-  seller: {
-    localSeg: 'seller',
-    layer: 'growth',
-    why: 'มีของขายอยู่แล้วแต่คนหาไม่เจอ — คนละปัญหากับ growth ที่เป็นเรื่องโตแบบมีระบบ (เจ้าของตัดสิน 15 พ.ย. 2569)',
-  },
-};
+ *  `check:brand-sync` บอกเองเมื่อมันขึ้นจริงที่ปลายทาง (ฟิลด์ `pendingLanded`)
+ *
+ *  🟢 **ว่างอยู่ตอนนี้ (19 พ.ย. 2569)** — `seller` เป็นรายการแรกและเดียวที่เคยอยู่ในคิวนี้
+ *     กลไกเดินครบรอบแล้ว: ขอ → เขาเพิ่ม → `pendingLanded` จับได้ → ย้ายเข้า SEG_CODE_MAP
+ *  ⚠️ **ห้ามลบ map นี้ทิ้งเพราะมันว่าง** — มันคือที่พักของ "ของที่ตกลงแล้วแต่ยังไม่มี" รอบหน้า
+ *     ถ้าลบ ครั้งต่อไปจะไม่มีที่ให้เขียน แล้วรหัสที่เพิ่งตกลงจะถูกยัดเข้า SEG_CODE_MAP ทันทีทั้งที่ยังไม่มีจริง
+ */
+export const PENDING_UPSTREAM: Record<string, { localSeg: HeroSeg; layer: AudienceLayer; why: string }> = {};
+
+/** 🔀 **รหัสที่สองฝั่งใช้คนละคำ แต่หมายถึงกลุ่มเดียวกัน** — ใช้แปลลิงก์ที่เข้ามาจากอีกระบบ
+ *
+ * 🔴 ปัญหาที่แก้ (ตรวจสด 19 พ.ย. 2569): ทะเบียนของเขาใช้ `growth`/`employee`
+ *    ฝั่งเราใช้ `owner`/`sidebiz` ⇒ ลิงก์แคมเปญ `/?seg=growth` ของเขา
+ *    **ตกเป็นพาดหัว default** เพราะ `segmentFor()` ไม่รู้จักคำนั้น
+ *    = บั๊กตระกูลเดียวกับที่วัดได้ว่า `landing_funnel.seg='default'` 97.5% (ledger #73/#74)
+ *    ⚠️ ไม่ใช่ปัญหา join — พจนานุกรมแปลตอนส่งออกถูกอยู่แล้ว · ที่พังคือ **ตอนคนกดลิงก์เข้ามา**
+ *
+ * ⚠️ **ไม่ประกาศซ้ำ — derive จาก SEG_CODE_MAP ตัวเดียว** ⇒ แก้พจนานุกรมที่เดียว ลิงก์ตามทันที
+ *    เข้าข่าย alias เมื่อ ① ฝั่งเรามี HeroSeg รองรับ (`localSeg !== null`) ② คำสองฝั่งไม่ตรงกัน
+ *    ⇒ `graduate` ไม่เข้า (เรายังไม่มีพาดหัวให้ — เดาไปจะส่งพาดหัวผิดกลุ่ม)
+ *    ⇒ `newbie`/`audit` ไม่เข้า (ตรงกันอยู่แล้ว)
+ *
+ * 🔴 **ห้าม alias รหัสที่ชนกับ HeroSeg ที่มีอยู่** — จะแย่งความหมายของ seg ตัวเอง (เทสต์กันไว้)
+ */
+export const UPSTREAM_SEG_ALIAS: Readonly<Record<string, HeroSeg>> = Object.freeze(
+  Object.fromEntries(
+    Object.entries(SEG_CODE_MAP)
+      .filter(([code, m]) => m.localSeg !== null && m.localSeg !== code)
+      .map(([code, m]) => [code, m.localSeg as HeroSeg]),
+  ),
+);
 
 /** 🔴 seg ที่เป็น **ประเภทธุรกิจ ไม่ใช่กลุ่มเป้าหมาย** — คนละแกนกับทะเบียน segment
  *  ยัดเข้าทะเบียนกลุ่มเป้าหมาย = ทะเบียนปนสองแกน แล้วจะงอกไม่จบ (ตอนนี้ 2 ตัว พรุ่งนี้มีอีก)
@@ -90,7 +117,12 @@ export interface SegDrift {
 export interface SyncReport {
   /** รหัสที่ทั้งสองฝั่งใช้คำเดียวกัน ⇒ ลิงก์ข้ามระบบทำงานได้ */
   aligned: string[];
-  /** รหัสที่ไม่ตรง ⇒ กับดัก */
+  /** 🔀 คำต่างกัน **แต่ `UPSTREAM_SEG_ALIAS` พาถึงแล้ว** ⇒ ลิงก์ทำงานได้เหมือนกัน
+   *  🔴 แยกออกจาก `drift` โดยเจตนา (19 พ.ย. 2569): ถ้านับรวมเป็น drift ตัวตรวจจะขึ้น 🔴
+   *     ค้างตลอดทั้งที่ของถูกซ่อมแล้ว = เครื่องมือที่สอนให้เราเลิกเชื่อมัน
+   *     (บทเรียนเดียวกับ `contrast-audit` ที่เดินไม่ครบแล้วรายงานเขียว — ledger #4b) */
+  bridged: SegDrift[];
+  /** รหัสที่ไม่ตรง **และยังไม่มีอะไรพาถึง** ⇒ กับดักจริง */
   drift: SegDrift[];
   /** ชั้นที่แหล่งจริงไม่มี แต่เรามี ⇒ เราพูดกับกลุ่มที่อีกระบบไม่รู้จัก */
   missingUpstream: AudienceLayer[];
@@ -115,6 +147,7 @@ export function compareSegments(remote: RemoteSegment[]): SyncReport {
   }
 
   const aligned: string[] = [];
+  const bridged: SegDrift[] = [];
   const drift: SegDrift[] = [];
   const seenLayers = new Set<AudienceLayer>();
 
@@ -123,6 +156,18 @@ export function compareSegments(remote: RemoteSegment[]): SyncReport {
     if (m) seenLayers.add(m.layer);
     if (m && m.localSeg === r.code) {
       aligned.push(r.code);
+      continue;
+    }
+    /* 🔀 คำต่างกันแต่มี alias พาถึง ⇒ ลิงก์ `?seg=<code>` ใช้ได้จริง ไม่ใช่กับดัก
+     *    เงื่อนไขตรงกับที่ UPSTREAM_SEG_ALIAS ใช้ derive (localSeg มีจริง และคำไม่ตรง) */
+    if (m && m.localSeg !== null && r.code in UPSTREAM_SEG_ALIAS) {
+      bridged.push({
+        code: r.code,
+        layer: m.layer,
+        localSeg: m.localSeg,
+        fallsBackToDefault: false,
+        why: `คำต่างกัน (เขา '${r.code}' · เรา '${m.localSeg}') แต่ alias พาถึงแล้ว ⇒ ลิงก์ใช้ได้`,
+      });
       continue;
     }
     drift.push({
@@ -148,6 +193,7 @@ export function compareSegments(remote: RemoteSegment[]): SyncReport {
   return {
     pendingLanded: real.map((r) => r.code).filter((c) => c in PENDING_UPSTREAM).sort(),
     aligned: aligned.sort(),
+    bridged: bridged.sort((a, b) => a.code.localeCompare(b.code)),
     drift: drift.sort((a, b) => a.code.localeCompare(b.code)),
     missingUpstream: ALL_LAYERS.filter((l) => !seenLayers.has(l)),
     filteredFixtures: filteredFixtures.sort(),
@@ -162,7 +208,9 @@ export function syncVerdict(r: SyncReport): { ok: boolean; line: string } {
     return { ok: false, line: `🔴 อีกระบบประกาศ validated ทั้งที่ยังไม่มีผลจริง: ${r.illegalValidated.join(', ')}` };
   }
   if (!ok) {
-    return { ok: false, line: `🔴 รหัสกลุ่มไม่ตรงกัน ${r.drift.length} จาก ${r.drift.length + r.aligned.length} — ลิงก์จากอีกระบบจะตกเป็นพาดหัว default` };
+    const total = r.drift.length + r.aligned.length + r.bridged.length;
+    return { ok: false, line: `🔴 รหัสกลุ่มที่ยังไม่มีอะไรพาถึง ${r.drift.length} จาก ${total} — ลิงก์จากอีกระบบจะตกเป็นพาดหัว default` };
   }
-  return { ok: true, line: `🟢 รหัสกลุ่มตรงกันครบ ${r.aligned.length} รายการ` };
+  const via = r.bridged.length ? ` (ตรงคำ ${r.aligned.length} · alias พาถึง ${r.bridged.length})` : '';
+  return { ok: true, line: `🟢 ลิงก์ข้ามระบบใช้ได้ครบ ${r.aligned.length + r.bridged.length} รายการ${via}` };
 }
