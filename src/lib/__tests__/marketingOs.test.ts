@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { resolve, join } from 'node:path';
-import {
-  OS_SAFE_EVENTS, OS_BUSINESS_EVENTS, EVENT_MAP, NOT_SENT_YET,
-  MAX_VALUE_LEN, safeProps, osEventFor, buildOsEvent, SENT_DIRECT,
-} from '../marketingOs';
+import { OS_BUSINESS_EVENTS, EVENT_MAP, NOT_SENT_YET, osEventFor, SENT_DIRECT } from '../marketingOs';
+import { OS_SAFE_EVENTS, MAX_VALUE_LEN, safeProps, encodeOsEvent } from '../osCodec';
 
 /* ══════════════════════════════════════════════════════════════════════
  * สะพานไป Marketing OS (ท่า A) — เจ้าของอนุมัติให้ข้ามเส้นแบ่ง 20 พ.ย. 2569
@@ -86,20 +84,20 @@ describe('② ห้ามพา PII ออกไป', () => {
   });
 
   it('🔴 payload ห้ามมีฟิลด์ UUID — เราไม่มีค่าจริง และปลายทางคืน invalid_uuid', () => {
-    const p = buildOsEvent({ event: 'cta_click', session: 's-1' }) as unknown as Record<string, unknown>;
+    const p = encodeOsEvent({ event: 'cta_click', session: 's-1' }) as unknown as Record<string, unknown>;
     for (const k of ['campaignId', 'contentItemId', 'experimentId', 'variantId', 'audienceSegmentId']) {
       expect(p[k], `${k} ต้องไม่ถูกส่ง`).toBeUndefined();
     }
   });
 
   it('ใช้ session เดียวกับ landing_funnel ทั้ง anonymousId และ sessionId ⇒ join ข้อมูลสองฝั่งได้', () => {
-    const p = buildOsEvent({ event: 'landing_view', session: 'sess-abc' });
+    const p = encodeOsEvent({ event: 'landing_view', session: 'sess-abc' });
     expect(p.anonymousId).toBe('sess-abc');
     expect(p.sessionId).toBe('sess-abc');
   });
 
   it('utm/seg/path ถูกแปลงชื่อฟิลด์ให้ตรงกับที่ปลายทางรับ', () => {
-    const p = buildOsEvent({
+    const p = encodeOsEvent({
       event: 'cta_click', session: 's', seg: 'owner', pagePath: '/', referrer: 'https://x.test',
       utm: { utm_source: 'facebook', utm_medium: 'comment', utm_campaign: 'c1', utm_content: 'v2' },
     });

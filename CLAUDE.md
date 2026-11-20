@@ -56,6 +56,31 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
      🔴 **ช่องที่ด่านเดิมมองไม่เห็นและปิดแล้วในรอบนี้**: regex เดิมจับแค่ `rpc('marketing_…` แต่ rpc ตัวจริงของเขาชื่อ
        **`ingest_marketing_event`** (ขึ้นต้นด้วย `ingest_`) ⇒ เลี่ยงด่านได้ฟรี · ตอนนี้ด่านจับชื่อนี้ตรง ๆ แล้ว
      ⚠️ ด่านดู **โค้ดจริง** (ตัดคอมเมนต์ก่อน) ⇒ เอกสารพูดถึงชื่อตาราง/rpc ได้ แต่ **เรียกใช้ไม่ได้**
+
+🚰 **สายท่อข้อมูลออก — แปลง → ห่อ → เก็บ → ส่ง** (20 พ.ย. 2569 · ADR-0003/0004/0005)
+```
+เหตุการณ์ในแอป
+ ① แปลง   src/lib/osCodec.ts    encode/decode + wireIssues() · pure ทั้งไฟล์ · กฎ PII อยู่ที่นี่
+ ② ห่อ     src/lib/osPackage.ts  ซอง {v,seq,packedAt,checksum,events} + canonical JSON
+ ③ เก็บ    src/lib/osOutbox.ts   คิวของค้าง + ส่งซ้ำ + **นับของหายแยกเหตุผล** 4 ชนิด
+ ④ ส่ง     src/lib/marketingOs.ts  POST /functions/v1/marketing-track (ไฟล์เดียวที่รู้ปลายทาง)
+```
+🔴 **`marketing-track` รับ 1 event ต่อ 1 POST — ไม่มี batch** ⇒ ซองเป็นรูปแบบ **ที่เก็บของเรา** ไม่ใช่รูปแบบสายส่ง
+🔴 **ไม่ใช่ erasure coding และห้ามเรียกชื่อนั้น** (ADR-0005 · ledger #91) — parity ช่วยไม่ได้เพราะหน่วยที่หาย
+   คือ **POST ทั้งก้อน** และที่เก็บมีที่เดียว ⇒ parity หายพร้อมข้อมูล · redundancy ตัวจริง = **ตารางของเราเอง**
+   (`landing_funnel`/`quickcheck_submissions`/`client_errors`) ที่ยังมีต้นฉบับอยู่แม้ส่งไม่ถึง
+⚠️ **ยังหายได้จริง 2 ทาง และยอมรับแล้ว**: ผู้ใช้ไม่กลับมาอีกเลย · เบราว์เซอร์ปิด storage (โหมดส่วนตัว)
+   ⇒ **ห้ามพูดว่าสายท่อนี้ไม่มีข้อมูลหาย** · `checksum` = ตรวจความครบถ้วน **ไม่ใช่ความปลอดภัย** (fnv1a ไม่ใช่ลายเซ็น)
+🔴 **ขา pull ยังไม่มี** — OS เห็น event ที่เราส่ง แต่ **อ่านภาพรวมของเราไม่ได้** (ADR-0006 `blocked`)
+   feed สาธารณะต้องมี rpc ที่ anon เรียกได้ = migration ⇒ ติด `schemaChangeAllowed()` (Acceptance #2 ยังไม่ผ่าน)
+   ⇒ **ห้ามบอกว่า "เชื่อมสองระบบครบแล้ว"** · ครบครึ่งเดียว
+กลไก: `osPipeline.test.ts` (26) · `osOutbox.test.ts` (18) · `marketingOs.test.ts` (32) · `ownershipBoundary.test.ts` (46)
+
+📐 **บันทึกการตัดสินใจทางสถาปัตยกรรม — [docs/adr/](docs/adr/README.md)** (เจ้าของสั่ง 20 พ.ย. 2569)
+เส้นแบ่ง: **CLAUDE.md = กฎที่ต้องทำวันนี้** · **ledger = เคยพลาดอะไร→กลไกอะไร** · **ADR = ทำไมเลือกทางนี้ ไม่เลือกทางอื่น**
+⚠️ **ADR ไม่แก้ย้อนหลัง** — ตัดสินใจใหม่ที่ขัดของเก่า ให้เขียนฉบับใหม่แล้วตั้งของเก่าเป็น `superseded`
+กลไก: `adr.test.ts` (29) — ค้นไฟล์เอง · บังคับหัวข้อครบ 4 + `## กลไก` เมื่อ `accepted` · `blocked` ต้องชี้ชื่อด่าน
+   · สถานะใน README ต้องตรงกับในไฟล์ · ห้าม ADR ไหนอ้างเกณฑ์เป็น `validated`
 | อีกระบบเป็นเจ้าของ | รีโปนี้เป็นเจ้าของ |
 |---|---|
 | การตลาดของเราเอง — แคมเปญ · ข้อเสนอ · คอนเทนต์ · brand rules · segment · pillar · attribution | ตัวผลิตภัณฑ์ — แอปที่ผู้ใช้ล็อกอิน · Landing/`/start` · Worker · billing · marketplace |
