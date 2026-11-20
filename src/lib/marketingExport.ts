@@ -19,6 +19,11 @@
 import { SEG_CODE_MAP, PENDING_UPSTREAM, BUSINESS_TYPE_SEGS, type AudienceLayer } from './brandSync';
 import { AUDIENCE } from './brandBrief';
 import { BIZ_LABEL } from './skillCatalog';
+import {
+  PLAN_NAME, PLAN_PRICE, PLAN_PRICE_NUM, ANNUAL_MONTHS_CHARGED,
+  annualPrice, annualSavingPct,
+} from './access';
+import type { PlanId } from '../types';
 import { MIN_FOR_RATE } from './growthPdca';
 
 /** แถวดิบจาก landing_funnel ที่ aggregate มาแล้วฝั่ง SQL */
@@ -57,6 +62,8 @@ export interface ExportBundle {
   personas: PersonaExport[];
   /** ประเภทธุรกิจที่เราเก็บจริง → marketing_business_types (ปลายทางยังว่าง 0 แถว) */
   businessTypes: BusinessTypeExport[];
+  /** ข้อเสนอจริงที่ขายอยู่ → marketing_offers (ปลายทางยังว่าง 0 แถว) */
+  offers: OfferExport[];
   /** ตารางปลายทางของแต่ละก้อน — ให้ตัว import ของเขารู้ว่าอะไรไปไหน */
   targetTables: Record<string, string>;
   /** 🔴 สิ่งที่ข้อมูลชุดนี้ตอบไม่ได้ — ประกาศไว้ ไม่ให้เดาเอง */
@@ -137,6 +144,16 @@ export function buildExport(rows: SegRow[], generatedAt: string): ExportBundle {
     '🏷️ `personas[].evidenceStatus` เป็น `hypothesis` ทุกตัว **ไม่ใช่ค่าตั้งต้นที่ลืมแก้** — ' +
     'เรายังไม่มีลูกค้าจ่ายจริงและยังไม่มีผลการทดลองซ้ำ ⇒ ส่งค่าอื่นไป = โกหกผ่าน schema ที่ถูกต้อง',
   );
+  blindSpots.push(
+    '💰 ตาราง `marketing_offers` ของคุณ **ไม่มีคอลัมน์ราคา** ⇒ ราคาอยู่ใน `description` ' +
+    'เป็นข้อความ ไม่ใช่ตัวเลขที่คำนวณต่อได้ · ถ้าต้องใช้ราคาเชิงตัวเลข ต้องเพิ่มคอลัมน์ฝั่งคุณ',
+  );
+  blindSpots.push(
+    `🚪 ข้อเสนอที่ **ไม่ได้ส่งไป**: ${OFFERS_NOT_EXPORTED.join(' · ')}`,
+  );
+  blindSpots.push(
+    '🔴 ยังไม่มีข้อเสนอไหนพิสูจน์แล้ว — ลูกค้าจ่ายจริง **0 ราย** ⇒ ห้ามอ่านว่าแพ็กไหนขายดี',
+  );
   const gaps = bizVocabGaps();
   if (gaps.length) {
     blindSpots.push(
@@ -161,10 +178,12 @@ export function buildExport(rows: SegRow[], generatedAt: string): ExportBundle {
     segments,
     personas: buildPersonas(),
     businessTypes: buildBusinessTypes(),
+    offers: buildOffers(),
     targetTables: {
       segments: 'marketing_audience_segments (อ้างอิง — ไม่ใช่ของใหม่)',
       personas: 'marketing_personas',
       businessTypes: 'marketing_business_types',
+      offers: 'marketing_offers',
     },
     blindSpots,
   };
@@ -272,3 +291,73 @@ export function bizVocabGaps(): string[] {
   const known = new Set(Object.keys(BIZ_LABEL));
   return (BUSINESS_TYPE_SEGS as readonly string[]).filter((s) => !known.has(s)).sort();
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 💰 Product Data → marketing_offers (ปลายทางยังว่าง 0 แถว)
+ *
+ * 🔴 ข้อแรกที่ต้องรู้: **ตาราง offers ของเขาไม่มีคอลัมน์ราคา**
+ *    (id · workspace_id · brand_id · code · name · description · offer_type ·
+ *     destination_url · active · created_at — อ่านจาก information_schema 20 พ.ย. 69)
+ *    ⇒ ราคาต้องไปอยู่ใน `description` · **ห้ามเดาว่ามีคอลัมน์ price แล้วส่งไป**
+ *
+ * แหล่งราคา = `access.ts` **ที่เดียว** (PLAN_PRICE_NUM + annualPrice + annualSavingPct)
+ *    ⇒ แก้ราคาในระบบแล้วไฟล์ที่ส่งออกเปลี่ยนตามเอง ไม่ต้องจำว่าต้องไปแก้ที่ไหนอีก
+ *    (เคยพลาด: SalePage.tsx เขียนราคาตายตัวแล้วเรียกมันว่า mirror — ledger #76)
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/** คอลัมน์จริงของ marketing_offers — อ่านจาก information_schema 20 พ.ย. 2569 */
+export const OFFERS_COLUMNS: readonly string[] = ['id', 'workspace_id', 'brand_id', 'code',
+  'name', 'description', 'offer_type', 'destination_url', 'active', 'created_at'] as const;
+
+export interface OfferExport {
+  /** → marketing_offers.code */
+  code: string;
+  /** → .name */
+  name: string;
+  /** → .description — ราคาอยู่ในนี้ เพราะตารางเขาไม่มีคอลัมน์ราคา */
+  description: string;
+  /** → .offer_type */
+  offerType: 'trial' | 'subscription-monthly' | 'subscription-annual';
+  /** → .destination_url — **เส้นทางสัมพัทธ์** ให้ปลายทางเติม origin เอง */
+  destinationPath: string;
+}
+
+const PAID: PlanId[] = ['starter', 'growth', 'scale'];
+
+/** ข้อเสนอจริงที่ขายอยู่ — ทุกตัวเลขคำนวณสดจาก access.ts ไม่มี hardcode */
+export function buildOffers(): OfferExport[] {
+  const offers: OfferExport[] = [{
+    code: 'free-trial',
+    name: `ทดลองใช้ ${PLAN_PRICE.free}`,
+    description: 'ปลดล็อกทุกฟีเจอร์ระดับ Scale · ไม่ต้องใช้บัตร · หมดอายุแล้วลดเป็นชั้นฟรีอัตโนมัติ',
+    offerType: 'trial',
+    destinationPath: '/start',
+  }];
+  for (const plan of PAID) {
+    offers.push({
+      code: `${plan}-monthly`,
+      name: `${PLAN_NAME[plan]} (รายเดือน)`,
+      description: `${PLAN_PRICE_NUM[plan].toLocaleString('th-TH')} บาท/เดือน`,
+      offerType: 'subscription-monthly',
+      destinationPath: '/sale',
+    });
+    offers.push({
+      code: `${plan}-annual`,
+      name: `${PLAN_NAME[plan]} (รายปี)`,
+      description: `${annualPrice(plan).toLocaleString('th-TH')} บาท/ปี ` +
+        `(จ่าย ${ANNUAL_MONTHS_CHARGED} เดือน ใช้ 12 เดือน ≈ ลด ${annualSavingPct(plan)}%)`,
+      offerType: 'subscription-annual',
+      destinationPath: '/sale',
+    });
+  }
+  return offers;
+}
+
+/** 🔴 ข้อเสนอที่ **อ้างในเอกสารแต่ไม่มีค่าคงที่ในโค้ด** ⇒ ไม่ส่งไป ประกาศไว้แทน
+ *  `฿1,990 ISO Readiness Pilot` — CLAUDE.md เองก็เขียนว่า "ยังไม่ฝังลงโค้ด · รอเจ้าของตัดสิน"
+ *  และมันเป็น **ประตูข้าง** ที่กฎ `AUDIENCE.neverTheEngine` ห้ามยกเป็นเครื่องยนต์
+ *  ⇒ ส่งไปโดยไม่มีแหล่ง = เสี่ยงให้ปลายทางยกขึ้นเป็นสารหลัก */
+export const OFFERS_NOT_EXPORTED: readonly string[] = [
+  'ISO Readiness Pilot ฿1,990 — ไม่มีค่าคงที่ในโค้ด (เอกสารอ้างไว้ แต่ยังไม่ฝัง) ' +
+  'และเป็นประตูข้างที่ห้ามเป็นเครื่องยนต์หลัก (AUDIENCE.neverTheEngine)',
+] as const;

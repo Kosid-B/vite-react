@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildExport, describeSeg, toMarketingCode, bizVocabGaps,
-  UPSTREAM_COLUMNS, TENANCY_KEYS, type SegRow,
+  UPSTREAM_COLUMNS, TENANCY_KEYS, OFFERS_COLUMNS, OFFERS_NOT_EXPORTED, type SegRow,
 } from '../marketingExport';
+import { PLAN_PRICE_NUM, annualPrice } from '../access';
 import { SEG_CODE_MAP } from '../brandSync';
 import { MIN_FOR_RATE } from '../growthPdca';
 
@@ -213,16 +214,92 @@ describe('🔑 สัญญากับคอลัมน์จริงขอ�
     for (const k of Object.keys(b.businessTypes[0])) expect(cols, `${k}`).toContain(snake(k));
   });
 
-  it('🔴 ห้ามมีกุญแจ tenancy หรือ UUID ของเขาในไฟล์เลย', () => {
-    const blob = JSON.stringify({ personas: b.personas, businessTypes: b.businessTypes });
-    for (const k of TENANCY_KEYS) {
-      expect(blob, `พบ ${k} ในไฟล์ — ของเขาต้องเติมเอง`).not.toContain(`"${k}"`);
+  /* 🔴 ด่านนี้เคยเขียนชื่อก้อนไว้ตายตัว ({personas, businessTypes}) ⇒ ก้อนใหม่ที่เพิ่มทีหลัง
+   *    (offers) หลุดด่านฟรี · และเทียบแต่ชื่อ snake ขณะที่ JSON เราเป็น camel ⇒ แม้ใส่ชื่อก็ไม่จับ
+   *    (เจอด้วย mutation 20 พ.ย. 2569 — ไม่มีเทสต์ไหนจับได้เลย)
+   *    ⇒ ตอนนี้หา "ก้อนข้อมูล" เองจาก bundle: อาร์เรย์ที่สมาชิกเป็นอ็อบเจกต์
+   *      ก้อนใหม่ถูกตรวจอัตโนมัติ ไม่ต้องรอใครมาต่อรายชื่อ */
+  const dataBlocks = Object.entries(b).filter(
+    ([, v]) => Array.isArray(v) && v.length > 0 && typeof v[0] === 'object' && v[0] !== null,
+  );
+
+  it('ต้องหาก้อนข้อมูลเจอครบ — หาไม่เจอ = ตัวตรวจพัง ไม่ใช่ "ไม่มีปัญหา"', () => {
+    const names = dataBlocks.map(([k]) => k);
+    for (const must of ['personas', 'businessTypes', 'offers']) {
+      expect(names, `ก้อน ${must} ต้องถูกด่าน tenancy เดินถึง`).toContain(must);
     }
-    expect(blob, 'พบ UUID ในไฟล์').not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+  });
+
+  const camel = (k: string) => k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+  it.each(dataBlocks.map(([k]) => k))('🔴 ก้อน %s ห้ามมีกุญแจ tenancy หรือ UUID ของเขา', (name) => {
+    const blob = JSON.stringify((b as unknown as Record<string, unknown>)[name]);
+    for (const k of TENANCY_KEYS) {
+      expect(blob, `พบ ${k} ใน ${name} — ของเขาต้องเติมเอง`).not.toContain(`"${k}"`);
+      expect(blob, `พบ ${camel(k)} ใน ${name} — ของเขาต้องเติมเอง`).not.toContain(`"${camel(k)}"`);
+    }
+    expect(blob, `พบ UUID ใน ${name}`).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
   });
 
   it('ต้องบอกว่าก้อนไหนไปตารางไหน — ไม่ให้ปลายทางเดา', () => {
     expect(b.targetTables.personas).toBe('marketing_personas');
     expect(b.targetTables.businessTypes).toBe('marketing_business_types');
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 💰 Product Data → marketing_offers (20 พ.ย. 2569)
+ * 🔴 ตารางเขา **ไม่มีคอลัมน์ราคา** ⇒ ราคาอยู่ใน description
+ * 🔴 แหล่งราคาเดียวคือ access.ts — ห้าม hardcode ซ้ำ (ledger #76: SalePage เคยเขียนเลขตายตัว
+ *    แล้วเรียกมันว่า mirror · คำว่า mirror ในคอมเมนต์ไม่ได้ทำให้มันเป็น mirror)
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('💰 ก้อนข้อเสนอ (offers)', () => {
+  const b = buildExport(REAL, '2026-11-20T00:00:00Z');
+
+  it('ต้องมีทั้งทดลองฟรี · รายเดือน · รายปี ครบ 3 แพ็กที่ขายจริง', () => {
+    const codes = b.offers.map((o) => o.code);
+    expect(codes).toContain('free-trial');
+    for (const p of ['starter', 'growth', 'scale']) {
+      expect(codes, `${p} รายเดือน`).toContain(`${p}-monthly`);
+      expect(codes, `${p} รายปี`).toContain(`${p}-annual`);
+    }
+  });
+
+  it('🔴 ราคาต้องคำนวณสดจาก access.ts — ไม่ใช่เลขที่พิมพ์ซ้ำ', () => {
+    for (const p of ['starter', 'growth', 'scale'] as const) {
+      const m = b.offers.find((o) => o.code === `${p}-monthly`)!;
+      expect(m.description, `${p} รายเดือน`).toContain(PLAN_PRICE_NUM[p].toLocaleString('th-TH'));
+      const y = b.offers.find((o) => o.code === `${p}-annual`)!;
+      expect(y.description, `${p} รายปี`).toContain(annualPrice(p).toLocaleString('th-TH'));
+      // รายปีต้องถูกกว่ารายเดือน×12 เสมอ (กันคิดกลับด้าน)
+      expect(annualPrice(p)).toBeLessThan(PLAN_PRICE_NUM[p] * 12);
+    }
+  });
+
+  it('ฟิลด์ต้องเป็นสับเซตของคอลัมน์จริงของ marketing_offers', () => {
+    const snake = (k: string) => k.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`);
+    for (const k of Object.keys(b.offers[0])) {
+      // destinationPath → destination_url (ชื่อไม่ตรงโดยเจตนา เพราะเราส่ง path ไม่ส่ง url เต็ม)
+      const col = k === 'destinationPath' ? 'destination_url' : snake(k);
+      expect(OFFERS_COLUMNS, `${k} → ${col}`).toContain(col);
+    }
+  });
+
+  it('🔴 ส่ง path สัมพัทธ์ ไม่ส่ง URL เต็ม — ปลายทางเติม origin เอง', () => {
+    for (const o of b.offers) {
+      expect(o.destinationPath, `${o.code}`).toMatch(/^\//);
+      expect(o.destinationPath, 'ห้ามมีโดเมนในไฟล์').not.toMatch(/^https?:/);
+    }
+  });
+
+  it('🔴 Pilot ฿1,990 ต้องไม่ถูกส่งไป และต้องประกาศเหตุผลไว้', () => {
+    expect(JSON.stringify(b.offers), 'ไม่มีค่าคงที่ในโค้ด ⇒ ห้ามส่ง').not.toContain('1,990');
+    expect(OFFERS_NOT_EXPORTED.join(' ')).toContain('1,990');
+    expect(OFFERS_NOT_EXPORTED.join(' '), 'ต้องบอกว่าเป็นประตูข้าง').toContain('neverTheEngine');
+  });
+
+  it('ต้องเตือนว่าไม่มีคอลัมน์ราคา และยังไม่มีข้อเสนอไหนพิสูจน์แล้ว', () => {
+    const j = b.blindSpots.join(' ');
+    expect(j).toContain('ไม่มีคอลัมน์ราคา');
+    expect(j, 'จ่ายจริง 0 ราย ⇒ ห้ามอ่านว่าแพ็กไหนขายดี').toContain('0 ราย');
   });
 });
