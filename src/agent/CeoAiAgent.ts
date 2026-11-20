@@ -7,7 +7,11 @@ import { FREE_DAILY_TOKENS, type Engagement } from '../lib/tokenEconomics';
 import { constitutionBlock } from '../lib/founderConstitution';
 
 interface Env {
+  /** 🔴 ต้องเป็น **Cloudflare Secret** ไม่ใช่ `vars` — ดูเหตุผลใน wrangler.jsonc (ledger #82) */
   ANTHROPIC_API_KEY: string;
+  /** public vars (มีอยู่ใน wrangler.jsonc แล้ว) — ใช้ส่ง error ที่ล้มฝั่ง Worker ให้ตรวจย้อนหลังได้ */
+  SUPABASE_URL?: string;
+  SUPABASE_ANON_KEY?: string;
 }
 
 interface ChatMessage {
@@ -152,8 +156,10 @@ export class CeoAiAgent implements DurableObject {
       const spent = Math.max(1, result.usage.inputTokens + result.usage.outputTokens);
       await this.addGuestTokens(ip, spent);
       return { summary: result.summary, suggestions: result.suggestions, guestTokensLeft: Math.max(0, cap - used - spent) };
-    } catch {
+    } catch (e) {
       // AI ล้ม — นับ token ประมาณเพื่อกัน retry ถล่ม (ยอมรับได้) · ตอบ fallback สุภาพ
+      // 🔴 แต่ต้อง **บันทึกสาเหตุ** ก่อน ไม่งั้นพังเงียบเหมือนที่เจอ 20 พ.ย. 2569
+      await this.reportAiFailure('guestAsk', e).catch(() => {});
       await this.addGuestTokens(ip, CeoAiAgent.FAIL_EST_TOKENS).catch(() => {});
       return { summary: 'ตอนนี้ทีม AI ไม่ว่างชั่วครู่ ลองใหม่อีกครั้งได้เลยครับ', suggestions: [], guestTokensLeft: Math.max(0, cap - used - CeoAiAgent.FAIL_EST_TOKENS) };
     }
@@ -181,9 +187,39 @@ export class CeoAiAgent implements DurableObject {
   }
 
   /** เรียก Claude แบบไม่มีประวัติ (สำหรับ guest ที่ใช้ DO ร่วมกัน — กันข้อมูลปนข้ามคน) + คืน usage token จริง */
+  /** 🔴 ความล้มเหลวที่มองไม่เห็น = ความล้มเหลวที่แก้ไม่ได้ (บทเรียน 20 พ.ย. 2569 · ledger #82)
+   *  เดิม `catch {}` กลืน error ทิ้งทั้งหมด · `console.error` ในไฟล์นี้มี **0 ครั้ง**
+   *  ⇒ กล่อง "ลอง AI" พังบน production โดยไม่มีร่องรอยที่ไหนเลย
+   *  ส่งลงท่อเดิมที่มีอยู่แล้ว (`track_client_error` · 0058) เพราะ Cloudflare log เก็บไม่กี่วัน
+   *  ⚠️ ส่งแค่ status + ข้อความสั้น — **ห้ามส่งคีย์หรือคำถามของผู้ใช้ลงไป** */
+  private async reportAiFailure(where: string, err: unknown): Promise<void> {
+    const message = `[worker] ${where}: ${String(err).slice(0, 300)}`;
+    console.error(message);
+    const { SUPABASE_URL: u, SUPABASE_ANON_KEY: k } = this.env;
+    if (!u || !k) return;
+    try {
+      await fetch(`${u}/rest/v1/rpc/track_client_error`, {
+        method: 'POST',
+        headers: { apikey: k, Authorization: `Bearer ${k}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          p_message: message, p_source: 'worker.ceoAiAgent',
+          p_path: '/api/guest-ask', p_stack: null, p_ua: null,
+        }),
+      });
+    } catch { /* รายงานล้มก็ต้องไม่ทำให้คำขอหลักล้ม */ }
+  }
+
+  /** คีย์หาย = สาเหตุที่พบบ่อยที่สุดและแยกไม่ออกจาก 401 อื่น ⇒ บอกชื่อสาเหตุตรง ๆ */
+  private requireKey(): void {
+    if (!this.env.ANTHROPIC_API_KEY) {
+      throw new Error('ANTHROPIC_API_KEY ว่าง — ต้องตั้งเป็น Cloudflare Secret (ไม่ใช่ vars)');
+    }
+  }
+
   private async callClaudeStateless(
     text: string, pageLabel?: string, context?: string,
   ): Promise<{ summary: string; suggestions: string[]; usage: { inputTokens: number; outputTokens: number } }> {
+    this.requireKey();
     const userContent = [
       pageLabel ? `[หน้า: ${pageLabel}]` : '',
       context ? `[บริบท: ${context}]` : '',
@@ -194,7 +230,7 @@ export class CeoAiAgent implements DurableObject {
       headers: { 'Content-Type': 'application/json', 'x-api-key': this.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 700, system: SYSTEM, messages: [{ role: 'user', content: userContent }] }),
     });
-    if (!res.ok) throw new Error(`Anthropic ${res.status}`);
+    if (!res.ok) throw new Error(`Anthropic ${res.status}: ${(await res.text()).slice(0, 200)}`);
     const json = await res.json() as { content: { type: string; text: string }[]; usage?: { input_tokens?: number; output_tokens?: number } };
     const raw = json.content?.[0]?.text ?? '';
     const usage = { inputTokens: json.usage?.input_tokens ?? 0, outputTokens: json.usage?.output_tokens ?? 0 };
@@ -221,6 +257,7 @@ export class CeoAiAgent implements DurableObject {
       { role: 'user', content: userContent },
     ];
 
+    this.requireKey();
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {

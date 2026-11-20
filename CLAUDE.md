@@ -903,7 +903,9 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 ┌─ CEO AI Thailand (production หลัก) ──────────────────────────────
 │ Supabase project  : waigsnxhrlwtiotspaim (Pro · prod จริง — เดิม rsjbqmnvocvtveelselj = backup ไม่ใช่ prod)
 │ GitHub Actions    : VITE_SUPABASE_URL ✅, VITE_SUPABASE_ANON_KEY ✅ (ใช้โดย deploy.yml legacy)
-│ Cloudflare Worker : ANTHROPIC_API_KEY (vars ใน wrangler/dashboard — ใช้โดย CeoAiAgent DO)
+│ Cloudflare Worker : ANTHROPIC_API_KEY = **Secret เท่านั้น** (`npx wrangler secret put`) — ใช้โดย CeoAiAgent DO
+│                     🔴 ห้ามใส่ใน `vars` ของ wrangler.jsonc: wrangler ลบ vars ทั้งหมดก่อน deploy
+│                     ⇒ ประกาศเป็นค่าว่าง = คีย์ถูกล้างทุกครั้งที่ merge (ledger #82) · Secret ไม่ถูกลบ
 │ Supabase Fn       : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅
 │                     SLIPOK_API_KEY ✅ (ขึ้นต้น SLIPOKWL…), SLIPOK_BRANCH_ID ✅ =72189 (ตรวจสลิป verify-slip)
 │ Pending           : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
