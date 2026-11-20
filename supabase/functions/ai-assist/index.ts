@@ -8,6 +8,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModel } from "../_shared/modelRouter.ts";
 import { enforceAiQuota, enforceAiTokens, recordAiTokens } from "../_shared/quota.ts";
+import { reportAiFailure } from "../_shared/aiFailure.ts";
 import { AI_GUARDRAILS } from "../_shared/aiGuardrails.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
@@ -67,7 +68,12 @@ Deno.serve(async (req) => {
     }),
   });
 
-  if (!r.ok) return json({ error: "anthropic_error", detail: await r.text() }, 502);
+  if (!r.ok) {
+    const detail = await r.text();
+    // 🔴 เดิมคืน 502 เงียบ ๆ — ไม่มีร่องรอยว่าพังเพราะอะไร (ledger #82)
+    await reportAiFailure("ai-assist", `Anthropic ${r.status}: ${detail}`);
+    return json({ error: "anthropic_error", detail }, 502);
+  }
 
   const data = await r.json();
   // บันทึก token จริง (flag-gated) — ไม่บล็อกการตอบ
@@ -106,7 +112,9 @@ async function streamAssist(req: Request, body: Body): Promise<Response> {
   });
 
   if (!upstream.ok || !upstream.body) {
-    return json({ error: "anthropic_error", detail: await upstream.text() }, 502);
+    const detail = await upstream.text();
+    await reportAiFailure("ai-assist:stream", `Anthropic ${upstream.status}: ${detail}`);
+    return json({ error: "anthropic_error", detail }, 502);
   }
 
   const stream = new ReadableStream({

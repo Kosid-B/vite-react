@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Anthropic from 'npm:@anthropic-ai/sdk@0.26.0';
+import { reportAiFailure } from '../_shared/aiFailure.ts';
 import { pickModel } from '../_shared/modelRouter.ts';
 import { enforceAiQuota, enforceAiTokens, recordAiTokens } from '../_shared/quota.ts';
 import { AI_GUARDRAILS } from '../_shared/aiGuardrails.ts';
@@ -127,6 +128,8 @@ serve(async (req) => {
       headers: { ...cors, 'Content-Type': 'application/json' },
     });
   } catch (e) {
+    // 🔴 เดิมคืน 500 โดยไม่มี log เลย ⇒ พังเงียบเหมือนฝั่ง Worker (ledger #82)
+    await reportAiFailure('agent-run', e);
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
       headers: { ...cors, 'Content-Type': 'application/json' },
