@@ -53,7 +53,13 @@ export default function ProductQuickCheck({ onGetStarted }: { onGetStarted: () =
 
   /** ผู้ใช้แตะช่องไหนก็ตาม = เลิกเป็นตัวอย่าง เริ่มนับเป็นข้อมูลจริง */
   function touch<T>(set: (v: T) => void) {
-    return (v: T) => { setTouched(true); set(v); };
+    return (v: T) => {
+      // 🔴 ต้องมี "เริ่มกรอก" ไม่ใช่มีแต่ "กรอกจบ" — ไม่งั้น completion_rate ของ OS
+      //    ไม่มีตัวหาร (`marketing_metric_definitions.completion_rate` เป็น rate_metric)
+      if (!touched) track('quickcheck_started', { biz });
+      setTouched(true);
+      set(v);
+    };
   }
 
   /** ส่งขึ้นแผงแอดมิน (นิรนาม · ไม่มีชื่อสินค้า) — เงียบเสมอ ห้ามทำหน้าเว็บพัง */

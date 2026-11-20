@@ -125,6 +125,16 @@ export const TOKENS = {
 
 // ช่องทางชุมชน/โซเชียล — โชว์บนหน้า Landing เฉพาะเมื่อใส่ URL (เว้นว่าง = ซ่อน)
 //   ⚠️ เว้นว่างไว้จนกว่าจะสร้างกลุ่มจริง (LINE OpenChat / กลุ่ม Facebook) แล้วค่อยวางลิงก์
+/* Marketing OS — ส่ง event ของเราไปให้อีกระบบ "มองเห็น" (ท่า A · เจ้าของอนุมัติ 20 พ.ย. 2569)
+ * ที่นี่มีแค่ **สวิตช์** · ชื่อปลายทางอยู่ใน `src/lib/marketingOs.ts` ไฟล์เดียว
+ *   🔴 เหตุผล: ด่าน `ownershipBoundary` บังคับว่ามีไฟล์เดียวที่รู้จักปลายทางของอีกระบบ
+ *      ⇒ อยากรู้ว่าเรายิงอะไรออกไป เปิดไฟล์เดียวจบ (ไม่ใช่ตามล่าทั้งรีโป)
+ * live=false = ปิดสนิท (kill switch) · ถึงเปิดก็ยัง no-op ถ้าไม่มี VITE_SUPABASE_URL (local/preview)
+ * เหตุผลที่ต้องมี: health score ของ OS = 0 และ config ของมันบล็อกคำแนะนำกลยุทธ์เองที่ score < 70 */
+export const MARKETING_OS = {
+  live: true,
+} as const;
+
 export const SOCIAL = {
   lineCommunityUrl: '',      // ลิงก์เชิญเข้า LINE OpenChat / LINE OA community (เช่น https://line.me/ti/g2/...)
   facebookGroupUrl: '',      // ลิงก์กลุ่ม Facebook (ถ้ามี)

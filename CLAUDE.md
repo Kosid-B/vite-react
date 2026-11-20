@@ -30,12 +30,89 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
         เคยตกเป็นพาดหัว default · แก้แล้วด้วย `brandSync.UPSTREAM_SEG_ALIAS` (derive จาก `SEG_CODE_MAP` ที่เดียว)
         ⚠️ **`graduate` ไม่มี alias โดยเจตนา** — เรายังไม่มีพาดหัวให้นักศึกษาจบใหม่ ⇒ ตกเป็น default อย่างซื่อสัตย์
         เครื่องมือ: `npm run check:brand-sync` (แยก `aligned` / `bridged` / `drift` — bridged = alias พาถึงแล้ว ไม่ใช่กับดัก)
-   · **ใน production `waigsnxhrlwtiotspaim`**: ตาราง `marketing_*` **33 ตาราง มีอยู่จริง แต่ 0 แถวทุกตาราง**
-   ⚠️ **แก้คำเดิมที่เขียนผิด**: บรรทัดนี้เคยเขียนว่า *"production มีสองระบบเขียนลง"* — **โครงสร้างถูก แต่ข้อมูลไม่จริง**
-     ไม่เคยมีใครเขียนข้อมูลลง `marketing_*` ของ production เลย ⇒ อ่านว่า "โครงเปล่าที่ apply ไว้" ไม่ใช่ "ระบบที่ทำงานอยู่"
+   · **ใน production `waigsnxhrlwtiotspaim`**: ตาราง `marketing_*` **33 ตาราง** — 🔴 **ไม่ใช่ 0 แถวแล้ว** (นับสด 20 พ.ย. 2569)
+     `metric_definitions` 20 · `event_definitions` 17 · `brand_rules` 10 · `message_pillars` 7 · `audience_segments` 5 ·
+     `brands` 1 · `measurement_config` 1 · `measurement_health_live` 1 · **อีก 25 ตารางยังว่าง**
+   ⚠️ **ประโยคนี้ถูกแก้สองรอบ — อ่านให้ครบก่อนอ้าง**
+     รอบ 1 (24 ส.ค.) เขียนว่า *"production มีสองระบบเขียนลง"* จากการดู schema อย่างเดียว = **ผิด**
+     รอบ 2 (15 พ.ย.) แก้เป็น *"0 แถวทุกตาราง · ไม่เคยมีใครเขียนลงเลย"* = **ผิดอีก** (นับตอนนั้นไม่ครบ/ข้อมูลมาทีหลัง)
+     🔴 **สิ่งที่จริงวันนี้**: มี **ข้อมูลตั้งต้น (definitions/rules/pillars/segments)** อยู่จริง
+       แต่ **`marketing_events` = 0 แถว** ⇒ ยังไม่มี *เหตุการณ์* ไหลเข้าเลย
+   🔴 **และมีท่อรับ event สาธารณะอยู่จริง**: edge function `marketing-track` (live 23 ส.ค. 2569 · `verify_jwt=false`
+     · กั้นด้วย Origin allowlist `ceoaithailand.org`) เขียนลง production ด้วย **service_role** ผ่าน rpc `ingest_marketing_event`
+     โดย **hardcode `workspace_id` ไว้ในโค้ด** · 🔴 **ไม่มีซอร์สในรีโปนี้เลย** (คู่กับ `marketing-generate`)
+     ⇒ ท่อเปิดอยู่ ~3 เดือน แต่ `marketing_events` ยังเป็น 0 ⇒ **ฝั่งหน้าเว็บไม่เคยยิงเข้ามา** (รูปแบบเดียวกับ Amplitude ที่ได้ 0 event)
+   ⚠️ **ห้ามเขียนข้ออ้างเรื่องข้อมูลใน DB โดยไม่แนบจำนวนแถวที่นับจริง** (ledger #79 ตั้งกฎนี้ไว้แล้ว แต่ไม่มีกลไกบังคับ)
    ⚠️ **ตาราง `marketing_*` ของสองที่เป็นคนละชุด คนละชื่อ** — ของอีกระบบมี `marketing_behavior_*` · `marketing_personas` ·
      `marketing_ctas` · `marketing_evidence` ที่ production ไม่มี ⇒ **ห้ามอ่าน schema ฝั่งหนึ่งแล้วเดาอีกฝั่ง**
    ⇒ รีโปนี้ **ห้ามสร้าง migration `marketing_*` · ห้ามอ่าน/เขียนตาราง `marketing_*` ของทั้งสอง project** (กลไก: `ownershipBoundary.test.ts`)
+   🟢 **ข้อยกเว้นข้อเดียว เจ้าของอนุมัติ 20 พ.ย. 2569 ("ลุย A ต่อ B") — ส่ง event ออกได้ ผ่าน `marketing-track` เท่านั้น**
+     🔴 **แต่ปลายทางนี้ไม่ใช่ของ OS** (ตรวจเย็นวันเดียวกัน · ledger #94 · ADR-0002 §แก้ไขบริบท):
+       `marketing-track` deploy บน `waigsnxhrlwtiotspaim` ใช้ `SUPABASE_URL` ของ project ตัวเอง ⇒ เขียนลง **ฐานเรา**
+       แอป OS ชี้ไป `bjozpwdtqbpwcxnqguka` ซึ่ง **ไม่มีตาราง `marketing_events`** ⇒ ข้อมูลไม่เคยถึง OS
+       ⇒ คุณค่าที่เหลือจริง = ตาราง event ชั้นละเอียด **ของเราเอง** + VIEW สุขภาพการวัดที่ขยับเอง
+       ⇒ **ห้ามพูดว่า "เชื่อมกับ Marketing OS แล้ว"**
+     เหตุผลที่เคยเขียนไว้ (วัดจากตาราง `marketing_*` ใน **ฐานเรา** ไม่ใช่ของเขา): `health_live.score = 0` · `event_count = 0`
+     และ `marketing_measurement_config.block_strategic_recommendations_below_score = true`
+     ⇒ **OS ปฏิเสธการให้คำแนะนำกลยุทธ์ด้วยกลไกของตัวมันเอง** จนกว่าจะมี event ไหลเข้า ⇒ ต้องมีใครส่งให้
+     · ขอบเขต: **ไฟล์เดียว** `src/lib/marketingOs.ts` ถือชื่อปลายทาง + ยิง `POST /functions/v1/marketing-track`
+       (`src/config.ts` เหลือแค่สวิตช์ `MARKETING_OS.live` · ไม่รู้ชื่อปลายทาง)
+     · ยังห้ามเหมือนเดิมทุกข้อ: `.from('marketing_…')` · `rpc(…)` ของเขา · migration `marketing_*` · อ่านสคีมาฝั่งหนึ่งแล้วเดาอีกฝั่ง
+     🔴 **ช่องที่ด่านเดิมมองไม่เห็นและปิดแล้วในรอบนี้**: regex เดิมจับแค่ `rpc('marketing_…` แต่ rpc ตัวจริงของเขาชื่อ
+       **`ingest_marketing_event`** (ขึ้นต้นด้วย `ingest_`) ⇒ เลี่ยงด่านได้ฟรี · ตอนนี้ด่านจับชื่อนี้ตรง ๆ แล้ว
+     ⚠️ ด่านดู **โค้ดจริง** (ตัดคอมเมนต์ก่อน) ⇒ เอกสารพูดถึงชื่อตาราง/rpc ได้ แต่ **เรียกใช้ไม่ได้**
+
+🚪 **ประตูจริงที่ป้อน Marketing OS ได้ — `marketing-behavior-ingest`** (ตรวจสด 20 พ.ย. 2569 · ADR-0009)
+```
+POST https://bjozpwdtqbpwcxnqguka.supabase.co/functions/v1/marketing-behavior-ingest
+verify_jwt=true (ต้องมี anon key ของ project เขา) · origin allowlist = ceoaithailand.org + www เท่านั้น
+batch 1–20 event · เพดาน 16KB · strict schema (คีย์เกิน = ปฏิเสธ)
+name: view|engaged|action · topic: business_validation|first_customer|content_marketing|business_systems
+format: article|short_video|checklist|interactive · source: website|saas · mode: live|test
+```
+🟢 **ฝั่งเขาทำงานได้แล้ว ไม่ต้องแก้**: `marketing_behavior_batches` มี batch `mode:"test"` ที่ยิงเข้าสำเร็จ
+   14 พ.ย. 2569 และ `archived_at` ถูกเซ็ต ⇒ ครบวงจรถึงขั้นเก็บคลัง · ที่ขาดคือ **ฝั่งเราไม่เคยยิง**
+🔴 **`consent: 'analytics_opt_in'` เป็นค่าคงที่บังคับในสคีมา** ⇒ ห้ามส่งถ้าผู้ใช้ไม่ได้ยินยอมจริง
+   (ค่านั้นเป็นคำประกาศแทนผู้ใช้ · ส่งทั้งที่ไม่ยินยอม = โกหก + ผิด PDPA)
+🔴 **taxonomy เขาแคบมาก** (3×4×4) · event เรา 179 ชื่อ ⇒ แมปได้ไม่กี่ตัว · **ที่แมปไม่ได้ ห้ามเดาให้ลงช่อง**
+🧪 `mode:'test'` = ทางพิสูจน์โดยไม่ปนข้อมูลจริง · และเพราะ localhost ไม่อยู่ใน allowlist
+   ⇒ **ทดสอบจากเครื่องไม่ได้ ต้องทดสอบบน production ด้วย `test`**
+⚠️ workspace id คนละตัว: `marketing-track` = `98911455-…` · `behavior-ingest` = `e82e7d93-…`
+🔑 ต้องมี `VITE_MARKETING_OS_URL` + `VITE_MARKETING_OS_ANON_KEY` (publishable = public โดยดีไซน์)
+   ใน GitHub Secrets **และ** ใน build step ของ `cloudflare-deploy.yml` — ขาดที่ใดที่หนึ่ง = เงียบสนิท (ledger #18)
+
+🚰 **สายท่อข้อมูลออก — รูปแบบกลาง → แปลง → ห่อ → เก็บ → ส่ง** (20 พ.ย. 2569 · ADR-0003/0004/0005/0008)
+```
+เหตุการณ์ในแอป (analytics.track · 179 ชื่อ · ไม่นับ __tests__)
+ ⓪ รูปแบบกลาง src/lib/eventFormat.ts  CEF: {schema,name,occurredAt,source,session,context,props}
+      · source 'browser'|'server' (เบราว์เซอร์อ้างเรื่องเงินไม่ได้) · ตารางแปลงคำศัพท์สองฝั่งอยู่ที่นี่
+      · sinksFor(name) ตอบ "event นี้ไปถึงไหน" — **คำนวณจากโค้ดจริง** ไม่ใช่รายการที่ประกาศ
+ ① แปลง   src/lib/osCodec.ts    encode/decode + wireIssues() · pure ทั้งไฟล์ · กฎ PII อยู่ที่นี่
+ ② ห่อ     src/lib/osPackage.ts  ซอง {v,seq,packedAt,checksum,events} + canonical JSON
+ ③ เก็บ    src/lib/osOutbox.ts   คิวของค้าง + ส่งซ้ำ + **นับของหายแยกเหตุผล** 4 ชนิด
+ ④ ส่ง     src/lib/marketingOs.ts  POST /functions/v1/marketing-track (ไฟล์เดียวที่รู้ปลายทาง)
+```
+🔴 **สายส่งต้องประกอบ payload ผ่าน `cefToOs(toCef(…))` · ห้ามเรียก `encodeOsEvent` ตรง** (เทสต์บังคับ)
+   — ชั้นกลางที่ข้ามได้ ไม่ใช่มาตรฐาน
+⚠️ **`landing_funnel` ไม่ใช่ sink ของ event** (เป็นตารางสถานะ 1 แถว/ผู้เข้าชม เขียนผ่าน `track_landing`)
+⚠️ GA + Amplitude ได้ **ทุก** event · OS ได้ **4 ตัวที่แมป + 1 ตัวที่ส่งตรง** ⇒ อีก ~174 ตัว OS ยังมองไม่เห็น
+   (มองเห็นว่า "ไม่ไป" แล้ว ≠ ข้อมูลครบ)
+🔴 **`marketing-track` รับ 1 event ต่อ 1 POST — ไม่มี batch** ⇒ ซองเป็นรูปแบบ **ที่เก็บของเรา** ไม่ใช่รูปแบบสายส่ง
+🔴 **ไม่ใช่ erasure coding และห้ามเรียกชื่อนั้น** (ADR-0005 · ledger #91) — parity ช่วยไม่ได้เพราะหน่วยที่หาย
+   คือ **POST ทั้งก้อน** และที่เก็บมีที่เดียว ⇒ parity หายพร้อมข้อมูล · redundancy ตัวจริง = **ตารางของเราเอง**
+   (`landing_funnel`/`quickcheck_submissions`/`client_errors`) ที่ยังมีต้นฉบับอยู่แม้ส่งไม่ถึง
+⚠️ **ยังหายได้จริง 2 ทาง และยอมรับแล้ว**: ผู้ใช้ไม่กลับมาอีกเลย · เบราว์เซอร์ปิด storage (โหมดส่วนตัว)
+   ⇒ **ห้ามพูดว่าสายท่อนี้ไม่มีข้อมูลหาย** · `checksum` = ตรวจความครบถ้วน **ไม่ใช่ความปลอดภัย** (fnv1a ไม่ใช่ลายเซ็น)
+🔴 **ขา pull ยังไม่มี** — OS เห็น event ที่เราส่ง แต่ **อ่านภาพรวมของเราไม่ได้** (ADR-0006 `blocked`)
+   feed สาธารณะต้องมี rpc ที่ anon เรียกได้ = migration ⇒ ติด `schemaChangeAllowed()` (Acceptance #2 ยังไม่ผ่าน)
+   ⇒ **ห้ามบอกว่า "เชื่อมสองระบบครบแล้ว"** · ครบครึ่งเดียว
+กลไก: `osPipeline.test.ts` (26) · `osOutbox.test.ts` (18) · `marketingOs.test.ts` (32) · `ownershipBoundary.test.ts` (46)
+
+📐 **บันทึกการตัดสินใจทางสถาปัตยกรรม — [docs/adr/](docs/adr/README.md)** (เจ้าของสั่ง 20 พ.ย. 2569)
+เส้นแบ่ง: **CLAUDE.md = กฎที่ต้องทำวันนี้** · **ledger = เคยพลาดอะไร→กลไกอะไร** · **ADR = ทำไมเลือกทางนี้ ไม่เลือกทางอื่น**
+⚠️ **ADR ไม่แก้ย้อนหลัง** — ตัดสินใจใหม่ที่ขัดของเก่า ให้เขียนฉบับใหม่แล้วตั้งของเก่าเป็น `superseded`
+กลไก: `adr.test.ts` (29) — ค้นไฟล์เอง · บังคับหัวข้อครบ 4 + `## กลไก` เมื่อ `accepted` · `blocked` ต้องชี้ชื่อด่าน
+   · สถานะใน README ต้องตรงกับในไฟล์ · ห้าม ADR ไหนอ้างเกณฑ์เป็น `validated`
 | อีกระบบเป็นเจ้าของ | รีโปนี้เป็นเจ้าของ |
 |---|---|
 | การตลาดของเราเอง — แคมเปญ · ข้อเสนอ · คอนเทนต์ · brand rules · segment · pillar · attribution | ตัวผลิตภัณฑ์ — แอปที่ผู้ใช้ล็อกอิน · Landing/`/start` · Worker · billing · marketplace |

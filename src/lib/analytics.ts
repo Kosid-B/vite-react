@@ -10,6 +10,8 @@
  */
 
 import { sendAmplitude } from './amplitude';
+import { sendOsEvent } from './marketingOs';
+import { osEventFor } from './eventFormat';
 
 declare global {
   interface Window { gtag?: (...args: unknown[]) => void }
@@ -36,5 +38,9 @@ export function track(event: string, params: Record<string, string | number> = {
     }
     window.gtag?.('event', event, safe);
     sendAmplitude(event, safe); // ส่งชุดเดียวกันเข้า Amplitude (no-op ถ้าไม่ตั้ง VITE_AMPLITUDE_KEY)
+    // sink ที่ 3 — Marketing OS (no-op ถ้าไม่ได้แมป event นั้น / ปิด flag / local-preview)
+    // ⚠️ ต่อที่นี่ที่เดียวโดยตั้งใจ: ทุกจุดเรียก track() เดิมได้ไปด้วยฟรี ไม่ต้องไล่แก้ทีละไฟล์
+    const osEvent = osEventFor(event);
+    if (osEvent) sendOsEvent(osEvent, safe);
   } catch { /* ห้ามทำ UX พัง เพราะ analytics */ }
 }

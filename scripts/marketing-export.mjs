@@ -98,6 +98,16 @@ const main = async () => {
     console.log(`  ${s.seg.padEnd(9)} ${String(s.visitors).padStart(4)} คน · สมัคร ${s.signup} · อัตรา ${rate.padEnd(11)} ${mark}`);
   }
 
+  /* ── ก้อนที่ไปเติมตารางที่ปลายทางยังว่าง (ขยายขอบเขต 20 พ.ย. 2569) ─────────── */
+  console.log('\n🧩 ก้อนที่ไปเติมตารางที่ยังว่างของ Marketing OS:');
+  console.log(`  personas       ${String(bundle.personas.length).padStart(2)} ราย → ${bundle.targetTables.personas}`);
+  for (const p of bundle.personas) {
+    console.log(`     · ${p.layer.padEnd(10)} seg=${String(p.segmentCode ?? '—').padEnd(9)} ${p.role ? `[${p.role}] ` : ''}${p.summary.slice(0, 44)}`);
+  }
+  console.log(`  businessTypes  ${String(bundle.businessTypes.length).padStart(2)} ราย → ${bundle.targetTables.businessTypes}`);
+  console.log(`     · ${bundle.businessTypes.map((t) => t.code).join(' · ')}`);
+  console.log('  🔑 ไม่มี workspace_id/brand_id/UUID ในไฟล์ — ปลายทางเติมเอง (tenant isolation)');
+
   console.log('\n🔴 จุดบอดที่ส่งไปกับไฟล์ (อีกระบบต้องอ่านก่อนใช้ตัวเลข):');
   for (const b of bundle.blindSpots) console.log(`   · ${b}`);
 

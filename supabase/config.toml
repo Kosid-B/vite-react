@@ -94,3 +94,20 @@ verify_jwt = false
 
 [functions.backup-export]
 verify_jwt = false
+
+# 🔴 เพิ่ม 20 พ.ย. 2569 — 4 ตัวนี้ "deploy อยู่บน production ด้วย verify_jwt=false"
+#    แต่หายไปจากไฟล์นี้ ⇒ `supabase functions deploy` (ไม่ระบุชื่อ) จะตั้งเป็น true
+#    แล้ว cron ทุกตัวพัง 401 แบบ **เงียบ** (ไม่มีใครเห็นจนรายงานไม่มา)
+#    ทั้ง 4 ยืนยันตัวตนด้วย CRON_SECRET และ header ในไฟล์ตัวเองเขียน --no-verify-jwt อยู่แล้ว
+#    กลไกกันซ้ำ: `supabaseFunctionsConfig.test.ts`
+[functions.checkup-report]
+verify_jwt = false
+
+[functions.hubspot-sync]
+verify_jwt = false
+
+[functions.lead-nurture]
+verify_jwt = false
+
+[functions.market-snapshot]
+verify_jwt = false
