@@ -50,7 +50,7 @@
 >
 > | | ของจริงที่วัดได้ 15 พ.ย. 69 |
 > |---|---|
-> | `marketing_*` 33 ตารางใน `waigsnxhrlwtiotspaim` | **มีอยู่จริง · แต่ 0 แถวทุกตาราง** |
+> | `marketing_*` 33 ตารางใน `waigsnxhrlwtiotspaim` | **มีอยู่จริง · 🔴 แก้ 20 พ.ย. 2569: มีข้อมูลตั้งต้นแล้ว 8 ตาราง (definitions/rules/pillars/segments) · `marketing_events` = 0** — ตัวเลขที่นับสดอยู่ใน CLAUDE.md |
 > | Marketing OS เขียนข้อมูลลงที่ไหนจริง ๆ | **`bjozpwdtqbpwcxnqguka` = "CEOAITHAILAND Marketing"** (คนละ project · org เดียวกัน · ap-northeast-1 · สร้าง 19 ส.ค. 69) |
 > | ข้อมูลจริงที่มี | `marketing_brands` 1 · `marketing_audience_segments` 5 · `marketing_message_pillars` 7 · `marketing_brand_rules` 7 · `marketing_behavior_limits` 6 |
 >

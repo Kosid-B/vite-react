@@ -30,9 +30,19 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
         เคยตกเป็นพาดหัว default · แก้แล้วด้วย `brandSync.UPSTREAM_SEG_ALIAS` (derive จาก `SEG_CODE_MAP` ที่เดียว)
         ⚠️ **`graduate` ไม่มี alias โดยเจตนา** — เรายังไม่มีพาดหัวให้นักศึกษาจบใหม่ ⇒ ตกเป็น default อย่างซื่อสัตย์
         เครื่องมือ: `npm run check:brand-sync` (แยก `aligned` / `bridged` / `drift` — bridged = alias พาถึงแล้ว ไม่ใช่กับดัก)
-   · **ใน production `waigsnxhrlwtiotspaim`**: ตาราง `marketing_*` **33 ตาราง มีอยู่จริง แต่ 0 แถวทุกตาราง**
-   ⚠️ **แก้คำเดิมที่เขียนผิด**: บรรทัดนี้เคยเขียนว่า *"production มีสองระบบเขียนลง"* — **โครงสร้างถูก แต่ข้อมูลไม่จริง**
-     ไม่เคยมีใครเขียนข้อมูลลง `marketing_*` ของ production เลย ⇒ อ่านว่า "โครงเปล่าที่ apply ไว้" ไม่ใช่ "ระบบที่ทำงานอยู่"
+   · **ใน production `waigsnxhrlwtiotspaim`**: ตาราง `marketing_*` **33 ตาราง** — 🔴 **ไม่ใช่ 0 แถวแล้ว** (นับสด 20 พ.ย. 2569)
+     `metric_definitions` 20 · `event_definitions` 17 · `brand_rules` 10 · `message_pillars` 7 · `audience_segments` 5 ·
+     `brands` 1 · `measurement_config` 1 · `measurement_health_live` 1 · **อีก 25 ตารางยังว่าง**
+   ⚠️ **ประโยคนี้ถูกแก้สองรอบ — อ่านให้ครบก่อนอ้าง**
+     รอบ 1 (24 ส.ค.) เขียนว่า *"production มีสองระบบเขียนลง"* จากการดู schema อย่างเดียว = **ผิด**
+     รอบ 2 (15 พ.ย.) แก้เป็น *"0 แถวทุกตาราง · ไม่เคยมีใครเขียนลงเลย"* = **ผิดอีก** (นับตอนนั้นไม่ครบ/ข้อมูลมาทีหลัง)
+     🔴 **สิ่งที่จริงวันนี้**: มี **ข้อมูลตั้งต้น (definitions/rules/pillars/segments)** อยู่จริง
+       แต่ **`marketing_events` = 0 แถว** ⇒ ยังไม่มี *เหตุการณ์* ไหลเข้าเลย
+   🔴 **และมีท่อรับ event สาธารณะอยู่จริง**: edge function `marketing-track` (live 23 ส.ค. 2569 · `verify_jwt=false`
+     · กั้นด้วย Origin allowlist `ceoaithailand.org`) เขียนลง production ด้วย **service_role** ผ่าน rpc `ingest_marketing_event`
+     โดย **hardcode `workspace_id` ไว้ในโค้ด** · 🔴 **ไม่มีซอร์สในรีโปนี้เลย** (คู่กับ `marketing-generate`)
+     ⇒ ท่อเปิดอยู่ ~3 เดือน แต่ `marketing_events` ยังเป็น 0 ⇒ **ฝั่งหน้าเว็บไม่เคยยิงเข้ามา** (รูปแบบเดียวกับ Amplitude ที่ได้ 0 event)
+   ⚠️ **ห้ามเขียนข้ออ้างเรื่องข้อมูลใน DB โดยไม่แนบจำนวนแถวที่นับจริง** (ledger #79 ตั้งกฎนี้ไว้แล้ว แต่ไม่มีกลไกบังคับ)
    ⚠️ **ตาราง `marketing_*` ของสองที่เป็นคนละชุด คนละชื่อ** — ของอีกระบบมี `marketing_behavior_*` · `marketing_personas` ·
      `marketing_ctas` · `marketing_evidence` ที่ production ไม่มี ⇒ **ห้ามอ่าน schema ฝั่งหนึ่งแล้วเดาอีกฝั่ง**
    ⇒ รีโปนี้ **ห้ามสร้าง migration `marketing_*` · ห้ามอ่าน/เขียนตาราง `marketing_*` ของทั้งสอง project** (กลไก: `ownershipBoundary.test.ts`)
