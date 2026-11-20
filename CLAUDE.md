@@ -57,14 +57,22 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
        **`ingest_marketing_event`** (ขึ้นต้นด้วย `ingest_`) ⇒ เลี่ยงด่านได้ฟรี · ตอนนี้ด่านจับชื่อนี้ตรง ๆ แล้ว
      ⚠️ ด่านดู **โค้ดจริง** (ตัดคอมเมนต์ก่อน) ⇒ เอกสารพูดถึงชื่อตาราง/rpc ได้ แต่ **เรียกใช้ไม่ได้**
 
-🚰 **สายท่อข้อมูลออก — แปลง → ห่อ → เก็บ → ส่ง** (20 พ.ย. 2569 · ADR-0003/0004/0005)
+🚰 **สายท่อข้อมูลออก — รูปแบบกลาง → แปลง → ห่อ → เก็บ → ส่ง** (20 พ.ย. 2569 · ADR-0003/0004/0005/0008)
 ```
-เหตุการณ์ในแอป
+เหตุการณ์ในแอป (analytics.track · 179 ชื่อ · ไม่นับ __tests__)
+ ⓪ รูปแบบกลาง src/lib/eventFormat.ts  CEF: {schema,name,occurredAt,source,session,context,props}
+      · source 'browser'|'server' (เบราว์เซอร์อ้างเรื่องเงินไม่ได้) · ตารางแปลงคำศัพท์สองฝั่งอยู่ที่นี่
+      · sinksFor(name) ตอบ "event นี้ไปถึงไหน" — **คำนวณจากโค้ดจริง** ไม่ใช่รายการที่ประกาศ
  ① แปลง   src/lib/osCodec.ts    encode/decode + wireIssues() · pure ทั้งไฟล์ · กฎ PII อยู่ที่นี่
  ② ห่อ     src/lib/osPackage.ts  ซอง {v,seq,packedAt,checksum,events} + canonical JSON
  ③ เก็บ    src/lib/osOutbox.ts   คิวของค้าง + ส่งซ้ำ + **นับของหายแยกเหตุผล** 4 ชนิด
  ④ ส่ง     src/lib/marketingOs.ts  POST /functions/v1/marketing-track (ไฟล์เดียวที่รู้ปลายทาง)
 ```
+🔴 **สายส่งต้องประกอบ payload ผ่าน `cefToOs(toCef(…))` · ห้ามเรียก `encodeOsEvent` ตรง** (เทสต์บังคับ)
+   — ชั้นกลางที่ข้ามได้ ไม่ใช่มาตรฐาน
+⚠️ **`landing_funnel` ไม่ใช่ sink ของ event** (เป็นตารางสถานะ 1 แถว/ผู้เข้าชม เขียนผ่าน `track_landing`)
+⚠️ GA + Amplitude ได้ **ทุก** event · OS ได้ **4 ตัวที่แมป + 1 ตัวที่ส่งตรง** ⇒ อีก ~174 ตัว OS ยังมองไม่เห็น
+   (มองเห็นว่า "ไม่ไป" แล้ว ≠ ข้อมูลครบ)
 🔴 **`marketing-track` รับ 1 event ต่อ 1 POST — ไม่มี batch** ⇒ ซองเป็นรูปแบบ **ที่เก็บของเรา** ไม่ใช่รูปแบบสายส่ง
 🔴 **ไม่ใช่ erasure coding และห้ามเรียกชื่อนั้น** (ADR-0005 · ledger #91) — parity ช่วยไม่ได้เพราะหน่วยที่หาย
    คือ **POST ทั้งก้อน** และที่เก็บมีที่เดียว ⇒ parity หายพร้อมข้อมูล · redundancy ตัวจริง = **ตารางของเราเอง**

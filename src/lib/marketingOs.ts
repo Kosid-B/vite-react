@@ -24,7 +24,8 @@
 
 /** 10 event ที่ `marketing-track` ยอมรับ (ตรงกับ `SAFE_BROWSER_EVENTS` ในตัวฟังก์ชัน)
  *  ส่งชื่อนอกรายการนี้ = ฟังก์ชันคืน 400 `event_not_allowed` */
-import { encodeOsEvent, wireIssues, type OsEvent, type OsEventPayload } from './osCodec';
+import { wireIssues, type OsEvent, type OsEventPayload } from './osCodec';
+import { cefToOs, toCef } from './eventFormat';
 import { ack, browserStore, enqueue, loadOutbox, saveOutbox } from './osOutbox';
 
 /** ปลายทางเดียวที่รีโปนี้คุยกับ Marketing OS ได้ — edge function ของเขา (ไม่ใช่ตาราง ไม่ใช่ rpc)
@@ -37,35 +38,6 @@ export const OS_BUSINESS_EVENTS = [
   'trial_started', 'signup_complete', 'subscription_started',
   'purchase_completed', 'lead_created', 'content_published', 'tracking_error',
 ] as const;
-
-/** GA event ของเรา → OS event · **แมปเฉพาะที่ความหมายตรงกันจริง** ห้ามเดา
- *  (ชื่อ GA ฝั่งซ้ายต้องมีอยู่จริงในโค้ด — เทสต์บังคับ) */
-export const EVENT_MAP: Readonly<Record<string, OsEvent>> = Object.freeze({
-  landing_cta_click: 'cta_click',
-  quickcheck_started: 'calculator_start',
-  quickcheck_submitted: 'calculator_complete',
-  quickcheck_signup_click: 'signup_start',
-});
-
-/** event ที่ส่ง **ตรง** ไม่ผ่าน EVENT_MAP (เพราะไม่มี GA event คู่กัน)
- *  ⇒ ต้องประกาศไว้ ไม่งั้นด่าน "safe event ทุกตัวต้องถูกส่งหรือมีเหตุผล" จะอ่านว่าเงียบหายไป */
-export const SENT_DIRECT: Readonly<Record<string, string>> = Object.freeze({
-  landing_view: 'ส่งจาก useLandingTrace ตอนเริ่ม session (once) — ไม่มี GA event คู่กัน',
-});
-
-/** event ของ OS ที่ **ยังไม่ได้ส่ง** พร้อมเหตุผล — ห้ามปล่อยว่างไว้เฉย ๆ ให้คนเดา */
-export const NOT_SENT_YET: Readonly<Record<string, string>> = Object.freeze({
-  page_view: 'หน้าอื่นนอก Landing ยังไม่ได้ต่อ — Landing ส่ง landing_view อยู่แล้ว',
-  content_view: 'บทความเป็น HTML ที่ Worker เรนเดอร์ ไม่มี React ⇒ ต้องต่อฝั่ง Worker (คนละงาน)',
-  cta_view: 'ต้องมี IntersectionObserver ที่ปุ่ม CTA โดยเฉพาะ — ของเดิมวัดเป็น "ส่วนของหน้า" ไม่ใช่ปุ่ม',
-  assessment_start: 'เครื่องประเมินตลาดยังไม่มี event เริ่ม/จบแยกกัน',
-  assessment_complete: 'เหตุผลเดียวกับ assessment_start',
-});
-
-/** GA event → OS event (null = ไม่ได้แมปไว้ ⇒ ไม่ส่ง) */
-export function osEventFor(gaEvent: string): OsEvent | null {
-  return EVENT_MAP[gaEvent] ?? null;
-}
 
 // ── ส่งจริง (impure) ────────────────────────────────────────────────────────
 
@@ -104,15 +76,21 @@ async function deliver(
     const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
     if (!base) return;
 
-    const body = encodeOsEvent({
-      event,
+    /* เหตุการณ์ → CEF (รูปแบบกลาง) → payload ของปลายทาง
+     * 🔴 ห้ามข้าม CEF ไปประกอบ payload ตรง ๆ — ชั้นกลางที่ถูกข้ามได้ ไม่ใช่มาตรฐาน */
+    const body = cefToOs(toCef({
+      name: event,
       session: funnel.currentFunnelSession(),
-      seg: new URLSearchParams(window.location.search).get('seg') ?? undefined,
-      pagePath: window.location.pathname,
-      referrer: document.referrer,
-      utm: utm.pickUtm(window.location.search) as Record<string, string | undefined>,
+      source: 'browser',
+      context: {
+        seg: new URLSearchParams(window.location.search).get('seg') ?? undefined,
+        pagePath: window.location.pathname,
+        referrer: document.referrer,
+        utm: utm.pickUtm(window.location.search) as Record<string, string | undefined>,
+      },
       props,
-    });
+    }));
+    if (!body) return;
 
     /* 🔴 ตรวจก่อนใช้เน็ตเสมอ — payload ที่ `wireIssues()` ไม่ผ่านคือของที่ปลายทางจะปฏิเสธอยู่ดี
      *    ยิงไปก็เสียทั้งเวลาเราและโควตาเขา · และทำให้ log ฝั่งเขาสกปรกโดยไม่มีประโยชน์ */

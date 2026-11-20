@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { resolve, join } from 'node:path';
-import { OS_BUSINESS_EVENTS, EVENT_MAP, NOT_SENT_YET, osEventFor, SENT_DIRECT } from '../marketingOs';
+import { OS_BUSINESS_EVENTS } from '../marketingOs';
+import { EVENT_MAP, NOT_SENT_YET, osEventFor, SENT_DIRECT } from '../eventFormat';
 import { OS_SAFE_EVENTS, MAX_VALUE_LEN, safeProps, encodeOsEvent } from '../osCodec';
 
 /* ══════════════════════════════════════════════════════════════════════

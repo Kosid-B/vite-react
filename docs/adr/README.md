@@ -42,5 +42,6 @@
 | [0005](0005-no-erasure-coding.md) | **ไม่ใช้ erasure coding** — ใช้สำเนา + ส่งซ้ำ + นับของหาย | `rejected` |
 | [0006](0006-data-cdn-feed.md) | CDN ข้อมูล (feed รวมที่แคชที่ขอบ) | `blocked` |
 | [0007](0007-server-side-business-events.md) | event ฝั่งธุรกิจ 7 ตัวต้องยิงจากเซิร์ฟเวอร์ | `proposed` |
+| [0008](0008-common-event-format.md) | CEF — รูปแบบ event กลางหนึ่งเดียว แล้วแปลงออกทีละปลายทาง | `accepted` |
 
 กลไกบังคับรูปแบบ: `src/lib/__tests__/adr.test.ts`

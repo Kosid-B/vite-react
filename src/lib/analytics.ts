@@ -10,7 +10,8 @@
  */
 
 import { sendAmplitude } from './amplitude';
-import { osEventFor, sendOsEvent } from './marketingOs';
+import { sendOsEvent } from './marketingOs';
+import { osEventFor } from './eventFormat';
 
 declare global {
   interface Window { gtag?: (...args: unknown[]) => void }
