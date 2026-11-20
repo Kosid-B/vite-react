@@ -31,6 +31,26 @@ marketing_measurement_config      : block_strategic_recommendations_below_score 
 - ส่งแค่ 10 event ที่ฟังก์ชันนั้นรับ · ไม่ส่งฟิลด์ UUID เลย (เราไม่มีค่าจริงของเขา)
 - ใช้ `session` ตัวเดียวกับ `landing_funnel` ⇒ ข้อมูลสองฝั่ง join กันได้ภายหลัง
 
+## 🔁 แก้ไขบริบท 20 พ.ย. 2569 (เย็นวันเดียวกัน) — สมมติฐานหลักของ ADR นี้ผิด
+
+ADR นี้เขียนไว้ว่าการยิง `marketing-track` ทำให้ **Marketing OS มองเห็น event** · **ผิด**
+
+เจ้าของยืนยันว่าแอป Marketing OS ชี้ไป Supabase **`bjozpwdtqbpwcxnqguka`**
+แต่ `marketing-track` deploy อยู่บน **`waigsnxhrlwtiotspaim`** และใช้ `SUPABASE_URL` ของ project ตัวเอง
+⇒ event ลง `marketing_events` ของ **เรา** · ฐานที่ OS อ่าน **ไม่มีตารางนั้นด้วยซ้ำ**
+⇒ **ข้อมูลไม่เคยถึง OS และจะไม่ถึงด้วยท่านี้**
+
+🔴 ความผิดเชิงวิธีคิด (ledger #94): ผมเห็นปลายทางที่มีอยู่ (`marketing-track`) + ตารางชื่อ `marketing_*`
+อยู่ในฐานเรา แล้ว **สรุปว่านั่นคือปลายทางของ OS โดยไม่ได้ตรวจว่า OS อ่านฐานไหน**
+— เป็นรูปแบบเดิมเป๊ะ: *เห็นของที่ดูเข้ากัน แล้วเล่าเหมือนตรวจแล้ว*
+
+**คุณค่าที่เหลือจริงของ ADR นี้ (ยังคุ้มที่จะ merge ไว้)**
+ตาราง event ชั้นละเอียดใน **ฐานของเราเอง** + VIEW `marketing_measurement_health_live`
+ที่ขยับเองตามข้อมูล — ของที่เมื่อก่อนไม่มีเลย (เรามีแค่ `landing_funnel` 1 แถว/ผู้เข้าชม + GA/Amplitude)
+⇒ **ห้ามอ่าน ADR นี้ว่า "เชื่อมกับ Marketing OS แล้ว"**
+
+ทางที่ถูกอยู่ใน **[ADR-0009](0009-marketing-os-behavior-ingest.md)** — `marketing-behavior-ingest` บนฐานของเขา
+
 ## ผลที่ตามมา
 
 - ✅ OS เริ่มมี event ⇒ health score ขยับได้ ⇒ มันเลิกบล็อกตัวเอง
