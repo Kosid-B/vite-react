@@ -44,6 +44,43 @@ describe('🔴 ท่อรายงาน AI ล้ม ฝั่ง Edge Functi
     expect(reports, `คืน error ${returns} จุด แต่รายงาน ${reports} จุด`).toBe(returns);
   });
 
+  /* ══════════════════════════════════════════════════════════════════════
+   * 🔴 จุดบอดที่เจอ 20 พ.ย. 2569: ทุกฟังก์ชันคืน `missing_api_key` **ก่อน** เรียก Anthropic
+   *    ⇒ กรณีที่เป็นไปได้มากที่สุด (คีย์ยังไม่ถูกตั้ง) คือกรณีเดียวที่ไม่เคยถูกบันทึก
+   *    ⇒ คำถาม "คีย์ตั้งแล้วหรือยัง" ตอบว่า "ตรวจไม่ได้" ทุกรอบ ทั้งที่มีท่อ log อยู่แล้ว
+   * ══════════════════════════════════════════════════════════════════════ */
+  const MISSING_KEY_FNS = ['ai-assist', 'ai-plan', 'compliance-check', 'privacy-notice'];
+
+  it('ต้องหาจุดคืน missing_api_key เจอครบ — หาไม่เจอ = ตัวตรวจพัง', () => {
+    const found = MISSING_KEY_FNS.filter((fn) => code(read(`${FN_DIR}/${fn}/index.ts`)).includes('missing_api_key'));
+    expect(found, 'ฟังก์ชันที่ควรมีด่านคีย์ว่างหายไป').toEqual(MISSING_KEY_FNS);
+  });
+
+  it.each(MISSING_KEY_FNS)('🔴 %s ต้องรายงานก่อนคืน missing_api_key ทุกจุด', (fn) => {
+    const c = code(read(`${FN_DIR}/${fn}/index.ts`));
+    const returns = (c.match(/missing_api_key/g) ?? []).length;
+    const reports = (c.match(/reportMissingKey\(/g) ?? []).length;
+    expect(reports, `คืน ${returns} จุด แต่รายงาน ${reports} จุด = ล้มเงียบ`).toBe(returns);
+    // ต้องรายงาน "ก่อน" คืนค่า ไม่ใช่หลัง (หลัง = ไม่มีทางทำงาน)
+    expect(c.indexOf('reportMissingKey('), 'ต้องอยู่ก่อนบรรทัดที่ return')
+      .toBeLessThan(c.indexOf('error: "missing_api_key"'));
+  });
+
+  it('🔴 ต้องกันยิงซ้ำทุกคำขอ — คีย์หายคือ error ที่เกิดทุกครั้ง ท่อมีเพดาน 500 แถว/ชม.', () => {
+    const c = code(read(`${FN_DIR}/_shared/aiFailure.ts`));
+    expect(c, 'ต้องมีตัวจำว่ารายงานไปแล้ว').toMatch(/new Set</);
+    expect(c, 'ต้องคืนออกก่อนถ้ารายงานไปแล้ว').toMatch(/\.has\([^)]*\)\)\s*return/);
+    expect(c, 'ต้องจำแยกตามจุด ไม่ใช่ธงเดียวทั้งไฟล์').toMatch(/\.add\(where\)/);
+  });
+
+  it('ผู้เรียกต้องส่ง "ชื่อ" env มา ไม่ใช่ค่า (ท่อห้ามเอ่ยชื่อคีย์เอง — ด่านข้างบนกันไว้)', () => {
+    for (const fn of MISSING_KEY_FNS) {
+      const c = code(read(`${FN_DIR}/${fn}/index.ts`));
+      expect(c, `${fn} ต้องส่งชื่อ env มาเป็นสตริง`).toMatch(/reportMissingKey\([^)]*["']ANTHROPIC_API_KEY["']\)/);
+      expect(c, `${fn} ห้ามส่งตัวแปรที่ถือค่าคีย์`).not.toMatch(/reportMissingKey\([^)]*,\s*ANTHROPIC_API_KEY\s*\)/);
+    }
+  });
+
   it('ต้องใช้ท่อเดิม (rpc track_client_error) ไม่สร้างตารางใหม่ — ด่านปล่อยของกั้น schema', () => {
     expect(code(read(`${FN_DIR}/_shared/aiFailure.ts`))).toContain('rpc/track_client_error');
   });

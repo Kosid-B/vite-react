@@ -8,7 +8,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModel } from "../_shared/modelRouter.ts";
 import { enforceAiQuota, enforceAiTokens, recordAiTokens } from "../_shared/quota.ts";
-import { reportAiFailure } from "../_shared/aiFailure.ts";
+import { reportAiFailure, reportMissingKey } from "../_shared/aiFailure.ts";
 import { AI_GUARDRAILS } from "../_shared/aiGuardrails.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
@@ -26,7 +26,10 @@ interface Body { page?: string; pageLabel?: string; instruction?: string; contex
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
-  if (!ANTHROPIC_API_KEY) return json({ error: "missing_api_key" }, 500);
+  if (!ANTHROPIC_API_KEY) {
+    await reportMissingKey("ai-assist", "ANTHROPIC_API_KEY");   // กันตาบอด: คีย์หาย = กรณีที่เคยไม่ถูกบันทึกเลย
+    return json({ error: "missing_api_key" }, 500);
+  }
 
   let body: Body;
   try { body = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
