@@ -8,6 +8,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { pickModels } from "../_shared/modelRouter.ts";
 import { chatWithFallback } from "../_shared/llm.ts";
+import { reportAiFailure } from "../_shared/aiFailure.ts";
 import { enforceAiQuota, enforceAiTokens, recordAiTokens } from "../_shared/quota.ts";
 import { AI_GUARDRAILS } from "../_shared/aiGuardrails.ts";
 
@@ -81,7 +82,7 @@ Deno.serve(async (req) => {
   try {
     text = await callPlan(userMsg, 3000);
   } catch (e) {
-    console.error("[ai-plan] llm_error:", String(e));
+    await reportAiFailure("ai-plan", e);   // console.error + บันทึกลง client_errors
     return json({ error: "llm_error", detail: String(e) }, 502);
   }
 
@@ -97,7 +98,7 @@ Deno.serve(async (req) => {
       text = await callPlan(retryMsg, 4000);
       parsed = extractJson(text);
     } catch (e) {
-      console.error("[ai-plan] llm_error on retry:", String(e));
+      await reportAiFailure("ai-plan:retry", e);
     }
   }
 
