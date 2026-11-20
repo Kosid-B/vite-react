@@ -40,7 +40,13 @@
     { "pattern": "www.ceoaithailand.org", "custom_domain": true }
   ],
   "vars": {
-    "ANTHROPIC_API_KEY": "",
+    // 🔴 ห้ามประกาศ ANTHROPIC_API_KEY ที่นี่ (เอาออก 20 พ.ย. 2569 · ledger #82)
+    //    เอกสาร Cloudflare: "Wrangler will delete all vars before setting those found in the
+    //    configuration file" ⇒ ประกาศไว้เป็นค่าว่าง = **ทุกครั้งที่ merge เข้า main คีย์ถูกล้าง**
+    //    ส่วน Secret (encrypted) "are never deleted by a deployment" ⇒ ที่ถูกคือตั้งเป็น Secret:
+    //      npx wrangler secret put ANTHROPIC_API_KEY
+    //      (หรือ Dashboard → Worker → Settings → Variables → Add → ติ๊ก Encrypt)
+    //    กลไกเฝ้า: workerSecretVars.test.ts — ชื่อที่ลงท้าย _KEY/_SECRET/_TOKEN ห้ามอยู่ใน vars
     // ค่า public (ไม่ใช่ secret) — ใช้อ่านตาราง storefronts เพื่อทำ SEO ฝั่ง server (/b/<slug>, /sitemap.xml)
     // ใช้ publishable key (sb_publishable_…) = public โดยดีไซน์ + rotate แยกได้ (เลี่ยง anon JWT ที่ scanner ตีว่าเป็น secret)
     // production Supabase = waigsnxhrlwtiotspaim (ย้ายจาก rsjbqmnvocvtveelselj — ก.ค. 2569)
