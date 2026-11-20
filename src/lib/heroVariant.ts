@@ -9,6 +9,10 @@
 
 import type { OnboardGoal, PageId } from '../types';
 
+/* 🔀 alias รหัสกลุ่มของ Marketing OS — **นำเข้า ไม่ประกาศซ้ำ**
+ *    พจนานุกรมอยู่ที่ `brandSync.SEG_CODE_MAP` ที่เดียว (ทิศทาง: ผู้ใช้ → พจนานุกรม) */
+import { UPSTREAM_SEG_ALIAS } from './brandSync';
+
 export type HeroSeg = 'default' | 'seller' | 'newbie' | 'sidebiz' | 'owner' | 'palm' | 'food' | 'audit' | 'btc';
 
 export interface HeroVariant {
@@ -169,6 +173,15 @@ export function segmentFor(search: string, referrer = ''): HeroSeg {
   const seg = get('seg');
   if (seg === 'seller' || seg === 'newbie' || seg === 'sidebiz' || seg === 'owner' || seg === 'palm'
       || seg === 'food' || seg === 'audit' || seg === 'btc') return seg;
+
+  /* 1b) 🔀 รหัสของ **Marketing OS** ที่ใช้คนละคำกับเรา (`growth`→owner · `employee`→sidebiz)
+   *     🔴 ทำไมต้องมี: แคมเปญของอีกระบบปล่อยลิงก์ `/?seg=growth` ออกไป — ถ้าเราไม่รู้จักคำนั้น
+   *        คนที่กดจะเห็นพาดหัวกลาง ๆ ทั้งที่เรารู้กลุ่มเขาแล้ว = บั๊กตระกูล `seg='default'` 97.5% (ledger #73/#74)
+   *     ⚠️ ต้องอยู่ **หลัง** ด่าน 1 เสมอ — รหัสของเราเองชนะ alias ของอีกระบบ
+   *     ⚠️ `graduate` ไม่อยู่ใน alias **โดยเจตนา** (ยังไม่มีพาดหัวให้) ⇒ ตกไปเป็น default ซึ่งถูกแล้ว
+   *        ยัด alias ให้ = ส่งพาดหัวผิดกลุ่ม ซึ่งแย่กว่าพาดหัวกลาง ๆ */
+  const aliased = UPSTREAM_SEG_ALIAS[seg];
+  if (aliased) return aliased;
 
   // 2) ?goal= (เผื่อสะพานจากเว็บบริษัท)
   const goal = get('goal');

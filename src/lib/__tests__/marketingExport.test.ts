@@ -61,23 +61,41 @@ describe('แมปรหัสกลุ่มข้ามระบบ', () => {
     expect(toMarketingCode('audit').code).toBe('audit');
   });
 
+  /* 🟢 แก้ 19 พ.ย. 2569 — `seller` **ขึ้นที่ปลายทางจริงแล้ว**
+   *    ยืนยันสดผ่าน MCP: marketing_audience_segments มี code='seller'
+   *    ⇒ เลิกเป็น PENDING_UPSTREAM · ย้ายเข้า SEG_CODE_MAP แล้ว
+   *    เทสต์เดิมเคยบังคับว่าต้องคืน null ("ตกลงแล้ว ≠ มีแล้ว") — ตอนนี้ "มีแล้ว" จริง */
+  it('🟢 seller แมปได้แล้ว — ปลายทางเพิ่มให้จริง (ตรวจสด 19 พ.ย. 69)', () => {
+    expect(toMarketingCode('seller').code).toBe('seller');
+    expect(toMarketingCode('seller').layer).toBe('growth');
+  });
+
   it('🔴 รหัสที่ทะเบียนของเขาไม่มี ต้องคืน null — ห้ามเดาให้ใกล้เคียง', () => {
+    // food/palm = ประเภทธุรกิจ คนละแกนกับทะเบียนกลุ่ม ⇒ ต้องไม่มีรหัสฝั่งเขาตลอดไป
     expect(toMarketingCode('food').code).toBeNull();
-    expect(toMarketingCode('seller').code).toBeNull();   // ตกลงจะเพิ่ม แต่ยังไม่มีจริง
     expect(toMarketingCode('palm').code).toBeNull();
+    expect(toMarketingCode('ไม่มีจริง').code).toBeNull();
   });
 
   it('🔴 รหัสที่แมปไม่ได้ ต้องถูกประกาศเป็นจุดบอด ไม่ใช่หายเงียบ', () => {
-    const b = buildExport(REAL, '2026-11-15T00:00:00Z');
+    const b = buildExport(REAL, '2026-11-19T00:00:00Z');
     // 🔴 แยก 3 กอง — ของที่ตัดสินใจไปแล้ว ต้องไม่จมปนกับของที่ยังไม่มีใครตัดสิน
-    const pending = b.blindSpots.find((s) => s.includes('ยังไม่ยืนยันว่ามีจริง'));
-    expect(pending, 'seller = ตกลงแล้วว่าเขาจะเพิ่ม').toContain('seller');
     const bizType = b.blindSpots.find((s) => s.includes('ประเภทธุรกิจ ไม่ใช่กลุ่มเป้าหมาย'));
     expect(bizType, 'food = คนละแกน ห้ามเข้าทะเบียน segment').toContain('food');
-    expect(pending, 'food ต้องไม่ปนอยู่ในกองที่รอเพิ่ม').not.toContain('food');
+    // 🟢 กองที่รอปลายทางเพิ่ม ต้องว่างแล้ว — seller ขึ้นจริงแล้ว
+    expect(b.blindSpots.find((s) => s.includes('ยังไม่ยืนยันว่ามีจริง')), 'ไม่มีรหัสไหนค้างรอแล้ว').toBeUndefined();
     // 🔴 `default` ไม่ใช่ "กลุ่มที่ทะเบียนขาด" แต่คือ "ยังไม่ติดแท็ก" — คนละปัญหา
     //    ถ้านับรวม จะมี 342/361 แถวติดธงจนคำเตือนจริงถูกกลบ
     expect(b.blindSpots.join(' '), 'default ต้องไม่ถูกนับเป็นกลุ่มที่ทะเบียนขาด').not.toMatch(/ยังไม่มีใครตัดสินใจเลย:.*default/);
+  });
+
+  /* 🔴 กลไก PENDING_UPSTREAM ต้องยังทำงาน แม้ตอนนี้จะว่าง
+   *    ถ้าใครลบ map ทิ้งเพราะ "ไม่มีใครใช้" รอบหน้าจะไม่มีที่พักให้ของที่ตกลงแต่ยังไม่มี
+   *    แล้วมันจะถูกยัดเข้า SEG_CODE_MAP ทันทีทั้งที่ปลายทางยังไม่มี = join หล่นเงียบ ๆ */
+  it('🔴 กองรอปลายทางยังต้องทำงาน — ใส่ของเข้าไปแล้วต้องขึ้นเป็นจุดบอดทันที', () => {
+    const b = buildExport([...REAL, { seg: 'ทดลองรอ', visitors: 3, cta: 0, signup: 0 }], '2026-11-19T00:00:00Z');
+    const line = b.blindSpots.find((s) => s.includes('ยังไม่มีใครตัดสินใจเลย'));
+    expect(line, 'รหัสที่ไม่มีใครตัดสินใจ ต้องไม่หายเงียบ').toContain('ทดลองรอ');
   });
 });
 

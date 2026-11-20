@@ -63,9 +63,13 @@ const main = async () => {
     console.log('   (ไม่ลบให้ — เป็นขยะของ Marketing OS ให้เซสชันที่ทำงานในโฟลเดอร์นั้นเก็บเอง)\n');
   }
 
-  console.log(`🟢 รหัสที่ตรงกัน (${rep.aligned.length}): ${rep.aligned.join(', ') || '—'}`);
+  console.log(`🟢 รหัสที่ตรงคำกัน (${rep.aligned.length}): ${rep.aligned.join(', ') || '—'}`);
+  if (rep.bridged.length) {
+    console.log(`🔀 คำต่างกันแต่ alias พาถึงแล้ว (${rep.bridged.length}) — ลิงก์ใช้ได้จริง ไม่ใช่กับดัก:`);
+    for (const b of rep.bridged) console.log(`   · ${b.code.padEnd(12)} → ${b.localSeg}`);
+  }
   if (rep.drift.length) {
-    console.log(`\n🔴 รหัสที่ไม่ตรง (${rep.drift.length}) — ลิงก์ ?seg=<code> จากอีกระบบจะตกเป็นพาดหัว default:`);
+    console.log(`\n🔴 รหัสที่ยังไม่มีอะไรพาถึง (${rep.drift.length}) — ลิงก์ ?seg=<code> จะตกเป็นพาดหัว default:`);
     for (const d of rep.drift) console.log(`   · ${d.code.padEnd(12)} ${d.why}`);
   }
   if (rep.missingUpstream.length) console.log(`\n⚠️  ชั้นที่แหล่งจริงไม่มี: ${rep.missingUpstream.join(', ')}`);

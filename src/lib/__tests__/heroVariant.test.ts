@@ -90,3 +90,41 @@ describe('pickHeroVariant', () => {
     });
   });
 });
+
+/* 🔀 ลิงก์ที่เข้ามาจาก Marketing OS ต้องถึงพาดหัวที่ถูกกลุ่ม (19 พ.ย. 2569)
+ *    เทสต์นี้วัดจาก **ผลที่ผู้ใช้เห็น** (HeroSeg ที่ได้) ไม่ใช่ว่า alias มีคีย์ครบไหม
+ *    — ความตรงของตัว alias เองอยู่ใน brandSync.test.ts */
+describe('🔀 segmentFor รับรหัสของ Marketing OS', () => {
+  it('?seg=growth → owner · ?seg=employee → sidebiz', () => {
+    expect(segmentFor('?seg=growth')).toBe('owner');
+    expect(segmentFor('?seg=employee')).toBe('sidebiz');
+  });
+
+  it('ไม่สนตัวพิมพ์เล็กใหญ่ (แคปชั่นคนพิมพ์มือ)', () => {
+    expect(segmentFor('?seg=GROWTH')).toBe('owner');
+    expect(segmentFor('?seg=Employee')).toBe('sidebiz');
+  });
+
+  it('🔴 รหัสของเราเองต้องชนะ alias เสมอ — alias อยู่หลังด่าน 1', () => {
+    expect(segmentFor('?seg=owner')).toBe('owner');
+    expect(segmentFor('?seg=sidebiz')).toBe('sidebiz');
+    expect(segmentFor('?seg=seller')).toBe('seller');
+  });
+
+  it('🔴 ?seg=graduate ต้องเป็น default — เรายังไม่มีพาดหัวให้ ห้ามเดา', () => {
+    // พาดหัวผิดกลุ่ม แย่กว่าพาดหัวกลาง ๆ · วันที่มี HeroSeg ให้ graduate ค่อยแก้เทสต์นี้
+    expect(segmentFor('?seg=graduate')).toBe('default');
+  });
+
+  it('alias ต้องไม่กลืนด่านถัด ๆ ไป — รหัสที่ไม่รู้จักยังตกไปอ่าน goal/utm ได้', () => {
+    expect(segmentFor('?seg=ไม่มีจริง&goal=validate')).toBe('newbie');
+    expect(segmentFor('?seg=&utm_content=ปาล์ม')).toBe('palm');
+  });
+
+  it('พาดหัวที่ได้ต้องเป็นของกลุ่มนั้นจริง ไม่ใช่แค่ชื่อ seg ตรง', () => {
+    // 🔴 ชั้นนี้คือสิ่งที่ผู้ใช้เห็นจริง — เทียบกับพาดหัวของ owner/sidebiz ตัวจริง
+    expect(pickHeroVariant('?seg=growth').h1a).toBe(pickHeroVariant('?seg=owner').h1a);
+    expect(pickHeroVariant('?seg=employee').h1a).toBe(pickHeroVariant('?seg=sidebiz').h1a);
+    expect(pickHeroVariant('?seg=growth').h1a).not.toBe(pickHeroVariant('').h1a);
+  });
+});
