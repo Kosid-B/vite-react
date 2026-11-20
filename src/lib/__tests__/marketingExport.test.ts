@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { buildExport, describeSeg, toMarketingCode, type SegRow } from '../marketingExport';
+import {
+  buildExport, describeSeg, toMarketingCode, bizVocabGaps,
+  UPSTREAM_COLUMNS, TENANCY_KEYS, type SegRow,
+} from '../marketingExport';
+import { SEG_CODE_MAP } from '../brandSync';
 import { MIN_FOR_RATE } from '../growthPdca';
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -138,5 +142,87 @@ describe('กรณีขอบ', () => {
   it('เรียงจากกลุ่มที่มีคนมากสุดก่อน', () => {
     const b = buildExport(REAL, '2026-11-15T00:00:00Z');
     expect(b.segments.map((s) => s.seg)).toEqual(['default', 'newbie', 'owner', 'seller', 'food']);
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 🧩 persona + ประเภทธุรกิจ → ตารางที่ปลายทางยังว่าง (20 พ.ย. 2569)
+ *
+ * เจ้าของขยายสิทธิ์เป็น "อ่านฐาน Marketing OS ได้ทุกตาราง · ห้ามเขียน"
+ * ⇒ อ่าน information_schema จริงแล้วพบว่า personas / business_types /
+ *   segment_business_types **มีโครงครบแต่ 0 แถว**
+ *
+ * 🔴 เทสต์ชุดนี้กันความผิด 2 แบบที่จะทำให้ไฟล์ "ส่งไปแล้วนำเข้าไม่ได้":
+ *   ① ชื่อฟิลด์ไม่ตรงคอลัมน์จริงของเขา
+ *   ② เราเผลอใส่กุญแจ tenancy (workspace_id/brand_id/UUID) ที่ต้องเป็นของเขา
+ * ══════════════════════════════════════════════════════════════════════════ */
+describe('🧩 ก้อน persona / ประเภทธุรกิจ', () => {
+  const b = buildExport(REAL, '2026-11-20T00:00:00Z');
+
+  it('persona มาจากชั้นกลุ่มเป้าหมายจริงครบ 5 ชั้น', () => {
+    expect(b.personas.map((p) => p.layer)).toEqual(['primary', 'secondary', 'broad', 'growth', 'sideDoor']);
+  });
+
+  it('🔴 evidenceStatus ต้องเป็น hypothesis ทุกตัว — เรายังไม่มีผลจริงสักตัว', () => {
+    expect(b.personas.every((p) => p.evidenceStatus === 'hypothesis')).toBe(true);
+  });
+
+  it('หน้าที่เชิงธุรกิจต้องตรงกับที่เจ้าของตัดสิน (growth=รายได้ · primary=ฐาน · sideDoor=ห้ามเป็นเครื่องยนต์)', () => {
+    const role = (l: string) => b.personas.find((p) => p.layer === l)?.role;
+    expect(role('growth')).toBe('revenueEngine');
+    expect(role('primary')).toBe('baseBuilding');
+    expect(role('sideDoor')).toBe('neverTheEngine');
+  });
+
+  it('segmentCode ต้องเป็นรหัสที่ทะเบียนของเขามีจริง (ไม่ใช่ seg ของเรา)', () => {
+    const upstream = Object.keys(SEG_CODE_MAP);
+    for (const p of b.personas) {
+      if (p.segmentCode !== null) expect(upstream, `${p.layer} → ${p.segmentCode}`).toContain(p.segmentCode);
+    }
+  });
+
+  it('ประเภทธุรกิจต้องตัด `all` ออก (เป็น wildcard ไม่ใช่ประเภทธุรกิจ)', () => {
+    expect(b.businessTypes.map((t) => t.code)).not.toContain('all');
+    expect(b.businessTypes.length, 'ต้องเหลือประเภทจริงหลายตัว').toBeGreaterThanOrEqual(5);
+    expect(b.businessTypes.find((t) => t.code === 'food')?.name).toBeTruthy();
+  });
+
+  it('🔴 คำศัพท์ที่ไม่ตรงกันเองต้องถูกประกาศ ไม่ใช่เดาชื่อให้', () => {
+    const gaps = bizVocabGaps();
+    expect(gaps, 'palm ยังเป็นช่องว่างจริงในวันที่เขียนเทสต์').toContain('palm');
+    const line = b.blindSpots.find((s) => s.includes('คำศัพท์ประเภทธุรกิจ'));
+    expect(line, 'ช่องว่างต้องถูกประกาศเป็นจุดบอด').toContain('palm');
+    expect(b.businessTypes.map((t) => t.code), 'ห้ามแอบส่ง palm ไปโดยไม่มีชื่อยืนยัน').not.toContain('palm');
+  });
+});
+
+describe('🔑 สัญญากับคอลัมน์จริงของปลายทาง', () => {
+  const b = buildExport(REAL, '2026-11-20T00:00:00Z');
+  /** แปลงชื่อฟิลด์ camelCase ของเรา → snake_case ของเขา */
+  const snake = (k: string) => k.replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`);
+
+  it('ฟิลด์ของ persona ต้องเป็นสับเซตของคอลัมน์ marketing_personas', () => {
+    const cols = UPSTREAM_COLUMNS.marketing_personas as readonly string[];
+    // `layer`/`role`/`segmentCode` เป็นข้อมูลช่วย map — ต้องไม่ชนชื่อคอลัมน์ที่ไม่มี
+    const mapped = ['name', 'summary', 'evidenceStatus'];
+    for (const k of mapped) expect(cols, `${k} → ${snake(k)}`).toContain(snake(k));
+  });
+
+  it('ฟิลด์ของประเภทธุรกิจต้องเป็นสับเซตของคอลัมน์ marketing_business_types', () => {
+    const cols = UPSTREAM_COLUMNS.marketing_business_types as readonly string[];
+    for (const k of Object.keys(b.businessTypes[0])) expect(cols, `${k}`).toContain(snake(k));
+  });
+
+  it('🔴 ห้ามมีกุญแจ tenancy หรือ UUID ของเขาในไฟล์เลย', () => {
+    const blob = JSON.stringify({ personas: b.personas, businessTypes: b.businessTypes });
+    for (const k of TENANCY_KEYS) {
+      expect(blob, `พบ ${k} ในไฟล์ — ของเขาต้องเติมเอง`).not.toContain(`"${k}"`);
+    }
+    expect(blob, 'พบ UUID ในไฟล์').not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+  });
+
+  it('ต้องบอกว่าก้อนไหนไปตารางไหน — ไม่ให้ปลายทางเดา', () => {
+    expect(b.targetTables.personas).toBe('marketing_personas');
+    expect(b.targetTables.businessTypes).toBe('marketing_business_types');
   });
 });

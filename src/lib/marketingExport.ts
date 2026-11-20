@@ -17,6 +17,8 @@
  * ══════════════════════════════════════════════════════════════════════════ */
 
 import { SEG_CODE_MAP, PENDING_UPSTREAM, BUSINESS_TYPE_SEGS, type AudienceLayer } from './brandSync';
+import { AUDIENCE } from './brandBrief';
+import { BIZ_LABEL } from './skillCatalog';
 import { MIN_FOR_RATE } from './growthPdca';
 
 /** แถวดิบจาก landing_funnel ที่ aggregate มาแล้วฝั่ง SQL */
@@ -51,6 +53,12 @@ export interface ExportBundle {
   /** กติกาที่อีกระบบต้องถือตามเวลาใช้ข้อมูลชุดนี้ */
   rules: string[];
   segments: SegExport[];
+  /** persona ตามชั้นกลุ่มเป้าหมาย → marketing_personas (ปลายทางยังว่าง 0 แถว) */
+  personas: PersonaExport[];
+  /** ประเภทธุรกิจที่เราเก็บจริง → marketing_business_types (ปลายทางยังว่าง 0 แถว) */
+  businessTypes: BusinessTypeExport[];
+  /** ตารางปลายทางของแต่ละก้อน — ให้ตัว import ของเขารู้ว่าอะไรไปไหน */
+  targetTables: Record<string, string>;
   /** 🔴 สิ่งที่ข้อมูลชุดนี้ตอบไม่ได้ — ประกาศไว้ ไม่ให้เดาเอง */
   blindSpots: string[];
 }
@@ -121,6 +129,22 @@ export function buildExport(rows: SegRow[], generatedAt: string): ExportBundle {
       '⇒ ห้ามยัดเข้าทะเบียนกลุ่ม (ทะเบียนจะปนสองแกนแล้วงอกไม่จบ) ให้ไปอยู่ฟิลด์ "ประเภทธุรกิจ" แยกต่างหาก',
     );
   }
+  blindSpots.push(
+    '🔑 ไฟล์นี้ **ไม่มี** workspace_id / brand_id / UUID ใด ๆ **โดยเจตนา** — เป็นกุญแจ tenancy ของคุณ ' +
+    'ตัว import ต้องเติมเอง ⇒ เราเดาแล้วข้อมูลจะไปลงผิด tenant',
+  );
+  blindSpots.push(
+    '🏷️ `personas[].evidenceStatus` เป็น `hypothesis` ทุกตัว **ไม่ใช่ค่าตั้งต้นที่ลืมแก้** — ' +
+    'เรายังไม่มีลูกค้าจ่ายจริงและยังไม่มีผลการทดลองซ้ำ ⇒ ส่งค่าอื่นไป = โกหกผ่าน schema ที่ถูกต้อง',
+  );
+  const gaps = bizVocabGaps();
+  if (gaps.length) {
+    blindSpots.push(
+      `🔴 คำศัพท์ประเภทธุรกิจของเราเองยังไม่ตรงกัน: ${gaps.join(', ')} ถูกใช้เป็น seg บนหน้าเว็บ ` +
+      'แต่ไม่มีในแคตาล็อก (`BIZ_LABEL`) ⇒ **ไม่ได้ส่งไปในก้อน businessTypes** เพราะยังไม่มีชื่อที่ยืนยันได้ ' +
+      '— ประกาศไว้แทนการเดาชื่อให้',
+    );
+  }
   if (unmapped.length) {
     blindSpots.push(`🔴 รหัสที่ยังไม่มีใครตัดสินใจเลย: ${unmapped.join(', ')} ⇒ ถ้า join ด้วยทะเบียนเดิมจะทิ้งแถวเหล่านี้เงียบ ๆ`);
   }
@@ -135,6 +159,116 @@ export function buildExport(rows: SegRow[], generatedAt: string): ExportBundle {
       'ทุกเกณฑ์ที่สร้างจากข้อมูลชุดนี้มีสถานะได้แค่ hypothesis — ห้าม validated จนกว่าจะมีผลซ้ำ',
     ],
     segments,
+    personas: buildPersonas(),
+    businessTypes: buildBusinessTypes(),
+    targetTables: {
+      segments: 'marketing_audience_segments (อ้างอิง — ไม่ใช่ของใหม่)',
+      personas: 'marketing_personas',
+      businessTypes: 'marketing_business_types',
+    },
     blindSpots,
   };
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 🧩 ขยายขอบเขต 20 พ.ย. 2569 — ส่ง persona + ประเภทธุรกิจ ไปเติมตารางที่ยังว่าง
+ *
+ * เจ้าของขยายสิทธิ์: **อ่านฐาน Marketing OS ได้ทุกตาราง · ห้ามเขียน** และยืนยัน
+ * กลไกคือ **ไฟล์ export ทางเดียว** (ไม่เปิดให้เขาต่อฐานเรา · ไม่เขียนฐานเขา)
+ *
+ * สถานะปลายทางที่วัดสดได้ (ไม่ใช่เดา · `count(*)` จริง):
+ *   marketing_brand_rules 7 · message_pillars 7 · audience_segments 6 · brands 1
+ *   🔴 personas 0 · business_types 0 · segment_business_types 0 · campaigns 0 · offers 0
+ *   ⇒ "ตารางมีอยู่ ≠ มีใครใช้มัน" (บทเรียน ledger #79 — ต่างกันแค่ count ครั้งเดียว)
+ *
+ * 🔴 กติกาการออกแบบไฟล์ (ห้ามละเมิด):
+ *   ① **ส่งรหัสข้อความ ไม่ส่ง UUID** — `workspace_id`/`brand_id`/`segment_id` เป็นกุญแจ
+ *      tenancy ของเขา ⇒ ตัว import ของเขาเติมเอง · เราเดา = ข้อมูลไปลงผิด tenant
+ *   ② **`evidenceStatus` ได้แค่ `hypothesis`** — CHECK ของเขายอม 4 ค่า
+ *      (hypothesis|research|observed|validated) ตรงกับ ClaimStatus ของเรา
+ *      แต่เรายังไม่มีผลจริงสักตัว ⇒ ส่งค่าอื่นไป = โกหกผ่าน schema ที่ถูกต้อง
+ *   ③ **ไม่สร้างคำบรรยายใหม่** — ทุกข้อความมาจาก AUDIENCE / BIZ_LABEL ของจริง
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/** คอลัมน์จริงของตารางปลายทาง — อ่านจาก information_schema 20 พ.ย. 2569
+ *  🔴 ใช้เป็นสัญญา: ชื่อฟิลด์ที่เราส่งต้องเป็นสับเซตของรายการนี้ (เทสต์บังคับ) */
+export const UPSTREAM_COLUMNS = {
+  marketing_personas: ['id', 'workspace_id', 'brand_id', 'audience_segment_id', 'name',
+    'summary', 'business_stage', 'awareness_stage', 'evidence_status', 'metadata',
+    'created_at', 'updated_at'],
+  marketing_business_types: ['id', 'workspace_id', 'code', 'name', 'description',
+    'active', 'created_at', 'updated_at'],
+  marketing_segment_business_types: ['workspace_id', 'segment_id', 'business_type_id', 'created_at'],
+} as const;
+
+/** กุญแจที่ **ห้าม** อยู่ในไฟล์ของเรา — ของเขาเติมเอง */
+export const TENANCY_KEYS: readonly string[] = ['id', 'workspace_id', 'brand_id',
+  'audience_segment_id', 'segment_id', 'business_type_id'] as const;
+
+export interface BusinessTypeExport {
+  /** → marketing_business_types.code (UNIQUE ร่วมกับ workspace_id) */
+  code: string;
+  /** → .name */
+  name: string;
+}
+
+export interface PersonaExport {
+  /** → marketing_personas.name */
+  name: string;
+  /** → .summary — ข้อความจาก AUDIENCE ตัวจริง ไม่เขียนใหม่ */
+  summary: string;
+  /** รหัสกลุ่มฝั่งเขา ให้ resolve เป็น audience_segment_id · null = ทะเบียนเขายังไม่มี */
+  segmentCode: string | null;
+  /** ชั้นกลุ่มเป้าหมายฝั่งเรา (เรียงแล้ว หัวหาด = primary) */
+  layer: AudienceLayer;
+  /** หน้าที่เชิงธุรกิจ — เจ้าของตัดสิน 24 ส.ค. 2569 */
+  role: 'revenueEngine' | 'baseBuilding' | 'neverTheEngine' | null;
+  /** 🔴 ได้แค่ hypothesis — เรายังไม่มีผลจริงสักตัว */
+  evidenceStatus: 'hypothesis';
+}
+
+/** ประเภทธุรกิจที่เราเก็บจริง — จาก BIZ_LABEL ตัวเดียวกับ dropdown ของ "ตรวจสินค้าเร็ว"
+ *  ⚠️ ตัด `all` ออก: เป็นค่า wildcard ของแคตาล็อก **ไม่ใช่ประเภทธุรกิจ** */
+export function buildBusinessTypes(): BusinessTypeExport[] {
+  return Object.entries(BIZ_LABEL)
+    .filter(([code]) => code !== 'all')
+    .map(([code, name]) => ({ code, name }))
+    .sort((a, b) => a.code.localeCompare(b.code));
+}
+
+/** รหัสฝั่งเขาที่เป็นตัวแทนของชั้นนี้ — ชั้น growth มีสองรหัส (growth, seller)
+ *  ⇒ เลือกตัวที่ชื่อตรงกับชั้นก่อน แล้วค่อยเรียงตามตัวอักษร (deterministic) */
+function upstreamCodeForLayer(layer: AudienceLayer): string | null {
+  const codes = Object.entries(SEG_CODE_MAP)
+    .filter(([, m]) => m.layer === layer)
+    .map(([code]) => code)
+    .sort();
+  if (!codes.length) return null;
+  return codes.includes(layer) ? layer : codes[0];
+}
+
+const LAYERS: AudienceLayer[] = ['primary', 'secondary', 'broad', 'growth', 'sideDoor'];
+
+/** persona 5 ตัวจากชั้นกลุ่มเป้าหมายจริง — ข้อความมาจาก AUDIENCE ทั้งหมด */
+export function buildPersonas(): PersonaExport[] {
+  const roleOf = (l: AudienceLayer): PersonaExport['role'] =>
+    AUDIENCE.revenueEngine === l ? 'revenueEngine'
+      : AUDIENCE.baseBuilding === l ? 'baseBuilding'
+        : AUDIENCE.neverTheEngine === l ? 'neverTheEngine' : null;
+  return LAYERS.map((layer) => ({
+    name: `${layer} — ${String(AUDIENCE[layer]).slice(0, 60)}`,
+    summary: String(AUDIENCE[layer]),
+    segmentCode: upstreamCodeForLayer(layer),
+    layer,
+    role: roleOf(layer),
+    evidenceStatus: 'hypothesis' as const,
+  }));
+}
+
+/** 🔴 คำศัพท์สองชุดของเราเองที่ไม่ตรงกัน — ประกาศไว้ ห้ามปิดด้วยการเดา
+ *  `BUSINESS_TYPE_SEGS` (HeroSeg ที่เป็นประเภทธุรกิจ) ต้องมีอยู่ใน BIZ_LABEL ด้วย
+ *  ไม่งั้นแปลว่าเรามีประเภทธุรกิจที่แคตาล็อกไม่รู้จัก ⇒ ส่งไปเขาจะ map ไม่ได้ */
+export function bizVocabGaps(): string[] {
+  const known = new Set(Object.keys(BIZ_LABEL));
+  return (BUSINESS_TYPE_SEGS as readonly string[]).filter((s) => !known.has(s)).sort();
 }
