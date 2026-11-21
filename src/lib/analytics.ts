@@ -12,6 +12,7 @@
 import { sendAmplitude } from './amplitude';
 import { sendOsEvent } from './marketingOs';
 import { osEventFor } from './eventFormat';
+import { sendBehaviorAuto } from './behaviorOs';
 
 declare global {
   interface Window { gtag?: (...args: unknown[]) => void }
@@ -42,5 +43,8 @@ export function track(event: string, params: Record<string, string | number> = {
     // ⚠️ ต่อที่นี่ที่เดียวโดยตั้งใจ: ทุกจุดเรียก track() เดิมได้ไปด้วยฟรี ไม่ต้องไล่แก้ทีละไฟล์
     const osEvent = osEventFor(event);
     if (osEvent) sendOsEvent(osEvent, safe);
+    // sink ที่ 4 — Marketing OS ตัวจริง (ฐานของเขา · ADR-0009)
+    //   no-op เมื่อ: ไม่แมปเข้า taxonomy เขา / ผู้ใช้ไม่ได้ยินยอม 'all' / ปิด flag
+    sendBehaviorAuto(event, safe);
   } catch { /* ห้ามทำ UX พัง เพราะ analytics */ }
 }

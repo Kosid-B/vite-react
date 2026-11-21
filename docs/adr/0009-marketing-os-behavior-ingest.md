@@ -1,6 +1,6 @@
 # ADR-0009 — ป้อน Marketing OS ผ่าน `marketing-behavior-ingest` (ประตูจริงของเขา)
 
-- **สถานะ**: `proposed` — รู้ทางแล้ว แต่ต้องได้ของจากเจ้าของ 2 อย่างก่อนเริ่ม
+- **สถานะ**: `accepted` — สร้างแล้ว และปล่อยด้วย `mode: 'test'` ก่อนโดยเจตนา
 - **วันที่**: 20 พ.ย. 2569
 - **ที่มา**: เจ้าของตอบว่าแอป Marketing OS ชี้ไป Supabase **`bjozpwdtqbpwcxnqguka`**
 
@@ -82,14 +82,42 @@ rate limit ต่อ IP ต่อนาที (HMAC ไม่เก็บ IP) ·
 
 ## การตัดสินใจ
 
-ต่อ sink ตัวที่สองจาก CEF → `marketing-behavior-ingest` · **ยังไม่เริ่ม** จนได้ 2 อย่างจากเจ้าของ:
+ต่อ sink ตัวที่สองจาก CEF → `marketing-behavior-ingest` · **สร้างแล้ว** (`src/lib/behaviorOs.ts`)
 
-1. **anon key ของ `bjozpwdtqbpwcxnqguka`** (publishable = public โดยดีไซน์ เหมือน key ของเราที่อยู่ใน `wrangler.jsonc`)
-   ⇒ ตั้งเป็น `VITE_MARKETING_OS_URL` + `VITE_MARKETING_OS_ANON_KEY` ใน GitHub Secrets **และ**
-   ใน build step ของ `cloudflare-deploy.yml` (ไม่ใส่ทั้งสองที่ = เงียบสนิทโดยไม่มีใครรู้ · ledger #18)
-   🔴 ผมไม่ดึงคีย์มาใส่เอง — เป็นคีย์ของอีกระบบ เจ้าของตัดสิน
-2. **ยืนยันว่าผูก `consent` กับอะไร** — เรามี `CookieConsent` อยู่แล้ว ต้องรู้ว่าช่อง "วิเคราะห์"
-   ของแถบนั้นนับเป็น `analytics_opt_in` ได้หรือไม่ (ถ้าไม่ ต้องเพิ่มช่องใหม่ = งาน UI)
+สองข้อที่เคยค้าง — แก้ได้โดยไม่ต้องรอ:
+
+1. **คีย์ — อ่านจาก env เท่านั้น** (`VITE_MARKETING_OS_URL` + `VITE_MARKETING_OS_ANON_KEY`)
+   🔴 **รอบแรกผมฝัง JWT ไว้ในไฟล์ตรง ๆ และผิด** — อ้างว่า "คีย์ของเราก็อยู่ในรีโป"
+   ซึ่งไม่ตรง: ของเราเป็นรูป `sb_publishable_…` **ไม่ใช่ JWT** และรีโปนี้ไม่เคยมี JWT เลย
+   GitGuardian จับได้ใน PR (ledger #96) ⇒ ตอนนี้มีด่านทั้งรีโปห้าม JWT ฝังในโค้ด
+   · ใช้ **legacy anon (JWT role=anon)** เพราะ `verify_jwt=true` ตรวจ JWT แน่นอน ·
+     🟡 `sb_publishable_…` ยังไม่ได้ทดสอบว่าผ่านด่านนั้นไหม
+   · 🔑 **เจ้าของต้องตั้ง GitHub Secret `VITE_MARKETING_OS_ANON_KEY`** (+ `vars.VITE_MARKETING_OS_URL`)
+     build step ใน `cloudflare-deploy.yml` ต่อให้แล้ว · ไม่ตั้ง = ฟีเจอร์ **เงียบสนิท** ไม่ใช่ล้มเงียบ
+     (`envContract.test.ts` บังคับว่า env ทุกตัวที่โค้ดอ่านต้องอยู่ใน workflow — ledger #18)
+2. **consent** — คำตอบอยู่ในโค้ดเราเองแล้ว ไม่ต้องตัดสินใหม่:
+   `CookieConsent.tsx` เก็บ `ceo_ai_cookie_consent` = `'all'` (ปุ่มที่ **ปลด `GA_DISABLE`** = เปิด
+   Analytics จริง) หรือ `'necessary'` (ปิด) ⇒ **`analytics_opt_in` ⇔ `'all'` เท่านั้น**
+   ยังไม่เลือก · กด necessary · อ่าน storage ไม่ได้ = **ไม่ส่ง** (fail-closed)
+
+**การปล่อยของ**: `MARKETING_OS.behaviorMode = 'test'` ก่อน
+เพราะ allowlist ไม่มี localhost ⇒ **พิสูจน์ได้แต่บน production** · เห็นแถว `mode='test'`
+เข้า `marketing_behavior_events` แล้วค่อยเปลี่ยนเป็น `'live'` — 🔒 เทสต์ล็อกว่าต้องเป็น `test`
+(เปลี่ยนเป็น live ต้องแก้เทสต์ด้วย = ตั้งใจ ไม่ใช่เผลอ)
+
+**ที่แมปจริง** (เฉพาะที่ความหมายตรง · `BEHAVIOR_MAP` + `NEXTPROBLEM_TOPIC`)
+
+| ของเรา | → name / topic / format |
+|---|---|
+| `landing_view` | view / business_validation / interactive |
+| `landing_cta_click` · `quickcheck_signup_click` · `quickcheck_submitted` | action / business_validation / interactive |
+| `quickcheck_started` | engaged / business_validation / interactive |
+| `nextproblem_click` id=`customers` | action / **first_customer** / interactive |
+| `nextproblem_click` id=`found` | action / **content_marketing** / interactive |
+| `nextproblem_click` id=`system` | action / **business_systems** / interactive |
+
+🔴 **ไม่แมป 4 หัวข้อ พร้อมเหตุผทุกข้อ** (`NEXTPROBLEM_UNMAPPED`): `capital` · `team` · `plan` · `risk`
+⇒ อีก ~173 event ที่เหลือก็ไม่ส่ง · เทสต์บังคับว่าทุกหัวข้อใน `nextProblems` ต้องอยู่กองใดกองหนึ่ง **ห้ามเงียบ**
 
 ## ผลที่ตามมา
 
@@ -108,8 +136,53 @@ rate limit ต่อ IP ต่อนาที (HMAC ไม่เก็บ IP) ·
 | เดา topic/format ให้ครบทุก event | สร้างข้อมูลที่ดูเหมือนจริง — ผิดกฎสูงสุดตรง ๆ |
 | ส่งโดยไม่เช็ค consent (ใส่ค่าคงที่ไปเลย) | ค่านั้นเป็น**คำประกาศ**ว่าผู้ใช้ยินยอม · ส่งทั้งที่ไม่ได้ยินยอม = โกหก + ผิด PDPA |
 
-## กลไก (ตอนลงมือ)
+## 🔧 แก้ฝั่งเขาแล้ว 20 พ.ย. 2569 (เจ้าของสั่ง "แก้ได้เลย") — additive เท่านั้น
 
-ด่าน `ownershipBoundary.test.ts` ต้องขยายให้รู้จักปลายทางที่สอง (ยังคงกฎ "ไฟล์เดียวที่รู้ปลายทาง") ·
-เทสต์ต้องบังคับว่า `cefToBehavior()` คืน `null` สำหรับ event ที่แมปไม่ได้ และ
-**ห้ามส่งเมื่อไม่มี consent** (mutation: ถอดเงื่อนไข consent ⇒ ต้องแดง)
+🔴 **ข้อบกพร่องที่เจอในโมเดลของเขาเอง ไม่ใช่ความเห็นเรา**
+`marketing_message_pillars` ประกาศ **7 เสา** พร้อม `problem`/`promise` ของแต่ละเสา
+แต่ `marketing_behavior_events.topic` มี CHECK แค่ **4 ค่า**
+
+| pillar | topic เดิม |
+|---|---|
+| `validate` · `first-customer` · `marketing` · `systemize` | ✅ มีช่อง |
+| `start` · `side-income` · `money` | 🔴 **วัดไม่ได้เลย** ทั้งที่เป็นกลยุทธ์ของระบบนี้ |
+
+และ `money` ("ขายได้แต่ไม่เห็นกำไรจริง · เข้าใจราคา ต้นทุน กำไร และจุดคุ้มทุน") **ตรงกับ
+เครื่องคำนวณของ CEO AI เป๊ะ** ⇒ ข้อมูลจริงถูกบังคับลง `business_validation` ซึ่งผิดความหมาย
+
+**สิ่งที่แก้ (2 อย่าง · ไม่แตะแถวเดิม ไม่แตะ trigger/rpc/RLS)**
+
+1. migration `widen_behavior_topic_to_all_message_pillars` — ขยาย CHECK 4 → 7
+   ชื่อค่าที่เพิ่ม = `code` ของ pillar เขาตรง ๆ (`start` · `side_income` · `money`)
+   🔑 **ไม่ตั้งชื่อใหม่เอง** เพราะการตั้งชื่อ taxonomy ของคนอื่นคือการตัดสินใจเชิงกลยุทธ์
+   + `comment on column` ชี้ว่าแหล่งความจริงคือ `marketing_message_pillars.code`
+2. edge function `marketing-behavior-ingest` **v3 → v4** — แก้ `z.enum` ของ `topic` ใน
+   `contract.ts` เท่านั้น · `index.ts` เหมือนเดิมทุกบรรทัด · `verify_jwt` ยังเป็น `true`
+   (อ่านกลับมา diff แล้ว — ต่างกันบรรทัดเดียว)
+
+**สถาปัตยกรรมฝั่งเขาที่ตรวจแล้วและ "ไม่ต้องแก้"**
+`ingest → rpc receive_marketing_behavior → marketing_behavior_batches`
+`→ trigger expand_marketing_behavior → marketing_behavior_events` ⇒ ครบวงจรอยู่แล้ว
+(rpc กั้น `workspaces.slug='ceo-ai-thailand'` · rate limit global 10,000/วัน + 60/คีย์ · เก็บสำเนาลง private bucket)
+
+🟡 **ที่ยังพิสูจน์ไม่ได้ในเซสชันนี้**
+- **UI ของ OS จัดการ topic ค่าใหม่ยังไง** — โค้ดอยู่ที่ `D:\CEOAITHAILAND Marketing-P1.0.2-baseline`
+  ซึ่งเซสชันคลาวด์เข้าไม่ถึง ⇒ ถ้า UI มี switch 4 ทาง ค่าใหม่อาจแสดงเป็น "ไม่รู้จัก"
+  (ไม่ควรพัง เพราะเป็นการ**เพิ่ม**ค่า ไม่ได้เปลี่ยนหรือลบ — แต่ผม **ยังไม่ได้เห็นโค้ดนั้น**)
+- **ยิงทดสอบจริง** — ตัวจัดการสิทธิ์ของเซสชันปฏิเสธการ POST ไป endpoint ของอีกระบบจากเชลล์
+  ⇒ หลักฐานจริงจะมาจาก batch แรกที่เว็บ production ยิง (mode `test`)
+
+**ย้อนกลับ**: `drop constraint` แล้วสร้างใหม่ด้วย ARRAY 4 ค่าเดิม + deploy function v3
+(ทำได้ตราบที่ยังไม่มีแถวที่ใช้ค่าใหม่)
+
+## กลไก
+
+`src/lib/__tests__/behaviorOs.test.ts` (38 เทสต์) + `ownershipBoundary.test.ts` (18)
+
+- ปลายทางแต่ละตัวมี **ไฟล์เจ้าของไฟล์เดียว** · รหัส project ของเขาโผล่ได้แค่ 2 ไฟล์ที่มีเหตุผล
+  (`behaviorOs` และ `brandSync` ตามข้อยกเว้นอ่านอย่างเดียว 15 พ.ย.)
+- ห้ามมี `service_role` ในโค้ดฝั่งเบราว์เซอร์ทั้งรีโป
+- ยืนยันแดงจริง 6 ท่า: ยอมรับ `necessary` เป็นการยินยอม · เดาหมวดให้ event ที่แมปไม่ได้ ·
+  ถอดด่าน consent · **เรียก consent แต่ไม่ใช้ผล** · ไม่จับคีย์เกิน · เปลี่ยนเป็น `live`
+- ⚠️ เทสต์ consent เวอร์ชันแรกของผม **ผ่านฟรี** เพราะหา `analyticsOptIn(` แล้วไปเจอตัวนิยาม
+  ฟังก์ชันในไฟล์เดียวกัน ⇒ แก้เป็นจับ **รูปประโยคของด่าน** `if (!analyticsOptIn(` (ledger #95)

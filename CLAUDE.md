@@ -67,19 +67,25 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 POST https://bjozpwdtqbpwcxnqguka.supabase.co/functions/v1/marketing-behavior-ingest
 verify_jwt=true (ต้องมี anon key ของ project เขา) · origin allowlist = ceoaithailand.org + www เท่านั้น
 batch 1–20 event · เพดาน 16KB · strict schema (คีย์เกิน = ปฏิเสธ)
-name: view|engaged|action · topic: business_validation|first_customer|content_marketing|business_systems
+name: view|engaged|action · topic: 7 ค่า = code ของ marketing_message_pillars (ขยายจาก 4 → 7 · 20 พ.ย. 69)
+  business_validation|first_customer|content_marketing|business_systems|start|side_income|money
 format: article|short_video|checklist|interactive · source: website|saas · mode: live|test
 ```
 🟢 **ฝั่งเขาทำงานได้แล้ว ไม่ต้องแก้**: `marketing_behavior_batches` มี batch `mode:"test"` ที่ยิงเข้าสำเร็จ
    14 พ.ย. 2569 และ `archived_at` ถูกเซ็ต ⇒ ครบวงจรถึงขั้นเก็บคลัง · ที่ขาดคือ **ฝั่งเราไม่เคยยิง**
 🔴 **`consent: 'analytics_opt_in'` เป็นค่าคงที่บังคับในสคีมา** ⇒ ห้ามส่งถ้าผู้ใช้ไม่ได้ยินยอมจริง
    (ค่านั้นเป็นคำประกาศแทนผู้ใช้ · ส่งทั้งที่ไม่ยินยอม = โกหก + ผิด PDPA)
-🔴 **taxonomy เขาแคบมาก** (3×4×4) · event เรา 179 ชื่อ ⇒ แมปได้ไม่กี่ตัว · **ที่แมปไม่ได้ ห้ามเดาให้ลงช่อง**
+🔴 **taxonomy เขาแคบ** (3×7×4) · event เรา 179 ชื่อ ⇒ แมปได้ 10 ทาง · **ที่แมปไม่ได้ ห้ามเดาให้ลงช่อง**
+🔧 **แก้ฝั่งเขาแล้ว** (เจ้าของสั่ง 20 พ.ย. 69): ขยาย CHECK `topic` 4 → 7 + function v4 (เฉพาะ z.enum)
+   เพราะเสา `start`/`side-income`/`money` ของเขาเอง **วัดไม่ได้** และ `money` ตรงกับเครื่องคำนวณเราเป๊ะ
+   🟡 ยังไม่เห็นโค้ด UI ของเขา ⇒ ไม่ยืนยันได้ว่า UI แสดงค่าใหม่อย่างไร (เป็นการเพิ่มค่า ไม่ควรพัง)
 🧪 `mode:'test'` = ทางพิสูจน์โดยไม่ปนข้อมูลจริง · และเพราะ localhost ไม่อยู่ใน allowlist
    ⇒ **ทดสอบจากเครื่องไม่ได้ ต้องทดสอบบน production ด้วย `test`**
 ⚠️ workspace id คนละตัว: `marketing-track` = `98911455-…` · `behavior-ingest` = `e82e7d93-…`
-🔑 ต้องมี `VITE_MARKETING_OS_URL` + `VITE_MARKETING_OS_ANON_KEY` (publishable = public โดยดีไซน์)
-   ใน GitHub Secrets **และ** ใน build step ของ `cloudflare-deploy.yml` — ขาดที่ใดที่หนึ่ง = เงียบสนิท (ledger #18)
+🔑 ต้องมี `VITE_MARKETING_OS_URL` (vars) + `VITE_MARKETING_OS_ANON_KEY` (secret) — build step ต่อให้แล้ว
+   🔴 **ห้ามฝังคีย์ลงรีโปเด็ดขาด** — ผมเคยฝัง JWT แล้ว GitGuardian จับได้ (ledger #96)
+   ของเราในรีโปเป็นรูป `sb_publishable_…` **ไม่ใช่ JWT** ⇒ อย่าอ้างมันเป็นแบบอย่างของการฝัง JWT
+   กลไก: `ownershipBoundary.test.ts` ห้าม JWT ฝังในโค้ดทั้งรีโป · `envContract.test.ts` เฝ้า workflow
 
 🚰 **สายท่อข้อมูลออก — รูปแบบกลาง → แปลง → ห่อ → เก็บ → ส่ง** (20 พ.ย. 2569 · ADR-0003/0004/0005/0008)
 ```
