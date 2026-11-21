@@ -111,6 +111,32 @@ describe('🔴 เอกสารกับโค้ดต้องไม่ค�
     expect(stale, `ไฟล์ที่ยังบอกสถานะเก่า: ${stale.join(', ')}`).toEqual([]);
   });
 
+  /* 🔴 21 พ.ย. 2569 — ด่านเฝ้าเดิมครอบแค่ "Gate B" ชื่อเดียว (เขียนตอนที่ Gate B เป็นด่านเดียวที่เพิ่งปิด)
+   *    พอ `Phase 1 Acceptance #2` ปิดบ้าง มันจับประโยคค้างในเอกสารไม่ได้เลยสักไฟล์
+   *    ⇒ ทำให้ทั่วไปจาก `GATE_CHAIN` เอง: **ด่านไหนก็ตามที่ปิดแล้ว ห้ามมีไฟล์ไหนบอกว่ายังไม่ผ่าน**
+   *    ⇒ ครั้งหน้ามีด่านปิดเพิ่ม ตัวตรวจขยายตัวเอง ไม่ต้องมีใครจำ */
+  const NOT_PASSED = ['ยังไม่' + 'ผ่าน', 'ยังไม่' + 'ปิด', '= `' + 'open`'];
+  /* ⚠️ ยกเว้น ledger ไฟล์เดียว และบอกเหตุผลไว้ตรงนี้: มันเป็น **บันทึกอดีต** (append-only)
+   *    ประโยค "ตอนนั้นยังไม่ผ่าน" คือเนื้อหาที่ถูกต้องของมัน — แก้ = ลบประวัติ (หลักเดียวกับ ADR)
+   *    🔴 ไม่ได้ยกเว้น "ตัวเทสต์เอง" (นั่นคือช่องโหว่ถาวร) — regex ยังประกอบจากชิ้นส่วนเหมือนเดิม */
+  const HISTORY_ONLY = ['docs/LESSONS-LEDGER.md'];
+
+  it('🔴 ด่านที่ปิดแล้วทุกด่าน ห้ามมีไฟล์ไหนยังบอกว่ายังไม่ผ่าน', () => {
+    const closed = GATE_CHAIN.filter((g) => g.status === 'closed');
+    expect(closed.length, 'ไม่มีด่านปิดเลย = เทสต์นี้ไม่ได้ตรวจอะไร').toBeGreaterThan(0);
+    const bad: string[] = [];
+    for (const f of files) {
+      const rel = f.slice(ROOT.length + 1);
+      if (HISTORY_ONLY.includes(rel) || rel.includes('releaseGates')) continue;
+      const src = readFileSync(f, 'utf8');
+      for (const g of closed) {
+        const re = new RegExp(g.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[^\\n]{0,40}(' + NOT_PASSED.join('|') + ')');
+        if (re.test(src)) bad.push(`${rel} (${g.name})`);
+      }
+    }
+    expect(bad, `ยังค้างสถานะเก่า: ${bad.join(', ')}`).toEqual([]);
+  });
+
   it('ทุกไฟล์ที่พูดถึง Gate B ต้องชี้มาที่แหล่งเดียว (releaseGates)', () => {
     const orphan = files.filter((f) => {
       const rel = f.slice(ROOT.length + 1);
