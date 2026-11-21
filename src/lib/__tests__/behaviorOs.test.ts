@@ -241,8 +241,10 @@ describe('🚢 ถูกเรียกใช้จริง + ขอบเข�
     expect(gi).toBeLessThan(b.indexOf('fetch('));
   });
 
-  it('เริ่มที่ mode test — ห้ามขึ้น live ก่อนเห็นแถวจริง', () => {
-    expect(code(read('src/config.ts'))).toMatch(/behaviorMode:\s*'test'/);
+  it("mode = 'live' — เปลี่ยนได้เพราะเห็นแถวจริงแล้ว (21 พ.ย. 69 · 4 event เข้าฐานเขา)", () => {
+    // ล็อกสองทาง: กันถอยกลับไป 'test' โดยไม่ตั้งใจ และกันเปลี่ยนค่าโดยไม่แก้เทสต์
+    // ถ้าจะกลับเป็น 'test' (เช่น ปลายทางมีปัญหา) ต้องแก้บรรทัดนี้ด้วย = ตั้งใจ ไม่ใช่เผลอ
+    expect(code(read('src/config.ts'))).toMatch(/behaviorMode:\s*'live'/);
   });
 
   it('kill switch ต้องมีและถูกเช็ก', () => {
