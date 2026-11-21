@@ -131,7 +131,7 @@ description: ใช้เมื่อจะแตะระบบถาม-ตอ
 | ด่าน | สถานะวันนี้ (ตรวจสด 20 พ.ย. 2569) | แปลว่า |
 |---|---|---|
 | `egressGuard.ALLOWED_HOSTS` | **2 โฮสต์เท่านั้น**: `google.serper.dev` · `api.anthropic.com` | เรียก OpenAI embeddings / Pinecone / MongoDB Atlas จาก Edge Function **ถูกบล็อกโดยกลไกของเราเอง** ⇒ ต้องขออนุมัติเพิ่ม allowlist (เป็นการตัดสินใจเรื่องความปลอดภัย = งานเจ้าของ) |
-| `releaseGates.schemaChangeAllowed()` | `Phase 1 Acceptance #2` = `status: 'open'` (**รู้ว่ายังไม่ผ่าน** ไม่ใช่ `'unknown'` ⇒ ทางออกคือทำ ไม่ใช่ถาม) | เพิ่มตาราง/เปิด pgvector = **แตะ schema ⇒ ยังกั้นอยู่** |
+| `releaseGates.schemaChangeAllowed()` | `Phase 1 Acceptance #2` = `status: 'closed'` (21 พ.ย. 69) · ที่กั้นอยู่คือ `Freeze Phase 1 baseline` = `open` (**รู้ว่ายังไม่ผ่าน** ไม่ใช่ `'unknown'` ⇒ ทางออกคือทำ ไม่ใช่ถาม) | เพิ่มตาราง/เปิด pgvector = **แตะ schema ⇒ ยังกั้นอยู่** |
 | PDPA | ข้อมูลผู้ใช้ห้ามไหลออกนอกโดยไม่มีฐานทางกฎหมาย | ส่งเนื้อหาผู้ใช้ไปทำ embedding ที่ผู้ให้บริการที่สาม = การเปิดเผยข้อมูล ไม่ใช่แค่เรื่องเทคนิค |
 
 ⇒ **ลำดับที่ถูกคือ**: ปิดข้อ ④ ก่อน → ให้ผู้ใช้อัปโหลดเอกสารได้ → *แล้วถึงมีเหตุผลให้คุยเรื่องเวกเตอร์*

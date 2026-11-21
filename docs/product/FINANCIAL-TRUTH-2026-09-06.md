@@ -84,7 +84,7 @@ paid_at · first_login_at · first_job_completed_at · last_active_at · core_pa
 ```
 
 ⇒ ต้องเพิ่มคอลัมน์ = **แตะ schema** = `releaseGates.schemaChangeAllowed()` ยังกั้นอยู่
-(`Phase 1 Acceptance #2` = `open`)
+(21 พ.ย. 69: `Phase 1 Acceptance #2` = `closed` · ที่กั้นอยู่คือ `Freeze Phase 1 baseline` — อ่านสถานะจริงจาก `releaseGates`)
 
 ⚠️ **ผลที่ตามมาโดยตรง**: `Gate 1` (Activation เกิดจริง) และ `Gate 2` (First Value)
 **ผ่านไม่ได้เลยจนกว่าจะบันทึกเวลาพวกนี้ได้** — ไม่ใช่เพราะลูกค้าไม่ activate

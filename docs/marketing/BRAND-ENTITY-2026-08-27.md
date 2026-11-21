@@ -49,7 +49,7 @@
 
 | งาน | ทำไม่ได้เพราะ | ปลดล็อกเมื่อ |
 |---|---|---|
-| **Supabase staging** สำหรับเก็บ Brand Visibility | ด่านปล่อยของยังกั้น (`Phase 1 Acceptance #2` = ยังไม่ผ่าน) | เจ้าของปิดด่าน |
+| **Supabase staging** สำหรับเก็บ Brand Visibility | ด่านปล่อยของยังกั้น (21 พ.ย. 69: ติด `Freeze Phase 1 baseline` · `Acceptance #2` ปิดแล้ว) | ปิดด่านที่เหลือ — ดู `releaseGates` |
 | **โมดูลใน Marketing OS Dashboard** | 🔴 **Marketing OS เป็นของอีกระบบ** (เจ้าของตัดสิน 24 ส.ค.) — สร้างที่นี่ = มีสองระบบทำเรื่องเดียวกัน | ตัดสินใจใหม่ว่าใครเป็นเจ้าของ |
 | อ่านอันดับ/impression/CTR จาก **Search Console** | ผู้ช่วยไม่มีสิทธิ์เข้า GSC | เจ้าของส่งข้อมูลออกมา |
 | ตรวจ SERP จริง | proxy บล็อก `ceoaithailand.org` (403) | — |
@@ -155,7 +155,7 @@
 
 | อยากได้ | ทำไมยังไม่ได้ |
 |---|---|
-| เก็บค่าลง Supabase (staging table) แทน localStorage | 🔴 ด่านปล่อยของ `Phase 1 Acceptance #2` = `open` ⇒ `schemaChangeAllowed()` ยังกั้น migration |
+| เก็บค่าลง Supabase (staging table) แทน localStorage | 🔴 `schemaChangeAllowed()` ยังกั้น migration — 21 พ.ย. 69 ติดด่าน `Freeze Phase 1 baseline` (`Acceptance #2` ปิดแล้ว) · สถานะจริงอ่านจาก `releaseGates` |
 | ดึงจาก GSC / Facebook / YouTube อัตโนมัติ | 🔴 ผู้ช่วยไม่มีสิทธิ์เข้าทั้งสามระบบ · ต้องเป็นค่าที่เจ้าของกรอก จนกว่าจะต่อ connector ได้ |
 | ขึ้นเป็นการ์ดใน Marketing OS Dashboard | 🔴 Marketing OS เป็นของอีกระบบ (เส้นแบ่งความเป็นเจ้าของ 24 ส.ค.) — รีโปนี้ทำได้แค่ **สมองที่ตัดสิน** ไม่ใช่หน้าปัดของอีกระบบ |
 
