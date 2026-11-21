@@ -79,8 +79,16 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
 🔧 **แก้ฝั่งเขาแล้ว** (เจ้าของสั่ง 20 พ.ย. 69): ขยาย CHECK `topic` 4 → 7 + function v4 (เฉพาะ z.enum)
    เพราะเสา `start`/`side-income`/`money` ของเขาเอง **วัดไม่ได้** และ `money` ตรงกับเครื่องคำนวณเราเป๊ะ
    🟡 ยังไม่เห็นโค้ด UI ของเขา ⇒ ไม่ยืนยันได้ว่า UI แสดงค่าใหม่อย่างไร (เป็นการเพิ่มค่า ไม่ควรพัง)
+🟢 **ฝั่งเราต่อถึงแล้วจริง — วัดแถวในฐานของเขา 21 พ.ย. 2569** (`behaviorMode: 'live'` ตั้งแต่วันนั้น)
+   ค่าตั้งต้นก่อนทดสอบ `marketing_behavior_events` = **1** (ของเขาเอง 14 พ.ย.) → หลังทดสอบ = **5**
+   ⇒ ของเรา **4 event จาก session เดียว** `405a828b`: `view/start` → `engaged/money`
+     → `action/money` ×2 · `source=website` · **ตรงตารางแมปทุกบรรทัด**
+   🔴 ถ้าไม่ได้ขยาย CHECK `topic` เป็น 7 ค่าเมื่อเช้าวันเดียวกัน **3 แถวที่เป็น `money` จะถูกปฏิเสธทั้งหมด**
+   ⚠️ 4 event มาใน **3 batch** (1·1·2) ⇒ การรวมก้อนแทบไม่ได้รวม (flush ตาม `pagehide`)
+      ยังไม่เป็นปัญหาเพราะคนน้อย · คนเยอะเมื่อไรจะกิน rate limit ของเขา (60/คีย์/นาที) เร็วเกินควร
 🧪 `mode:'test'` = ทางพิสูจน์โดยไม่ปนข้อมูลจริง · และเพราะ localhost ไม่อยู่ใน allowlist
    ⇒ **ทดสอบจากเครื่องไม่ได้ ต้องทดสอบบน production ด้วย `test`**
+   🔒 เทสต์ล็อกค่า `behaviorMode` **สองทาง** — จะกลับไป `'test'` ก็ต้องแก้เทสต์ = ตั้งใจ ไม่ใช่เผลอ
 ⚠️ workspace id คนละตัว: `marketing-track` = `98911455-…` · `behavior-ingest` = `e82e7d93-…`
 🔑 ต้องมี `VITE_MARKETING_OS_URL` (vars) + `VITE_MARKETING_OS_ANON_KEY` (secret) — build step ต่อให้แล้ว
    🔴 **ห้ามฝังคีย์ลงรีโปเด็ดขาด** — ผมเคยฝัง JWT แล้ว GitGuardian จับได้ (ledger #96)

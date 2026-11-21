@@ -135,9 +135,11 @@ export const MARKETING_OS = {
   live: true,
   /** ปลายทางที่สอง = ฐานของ Marketing OS จริง (`behaviorOs.ts` · ADR-0009) */
   behaviorLive: true,
-  /** 🧪 เริ่มที่ 'test' โดยเจตนา — localhost ยิงไม่ได้ (allowlist) ⇒ พิสูจน์ได้แต่บน production
-   *  เห็นแถวเข้าฐานเขาแล้วค่อยเปลี่ยนเป็น 'live' · ห้ามเปลี่ยนก่อนเห็นแถว */
-  behaviorMode: 'test' as 'live' | 'test',
+  /** 🟢 'live' ตั้งแต่ 21 พ.ย. 2569 — เปลี่ยนหลังเห็นแถวจริงในฐานของเขา ไม่ใช่หลังอ่านโค้ด
+   *  หลักฐาน: marketing_behavior_events 1 → 5 แถว (ของเรา 4) จาก session เดียว 405a828b
+   *  view/start → engaged/money → action/money ×2 · ตรงตารางแมปทุกบรรทัด
+   *  ก่อนหน้านี้เป็น 'test' เพราะ allowlist ไม่มี localhost ⇒ พิสูจน์ได้แต่บน production */
+  behaviorMode: 'live' as 'live' | 'test',
 } as const;
 
 export const SOCIAL = {
