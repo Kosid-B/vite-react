@@ -112,7 +112,7 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
 🔴 **ขา pull ยังไม่มี** — OS เห็น event ที่เราส่ง แต่ **อ่านภาพรวมของเราไม่ได้** (ADR-0006 `blocked`)
    feed สาธารณะต้องมี rpc ที่ anon เรียกได้ = migration ⇒ ติด `schemaChangeAllowed()` (Acceptance #2 ยังไม่ผ่าน)
    ⇒ **ห้ามบอกว่า "เชื่อมสองระบบครบแล้ว"** · ครบครึ่งเดียว
-กลไก: `osPipeline.test.ts` (26) · `osOutbox.test.ts` (18) · `marketingOs.test.ts` (32) · `ownershipBoundary.test.ts` (46)
+กลไก: `osPipeline.test.ts` (26) · `osOutbox.test.ts` (18) · `marketingOs.test.ts` (32) · `ownershipBoundary.test.ts` (19)
 
 📐 **บันทึกการตัดสินใจทางสถาปัตยกรรม — [docs/adr/](docs/adr/README.md)** (เจ้าของสั่ง 20 พ.ย. 2569)
 เส้นแบ่ง: **CLAUDE.md = กฎที่ต้องทำวันนี้** · **ledger = เคยพลาดอะไร→กลไกอะไร** · **ADR = ทำไมเลือกทางนี้ ไม่เลือกทางอื่น**
