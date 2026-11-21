@@ -6,6 +6,7 @@ import {
   markSectionEnter, markSectionExit, closeOpenSections, settleOpenSections,
 } from '../lib/landingFunnel';
 import { sendOsEvent } from '../lib/marketingOs';
+import { sendBehaviorAuto } from '../lib/behaviorOs';
 
 /* ===== useLandingTrace — วัดความลึกของความสนใจบน Landing (PDPA-safe) =====
  * ส่ง 2 ทาง (anonymous · ไม่เก็บ PII · ไม่บันทึก cursor path):
@@ -36,6 +37,7 @@ export function useLandingTrace(
     // Marketing OS: "มีคนเข้าหน้า Landing" — event ขั้น exposure ตัวแรกที่ OS นิยามไว้
     // once=true เพราะหน้าโหลดครั้งเดียวต่อ session (StrictMode รัน effect สองรอบ)
     sendOsEvent('landing_view', { seg }, true);
+    sendBehaviorAuto('landing_view', { seg });   // sink ที่ 4 (ฐานของ OS จริง · ADR-0009)
 
     let maxPct = 0;
     /** จบแล้วจริง ๆ (ปิดหน้า / unmount) — ต่างจาก "สลับแอปชั่วคราว" ซึ่งกลับมาได้ */

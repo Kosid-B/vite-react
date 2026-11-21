@@ -43,6 +43,6 @@
 | [0006](0006-data-cdn-feed.md) | CDN ข้อมูล (feed รวมที่แคชที่ขอบ) | `blocked` |
 | [0007](0007-server-side-business-events.md) | event ฝั่งธุรกิจ 7 ตัวต้องยิงจากเซิร์ฟเวอร์ | `proposed` |
 | [0008](0008-common-event-format.md) | CEF — รูปแบบ event กลางหนึ่งเดียว แล้วแปลงออกทีละปลายทาง | `accepted` |
-| [0009](0009-marketing-os-behavior-ingest.md) | ป้อน Marketing OS ผ่าน `marketing-behavior-ingest` (ประตูจริงของเขา) | `proposed` |
+| [0009](0009-marketing-os-behavior-ingest.md) | ป้อน Marketing OS ผ่าน `marketing-behavior-ingest` (ประตูจริงของเขา) | `accepted` |
 
 กลไกบังคับรูปแบบ: `src/lib/__tests__/adr.test.ts`

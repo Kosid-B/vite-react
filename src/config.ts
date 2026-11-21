@@ -133,6 +133,11 @@ export const TOKENS = {
  * เหตุผลที่ต้องมี: health score ของ OS = 0 และ config ของมันบล็อกคำแนะนำกลยุทธ์เองที่ score < 70 */
 export const MARKETING_OS = {
   live: true,
+  /** ปลายทางที่สอง = ฐานของ Marketing OS จริง (`behaviorOs.ts` · ADR-0009) */
+  behaviorLive: true,
+  /** 🧪 เริ่มที่ 'test' โดยเจตนา — localhost ยิงไม่ได้ (allowlist) ⇒ พิสูจน์ได้แต่บน production
+   *  เห็นแถวเข้าฐานเขาแล้วค่อยเปลี่ยนเป็น 'live' · ห้ามเปลี่ยนก่อนเห็นแถว */
+  behaviorMode: 'test' as 'live' | 'test',
 } as const;
 
 export const SOCIAL = {

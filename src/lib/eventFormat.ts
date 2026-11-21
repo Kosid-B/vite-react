@@ -153,3 +153,103 @@ export function cefToOs(r: CefRecord): OsEventPayload | null {
     props: r.props,
   });
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * ปลายทางที่สอง — Marketing OS จริง (`marketing-behavior-ingest` · ADR-0009)
+ *
+ * 🔴 taxonomy ของเขาแคบมาก: name 3 × topic 4 × format 4
+ *    event ของเรา 179 ชื่อ ⇒ แมปได้ไม่กี่ตัว · **ที่แมปไม่ได้ ห้ามเดาให้ลงช่อง**
+ *    (ยัดลง business_validation เพราะไม่รู้จะใส่อะไร = สร้างข้อมูลที่ดูเหมือนจริง)
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+export const BEHAVIOR_NAMES = ['view', 'engaged', 'action'] as const;
+/** 🔑 ตรงกับ CHECK `marketing_behavior_events_topic_check` ของเขา และกับ
+ *  `marketing_message_pillars.code` ทั้ง 7 เสา (hyphen → underscore)
+ *  ⚠️ เดิมมี 4 ค่า ⇒ เสา start/side-income/money ของเขาเอง **วัดไม่ได้**
+ *     ขยายเป็น 7 เมื่อ 20 พ.ย. 2569 (migration + function v4 ฝั่งเขา · ADR-0009) */
+export const BEHAVIOR_TOPICS = [
+  'business_validation', 'first_customer', 'content_marketing', 'business_systems',
+  'start', 'side_income', 'money',
+] as const;
+export const BEHAVIOR_FORMATS = ['article', 'short_video', 'checklist', 'interactive'] as const;
+
+export type BehaviorName = (typeof BEHAVIOR_NAMES)[number];
+export type BehaviorTopic = (typeof BEHAVIOR_TOPICS)[number];
+export type BehaviorFormat = (typeof BEHAVIOR_FORMATS)[number];
+
+export interface BehaviorEvent {
+  id: string;
+  session: string;
+  at: string;
+  source: 'website' | 'saas';
+  name: BehaviorName;
+  topic: BehaviorTopic;
+  format: BehaviorFormat;
+}
+
+interface BehaviorShape { name: BehaviorName; topic: BehaviorTopic; format: BehaviorFormat }
+
+/** event ของเรา → ช่องของเขา · **เฉพาะที่ความหมายตรงกันจริง**
+ *  🔑 แหล่งความจริงของ `topic` = `marketing_message_pillars.code` ของเขา (7 เสา)
+ *     เทียบทีละคู่จาก `problem`/`promise` ที่เขาเขียนไว้เอง ไม่ใช่เดาจากชื่อ:
+ *       pillar `money` — "ขายได้แต่ไม่เห็นกำไรจริง · เข้าใจราคา ต้นทุน กำไร และจุดคุ้มทุน"
+ *         ⇒ ตรงกับเครื่องคำนวณของเราเป๊ะ (`quickcheck_*`)
+ *       pillar `start` — "อยากมีธุรกิจแต่ไม่รู้เริ่มตรงไหน"
+ *         ⇒ ตรงกับพาดหัว default ของหน้า Landing ("อยากมีธุรกิจ แต่ไม่รู้จะเริ่มจากอะไร")
+ *  ⚠️ เดิมทุกตัวถูกบังคับลง `business_validation` เพราะ CHECK ของเขามีแค่ 4 ค่า
+ *     ⇒ ขยายเป็น 7 แล้ว (migration + function v4 ฝั่งเขา 20 พ.ย. 2569 · ADR-0009) */
+export const BEHAVIOR_MAP: Readonly<Record<string, BehaviorShape>> = Object.freeze({
+  landing_view:            { name: 'view',    topic: 'start', format: 'interactive' },
+  landing_cta_click:       { name: 'action',  topic: 'start', format: 'interactive' },
+  quickcheck_started:      { name: 'engaged', topic: 'money', format: 'interactive' },
+  quickcheck_submitted:    { name: 'action',  topic: 'money', format: 'interactive' },
+  quickcheck_signup_click: { name: 'action',  topic: 'money', format: 'interactive' },
+});
+
+/** `nextproblem_click` พา `id` ของหัวข้อมาด้วย ⇒ แมป topic ตามหัวข้อที่เขากดจริง
+ *  เทียบข้อความ `ask`/`gives` ของเรา กับ `problem`/`promise` ของเสาเขา: */
+export const NEXTPROBLEM_TOPIC: Readonly<Record<string, BehaviorTopic>> = Object.freeze({
+  // "จะหาลูกค้าเพิ่มจากไหน" ↔ pillar first-customer "ยังไม่มีลูกค้าจริง"
+  customers: 'first_customer',
+  // "คนค้นหาของแบบที่คุณขาย เจอร้านคุณไหม" ↔ pillar marketing
+  found: 'content_marketing',
+  // "ถ้าคุณหยุดสักอาทิตย์ ร้านยังเดินต่อได้ไหม" ↔ pillar systemize "พึ่งเจ้าของมากเกินไป"
+  system: 'business_systems',
+  // "ไม่อยากเสี่ยงลงเงินก้อนก่อนรู้ว่าจะขายได้ไหม · ทดสอบไอเดียกับคนจริงก่อนผลิต"
+  //   ↔ pillar validate "ไม่รู้ว่าจะมีใครซื้อ · ตรวจลูกค้าและสมมติฐานก่อนขยาย" (ตรงเป๊ะ)
+  capital: 'business_validation',
+  // "งานหลังร้านกินเวลา" ↔ pillar systemize "เปลี่ยนงานซ้ำให้เป็น process, KPI และระบบ"
+  team: 'business_systems',
+});
+
+/** หัวข้อที่ **ไม่แมปโดยเจตนา** พร้อมเหตุผล — ห้ามปล่อยว่างให้คนเดา */
+export const NEXTPROBLEM_UNMAPPED: Readonly<Record<string, string>> = Object.freeze({
+  plan: 'เสา start คือ "ยังไม่เริ่ม" แต่ `plan` ของเราคือคนที่โตแล้วอยากรู้ก้าวถัดไป ⇒ คนละคน',
+  risk: 'ความเปราะของซัพพลายเชน/ของขึ้นราคา — ไม่มีเสาไหนใน 7 เสาของเขาพูดถึงเรื่องนี้',
+});
+
+/** topic ของเขาที่เรา **ยังไม่ส่ง** พร้อมเหตุผล (เขามีช่องแล้ว แต่เรายังไม่มีสัญญาณที่ตรง) */
+export const BEHAVIOR_TOPIC_UNUSED: Readonly<Record<string, string>> = Object.freeze({
+  side_income: 'เป็นคุณสมบัติของ **คน** (seg=sidebiz) ไม่ใช่ของ **เหตุการณ์** · สคีมา behavior ของเขาไม่มีช่อง seg ⇒ ส่งไม่ได้โดยไม่บิดความหมาย',
+});
+
+/** CEF → event ของเขา · null = ไม่แมป (ไม่ส่ง)
+ *  @param newId ตัวสร้าง uuid (ฉีดเข้ามาเพื่อให้เทสต์กำหนดค่าได้) */
+export function cefToBehavior(r: CefRecord, newId: () => string): BehaviorEvent | null {
+  if (cefIssues(r).length > 0) return null;
+
+  let shape: BehaviorShape | undefined = BEHAVIOR_MAP[r.name];
+  if (!shape && r.name === 'nextproblem_click') {
+    const topic = NEXTPROBLEM_TOPIC[String(r.props.id ?? '')];
+    if (topic) shape = { name: 'action', topic, format: 'interactive' };
+  }
+  if (!shape) return null;
+
+  return {
+    id: newId(),
+    session: r.session,
+    at: r.occurredAt,
+    source: r.source === 'server' ? 'saas' : 'website',
+    ...shape,
+  };
+}

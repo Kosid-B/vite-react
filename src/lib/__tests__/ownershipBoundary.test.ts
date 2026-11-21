@@ -170,12 +170,57 @@ describe('🧱 เส้นแบ่งฉบับ 20 พ.ย. 2569 — ส่�
     expect(files.some((f) => f.endsWith(ALLOWED_FILE))).toBe(true);
   });
 
-  it('🔴 มีไฟล์เดียวที่คุยกับ Marketing OS ได้ — ไฟล์อื่นห้ามเอ่ยถึงปลายทางเลย', () => {
+  /** ปลายทางของอีกระบบ → ไฟล์เดียวที่มีสิทธิ์รู้จักมัน
+   *  🔴 สองปลายทางคนละฐานข้อมูล (ledger #94): `marketing-track` ลงฐานเรา ·
+   *     `marketing-behavior-ingest` ลงฐานเขา ⇒ ห้ามปนไฟล์กัน ไม่งั้นอ่านไม่ออกว่าอะไรไปไหน */
+  const DESTINATIONS: ReadonlyArray<[RegExp, string]> = [
+    [/marketing-track|ingest_marketing_event/, ALLOWED_FILE],
+    [/marketing-behavior-ingest/, 'lib/behaviorOs.ts'],
+  ];
+
+  /** ไฟล์ที่มีสิทธิ์เอ่ยถึง **รหัส project ของเขา** — กว้างกว่า "ชื่อปลายทาง" เพราะ
+   *  `brandSync` ใช้รหัสนี้ตาม **ข้อยกเว้นอ่านอย่างเดียว 3 ตาราง** ที่เจ้าของอนุมัติ 15 พ.ย. 2569
+   *  🔴 รายการนี้ต้องสั้น และทุกชื่อในนี้ต้องมีเหตุผลที่เขียนไว้ที่อื่นแล้ว */
+  const MAY_NAME_THEIR_PROJECT = ['lib/behaviorOs.ts', 'lib/brandSync.ts'];
+
+  it.each(DESTINATIONS.map(([, owner]) => owner))('ไฟล์เจ้าของปลายทาง %s ต้องมีอยู่จริง', (owner) => {
+    expect(files.some((f) => f.endsWith(owner)), `ไม่เจอ ${owner}`).toBe(true);
+  });
+
+  it('🔴 ปลายทางแต่ละตัวมีไฟล์เจ้าของไฟล์เดียว — ไฟล์อื่นห้ามเอ่ยถึงเลย', () => {
+    const offenders: string[] = [];
+    for (const [re, owner] of DESTINATIONS) {
+      for (const f of files) {
+        if (f.endsWith(owner)) continue;
+        if (re.test(codeOf(f))) offenders.push(`${f.replace(SRC + '/', '')} (ปลายทางของ ${owner})`);
+      }
+    }
+    expect(offenders, `ไฟล์ที่ยิงไป OS เองนอกไฟล์เจ้าของ: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  it('🔴 รหัส project ของเขาโผล่ได้เฉพาะไฟล์ที่มีเหตุผลรองรับ', () => {
     const offenders = files
-      .filter((f) => !f.endsWith(ALLOWED_FILE))
-      .filter((f) => /marketing-track|ingest_marketing_event/.test(codeOf(f)))
+      .filter((f) => !MAY_NAME_THEIR_PROJECT.some((a) => f.endsWith(a)))
+      .filter((f) => /bjozpwdtqbpwcxnqguka/.test(codeOf(f)))
       .map((f) => f.replace(SRC + '/', ''));
-    expect(offenders, `ไฟล์ที่ยิงไป OS เองนอกสะพาน: ${offenders.join(', ')}`).toEqual([]);
+    expect(offenders, `เอ่ยถึง project ของเขานอกรายการ: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  /** 🔴 ledger #96 — ผมฝัง JWT (คีย์ anon ของอีกระบบ) ลงรีโปสาธารณะ โดยอ้างว่า
+   *  "คีย์ของเราก็อยู่ในรีโป" · **ผิด**: ของเราเป็นรูป `sb_publishable_…` ไม่ใช่ JWT
+   *  และรีโปนี้ไม่เคยมี JWT อยู่เลย ⇒ GitGuardian จับได้ ไม่ใช่ผม
+   *  ⇒ ด่านนี้ทำให้ความผิดแบบนั้นแดงที่เครื่องก่อนถึง GitHub */
+  it('🔴 ห้ามมี JWT ฝังในโค้ดทั้งรีโป — คีย์ต้องมาจาก env เท่านั้น', () => {
+    const offenders = files
+      .filter((f) => /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\./.test(readFileSync(f, 'utf8')))
+      .map((f) => f.replace(SRC + '/', ''));
+    expect(offenders, `มี JWT ฝังอยู่: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  it('🔴 ห้ามมี service_role key ในโค้ดฝั่งเบราว์เซอร์ (คีย์ที่ยกสิทธิ์ทั้งฐาน)', () => {
+    for (const f of files) {
+      expect(codeOf(f), `${f.replace(SRC + '/', '')} มี service role key`).not.toMatch(/service_role/);
+    }
   });
 
   it('🔴 ห้ามเรียก rpc ของเขาตรง ๆ จากรีโปนี้ (รวมชื่อที่ไม่ขึ้นต้นด้วย marketing_)', () => {

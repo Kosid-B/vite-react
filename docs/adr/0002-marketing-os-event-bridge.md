@@ -69,6 +69,6 @@ ADR นี้เขียนไว้ว่าการยิง `marketing-trac
 
 ## กลไก
 
-`src/lib/__tests__/marketingOs.test.ts` (32) + `ownershipBoundary.test.ts` (46)
+`src/lib/__tests__/marketingOs.test.ts` (32) + `ownershipBoundary.test.ts` (19)
 ด่านหลังจับ **ชื่อ rpc จริงของเขา (`ingest_marketing_event`)** ด้วย — regex เดิมจับแค่
 `rpc('marketing_…` ซึ่งเลี่ยงได้ฟรี · และด่านดู**โค้ดจริง** (ตัดคอมเมนต์) ⇒ เอกสารพูดถึงได้ เรียกใช้ไม่ได้
