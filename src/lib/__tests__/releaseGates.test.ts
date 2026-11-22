@@ -74,23 +74,41 @@ describe('การตัดสินว่าแตะ schema ได้ไห�
   });
 
   it('🔴 ติดแล้วต้องบอกว่าทำอะไรต่อ — ห้ามคืน "ทำไม่ได้" เปล่า ๆ', () => {
-    const v = schemaChangeAllowed();
-    expect(v.allowed, 'สถานะจริงตอนนี้ควรยังกั้นอยู่').toBe(false);
+    const v = schemaChangeAllowed([gate('closed', 'a'), gate('open', 'b')]);
+    expect(v.allowed).toBe(false);
     expect(v.nextAction.length).toBeGreaterThan(30);
     expect(v.nextAction).toMatch(/ถามเจ้าของ|ปิด/);
     // ต้องบอกด้วยว่าระหว่างรอ ทำอะไรได้ — ไม่ใช่หยุดทั้งโปรเจกต์
     expect(v.nextAction).toMatch(/ระหว่างรอ/);
   });
 
-  it('สถานะจริง: Gate B ปิดแล้ว แต่ด่านที่กั้นอยู่ต้องไม่ใช่ Gate B', () => {
-    expect(GATE_CHAIN[0].status).toBe('closed');
-    expect(schemaChangeAllowed().blockedBy?.key).not.toBe('gate-b');
+  /* 🔴 กฎนี้ยังอยู่และยังสำคัญ แม้ตอนนี้ห่วงโซ่จะปิดครบแล้ว —
+   *    วันที่มีด่านใหม่เพิ่มเข้ามา มันต้องกั้นทันทีโดยไม่ต้องมีใครจำ */
+  it('🔴 ปิดด่านแรกแล้วห้ามเหมาว่าทั้งห่วงโซ่เปิด', () => {
+    expect(schemaChangeAllowed([gate('closed', 'a'), gate('open', 'b')]).allowed).toBe(false);
+    expect(schemaChangeAllowed([gate('closed', 'a'), gate('unknown', 'b')]).allowed).toBe(false);
   });
 
-  it('🔴 ปิดด่านแรกแล้วห้ามเหมาว่าทั้งห่วงโซ่เปิด', () => {
-    // ความเสี่ยงจริงหลัง 26 ส.ค. 2569: "Gate B ปิดแล้ว" ถูกอ่านเป็น "แตะ schema ได้แล้ว"
-    expect(schemaChangeAllowed().allowed).toBe(false);
-    expect(GATE_CHAIN.filter((g) => g.status !== 'closed').length).toBeGreaterThan(0);
+  /* ── สถานะจริง 22 พ.ย. 2569 ──────────────────────────────────────────
+   * ด่านที่ 3 เปลี่ยนเป็น in-repo และ baseline ถูกเขียนลงรีโปแล้ว ⇒ ห่วงโซ่ปิดครบ
+   * ⚠️ "ปิดครบ" ไม่ได้แปลว่าแก้ schema ได้ตามใจ — ข้อความ verdict ยังผูกกับ regression gate */
+  it('สถานะจริง: ทั้งสามด่านปิดแล้ว และด่านที่ 3 ตรวจได้จากรีโป', () => {
+    expect(GATE_CHAIN.map((g) => g.status)).toEqual(['closed', 'closed', 'closed']);
+    expect(GATE_CHAIN[2].verifiable).toBe('in-repo');
+  });
+
+  it('สถานะจริง: แก้ schema ได้แล้ว แต่ต้องพ่วง regression gate เสมอ', () => {
+    const v = schemaChangeAllowed();
+    expect(v.allowed).toBe(true);
+    expect(v.blockedBy).toBeNull();
+    expect(v.nextAction).toMatch(/regression gate/);
+  });
+
+  /* 🔴 ด่านที่บอกว่า "ตรวจได้จากรีโป" แล้วยังเป็น unknown = ไม่ได้ตรวจจริง */
+  it('🔴 ด่าน in-repo ห้ามมีสถานะ unknown', () => {
+    for (const g of GATE_CHAIN.filter((x) => x.verifiable === 'in-repo')) {
+      expect(g.status, `${g.key} ตรวจได้แต่ยังไม่ตรวจ`).not.toBe('unknown');
+    }
   });
 });
 
@@ -119,7 +137,11 @@ describe('🔴 เอกสารกับโค้ดต้องไม่ค�
   /* ⚠️ ยกเว้น ledger ไฟล์เดียว และบอกเหตุผลไว้ตรงนี้: มันเป็น **บันทึกอดีต** (append-only)
    *    ประโยค "ตอนนั้นยังไม่ผ่าน" คือเนื้อหาที่ถูกต้องของมัน — แก้ = ลบประวัติ (หลักเดียวกับ ADR)
    *    🔴 ไม่ได้ยกเว้น "ตัวเทสต์เอง" (นั่นคือช่องโหว่ถาวร) — regex ยังประกอบจากชิ้นส่วนเหมือนเดิม */
-  const HISTORY_ONLY = ['docs/LESSONS-LEDGER.md'];
+  /* 🔁 22 พ.ย. 2569 — เพิ่ม `docs/adr/` ด้วยเหตุผลเดียวกันเป๊ะ: ADR เป็นบันทึกอดีตตามกฎโปรเจกต์
+   *    ("ADR ไม่แก้ย้อนหลัง — ตัดสินใจใหม่ให้เขียนฉบับใหม่/ต่อท้าย") ⇒ หัวข้อ "อัปเดตสถานะ" ลงวันที่
+   *    ต้องเก็บประโยคของวันนั้นไว้ได้ · **สถานะปัจจุบัน** ของ ADR ถูกเฝ้าด้วย `adr.test.ts` แทน
+   *    (บรรทัด `**สถานะ**:` ต้องตรงกับ README) ⇒ ไม่ได้ปล่อยช่องว่าง ย้ายผู้เฝ้าเท่านั้น */
+  const HISTORY_ONLY = ['docs/LESSONS-LEDGER.md', 'docs/adr/'];
 
   it('🔴 ด่านที่ปิดแล้วทุกด่าน ห้ามมีไฟล์ไหนยังบอกว่ายังไม่ผ่าน', () => {
     const closed = GATE_CHAIN.filter((g) => g.status === 'closed');
@@ -127,7 +149,7 @@ describe('🔴 เอกสารกับโค้ดต้องไม่ค�
     const bad: string[] = [];
     for (const f of files) {
       const rel = f.slice(ROOT.length + 1);
-      if (HISTORY_ONLY.includes(rel) || rel.includes('releaseGates')) continue;
+      if (HISTORY_ONLY.some((h) => rel === h || rel.startsWith(h)) || rel.includes('releaseGates')) continue;
       const src = readFileSync(f, 'utf8');
       for (const g of closed) {
         const re = new RegExp(g.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[^\\n]{0,40}(' + NOT_PASSED.join('|') + ')');

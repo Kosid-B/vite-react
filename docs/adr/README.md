@@ -40,9 +40,10 @@
 | [0003](0003-codec-layer.md) | แยกชั้นแปลง (codec) ออกจากชั้นส่ง | `accepted` |
 | [0004](0004-packaging-envelope.md) | ซองข้อมูลเป็นรูปแบบ "ที่เก็บของเรา" ไม่ใช่รูปแบบสายส่ง | `accepted` |
 | [0005](0005-no-erasure-coding.md) | **ไม่ใช้ erasure coding** — ใช้สำเนา + ส่งซ้ำ + นับของหาย | `rejected` |
-| [0006](0006-data-cdn-feed.md) | CDN ข้อมูล (feed รวมที่แคชที่ขอบ) | `blocked` |
+| [0006](0006-data-cdn-feed.md) | CDN ข้อมูล (feed รวมที่แคชที่ขอบ) | `proposed` |
 | [0007](0007-server-side-business-events.md) | event ฝั่งธุรกิจ 7 ตัวต้องยิงจากเซิร์ฟเวอร์ | `proposed` |
 | [0008](0008-common-event-format.md) | CEF — รูปแบบ event กลางหนึ่งเดียว แล้วแปลงออกทีละปลายทาง | `accepted` |
 | [0009](0009-marketing-os-behavior-ingest.md) | ป้อน Marketing OS ผ่าน `marketing-behavior-ingest` (ประตูจริงของเขา) | `accepted` |
+| [0010](0010-freeze-baseline-is-measurable.md) | `Freeze Phase 1 baseline` เป็นเกณฑ์ที่ตรวจจากรีโปได้ | `accepted` |
 
 กลไกบังคับรูปแบบ: `src/lib/__tests__/adr.test.ts`

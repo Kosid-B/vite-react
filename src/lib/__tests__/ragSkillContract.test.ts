@@ -74,11 +74,15 @@ describe('skill rag-data-streaming ต้องตรงกับโค้ดจ
   });
 
   /* ── ③ ด่านปล่อยของ ── */
-  it('🔴 สถานะ Phase 1 Acceptance #2 ต้องตรงกับที่ skill เขียน', () => {
-    const gate = GATE_CHAIN.find((g) => g.key === 'phase1-acceptance-2');
-    expect(gate, 'ไม่เจอด่านนี้แล้ว').toBeTruthy();
-    expect(skill, `ด่านอยู่สถานะ ${gate!.status} แต่ skill เขียนอย่างอื่น`)
-      .toContain(`\`status: '${gate!.status}'\``);
+  /* 🔁 22 พ.ย. 2569 — เดิมผูกกับด่านเดียว (`phase1-acceptance-2`) · บทเรียน ledger #99:
+   *    ด่านเฝ้าที่ผูกกับ "ชื่อที่เคยเปลี่ยน" จะเงียบเมื่อด่านอื่นเปลี่ยนบ้าง
+   *    ⇒ อ่าน `GATE_CHAIN` เอง · ทุกสถานะที่มีอยู่จริงต้องปรากฏใน skill */
+  it('🔴 สถานะของทุกด่านใน GATE_CHAIN ต้องตรงกับที่ skill เขียน', () => {
+    expect(GATE_CHAIN.length, 'ไม่มีด่านให้ตรวจ').toBeGreaterThan(0);
+    for (const g of GATE_CHAIN) {
+      expect(skill, `${g.key} อยู่สถานะ ${g.status} แต่ skill เขียนอย่างอื่น`)
+        .toContain(`\`status: '${g.status}'\``);
+    }
   });
 
   /* ── ④ ของที่ต้องอยู่กองไหน ── */
