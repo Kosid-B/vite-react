@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -253,5 +253,60 @@ describe('🚢 ถูกเรียกใช้จริง + ขอบเข�
 
   it('ต้องเงียบเสมอ (มี catch ครอบทุกทาง)', () => {
     expect((b.match(/catch/g) ?? []).length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+ * ⑤ รวมก้อนจริงไหม — เทสต์ **พฤติกรรม** ไม่ใช่ค่าคงที่ (ledger #100)
+ *
+ * 🔴 ความผิดที่ด่านนี้กัน: โค้ด "รวมก้อนก่อนยิง" มีอยู่ครบตั้งแต่วันแรก และเทสต์ชุดเดิม
+ *    (42 ข้อ) ผ่านหมด — แต่กรอบเวลาตั้งไว้ 4 วินาที ซึ่งสั้นกว่าจังหวะคนใช้งานจริง
+ *    ⇒ session จริงแรกที่เข้าฐานปลายทางได้ **3 ก้อนจาก 4 event** (1·1·2)
+ *    ⇒ "มีโค้ด" ≠ "ทำงาน" · ตัวเลขพารามิเตอร์เป็นที่ซ่อนที่ดีที่สุดของกลไกที่ตายแล้ว
+ *
+ * เทสต์นี้เล่น **ช่วงเวลาจริงที่วัดได้** ซ้ำ แล้วนับจำนวน POST — ถ้ากรอบถูกย่อกลับ จะแดงทันที
+ * ══════════════════════════════════════════════════════════════════════ */
+describe('⑤ รวมก้อน — เล่นจังหวะจริงของ session 405a828b ซ้ำ', () => {
+  /** ช่วงห่างจริงระหว่าง event (วินาที) — 21 พ.ย. 2569 · ของเราเอง 4 event แรกที่ถึงฐานเขา */
+  const REAL_GAPS_SEC = [26, 17, 2];
+
+  async function run(): Promise<{ posts: number; events: number }> {
+    vi.resetModules();
+    vi.useFakeTimers();
+    vi.stubEnv('VITE_MARKETING_OS_URL', 'https://example.invalid');
+    vi.stubEnv('VITE_MARKETING_OS_ANON_KEY', 'test-key-not-a-real-jwt');
+    localStorage.clear();
+    localStorage.setItem(CONSENT_KEY, 'all');
+
+    const bodies: string[] = [];
+    vi.stubGlobal('fetch', (_u: string, init?: { body?: string }) => {
+      bodies.push(String(init?.body ?? ''));
+      return Promise.resolve({ ok: true } as Response);
+    });
+
+    const mod = await import('../behaviorOs');
+    // ⚠️ `flush()` ใช้ dynamic import — ถ้า module registry ยังว่าง มันจะ settle บน event loop จริง
+    //    ซึ่ง fake timer รอไม่ถึง ⇒ อุ่นไว้ก่อน ไม่งั้นเทสต์นี้จะ "เขียวเพราะไม่มีอะไรเกิดขึ้น"
+    await import('../../config');
+    mod.sendBehavior('landing_view', {}, SESSION);
+    for (const g of REAL_GAPS_SEC) {
+      await vi.advanceTimersByTimeAsync(g * 1000);
+      mod.sendBehavior('quickcheck_submitted', {}, SESSION);
+    }
+    // ปล่อยให้กรอบเวลาปิดลง แล้วรอ promise ภายใน flush
+    await vi.advanceTimersByTimeAsync(mod.FLUSH_WINDOW_MS + 1000);
+    await vi.advanceTimersByTimeAsync(0);
+
+    const events = bodies.reduce((n, b) => n + ((JSON.parse(b || '{}').events as unknown[])?.length ?? 0), 0);
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    return { posts: bodies.length, events };
+  }
+
+  it('4 event ที่ห่างกัน 26·17·2 วินาที ต้องออกเป็น **ก้อนเดียว** (เดิมได้ 3 ก้อน)', async () => {
+    const { posts, events } = await run();
+    expect(events, 'ต้องไม่ทำ event หายระหว่างรวมก้อน').toBe(4);
+    expect(posts, 'กรอบเวลาสั้นเกิน = กลับไปยิงทีละตัวอีก').toBe(1);
   });
 });

@@ -41,6 +41,16 @@ export const OUTBOX_KEY = 'ceo_ai_behavior_outbox';
 
 export const MAX_BATCH = 20;
 export const MAX_BATCH_BYTES = 16_000;
+/** กรอบเวลารวมก้อน — นับจาก **event แรกที่เข้าคิว** (throttle) ไม่ใช่รีเซ็ตทุกตัว (debounce)
+ *  🔴 ของเดิม 4 วินาที — สั้นกว่าจังหวะที่คนใช้งานจริงมาก ⇒ "รวมก้อน" แทบไม่เคยรวมอะไรเลย
+ *     วัดจาก session จริงแรกที่เข้าฐานเขา (`405a828b` · 21 พ.ย. 2569):
+ *     ช่วงห่างระหว่าง event = **26 วิ · 17 วิ · 2 วิ** ⇒ 4 event กลายเป็น **3 ก้อน** (1·1·2)
+ *     ⇒ โค้ดรวมก้อน "มีอยู่" แต่พารามิเตอร์ทำให้มันไม่ทำงาน (ledger #100)
+ *  60 วินาทีครอบ session นั้นได้ทั้งหมดในก้อนเดียว (09:33:42 → 09:34:27 = 45 วิ)
+ *  ⚠️ แลกด้วย: ข้อมูลถึงปลายทางช้าลงได้ถึง ~1 นาที — ยอมรับได้ เพราะเป็นข้อมูลวิเคราะห์พฤติกรรม
+ *     ไม่ใช่ของที่ต้องเห็นทันที · และ **ไม่เพิ่มความเสี่ยงของหาย** เพราะเขียนลง storage
+ *     ตั้งแต่ตอนเข้าคิวแล้ว (ดู `enqueue`) ไม่ได้ค้างอยู่แต่ในหน่วยความจำ */
+export const FLUSH_WINDOW_MS = 60_000;
 /** ของที่เก่ากว่านี้ปลายทางปฏิเสธ (`expired_event`) ⇒ ทิ้งก่อนส่ง */
 export const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 export const ENVELOPE_VERSION = 1;
@@ -176,8 +186,8 @@ export function sendBehavior(
     if (!UUID_RE.test(s)) return;                       // ต้องเป็น uuid จริง ไม่งั้นปลายทางปฏิเสธ
     const mapped = cefToBehavior(toCef({ name: event, session: s, props }), uuid);
     if (!mapped || !UUID_RE.test(mapped.id)) return;
-    buffer.push(mapped);
-    if (buffer.length >= MAX_BATCH) void flush();
+    hookPagehide();                                     // ต้องฮุกเสมอ ไม่ใช่เฉพาะตอนตั้งเวลา
+    if (enqueue(mapped) >= MAX_BATCH) void flush();
     else schedule();
   } catch { /* ห้ามทำ UX พัง เพราะ analytics */ }
 }
@@ -196,14 +206,35 @@ export function sendBehaviorAuto(
   } catch { /* เงียบ */ }
 }
 
-function schedule(): void {
-  if (flushTimer) return;
-  flushTimer = setTimeout(() => { flushTimer = undefined; void flush(); }, 4000);
-  if (!hooked) {
-    hooked = true;
-    // ผู้ใช้ปิดแท็บ = โอกาสสุดท้าย (pagehide ไว้ใจได้กว่า beforeunload บน iOS)
-    window.addEventListener('pagehide', () => { void flush(); });
+/** เข้าคิว — **เขียนลง storage ทันที ไม่รอ flush** · คืนจำนวนที่ค้างทั้งหมด
+ *  🔴 เหตุผลที่ต้องเขียนทันทีเมื่อกรอบเวลายาวขึ้น: ถ้ายังค้างอยู่แต่ในหน่วยความจำ
+ *     แท็บที่ถูกปิดโดยไม่ยิง `pagehide` (เบราว์เซอร์ฆ่าทิ้ง · เครื่องดับ) จะทำของหาย
+ *     **มากขึ้นตามกรอบที่ยาวขึ้น** ⇒ ยืดเวลารวมก้อนได้ ก็ต่อเมื่อของรอดการปิดแท็บแล้วเท่านั้น
+ *  ⚠️ อ่าน storage ไม่ได้ (โหมดส่วนตัว) = ตกไปใช้หน่วยความจำเหมือนเดิม — ของหายได้ และยอมรับแล้ว */
+function enqueue(ev: BehaviorEvent): number {
+  const st = store();
+  if (!st) { buffer.push(ev); return buffer.length; }
+  try {
+    const box = loadOutbox(st.getItem(OUTBOX_KEY));
+    const events = [...box.events, ev].slice(-MAX_BATCH * 5);
+    st.setItem(OUTBOX_KEY, saveOutbox({ ...box, events }));
+    return events.length + buffer.length;
+  } catch {
+    buffer.push(ev);
+    return buffer.length;
   }
+}
+
+function hookPagehide(): void {
+  if (hooked) return;
+  hooked = true;
+  // ผู้ใช้ปิดแท็บ = โอกาสสุดท้าย (pagehide ไว้ใจได้กว่า beforeunload บน iOS)
+  window.addEventListener('pagehide', () => { void flush(); });
+}
+
+function schedule(): void {
+  if (flushTimer) return;   // throttle: นับจากตัวแรก — ไม่รีเซ็ต ไม่งั้นคนที่ขยับเรื่อย ๆ จะไม่ถูกส่งเลย
+  flushTimer = setTimeout(() => { flushTimer = undefined; void flush(); }, FLUSH_WINDOW_MS);
 }
 
 async function flush(): Promise<void> {
