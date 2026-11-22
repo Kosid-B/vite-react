@@ -58,12 +58,18 @@ describe('ชุด ADR — รูปแบบต้องบังคับไ�
     expect(missing, `accepted แต่ไม่มีกลไก: ${missing.join(', ')}`).toEqual([]);
   });
 
+  /* 🔁 แก้ 22 พ.ย. 2569 — เดิมบังคับว่า "ต้องมี ADR ที่ blocked อยู่จริง" โดยอิง ADR-0006
+   *    พอด่าน `Freeze Phase 1 baseline` ปิด ADR นั้นก็ไม่ blocked อีก ⇒ เทสต์จะแดงทั้งที่ไม่มีอะไรผิด
+   *    ⇒ ย้ายไปบังคับ **คุณสมบัติ** แทนการบังคับว่าต้องมีอยู่ · แล้วพิสูจน์ด้วยตัวอย่างสังเคราะห์
+   *       ว่าตัวตรวจยังจับของผิดได้จริง (ไม่ใช่ผ่านเพราะไม่มีไฟล์ให้ตรวจ) */
+  const NAMES_A_GATE = /releaseGates|schemaChangeAllowed|Acceptance #2|Freeze Phase 1 baseline/;
+
   it('🔴 ADR ที่ `blocked` ต้องระบุ **ชื่อด่าน** ที่กั้น ไม่ใช่บอกว่า "ยังไม่พร้อม"', () => {
-    const blocked = files.filter((f) => /\*\*สถานะ\*\*: `blocked`/.test(readAdr(f)));
-    expect(blocked.length, 'ตอนนี้ควรมี ADR ที่ blocked อยู่จริง (CDN ข้อมูล)').toBeGreaterThan(0);
-    for (const f of blocked) {
-      expect(readAdr(f), `${f} ต้องชี้ชื่อด่านที่กั้นได้`).toMatch(/releaseGates|schemaChangeAllowed|Acceptance #2/);
+    for (const f of files.filter((x) => /\*\*สถานะ\*\*: `blocked`/.test(readAdr(x)))) {
+      expect(readAdr(f), `${f} ต้องชี้ชื่อด่านที่กั้นได้`).toMatch(NAMES_A_GATE);
     }
+    // ตัวตรวจต้องยังจับของผิดได้ แม้วันนี้ไม่มี ADR ไหน blocked เลย
+    expect(NAMES_A_GATE.test('**สถานะ**: `blocked` — ยังไม่พร้อม')).toBe(false);
   });
 
   it('🔴 ห้าม ADR ไหนประกาศว่าเกณฑ์ตัวเลขเป็น `validated` (กฎเดิมของโปรเจกต์)', () => {
