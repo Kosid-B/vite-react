@@ -52,14 +52,42 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
    *  มันมีตาราง `marketing_events` ของตัวเอง ซึ่งบังเอิญชื่อชนกับของ Marketing OS — คนละใบ ไม่ใช่การข้ามเส้น */
   const TIS_ONLY = /_tis_|tis_automate/;
 
-  it('รีโปนี้ต้องไม่มี migration ที่สร้าง/แก้ตาราง marketing_* ของ production หลัก', () => {
+  /* 🔁 **22 พ.ย. 2569 — เส้นแบ่งย้าย ไม่ได้หายไป** (เจ้าของสั่ง "ย้าย DB ไปอยู่ supabase เดียวกับ ceo")
+   *  ของเดิม: ห้ามแตะ `marketing_*` ทุกตัว เพราะฐานเป็นของอีก project
+   *  ของใหม่: ฐานรวมเป็น project เดียวแล้ว ⇒ **เราเป็นเจ้าของ schema `marketing_os`**
+   *    ⇒ migration ที่สร้าง/แก้ `marketing_os.*` = ทำได้ (0066/0067 คือการย้ายนั้นเอง)
+   *  🔴 แต่ `public.marketing_*` (33 ตารางที่อีกระบบสร้างไว้ในฐานเรา) **ยังไม่ใช่ของเรา**
+   *    ⇒ ยังห้ามสร้าง/แก้/ลบเหมือนเดิมทุกข้อ · เส้นแบ่งจึงยังบังคับได้จริง ไม่ใช่ยกเลิกไปเฉย ๆ
+   *  ⚠️ ต้องแยก **schema** ออกจาก **ชื่อตาราง** จริง ๆ ไม่ใช่จับสตริง `marketing_` ลอย ๆ
+   *    (รอบแรกผมเขียนแบบจับสตริง แล้วมันไปสะดุด `format('alter table marketing_os.%I …')`
+   *     ของตัว migration เอง = ผลบวกปลอม · เลยต้องอ่านโครงประโยคให้ออก) */
+  const OWNED_SCHEMA = 'marketing_os';
+  const TABLE_RE = /\b(?:create|alter|drop)\s+table\s+(?:if\s+(?:not\s+)?exists\s+)?(?:([a-z_]+)\.)?([a-z_%]+)/gi;
+  /** มี statement ไหนแตะตาราง `marketing_*` ที่ไม่ได้อยู่ใน schema ที่เราเป็นเจ้าของไหม */
+  const crossesLine = (sql: string): boolean =>
+    [...sql.matchAll(TABLE_RE)].some(
+      ([, schema, table]) =>
+        table.toLowerCase().startsWith('marketing_') && schema?.toLowerCase() !== OWNED_SCHEMA,
+    );
+
+  it('migration ห้ามสร้าง/แก้ `public.marketing_*` ของอีกระบบ (แต่ `marketing_os.*` ทำได้)', () => {
     const dir = resolve(ROOT, 'supabase/migrations');
     const offenders = readdirSync(dir).filter((f) => {
       if (!f.endsWith('.sql') || TIS_ONLY.test(f)) return false;
-      const sql = readFileSync(join(dir, f), 'utf8');
-      return /\b(create|alter|drop)\s+table\s+(if\s+(not\s+)?exists\s+)?(public\.)?marketing_/i.test(sql);
+      return crossesLine(readFileSync(join(dir, f), 'utf8'));
     });
     expect(offenders, `migration ที่ข้ามเส้นแบ่ง: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  it('🔴 ด่านนี้ต้องยังจับของผิดได้จริง — ไม่ใช่ปล่อยผ่านทุกอย่างหลังย้ายเส้น', () => {
+    expect(crossesLine('create table if not exists public.marketing_campaigns (id uuid);'),
+      'public.marketing_* ต้องยังถูกจับ').toBe(true);
+    expect(crossesLine('alter table marketing_brands add column x text;'),
+      'ชื่อเปล่า (= public) ต้องถูกจับ').toBe(true);
+    expect(crossesLine('drop table marketing_events;'),
+      'ลบตารางของอีกระบบต้องถูกจับ').toBe(true);
+    expect(crossesLine('create table if not exists marketing_os.marketing_campaigns (id uuid);'),
+      'marketing_os.* ต้องผ่าน').toBe(false);
   });
 
   it('ไฟล์ที่ยกเว้นต้องเป็นของ TIS จริง ๆ — ห้ามใช้ชื่อไฟล์เลี่ยงเทสต์', () => {

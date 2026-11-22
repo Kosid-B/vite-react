@@ -1,15 +1,21 @@
 /* ══════════════════════════════════════════════════════════════════════════
  * behaviorOs.ts — ปลายทางที่ **สอง**: Marketing OS ตัวจริง (ADR-0009 · 20 พ.ย. 2569)
  *
- * ปลายทางที่หนึ่ง (`marketingOs.ts`) เขียนลง `marketing_events` ใน **ฐานของเรา**
- * ซึ่งแอป OS ไม่อ่าน (ledger #94) · ไฟล์นี้ยิงเข้า **ฐานของเขา** จริง
+ * ปลายทางที่หนึ่ง (`marketingOs.ts`) เขียนลง `marketing_events` ใน `public` ของเรา
+ * ซึ่งแอป OS ไม่อ่าน (ledger #94) · ไฟล์นี้ยิงเข้า **ท่อ behavior ตัวจริง**
+ *
+ * 🔁 **22 พ.ย. 2569 — ฐานถูกรวมมาอยู่ project เดียวกับ CEO แล้ว** (เจ้าของสั่ง · ADR-0011)
+ *   ตารางอยู่ schema `marketing_os` (ไม่ใช่ `public` — 4 ชื่อซ้ำกับของเราแต่ข้อมูลไม่เท่ากัน)
+ *   และฟังก์ชัน `marketing-behavior-ingest` ถูก deploy บน project ของเราแล้ว
+ *   🔴 **ยังเรียกมันว่า "ถึง Marketing OS" ไม่ได้** จนกว่าแอป OS จะถูกชี้มาฐานนี้ด้วย
+ *     (โค้ดแอปเขาอยู่บนเครื่องเจ้าของ · เซสชันคลาวด์เข้าไม่ถึง) ⇒ ตอนนี้ = ฐานเราเก็บครบ
  *
  * 🔒 กฎเส้นแบ่ง: ไฟล์นี้เป็น **ไฟล์เดียว** ที่รู้จัก endpoint นี้ (`ownershipBoundary.test.ts`)
  *
- * สัญญาของเขา (อ่านจากซอร์ส `marketing-behavior-ingest` v3):
+ * สัญญาของปลายทาง (ยกมาจากซอร์สจริงทั้งไฟล์ · เปลี่ยนแค่ schema ที่เขียนลง):
  *   · origin allowlist = ceoaithailand.org + www  ⇒ 🔴 **localhost ยิงไม่ได้**
- *     ⇒ ทดสอบได้แต่บน production ด้วย `mode:'test'` (เขาออกแบบโหมดนี้มาเพื่อการนี้)
- *   · verify_jwt = true ⇒ ต้องมี JWT ของ project เขาใน Authorization + apikey
+ *     ⇒ ทดสอบได้แต่บน production ด้วย `mode:'test'` (โหมดนี้มีไว้เพื่อการนี้)
+ *   · verify_jwt = true ⇒ ต้องมีคีย์ของ project เราใน Authorization + apikey
  *   · batch 1–20 event · เพดาน 16,000 ไบต์ · สคีมา strict (คีย์เกิน = ปฏิเสธทั้งก้อน)
  *   · `at` ต้องอยู่ในช่วง −24 ชม. ถึง +60 วินาที ⇒ ของค้างข้ามวันต้องทิ้ง ไม่ใช่ส่งไป
  *   · rate limit ต่อ IP ต่อนาที ⇒ ยิ่งต้องรวมเป็นก้อน ไม่ยิงทีละตัว
@@ -26,15 +32,16 @@ import { canonicalJson, checksumOf } from './osPackage';
 /** ปลายทางเดียวที่ไฟล์นี้รู้จัก — 🔒 ชื่อนี้ต้องอยู่ที่นี่ที่เดียวทั้งรีโป */
 const BEHAVIOR_FN = 'marketing-behavior-ingest';
 
-/** ฐานของอีกระบบ + คีย์ anon — **อ่านจาก env เท่านั้น ห้ามฝังค่าในรีโป**
- *  🔴 ผมเคยฝัง JWT ไว้ที่นี่ตรง ๆ แล้ว GitGuardian จับได้ (ledger #96) · เหตุผลที่ผมอ้าง
- *     ("คีย์ของเราก็อยู่ในรีโป") **ผิด** — ของเราเป็นรูป `sb_publishable_…` ไม่ใช่ JWT
- *     และรีโปนี้ไม่เคยมี JWT อยู่เลย ⇒ ผมสร้างบรรทัดฐานใหม่เองโดยอ้างแบบอย่างที่ไม่ตรง
- *  ⇒ ไม่มีค่าใน env = **เงียบสนิท** (รูปแบบเดียวกับ VITE_AMPLITUDE_KEY)
- *  🔒 `envContract.test.ts` บังคับว่าทั้งสองตัวต้องอยู่ใน build step ของ cloudflare-deploy.yml
- *     ไม่งั้นตั้ง Secret แล้วก็ยังเงียบโดยไม่มีใครรู้ (ledger #18) */
-const OS_BASE = ((import.meta.env.VITE_MARKETING_OS_URL as string | undefined) ?? '').replace(/\/$/, '');
-const OS_ANON_KEY = (import.meta.env.VITE_MARKETING_OS_ANON_KEY as string | undefined) ?? '';
+/** 🔁 **22 พ.ย. 2569 — ปลายทางย้ายมาอยู่ project เดียวกับ CEO แล้ว** (เจ้าของสั่งรวม DB · ADR-0011)
+ *  เดิมอ่าน `VITE_MARKETING_OS_URL` + `VITE_MARKETING_OS_ANON_KEY` = ฐานของอีก project
+ *  ⇒ รวมเป็น project เดียวแล้ว ⇒ ใช้ URL/คีย์ของเราเอง ⇒ **เลิกใช้ env สองตัวนั้นทั้งคู่**
+ *  🔴 ที่ได้มาไม่ใช่แค่โค้ดสั้นลง: **กับดัก `vars` vs `secrets` หายไปทั้งคู่**
+ *     (ตั้งผิดช่องแล้วได้ค่าว่างแบบเงียบสนิท และไม่มีเทสต์ไหนจับได้เพราะทั้งสองแบบถูกไวยากรณ์)
+ *  🔴 และบทเรียน ledger #96 ยังอยู่: **ห้ามฝังคีย์ลงรีโป** — ผมเคยฝัง JWT ของเขาไว้ที่นี่
+ *     แล้ว GitGuardian จับได้ · คีย์ต้องมาจาก env เท่านั้น ไม่ว่าจะเป็นคีย์ของใคร
+ *  ⇒ ไม่มีค่าใน env = **เงียบสนิท** (ไม่ใช่ล้มเงียบ · รูปแบบเดียวกับ VITE_AMPLITUDE_KEY) */
+const OS_BASE = ((import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? '').replace(/\/$/, '');
+const OS_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? '';
 
 export const CONSENT_KEY = 'ceo_ai_cookie_consent';
 export const OUTBOX_KEY = 'ceo_ai_behavior_outbox';

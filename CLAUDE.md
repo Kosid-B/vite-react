@@ -21,8 +21,22 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
    (`thai-performance-ads` เขียน "ผลต่าง ≥ 20% = มีนัย · ขยายงบเมื่อ conversion ≥ 30" ⇒ ใช้ `MIN_SAMPLE_FOR_RATE` + ด่าน `paid-scale` ของเราแทน)
 ⚠️ **ไม่ได้ห้ามใช้** — ใช้ได้และมีประโยชน์ แต่ต้องผ่าน `violatesBrand()` + skill `content-link-contract` ก่อนปล่อยทุกชิ้น
 
-🧱 **เส้นแบ่งความเป็นเจ้าของ — Marketing OS = อีกระบบ** (เจ้าของตัดสิน 24 ส.ค. 2569 · ห้ามข้ามโดยไม่มีคำสั่งใหม่)
-🔴 **Marketing OS รันบน Supabase ของตัวเอง ไม่ใช่ production ของเรา** (ตรวจสดผ่าน MCP 15 พ.ย. 2569 · ledger #79)
+🧱 **เส้นแบ่งความเป็นเจ้าของ — Marketing OS = อีกระบบ** (เจ้าของตัดสิน 24 ส.ค. 2569)
+🔀 **22 พ.ย. 2569 — เจ้าของสั่งรวมฐานข้อมูล: "ย้าย DB ไปอยู่ supabase เดียวกับ ceo"** (ADR-0011)
+   ⇒ **เส้นแบ่ง "ใครเป็นเจ้าของการตลาด" ไม่เปลี่ยน** (ตารางล่างยังใช้ได้ทุกบรรทัด)
+   ⇒ ที่เปลี่ยนคือ **ฐานข้อมูลอยู่ที่ไหน**: ข้อมูลของ OS ถูกคัดลอกมาอยู่ `waigsnxhrlwtiotspaim`
+     ใน **schema `marketing_os`** (ไม่ใช่ `public`) · นับยืนยันสองฝั่ง **48 แถว ตรงกันทุกตาราง**
+     (workspace_members 11 · brand_rules 7 · message_pillars 7 · audience_segments 6 ·
+      behavior_events 5 · behavior_batches 4 · behavior_limits 3 · workspaces 3 · brands 1 · config 1)
+   🔴 **ทำไมเป็น schema แยก**: 4 ตารางชื่อซ้ำกับของเราแต่ข้อมูลไม่เท่ากัน (brand_rules เขา 7/เรา 10 ·
+     audience_segments เขา 6/เรา 5) ⇒ ยัดลง `public` = ต้องเลือกว่าข้อมูลฝั่งไหนตาย
+   🔴 **ยังห้ามพูดว่า "ย้ายเสร็จ" หรือ "เชื่อมกับ Marketing OS แล้ว"** — ที่ทำได้คือ *คัดลอกครบ*:
+     **แอป OS ยังชี้ไป project เดิม** (โค้ดอยู่เครื่องเจ้าของ · เซสชันคลาวด์เข้าไม่ถึง) ·
+     33 ตารางที่ว่างยังไม่สร้าง · **identity ยังไม่รวม** (owner_id/user_id เป็น `auth.users` คนละชุด
+     ⇒ ตัด FK ไป auth ออก) ⇒ ยังไม่ใช่ "Shared Identity" ตามผังที่เจ้าของให้มา
+   🔒 ของใหม่ปิดสนิท: RLS เปิด + **ไม่มี policy** + revoke `anon`/`authenticated` ⇒ ยังไม่มีใครอ่านได้
+   ↩️ ย้อนกลับได้: `drop schema marketing_os cascade` (ของเขายังอยู่ครบ — นี่คือคัดลอก ไม่ใช่ตัดทิ้ง)
+🔴 **ของเดิมก่อน 22 พ.ย.: Marketing OS รันบน Supabase ของตัวเอง** (ตรวจสดผ่าน MCP 15 พ.ย. 2569 · ledger #79)
    · **ของอีกระบบ**: `bjozpwdtqbpwcxnqguka` = **"CEOAITHAILAND Marketing"** (org เดียวกัน · ap-northeast-1 · สร้าง 19 ส.ค. 69)
      โค้ดอยู่เครื่องเจ้าของที่ `D:\CEOAITHAILAND Marketing-P1.0.2-baseline` · deploy เป็น Vercel project `ceo-ai-marketing`
      **ข้อมูลการตลาดจริงทั้งหมดอยู่ที่นี่** (วัดสด 19 พ.ย. 69: `marketing_brands` 1 · `audience_segments` **6** · `message_pillars` 7)
@@ -45,7 +59,13 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
    ⚠️ **ห้ามเขียนข้ออ้างเรื่องข้อมูลใน DB โดยไม่แนบจำนวนแถวที่นับจริง** (ledger #79 ตั้งกฎนี้ไว้แล้ว แต่ไม่มีกลไกบังคับ)
    ⚠️ **ตาราง `marketing_*` ของสองที่เป็นคนละชุด คนละชื่อ** — ของอีกระบบมี `marketing_behavior_*` · `marketing_personas` ·
      `marketing_ctas` · `marketing_evidence` ที่ production ไม่มี ⇒ **ห้ามอ่าน schema ฝั่งหนึ่งแล้วเดาอีกฝั่ง**
-   ⇒ รีโปนี้ **ห้ามสร้าง migration `marketing_*` · ห้ามอ่าน/เขียนตาราง `marketing_*` ของทั้งสอง project** (กลไก: `ownershipBoundary.test.ts`)
+   ⇒ **กฎวันนี้ (แก้ 22 พ.ย. 2569 · เส้นแบ่งย้าย ไม่ได้หายไป)**:
+     · 🟢 `marketing_os.*` = **เราเป็นเจ้าของแล้ว** ⇒ migration ทำได้ (ไฟล์ 0066/0067 คือการย้ายนั้นเอง)
+     · 🔴 `public.marketing_*` (33 ตารางที่อีกระบบสร้างไว้ในฐานเรา) **ยังไม่ใช่ของเรา** ⇒ ห้ามสร้าง/แก้/ลบ
+     · 🔴 โค้ดผลิตภัณฑ์ยัง **ห้าม** `.from('marketing_…')` / `rpc('marketing_…')` / `rpc('ingest_marketing_event')`
+     กลไก: `ownershipBoundary.test.ts` — ด่านอ่าน **โครงประโยค SQL** แยก schema ออกจากชื่อตาราง
+     (เขียนแบบจับสตริงรอบแรกแล้วได้ผลบวกปลอมจาก `format('alter table marketing_os.%I …')` ของตัวเอง)
+     + มีเทสต์สังเคราะห์ยืนยันว่ายังจับ `public.marketing_*` ได้จริง ไม่ใช่ยกเลิกด่านไปเฉย ๆ
    🟢 **ข้อยกเว้นข้อเดียว เจ้าของอนุมัติ 20 พ.ย. 2569 ("ลุย A ต่อ B") — ส่ง event ออกได้ ผ่าน `marketing-track` เท่านั้น**
      🔴 **แต่ปลายทางนี้ไม่ใช่ของ OS** (ตรวจเย็นวันเดียวกัน · ledger #94 · ADR-0002 §แก้ไขบริบท):
        `marketing-track` deploy บน `waigsnxhrlwtiotspaim` ใช้ `SUPABASE_URL` ของ project ตัวเอง ⇒ เขียนลง **ฐานเรา**
@@ -64,8 +84,9 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
 
 🚪 **ประตูจริงที่ป้อน Marketing OS ได้ — `marketing-behavior-ingest`** (ตรวจสด 20 พ.ย. 2569 · ADR-0009)
 ```
-POST https://bjozpwdtqbpwcxnqguka.supabase.co/functions/v1/marketing-behavior-ingest
-verify_jwt=true (ต้องมี anon key ของ project เขา) · origin allowlist = ceoaithailand.org + www เท่านั้น
+POST https://waigsnxhrlwtiotspaim.supabase.co/functions/v1/marketing-behavior-ingest   ← ย้ายมา 22 พ.ย. 69
+  (เดิมอยู่ project bjozpwdtqbpwcxnqguka · ซอร์สยกมาทั้งไฟล์ เปลี่ยนแค่ schema ปลายทางเป็น marketing_os)
+verify_jwt=true (ใช้คีย์ของ project เราแล้ว) · origin allowlist = ceoaithailand.org + www เท่านั้น
 batch 1–20 event · เพดาน 16KB · strict schema (คีย์เกิน = ปฏิเสธ)
 name: view|engaged|action · topic: 7 ค่า = code ของ marketing_message_pillars (ขยายจาก 4 → 7 · 20 พ.ย. 69)
   business_validation|first_customer|content_marketing|business_systems|start|side_income|money
@@ -94,7 +115,10 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
    ⇒ **ทดสอบจากเครื่องไม่ได้ ต้องทดสอบบน production ด้วย `test`**
    🔒 เทสต์ล็อกค่า `behaviorMode` **สองทาง** — จะกลับไป `'test'` ก็ต้องแก้เทสต์ = ตั้งใจ ไม่ใช่เผลอ
 ⚠️ workspace id คนละตัว: `marketing-track` = `98911455-…` · `behavior-ingest` = `e82e7d93-…`
-🔑 ต้องมี `VITE_MARKETING_OS_URL` (vars) + `VITE_MARKETING_OS_ANON_KEY` (secret) — build step ต่อให้แล้ว
+🔑 **ถอด `VITE_MARKETING_OS_URL`/`_ANON_KEY` ออกแล้ว (22 พ.ย. 69)** — ปลายทางอยู่ project เดียวกับเรา
+   ⇒ `behaviorOs.ts` ใช้ `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` ร่วมกับที่เหลือ
+   🟢 ได้ของแถม: **กับดัก `vars` vs `secrets` หายไปทั้งคู่** (ตั้งผิดช่อง = ค่าว่างเงียบ ๆ จับไม่ได้)
+   ⚠️ Secret/Variable สองตัวนั้นใน GitHub **กลายเป็นของไม่ได้ใช้** (ลบได้ · ไม่ลบก็ไม่กระทบอะไร)
    🔴 **ห้ามฝังคีย์ลงรีโปเด็ดขาด** — ผมเคยฝัง JWT แล้ว GitGuardian จับได้ (ledger #96)
    ของเราในรีโปเป็นรูป `sb_publishable_…` **ไม่ใช่ JWT** ⇒ อย่าอ้างมันเป็นแบบอย่างของการฝัง JWT
    กลไก: `ownershipBoundary.test.ts` ห้าม JWT ฝังในโค้ดทั้งรีโป · `envContract.test.ts` เฝ้า workflow
