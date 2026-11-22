@@ -98,9 +98,17 @@ describe('🟢 AI ที่ผู้ใช้คุยด้วยจริง (
 });
 
 describe('🔴 เส้นแบ่งเจ้าของ + เอกสาร audit ต้องตรงกับของจริง', () => {
-  it('รีโปนี้ยังไม่มี migration marketing_* (Marketing OS = อีกระบบ)', () => {
-    const owns = readdirSync(resolve(SRC, '../supabase/migrations')).some((f) => /marketing/.test(f));
-    expect(owns, 'รีโปเริ่มมี migration marketing_* แล้ว → อัปเดต audit §0').toBe(false);
+  /* 🔁 22 พ.ย. 2569 — เจ้าของสั่งรวมฐาน (ADR-0011) ⇒ รีโปนี้ **เป็นเจ้าของ schema `marketing_os`** แล้ว
+   *    ⇒ มี migration ชื่อ marketing ได้ แต่ต้องเป็นของ schema นั้นเท่านั้น
+   *    🔴 เนื้อใน SQL ถูกเฝ้าโดย `ownershipBoundary.test.ts` (อ่านโครงประโยค แยก schema)
+   *       ด่านนี้เฝ้าแค่ว่า **ชื่อไฟล์** ไม่แอบอ้างเป็นของอีกระบบ */
+  it('migration ที่ชื่อ marketing ต้องเป็นของ schema `marketing_os` เท่านั้น', () => {
+    const files = readdirSync(resolve(SRC, '../supabase/migrations')).filter((f) => /marketing/.test(f));
+    expect(files.length, 'ไม่เจอไฟล์ของการรวมฐาน — ถ้าถอดออกแล้วให้ลบเทสต์นี้พร้อมอัปเดต audit §0')
+      .toBeGreaterThan(0);
+    for (const f of files) {
+      expect(f, `${f} ไม่ได้บอกว่าเป็นของ marketing_os`).toMatch(/marketing_os/);
+    }
   });
 
   it('เอกสาร audit ต้องบันทึก migration ของ production ที่รีโปไม่ได้เป็นเจ้าของ', () => {

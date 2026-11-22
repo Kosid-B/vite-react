@@ -45,5 +45,6 @@
 | [0008](0008-common-event-format.md) | CEF — รูปแบบ event กลางหนึ่งเดียว แล้วแปลงออกทีละปลายทาง | `accepted` |
 | [0009](0009-marketing-os-behavior-ingest.md) | ป้อน Marketing OS ผ่าน `marketing-behavior-ingest` (ประตูจริงของเขา) | `accepted` |
 | [0010](0010-freeze-baseline-is-measurable.md) | `Freeze Phase 1 baseline` เป็นเกณฑ์ที่ตรวจจากรีโปได้ | `accepted` |
+| [0011](0011-single-supabase-project.md) | รวมฐานข้อมูลเป็น Supabase project เดียว (schema `marketing_os`) | `accepted` |
 
 กลไกบังคับรูปแบบ: `src/lib/__tests__/adr.test.ts`

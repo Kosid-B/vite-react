@@ -230,9 +230,14 @@ describe('🚢 ถูกเรียกใช้จริง + ขอบเข�
     expect(b).not.toMatch(/service_role|SERVICE_ROLE/);
   });
 
+  /* 🔁 22 พ.ย. 2569 — ฐานถูกรวมมาอยู่ project เดียวกับ CEO ⇒ ใช้ URL/คีย์ของเราเอง
+   *    เลิกใช้ VITE_MARKETING_OS_* ทั้งคู่ (กับดัก vars vs secrets หายไปด้วย)
+   *    🔴 กฎที่ไม่เปลี่ยน: คีย์ต้องมาจาก env ไม่ว่าจะเป็นคีย์ของใคร (ledger #96) */
   it('🔴 คีย์ต้องมาจาก env ไม่ใช่ฝังในรีโป (ledger #96)', () => {
-    expect(b).toMatch(/import\.meta\.env\.VITE_MARKETING_OS_ANON_KEY/);
-    expect(b).toMatch(/import\.meta\.env\.VITE_MARKETING_OS_URL/);
+    expect(b).toMatch(/import\.meta\.env\.VITE_SUPABASE_ANON_KEY/);
+    expect(b).toMatch(/import\.meta\.env\.VITE_SUPABASE_URL/);
+    // ห้ามกลับไปผูกกับ env ของอีก project (ปลายทางไม่ได้อยู่ที่นั่นแล้ว)
+    expect(b.replace(/\/\*[\s\S]*?\*\//g, '')).not.toMatch(/VITE_MARKETING_OS_/);
   });
 
   it('ไม่ได้ตั้ง env = เงียบสนิท (เช็กก่อนยิง)', () => {
@@ -273,8 +278,8 @@ describe('⑤ รวมก้อน — เล่นจังหวะจริ�
   async function run(): Promise<{ posts: number; events: number }> {
     vi.resetModules();
     vi.useFakeTimers();
-    vi.stubEnv('VITE_MARKETING_OS_URL', 'https://example.invalid');
-    vi.stubEnv('VITE_MARKETING_OS_ANON_KEY', 'test-key-not-a-real-jwt');
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://example.invalid');
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'test-key-not-a-real-jwt');
     localStorage.clear();
     localStorage.setItem(CONSENT_KEY, 'all');
 

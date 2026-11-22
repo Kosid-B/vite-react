@@ -50,9 +50,8 @@ jobs:
           #    "เขียนถูก" ≠ "ทำงานจริง" — บังคับด้วย envContract.test.ts แล้ว
           # คีย์นี้เป็น public client key (เหมือน GA measurement id) ฝังในบันเดิลได้โดยดีไซน์
           VITE_AMPLITUDE_KEY: ${{ secrets.VITE_AMPLITUDE_KEY }}
-          # ปลายทางที่สอง — ฐานของ Marketing OS (ADR-0009) · ไม่ตั้ง = ฟีเจอร์เงียบสนิท
-          VITE_MARKETING_OS_URL: ${{ vars.VITE_MARKETING_OS_URL }}
-          VITE_MARKETING_OS_ANON_KEY: ${{ secrets.VITE_MARKETING_OS_ANON_KEY }}
+          # 🔁 22 พ.ย. 2569: VITE_MARKETING_OS_URL/ANON_KEY ถูกถอดออก — ฐาน OS ย้ายมา project นี้แล้ว
+          #    ปลายทาง behavior ใช้ VITE_SUPABASE_URL/ANON_KEY ด้านบนร่วมกัน (ADR-0011)
           # อัตราสุ่มอัด session replay 0..1 (ว่าง = 1 = อัดทุกเซสชัน) — ตั้งที่ Variables ไม่ใช่ Secrets
           VITE_AMPLITUDE_REPLAY_SR: ${{ vars.VITE_AMPLITUDE_REPLAY_SR }}
 
