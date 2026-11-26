@@ -1,0 +1,27 @@
+-- 0077 — ให้เหลือ "ประตูเดียว" สำหรับบัญชีผู้ใช้: wrapper `os_member_funnel_summary` (เจ้าของสั่ง 26 พ.ย. 2569)
+--
+-- 🔴 ก่อนหน้านี้มี **สองประตูที่ทำเรื่องเดียวกัน** (ledger #111 — สองเซสชันทำซ้ำกันห่าง 15 นาที):
+--    · `public.os_member_funnel_summary(p_workspace, p_since)` ← เซสชันบนเครื่องเจ้าของ
+--      บังคับให้ผู้เรียก **ระบุ workspace** แล้วตรวจ `is_workspace_member(p_workspace)`
+--    · `public.marketing_os_funnel_summary(p_since)` ← เซสชันคลาวด์ (repo 0076)
+--      ตรวจ `auth.uid()` เอาเอง ⇒ ตรวจได้แค่ "เป็นสมาชิกที่ไหนก็ได้"
+--    ⇒ เส้นแบ่งความปลอดภัยอยู่สองที่ = พลาดที่เดียวก็รั่ว และแก้ที่เดียวไม่พอ
+--
+-- 🔑 **เก็บ wrapper ของเขาเป็นประตูหลัก เพราะรัดกุมกว่า** — ระบุ workspace ที่ไม่ได้เป็นสมาชิก = ปฏิเสธ
+--    (วัดแล้ว: เจ้าของระบุ `RLS_TEST_WORKSPACE_A` ก็ยังถูกปฏิเสธ `42501`)
+-- ⇒ revoke `execute` ของ `authenticated` ออกจากตัวใน · ตัวในเหลือ `service_role` เท่านั้น
+--
+-- 🟢 **ทำไมไม่พัง และวัดแล้ว ไม่ได้เชื่อ**: wrapper เป็น `security definer` ⇒ ตอนเรียกตัวใน
+--    จะรันในสิทธิ์ของ **เจ้าของฟังก์ชัน** ไม่ใช่ของผู้เรียก ⇒ บัญชีผู้ใช้ยังอ่านผลผ่าน wrapper ได้
+--
+--    ยืนยันบน production หลัง apply (สวมบทผู้เรียกจริงใน SQL · 5/5):
+--      ① ตัวใน · เจ้าของ (authenticated)              → 🟢 ปฏิเสธ `42501 permission denied for function`
+--      ② wrapper · เจ้าของ                            → 🟢 **อ่านได้ 4 แถว** (ข้อสำคัญที่สุด — ไม่พัง)
+--      ③ wrapper · ลูกค้าคนอื่นของเรา                  → 🟢 ปฏิเสธ `42501 not a member of this workspace`
+--      ④ wrapper · เจ้าของ แต่ระบุ workspace ที่ไม่ได้เป็นสมาชิก → 🟢 ปฏิเสธ `42501`
+--      ⑤ ตัวใน · `service_role`                       → 🟢 อ่านได้ 4 แถว
+--
+-- ⚠️ **ด่านตรวจสมาชิกในตัวในยังคงไว้ ไม่ได้ถอดออก** — เป็นชั้นป้องกันซ้ำ
+--    ถ้าวันหน้ามีใคร grant ตัวในให้ browser role อีก จะยังมีด่านรออยู่
+
+revoke execute on function public.marketing_os_funnel_summary(timestamptz) from authenticated;
