@@ -6,6 +6,13 @@ on:
     branches: [main]
   push:
     branches: [main]
+  # 🔴 ห้ามลบ — ledger #114 · 26 พ.ย. 2569
+  # มีทางสั่งรันเองไว้ เพื่อไม่ต้องใช้ท่าที่ห้าม (คอมมิตว่าง / ปิด-เปิด PR ใหม่)
+  # เวลาต้องตรวจ head ที่ CI ยังไม่แตะ
+  # ⚠️ ไม่ใช่ยาแก้ทุกกรณี: ถ้า PR มี merge conflict (mergeable_state = dirty)
+  #    workflow ที่ trigger ด้วย pull_request จะ "ไม่เกิด run เลย" เพราะ GitHub
+  #    สร้าง merge ref (refs/pull/<n>/merge) ไม่ได้ ⇒ ต้องแก้ conflict ก่อน
+  workflow_dispatch:
 
 jobs:
   build-test:

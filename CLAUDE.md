@@ -99,15 +99,22 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
    · **ใน production `waigsnxhrlwtiotspaim`**: ตาราง `marketing_*` **33 ตาราง** — 🔴 **ไม่ใช่ 0 แถวแล้ว** (นับสด 20 พ.ย. 2569)
      `metric_definitions` 20 · `event_definitions` 17 · `brand_rules` 10 · `message_pillars` 7 · `audience_segments` 5 ·
      `brands` 1 · `measurement_config` 1 · `measurement_health_live` 1 · **อีก 25 ตารางยังว่าง**
-   ⚠️ **ประโยคนี้ถูกแก้สองรอบ — อ่านให้ครบก่อนอ้าง**
+   ⚠️ **ประโยคนี้ถูกแก้สามรอบ — อ่านให้ครบก่อนอ้าง**
      รอบ 1 (24 ส.ค.) เขียนว่า *"production มีสองระบบเขียนลง"* จากการดู schema อย่างเดียว = **ผิด**
      รอบ 2 (15 พ.ย.) แก้เป็น *"0 แถวทุกตาราง · ไม่เคยมีใครเขียนลงเลย"* = **ผิดอีก** (นับตอนนั้นไม่ครบ/ข้อมูลมาทีหลัง)
-     🔴 **สิ่งที่จริงวันนี้**: มี **ข้อมูลตั้งต้น (definitions/rules/pillars/segments)** อยู่จริง
-       แต่ **`marketing_events` = 0 แถว** ⇒ ยังไม่มี *เหตุการณ์* ไหลเข้าเลย
+     รอบ 3 (20 พ.ย.) แก้เป็น *"`marketing_events` = 0 แถว ⇒ ยังไม่มีเหตุการณ์ไหลเข้าเลย"* = **ผิดอีก** (ledger #113)
+     🟢 **สิ่งที่จริงวันนี้ (นับสด 26 พ.ย. 2569 ~10:50 UTC)**: `public.marketing_events` = **35 แถว**
+       · ชื่อเดียว `landing_view` · **21 session** · ไหลเข้าตั้งแต่ **20 พ.ย. 18:20** ถึง **26 พ.ย. 09:32**
+       ⇒ ท่อ `marketing-track` **ทำงานอยู่จริง** ไม่ใช่ท่อตาย
+       🔴 **แต่มี event ชนิดเดียว** — `cta_click`/`quickcheck_submitted` ที่แมปไว้ยังเป็น 0
+         (สาเหตุ = `track()` ที่ขาดไป 2 จุด · แก้แล้วใน PR #465 ขึ้น production 10:04 วันนี้
+          ⇒ **คำทำนายที่ตรวจได้**: ถ้าแก้ถูก `cta_click` ต้องเริ่มมีแถวในไม่กี่วัน · ถ้ายัง 0 แปลว่ายังมีจุดที่พลาด)
    🔴 **และมีท่อรับ event สาธารณะอยู่จริง**: edge function `marketing-track` (live 23 ส.ค. 2569 · `verify_jwt=false`
      · กั้นด้วย Origin allowlist `ceoaithailand.org`) เขียนลง production ด้วย **service_role** ผ่าน rpc `ingest_marketing_event`
      โดย **hardcode `workspace_id` ไว้ในโค้ด** · 🔴 **ไม่มีซอร์สในรีโปนี้เลย** (คู่กับ `marketing-generate`)
-     ⇒ ท่อเปิดอยู่ ~3 เดือน แต่ `marketing_events` ยังเป็น 0 ⇒ **ฝั่งหน้าเว็บไม่เคยยิงเข้ามา** (รูปแบบเดียวกับ Amplitude ที่ได้ 0 event)
+     🔁 **เคยเขียนที่นี่ว่า "ท่อเปิดอยู่ ~3 เดือน แต่ยังเป็น 0 ⇒ ฝั่งหน้าเว็บไม่เคยยิงเข้ามา" — ผิด** (ledger #113)
+       ที่จริงคือ **ยิงเข้ามาตั้งแต่ 20 พ.ย.** (วันที่เจ้าของสั่ง "ลุย A ต่อ B" แล้วเราต่อท่อ) ⇒ ก่อนหน้านั้นไม่มีใครยิง
+       ⚠️ ความผิดนี้เป็นการละเมิดหลักของโปรเจกต์เอง: `zeroIsNotProof()` บอกว่า **0 = "ยังไม่พบ" ไม่ใช่ "ไม่เคยมี"**
    ⚠️ **ห้ามเขียนข้ออ้างเรื่องข้อมูลใน DB โดยไม่แนบจำนวนแถวที่นับจริง** (ledger #79 ตั้งกฎนี้ไว้แล้ว แต่ไม่มีกลไกบังคับ)
    ⚠️ **ตาราง `marketing_*` ของสองที่เป็นคนละชุด คนละชื่อ** — ของอีกระบบมี `marketing_behavior_*` · `marketing_personas` ·
      `marketing_ctas` · `marketing_evidence` ที่ production ไม่มี ⇒ **ห้ามอ่าน schema ฝั่งหนึ่งแล้วเดาอีกฝั่ง**

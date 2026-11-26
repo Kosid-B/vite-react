@@ -59,6 +59,15 @@ describe('ci gate — เครื่องมือที่ตรวจใน�
     expect(missing, `ขั้นที่ CI รันแต่ \`npm run ci\` ไม่ได้รัน: ${missing.join(', ')}`).toEqual([]);
   });
 
+  /** 🔴 ledger #114 — ต้องมีทางสั่ง CI รันเองกับ head ที่ต้องการ
+   *  ไม่งั้นทางออกที่เหลือคือท่าที่ห้ามทั้งคู่ (คอมมิตว่าง / ปิด-เปิด PR ใหม่)
+   *  ⚠️ ไม่ใช่กลไกของความผิด #114 เอง — ความผิดนั้นเกิดจาก PR มี merge conflict
+   *     (`mergeable_state: dirty`) ⇒ GitHub สร้าง merge ref ไม่ได้ ⇒ ไม่มี run เกิดขึ้นเลย
+   *     ซึ่งเทสต์บังคับไม่ได้ เพราะเป็นสถานะฝั่ง GitHub ไม่ใช่ของในรีโป */
+  it('🔴 ci.yml ต้องสั่งรันเองได้ (`workflow_dispatch`) — ไม่งั้น head ที่ CI ไม่แตะจะไม่มีทางตรวจ', () => {
+    expect(/^\s*workflow_dispatch:/m.test(stripComments(ciYml))).toBe(true);
+  });
+
   it('`npm run ci` ต้องมี lint (ขั้นที่ถูกลืมจนแดง 54 รอบ)', () => {
     expect(pkg.scripts.ci).toContain('npm run lint');
   });
