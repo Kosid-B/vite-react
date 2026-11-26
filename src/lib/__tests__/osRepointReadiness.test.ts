@@ -8,7 +8,10 @@ import {
   OS_REPOINT_HOW_TO_COUNT,
   OS_REPOINT_MEASURED_AT,
   OS_REPOINT_OBSERVABLE_SIGNAL,
-  IDENTITY_DECIDED,
+  APP_REPOINTED,
+  IDENTITY_APPROACH,
+  IDENTITY_FACTS,
+  IDENTITY_IMPLEMENTED,
   osRepointBlockers,
   osRepointCoverage,
   osRepointReady,
@@ -37,22 +40,27 @@ describe('osRepointReadiness — ตัวเลขที่ล็อกไว�
     const c = osRepointCoverage();
     expect(c.total).toBe(17);
     expect(c.hasData).toBe(5);
-    expect(c.emptyShellPublic).toBe(4);
-    expect(c.absent).toBe(8);
+    expect(c.structureOnly).toBe(12);
+    expect(c.absent).toBe(0);
+    expect(c.present).toBe(17);
     expect(OS_REPOINT_MEASURED_AT).toBe('2026-11-26');
+  });
+
+  it('🟢 ตารางครบแล้ว — ห้ามถอยกลับไปมีตาราง absent โดยไม่รู้ตัว (migration 0070/0071)', () => {
+    expect(OS_APP_TABLES.filter((t) => t.state === 'absent')).toEqual([]);
   });
 
   it('ทุกตารางต้องมีสถานะที่รู้จัก และห้ามชื่อซ้ำ', () => {
     const names = OS_APP_TABLES.map((t) => t.name);
     expect(new Set(names).size).toBe(names.length);
     for (const t of OS_APP_TABLES) {
-      expect(['has_data', 'empty_shell_public', 'absent']).toContain(t.state);
+      expect(['has_data', 'structure_only', 'absent']).toContain(t.state);
     }
   });
 
   it('ยอดรวมของสามสถานะต้องเท่ากับจำนวนตารางทั้งหมด (ห้ามมีตัวไหนหายไปจากกอง)', () => {
     const c = osRepointCoverage();
-    expect(c.hasData + c.emptyShellPublic + c.absent).toBe(c.total);
+    expect(c.hasData + c.structureOnly + c.absent).toBe(c.total);
   });
 
   it('ต้องบอกที่มาและวิธีนับไว้ ไม่ใช่ตัวเลขลอย (ledger #79)', () => {
@@ -63,38 +71,88 @@ describe('osRepointReadiness — ตัวเลขที่ล็อกไว�
 });
 
 describe('osRepointReadiness — ด่านกั้น', () => {
-  it('🔴 วันนี้ยังไม่พร้อม และต้องบอกได้ว่าเพราะอะไร', () => {
-    expect(IDENTITY_DECIDED).toBe(false);
+  it('🔴 วันนี้ยังไม่พร้อม — และเหลือด่านเดียวคือ "แอปยังไม่ชี้มาฐานเรา"', () => {
     expect(osRepointReady()).toBe(false);
     const b = osRepointBlockers();
-    expect(b.join(' ')).toContain('8 ตัวไม่มีในฐานเราเลย');
-    expect(b.join(' ')).toContain('identity ยังไม่ตัดสิน');
+    expect(b).toHaveLength(1);
+    expect(b[0]).toContain('แอป OS ยังชี้ไป project เดิม');
+  });
+
+  it('🟢 identity ทำแล้วจริง (ADR-0016) — ตารางครบ + identity จบ เหลือแค่แอป', () => {
+    expect(IDENTITY_APPROACH).toBe('shared_auth_users');
+    expect(IDENTITY_IMPLEMENTED).toBe(true);
+    expect(APP_REPOINTED).toBe(false);
+    // ถอย identity กลับ = ต้องมี blocker สองข้อ ไม่ใช่ข้อเดียว
+    expect(osRepointBlockers(OS_APP_TABLES, { identityReady: false })).toHaveLength(2);
+    // แอปชี้มาแล้ว = ผ่านครบ
+    expect(osRepointReady(OS_APP_TABLES, { appRepointed: true })).toBe(true);
   });
 
   it('ด่านนี้ไม่ใช่ false ตายตัว — ครบทุกตาราง + ตัดสิน identity แล้ว = ผ่าน', () => {
     const allThere: OsAppTable[] = OS_APP_TABLES.map((t) => ({ ...t, state: 'has_data' }));
-    expect(osRepointReady(allThere, { identityDecided: true })).toBe(true);
-    expect(osRepointBlockers(allThere, { identityDecided: true })).toEqual([]);
+    expect(osRepointReady(allThere, { identityReady: true, appRepointed: true })).toBe(true);
+    expect(osRepointBlockers(allThere, { identityReady: true, appRepointed: true })).toEqual([]);
   });
 
   it('แก้ identity อย่างเดียวไม่พอ · สร้างตารางอย่างเดียวก็ไม่พอ (ต้องครบทั้งคู่)', () => {
-    const allThere: OsAppTable[] = OS_APP_TABLES.map((t) => ({ ...t, state: 'has_data' }));
-    expect(osRepointReady(OS_APP_TABLES, { identityDecided: true })).toBe(false);
-    expect(osRepointReady(allThere, { identityDecided: false })).toBe(false);
+    const oneGone: OsAppTable[] = OS_APP_TABLES.map((t, i) =>
+      i === 0 ? { ...t, state: 'absent' as const } : t,
+    );
+    expect(osRepointReady(oneGone, { identityReady: true, appRepointed: true })).toBe(false);
+    expect(osRepointReady(OS_APP_TABLES, { identityReady: false, appRepointed: true })).toBe(false);
   });
 
-  it('ตารางที่มีแค่ใน public ก็ยังเป็น blocker (public.marketing_* ไม่ใช่ของเรา)', () => {
-    const onlyShells: OsAppTable[] = [
+  it('🟢 structure_only ไม่ใช่ blocker — 0 แถวเท่ากับฝั่งเขา ไม่ใช่ข้อมูลหาย', () => {
+    const mixed: OsAppTable[] = [
       { name: 'a', state: 'has_data' },
-      { name: 'b', state: 'empty_shell_public' },
+      { name: 'b', state: 'structure_only' },
     ];
-    const b = osRepointBlockers(onlyShells, { identityDecided: true });
+    expect(osRepointBlockers(mixed, { identityReady: true, appRepointed: true })).toEqual([]);
+  });
+
+  it('🔴 แต่ absent ยังเป็น blocker เสมอ แม้ identity จบแล้ว', () => {
+    const gone: OsAppTable[] = [
+      { name: 'a', state: 'has_data' },
+      { name: 'b', state: 'absent' },
+    ];
+    const b = osRepointBlockers(gone, { identityReady: true, appRepointed: true });
     expect(b).toHaveLength(1);
-    expect(b[0]).toContain('1 ตัวมีแค่ใน public');
+    expect(b[0]).toContain('1 ตัวไม่มีในฐานเราเลย');
+  });
+});
+
+describe('osRepointReadiness — ความจริงเรื่อง identity', () => {
+  it('🔴 ล็อกตัวเลขที่วัดได้ และบังคับให้ "สมาชิกทั้งหมด" แยกจาก "ผู้ใช้จริง" เสมอ', () => {
+    const f = IDENTITY_FACTS;
+    expect(f.membersTotal).toBe(11);
+    expect(f.realMembers).toBe(1);
+    expect(f.fixtureMembers).toBe(10);
+    expect(f.realMembers + f.fixtureMembers).toBe(f.membersTotal);
+    expect(f.realWorkspaces).toBe(1);
+    expect(f.fixtureWorkspaces).toBe(2);
+    expect(f.realWorkspaces + f.fixtureWorkspaces).toBe(f.workspacesTotal);
+    expect(f.realMembersInOurAuthUsers).toBe(0);
+    expect(f.measuredAt).toBe('2026-11-26');
+  });
+
+  it('🔴 fixture ต้องไม่ถูกนับเป็นผู้ใช้จริง — ถ้าเท่ากันคือกลับไปสับสนเหมือนเดิม', () => {
+    expect(IDENTITY_FACTS.realMembers).toBeLessThan(IDENTITY_FACTS.membersTotal);
+  });
+
+  it('ข้อความ blocker ต้องไม่อ้างจำนวนรวมเป็นจำนวนคนที่ต้องย้าย', () => {
+    const b = osRepointBlockers(OS_APP_TABLES, { identityReady: false });
+    expect(b.join(' ')).not.toContain('11 คน');
   });
 });
 
 describe('osRepointReadiness — เอกสารต้องพูดตรงกับตัวเลข', () => {
+  it('🔴 CLAUDE.md ห้ามอ้าง workspace_members 11 คน แบบที่อ่านว่าเป็นคนจริง 11 คน', () => {
+    const lines = read('CLAUDE.md')
+      .split('\n')
+      .filter((l) => /workspace_members/.test(l) && /11 คน/.test(l) && !l.includes('เคยเขียน'));
+    expect(lines).toEqual([]);
+  });
+
   it(`${CHECKLIST} ต้องอ้างสัดส่วนที่วัดได้ "${OS_REPOINT_COVERAGE_PHRASE}"`, () => {
     expect(read(CHECKLIST)).toContain(OS_REPOINT_COVERAGE_PHRASE);
   });
