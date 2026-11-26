@@ -1050,15 +1050,26 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 │ Supabase Fn       : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅
 │                     SLIPOK_API_KEY ✅ (ขึ้นต้น SLIPOKWL…), SLIPOK_BRANCH_ID ✅ =72189 (ตรวจสลิป verify-slip)
 │ Pending           : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
-│ 🔴 **ขาด: `SUPABASE_ACCESS_TOKEN` (GitHub secret)** — ค้างมาตั้งแต่ ledger #87 ("งานเจ้าของ")
-│    ⇒ workflow `supabase-functions-deploy.yml` **แดงทุกครั้ง** ที่แตะ `supabase/functions/**`
-│      หรือ `config.toml` · มันแดงที่ขั้น "ตรวจว่ามี access token จริงก่อนเริ่ม deploy"
-│      **หลัง** lint + เทสต์ผ่านครบแล้ว ⇒ 🔴 **อย่าอ่านว่าโค้ดพัง** และ **ห้ามแก้ให้ข้ามเงียบ ๆ**
-│      (ความแดงนี้คือของที่ #87 ตั้งใจให้เห็น — ไม่มี workflow deploy = production drift จาก main)
-│    ⇒ ระหว่างยังไม่มี token: deploy edge function **ผ่าน MCP** แล้ว **อ่านย้อนด้วย
-│      `get_edge_function` เทียบกับไฟล์ในรีโปทุกครั้ง** (ledger #88, #103)
-│    วิธีตั้ง: supabase.com/dashboard/account/tokens → scoped token (`sbp_fc…`)
+│ 🟢 **`SUPABASE_ACCESS_TOKEN` (GitHub secret) — เจ้าของตั้งแล้ว 26 พ.ย. 2569** (ค้างมาตั้งแต่ ledger #87)
+│    ⇒ workflow `supabase-functions-deploy.yml` เดินผ่านด่าน token แล้ว
+│    ⚠️ ถ้ามันแดงที่ขั้น "ตรวจว่ามี access token" อีก = token ถูกลบ/หมดอายุ/ตั้งผิดช่อง
+│      (`secrets` ไม่ใช่ `vars`) — **ห้ามแก้ให้ข้ามเงียบ ๆ** ความแดงนี้คือของที่ #87 ตั้งใจให้เห็น
+│    วิธีตั้งใหม่: supabase.com/dashboard/account/tokens → scoped token (`sbp_fc…`)
 │      เฉพาะ project `waigsnxhrlwtiotspaim` + สิทธิ์ Edge Functions อ่าน-เขียน (ไม่ต้องให้สิทธิ์ Database)
+│ 🔴 **workflow นี้ deploy เฉพาะฟังก์ชันที่ "เปลี่ยนในคอมมิตนั้น"** (แก้ 26 พ.ย. 69 · ledger #104)
+│    เดิมเป็น `supabase functions deploy` เปล่า = ยิงทั้ง 31 โฟลเดอร์ ⇒ จะ **สร้างฟังก์ชันใหม่ 9 ตัว
+│    ที่ไม่เคยขึ้น production เลย** (3 ตัวเป็น endpoint สาธารณะ) โดยไม่มีใครสั่ง
+│    ⇒ จะปล่อยตัวที่ยังไม่เคยขึ้น ต้องสั่งเอง: Actions → Run workflow → ใส่ชื่อ (เว้นวรรคคั่น)
+│    ⚠️ แก้ `config.toml`/`_shared` อย่างเดียว **ไม่ทำให้ของจริงเปลี่ยน** — workflow ขึ้น `::warning::` ให้
+│    กลไก: `ciGate.test.ts` → `bulkDeployCommands()` ห้ามคำสั่ง deploy ที่ไม่ระบุชื่อ (ยืนยันแดงจริง)
+│ 🔴 **9 ตัวในรีโปที่ยังไม่เคยขึ้น production** (นับสด 26 พ.ย. 69 · รีโป 31 · production 25 · ซ้อนกัน 22)
+│    `compliance-check` · `create-recurring-plan` · `handoff-import`† · `line-login`† · `omise-create-charge`
+│    · `privacy-notice` · `recurring-webhook`† · `refund-invoice` · `stripe-create-checkout`
+│    († = `verify_jwt=false` ⇒ เปิดเป็น endpoint สาธารณะทันทีที่ deploy) · ส่วนใหญ่เป็นท่อรับเงิน
+│    ค้างจาก 24 ส.ค. 69 · 🟡 **ยังไม่เคยรันจริง ⇒ ห้ามอ้างว่าระบบรองรับช่องทางเหล่านี้แล้ว**
+│ 🔴 **3 ตัวบน production ที่ไม่มีซอร์สในรีโป**: `marketing-track` · `marketing-generate` · `slipok-quota-check`
+│    ⇒ deploy อัตโนมัติไม่แตะมัน (ปลอดภัย) แต่ก็ **ไม่มีใครอ่านโค้ดมันได้** — ช่องเดิมของ ledger #103
+│    ⇒ deploy มือผ่าน MCP ต้อง **อ่านย้อนด้วย `get_edge_function` เทียบไฟล์ในรีโปทุกครั้ง** (ledger #88, #103)
 ├─ TIS Automate (แยก) ─────────────────────────────────────────────
 │ Supabase project  : galtbbkcddugnsfkgyqm — ไม่มี secret ฝั่ง client (publishable key ฝังได้)
 ├─ Marketing OS = อีกระบบ (ห้ามแตะจากรีโปนี้) ─────────────────────

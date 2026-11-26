@@ -126,3 +126,48 @@ describe('ทุกเส้นทางที่ขึ้น production ต้�
     expect(yml, 'ต้องล้มทันทีถ้าไม่มี token แทนที่จะเงียบ').toContain('SUPABASE_ACCESS_TOKEN');
   });
 });
+
+/* ══════════════════════════════════════════════════════════════════════
+ * ด่าน: workflow deploy edge function **ห้ามยิงรวดเดียวทั้งรีโป** (ledger #104)
+ *
+ * 26 พ.ย. 2569 — ตั้ง `SUPABASE_ACCESS_TOKEN` สำเร็จ รันจริงครั้งแรก CLI ตอบว่า
+ * "Deploy 31 Functions" ⇒ นับสดเทียบ production พบว่า **9 ตัวในรีโปไม่เคยขึ้นเลย**
+ * และ 3 ใน 9 เป็น endpoint สาธารณะ (handoff-import · line-login · recurring-webhook)
+ * ⇒ เติม `--yes` เฉย ๆ เพื่อให้ CI เขียว = ปล่อยท่อรับเงินที่ค้างมา 3 เดือน
+ *   ขึ้น production โดยไม่มีใครสั่ง · "ของที่ยังไม่เคยขึ้น" ต้องเป็นการตัดสินใจ
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/** คำสั่ง deploy ที่ **ไม่ได้ระบุชื่อฟังก์ชัน** (ตามด้วย flag ล้วน หรือไม่ตามด้วยอะไรเลย) */
+function bulkDeployCommands(yml: string): string[] {
+  return [...yml.matchAll(/supabase functions deploy([^\n]*)/g)]
+    .map((m) => m[1].trim())
+    .filter((rest) => rest === '' || rest.startsWith('-'));
+}
+
+describe('🔴 deploy edge function ต้องระบุชื่อเสมอ (ledger #104)', () => {
+  const body = stripComments(fnDeployYml);
+
+  it('ไม่มีคำสั่ง deploy ที่ปล่อยให้ CLI เลือกเองทั้งโฟลเดอร์', () => {
+    expect(bulkDeployCommands(body), 'เจอ bulk deploy = ของที่ไม่เคยขึ้น production จะขึ้นเอง').toEqual([]);
+  });
+
+  it('ด่านนี้จับของผิดได้จริง (ตัวอย่างสังเคราะห์ — กันเทสต์ที่ผ่านเพราะไม่ได้ตรวจอะไร)', () => {
+    expect(bulkDeployCommands('run: supabase functions deploy\n')).toHaveLength(1);
+    expect(bulkDeployCommands('run: supabase functions deploy --project-ref abc\n')).toHaveLength(1);
+    expect(bulkDeployCommands('run: supabase functions deploy --yes\n')).toHaveLength(1);
+    expect(bulkDeployCommands('run: supabase functions deploy "$fn" --remote=x --yes\n')).toHaveLength(0);
+  });
+
+  it('ต้องสั่งแบบไม่ถามยืนยัน — stdout ของ CI ไม่ใช่ terminal ⇒ ถามแล้วล้ม', () => {
+    expect(body).toMatch(/supabase functions deploy[^\n]*--yes/);
+  });
+
+  it('ห้ามใช้ --project-ref ที่ถูกประกาศเลิกใช้ (จะถูกถอดใน CLI v4 · เราปัก version: latest)', () => {
+    expect(body, 'ปัก latest + ใช้ flag ที่จะถูกถอด = พังเองวันหนึ่งโดยไม่มีใครแตะอะไร')
+      .not.toContain('--project-ref');
+  });
+
+  it('ต้อง checkout ลึกพอจะเทียบคอมมิตก่อนหน้าได้ (ไม่งั้นหา "อะไรเปลี่ยน" ไม่ได้)', () => {
+    expect(body).toMatch(/fetch-depth:\s*0/);
+  });
+});

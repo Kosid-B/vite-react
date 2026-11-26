@@ -4,8 +4,15 @@
 #    20 พ.ย. 2569 พบว่า ai-assist ที่รันอยู่ **ไม่มีท่อ log** ทั้งที่ PR merge เข้า main
 #    ไปก่อนแล้ว (deploy จาก checkout ที่ยังไม่ pull) และไม่มีอะไรบอกว่ามันไม่ตรง
 #
-# ⚠️ `supabase functions deploy` (ไม่ระบุชื่อ) deploy ทุกโฟลเดอร์ใน supabase/functions
-#    และอ่าน verify_jwt จาก config.toml — ตัวที่ไม่ประกาศ CLI จะ default เป็น **true**
+# 🔴 **ห้าม `supabase functions deploy` เปล่า ๆ** (ledger #104 · 26 พ.ย. 2569)
+#    รันจริงครั้งแรกหลังตั้ง token CLI ตอบว่า "Deploy 31 Functions" ⇒ นับสดแล้วพบว่า
+#    **9 ตัวในรีโปไม่เคยขึ้น production เลย** และ 3 ใน 9 เป็น endpoint สาธารณะ
+#    (handoff-import · line-login · recurring-webhook) ⇒ เติม --yes เฉย ๆ =
+#    ปล่อยท่อรับเงินที่ค้างมา 3 เดือนขึ้น production โดยไม่มีใครสั่งและไม่เคยทดสอบ
+#    ⇒ กติกา: deploy **เฉพาะฟังก์ชันที่เปลี่ยนในคอมมิตนั้น** หรือที่สั่งชื่อมาเอง
+#    (ของที่ยังไม่เคยขึ้น ถ้าจะขึ้นต้องเป็นการตัดสินใจ ไม่ใช่ผลข้างเคียงของการแก้ไฟล์อื่น)
+#
+# ⚠️ verify_jwt อ่านจาก config.toml ตอน deploy — ตัวที่ไม่ประกาศ CLI จะ default เป็น **true**
 #    ⇒ ด่าน `supabaseFunctionsConfig.test.ts` บังคับว่าทุกฟังก์ชันต้องถูกประกาศ
 #      (เคยหาย 4 ตัว: checkup-report · hubspot-sync · lead-nurture · market-snapshot)
 #
@@ -23,6 +30,11 @@ on:
       - 'supabase/config.toml'
       - '.github/workflows/supabase-functions-deploy.yml'
   workflow_dispatch:
+    inputs:
+      functions:
+        description: 'ชื่อฟังก์ชันที่จะ deploy (เว้นวรรคคั่น) — เว้นว่าง = ใช้ชุดที่เปลี่ยนในคอมมิตล่าสุด'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -41,6 +53,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          # ต้องเทียบกับคอมมิตก่อนหน้าเพื่อหาว่า "ฟังก์ชันไหนเปลี่ยน" — shallow clone เทียบไม่ได้
+          fetch-depth: 0
           persist-credentials: false
 
       - uses: actions/setup-node@v4
@@ -62,8 +76,67 @@ jobs:
             exit 1
           fi
 
+      - name: เลือกว่าจะ deploy ฟังก์ชันไหน (ห้ามยิงรวดเดียวทั้งรีโป)
+        id: pick
+        env:
+          MANUAL: ${{ inputs.functions }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ -n "$(printf '%s' "${MANUAL:-}" | tr -d '[:space:]')" ]; then
+            RAW="$MANUAL"
+            echo "โหมดสั่งมือ"
+          else
+            BASE="${BEFORE:-}"
+            if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] \
+               || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+              BASE="${GITHUB_SHA}^"
+            fi
+            RAW=$(git diff --name-only "$BASE" "$GITHUB_SHA" -- supabase/functions/ \
+                  | awk -F/ 'NF>=4 && $3 != "_shared" {print $3}' | sort -u | tr '\n' ' ')
+            # verify_jwt มีผลตอน deploy เท่านั้น ⇒ แก้ค่าอย่างเดียวไม่ทำให้ของจริงเปลี่ยน
+            if git diff --name-only "$BASE" "$GITHUB_SHA" -- supabase/config.toml | grep -q .; then
+              echo "::warning::config.toml เปลี่ยน — ฟังก์ชันที่แก้แค่ verify_jwt จะยังใช้ค่าเดิมจนกว่าจะสั่ง deploy พร้อมชื่อ (Run workflow)"
+            fi
+            # _shared เป็นโค้ดร่วม — เราไม่เดาว่าใครใช้มันบ้าง
+            if git diff --name-only "$BASE" "$GITHUB_SHA" -- supabase/functions/_shared | grep -q .; then
+              echo "::warning::_shared เปลี่ยน — ฟังก์ชันที่ import มันต้อง deploy ใหม่ด้วย ⇒ สั่ง Run workflow พร้อมรายชื่อ"
+            fi
+          fi
+          LIST=""
+          for fn in $RAW; do
+            case "$fn" in
+              *[!a-z0-9-]*|'') echo "::error::ชื่อฟังก์ชันไม่ถูกต้อง: $fn"; exit 1 ;;
+            esac
+            if [ -d "supabase/functions/$fn" ]; then
+              LIST="$LIST $fn"
+            else
+              echo "::warning::ข้าม $fn — ไม่มีโฟลเดอร์ในรีโปแล้ว (การลบฟังก์ชันบน production ต้องทำมือ)"
+            fi
+          done
+          LIST=$(echo $LIST | xargs || true)
+          echo "list=$LIST" >> "$GITHUB_OUTPUT"
+          if [ -z "$LIST" ]; then
+            echo "ไม่มีฟังก์ชันไหนเปลี่ยน ⇒ ไม่ deploy อะไรเลย (ไม่ใช่ความผิดพลาด)" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "จะ deploy: $LIST" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+
       - uses: supabase/setup-cli@v1
+        if: steps.pick.outputs.list != ''
         with:
           version: latest
 
-      - run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_ID"
+      # --yes เพราะ stdout ไม่ใช่ terminal ⇒ CLI ถามยืนยันไม่ได้แล้วล้ม
+      # --remote แทน --project-ref ที่ถูกประกาศเลิกใช้ (จะถูกถอดใน v4 ซึ่งเราปักเป็น latest)
+      - name: Deploy เฉพาะฟังก์ชันที่เลือก
+        if: steps.pick.outputs.list != ''
+        env:
+          LIST: ${{ steps.pick.outputs.list }}
+        run: |
+          set -euo pipefail
+          for fn in $LIST; do
+            echo "::group::deploy $fn"
+            supabase functions deploy "$fn" --remote="$SUPABASE_PROJECT_ID" --yes
+            echo "::endgroup::"
+          done
