@@ -134,12 +134,18 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
    ห้ามมี `.schema(` ในไฟล์ท่อ · rpc ที่เรียกต้องมี migration + `grant … to service_role` จริง
    🔴 **ยังห้ามพูดว่า "แก้แล้ว"** จนกว่าจะเห็น batch `live` ก้อนถัดไปมี `archived_at` เป็นค่าจริง
    ⚠️ 2 แถวเดิมคง `NULL` ไว้โดยตั้งใจ = หลักฐานชิ้นเดียวที่บอกว่าบั๊กนี้เคยเกิด (ไฟล์อยู่ในคลังครบ)
-🔒 **`marketing_os` ยังปิดสนิท** (นับสด 26 พ.ย.): RLS policy **0** · grant ให้ `anon`/`authenticated` **0** ·
-   ไม่มี USAGE บน schema ⇒ 🔴 **แอป OS ที่ใช้ anon key อ่านไม่ได้สักแถว** — ข้อนี้ยังไม่ถูกแก้
-   และแก้ไม่ได้ด้วยการเปิด grant เฉย ๆ เพราะ `authenticated` ของเรา = **ลูกค้าของเรา** ไม่ใช่ผู้ใช้ของเขา
-   ⇒ เปิดกว้าง = ลูกค้าทุกคนที่ล็อกอินอ่านข้อมูลการตลาดได้ · ต้องตัดสินเรื่อง identity ก่อน
-   🔢 **นับสด 26 พ.ย. 69**: `marketing_os.workspace_members` **11 คน** · ที่มีอยู่ใน `auth.users`
-      ของเรา **0 คน** · ผู้ใช้ทั้งหมดของเรา 4 บัญชี ⇒ policy ที่อิง `auth.uid()` แมตช์ศูนย์แถวเสมอ
+🔑 **สิทธิ์บน `marketing_os` — เปิดให้ `service_role` เท่านั้น** (B1 · ADR-0013 · 26 พ.ย. 69)
+   ตอนย้ายฐาน (0066) เรา revoke จาก `anon`/`authenticated` แล้วจบ **แต่ไม่เคย grant ให้ใครเลย**
+   ⇒ `service_role` เคยมีสิทธิ์บนตาราง **0** · `bypassrls=true` ข้ามได้แค่ **RLS** ไม่ใช่สิทธิ์บนตาราง
+   🟢 แก้แล้วด้วย migration 0069 — ยืนยันหลัง apply: `service_role` = **44 grants** (11×4) ·
+      `anon`/`authenticated` ไม่ปรากฏในรายการสิทธิ์เลย · RLS policy ยังเป็น **0**
+   🔴 **ยังไม่พอสำหรับ `supabase-js`** — PostgREST ต้องมี `marketing_os` ใน **Exposed schemas**
+      (Dashboard → Project Settings → API) ซึ่งรีโปแตะไม่ได้ ⇒ ปิดได้แค่ชั้นสิทธิ์ ·
+      ต่อฐานตรงด้วย **Postgres connection string** = ใช้ได้ทันที
+   🔴 **ห้ามเปิดให้ `anon`/`authenticated` จนกว่าจะตัดสินเรื่อง identity** — นับสด 26 พ.ย. 69:
+      `marketing_os.workspace_members` **11 คน** · มีใน `auth.users` ของเรา **0 คน** · ของเรามี 4 บัญชี
+      ⇒ policy ที่อิง `auth.uid()` แมตช์ศูนย์แถวเสมอ · เปิดกว้างแทน = ลูกค้าเราอ่านข้อมูลการตลาดได้
+      กลไก: `ownershipBoundary.test.ts` ห้าม migration `grant … marketing_os … to anon|authenticated`
 🧪 `mode:'test'` = ทางพิสูจน์โดยไม่ปนข้อมูลจริง · และเพราะ localhost ไม่อยู่ใน allowlist
    ⇒ **ทดสอบจากเครื่องไม่ได้ ต้องทดสอบบน production ด้วย `test`**
    🔒 เทสต์ล็อกค่า `behaviorMode` **สองทาง** — จะกลับไป `'test'` ก็ต้องแก้เทสต์ = ตั้งใจ ไม่ใช่เผลอ
