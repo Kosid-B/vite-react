@@ -38,6 +38,11 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
    ↩️ ย้อนกลับได้: `drop schema marketing_os cascade` (ของเขายังอยู่ครบ — นี่คือคัดลอก ไม่ใช่ตัดทิ้ง)
    🔢 **ลำดับงานที่เหลือ ห้ามสลับ** (26 พ.ย. 2569):
      ① ย้ายแอป OS มาชี้ `waigsnxhrlwtiotspaim` + schema `marketing_os` (ต้องเปิดโฟลเดอร์บนเครื่องเจ้าของ)
+        📋 **สเปกลงมือครบแล้ว**: [OS-APP-REPOINT-CHECKLIST.md](docs/product/OS-APP-REPOINT-CHECKLIST.md)
+           (ตัวเลขวัดสด 26 พ.ย. 69 · รวมสามอย่างที่จะพังถ้าไม่รู้ล่วงหน้า + วิธีวัดว่าสำเร็จ)
+        🟢 **ฝั่งฐานพร้อมหมดแล้ว** — Exposed schemas ✅ · service_role 44 grants ✅ · 11 ตารางครบ ✅
+           เหลือแค่แก้ปลายทางในโค้ดของแอป ซึ่งเซสชันคลาวด์เข้าไม่ถึง (เช็ก 3 รอบวันที่ 26 พ.ย.)
+        🔢 ฐานเดิมของเขา **นิ่งตั้งแต่ 21 พ.ย. 09:34** (= การทดสอบของเราเอง) ⇒ หลังจากนั้นไม่มีอะไรเขียนลงอีก
      ② แล้วค่อยย้าย `brandSync`/`scripts/brand-sync-check.mjs` มาอ่านฐานเดียวกัน
      🔴 **ห้ามทำ ② ก่อน ①** — `brandSync` ต้องชี้ไปที่ "แหล่งจริงที่แอป OS ใช้อยู่" ซึ่งวันนี้ยังเป็น project เดิม
         ย้ายก่อน = รีโปประกาศว่ารวมฐานเสร็จแล้วทั้งที่ยังไม่เสร็จ (และสคริปต์ก็ยังรันไม่ได้อยู่ดี
@@ -46,7 +51,8 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
         จะย้ายต้องแก้เทสต์พร้อมเหตุผล ไม่ใช่แก้ค่าเงียบ ๆ
 🔴 **ของเดิมก่อน 22 พ.ย.: Marketing OS รันบน Supabase ของตัวเอง** (ตรวจสดผ่าน MCP 15 พ.ย. 2569 · ledger #79)
    · **ของอีกระบบ**: `bjozpwdtqbpwcxnqguka` = **"CEOAITHAILAND Marketing"** (org เดียวกัน · ap-northeast-1 · สร้าง 19 ส.ค. 69)
-     โค้ดอยู่เครื่องเจ้าของที่ `D:\CEOAITHAILAND Marketing-P1.0.2-baseline` · deploy เป็น Vercel project `ceo-ai-marketing`
+     โค้ดอยู่เครื่องเจ้าของที่ `D:\CEOAITHAILAND Marketing-P1.0.2-baseline`
+     🔴 (เคยเขียนว่า deploy เป็น Vercel `ceo-ai-marketing` — **ตรวจ 26 พ.ย. 69 แล้วไม่มี project นั้น**)
      **ข้อมูลการตลาดจริงทั้งหมดอยู่ที่นี่** (วัดสด 19 พ.ย. 69: `marketing_brands` 1 · `audience_segments` **6** · `message_pillars` 7)
      🔀 **รหัสกลุ่มสองฝั่งใช้คนละคำ** — เขา `growth`/`employee` · เรา `owner`/`sidebiz` ⇒ ลิงก์ `?seg=growth` ของเขา
         เคยตกเป็นพาดหัว default · แก้แล้วด้วย `brandSync.UPSTREAM_SEG_ALIAS` (derive จาก `SEG_CODE_MAP` ที่เดียว)
@@ -1110,8 +1116,13 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 │ Supabase project  : galtbbkcddugnsfkgyqm — ไม่มี secret ฝั่ง client (publishable key ฝังได้)
 ├─ Marketing OS = อีกระบบ (ห้ามแตะจากรีโปนี้) ─────────────────────
 │ Supabase project  : bjozpwdtqbpwcxnqguka "CEOAITHAILAND Marketing" (org เดียวกัน · ap-northeast-1)
-│ โค้ด/deploy       : D:\CEOAITHAILAND Marketing-P1.0.2-baseline (เครื่องเจ้าของ) → Vercel `ceo-ai-marketing`
-│ ⚠️ ไม่มี repo บน GitHub ⇒ เซสชันคลาวด์เข้าไม่ถึง · ต้องเปิด Claude Code ในโฟลเดอร์นั้นเอง
+│ โค้ด              : D:\CEOAITHAILAND Marketing-P1.0.2-baseline (เครื่องเจ้าของ)
+│ 🔴 **"deploy เป็น Vercel project `ceo-ai-marketing`" — ตรวจแล้วไม่ตรง (26 พ.ย. 2569)**
+│    บัญชี Vercel มี **ทีมเดียว** (`kosid-btc's projects`) และมี 5 project:
+│    `vite-react` · `sck-saas` · `crm-sck` · `youtube-ai-automate-v-1` · `tis-automate`
+│    **ไม่มี `ceo-ai-marketing`** ⇒ อาจอยู่บัญชีอื่น · ถูกลบ · หรือไม่เคยมี — **ยังไม่รู้ ห้ามอ้างต่อ**
+│ ⚠️ ไม่มี repo บน GitHub + โฟลเดอร์ `not_available` ⇒ เซสชันคลาวด์เข้าไม่ถึงทุกทาง
+│    ⇒ สเปกการย้าย (ข้อ ①) เขียนรอไว้แล้วที่ [OS-APP-REPOINT-CHECKLIST.md](docs/product/OS-APP-REPOINT-CHECKLIST.md)
 ├─ Dev/local ──────────────────────────────────────────────────────
 │ ไม่มี .env — local mode ใช้ localStorage · Vercel PR preview build โดยไม่มี VITE_SUPABASE_*
 └──────────────────────────────────────────────────────────────────
