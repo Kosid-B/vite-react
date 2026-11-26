@@ -34,9 +34,17 @@ describe('เส้นแบ่งที่ยังอยู่ — อนุ�
     ]);
   });
 
-  it('project ref ต้องเป็นของอีกระบบ ไม่ใช่ production ของเรา', () => {
-    expect(MARKETING_SOURCE.projectRef).toBe('bjozpwdtqbpwcxnqguka');
-    expect(MARKETING_SOURCE.projectRef).not.toBe('waigsnxhrlwtiotspaim');
+  /* 🔁 แก้พร้อมเหตุผล 26 พ.ย. 2569 (ไม่ใช่แก้ค่าเงียบ ๆ — ตามที่ CLAUDE.md สั่งไว้):
+   *    เดิมล็อกว่า "ต้องเป็นของอีกระบบ ไม่ใช่ production ของเรา" เพราะตอนนั้น Marketing OS รันบน project แยก
+   *    ADR-0011 ย้ายข้อมูลเข้ามา `marketing_os` · ① แอป OS อ่านฐานนี้ผ่านเกณฑ์แล้ว (7/6) · เจ้าของเลือก "ทาง 2"
+   *    ⇒ แหล่งจริงย้ายมาแล้ว · project เดิมนิ่งตั้งแต่ 21 พ.ย. — เทียบกับมันต่อ = จับ drift ไม่ได้อีกเลย
+   *    ⇒ ล็อกสองทางเหมือนเดิม: ต้องเป็นแหล่งใหม่ **และ** ห้ามชี้กลับไปที่เลิกใช้โดยไม่รู้ตัว */
+  it('แหล่งจริง = schema marketing_os ใน production ผ่าน rpc (ไม่ใช่ project เดิมที่เลิกใช้)', () => {
+    expect(MARKETING_SOURCE.projectRef).toBe('waigsnxhrlwtiotspaim');
+    expect(MARKETING_SOURCE.schema).toBe('marketing_os');
+    expect(MARKETING_SOURCE.rpc).toBe('os_brand_sync_segments');
+    expect(MARKETING_SOURCE.retiredProjectRef).toBe('bjozpwdtqbpwcxnqguka');
+    expect(MARKETING_SOURCE.projectRef).not.toBe(MARKETING_SOURCE.retiredProjectRef);
   });
 });
 

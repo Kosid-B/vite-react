@@ -15,13 +15,26 @@
 
 import type { HeroSeg } from './heroVariant';
 
-/** project ของอีกระบบ — ยืนยันสดผ่าน MCP 15 พ.ย. 2569 */
+/** แหล่งจริงของ Marketing OS
+ *
+ *  🔁 **ย้ายแล้ว 26 พ.ย. 2569** (ข้อ ② ของลำดับรวมฐาน · เจ้าของเลือก "ทาง 2")
+ *     เดิม = project แยก `bjozpwdtqbpwcxnqguka` (ยืนยันสด 15 พ.ย.) · **นิ่งตั้งแต่ 21 พ.ย. 09:34**
+ *     ⇒ เทียบกับมัน = เทียบกับของที่ไม่มีใครแก้อีก · drift หลังจากนั้นจะไม่มีวันถูกจับ
+ *     ตอนนี้ = schema `marketing_os` ใน production ของเรา · อ่านผ่าน rpc เท่านั้น (ADR-0012)
+ *  ⚠️ ทำ ② ได้เพราะแหล่งจริงย้ายแล้ว: แอป OS บนเครื่องเจ้าของชี้ฐานนี้และอ่านผ่านเกณฑ์ในเครื่อง
+ *     (brand_rules 7 · segments 6 ไม่ใช่ 10/5 ของ public — วัดด้วย service key ก่อนเปลี่ยนเป็น ADR-0016)
+ *     ส่วน project เดิมไม่มีใครเขียนอีกแล้ว · แอป OS **ยังไม่ deploy** (ดู osRepointReadiness) */
 export const MARKETING_SOURCE = {
-  projectRef: 'bjozpwdtqbpwcxnqguka',
+  projectRef: 'waigsnxhrlwtiotspaim',
+  schema: 'marketing_os',
+  /** rpc ใน `public` ที่สคริปต์เรียก (migration 0074 · service_role เท่านั้น) */
+  rpc: 'os_brand_sync_segments',
+  /** project เดิม — คงไว้เป็นหลักฐาน + ให้เทสต์กันไม่ให้ใครชี้กลับไปโดยไม่รู้ตัว */
+  retiredProjectRef: 'bjozpwdtqbpwcxnqguka',
   projectName: 'CEOAITHAILAND Marketing',
   /** 🔒 อ่านได้เท่านี้ — เจ้าของอนุญาตเฉพาะสามตารางนี้ และเฉพาะการอ่าน */
   readOnlyTables: ['marketing_brands', 'marketing_audience_segments', 'marketing_message_pillars'],
-  /** 🔴 ห้ามเขียนทุกกรณี — ลบ/แก้ของในฐานอีกระบบ = ข้ามเส้นที่กว้างกว่าที่ได้รับอนุญาต */
+  /** 🔴 ห้ามเขียนทุกกรณี — brandSync มีไว้จับ drift ไม่ใช่แก้ข้อมูลของอีกฝั่ง */
   writeAllowed: false,
 } as const;
 
