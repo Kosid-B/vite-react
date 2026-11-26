@@ -156,20 +156,40 @@ export type IdentityApproach =
   /** (ข) ย้ายผู้ใช้ของเขาเข้า `auth.users` ของเรา แล้วเขียน RLS */
   | 'shared_auth_users';
 
-/** 🟢 เจ้าของเลือก 26 พ.ย. 2569 (*"ก"*) — ADR-0015 */
-export const IDENTITY_APPROACH: IdentityApproach = 'service_key_scoped';
+/**
+ * 🟢 เจ้าของเลือก **(ข)** 26 พ.ย. 2569 — ADR-0016 (แทน ADR-0015 ที่เคยเลือก (ก))
+ *    เปลี่ยนเพราะวัดได้ว่าเป็นผู้ใช้จริง **1 คน** และคนนั้นคือ `support@b-tctraining.com`
+ *    ซึ่ง **มีบัญชีในฐานเราอยู่แล้ว** ⇒ ต้นทุนของ (ข) = แมป 1 แถว ไม่ใช่ย้าย 11 บัญชี
+ *    ⇒ ได้ **Postgres บังคับเส้นแบ่ง workspace** แทนโค้ดแอป ซึ่งแข็งแรงกว่า (ก) ทุกทาง
+ */
+export const IDENTITY_APPROACH: IdentityApproach = 'shared_auth_users';
 
 /**
- * 🔴 **เลือกทางแล้ว ≠ ทำแล้ว** — งานอยู่ในโค้ดแอป OS (`apps/marketing-os`) ซึ่งอยู่บนเครื่องเจ้าของ
- *    เซสชันคลาวด์เปิดโฟลเดอร์นั้นไม่ได้ (`not_available`) ⇒ ยืนยันเองไม่ได้ว่าทำแล้วหรือยัง
- *    จะเป็น `true` ได้ต้องมีหลักฐานว่าแอปอ่าน `marketing_audience_segments` ได้ **6 กลุ่ม** จริง
- *    (สเปก: `docs/product/OS-APP-SERVICE-KEY-SCOPING.md`)
+ * 🟢 **ทำแล้วและพิสูจน์แล้วบน production** (migration 0072 · 26 พ.ย. 2569)
+ *    พิสูจน์ด้วยการ **สวมบทผู้ใช้จริงใน SQL** (`set local role authenticated`
+ *    + `request.jwt.claims.sub`) ไม่ใช่แค่ดูว่า policy มีอยู่:
+ *      · เจ้าของ (`d9c45d9c…`) เห็น `marketing_audience_segments` = **6** · brand 1 · pillar 7
+ *        · workspace **1** (ไม่เห็น fixture 2 ก้อน) · สมาชิก 2
+ *      · ลูกค้าคนอื่นของเรา = **0 ทุกตาราง**
+ *      · `anon` · ตารางที่ไม่ได้เปิด · เพิ่มสมาชิก · คนนอกเขียนลง workspace = **ถูกปฏิเสธ 42501 ทั้ง 4 ข้อ**
+ *    🔴 สิ่งที่ยังพิสูจน์ไม่ได้: ชั้น **HTTP/PostgREST** — proxy ของเซสชันคลาวด์ block `supabase.co`
+ *       ⇒ ที่พิสูจน์แล้วคือ **ฐานบังคับถูก** ไม่ใช่ว่า supabase-js เรียกสำเร็จ
  */
-export const IDENTITY_IMPLEMENTED = false;
+export const IDENTITY_IMPLEMENTED = true;
+
+/**
+ * 🔴 **ด่านสุดท้ายที่เหลือ** — แอป OS ยังชี้ไป project เดิม `bjozpwdtqbpwcxnqguka`
+ *    ต้องแก้ 3 ค่าในโค้ดแอป: `NEXT_PUBLIC_SUPABASE_URL` · anon key · `db: { schema: 'marketing_os' }`
+ *    ⇒ อยู่บนเครื่องเจ้าของ · เซสชันคลาวด์เปิดโฟลเดอร์ไม่ได้ (`not_available`)
+ *    เกณฑ์ยืนยัน: แอปแสดงกลุ่มเป้าหมาย **6** กลุ่ม (ของเขา) ไม่ใช่ **5** (ของเรา)
+ */
+export const APP_REPOINTED = false;
 
 export interface OsRepointOpts {
   /** identity พร้อมใช้งานจริงแล้วหรือยัง (เลือกทาง **และ** ทำเสร็จ) — ค่าเริ่มต้นคือสถานะจริงวันนี้ */
   identityReady?: boolean;
+  /** แอป OS ชี้มาฐานเราแล้วหรือยัง */
+  appRepointed?: boolean;
 }
 
 /**
@@ -182,6 +202,7 @@ export function osRepointBlockers(
 ): string[] {
   const identityReady =
     opts.identityReady ?? (IDENTITY_APPROACH !== 'undecided' && IDENTITY_IMPLEMENTED);
+  const appRepointed = opts.appRepointed ?? APP_REPOINTED;
   const c = osRepointCoverage(tables);
   const out: string[] = [];
   if (c.absent > 0) {
@@ -193,6 +214,9 @@ export function osRepointBlockers(
         ? `identity ยังไม่ตัดสิน: ผู้ใช้จริง ${IDENTITY_FACTS.realMembers} คน มีใน auth.users ของเรา ${IDENTITY_FACTS.realMembersInOurAuthUsers} คน`
         : `identity เลือกทางแล้ว (${IDENTITY_APPROACH}) แต่ยังไม่ได้ทำในโค้ดแอป OS`,
     );
+  }
+  if (!appRepointed) {
+    out.push('แอป OS ยังชี้ไป project เดิมของเขา ⇒ ต้องแก้ URL + key + db.schema');
   }
   return out;
 }

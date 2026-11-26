@@ -99,8 +99,12 @@ workspaces · workspace_members · workspace_state          ← สามตั�
 
 🟢 ยืนยันสองฝั่ง ตรงกันทุกแถว · 🟢 `e82e7d93…` = workspace ตัวเดียวกับที่ `marketing-behavior-ingest` hardcode
 ⇒ **แอป OS วันนี้เป็น single-tenant ของเจ้าของ** ไม่ใช่ระบบหลายผู้ใช้
-⇒ ผู้ใช้จริง **1 คน** ยังไม่มีใน `auth.users` ของเรา ⇒ ล็อกอินเดิมใช้ไม่ได้ · `auth.uid()` แมตช์ศูนย์แถว
-⇒ FK ไป `auth.users` ถูกตัดออกตอนย้าย (ตั้งใจ)
+
+🟢 **ปิดแล้ว 26 พ.ย. 69 ด้วย migration 0072 (ADR-0016)** — ผู้ใช้จริงคนนั้นคือ
+`support@b-tctraining.com` ซึ่ง **มีบัญชีในฐานเราอยู่แล้ว** (`d9c45d9c…` สร้าง 27 มิ.ย. 69)
+⇒ แมปเข้า `marketing_os.workspace_members` + เขียน RLS อิงการเป็นสมาชิก ⇒ **ไม่ต้องสร้างบัญชีใหม่**
+⇒ ไม่ต้องใช้ service key ในแอป · **Postgres บังคับเส้นแบ่ง workspace เอง**
+⚠️ FK ไป `auth.users` ยังถูกตัดไว้ตามเดิม (ตั้งใจ) — ความสัมพันธ์บังคับผ่าน policy ไม่ใช่ FK
 
 ## 4. ลำดับที่แนะนำ
 
@@ -132,6 +136,12 @@ workspaces · workspace_members · workspace_state          ← สามตั�
 
 **แอปแสดงกลุ่มเป้าหมาย `marketing_audience_segments` = 6 กลุ่ม**
 (ของเขา 6 · **ของเรา 5**) ⇒ เห็น **5** แปลว่ากำลังอ่าน `public` ของเรา ไม่ใช่ `marketing_os`
+
+🟢 **ฝั่งฐานผ่านเกณฑ์นี้แล้ว 26 พ.ย. 69** — สวมบทผู้ใช้จริงใน SQL
+(`set local role authenticated` + `request.jwt.claims.sub = d9c45d9c…`) ได้ **6 แถว**
+และลูกค้าคนอื่นของเราได้ **0 แถว** · `anon` ถูกปฏิเสธ `42501`
+🔴 **ที่เหลือคือชั้น HTTP** — ยืนยันจากเซสชันคลาวด์ไม่ได้ (proxy block `supabase.co`)
+⇒ ต้องเห็นเลข 6 **ในหน้าเว็บจริง** ถึงจะปิดข้อ ① ได้
 
 ⚠️ ส่วนต่างแค่ 1 แถวจึงเป็นเกณฑ์ที่อ่านพลาดง่าย — ให้ยืนยันซ้ำด้วย **ชื่อกลุ่ม**:
 ฝั่งเขาใช้รหัส `growth`/`employee`/`graduate` · ฝั่งเราใช้ `owner`/`sidebiz`/`newbie`

@@ -44,13 +44,19 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
            แอป OS query **17 ตาราง** · ในฐานเรามีแล้ว **17 จาก 17**
            (มีข้อมูล 5 · โครงสร้างเปล่า 12 ซึ่ง **ฝั่งเขาก็ 0 แถว** ⇒ เท่ากับต้นทาง ไม่ใช่ข้อมูลหาย)
            🟢 **พิสูจน์ว่าไม่เหลื่อม**: fingerprint คอลัมน์ (ชื่อ·ชนิด·not-null·default) **ตรงกันเป๊ะทั้ง 17 ตาราง**
-           🔒 สิทธิ์หลัง 0070+0071: `service_role` **92 grants** (23×4) · `anon`/`authenticated` **0** ·
-              RLS เปิด 23/23 · policy **0** · FK ไป `auth.users` **0** (ตัดออกโดยเจตนา)
-           🔴 **ด่านที่เหลือข้อเดียว = identity** · 🟢 **เจ้าของเลือกทาง (ก) แล้ว 26 พ.ย. 69 (ADR-0015)**
-              ⇒ `osRepointReady()` ยังเป็น **false** เพราะ **เลือกทางแล้ว ≠ ทำแล้ว** (งานอยู่ในโค้ดแอป OS)
-              🔴 **และตัวเลข "11 คน" ที่เราอ้างกันมาตลอด เข้าใจผิด** (ledger #109) — วัดแล้วเป็น
-                 **ผู้ใช้จริง 1 คน + fixture ของเทสต์ RLS 10 คน** ใน workspace ปลอม 2 ก้อนที่ว่างเปล่า
-                 ⇒ ต้นทุนของทาง (ข) = **1 บัญชี ไม่ใช่ 11** ⇒ (ข) ถูกกว่าที่เคยประเมินไว้มาก
+           🟢 **identity จบแล้วด้วย (ข) — เจ้าของเปลี่ยนจาก (ก) หลังเห็นตัวเลขจริง (ADR-0016 แทน ADR-0015)**
+              เหตุที่เปลี่ยน: ตัวเลข "11 คน" ที่เราอ้างกันมาตลอด**อ่านผิด** (ledger #109) —
+              เป็น **ผู้ใช้จริง 1 คน + fixture ของเทสต์ RLS 10 คน** · และคนจริงคนนั้นคือ
+              `support@b-tctraining.com` ซึ่ง **มีบัญชีในฐานเราอยู่แล้ว** (`d9c45d9c…` · 27 มิ.ย. 69)
+              ⇒ ต้นทุน (ข) = **แมป 1 แถว** ไม่ใช่ย้าย 11 บัญชี ⇒ ได้ **Postgres บังคับเส้นแบ่ง** แทนโค้ดแอป
+              🟢 **พิสูจน์แล้วบน production ด้วยการสวมบทผู้ใช้ใน SQL** (migration 0072):
+                 เจ้าของเห็น segment **6** · brand 1 · pillar 7 · workspace **1** (ไม่เห็น fixture) ·
+                 ลูกค้าคนอื่นเห็น **0 ทุกตาราง** · `anon`/ตารางที่ไม่ได้เปิด/เพิ่มสมาชิก/คนนอกเขียน = **ปฏิเสธ 42501 ทั้ง 4**
+              🔴 ชั้นที่ยังพิสูจน์ไม่ได้ = **HTTP/PostgREST** (proxy block `supabase.co`)
+                 ⇒ พิสูจน์แล้วว่า **ฐานบังคับถูก** ไม่ใช่ว่า `supabase-js` เรียกสำเร็จ
+           🔴 **ด่านสุดท้ายที่เหลือ = แอป OS ยังชี้ไป `bjozpwdtqbpwcxnqguka`**
+              ต้องแก้ 3 ค่า: `NEXT_PUBLIC_SUPABASE_URL` · anon key · `db: { schema: 'marketing_os' }`
+              ⇒ `osRepointReady()` ยังเป็น **false** (`APP_REPOINTED = false`)
            ⚠️ เคยเขียนที่นี่ว่า *"ฝั่งฐานพร้อมหมดแล้ว · เหลือแค่แก้ปลายทางในโค้ด"* — **ผิด** (ledger #107)
               เพราะวัดจากจำนวนแถวที่ย้ายได้ (48 แถวตรงกันสองฝั่ง = จริง) ไม่ได้วัดจากของที่แอปใช้
               🔴 **ราก: migration 0066 คัดลอกตาราง "ที่มีข้อมูล" ไม่ได้คัดลอกตาราง "ที่แอปใช้"**
@@ -170,24 +176,31 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
       (Dashboard → Integrations → **Data API → แท็บ Settings** → *Exposed schemas* · ตอนนี้ 3 of 4:
       `graphql_public` · `marketing_os` · `public` · ไม่รวม `private`)
       ⇒ **ข้อ ② ของลำดับงานรวมฐาน ปิดครบทั้งสองชั้นแล้ว** (สิทธิ์ + การมองเห็น)
-      ⚠️ **expose ≠ ใครก็อ่านได้** — `anon`/`authenticated` ยังมี 0 grants · ไม่มี USAGE · RLS policy 0
-         ⇒ ยิงเข้ามาได้ `permission denied` เหมือนเดิม · ที่เปลี่ยนคือ **service key** ใช้ REST ได้แล้ว
+      ⚠️ **expose ≠ ใครก็อ่านได้** — 🔴 `anon` ยังมี **0 grants · ไม่มี USAGE · ไม่มี policy** ตลอดกาล
+         🔁 **`authenticated` เปลี่ยนแล้ว 26 พ.ย. 69 (0072 · ADR-0016)** — ได้ `usage` + CRUD
+         เฉพาะ **17 ตารางที่แอป OS query** พร้อม RLS policy อิงการเป็นสมาชิกทุกตาราง
+         ⇒ ลูกค้าเราที่ไม่ใช่สมาชิกเห็น **0 แถว** (วัดแล้ว) · อีก 6 ตารางยัง `service_role` เท่านั้น
       🔴 **ค่านี้อยู่นอกรีโป เทสต์มองไม่เห็น** — ถ้ามีคนเอา `marketing_os` ออกจากรายการ จะไม่มีอะไรเตือน
          (นี่คือเหตุผลที่ ADR-0012 ยังยืนยันว่าท่อของเราต้องเดินผ่าน **rpc** ไม่ใช่ `.schema()`
           ⇒ ท่อ ingest จะไม่พังตามค่านี้ ไม่ว่าใครจะไปแก้มันเมื่อไร)
       🟢 ตรวจแล้วว่าสวิตช์ **"Automatically expose new tables"** (เปิดอยู่) ไม่กระทบ schema นี้ —
          `pg_default_acl` ของ `marketing_os` มีแต่ `service_role=arwd` (มาจาก 0069) ·
          ของ `public` ต่างหากที่มี `anon`/`authenticated` ⇒ ตารางใหม่ใน `marketing_os` ไม่หลุดไปหาเบราว์เซอร์
-   🔴 **ห้ามเปิดให้ `anon`/`authenticated` จนกว่า identity จะถูก *ทำ* เสร็จ** (เลือกทางแล้ว ≠ ทำแล้ว)
-      🔁 **แก้ 26 พ.ย. 69 (ledger #109) — เคยเขียนที่นี่ว่า `workspace_members` 11 คน ซึ่งอ่านว่าเป็นคนจริง 11 คน**
-      วัดสดสองฝั่งแล้ว: **3 workspace** — `RLS_TEST_WORKSPACE_A`/`B` (สร้างวินาทีเดียวกัน 24 ส.ค. ·
+   🔑 **สิทธิ์ของ browser role บน `marketing_os` — กฎที่ใช้ตั้งแต่ 26 พ.ย. 69 (ADR-0016)**
+      ① 🔴 **`anon` ห้ามได้สิทธิ์ตลอดกาล** — ไม่มีเงื่อนไขใดยกเว้นได้
+      ② `authenticated` ได้เฉพาะเมื่อ migration เดียวกัน **สร้าง RLS policy ด้วย** (สิทธิ์เปล่า = ยังห้าม)
+      ③ ห้าม `on all tables in schema` และห้าม `alter default privileges` (บทเรียน 0069: ตารางอนาคตได้สิทธิ์เงียบ ๆ)
+      🔁 **เคยเขียนที่นี่ว่า `workspace_members` 11 คน** ซึ่งอ่านว่าเป็นคนจริง 11 คน — **ผิด** (ledger #109)
+      วัดสดสองฝั่ง: **3 workspace** — `RLS_TEST_WORKSPACE_A`/`B` (สร้างวินาทีเดียวกัน 24 ส.ค. ·
       สมาชิก 5+5 · brand/segment/rule = **0 ทั้งคู่** = fixture ของเทสต์ RLS) + `ceo-ai-thailand`
       (`e82e7d93…` · **สมาชิก 1 คน** · ถือข้อมูลจริงทั้งหมด 1 brand · 6 segment · 7 rule)
-      ⇒ **ผู้ใช้จริง 1 คน** · มีใน `auth.users` ของเรา **0 คน** · ของเรามี 4 บัญชี
+      ⇒ **ผู้ใช้จริง 1 คน** = `support@b-tctraining.com` ซึ่งมีบัญชีในฐานเราอยู่แล้ว ⇒ แมปเข้า `workspace_members` แล้ว
       ⇒ `e82e7d93…` คือ workspace ตัวเดียวกับที่ `marketing-behavior-ingest` hardcode ⇒ **แอป OS = single-tenant**
-      ⚠️ ที่ยังจริงเหมือนเดิม: policy ที่อิง `auth.uid()` แมตช์ศูนย์แถว · เปิดกว้างแทน = ลูกค้าเราอ่านข้อมูลการตลาดได้
+      ⚠️ **ความปลอดภัยยืนอยู่บน policy ไม่ใช่บน grant** — ลบ policy = เปิดหมดทันที
+         (เหตุผลที่ด่าน B1 บังคับว่า grant กับ policy ต้องมาคู่กัน)
       แหล่งความจริง: `osRepointReadiness.IDENTITY_FACTS` (ล็อกด้วยเทสต์)
-      กลไก: `ownershipBoundary.test.ts` ห้าม migration `grant … marketing_os … to anon|authenticated`
+      กลไก: `ownershipBoundary.test.ts` — `anon` ห้ามเสมอ · `authenticated` ต้องมี policy · ห้ามเหวี่ยงทั้ง schema
+         + เทสต์อ่าน `0072` ตัวจริงว่าไม่มี `to anon` และ 4 ตารางที่ไม่ควรเปิดไม่ถูกเปิด
 🧪 `mode:'test'` = ทางพิสูจน์โดยไม่ปนข้อมูลจริง · และเพราะ localhost ไม่อยู่ใน allowlist
    ⇒ **ทดสอบจากเครื่องไม่ได้ ต้องทดสอบบน production ด้วย `test`**
    🔒 เทสต์ล็อกค่า `behaviorMode` **สองทาง** — จะกลับไป `'test'` ก็ต้องแก้เทสต์ = ตั้งใจ ไม่ใช่เผลอ

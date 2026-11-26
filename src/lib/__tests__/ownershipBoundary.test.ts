@@ -142,39 +142,93 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
     }
   });
 
-  /** 🔴 B1 (ADR-0013 · 26 พ.ย. 2569) — `marketing_os` เปิดให้ `service_role` เท่านั้น
+  /** 🔴 B1 — สิทธิ์ของ `marketing_os` บน browser role
    *
-   *  เหตุผลเป็นตัวเลข ไม่ใช่ความระแวง: `marketing_os.workspace_members` มี 11 คน
-   *  ที่มีตัวตนใน `auth.users` ของเรา = **0** ⇒ policy ที่อิง `auth.uid()` แมตช์ศูนย์แถวเสมอ
-   *  และถ้าเปิดกว้างให้ `authenticated` แทน = **ลูกค้าของเราอ่านข้อมูลการตลาดของอีกระบบได้**
-   *  ⇒ การเปิดให้ browser role ต้องมาพร้อมคำตอบเรื่อง identity เสมอ ห้ามเปิดดักไว้ก่อน */
-  it('🔴 migration ห้าม grant `marketing_os` ให้ anon/authenticated (service_role เท่านั้น)', () => {
+   *  🔁 **แก้อย่างจงใจ 26 พ.ย. 2569 (ADR-0016 แทน ADR-0013/0015) — ไม่ใช่การผ่อนด่าน**
+   *  กฎเดิม: *ห้าม grant ให้ `anon`/`authenticated` เลย* · เหตุผลที่เขียนไว้คือ
+   *  *"`workspace_members` 11 คน มีใน `auth.users` ของเรา 0 ⇒ policy อิง `auth.uid()` แมตช์ศูนย์แถว"*
+   *  🔴 ตัวเลขนั้น **อ่านผิด** (ledger #109): เป็นผู้ใช้จริง **1 คน** + fixture ของเทสต์ RLS 10 คน
+   *     และคนจริงคนนั้นคือ `support@b-tctraining.com` ซึ่ง **มีบัญชีในฐานเราอยู่แล้ว**
+   *  ⇒ เงื่อนไขที่กฎเดิมรออยู่ (*"จนกว่าจะตัดสินเรื่อง identity"*) **เกิดขึ้นแล้ว**
+   *
+   *  กฎใหม่ — **แคบลงกว่าเดิมในสองแกน ไม่ได้กว้างขึ้น**:
+   *   ① `anon` **ห้ามได้สิทธิ์ตลอดกาล** ไม่มีเงื่อนไขใด ๆ มายกเว้นได้
+   *   ② `authenticated` ได้เฉพาะเมื่อ migration เดียวกัน **สร้าง RLS policy ด้วย**
+   *      ⇒ สิทธิ์เปล่าที่ไม่มี policy คุม = ของเดิมที่เราห้าม และยังห้ามอยู่
+   *   ③ ห้าม `on all tables in schema` และห้าม `alter default privileges` กับ `authenticated`
+   *      ⇒ ต้องระบุชื่อตารางทีละตัว (บทเรียน 0069: ตารางที่สร้างทีหลังได้สิทธิ์ติดมาเงียบ ๆ) */
+  const scanBrowserGrants = (sql: string): string[] => {
+    const hasPolicy = /create\s+policy[\s\S]*?marketing_os/i.test(sql);
+    const bad: string[] = [];
+    for (const stmt of sql.split(';')) {
+      if (!/marketing_os/i.test(stmt)) continue;
+      const head = stmt.replace(/^[\s\S]*?\n(?=\s*(grant|alter))/i, '');
+      if (!/^\s*(grant|alter\s+default\s+privileges)/i.test(head)) continue;
+      if (!/\bto\b[^;]*\b(anon|authenticated)\b/i.test(stmt)) continue;
+      // ① anon = ห้ามเสมอ
+      if (/\bto\b[^;]*\banon\b/i.test(stmt)) {
+        bad.push(`anon: ${stmt.trim().slice(0, 70)}`);
+        continue;
+      }
+      // ③ ห้ามเหวี่ยงกว้าง
+      if (/all\s+tables\s+in\s+schema/i.test(stmt) || /^\s*alter\s+default\s+privileges/i.test(head)) {
+        bad.push(`กว้างเกิน: ${stmt.trim().slice(0, 70)}`);
+        continue;
+      }
+      // ② authenticated ต้องมี policy คู่กันในไฟล์เดียวกัน
+      if (!hasPolicy) bad.push(`ไม่มี policy คู่กัน: ${stmt.trim().slice(0, 70)}`);
+    }
+    return bad;
+  };
+
+  it('🔴 migration: `anon` ห้ามได้สิทธิ์บน `marketing_os` · `authenticated` ต้องมี policy คู่กัน', () => {
     const bad: string[] = [];
     for (const f of readdirSync(resolve(ROOT, 'supabase/migrations')).filter((x) => x.endsWith('.sql'))) {
-      const sql = readFileSync(resolve(ROOT, 'supabase/migrations', f), 'utf8');
-      for (const stmt of sql.split(';')) {
-        if (!/marketing_os/i.test(stmt)) continue;
-        if (!/^\s*(grant|alter\s+default\s+privileges)/i.test(stmt.replace(/^[\s\S]*?\n(?=\s*(grant|alter))/i, ''))) continue;
-        if (/\bto\b[^;]*\b(anon|authenticated)\b/i.test(stmt)) bad.push(`${f}: ${stmt.trim().slice(0, 60)}…`);
+      for (const b of scanBrowserGrants(readFileSync(resolve(ROOT, 'supabase/migrations', f), 'utf8'))) {
+        bad.push(`${f} → ${b}`);
       }
     }
-    expect(bad, `เปิด marketing_os ให้ browser role: ${bad.join(' | ')}`).toEqual([]);
+    expect(bad, `สิทธิ์ browser role ที่ไม่ผ่านกฎ: ${bad.join(' | ')}`).toEqual([]);
   });
 
-  it('🔴 ด่าน B1 ต้องจับของผิดได้จริง (ตัวอย่างสังเคราะห์)', () => {
-    const scan = (sql: string) => {
-      const bad: string[] = [];
-      for (const stmt of sql.split(';')) {
-        if (!/marketing_os/i.test(stmt)) continue;
-        if (!/^\s*(grant|alter\s+default\s+privileges)/i.test(stmt.replace(/^[\s\S]*?\n(?=\s*(grant|alter))/i, ''))) continue;
-        if (/\bto\b[^;]*\b(anon|authenticated)\b/i.test(stmt)) bad.push(stmt);
-      }
-      return bad;
-    };
-    expect(scan('grant select on all tables in schema marketing_os to authenticated;'), 'ต้องจับ').toHaveLength(1);
-    expect(scan('grant usage on schema marketing_os to anon;'), 'ต้องจับ').toHaveLength(1);
-    expect(scan('grant select on all tables in schema marketing_os to service_role;'), 'service_role ต้องผ่าน').toHaveLength(0);
-    expect(scan('revoke all on marketing_os.x from anon, authenticated;'), 'revoke ต้องไม่ถูกจับ').toHaveLength(0);
+  it('🔴 ด่าน B1 ต้องจับของผิดได้จริง และต้องไม่จับของที่ถูก (ตัวอย่างสังเคราะห์)', () => {
+    const POLICY =
+      'create policy p on marketing_os.t for all to authenticated using (marketing_os.is_workspace_member(workspace_id));';
+    // ① anon ห้ามเสมอ แม้มี policy
+    expect(scanBrowserGrants(`grant usage on schema marketing_os to anon; ${POLICY}`)).toHaveLength(1);
+    expect(scanBrowserGrants('grant select on marketing_os.t to anon;')).toHaveLength(1);
+    // ② authenticated ไม่มี policy = ห้าม
+    expect(scanBrowserGrants('grant select on marketing_os.t to authenticated;')).toHaveLength(1);
+    // ② authenticated + policy = ผ่าน
+    expect(scanBrowserGrants(`grant select on marketing_os.t to authenticated; ${POLICY}`)).toHaveLength(0);
+    // ③ กว้างเกิน = ห้าม แม้มี policy
+    expect(
+      scanBrowserGrants(`grant select on all tables in schema marketing_os to authenticated; ${POLICY}`),
+    ).toHaveLength(1);
+    expect(
+      scanBrowserGrants(
+        `alter default privileges in schema marketing_os grant select on tables to authenticated; ${POLICY}`,
+      ),
+    ).toHaveLength(1);
+    // service_role ยังผ่านทุกแบบเหมือนเดิม
+    expect(scanBrowserGrants('grant select on all tables in schema marketing_os to service_role;')).toHaveLength(0);
+    // revoke ต้องไม่ถูกนับเป็นการเปิด
+    expect(scanBrowserGrants('revoke all on marketing_os.x from anon, authenticated;')).toHaveLength(0);
+  });
+
+  it('🔴 0072 ต้องปิด `anon` ไว้จริง และระบุชื่อตารางทีละตัว ไม่เหวี่ยงทั้ง schema', () => {
+    const sql = readFileSync(resolve(ROOT, 'supabase/migrations/0072_marketing_os_member_rls.sql'), 'utf8');
+    const code = sql.replace(/^\s*--.*$/gm, '');
+    expect(/\bto\b[^;]*\banon\b/i.test(code), 'ห้าม grant ให้ anon').toBe(false);
+    expect(/all\s+tables\s+in\s+schema/i.test(code), 'ห้ามเหวี่ยงทั้ง schema').toBe(false);
+    expect(/alter\s+default\s+privileges/i.test(code), 'ห้ามตั้ง default ให้ตารางอนาคต').toBe(false);
+    // ตารางที่ไม่ได้อยู่ใน 17 ตัวของแอป ต้องไม่ถูกเปิดให้ authenticated
+    for (const t of ['marketing_behavior_events', 'marketing_behavior_batches', 'marketing_brand_rules', 'workspace_state']) {
+      expect(code.includes(`${t} to authenticated`), `${t} ต้องไม่ถูกเปิด`).toBe(false);
+    }
+    // workspaces / workspace_members = อ่านเท่านั้น (กัน privilege escalation)
+    expect(code).toMatch(/grant select on marketing_os\.workspace_members to authenticated/);
+    expect(/insert[^;]*marketing_os\.workspace_members to authenticated/i.test(code)).toBe(false);
   });
 
   /* ── ข้อยกเว้น 15 พ.ย. 2569 — อ่านอย่างเดียว 3 ตาราง ───────────────────

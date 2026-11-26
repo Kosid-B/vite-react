@@ -8,6 +8,7 @@ import {
   OS_REPOINT_HOW_TO_COUNT,
   OS_REPOINT_MEASURED_AT,
   OS_REPOINT_OBSERVABLE_SIGNAL,
+  APP_REPOINTED,
   IDENTITY_APPROACH,
   IDENTITY_FACTS,
   IDENTITY_IMPLEMENTED,
@@ -70,35 +71,35 @@ describe('osRepointReadiness — ตัวเลขที่ล็อกไว�
 });
 
 describe('osRepointReadiness — ด่านกั้น', () => {
-  it('🔴 วันนี้ยังไม่พร้อม — และเหลือด่านเดียวคือ identity ไม่ใช่เรื่องตารางอีกแล้ว', () => {
+  it('🔴 วันนี้ยังไม่พร้อม — และเหลือด่านเดียวคือ "แอปยังไม่ชี้มาฐานเรา"', () => {
     expect(osRepointReady()).toBe(false);
     const b = osRepointBlockers();
     expect(b).toHaveLength(1);
-    expect(b[0]).toContain('identity');
+    expect(b[0]).toContain('แอป OS ยังชี้ไป project เดิม');
   });
 
-  it('🔴 เลือกทางแล้ว ≠ ทำแล้ว — ข้อความต้องแยกสองเรื่องนี้ออกจากกัน', () => {
-    expect(IDENTITY_APPROACH).toBe('service_key_scoped');
-    expect(IDENTITY_IMPLEMENTED).toBe(false);
-    // เลือกทางแล้ว ⇒ ต้องบอกว่า "ยังไม่ได้ทำ" ไม่ใช่ "ยังไม่ตัดสิน"
-    const b = osRepointBlockers();
-    expect(b[0]).toContain('เลือกทางแล้ว');
-    expect(b[0]).toContain('service_key_scoped');
-    expect(b[0]).not.toContain('ยังไม่ตัดสิน');
+  it('🟢 identity ทำแล้วจริง (ADR-0016) — ตารางครบ + identity จบ เหลือแค่แอป', () => {
+    expect(IDENTITY_APPROACH).toBe('shared_auth_users');
+    expect(IDENTITY_IMPLEMENTED).toBe(true);
+    expect(APP_REPOINTED).toBe(false);
+    // ถอย identity กลับ = ต้องมี blocker สองข้อ ไม่ใช่ข้อเดียว
+    expect(osRepointBlockers(OS_APP_TABLES, { identityReady: false })).toHaveLength(2);
+    // แอปชี้มาแล้ว = ผ่านครบ
+    expect(osRepointReady(OS_APP_TABLES, { appRepointed: true })).toBe(true);
   });
 
   it('ด่านนี้ไม่ใช่ false ตายตัว — ครบทุกตาราง + ตัดสิน identity แล้ว = ผ่าน', () => {
     const allThere: OsAppTable[] = OS_APP_TABLES.map((t) => ({ ...t, state: 'has_data' }));
-    expect(osRepointReady(allThere, { identityReady: true })).toBe(true);
-    expect(osRepointBlockers(allThere, { identityReady: true })).toEqual([]);
+    expect(osRepointReady(allThere, { identityReady: true, appRepointed: true })).toBe(true);
+    expect(osRepointBlockers(allThere, { identityReady: true, appRepointed: true })).toEqual([]);
   });
 
   it('แก้ identity อย่างเดียวไม่พอ · สร้างตารางอย่างเดียวก็ไม่พอ (ต้องครบทั้งคู่)', () => {
     const oneGone: OsAppTable[] = OS_APP_TABLES.map((t, i) =>
       i === 0 ? { ...t, state: 'absent' as const } : t,
     );
-    expect(osRepointReady(oneGone, { identityReady: true })).toBe(false);
-    expect(osRepointReady(OS_APP_TABLES, { identityReady: false })).toBe(false);
+    expect(osRepointReady(oneGone, { identityReady: true, appRepointed: true })).toBe(false);
+    expect(osRepointReady(OS_APP_TABLES, { identityReady: false, appRepointed: true })).toBe(false);
   });
 
   it('🟢 structure_only ไม่ใช่ blocker — 0 แถวเท่ากับฝั่งเขา ไม่ใช่ข้อมูลหาย', () => {
@@ -106,7 +107,7 @@ describe('osRepointReadiness — ด่านกั้น', () => {
       { name: 'a', state: 'has_data' },
       { name: 'b', state: 'structure_only' },
     ];
-    expect(osRepointBlockers(mixed, { identityReady: true })).toEqual([]);
+    expect(osRepointBlockers(mixed, { identityReady: true, appRepointed: true })).toEqual([]);
   });
 
   it('🔴 แต่ absent ยังเป็น blocker เสมอ แม้ identity จบแล้ว', () => {
@@ -114,7 +115,7 @@ describe('osRepointReadiness — ด่านกั้น', () => {
       { name: 'a', state: 'has_data' },
       { name: 'b', state: 'absent' },
     ];
-    const b = osRepointBlockers(gone, { identityReady: true });
+    const b = osRepointBlockers(gone, { identityReady: true, appRepointed: true });
     expect(b).toHaveLength(1);
     expect(b[0]).toContain('1 ตัวไม่มีในฐานเราเลย');
   });
