@@ -8,7 +8,9 @@ import {
   OS_REPOINT_HOW_TO_COUNT,
   OS_REPOINT_MEASURED_AT,
   OS_REPOINT_OBSERVABLE_SIGNAL,
-  IDENTITY_DECIDED,
+  IDENTITY_APPROACH,
+  IDENTITY_FACTS,
+  IDENTITY_IMPLEMENTED,
   osRepointBlockers,
   osRepointCoverage,
   osRepointReady,
@@ -69,25 +71,34 @@ describe('osRepointReadiness — ตัวเลขที่ล็อกไว�
 
 describe('osRepointReadiness — ด่านกั้น', () => {
   it('🔴 วันนี้ยังไม่พร้อม — และเหลือด่านเดียวคือ identity ไม่ใช่เรื่องตารางอีกแล้ว', () => {
-    expect(IDENTITY_DECIDED).toBe(false);
     expect(osRepointReady()).toBe(false);
     const b = osRepointBlockers();
     expect(b).toHaveLength(1);
-    expect(b[0]).toContain('identity ยังไม่ตัดสิน');
+    expect(b[0]).toContain('identity');
+  });
+
+  it('🔴 เลือกทางแล้ว ≠ ทำแล้ว — ข้อความต้องแยกสองเรื่องนี้ออกจากกัน', () => {
+    expect(IDENTITY_APPROACH).toBe('service_key_scoped');
+    expect(IDENTITY_IMPLEMENTED).toBe(false);
+    // เลือกทางแล้ว ⇒ ต้องบอกว่า "ยังไม่ได้ทำ" ไม่ใช่ "ยังไม่ตัดสิน"
+    const b = osRepointBlockers();
+    expect(b[0]).toContain('เลือกทางแล้ว');
+    expect(b[0]).toContain('service_key_scoped');
+    expect(b[0]).not.toContain('ยังไม่ตัดสิน');
   });
 
   it('ด่านนี้ไม่ใช่ false ตายตัว — ครบทุกตาราง + ตัดสิน identity แล้ว = ผ่าน', () => {
     const allThere: OsAppTable[] = OS_APP_TABLES.map((t) => ({ ...t, state: 'has_data' }));
-    expect(osRepointReady(allThere, { identityDecided: true })).toBe(true);
-    expect(osRepointBlockers(allThere, { identityDecided: true })).toEqual([]);
+    expect(osRepointReady(allThere, { identityReady: true })).toBe(true);
+    expect(osRepointBlockers(allThere, { identityReady: true })).toEqual([]);
   });
 
   it('แก้ identity อย่างเดียวไม่พอ · สร้างตารางอย่างเดียวก็ไม่พอ (ต้องครบทั้งคู่)', () => {
     const oneGone: OsAppTable[] = OS_APP_TABLES.map((t, i) =>
       i === 0 ? { ...t, state: 'absent' as const } : t,
     );
-    expect(osRepointReady(oneGone, { identityDecided: true })).toBe(false);
-    expect(osRepointReady(OS_APP_TABLES, { identityDecided: false })).toBe(false);
+    expect(osRepointReady(oneGone, { identityReady: true })).toBe(false);
+    expect(osRepointReady(OS_APP_TABLES, { identityReady: false })).toBe(false);
   });
 
   it('🟢 structure_only ไม่ใช่ blocker — 0 แถวเท่ากับฝั่งเขา ไม่ใช่ข้อมูลหาย', () => {
@@ -95,7 +106,7 @@ describe('osRepointReadiness — ด่านกั้น', () => {
       { name: 'a', state: 'has_data' },
       { name: 'b', state: 'structure_only' },
     ];
-    expect(osRepointBlockers(mixed, { identityDecided: true })).toEqual([]);
+    expect(osRepointBlockers(mixed, { identityReady: true })).toEqual([]);
   });
 
   it('🔴 แต่ absent ยังเป็น blocker เสมอ แม้ identity จบแล้ว', () => {
@@ -103,13 +114,44 @@ describe('osRepointReadiness — ด่านกั้น', () => {
       { name: 'a', state: 'has_data' },
       { name: 'b', state: 'absent' },
     ];
-    const b = osRepointBlockers(gone, { identityDecided: true });
+    const b = osRepointBlockers(gone, { identityReady: true });
     expect(b).toHaveLength(1);
     expect(b[0]).toContain('1 ตัวไม่มีในฐานเราเลย');
   });
 });
 
+describe('osRepointReadiness — ความจริงเรื่อง identity', () => {
+  it('🔴 ล็อกตัวเลขที่วัดได้ และบังคับให้ "สมาชิกทั้งหมด" แยกจาก "ผู้ใช้จริง" เสมอ', () => {
+    const f = IDENTITY_FACTS;
+    expect(f.membersTotal).toBe(11);
+    expect(f.realMembers).toBe(1);
+    expect(f.fixtureMembers).toBe(10);
+    expect(f.realMembers + f.fixtureMembers).toBe(f.membersTotal);
+    expect(f.realWorkspaces).toBe(1);
+    expect(f.fixtureWorkspaces).toBe(2);
+    expect(f.realWorkspaces + f.fixtureWorkspaces).toBe(f.workspacesTotal);
+    expect(f.realMembersInOurAuthUsers).toBe(0);
+    expect(f.measuredAt).toBe('2026-11-26');
+  });
+
+  it('🔴 fixture ต้องไม่ถูกนับเป็นผู้ใช้จริง — ถ้าเท่ากันคือกลับไปสับสนเหมือนเดิม', () => {
+    expect(IDENTITY_FACTS.realMembers).toBeLessThan(IDENTITY_FACTS.membersTotal);
+  });
+
+  it('ข้อความ blocker ต้องไม่อ้างจำนวนรวมเป็นจำนวนคนที่ต้องย้าย', () => {
+    const b = osRepointBlockers(OS_APP_TABLES, { identityReady: false });
+    expect(b.join(' ')).not.toContain('11 คน');
+  });
+});
+
 describe('osRepointReadiness — เอกสารต้องพูดตรงกับตัวเลข', () => {
+  it('🔴 CLAUDE.md ห้ามอ้าง workspace_members 11 คน แบบที่อ่านว่าเป็นคนจริง 11 คน', () => {
+    const lines = read('CLAUDE.md')
+      .split('\n')
+      .filter((l) => /workspace_members/.test(l) && /11 คน/.test(l) && !l.includes('เคยเขียน'));
+    expect(lines).toEqual([]);
+  });
+
   it(`${CHECKLIST} ต้องอ้างสัดส่วนที่วัดได้ "${OS_REPOINT_COVERAGE_PHRASE}"`, () => {
     expect(read(CHECKLIST)).toContain(OS_REPOINT_COVERAGE_PHRASE);
   });

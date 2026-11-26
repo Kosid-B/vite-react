@@ -46,8 +46,11 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
            🟢 **พิสูจน์ว่าไม่เหลื่อม**: fingerprint คอลัมน์ (ชื่อ·ชนิด·not-null·default) **ตรงกันเป๊ะทั้ง 17 ตาราง**
            🔒 สิทธิ์หลัง 0070+0071: `service_role` **92 grants** (23×4) · `anon`/`authenticated` **0** ·
               RLS เปิด 23/23 · policy **0** · FK ไป `auth.users` **0** (ตัดออกโดยเจตนา)
-           🔴 **ด่านที่เหลือข้อเดียว = identity** — `workspace_members` 11 คน มีใน `auth.users` ของเรา 0 คน
-              ⇒ `osRepointReady()` ยังเป็น **false** และจะเป็น false จนเรื่องนี้ถูกตัดสิน
+           🔴 **ด่านที่เหลือข้อเดียว = identity** · 🟢 **เจ้าของเลือกทาง (ก) แล้ว 26 พ.ย. 69 (ADR-0015)**
+              ⇒ `osRepointReady()` ยังเป็น **false** เพราะ **เลือกทางแล้ว ≠ ทำแล้ว** (งานอยู่ในโค้ดแอป OS)
+              🔴 **และตัวเลข "11 คน" ที่เราอ้างกันมาตลอด เข้าใจผิด** (ledger #109) — วัดแล้วเป็น
+                 **ผู้ใช้จริง 1 คน + fixture ของเทสต์ RLS 10 คน** ใน workspace ปลอม 2 ก้อนที่ว่างเปล่า
+                 ⇒ ต้นทุนของทาง (ข) = **1 บัญชี ไม่ใช่ 11** ⇒ (ข) ถูกกว่าที่เคยประเมินไว้มาก
            ⚠️ เคยเขียนที่นี่ว่า *"ฝั่งฐานพร้อมหมดแล้ว · เหลือแค่แก้ปลายทางในโค้ด"* — **ผิด** (ledger #107)
               เพราะวัดจากจำนวนแถวที่ย้ายได้ (48 แถวตรงกันสองฝั่ง = จริง) ไม่ได้วัดจากของที่แอปใช้
               🔴 **ราก: migration 0066 คัดลอกตาราง "ที่มีข้อมูล" ไม่ได้คัดลอกตาราง "ที่แอปใช้"**
@@ -175,9 +178,15 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
       🟢 ตรวจแล้วว่าสวิตช์ **"Automatically expose new tables"** (เปิดอยู่) ไม่กระทบ schema นี้ —
          `pg_default_acl` ของ `marketing_os` มีแต่ `service_role=arwd` (มาจาก 0069) ·
          ของ `public` ต่างหากที่มี `anon`/`authenticated` ⇒ ตารางใหม่ใน `marketing_os` ไม่หลุดไปหาเบราว์เซอร์
-   🔴 **ห้ามเปิดให้ `anon`/`authenticated` จนกว่าจะตัดสินเรื่อง identity** — นับสด 26 พ.ย. 69:
-      `marketing_os.workspace_members` **11 คน** · มีใน `auth.users` ของเรา **0 คน** · ของเรามี 4 บัญชี
-      ⇒ policy ที่อิง `auth.uid()` แมตช์ศูนย์แถวเสมอ · เปิดกว้างแทน = ลูกค้าเราอ่านข้อมูลการตลาดได้
+   🔴 **ห้ามเปิดให้ `anon`/`authenticated` จนกว่า identity จะถูก *ทำ* เสร็จ** (เลือกทางแล้ว ≠ ทำแล้ว)
+      🔁 **แก้ 26 พ.ย. 69 (ledger #109) — เคยเขียนที่นี่ว่า `workspace_members` 11 คน ซึ่งอ่านว่าเป็นคนจริง 11 คน**
+      วัดสดสองฝั่งแล้ว: **3 workspace** — `RLS_TEST_WORKSPACE_A`/`B` (สร้างวินาทีเดียวกัน 24 ส.ค. ·
+      สมาชิก 5+5 · brand/segment/rule = **0 ทั้งคู่** = fixture ของเทสต์ RLS) + `ceo-ai-thailand`
+      (`e82e7d93…` · **สมาชิก 1 คน** · ถือข้อมูลจริงทั้งหมด 1 brand · 6 segment · 7 rule)
+      ⇒ **ผู้ใช้จริง 1 คน** · มีใน `auth.users` ของเรา **0 คน** · ของเรามี 4 บัญชี
+      ⇒ `e82e7d93…` คือ workspace ตัวเดียวกับที่ `marketing-behavior-ingest` hardcode ⇒ **แอป OS = single-tenant**
+      ⚠️ ที่ยังจริงเหมือนเดิม: policy ที่อิง `auth.uid()` แมตช์ศูนย์แถว · เปิดกว้างแทน = ลูกค้าเราอ่านข้อมูลการตลาดได้
+      แหล่งความจริง: `osRepointReadiness.IDENTITY_FACTS` (ล็อกด้วยเทสต์)
       กลไก: `ownershipBoundary.test.ts` ห้าม migration `grant … marketing_os … to anon|authenticated`
 🧪 `mode:'test'` = ทางพิสูจน์โดยไม่ปนข้อมูลจริง · และเพราะ localhost ไม่อยู่ใน allowlist
    ⇒ **ทดสอบจากเครื่องไม่ได้ ต้องทดสอบบน production ด้วย `test`**

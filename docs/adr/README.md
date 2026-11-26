@@ -49,5 +49,6 @@
 | [0012](0012-rpc-only-into-marketing-os.md) | เข้า `marketing_os` ผ่าน rpc ใน `public` เท่านั้น ห้ามพึ่ง Exposed schemas | `accepted` |
 | [0013](0013-marketing-os-service-role-only.md) | เปิด `marketing_os` ให้ `service_role` เท่านั้น ยังไม่เปิดให้ browser role | `accepted` |
 | [0014](0014-fill-marketing-os-tables-by-app-usage.md) | เติมตาราง `marketing_os` ตาม "ของที่แอปใช้" ไม่ใช่ "ของที่มีข้อมูล" | `accepted` |
+| [0015](0015-identity-service-key-scoped.md) | identity ของแอป OS: ทาง (ก) service key แบบจำกัดขอบ | `accepted` |
 
 กลไกบังคับรูปแบบ: `src/lib/__tests__/adr.test.ts`

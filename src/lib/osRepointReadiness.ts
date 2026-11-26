@@ -115,12 +115,61 @@ export function osRepointCoverage(
 /** ข้อความที่เอกสารทุกฉบับต้องอ้างให้ตรงกัน — แก้ค่าแล้วไม่แก้เอกสาร = เทสต์แดง */
 export const OS_REPOINT_COVERAGE_PHRASE = '17 จาก 17';
 
-/** 🔴 ยังไม่ถูกตัดสิน (26 พ.ย. 2569) — ผู้ใช้ของเขา 11 คน มีใน `auth.users` ของเรา 0 คน (ADR-0013) */
-export const IDENTITY_DECIDED = false;
+/**
+ * 🔴 **ความจริงเรื่อง identity ที่เพิ่งวัดได้ 26 พ.ย. 2569 — ตัวเลข "11 คน" ที่อ้างกันมาตลอดเข้าใจผิด**
+ *    (CLAUDE.md · ADR-0012 · ADR-0013 · ADR-0014 เขียนไว้ว่า "ผู้ใช้ของเขา 11 คน"
+ *     เหมือนเป็นคน 11 คนที่ต้องย้าย — ความจริงคือ **1 คน + fixture ของเทสต์ RLS 10 คน**)
+ *
+ *    | workspace | สร้างเมื่อ | สมาชิก | brand | segment | rule |
+ *    |---|---|---|---|---|---|
+ *    | `RLS_TEST_WORKSPACE_A` | 24 ส.ค. 07:55:01 | 5 | 0 | 0 | 0 |
+ *    | `RLS_TEST_WORKSPACE_B` | 24 ส.ค. 07:55:01 | 5 | 0 | 0 | 0 |
+ *    | `ceo-ai-thailand` (`e82e7d93…`) | 4 ก.ย. | **1** | 1 | **6** | **7** |
+ *
+ *    🟢 ยืนยันสองฝั่ง (ฐานเขาและฐานเรา ตรงกันทุกแถว) · สอง fixture สร้าง**วินาทีเดียวกัน** และว่างเปล่าทั้งคู่
+ *    🟢 `e82e7d93…` = **workspace ตัวเดียวกับที่ `marketing-behavior-ingest` hardcode ไว้**
+ *    ⇒ แอป OS วันนี้เป็น **single-tenant ของเจ้าของ** ไม่ใช่ระบบหลายผู้ใช้
+ *    ⇒ ต้นทุนของทาง (ข) *"ย้ายผู้ใช้เข้า auth.users ของเรา"* = **1 บัญชี ไม่ใช่ 11** (ADR-0015)
+ */
+export const IDENTITY_FACTS = {
+  measuredAt: '2026-11-26',
+  workspacesTotal: 3,
+  /** workspace ที่มีข้อมูลจริง = `ceo-ai-thailand` (`e82e7d93-b88e-48ff-9364-b54bcff5278d`) */
+  realWorkspaces: 1,
+  /** `RLS_TEST_WORKSPACE_A` + `B` — สร้างวินาทีเดียวกัน · brand/segment/rule = 0 ทั้งคู่ */
+  fixtureWorkspaces: 2,
+  membersTotal: 11,
+  /** owner ของ workspace จริง 1 คน (`e0063708-…`) */
+  realMembers: 1,
+  fixtureMembers: 10,
+  /** 🔴 คนจริงคนนั้นก็ยังไม่มีใน `auth.users` ของเรา */
+  realMembersInOurAuthUsers: 0,
+  ourAuthUsers: 4,
+} as const;
+
+/** ทางที่เลือกเดินเรื่อง identity (ADR-0013 · ADR-0015) */
+export type IdentityApproach =
+  /** ยังไม่ตัดสิน */
+  | 'undecided'
+  /** (ก) ฝั่งเซิร์ฟเวอร์ใช้ service key + helper ตัวเดียวที่บังคับ workspace — เจ้าของเลือก (ADR-0015) */
+  | 'service_key_scoped'
+  /** (ข) ย้ายผู้ใช้ของเขาเข้า `auth.users` ของเรา แล้วเขียน RLS */
+  | 'shared_auth_users';
+
+/** 🟢 เจ้าของเลือก 26 พ.ย. 2569 (*"ก"*) — ADR-0015 */
+export const IDENTITY_APPROACH: IdentityApproach = 'service_key_scoped';
+
+/**
+ * 🔴 **เลือกทางแล้ว ≠ ทำแล้ว** — งานอยู่ในโค้ดแอป OS (`apps/marketing-os`) ซึ่งอยู่บนเครื่องเจ้าของ
+ *    เซสชันคลาวด์เปิดโฟลเดอร์นั้นไม่ได้ (`not_available`) ⇒ ยืนยันเองไม่ได้ว่าทำแล้วหรือยัง
+ *    จะเป็น `true` ได้ต้องมีหลักฐานว่าแอปอ่าน `marketing_audience_segments` ได้ **6 กลุ่ม** จริง
+ *    (สเปก: `docs/product/OS-APP-SERVICE-KEY-SCOPING.md`)
+ */
+export const IDENTITY_IMPLEMENTED = false;
 
 export interface OsRepointOpts {
-  /** เรื่อง identity ถูกตัดสินแล้วหรือยัง — ค่าเริ่มต้นคือสถานะจริงวันนี้ */
-  identityDecided?: boolean;
+  /** identity พร้อมใช้งานจริงแล้วหรือยัง (เลือกทาง **และ** ทำเสร็จ) — ค่าเริ่มต้นคือสถานะจริงวันนี้ */
+  identityReady?: boolean;
 }
 
 /**
@@ -131,14 +180,19 @@ export function osRepointBlockers(
   tables: readonly OsAppTable[] = OS_APP_TABLES,
   opts: OsRepointOpts = {},
 ): string[] {
-  const identityDecided = opts.identityDecided ?? IDENTITY_DECIDED;
+  const identityReady =
+    opts.identityReady ?? (IDENTITY_APPROACH !== 'undecided' && IDENTITY_IMPLEMENTED);
   const c = osRepointCoverage(tables);
   const out: string[] = [];
   if (c.absent > 0) {
     out.push(`ตาราง ${c.absent} ตัวไม่มีในฐานเราเลย ⇒ แอปจะได้ relation does not exist`);
   }
-  if (!identityDecided) {
-    out.push('identity ยังไม่ตัดสิน: workspace_members 11 คน มีใน auth.users ของเรา 0 คน');
+  if (!identityReady) {
+    out.push(
+      IDENTITY_APPROACH === 'undecided'
+        ? `identity ยังไม่ตัดสิน: ผู้ใช้จริง ${IDENTITY_FACTS.realMembers} คน มีใน auth.users ของเรา ${IDENTITY_FACTS.realMembersInOurAuthUsers} คน`
+        : `identity เลือกทางแล้ว (${IDENTITY_APPROACH}) แต่ยังไม่ได้ทำในโค้ดแอป OS`,
+    );
   }
   return out;
 }
