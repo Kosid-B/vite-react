@@ -200,17 +200,50 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
   it('🔴 ข้อยกเว้นเป็น "อ่าน" เท่านั้น — ห้ามมีคำสั่งเขียนในสคริปต์', () => {
     const js = readFileSync(resolve(ROOT, SYNC_SCRIPT), 'utf8');
     expect(/method:\s*['"`](POST|PATCH|PUT|DELETE)/i.test(js), 'พบ HTTP method ที่เขียนข้อมูล').toBe(false);
-    expect(/service[_-]?role/i.test(js) && !/ห้ามใช้ service-role/.test(js), 'ใช้ service-role key').toBe(false);
   });
 
-  it('🔴 ห้ามแตะ production ของเราจากสคริปต์นี้ — คนละฐาน คนละเจ้าของ', () => {
+  /* 🔁 แก้พร้อมเหตุผล 26 พ.ย. 2569 — เดิม "ห้ามใช้ service-role" เพราะสคริปต์อ่านฐานของอีกระบบด้วย publishable key
+   *    หลังรวมฐาน (ADR-0011) schema ของ OS revoke anon ทั้งหมด (B1 · ADR-0013) ⇒ publishable key อ่านไม่ได้แล้ว
+   *    เจ้าของเลือก "ทาง 2": ใช้ service key แทนการเปิด rpc ให้ anon (= ข้อมูลกลยุทธ์หลุดเป็นสาธารณะ)
+   *    ⇒ ความเสี่ยงย้ายจาก "สิทธิ์กว้าง" ไปที่ "คีย์รั่ว" ⇒ ด่านใหม่เฝ้าที่ตัวคีย์ */
+  it('🔴 service key ต้องมาจาก env ชื่อเฉพาะเท่านั้น — ห้ามฝัง ห้ามเป็น VITE_*', () => {
     const js = readFileSync(resolve(ROOT, SYNC_SCRIPT), 'utf8');
-    expect(js).toContain('bjozpwdtqbpwcxnqguka');
-    /* ⚠️ เจตนาคือห้าม **ใช้** production ไม่ใช่ห้าม **เอ่ยถึง** —
-     *    คอมเมนต์ที่เตือนว่า "ไม่แตะ production <ref>" คือสิ่งที่เราอยากให้มี ไม่ใช่สิ่งที่ต้องห้าม
-     *    (เทสต์เวอร์ชันแรกจับคอมเมนต์ตัวเองแล้วแดง — ตัดคอมเมนต์ออกก่อนตรวจ) */
+    expect(js).toMatch(/process\.env\.BRAND_SYNC_SERVICE_KEY/);
+    expect(/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\./.test(js), 'มี JWT ฝังในสคริปต์').toBe(false);
+    expect(/sb_secret_[A-Za-z0-9]/.test(js), 'มี secret key ฝังในสคริปต์').toBe(false);
+    expect(/VITE_[A-Z_]*KEY/.test(js), 'คีย์ชื่อ VITE_* = หลุดไปเบราว์เซอร์').toBe(false);
+  });
+
+  /* 🔁 แก้พร้อมเหตุผล 26 พ.ย. 2569 — เดิม "ห้ามแตะ production ของเรา · ต้องชี้ project อีกระบบ"
+   *    project นั้นถูกเลิกใช้ (นิ่งตั้งแต่ 21 พ.ย.) และแหล่งจริงย้ายมา `marketing_os` แล้ว
+   *    ⇒ เส้นที่ยังต้องเฝ้า: เข้าได้ทาง **rpc เท่านั้น** (ADR-0012) และห้ามชี้กลับ project เดิมโดยไม่รู้ตัว */
+  it('🔴 สคริปต์ต้องอ่านแหล่งจริงผ่าน rpc เท่านั้น — ห้ามอ่านตารางตรง ห้ามพึ่ง Exposed schemas', () => {
+    const js = readFileSync(resolve(ROOT, SYNC_SCRIPT), 'utf8');
     const code = js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
-    expect(code, 'สคริปต์ใช้ production หลักจริง = ข้ามเส้นคนละเส้น').not.toContain('waigsnxhrlwtiotspaim');
+    expect(code).toContain('waigsnxhrlwtiotspaim');
+    expect(code).toMatch(/\/rest\/v1\/rpc\//);
+    expect(/\/rest\/v1\/\$\{(?!.*rpc)/.test(code), 'อ่านตารางตรงผ่าน REST').toBe(false);
+    expect(/Accept-Profile|Content-Profile|\.schema\(/i.test(code), 'พึ่ง Exposed schemas (ADR-0012)').toBe(false);
+  });
+
+  it('🔴 project เดิมโผล่ในโค้ดได้แค่ในตัวกัน "ห้ามชี้กลับ" เท่านั้น', () => {
+    const js = readFileSync(resolve(ROOT, SYNC_SCRIPT), 'utf8');
+    const code = js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    expect(code).toMatch(/const RETIRED = 'bjozpwdtqbpwcxnqguka'/);
+    expect(code).toMatch(/URL_\.includes\(RETIRED\)/);
+    expect(code.split('bjozpwdtqbpwcxnqguka').length - 1, 'project เดิมถูกใช้ที่อื่นนอกตัวกัน').toBe(1);
+  });
+
+  it('🔴 rpc ที่สคริปต์เรียก ต้องมี migration รองรับ และ grant ให้ service_role เท่านั้น', () => {
+    const sql = readdirSync(resolve(ROOT, 'supabase/migrations'))
+      .filter((f) => f.endsWith('.sql'))
+      .map((f) => readFileSync(resolve(ROOT, 'supabase/migrations', f), 'utf8'))
+      .join('\n');
+    expect(sql).toContain('function public.os_brand_sync_segments');
+    expect(sql).toMatch(/grant execute on function public\.os_brand_sync_segments[^;]*to service_role/);
+    expect(sql, 'ห้ามเปิด rpc นี้ให้ browser role').not.toMatch(
+      /grant execute on function public\.os_brand_sync_segments[^;]*\b(anon|authenticated)\b/,
+    );
   });
 
   it('เอกสาร audit ต้องบันทึกคำตัดสินและเส้นแบ่งไว้ ไม่ใช่อยู่แค่ในแชต (ledger #41)', () => {
