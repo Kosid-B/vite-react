@@ -47,5 +47,6 @@
 | [0010](0010-freeze-baseline-is-measurable.md) | `Freeze Phase 1 baseline` เป็นเกณฑ์ที่ตรวจจากรีโปได้ | `accepted` |
 | [0011](0011-single-supabase-project.md) | รวมฐานข้อมูลเป็น Supabase project เดียว (schema `marketing_os`) | `accepted` |
 | [0012](0012-rpc-only-into-marketing-os.md) | เข้า `marketing_os` ผ่าน rpc ใน `public` เท่านั้น ห้ามพึ่ง Exposed schemas | `accepted` |
+| [0013](0013-marketing-os-service-role-only.md) | เปิด `marketing_os` ให้ `service_role` เท่านั้น ยังไม่เปิดให้ browser role | `accepted` |
 
 กลไกบังคับรูปแบบ: `src/lib/__tests__/adr.test.ts`

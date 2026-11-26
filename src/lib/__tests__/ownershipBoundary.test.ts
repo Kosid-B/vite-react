@@ -142,6 +142,41 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
     }
   });
 
+  /** 🔴 B1 (ADR-0013 · 26 พ.ย. 2569) — `marketing_os` เปิดให้ `service_role` เท่านั้น
+   *
+   *  เหตุผลเป็นตัวเลข ไม่ใช่ความระแวง: `marketing_os.workspace_members` มี 11 คน
+   *  ที่มีตัวตนใน `auth.users` ของเรา = **0** ⇒ policy ที่อิง `auth.uid()` แมตช์ศูนย์แถวเสมอ
+   *  และถ้าเปิดกว้างให้ `authenticated` แทน = **ลูกค้าของเราอ่านข้อมูลการตลาดของอีกระบบได้**
+   *  ⇒ การเปิดให้ browser role ต้องมาพร้อมคำตอบเรื่อง identity เสมอ ห้ามเปิดดักไว้ก่อน */
+  it('🔴 migration ห้าม grant `marketing_os` ให้ anon/authenticated (service_role เท่านั้น)', () => {
+    const bad: string[] = [];
+    for (const f of readdirSync(resolve(ROOT, 'supabase/migrations')).filter((x) => x.endsWith('.sql'))) {
+      const sql = readFileSync(resolve(ROOT, 'supabase/migrations', f), 'utf8');
+      for (const stmt of sql.split(';')) {
+        if (!/marketing_os/i.test(stmt)) continue;
+        if (!/^\s*(grant|alter\s+default\s+privileges)/i.test(stmt.replace(/^[\s\S]*?\n(?=\s*(grant|alter))/i, ''))) continue;
+        if (/\bto\b[^;]*\b(anon|authenticated)\b/i.test(stmt)) bad.push(`${f}: ${stmt.trim().slice(0, 60)}…`);
+      }
+    }
+    expect(bad, `เปิด marketing_os ให้ browser role: ${bad.join(' | ')}`).toEqual([]);
+  });
+
+  it('🔴 ด่าน B1 ต้องจับของผิดได้จริง (ตัวอย่างสังเคราะห์)', () => {
+    const scan = (sql: string) => {
+      const bad: string[] = [];
+      for (const stmt of sql.split(';')) {
+        if (!/marketing_os/i.test(stmt)) continue;
+        if (!/^\s*(grant|alter\s+default\s+privileges)/i.test(stmt.replace(/^[\s\S]*?\n(?=\s*(grant|alter))/i, ''))) continue;
+        if (/\bto\b[^;]*\b(anon|authenticated)\b/i.test(stmt)) bad.push(stmt);
+      }
+      return bad;
+    };
+    expect(scan('grant select on all tables in schema marketing_os to authenticated;'), 'ต้องจับ').toHaveLength(1);
+    expect(scan('grant usage on schema marketing_os to anon;'), 'ต้องจับ').toHaveLength(1);
+    expect(scan('grant select on all tables in schema marketing_os to service_role;'), 'service_role ต้องผ่าน').toHaveLength(0);
+    expect(scan('revoke all on marketing_os.x from anon, authenticated;'), 'revoke ต้องไม่ถูกจับ').toHaveLength(0);
+  });
+
   /* ── ข้อยกเว้น 15 พ.ย. 2569 — อ่านอย่างเดียว 3 ตาราง ───────────────────
    * 🔴 ข้อยกเว้นที่ไม่มีเทสต์ล้อม = ประตูที่เปิดแล้วลืมปิด
    *    สามข้อล่างนี้บังคับว่า "เปิดแค่ที่เปิด" ไม่ใช่ "เปิดแล้วปล่อย" */
