@@ -157,11 +157,24 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
    *      ⇒ สิทธิ์เปล่าที่ไม่มี policy คุม = ของเดิมที่เราห้าม และยังห้ามอยู่
    *   ③ ห้าม `on all tables in schema` และห้าม `alter default privileges` กับ `authenticated`
    *      ⇒ ต้องระบุชื่อตารางทีละตัว (บทเรียน 0069: ตารางที่สร้างทีหลังได้สิทธิ์ติดมาเงียบ ๆ) */
+  /**
+   * 🔴 **แก้ผลบวกปลอม 26 พ.ย. 2569** — ด่านรอบแรกจับสตริง `marketing_os` ทั้งคำ
+   *    ⇒ `grant execute on function public.marketing_os_funnel_summary(…) to authenticated`
+   *      ถูกจับทั้งที่เป็นฟังก์ชันใน **`public`** ไม่ใช่ object ใน schema `marketing_os`
+   *    (ความผิดชุดเดียวกับที่ CLAUDE.md เตือนไว้: `format('alter table marketing_os.%I …')` ของตัวเอง)
+   *
+   * เส้นแบ่งที่ถูก: กฎนี้คุม **สิทธิ์บน object ที่อยู่ใน schema `marketing_os`**
+   * ⇒ ตัดชื่อ `public.<อะไรก็ได้>` ออกก่อน แล้วถ้ายังเหลือคำว่า `marketing_os` = เป็นของ schema นั้นจริง
+   *   · ฟังก์ชันใน `public` ถูกคุมด้วยกฎ rpc แยก (ADR-0012) ไม่ใช่กฎนี้
+   */
+  const touchesMarketingOsObject = (stmt: string) =>
+    /marketing_os/i.test(stmt.replace(/\bpublic\.[a-z0-9_]+/gi, ''));
+
   const scanBrowserGrants = (sql: string): string[] => {
     const hasPolicy = /create\s+policy[\s\S]*?marketing_os/i.test(sql);
     const bad: string[] = [];
     for (const stmt of sql.split(';')) {
-      if (!/marketing_os/i.test(stmt)) continue;
+      if (!touchesMarketingOsObject(stmt)) continue;
       const head = stmt.replace(/^[\s\S]*?\n(?=\s*(grant|alter))/i, '');
       if (!/^\s*(grant|alter\s+default\s+privileges)/i.test(head)) continue;
       if (!/\bto\b[^;]*\b(anon|authenticated)\b/i.test(stmt)) continue;
@@ -214,6 +227,17 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
     expect(scanBrowserGrants('grant select on all tables in schema marketing_os to service_role;')).toHaveLength(0);
     // revoke ต้องไม่ถูกนับเป็นการเปิด
     expect(scanBrowserGrants('revoke all on marketing_os.x from anon, authenticated;')).toHaveLength(0);
+    // 🔴 ผลบวกปลอมที่เคยเกิด: ฟังก์ชันใน public ที่ **ชื่อ** มีคำว่า marketing_os
+    expect(
+      scanBrowserGrants(
+        'grant execute on function public.marketing_os_funnel_summary(timestamptz) to authenticated;',
+      ),
+      'ฟังก์ชันใน public ไม่ใช่ object ของ schema marketing_os',
+    ).toHaveLength(0);
+    // แต่ฟังก์ชันที่อยู่ **ใน** schema marketing_os ต้องยังถูกคุม
+    expect(
+      scanBrowserGrants('grant execute on function marketing_os.secret_fn() to authenticated;'),
+    ).toHaveLength(1);
   });
 
   it('🔴 0072 ต้องปิด `anon` ไว้จริง และระบุชื่อตารางทีละตัว ไม่เหวี่ยงทั้ง schema', () => {
@@ -289,13 +313,37 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
   /* 🔁 แก้พร้อมเหตุผล 26 พ.ย. 2569 — เดิม "ห้ามแตะ production ของเรา · ต้องชี้ project อีกระบบ"
    *    project นั้นถูกเลิกใช้ (นิ่งตั้งแต่ 21 พ.ย.) และแหล่งจริงย้ายมา `marketing_os` แล้ว
    *    ⇒ เส้นที่ยังต้องเฝ้า: เข้าได้ทาง **rpc เท่านั้น** (ADR-0012) และห้ามชี้กลับ project เดิมโดยไม่รู้ตัว */
+  /**
+   * 🔁 **อุดรูของด่านนี้ 26 พ.ย. 2569 (commit ตามหลัง #463 · เจ้าของสั่ง)**
+   *
+   * รุ่นแรกเขียนว่า `/\/rest\/v1\/\$\{(?!.*rpc)/` — เจตนาถูก แต่ `(?!.*rpc)` มองทั้ง**บรรทัด**
+   * ⇒ ถ้าใครเพิ่มการอ่านตารางตรง **บนบรรทัดที่มีคำว่า `rpc` อยู่ด้วย** (แม้แค่ในคอมเมนต์ท้ายบรรทัด)
+   *    lookahead จะล้มเหลว ⇒ regex ไม่แมตช์ ⇒ **ด่านผ่านฟรี**
+   * 🔴 ทดสอบแล้วว่าหลุดจริง ไม่ใช่ความกังวลลอย ๆ (ดูเคสสังเคราะห์ในเทสต์ถัดไป)
+   *
+   * กฎที่ใช้แทน: **ทุก `/rest/v1/` ต้องตามด้วย `rpc/` เท่านั้น** — ไม่สนว่าบรรทัดนั้นมีคำอะไรอีก
+   */
+  const readsTableDirectly = (code: string) => /\/rest\/v1\/(?!rpc\/)/.test(code);
+
   it('🔴 สคริปต์ต้องอ่านแหล่งจริงผ่าน rpc เท่านั้น — ห้ามอ่านตารางตรง ห้ามพึ่ง Exposed schemas', () => {
     const js = readFileSync(resolve(ROOT, SYNC_SCRIPT), 'utf8');
     const code = js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     expect(code).toContain('waigsnxhrlwtiotspaim');
     expect(code).toMatch(/\/rest\/v1\/rpc\//);
-    expect(/\/rest\/v1\/\$\{(?!.*rpc)/.test(code), 'อ่านตารางตรงผ่าน REST').toBe(false);
+    expect(readsTableDirectly(code), 'อ่านตารางตรงผ่าน REST').toBe(false);
     expect(/Accept-Profile|Content-Profile|\.schema\(/i.test(code), 'พึ่ง Exposed schemas (ADR-0012)').toBe(false);
+  });
+
+  it('🔴 ด่าน "ห้ามอ่านตารางตรง" ต้องไม่หลุดเมื่อบรรทัดนั้นมีคำว่า rpc อยู่ด้วย', () => {
+    // ของที่ถูก — ต้องไม่ถูกจับ
+    expect(readsTableDirectly('fetch(`${URL_}/rest/v1/rpc/${RPC}`, { headers })')).toBe(false);
+    // ของที่ผิด 3 แบบ — ต้องถูกจับทุกแบบ
+    expect(readsTableDirectly('fetch(`${URL_}/rest/v1/${table}?select=code`)')).toBe(true);
+    expect(
+      readsTableDirectly('fetch(`${URL_}/rest/v1/${t}?select=x`); // ไม่ใช่ rpc'),
+      'รูเดิม: คำว่า rpc บนบรรทัดเดียวกันทำให้หลุด',
+    ).toBe(true);
+    expect(readsTableDirectly('fetch(`${URL_}/rest/v1/marketing_brands?select=*`)')).toBe(true);
   });
 
   it('🔴 project เดิมโผล่ในโค้ดได้แค่ในตัวกัน "ห้ามชี้กลับ" เท่านั้น', () => {

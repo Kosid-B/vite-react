@@ -64,12 +64,19 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
               ⇒ เก็บลงรีโปแล้วแบบคัดลอก statement จริงมาเป๊ะ · **ห้ามแก้ฐานโดยไม่มีไฟล์คู่กัน**
            แหล่งความจริง + ด่าน: `src/lib/osRepointReadiness.ts`
         🔢 ฐานเดิมของเขา **นิ่งตั้งแต่ 21 พ.ย. 09:34** (= การทดสอบของเราเอง) ⇒ หลังจากนั้นไม่มีอะไรเขียนลงอีก
-     ② แล้วค่อยย้าย `brandSync`/`scripts/brand-sync-check.mjs` มาอ่านฐานเดียวกัน
-     🔴 **ห้ามทำ ② ก่อน ①** — `brandSync` ต้องชี้ไปที่ "แหล่งจริงที่แอป OS ใช้อยู่" ซึ่งวันนี้ยังเป็น project เดิม
-        ย้ายก่อน = รีโปประกาศว่ารวมฐานเสร็จแล้วทั้งที่ยังไม่เสร็จ (และสคริปต์ก็ยังรันไม่ได้อยู่ดี
-        เพราะ `marketing_os` revoke `anon` ⇒ ต้องมีคีย์ที่มีสิทธิ์ ซึ่งคีย์สาธารณะไม่มี)
-     ⚠️ เทสต์ `brandSync.test.ts` ล็อกไว้ว่า `projectRef` **ต้องไม่ใช่** `waigsnxhrlwtiotspaim` — ตั้งใจ
-        จะย้ายต้องแก้เทสต์พร้อมเหตุผล ไม่ใช่แก้ค่าเงียบ ๆ
+     ② 🟢 **ทำแล้ว 26 พ.ย. 69 (PR #463)** — `brandSync` อ่าน `marketing_os` ผ่าน **rpc `os_brand_sync_segments`**
+        (migration 0074 ในรีโป · ชื่อใน production = `0072_marketing_os_brand_sync_rpc`)
+        · `MARKETING_SOURCE.projectRef` = `waigsnxhrlwtiotspaim` · `schema: marketing_os` · อ่านอย่างเดียว 3 ตารางเดิม
+        · คีย์: **`BRAND_SYNC_SERVICE_KEY` จาก env เท่านั้น** (ชื่อเฉพาะ เพราะเครื่องเจ้าของมีตัวแปรชื่อมาตรฐาน
+          ระดับระบบที่เป็นคีย์ของ project อื่น) · ปฏิเสธ publishable key และ URL ที่ชี้ project เดิม (exit 2)
+        · รันจริงบน production: อ่านได้ **6 กลุ่ม** · aligned 3 · bridged 2 · drift 1 (`graduate` ตั้งใจ)
+        🔁 **เคยเขียนที่นี่ว่า "ห้ามทำ ② ก่อน ①" และเทสต์ล็อก `projectRef` ต้องไม่ใช่ production** — เหตุผลเดิมคือ
+           brandSync ต้องชี้ "แหล่งจริงที่แอป OS ใช้อยู่" · วันนี้ **ทั้งสองฐานนิ่งเหมือนกันตั้งแต่ 21 พ.ย.**
+           ⇒ เทียบกับ project เดิม = เทียบกับของที่ไม่มีใครแก้อีก จับ drift ไม่ได้เลย ⇒ ย้ายถูกแล้ว
+           ⚠️ **แต่ ② เสร็จ ไม่ได้แปลว่า ① เสร็จ** — `osRepointReady()` ยังเป็น `false` (`APP_REPOINTED = false`)
+        🔴 **`0073_marketing_os_funnel_summary_rpc` ยังไม่มีใครเรียก** (ledger #110) — สร้างตอนแผนเป็น (ก) service key
+           พอเปลี่ยนเป็น (ข) แอป OS ใช้ `authenticated` ซึ่ง `auth_exec = false` ⇒ **เรียกไม่ได้**
+           ⇒ เก็บไฟล์ไว้เพราะ apply ลง production แล้ว (กฎ ledger #108) · **ห้ามพูดว่า "OS เห็นผลแคมเปญแล้ว"**
 🔴 **ของเดิมก่อน 22 พ.ย.: Marketing OS รันบน Supabase ของตัวเอง** (ตรวจสดผ่าน MCP 15 พ.ย. 2569 · ledger #79)
    · **ของอีกระบบ**: `bjozpwdtqbpwcxnqguka` = **"CEOAITHAILAND Marketing"** (org เดียวกัน · ap-northeast-1 · สร้าง 19 ส.ค. 69)
      โค้ดอยู่เครื่องเจ้าของที่ `D:\CEOAITHAILAND Marketing-P1.0.2-baseline`
@@ -179,7 +186,19 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
       ⚠️ **expose ≠ ใครก็อ่านได้** — 🔴 `anon` ยังมี **0 grants · ไม่มี USAGE · ไม่มี policy** ตลอดกาล
          🔁 **`authenticated` เปลี่ยนแล้ว 26 พ.ย. 69 (0072 · ADR-0016)** — ได้ `usage` + CRUD
          เฉพาะ **17 ตารางที่แอป OS query** พร้อม RLS policy อิงการเป็นสมาชิกทุกตาราง
-         ⇒ ลูกค้าเราที่ไม่ใช่สมาชิกเห็น **0 แถว** (วัดแล้ว) · อีก 6 ตารางยัง `service_role` เท่านั้น
+         ⇒ ลูกค้าเราที่ไม่ใช่สมาชิกเห็น **0 แถว** (วัดแล้ว)
+         🔁 **แก้ 26 พ.ย. 69 เวลา ~09:45 (ledger #111) — เคยเขียนว่า "อีก 6 ตารางยัง `service_role` เท่านั้น"**
+            เซสชันบนเครื่องเจ้าของ apply `0075_marketing_os_member_read_results` ที่ 09:30:11
+            ⇒ เปิด **อีก 2 ตาราง** ให้ `authenticated` อ่านได้ **แบบอิงสมาชิกเหมือนกัน**:
+            · `marketing_brand_rules` — `grant select` ทั้งตาราง + policy `is_workspace_member`
+            · `marketing_behavior_events` — 🔑 **column-level grant 8 คอลัมน์** (`id`·`workspace_id`·
+              `occurred_at`·`source`·`name`·`topic`·`format`·`mode`) + policy `is_workspace_member`
+              ⇒ `session_id`/`props` **ไม่ถูกเปิด** · ดีไซน์นี้รัดกุมกว่าเปิดทั้งตาราง
+            ⇒ **เหลือ 4 ตารางที่ยัง `service_role` เท่านั้น** (`behavior_batches`·`behavior_config`
+              ·`behavior_limits`·`workspace_state`)
+            🔴 **และเป็นเหตุให้ `has_table_privilege` เชื่อไม่ได้ลำพัง** — column-level grant ทำให้
+              `has_table_privilege(...,'select')` = **false** แต่ `select`/`count(*)` **ทำได้จริง**
+              ⇒ ตรวจสิทธิ์ต้องดู `has_column_privilege` หรือ `pg_attribute.attacl` ด้วย ไม่ใช่แค่ระดับตาราง
       🔴 **ค่านี้อยู่นอกรีโป เทสต์มองไม่เห็น** — ถ้ามีคนเอา `marketing_os` ออกจากรายการ จะไม่มีอะไรเตือน
          (นี่คือเหตุผลที่ ADR-0012 ยังยืนยันว่าท่อของเราต้องเดินผ่าน **rpc** ไม่ใช่ `.schema()`
           ⇒ ท่อ ingest จะไม่พังตามค่านี้ ไม่ว่าใครจะไปแก้มันเมื่อไร)

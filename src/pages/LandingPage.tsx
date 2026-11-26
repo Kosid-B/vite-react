@@ -353,7 +353,7 @@ export default function LandingPage({ onGetStarted, onTryGuest, onExitPreview }:
             <span className="lp-nav-theme-label" style={{ display: 'inline' }}>{themeLabel(nextTheme(theme))}</span>
           </button>
           <button
-            onClick={() => { markLandingSignup(); onGetStarted(); }}
+            onClick={() => { markLandingSignup(); track('landing_cta_click', { cta: 'nav_signup', layout: layoutAb }); onGetStarted(); }}
             onMouseEnter={() => setNavHover(true)}
             onMouseLeave={() => setNavHover(false)}
             style={{ padding: '8px 20px', borderRadius: 8, border: `1px solid ${C.cyan5}`, background: navHover ? 'rgba(6,182,212,0.15)' : 'transparent', color: C.cyan4, fontFamily: 'inherit', fontWeight: 600, fontSize: 14, cursor: 'pointer', transition: 'all .2s' }}

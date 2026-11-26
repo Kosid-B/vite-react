@@ -61,6 +61,10 @@ export const CEF_SCHEMA = `cef/${CEF_VERSION}`;
  *  (ชื่อฝั่งซ้ายต้องมี `track('…')` จริงในโค้ด — เทสต์บังคับ) */
 export const EVENT_MAP: Readonly<Record<string, OsEvent>> = Object.freeze({
   landing_cta_click: 'cta_click',
+  /** 🔁 เพิ่ม 26 พ.ย. 2569 — ปุ่มของผู้ใช้ที่กลับมา (`ReturningGreeting`) เซ็ต `reached_cta`
+   *  ในกรวยอยู่แล้ว แต่ยิง event ชื่อนี้ซึ่งไม่ได้แมป ⇒ OS มองไม่เห็นการกด CTA นั้นเลย
+   *  แมปที่นี่ดีกว่ายิง `landing_cta_click` เพิ่ม เพราะไม่ทำให้ GA/Amplitude นับซ้ำ */
+  returning_draft_continue: 'cta_click',
   quickcheck_started: 'calculator_start',
   quickcheck_submitted: 'calculator_complete',
   quickcheck_signup_click: 'signup_start',
