@@ -100,48 +100,46 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
   });
 
 
-  /** 🔑 ไฟล์เดียวที่มีสิทธิ์แตะตารางใน schema ที่เราเป็นเจ้าของ (`marketing_os`)
-   *  = edge function ที่รับ event เข้ามา · เป็นเจ้าของท่อ จึงต้องเขียนลงตารางได้
-   *  🔴 สิทธิ์นี้ไม่ใช่ใบผ่านไปแตะ `public.marketing_*` — เทสต์ตัวถัดไปบังคับว่า
-   *     ทุกการแตะในไฟล์นี้ต้องมี `.schema('marketing_os')` นำหน้า */
+  /** 🔑 ไฟล์ท่อ = edge function ที่รับ event เข้ามา
+   *
+   *  🔴 **แก้กติกา 26 พ.ย. 2569 (ADR-0012 · ledger #105)** — เดิมอนุญาตให้ไฟล์นี้แตะตาราง
+   *     ได้ถ้าเขียน `.schema('marketing_os')` นำหน้า · **ของจริงพังเงียบบน production**:
+   *     batch `mode:'live'` 2 ก้อน (23 + 25 พ.ย.) มี `archived_at = NULL` ทั้งคู่ ทั้งที่
+   *     rpc เขียนแถวแล้ว · bucket สร้างแล้ว · ไฟล์ขึ้นคลังครบ 2/2
+   *     ⇒ PostgREST รับเฉพาะ schema ที่อยู่ใน "Exposed schemas" ซึ่งเป็น **config ของ
+   *       แพลตฟอร์ม ไม่ได้อยู่ในฐานข้อมูล** ⇒ เทสต์ในรีโปตรวจไม่ได้ และไม่มีใครเห็นว่ามันพัง
+   *  ⇒ กติกาใหม่: **ห้ามแตะตาราง `marketing_*` ตรง ๆ ทุกไฟล์** — เข้าได้ทางเดียวคือ rpc ใน `public`
+   *     (rpc ถูก expose เสมอ · และ `marketing_os` ยังไม่ต้องเปิดให้ใครมองเห็น) */
   const OS_PIPE_FILE = 'supabase/functions/marketing-behavior-ingest/index.ts';
 
-  it('โค้ดในรีโปนี้ต้องไม่อ่าน/เขียนตาราง marketing_* โดยตรง', () => {
+  it('โค้ดในรีโปนี้ต้องไม่อ่าน/เขียนตาราง marketing_* โดยตรง (ไม่มีไฟล์ไหนได้รับยกเว้นแล้ว)', () => {
     const offenders = [...walk(resolve(ROOT, 'src')), ...walk(resolve(ROOT, 'supabase/functions'))]
       .map((p) => p.slice(ROOT.length + 1))
-      .filter((rel) => rel !== OS_PIPE_FILE)
       .filter((rel) => /\.from\(\s*['"`]marketing_|rpc\(\s*['"`]marketing_/.test(codeOf(resolve(ROOT, rel))));
     expect(offenders, `ไฟล์ที่แตะตารางของอีกระบบ: ${offenders.join(', ')}`).toEqual([]);
   });
 
-  it('🔴 ไฟล์ที่ได้สิทธิ์ ต้องแตะผ่าน schema `marketing_os` เท่านั้น — ห้ามแตะ public', () => {
+  it('🔴 ไฟล์ท่อห้ามพึ่ง "Exposed schemas" — ห้ามมี .schema() เลย', () => {
     const file = resolve(ROOT, OS_PIPE_FILE);
     expect(existsSync(file), `${OS_PIPE_FILE} ไม่มีอยู่จริง — ยกเว้นไฟล์ที่ไม่มีตัวตน = ช่องโหว่`).toBe(true);
     const code = codeOf(file);
-    /* หาทุกจุดที่เรียก .from('marketing_…') แล้วดูข้อความก่อนหน้าว่ามี .schema('marketing_os') ติดอยู่ไหม
-     * (เขียน `.from('marketing_x')` เปล่า ๆ = ยิงไป public = ข้ามเส้น) */
-    const bare: string[] = [];
-    for (const m of code.matchAll(/\.from\(\s*['"`](marketing_[a-z_]*)/g)) {
-      const before = code.slice(Math.max(0, m.index - 40), m.index);
-      if (!/\.schema\(\s*['"`]marketing_os['"`]\s*\)\s*$/.test(before)) bare.push(m[1]);
-    }
-    expect(bare, `แตะโดยไม่ระบุ schema (= public): ${bare.join(', ')}`).toEqual([]);
+    expect(/\.schema\(/.test(code),
+      'กลับไปใช้ .schema() = พึ่งค่าที่อยู่นอกรีโป ซึ่งพังเงียบมาแล้วบน production').toBe(false);
+    // และต้องยังเข้าถึง marketing_os ได้จริงผ่าน rpc — ไม่ใช่เขียวเพราะไม่ได้ทำอะไรเลย
+    expect(code).toMatch(/rpc\(\s*['"`]receive_marketing_behavior['"`]/);
+    expect(code).toMatch(/rpc\(\s*['"`]mark_marketing_behavior_archived['"`]/);
   });
 
-  it('🔴 ด่าน schema ของไฟล์ท่อ ต้องยังจับของผิดได้จริง', () => {
-    const hits = (code: string) => {
-      const bad: string[] = [];
-      for (const m of code.matchAll(/\.from\(\s*['"`](marketing_[a-z_]*)/g)) {
-        const before = code.slice(Math.max(0, m.index - 40), m.index);
-        if (!/\.schema\(\s*['"`]marketing_os['"`]\s*\)\s*$/.test(before)) bad.push(m[1]);
-      }
-      return bad;
-    };
-    expect(hits("db.from('marketing_behavior_batches')"), 'ไม่ระบุ schema ต้องถูกจับ').toHaveLength(1);
-    expect(hits("db.schema('marketing_oss').from('marketing_behavior_batches')"),
-      'ชื่อ schema เพี้ยนต้องถูกจับ').toHaveLength(1);
-    expect(hits("db.schema('marketing_os').from('marketing_behavior_batches')"),
-      'ระบุ schema ถูกต้องต้องผ่าน').toHaveLength(0);
+  it('🔴 rpc ที่ไฟล์ท่อเรียก ต้องมี migration รองรับจริง (ห้ามเรียกของที่ไม่มี)', () => {
+    const sql = readdirSync(resolve(ROOT, 'supabase/migrations'))
+      .filter((f) => f.endsWith('.sql'))
+      .map((f) => readFileSync(resolve(ROOT, 'supabase/migrations', f), 'utf8'))
+      .join('\n');
+    for (const fn of ['receive_marketing_behavior', 'mark_marketing_behavior_archived']) {
+      expect(sql, `ไม่มี migration สร้าง ${fn}`).toContain(`function public.${fn}`);
+      expect(sql, `${fn} ต้อง grant ให้ service_role เท่านั้น`)
+        .toMatch(new RegExp(`grant execute on function public\\.${fn}[^;]*to service_role`));
+    }
   });
 
   /* ── ข้อยกเว้น 15 พ.ย. 2569 — อ่านอย่างเดียว 3 ตาราง ───────────────────

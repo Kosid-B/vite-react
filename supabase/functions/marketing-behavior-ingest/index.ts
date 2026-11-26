@@ -3,8 +3,9 @@
  * 🔀 **ย้ายมาอยู่ project เดียวกับ CEO เมื่อ 22 พ.ย. 2569** (ADR-0011)
  *    เดิม deploy บน `bjozpwdtqbpwcxnqguka` เขียนลง `public.*` ของ project นั้น
  *    ตอนนี้ deploy บน `waigsnxhrlwtiotspaim` เขียนลง **schema `marketing_os`**
- *    ⇒ ของที่เปลี่ยนจากซอร์สเดิม: **บรรทัดเดียว** (`.schema('marketing_os')` ก่อน `.from(...)`)
- *       เกณฑ์ตรวจ · โควตา · การเก็บคลัง · รหัสสถานะ ยกมาทั้งหมดไม่แก้
+ *    ⇒ ของที่เปลี่ยนจากซอร์สเดิม: **ขั้นเก็บคลัง** เท่านั้น (เดิมอัปเดตตารางตรง ตอนนี้เรียก rpc
+ *       `mark_marketing_behavior_archived` — เหตุผลอยู่ที่จุดเรียก บรรทัด ~122)
+ *       เกณฑ์ตรวจ · โควตา · การอัปไฟล์ · รหัสสถานะ ยกมาทั้งหมดไม่แก้
  *
  * 🔴 ทำไมไฟล์นี้ต้องอยู่ในรีโป: ของเดิม (`marketing-track`) รันบน production มา ~3 เดือน
  *    **โดยไม่มีซอร์สในรีโปเลย** ⇒ ไม่มีใครรู้ว่ามันทำอะไร แก้ไม่ได้ ตรวจไม่ได้
@@ -119,13 +120,17 @@ Deno.serve(async (request) => {
       if (existing.error || await existing.data.text() !== payload) return reply(503, 'archive_pending');
     }
 
-    /* 🔒 เขียนชื่อ schema เป็นสตริงตรงที่จุดเรียก **โดยเจตนา** ไม่ยกไปเป็นค่าคงที่
-     *    เพราะด่าน `ownershipBoundary.test.ts` ตรวจที่จุดเรียกว่ามี `.schema('marketing_os')` จริง
-     *    ⇒ ค่าคงที่ = ด่านต้องเชื่อการอ้างอิง · สตริงตรง = ด่านอ่านเองได้ว่ายิงไป schema ไหน */
-    const saved = await db.schema('marketing_os').from('marketing_behavior_batches')
-      .update({ archived_at: new Date().toISOString() })
-      .eq('id', batch.batchId).eq('payload_hash', hash);
+    /* 🔴 เคยเขียนเป็น `db.schema('marketing_os').from(...).update(...)` แล้ว **พังเงียบบน production**
+     *    (26 พ.ย. 2569 · ledger #105): batch จริง 2 ก้อนมี archived_at = NULL ทั้งคู่ ทั้งที่ไฟล์
+     *    ขึ้นคลังครบแล้ว ⇒ PostgREST ยอมรับเฉพาะ schema ที่อยู่ใน "Exposed schemas" ซึ่งเป็น
+     *    **config ของแพลตฟอร์ม ไม่ได้อยู่ในฐานข้อมูล** ⇒ รีโปตรวจไม่ได้ บังคับไม่ได้ เห็นไม่ได้
+     *    ⇒ ท่อเข้า `marketing_os` ผ่าน **rpc ใน `public` เท่านั้น** (ADR-0012) · ด่านเทสต์บังคับไว้แล้ว */
+    const saved = await db.rpc('mark_marketing_behavior_archived', {
+      p_id: batch.batchId, p_hash: hash,
+    });
     if (saved.error) return reply(503, 'archive_pending');
+    // ลองซ้ำหลังสำเร็จไปแล้ว = ปกติ · 'not_found' = ผิดจริง (hash ไม่ตรง / ไม่มีแถว) ต้องแยกให้เห็น
+    if (saved.data !== 'archived' && saved.data !== 'already_archived') return reply(503, 'archive_unconfirmed');
 
     return reply(200, 'stored_and_archived');
   } catch { return reply(503, 'temporarily_unavailable'); }
