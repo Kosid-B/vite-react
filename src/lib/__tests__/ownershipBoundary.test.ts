@@ -271,13 +271,37 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
   /* 🔁 แก้พร้อมเหตุผล 26 พ.ย. 2569 — เดิม "ห้ามแตะ production ของเรา · ต้องชี้ project อีกระบบ"
    *    project นั้นถูกเลิกใช้ (นิ่งตั้งแต่ 21 พ.ย.) และแหล่งจริงย้ายมา `marketing_os` แล้ว
    *    ⇒ เส้นที่ยังต้องเฝ้า: เข้าได้ทาง **rpc เท่านั้น** (ADR-0012) และห้ามชี้กลับ project เดิมโดยไม่รู้ตัว */
+  /**
+   * 🔁 **อุดรูของด่านนี้ 26 พ.ย. 2569 (commit ตามหลัง #463 · เจ้าของสั่ง)**
+   *
+   * รุ่นแรกเขียนว่า `/\/rest\/v1\/\$\{(?!.*rpc)/` — เจตนาถูก แต่ `(?!.*rpc)` มองทั้ง**บรรทัด**
+   * ⇒ ถ้าใครเพิ่มการอ่านตารางตรง **บนบรรทัดที่มีคำว่า `rpc` อยู่ด้วย** (แม้แค่ในคอมเมนต์ท้ายบรรทัด)
+   *    lookahead จะล้มเหลว ⇒ regex ไม่แมตช์ ⇒ **ด่านผ่านฟรี**
+   * 🔴 ทดสอบแล้วว่าหลุดจริง ไม่ใช่ความกังวลลอย ๆ (ดูเคสสังเคราะห์ในเทสต์ถัดไป)
+   *
+   * กฎที่ใช้แทน: **ทุก `/rest/v1/` ต้องตามด้วย `rpc/` เท่านั้น** — ไม่สนว่าบรรทัดนั้นมีคำอะไรอีก
+   */
+  const readsTableDirectly = (code: string) => /\/rest\/v1\/(?!rpc\/)/.test(code);
+
   it('🔴 สคริปต์ต้องอ่านแหล่งจริงผ่าน rpc เท่านั้น — ห้ามอ่านตารางตรง ห้ามพึ่ง Exposed schemas', () => {
     const js = readFileSync(resolve(ROOT, SYNC_SCRIPT), 'utf8');
     const code = js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
     expect(code).toContain('waigsnxhrlwtiotspaim');
     expect(code).toMatch(/\/rest\/v1\/rpc\//);
-    expect(/\/rest\/v1\/\$\{(?!.*rpc)/.test(code), 'อ่านตารางตรงผ่าน REST').toBe(false);
+    expect(readsTableDirectly(code), 'อ่านตารางตรงผ่าน REST').toBe(false);
     expect(/Accept-Profile|Content-Profile|\.schema\(/i.test(code), 'พึ่ง Exposed schemas (ADR-0012)').toBe(false);
+  });
+
+  it('🔴 ด่าน "ห้ามอ่านตารางตรง" ต้องไม่หลุดเมื่อบรรทัดนั้นมีคำว่า rpc อยู่ด้วย', () => {
+    // ของที่ถูก — ต้องไม่ถูกจับ
+    expect(readsTableDirectly('fetch(`${URL_}/rest/v1/rpc/${RPC}`, { headers })')).toBe(false);
+    // ของที่ผิด 3 แบบ — ต้องถูกจับทุกแบบ
+    expect(readsTableDirectly('fetch(`${URL_}/rest/v1/${table}?select=code`)')).toBe(true);
+    expect(
+      readsTableDirectly('fetch(`${URL_}/rest/v1/${t}?select=x`); // ไม่ใช่ rpc'),
+      'รูเดิม: คำว่า rpc บนบรรทัดเดียวกันทำให้หลุด',
+    ).toBe(true);
+    expect(readsTableDirectly('fetch(`${URL_}/rest/v1/marketing_brands?select=*`)')).toBe(true);
   });
 
   it('🔴 project เดิมโผล่ในโค้ดได้แค่ในตัวกัน "ห้ามชี้กลับ" เท่านั้น', () => {
