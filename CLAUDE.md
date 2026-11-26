@@ -1050,6 +1050,15 @@ const SERPER_KEY = Deno.env.get('SERPER_API_KEY') ?? '';
 │ Supabase Fn       : ANTHROPIC_API_KEY ✅, CRON_SECRET ✅, SERPER_API_KEY ✅, RESEND_API_KEY ✅
 │                     SLIPOK_API_KEY ✅ (ขึ้นต้น SLIPOKWL…), SLIPOK_BRANCH_ID ✅ =72189 (ตรวจสลิป verify-slip)
 │ Pending           : WEBHOOK_SECRET (ตั้งพร้อม payment gateway)
+│ 🔴 **ขาด: `SUPABASE_ACCESS_TOKEN` (GitHub secret)** — ค้างมาตั้งแต่ ledger #87 ("งานเจ้าของ")
+│    ⇒ workflow `supabase-functions-deploy.yml` **แดงทุกครั้ง** ที่แตะ `supabase/functions/**`
+│      หรือ `config.toml` · มันแดงที่ขั้น "ตรวจว่ามี access token จริงก่อนเริ่ม deploy"
+│      **หลัง** lint + เทสต์ผ่านครบแล้ว ⇒ 🔴 **อย่าอ่านว่าโค้ดพัง** และ **ห้ามแก้ให้ข้ามเงียบ ๆ**
+│      (ความแดงนี้คือของที่ #87 ตั้งใจให้เห็น — ไม่มี workflow deploy = production drift จาก main)
+│    ⇒ ระหว่างยังไม่มี token: deploy edge function **ผ่าน MCP** แล้ว **อ่านย้อนด้วย
+│      `get_edge_function` เทียบกับไฟล์ในรีโปทุกครั้ง** (ledger #88, #103)
+│    วิธีตั้ง: supabase.com/dashboard/account/tokens → scoped token (`sbp_fc…`)
+│      เฉพาะ project `waigsnxhrlwtiotspaim` + สิทธิ์ Edge Functions อ่าน-เขียน (ไม่ต้องให้สิทธิ์ Database)
 ├─ TIS Automate (แยก) ─────────────────────────────────────────────
 │ Supabase project  : galtbbkcddugnsfkgyqm — ไม่มี secret ฝั่ง client (publishable key ฝังได้)
 ├─ Marketing OS = อีกระบบ (ห้ามแตะจากรีโปนี้) ─────────────────────
