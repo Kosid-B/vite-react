@@ -37,22 +37,27 @@ describe('osRepointReadiness — ตัวเลขที่ล็อกไว�
     const c = osRepointCoverage();
     expect(c.total).toBe(17);
     expect(c.hasData).toBe(5);
-    expect(c.emptyShellPublic).toBe(4);
-    expect(c.absent).toBe(8);
+    expect(c.structureOnly).toBe(12);
+    expect(c.absent).toBe(0);
+    expect(c.present).toBe(17);
     expect(OS_REPOINT_MEASURED_AT).toBe('2026-11-26');
+  });
+
+  it('🟢 ตารางครบแล้ว — ห้ามถอยกลับไปมีตาราง absent โดยไม่รู้ตัว (migration 0070/0071)', () => {
+    expect(OS_APP_TABLES.filter((t) => t.state === 'absent')).toEqual([]);
   });
 
   it('ทุกตารางต้องมีสถานะที่รู้จัก และห้ามชื่อซ้ำ', () => {
     const names = OS_APP_TABLES.map((t) => t.name);
     expect(new Set(names).size).toBe(names.length);
     for (const t of OS_APP_TABLES) {
-      expect(['has_data', 'empty_shell_public', 'absent']).toContain(t.state);
+      expect(['has_data', 'structure_only', 'absent']).toContain(t.state);
     }
   });
 
   it('ยอดรวมของสามสถานะต้องเท่ากับจำนวนตารางทั้งหมด (ห้ามมีตัวไหนหายไปจากกอง)', () => {
     const c = osRepointCoverage();
-    expect(c.hasData + c.emptyShellPublic + c.absent).toBe(c.total);
+    expect(c.hasData + c.structureOnly + c.absent).toBe(c.total);
   });
 
   it('ต้องบอกที่มาและวิธีนับไว้ ไม่ใช่ตัวเลขลอย (ledger #79)', () => {
@@ -63,12 +68,12 @@ describe('osRepointReadiness — ตัวเลขที่ล็อกไว�
 });
 
 describe('osRepointReadiness — ด่านกั้น', () => {
-  it('🔴 วันนี้ยังไม่พร้อม และต้องบอกได้ว่าเพราะอะไร', () => {
+  it('🔴 วันนี้ยังไม่พร้อม — และเหลือด่านเดียวคือ identity ไม่ใช่เรื่องตารางอีกแล้ว', () => {
     expect(IDENTITY_DECIDED).toBe(false);
     expect(osRepointReady()).toBe(false);
     const b = osRepointBlockers();
-    expect(b.join(' ')).toContain('8 ตัวไม่มีในฐานเราเลย');
-    expect(b.join(' ')).toContain('identity ยังไม่ตัดสิน');
+    expect(b).toHaveLength(1);
+    expect(b[0]).toContain('identity ยังไม่ตัดสิน');
   });
 
   it('ด่านนี้ไม่ใช่ false ตายตัว — ครบทุกตาราง + ตัดสิน identity แล้ว = ผ่าน', () => {
@@ -78,19 +83,29 @@ describe('osRepointReadiness — ด่านกั้น', () => {
   });
 
   it('แก้ identity อย่างเดียวไม่พอ · สร้างตารางอย่างเดียวก็ไม่พอ (ต้องครบทั้งคู่)', () => {
-    const allThere: OsAppTable[] = OS_APP_TABLES.map((t) => ({ ...t, state: 'has_data' }));
-    expect(osRepointReady(OS_APP_TABLES, { identityDecided: true })).toBe(false);
-    expect(osRepointReady(allThere, { identityDecided: false })).toBe(false);
+    const oneGone: OsAppTable[] = OS_APP_TABLES.map((t, i) =>
+      i === 0 ? { ...t, state: 'absent' as const } : t,
+    );
+    expect(osRepointReady(oneGone, { identityDecided: true })).toBe(false);
+    expect(osRepointReady(OS_APP_TABLES, { identityDecided: false })).toBe(false);
   });
 
-  it('ตารางที่มีแค่ใน public ก็ยังเป็น blocker (public.marketing_* ไม่ใช่ของเรา)', () => {
-    const onlyShells: OsAppTable[] = [
+  it('🟢 structure_only ไม่ใช่ blocker — 0 แถวเท่ากับฝั่งเขา ไม่ใช่ข้อมูลหาย', () => {
+    const mixed: OsAppTable[] = [
       { name: 'a', state: 'has_data' },
-      { name: 'b', state: 'empty_shell_public' },
+      { name: 'b', state: 'structure_only' },
     ];
-    const b = osRepointBlockers(onlyShells, { identityDecided: true });
+    expect(osRepointBlockers(mixed, { identityDecided: true })).toEqual([]);
+  });
+
+  it('🔴 แต่ absent ยังเป็น blocker เสมอ แม้ identity จบแล้ว', () => {
+    const gone: OsAppTable[] = [
+      { name: 'a', state: 'has_data' },
+      { name: 'b', state: 'absent' },
+    ];
+    const b = osRepointBlockers(gone, { identityDecided: true });
     expect(b).toHaveLength(1);
-    expect(b[0]).toContain('1 ตัวมีแค่ใน public');
+    expect(b[0]).toContain('1 ตัวไม่มีในฐานเราเลย');
   });
 });
 

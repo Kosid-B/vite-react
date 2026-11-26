@@ -13,6 +13,12 @@
  *    ตัวเลขความพร้อมต้องอยู่ในรีโป พร้อม **วิธีนับ** + **วันที่** + **ที่มา** แล้วล็อกด้วยเทสต์
  *    (นิยามเดียวกับ `phase1Baseline.ts`)
  *
+ * 🔁 **รอบวัดที่สอง (26 พ.ย. 2569 บ่าย) — เจ้าของสั่ง "ไปต่อ" แทนที่จะหยุด** (ADR-0014)
+ *    ตารางถูกเติมครบแล้วด้วย migration 0070 (3 ตัว · เซสชันบนเครื่องเจ้าของ apply) + 0071 (9 ตัว)
+ *    ⇒ `absent` เหลือ **0** · ทั้ง 17 ตารางมีในฐานเราแล้ว และ **fingerprint คอลัมน์ตรงกับฝั่งเขาเป๊ะทั้ง 17**
+ *    ⇒ ด่านที่เหลือข้อเดียวคือ **identity** ซึ่งยังไม่ถูกตัดสิน
+ *    🔴 `structure_only` = 0 แถว **แต่ฝั่งเขาก็ 0 แถว** ⇒ นี่คือ "เท่ากับต้นทาง" ไม่ใช่ "ข้อมูลหาย"
+ *
  * pure ทั้งไฟล์ · ไม่เรียกฐานข้อมูลเอง (วัดด้วยมือผ่าน MCP แล้วบันทึก · วิธีนับติดอยู่ด้านล่าง)
  */
 
@@ -20,8 +26,8 @@
 export type OsTableState =
   /** 🟢 อยู่ใน `marketing_os` และมีแถวจริง — ใช้ได้ทันที */
   | 'has_data'
-  /** 🟡 ไม่มีใน `marketing_os` · มีใน `public` แต่ **0 แถว** — และ `public.marketing_*` ยังไม่ใช่ของเรา (ห้ามแตะ) */
-  | 'empty_shell_public'
+  /** 🟢 สร้างใน `marketing_os` แล้ว · **0 แถว** ซึ่งเท่ากับฝั่งเขา ⇒ ไม่ใช่ข้อมูลหาย (migration 0070/0071) */
+  | 'structure_only'
   /** 🔴 ไม่มีในฐานเราเลยทั้งสอง schema — มีอยู่แค่ใน project เดิม `bjozpwdtqbpwcxnqguka` */
   | 'absent';
 
@@ -54,20 +60,20 @@ export const OS_APP_TABLES: readonly OsAppTable[] = [
   { name: 'marketing_brands', state: 'has_data' },
   { name: 'marketing_audience_segments', state: 'has_data' },
   { name: 'marketing_message_pillars', state: 'has_data' },
-  // 🟡 4 ตัวที่มีใน public แต่ 0 แถว (และ public ไม่ใช่ของเรา)
-  { name: 'marketing_campaigns', state: 'empty_shell_public' },
-  { name: 'marketing_content_items', state: 'empty_shell_public' },
-  { name: 'marketing_content_versions', state: 'empty_shell_public' },
-  { name: 'marketing_offers', state: 'empty_shell_public' },
-  // 🔴 8 ตัวที่ไม่มีในฐานเราเลย
-  { name: 'marketing_action_items', state: 'absent' },
-  { name: 'marketing_ai_jobs', state: 'absent' },
-  { name: 'marketing_approval_requests', state: 'absent' },
-  { name: 'marketing_campaign_hypotheses', state: 'absent' },
-  { name: 'marketing_compliance_findings', state: 'absent' },
-  { name: 'marketing_content_assets', state: 'absent' },
-  { name: 'marketing_ctas', state: 'absent' },
-  { name: 'marketing_tracking_links', state: 'absent' },
+  // 🟢 3 ตัวจาก migration 0070 (เซสชันบนเครื่องเจ้าของ apply 08:14:17 UTC)
+  { name: 'marketing_offers', state: 'structure_only' },
+  { name: 'marketing_ctas', state: 'structure_only' },
+  { name: 'marketing_action_items', state: 'structure_only' },
+  // 🟢 9 ตัวจาก migration 0071
+  { name: 'marketing_campaigns', state: 'structure_only' },
+  { name: 'marketing_campaign_hypotheses', state: 'structure_only' },
+  { name: 'marketing_content_items', state: 'structure_only' },
+  { name: 'marketing_content_versions', state: 'structure_only' },
+  { name: 'marketing_ai_jobs', state: 'structure_only' },
+  { name: 'marketing_content_assets', state: 'structure_only' },
+  { name: 'marketing_approval_requests', state: 'structure_only' },
+  { name: 'marketing_compliance_findings', state: 'structure_only' },
+  { name: 'marketing_tracking_links', state: 'structure_only' },
 ];
 
 /**
@@ -86,23 +92,28 @@ export const OS_REPOINT_OBSERVABLE_SIGNAL = {
 export interface OsRepointCoverage {
   total: number;
   hasData: number;
-  emptyShellPublic: number;
+  structureOnly: number;
   absent: number;
+  /** ตารางที่ "มีอยู่จริงในฐานเรา" = ใช้ query ได้ไม่ล้ม */
+  present: number;
 }
 
 export function osRepointCoverage(
   tables: readonly OsAppTable[] = OS_APP_TABLES,
 ): OsRepointCoverage {
+  const hasData = tables.filter((t) => t.state === 'has_data').length;
+  const structureOnly = tables.filter((t) => t.state === 'structure_only').length;
   return {
     total: tables.length,
-    hasData: tables.filter((t) => t.state === 'has_data').length,
-    emptyShellPublic: tables.filter((t) => t.state === 'empty_shell_public').length,
+    hasData,
+    structureOnly,
     absent: tables.filter((t) => t.state === 'absent').length,
+    present: hasData + structureOnly,
   };
 }
 
 /** ข้อความที่เอกสารทุกฉบับต้องอ้างให้ตรงกัน — แก้ค่าแล้วไม่แก้เอกสาร = เทสต์แดง */
-export const OS_REPOINT_COVERAGE_PHRASE = '5 จาก 17';
+export const OS_REPOINT_COVERAGE_PHRASE = '17 จาก 17';
 
 /** 🔴 ยังไม่ถูกตัดสิน (26 พ.ย. 2569) — ผู้ใช้ของเขา 11 คน มีใน `auth.users` ของเรา 0 คน (ADR-0013) */
 export const IDENTITY_DECIDED = false;
@@ -125,11 +136,6 @@ export function osRepointBlockers(
   const out: string[] = [];
   if (c.absent > 0) {
     out.push(`ตาราง ${c.absent} ตัวไม่มีในฐานเราเลย ⇒ แอปจะได้ relation does not exist`);
-  }
-  if (c.emptyShellPublic > 0) {
-    out.push(
-      `ตาราง ${c.emptyShellPublic} ตัวมีแค่ใน public และ 0 แถว ⇒ ย้ายมา marketing_os ไม่ได้โดยไม่แตะของที่ไม่ใช่ของเรา`,
-    );
   }
   if (!identityDecided) {
     out.push('identity ยังไม่ตัดสิน: workspace_members 11 คน มีใน auth.users ของเรา 0 คน');

@@ -29,10 +29,12 @@ createClient(url, key, { db: { schema: 'marketing_os' } })
 
 ## 2. ฝั่งฐาน — พร้อมแค่ไหนจริง
 
-> 🔴 **แก้ 26 พ.ย. 2569 (รอบสอง) — หัวข้อนี้เคยเขียนว่า "ไม่ต้องทำอะไรเพิ่ม" ซึ่งผิด**
-> ตอนนั้นวัดจาก **จำนวนแถวที่คัดลอกมาได้** (48 แถว · 11 ตาราง · ตรงกันสองฝั่ง) ซึ่งเป็นความจริง
-> **แต่ไม่ใช่คำถามที่ควรถาม** · คำถามที่ถูกคือ *"ตารางที่แอปเขา query จริง มีในฐานเราครบไหม"*
-> ⇒ วัดแล้ววันเดียวกัน: **มีแค่ 5 จาก 17** · แหล่งความจริงที่ล็อกด้วยเทสต์ = `src/lib/osRepointReadiness.ts`
+> 🔁 **แก้ 26 พ.ย. 2569 สองรอบ — อ่านให้ครบก่อนอ้าง**
+> **รอบ 1** หัวข้อนี้เคยเขียนว่า "ไม่ต้องทำอะไรเพิ่ม" = **ผิด** · วัดจาก **จำนวนแถวที่คัดลอกมาได้**
+> (48 แถว · 11 ตาราง · ตรงกันสองฝั่ง) ซึ่งเป็นความจริง **แต่ไม่ใช่คำถามที่ควรถาม** —
+> คำถามที่ถูกคือ *"ตารางที่แอปเขา query จริง มีในฐานเราครบไหม"* ⇒ ตอนนั้นมีแค่ 5
+> **รอบ 2 (เจ้าของสั่ง "ไปต่อ" · ADR-0014)** เติมครบแล้วด้วย migration 0070 + 0071
+> ⇒ **มี 17 จาก 17** · แหล่งความจริงที่ล็อกด้วยเทสต์ = `src/lib/osRepointReadiness.ts`
 
 **สิ่งที่พร้อมจริง**
 
@@ -43,13 +45,19 @@ createClient(url, key, { db: { schema: 'marketing_os' } })
 | ตารางใหม่ในอนาคต | 🟢 `alter default privileges` ให้ `service_role` ไว้แล้ว (0069) |
 | ข้อมูล 11 ตารางที่ย้ายมา | 🟢 ครบ 48 แถว — `brand_rules` 7 · `audience_segments` 6 · `workspace_members` 11 |
 
-**สิ่งที่ยังไม่พร้อม — ตารางที่แอป query (17 ตัว) เทียบกับฐานเรา**
+**ตารางที่แอป query (17 ตัว) เทียบกับฐานเรา — หลัง migration 0070 + 0071**
 
 | สถานะ | จำนวน | ตาราง |
 |---|---|---|
-| 🟢 อยู่ใน `marketing_os` + มีแถว | **5** | `workspaces` · `workspace_members` · `marketing_brands` · `marketing_audience_segments` · `marketing_message_pillars` |
-| 🟡 มีแค่ใน `public` และ **0 แถว** | **4** | `marketing_campaigns` · `marketing_content_items` · `marketing_content_versions` · `marketing_offers` |
-| 🔴 **ไม่มีในฐานเราเลยทั้งสอง schema** | **8** | `marketing_action_items` · `marketing_ai_jobs` · `marketing_approval_requests` · `marketing_campaign_hypotheses` · `marketing_compliance_findings` · `marketing_content_assets` · `marketing_ctas` · `marketing_tracking_links` |
+| 🟢 มีแถวข้อมูลจริง | **5** | `workspaces` · `workspace_members` · `marketing_brands` · `marketing_audience_segments` · `marketing_message_pillars` |
+| 🟢 โครงสร้างพร้อม · 0 แถว (**ฝั่งเขาก็ 0 แถว** ⇒ เท่ากับต้นทาง) | **12** | `marketing_offers` · `marketing_ctas` · `marketing_action_items` (0070) · `marketing_campaigns` · `marketing_campaign_hypotheses` · `marketing_content_items` · `marketing_content_versions` · `marketing_ai_jobs` · `marketing_content_assets` · `marketing_approval_requests` · `marketing_compliance_findings` · `marketing_tracking_links` (0071) |
+| 🔴 ไม่มีในฐานเรา | **0** | — |
+
+🟢 **พิสูจน์ว่าไม่เหลื่อมจากต้นทาง**: fingerprint คอลัมน์ (ชื่อ · ชนิด · not-null · default)
+เทียบสองฐาน **ตรงกันเป๊ะทั้ง 17 ตาราง** · 🔒 สิทธิ์: `service_role` 92 grants (23×4) ·
+`anon`/`authenticated` **0** · RLS เปิด 23/23 · policy **0** · FK ไป `auth.users` **0**
+
+🔴 **ด่านที่เหลือข้อเดียว = identity** (ข้อ ③ ด้านล่าง) — ไม่ใช่เรื่องตารางอีกแล้ว
 
 🟡 **รายชื่อ 17 ตัวยังไม่ถูกตรวจจากรีโปนี้** — มาจากรายงานของเซสชันที่รันบนเครื่องเจ้าของ
 (อ่าน `apps/marketing-os/src/types/database.types.ts`) · เซสชันคลาวด์เปิดโฟลเดอร์ไม่ได้
@@ -73,12 +81,12 @@ workspaces · workspace_members · workspace_state          ← สามตั�
 ⇒ วันนี้อ่านได้ทางเดียวคือ **ฝั่งเซิร์ฟเวอร์ด้วย service key** (หรือ Postgres connection string)
 ⇒ จะเปิดให้เบราว์เซอร์ ต้องแก้เรื่อง identity ก่อน (ข้อ ③ · ดูข้อ 4)
 
-**② ตารางที่ไม่มีข้อมูลยังไม่ถูกสร้าง — 🔴 วัดแล้ววันที่ 26 พ.ย. 69: นี่ไม่ใช่เชิงอรรถ นี่คืองานทั้งก้อน**
-ฐานเดิมมี 44 ตาราง · ย้ายมาเฉพาะ **11 ตัวที่มีข้อมูลจริง**
-⇒ จาก 17 ตารางที่แอป query: **8 ตัวไม่มีในฐานเราเลย** + 4 ตัวมีแค่ใน `public` และว่าง
-⇒ ต่อให้แก้สิทธิ์และ identity ครบ หน้าเว็บก็จะล้มที่ `relation does not exist` อยู่ดี
-⇒ เจอตัวไหนให้ **สร้างทีละตัวตามที่โค้ดใช้จริง** ห้ามเดาโครงสร้างยกชุด (ADR-0011 §ทางเลือกที่ไม่เลือก)
-⚠️ และ 4 ตัวใน `public` **ห้ามย้าย/แก้/ลบ** — `public.marketing_*` ยังไม่ใช่ของเรา (เส้นแบ่งความเป็นเจ้าของ)
+**② ตารางที่ไม่มีข้อมูลยังไม่ถูกสร้าง — 🟢 ปิดแล้ว 26 พ.ย. 69**
+ฐานเดิมมี 44 ตาราง · 0066 ย้ายมาเฉพาะ **11 ตัวที่มีข้อมูลจริง** ⇒ ขาด 12 ตัวที่แอปใช้
+⇒ เติมครบแล้ว: **0070** (3 ตัว) + **0071** (9 ตัว) · โครงสร้างอ่านจากฐานเขาด้วย `pg_attribute` +
+  `pg_get_constraintdef` + `pg_indexes` — **ไม่ได้เดา** (ADR-0011 §ทางเลือกที่ไม่เลือก)
+⚠️ ตารางใน `public.marketing_*` **ห้ามย้าย/แก้/ลบ** — ยังไม่ใช่ของเรา (เส้นแบ่งความเป็นเจ้าของ)
+  ⇒ 4 ตัวที่เคยมีแค่ใน `public` ถูก **สร้างใหม่ใน `marketing_os`** ไม่ได้ย้ายของเขา
 
 **③ ผู้ใช้คนละชุด**
 `marketing_os.workspace_members` มี **11 คน** · มีตัวตนใน `auth.users` ของ production เรา **0 คน**
@@ -90,8 +98,9 @@ workspaces · workspace_members · workspace_state          ← สามตั�
 1. เปิดโฟลเดอร์ แล้ว `grep` หา `createClient` · `SUPABASE_URL` · `DATABASE_URL` · `bjozpwdtqbpwcxnqguka`
    → ตอบให้ได้ก่อนว่า **แอปอ่านจากเบราว์เซอร์ หรือจากเซิร์ฟเวอร์**
 2. เปลี่ยน URL + key + `db.schema` → รันในเครื่องก่อน **อย่าเพิ่ง deploy**
-3. 🟢 **รายชื่อที่จะพังรู้แล้วล่วงหน้า ไม่ต้องไล่เอง** — 8 ตัวใน §2 (กอง 🔴) + 4 ตัวในกอง 🟡
-   ⇒ ถ้าจะไปต่อ ต้องสร้าง 12 ตัวนั้นเป็น migration ในรีโปนี้ **ก่อน** จะเห็นหน้าเว็บทำงาน
+3. 🟢 **ตารางครบแล้ว ไม่ต้องไล่ `relation does not exist` อีก** — 0070 + 0071 ปิดครบ 12 ตัว
+   ⚠️ ถ้าเจอชื่อตารางที่ **ไม่อยู่ใน 17 ตัวของ §2** = แอปใช้ตารางที่เรายังไม่รู้
+   ⇒ จดชื่อ แล้วกลับมาเพิ่มเป็น migration ในรีโปนี้ **ห้าม `create table` ตรงบนฐาน** (ledger #108)
 4. ถ้าติดเรื่องล็อกอิน = ถึงข้อ ③ แล้ว **หยุด** แล้วตัดสินเรื่อง identity ก่อน ห้ามเปิด grant ให้ `authenticated` เพื่อให้มันผ่าน
    (กลไก `ownershipBoundary.test.ts` ในรีโปนี้กันไว้แล้ว)
 
