@@ -59,6 +59,14 @@ describe('ci gate — เครื่องมือที่ตรวจใน�
     expect(missing, `ขั้นที่ CI รันแต่ \`npm run ci\` ไม่ได้รัน: ${missing.join(', ')}`).toEqual([]);
   });
 
+  /** 🔴 ledger #114 — push สาขาฟีเจอร์ก่อนเปิด PR = ไม่มี `pull_request` event
+   *  ⇒ CI ไม่รันกับ head นั้นเลย และ GitHub ผูก run ของ head เก่าเข้า PR ใหม่
+   *     ⇒ หน้า PR ดูเหมือนมีด่านแล้ว ทั้งที่ยังไม่ได้ตรวจคอมมิตจริง
+   *  ⇒ ต้องมีทางสั่งรันเอง ไม่งั้นทางออกที่เหลือคือท่าที่ห้าม (คอมมิตว่าง / ปิด-เปิด PR) */
+  it('🔴 ci.yml ต้องสั่งรันเองได้ (`workflow_dispatch`) — ไม่งั้น head ที่ CI ไม่แตะจะไม่มีทางตรวจ', () => {
+    expect(/^\s*workflow_dispatch:/m.test(stripComments(ciYml))).toBe(true);
+  });
+
   it('`npm run ci` ต้องมี lint (ขั้นที่ถูกลืมจนแดง 54 รอบ)', () => {
     expect(pkg.scripts.ci).toContain('npm run lint');
   });

@@ -6,6 +6,11 @@ on:
     branches: [main]
   push:
     branches: [main]
+  # 🔴 ห้ามลบ — ledger #114 · 26 พ.ย. 2569
+  # push สาขาฟีเจอร์ "ก่อน" เปิด PR = ไม่มี pull_request event ⇒ CI ไม่รันกับ head นั้นเลย
+  # และ GitHub จะผูก run ของ head เก่าเข้า PR ใหม่ ⇒ หน้า PR ดูเหมือนมีด่านแล้ว ทั้งที่ยังไม่ได้ตรวจ
+  # ⇒ ต้องมีทางสั่งรันเองโดยไม่ต้องใช้ท่าที่ห้าม (คอมมิตว่าง / ปิด-เปิด PR ใหม่)
+  workflow_dispatch:
 
 jobs:
   build-test:
