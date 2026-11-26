@@ -36,6 +36,14 @@ Sidebar `button.nav-item` switches pages. Deployed on Cloudflare Workers + Supab
      ⇒ ตัด FK ไป auth ออก) ⇒ ยังไม่ใช่ "Shared Identity" ตามผังที่เจ้าของให้มา
    🔒 ของใหม่ปิดสนิท: RLS เปิด + **ไม่มี policy** + revoke `anon`/`authenticated` ⇒ ยังไม่มีใครอ่านได้
    ↩️ ย้อนกลับได้: `drop schema marketing_os cascade` (ของเขายังอยู่ครบ — นี่คือคัดลอก ไม่ใช่ตัดทิ้ง)
+   🔢 **ลำดับงานที่เหลือ ห้ามสลับ** (26 พ.ย. 2569):
+     ① ย้ายแอป OS มาชี้ `waigsnxhrlwtiotspaim` + schema `marketing_os` (ต้องเปิดโฟลเดอร์บนเครื่องเจ้าของ)
+     ② แล้วค่อยย้าย `brandSync`/`scripts/brand-sync-check.mjs` มาอ่านฐานเดียวกัน
+     🔴 **ห้ามทำ ② ก่อน ①** — `brandSync` ต้องชี้ไปที่ "แหล่งจริงที่แอป OS ใช้อยู่" ซึ่งวันนี้ยังเป็น project เดิม
+        ย้ายก่อน = รีโปประกาศว่ารวมฐานเสร็จแล้วทั้งที่ยังไม่เสร็จ (และสคริปต์ก็ยังรันไม่ได้อยู่ดี
+        เพราะ `marketing_os` revoke `anon` ⇒ ต้องมีคีย์ที่มีสิทธิ์ ซึ่งคีย์สาธารณะไม่มี)
+     ⚠️ เทสต์ `brandSync.test.ts` ล็อกไว้ว่า `projectRef` **ต้องไม่ใช่** `waigsnxhrlwtiotspaim` — ตั้งใจ
+        จะย้ายต้องแก้เทสต์พร้อมเหตุผล ไม่ใช่แก้ค่าเงียบ ๆ
 🔴 **ของเดิมก่อน 22 พ.ย.: Marketing OS รันบน Supabase ของตัวเอง** (ตรวจสดผ่าน MCP 15 พ.ย. 2569 · ledger #79)
    · **ของอีกระบบ**: `bjozpwdtqbpwcxnqguka` = **"CEOAITHAILAND Marketing"** (org เดียวกัน · ap-northeast-1 · สร้าง 19 ส.ค. 69)
      โค้ดอยู่เครื่องเจ้าของที่ `D:\CEOAITHAILAND Marketing-P1.0.2-baseline` · deploy เป็น Vercel project `ceo-ai-marketing`
@@ -1001,6 +1009,9 @@ public.ai_topup           — Top-up packs: credits AI เพิ่มต่อ 
 | verify-slip | ✅ | ตรวจสลิปกับธนาคารจริงผ่าน SlipOK → เปิดแพ็ก server-side (deployed prod · LIVE) |
 | promptpay-webhook | ❌ | รับ webhook จาก payment gateway |
 | hubspot-sync | ❌ | ซิงก์ platform_leads → HubSpot CRM (contacts upsert by email · cron · code-ready ยังไม่ deploy — รอ HUBSPOT_TOKEN) |
+| marketing-behavior-ingest | ✅ | รับ behavior event จากหน้าเว็บ → เขียนลง `marketing_os` (ย้ายมา 22 พ.ย. 69 · ADR-0011) · **ซอร์สอยู่ในรีโปแล้ว** `supabase/functions/marketing-behavior-ingest/` |
+🔴 **`marketing-track` + `marketing-generate` ยังไม่มีซอร์สในรีโป** — รันบน production แต่ไม่มีใครอ่านโค้ดได้
+   ⇒ ช่องเดียวกันที่ `marketing-behavior-ingest` ปิดไปแล้ว · สองตัวนี้ยังค้าง
 
 ### Marketing connectors / analytics sinks
 ```

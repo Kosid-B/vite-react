@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
 /** โค้ดจริงโดยไม่นับคอมเมนต์ — ด่านนี้ห้าม "การเรียกใช้" ไม่ใช่ห้าม "การเอ่ยถึงในเอกสาร"
@@ -100,11 +100,48 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
   });
 
 
+  /** 🔑 ไฟล์เดียวที่มีสิทธิ์แตะตารางใน schema ที่เราเป็นเจ้าของ (`marketing_os`)
+   *  = edge function ที่รับ event เข้ามา · เป็นเจ้าของท่อ จึงต้องเขียนลงตารางได้
+   *  🔴 สิทธิ์นี้ไม่ใช่ใบผ่านไปแตะ `public.marketing_*` — เทสต์ตัวถัดไปบังคับว่า
+   *     ทุกการแตะในไฟล์นี้ต้องมี `.schema('marketing_os')` นำหน้า */
+  const OS_PIPE_FILE = 'supabase/functions/marketing-behavior-ingest/index.ts';
+
   it('โค้ดในรีโปนี้ต้องไม่อ่าน/เขียนตาราง marketing_* โดยตรง', () => {
     const offenders = [...walk(resolve(ROOT, 'src')), ...walk(resolve(ROOT, 'supabase/functions'))]
-      .filter((p) => /\.from\(\s*['"`]marketing_|rpc\(\s*['"`]marketing_/.test(codeOf(p)))
-      .map((p) => p.slice(ROOT.length + 1));
+      .map((p) => p.slice(ROOT.length + 1))
+      .filter((rel) => rel !== OS_PIPE_FILE)
+      .filter((rel) => /\.from\(\s*['"`]marketing_|rpc\(\s*['"`]marketing_/.test(codeOf(resolve(ROOT, rel))));
     expect(offenders, `ไฟล์ที่แตะตารางของอีกระบบ: ${offenders.join(', ')}`).toEqual([]);
+  });
+
+  it('🔴 ไฟล์ที่ได้สิทธิ์ ต้องแตะผ่าน schema `marketing_os` เท่านั้น — ห้ามแตะ public', () => {
+    const file = resolve(ROOT, OS_PIPE_FILE);
+    expect(existsSync(file), `${OS_PIPE_FILE} ไม่มีอยู่จริง — ยกเว้นไฟล์ที่ไม่มีตัวตน = ช่องโหว่`).toBe(true);
+    const code = codeOf(file);
+    /* หาทุกจุดที่เรียก .from('marketing_…') แล้วดูข้อความก่อนหน้าว่ามี .schema('marketing_os') ติดอยู่ไหม
+     * (เขียน `.from('marketing_x')` เปล่า ๆ = ยิงไป public = ข้ามเส้น) */
+    const bare: string[] = [];
+    for (const m of code.matchAll(/\.from\(\s*['"`](marketing_[a-z_]*)/g)) {
+      const before = code.slice(Math.max(0, m.index - 40), m.index);
+      if (!/\.schema\(\s*['"`]marketing_os['"`]\s*\)\s*$/.test(before)) bare.push(m[1]);
+    }
+    expect(bare, `แตะโดยไม่ระบุ schema (= public): ${bare.join(', ')}`).toEqual([]);
+  });
+
+  it('🔴 ด่าน schema ของไฟล์ท่อ ต้องยังจับของผิดได้จริง', () => {
+    const hits = (code: string) => {
+      const bad: string[] = [];
+      for (const m of code.matchAll(/\.from\(\s*['"`](marketing_[a-z_]*)/g)) {
+        const before = code.slice(Math.max(0, m.index - 40), m.index);
+        if (!/\.schema\(\s*['"`]marketing_os['"`]\s*\)\s*$/.test(before)) bad.push(m[1]);
+      }
+      return bad;
+    };
+    expect(hits("db.from('marketing_behavior_batches')"), 'ไม่ระบุ schema ต้องถูกจับ').toHaveLength(1);
+    expect(hits("db.schema('marketing_oss').from('marketing_behavior_batches')"),
+      'ชื่อ schema เพี้ยนต้องถูกจับ').toHaveLength(1);
+    expect(hits("db.schema('marketing_os').from('marketing_behavior_batches')"),
+      'ระบุ schema ถูกต้องต้องผ่าน').toHaveLength(0);
   });
 
   /* ── ข้อยกเว้น 15 พ.ย. 2569 — อ่านอย่างเดียว 3 ตาราง ───────────────────

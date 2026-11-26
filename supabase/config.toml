@@ -111,3 +111,10 @@ verify_jwt = false
 
 [functions.market-snapshot]
 verify_jwt = false
+
+# 🔀 ย้ายมาจาก project bjozpwdtqbpwcxnqguka เมื่อ 22 พ.ย. 2569 (ADR-0011) · ซอร์สเข้ารีโป 26 พ.ย. 2569
+#    verify_jwt = true ตรงกับที่ deploy อยู่จริงบน production (ตรวจผ่าน MCP)
+#    🔴 ชั้นกั้นตัวจริงคือ origin allowlist (ceoaithailand.org + www) ไม่ใช่ JWT
+#       ⇒ ถ้าเปลี่ยนเป็น false ต้องถามก่อนว่าใครจะยิงเข้ามาได้เพิ่ม ไม่ใช่เปลี่ยนเพราะทดสอบไม่ผ่าน
+[functions.marketing-behavior-ingest]
+verify_jwt = true
