@@ -199,6 +199,13 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
             🔴 **และเป็นเหตุให้ `has_table_privilege` เชื่อไม่ได้ลำพัง** — column-level grant ทำให้
               `has_table_privilege(...,'select')` = **false** แต่ `select`/`count(*)` **ทำได้จริง**
               ⇒ ตรวจสิทธิ์ต้องดู `has_column_privilege` หรือ `pg_attribute.attacl` ด้วย ไม่ใช่แค่ระดับตาราง
+   🚪 **ประตูเดียวสำหรับบัญชีผู้ใช้ — `public.os_member_funnel_summary(p_workspace, p_since)`** (0077 · เจ้าของสั่ง 26 พ.ย. 69)
+      🔴 เคยมีสองประตูทำเรื่องเดียวกัน (ledger #111) ⇒ เส้นแบ่งความปลอดภัยสองที่ = พลาดที่เดียวก็รั่ว
+      ⇒ เก็บ wrapper ไว้เพราะ **บังคับให้ผู้เรียกระบุ workspace** · ระบุผิด = ปฏิเสธ `42501`
+      ⇒ `marketing_os_funnel_summary(p_since)` ตัวใน **เหลือ `service_role` เท่านั้น** (revoke แล้ว)
+      🟢 วัดหลัง revoke 5/5: ตัวใน·เจ้าของ ปฏิเสธ · **wrapper·เจ้าของ อ่านได้ 4 แถว** · wrapper·คนนอก ปฏิเสธ
+         · wrapper·workspace ที่ไม่ได้เป็นสมาชิก ปฏิเสธ · ตัวใน·service_role อ่านได้
+      ⚠️ ด่านตรวจสมาชิกในตัวในยังอยู่ เป็นชั้นป้องกันซ้ำ — ไม่ได้ถอดออก
       🔴 **ค่านี้อยู่นอกรีโป เทสต์มองไม่เห็น** — ถ้ามีคนเอา `marketing_os` ออกจากรายการ จะไม่มีอะไรเตือน
          (นี่คือเหตุผลที่ ADR-0012 ยังยืนยันว่าท่อของเราต้องเดินผ่าน **rpc** ไม่ใช่ `.schema()`
           ⇒ ท่อ ingest จะไม่พังตามค่านี้ ไม่ว่าใครจะไปแก้มันเมื่อไร)
