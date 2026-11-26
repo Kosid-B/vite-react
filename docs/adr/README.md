@@ -51,5 +51,6 @@
 | [0014](0014-fill-marketing-os-tables-by-app-usage.md) | เติมตาราง `marketing_os` ตาม "ของที่แอปใช้" ไม่ใช่ "ของที่มีข้อมูล" | `accepted` |
 | [0015](0015-identity-service-key-scoped.md) | identity ของแอป OS: ทาง (ก) service key แบบจำกัดขอบ | `superseded` |
 | [0016](0016-identity-shared-auth-users.md) | identity: แมปบัญชีเดียวเข้า `auth.users` ของเรา + RLS อิงการเป็นสมาชิก | `accepted` |
+| [0017](0017-migration-names-are-timestamps.md) | ชื่อไฟล์ migration เป็น timestamp UTC ไม่ใช่เลขลำดับ | `accepted` |
 
 กลไกบังคับรูปแบบ: `src/lib/__tests__/adr.test.ts`
