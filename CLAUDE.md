@@ -139,9 +139,18 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
    ⇒ `service_role` เคยมีสิทธิ์บนตาราง **0** · `bypassrls=true` ข้ามได้แค่ **RLS** ไม่ใช่สิทธิ์บนตาราง
    🟢 แก้แล้วด้วย migration 0069 — ยืนยันหลัง apply: `service_role` = **44 grants** (11×4) ·
       `anon`/`authenticated` ไม่ปรากฏในรายการสิทธิ์เลย · RLS policy ยังเป็น **0**
-   🔴 **ยังไม่พอสำหรับ `supabase-js`** — PostgREST ต้องมี `marketing_os` ใน **Exposed schemas**
-      (Dashboard → Project Settings → API) ซึ่งรีโปแตะไม่ได้ ⇒ ปิดได้แค่ชั้นสิทธิ์ ·
-      ต่อฐานตรงด้วย **Postgres connection string** = ใช้ได้ทันที
+   🟢 **ชั้นที่สองปิดแล้วเช่นกัน — เจ้าของติ๊ก `marketing_os` ใน Exposed schemas เอง 26 พ.ย. 2569**
+      (Dashboard → Integrations → **Data API → แท็บ Settings** → *Exposed schemas* · ตอนนี้ 3 of 4:
+      `graphql_public` · `marketing_os` · `public` · ไม่รวม `private`)
+      ⇒ **ข้อ ② ของลำดับงานรวมฐาน ปิดครบทั้งสองชั้นแล้ว** (สิทธิ์ + การมองเห็น)
+      ⚠️ **expose ≠ ใครก็อ่านได้** — `anon`/`authenticated` ยังมี 0 grants · ไม่มี USAGE · RLS policy 0
+         ⇒ ยิงเข้ามาได้ `permission denied` เหมือนเดิม · ที่เปลี่ยนคือ **service key** ใช้ REST ได้แล้ว
+      🔴 **ค่านี้อยู่นอกรีโป เทสต์มองไม่เห็น** — ถ้ามีคนเอา `marketing_os` ออกจากรายการ จะไม่มีอะไรเตือน
+         (นี่คือเหตุผลที่ ADR-0012 ยังยืนยันว่าท่อของเราต้องเดินผ่าน **rpc** ไม่ใช่ `.schema()`
+          ⇒ ท่อ ingest จะไม่พังตามค่านี้ ไม่ว่าใครจะไปแก้มันเมื่อไร)
+      🟢 ตรวจแล้วว่าสวิตช์ **"Automatically expose new tables"** (เปิดอยู่) ไม่กระทบ schema นี้ —
+         `pg_default_acl` ของ `marketing_os` มีแต่ `service_role=arwd` (มาจาก 0069) ·
+         ของ `public` ต่างหากที่มี `anon`/`authenticated` ⇒ ตารางใหม่ใน `marketing_os` ไม่หลุดไปหาเบราว์เซอร์
    🔴 **ห้ามเปิดให้ `anon`/`authenticated` จนกว่าจะตัดสินเรื่อง identity** — นับสด 26 พ.ย. 69:
       `marketing_os.workspace_members` **11 คน** · มีใน `auth.users` ของเรา **0 คน** · ของเรามี 4 บัญชี
       ⇒ policy ที่อิง `auth.uid()` แมตช์ศูนย์แถวเสมอ · เปิดกว้างแทน = ลูกค้าเราอ่านข้อมูลการตลาดได้
