@@ -148,3 +148,43 @@ workspaces · workspace_members · workspace_state          ← สามตั�
 ⇒ **ถ้าเห็นรหัสของเรา = ยังไม่ได้ย้าย ไม่ว่าจะนับได้เท่าไร**
 
 ถ้าจะใช้ `brand_rules` 7 เป็นเกณฑ์ ต้อง **เพิ่มโค้ดในแอปให้ query ตารางนั้นก่อน** — ไม่ใช่งานของการย้าย
+
+---
+
+## 7. ขั้นลงมือสุดท้าย — เหลือ 3 ค่า (เขียน 26 พ.ย. 2569 หลัง ADR-0016)
+
+> 🟢 **ข่าวดี: หลัง ADR-0016 งานนี้เล็กลงมาก** — identity จบแล้วด้วย RLS อิงการเป็นสมาชิก
+> ⇒ **ไม่ต้องใช้ service key ในแอปเลย** · ไม่ต้องเขียน helper ตรวจ workspace เอง
+> ⇒ ถ้าเซสชันบนเครื่องเคยเริ่มเขียน service-key helper ไว้ **ทิ้งได้ ไม่ต้องใช้**
+
+```
+NEXT_PUBLIC_SUPABASE_URL      = https://waigsnxhrlwtiotspaim.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = sb_publishable_Tf6Q7Mq6I2OLtfXot-EWJA_FESohA9E
+createServerClient/createBrowserClient(url, key, { db: { schema: 'marketing_os' } })
+```
+
+🔑 คีย์นี้เป็น **publishable key = สาธารณะโดยดีไซน์** (อยู่ใน `wrangler.jsonc` ของรีโปนี้แล้ว)
+🔴 **ห้ามใส่ `SUPABASE_SERVICE_ROLE_KEY` ในแอปนี้** — ไม่จำเป็นอีกแล้ว และมันข้าม RLS ทั้งหมด
+
+**ล็อกอินด้วยบัญชีเดิม `support@b-tctraining.com`** — บัญชีนี้มีอยู่ใน `auth.users` ของเราแล้ว
+(`d9c45d9c…` · สร้าง 27 มิ.ย. 2569) และถูกแมปเข้า `marketing_os.workspace_members` แล้ว
+⚠️ **รหัสผ่านคือของบัญชีในฐานเรา ไม่ใช่ของ project เดิม** — ถ้าจำไม่ได้ ใช้ "ลืมรหัสผ่าน" ของเว็บเรา
+
+### ถ้าเจอ error ให้ส่งข้อความ error มาตรง ๆ — แต่ละตัวบอกคนละเรื่อง
+
+| error | ความหมาย | แก้ที่ไหน |
+|---|---|---|
+| `PGRST106 Invalid schema: marketing_os` | PostgREST ไม่รับ schema นี้ | Dashboard → Data API → Settings → *Exposed schemas* (ควรติ๊กไว้แล้ว) |
+| `permission denied for schema/table` (42501) | ยิงมาในฐานะ `anon` คือ **ยังไม่ได้ล็อกอิน** | ล็อกอินก่อน · `anon` ถูกปิดสนิทโดยเจตนา (ADR-0016) |
+| อ่านได้แต่ได้ **0 แถว** | ล็อกอินแล้วแต่ **เป็นบัญชีอื่น** ที่ไม่ใช่สมาชิก | ล็อกอินด้วย `support@b-tctraining.com` |
+| ได้ **5 กลุ่ม** | กำลังอ่าน `public` ของเรา ไม่ใช่ `marketing_os` | `db: { schema: … }` ไม่ติด |
+| 🟢 ได้ **6 กลุ่ม** + รหัส `growth`/`employee` | **สำเร็จ** | แจ้งกลับมาเพื่อปิดข้อ ① (`APP_REPOINTED = true`) |
+
+### ทางเลือกถ้าไม่อยากแก้เอง
+push โฟลเดอร์นี้ขึ้น GitHub แบบ **private** แล้วบอกชื่อ `owner/repo`
+⇒ เซสชันคลาวด์ดึงเข้ามาแก้ได้ทันที · 🔴 ก่อน push ต้องเช็กว่ามี `.env`/`.env.local` ไหม
+ถ้ามีต้องใส่ `.gitignore` ก่อน (รีโปนี้มีบทเรียนเรื่องคีย์หลุดแล้ว · ledger #96)
+
+🔴 **เซสชันคลาวด์ยืนยันขั้นนี้เองไม่ได้** — ตรวจทางเข้าแล้ว 5 รอบวันที่ 26 พ.ย. 2569:
+โฟลเดอร์ทั้ง 4 ของ `LAPTOP-3N94M8O0` ขึ้น `not_available` · ไม่มีเซสชันอื่นที่มองเห็นกันได้ ·
+แอปไม่มี repo บน GitHub และไม่มี project บน Vercel ⇒ **ต้องทำบนเครื่องเท่านั้น**
