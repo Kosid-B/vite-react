@@ -118,3 +118,6 @@ verify_jwt = false
 #       ⇒ ถ้าเปลี่ยนเป็น false ต้องถามก่อนว่าใครจะยิงเข้ามาได้เพิ่ม ไม่ใช่เปลี่ยนเพราะทดสอบไม่ผ่าน
 [functions.marketing-behavior-ingest]
 verify_jwt = true
+
+[functions.os-marketing-brain]
+verify_jwt = true
