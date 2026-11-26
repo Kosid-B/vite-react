@@ -7,9 +7,11 @@ on:
   push:
     branches: [main]
   # 🔴 ห้ามลบ — ledger #114 · 26 พ.ย. 2569
-  # push สาขาฟีเจอร์ "ก่อน" เปิด PR = ไม่มี pull_request event ⇒ CI ไม่รันกับ head นั้นเลย
-  # และ GitHub จะผูก run ของ head เก่าเข้า PR ใหม่ ⇒ หน้า PR ดูเหมือนมีด่านแล้ว ทั้งที่ยังไม่ได้ตรวจ
-  # ⇒ ต้องมีทางสั่งรันเองโดยไม่ต้องใช้ท่าที่ห้าม (คอมมิตว่าง / ปิด-เปิด PR ใหม่)
+  # มีทางสั่งรันเองไว้ เพื่อไม่ต้องใช้ท่าที่ห้าม (คอมมิตว่าง / ปิด-เปิด PR ใหม่)
+  # เวลาต้องตรวจ head ที่ CI ยังไม่แตะ
+  # ⚠️ ไม่ใช่ยาแก้ทุกกรณี: ถ้า PR มี merge conflict (mergeable_state = dirty)
+  #    workflow ที่ trigger ด้วย pull_request จะ "ไม่เกิด run เลย" เพราะ GitHub
+  #    สร้าง merge ref (refs/pull/<n>/merge) ไม่ได้ ⇒ ต้องแก้ conflict ก่อน
   workflow_dispatch:
 
 jobs:
