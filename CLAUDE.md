@@ -124,8 +124,11 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
 🔴 **แต่ขั้นเก็บคลังพังเงียบทั้ง 2/2** (`archived_at = NULL`) — ledger #105 · ADR-0012
    4 แถวที่มี `archived_at` เป็นของที่ **คัดลอกมาจากฐานเขา** ⇒ ไม่ใช่หลักฐานของฝั่งเรา
    ไล่แล้ว: rpc ✅ · bucket ✅ · อัปไฟล์ ✅ (2 ไฟล์) · เหลือ `.schema('marketing_os').from(...).update(...)` ❌
-   🟡 น่าจะเป็น `PGRST106` — PostgREST รับเฉพาะ schema ใน **"Exposed schemas"** ซึ่งเป็น
-      **config ของแพลตฟอร์ม ไม่ได้อยู่ในฐานข้อมูล** ⇒ SQL อ่านไม่เห็น · เทสต์บังคับไม่ได้ · ไม่มี log
+   **สาเหตุมีสองชั้น** — 🟡 น่าจะโดน `PGRST106` (PostgREST รับเฉพาะ schema ใน **"Exposed schemas"**
+      ซึ่งเป็น config ของแพลตฟอร์ม ไม่ได้อยู่ในฐานข้อมูล ⇒ SQL อ่านไม่เห็น · เทสต์บังคับไม่ได้)
+      · 🟢 **และวัดตรงได้ว่า `service_role` มี grant บนตารางใน `marketing_os` = 0**
+      ⇒ ต่อให้เปิด schema ก็ยังเขียนไม่ได้ · `bypassrls` ข้ามได้แค่ RLS ไม่ใช่สิทธิ์บนตาราง
+      ⇒ ที่ rpc ทำงานได้เพราะเป็น `security definer` **ไม่ใช่เพราะ service_role มีสิทธิ์**
 🔴 **กติกาใหม่ (ADR-0012): เข้า `marketing_os` ผ่าน rpc ใน `public` เท่านั้น**
    ห้ามแตะตาราง `marketing_*` ตรงจากไฟล์ไหนทั้งสิ้น (ข้อยกเว้นของไฟล์ท่อถูกถอดทิ้งแล้ว) ·
    ห้ามมี `.schema(` ในไฟล์ท่อ · rpc ที่เรียกต้องมี migration + `grant … to service_role` จริง
@@ -135,6 +138,8 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
    ไม่มี USAGE บน schema ⇒ 🔴 **แอป OS ที่ใช้ anon key อ่านไม่ได้สักแถว** — ข้อนี้ยังไม่ถูกแก้
    และแก้ไม่ได้ด้วยการเปิด grant เฉย ๆ เพราะ `authenticated` ของเรา = **ลูกค้าของเรา** ไม่ใช่ผู้ใช้ของเขา
    ⇒ เปิดกว้าง = ลูกค้าทุกคนที่ล็อกอินอ่านข้อมูลการตลาดได้ · ต้องตัดสินเรื่อง identity ก่อน
+   🔢 **นับสด 26 พ.ย. 69**: `marketing_os.workspace_members` **11 คน** · ที่มีอยู่ใน `auth.users`
+      ของเรา **0 คน** · ผู้ใช้ทั้งหมดของเรา 4 บัญชี ⇒ policy ที่อิง `auth.uid()` แมตช์ศูนย์แถวเสมอ
 🧪 `mode:'test'` = ทางพิสูจน์โดยไม่ปนข้อมูลจริง · และเพราะ localhost ไม่อยู่ใน allowlist
    ⇒ **ทดสอบจากเครื่องไม่ได้ ต้องทดสอบบน production ด้วย `test`**
    🔒 เทสต์ล็อกค่า `behaviorMode` **สองทาง** — จะกลับไป `'test'` ก็ต้องแก้เทสต์ = ตั้งใจ ไม่ใช่เผลอ
