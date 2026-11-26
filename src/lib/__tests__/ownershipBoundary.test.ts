@@ -231,6 +231,24 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
     expect(/insert[^;]*marketing_os\.workspace_members to authenticated/i.test(code)).toBe(false);
   });
 
+  /** 🔓 0075 — เปิดให้สมาชิก "อ่าน" ผลที่ไหลข้ามระบบ (เจ้าของสั่ง 26 พ.ย. 2569)
+   *  ADR-0016 ข้อ 6 ปิด brand_rules + behavior_events ไว้เพราะแอปยังไม่ query · ตอนนี้แอปมีหน้าที่ query จริง
+   *  ⇒ เปิดเท่าที่หน้าจอใช้ และล็อกไม่ให้ใครขยายเงียบ ๆ */
+  it('🔴 0075 อ่านอย่างเดียว · ไม่ส่ง session_id · rpc ผลลัพธ์ต้องตรวจสมาชิกก่อน', () => {
+    const sql = readFileSync(resolve(ROOT, 'supabase/migrations/0075_marketing_os_member_read_results.sql'), 'utf8');
+    const code = sql.replace(/^\s*--.*$/gm, '');
+    expect(/\bto\b[^;]*\banon\b/i.test(code), 'ห้าม grant ให้ anon').toBe(false);
+    expect(/all\s+tables\s+in\s+schema|alter\s+default\s+privileges/i.test(code), 'ห้ามเหวี่ยงกว้าง').toBe(false);
+    expect(/grant\s+(insert|update|delete|all)/i.test(code), 'ต้องอ่านอย่างเดียว').toBe(false);
+    expect(/for\s+(all|insert|update|delete)\s+to\s+authenticated/i.test(code), 'policy ต้องเป็น select เท่านั้น').toBe(false);
+    const evGrant = code.match(/grant select \(([^)]*)\)\s+on marketing_os\.marketing_behavior_events/i);
+    expect(evGrant, 'behavior_events ต้อง grant ระดับคอลัมน์').not.toBeNull();
+    expect(evGrant![1]).not.toMatch(/session_id|batch_id/);
+    expect(code).toMatch(/is_workspace_member\(p_workspace\)[\s\S]*errcode = '42501'/);
+    expect(/grant execute on function public\.marketing_os_funnel_summary[^;]*authenticated/i.test(code),
+      'ตัวจริง (0073) ห้ามเปิดให้ authenticated ตรง ๆ — ต้องผ่านตัวห่อที่ตรวจสมาชิก').toBe(false);
+  });
+
   /* ── ข้อยกเว้น 15 พ.ย. 2569 — อ่านอย่างเดียว 3 ตาราง ───────────────────
    * 🔴 ข้อยกเว้นที่ไม่มีเทสต์ล้อม = ประตูที่เปิดแล้วลืมปิด
    *    สามข้อล่างนี้บังคับว่า "เปิดแค่ที่เปิด" ไม่ใช่ "เปิดแล้วปล่อย" */
