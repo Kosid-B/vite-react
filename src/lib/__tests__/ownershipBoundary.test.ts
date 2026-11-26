@@ -157,11 +157,24 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
    *      ⇒ สิทธิ์เปล่าที่ไม่มี policy คุม = ของเดิมที่เราห้าม และยังห้ามอยู่
    *   ③ ห้าม `on all tables in schema` และห้าม `alter default privileges` กับ `authenticated`
    *      ⇒ ต้องระบุชื่อตารางทีละตัว (บทเรียน 0069: ตารางที่สร้างทีหลังได้สิทธิ์ติดมาเงียบ ๆ) */
+  /**
+   * 🔴 **แก้ผลบวกปลอม 26 พ.ย. 2569** — ด่านรอบแรกจับสตริง `marketing_os` ทั้งคำ
+   *    ⇒ `grant execute on function public.marketing_os_funnel_summary(…) to authenticated`
+   *      ถูกจับทั้งที่เป็นฟังก์ชันใน **`public`** ไม่ใช่ object ใน schema `marketing_os`
+   *    (ความผิดชุดเดียวกับที่ CLAUDE.md เตือนไว้: `format('alter table marketing_os.%I …')` ของตัวเอง)
+   *
+   * เส้นแบ่งที่ถูก: กฎนี้คุม **สิทธิ์บน object ที่อยู่ใน schema `marketing_os`**
+   * ⇒ ตัดชื่อ `public.<อะไรก็ได้>` ออกก่อน แล้วถ้ายังเหลือคำว่า `marketing_os` = เป็นของ schema นั้นจริง
+   *   · ฟังก์ชันใน `public` ถูกคุมด้วยกฎ rpc แยก (ADR-0012) ไม่ใช่กฎนี้
+   */
+  const touchesMarketingOsObject = (stmt: string) =>
+    /marketing_os/i.test(stmt.replace(/\bpublic\.[a-z0-9_]+/gi, ''));
+
   const scanBrowserGrants = (sql: string): string[] => {
     const hasPolicy = /create\s+policy[\s\S]*?marketing_os/i.test(sql);
     const bad: string[] = [];
     for (const stmt of sql.split(';')) {
-      if (!/marketing_os/i.test(stmt)) continue;
+      if (!touchesMarketingOsObject(stmt)) continue;
       const head = stmt.replace(/^[\s\S]*?\n(?=\s*(grant|alter))/i, '');
       if (!/^\s*(grant|alter\s+default\s+privileges)/i.test(head)) continue;
       if (!/\bto\b[^;]*\b(anon|authenticated)\b/i.test(stmt)) continue;
@@ -214,6 +227,17 @@ describe('🔴 เส้นแบ่งเจ้าของ — Marketing OS �
     expect(scanBrowserGrants('grant select on all tables in schema marketing_os to service_role;')).toHaveLength(0);
     // revoke ต้องไม่ถูกนับเป็นการเปิด
     expect(scanBrowserGrants('revoke all on marketing_os.x from anon, authenticated;')).toHaveLength(0);
+    // 🔴 ผลบวกปลอมที่เคยเกิด: ฟังก์ชันใน public ที่ **ชื่อ** มีคำว่า marketing_os
+    expect(
+      scanBrowserGrants(
+        'grant execute on function public.marketing_os_funnel_summary(timestamptz) to authenticated;',
+      ),
+      'ฟังก์ชันใน public ไม่ใช่ object ของ schema marketing_os',
+    ).toHaveLength(0);
+    // แต่ฟังก์ชันที่อยู่ **ใน** schema marketing_os ต้องยังถูกคุม
+    expect(
+      scanBrowserGrants('grant execute on function marketing_os.secret_fn() to authenticated;'),
+    ).toHaveLength(1);
   });
 
   it('🔴 0072 ต้องปิด `anon` ไว้จริง และระบุชื่อตารางทีละตัว ไม่เหวี่ยงทั้ง schema', () => {

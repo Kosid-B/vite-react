@@ -186,7 +186,19 @@ format: article|short_video|checklist|interactive · source: website|saas · mod
       ⚠️ **expose ≠ ใครก็อ่านได้** — 🔴 `anon` ยังมี **0 grants · ไม่มี USAGE · ไม่มี policy** ตลอดกาล
          🔁 **`authenticated` เปลี่ยนแล้ว 26 พ.ย. 69 (0072 · ADR-0016)** — ได้ `usage` + CRUD
          เฉพาะ **17 ตารางที่แอป OS query** พร้อม RLS policy อิงการเป็นสมาชิกทุกตาราง
-         ⇒ ลูกค้าเราที่ไม่ใช่สมาชิกเห็น **0 แถว** (วัดแล้ว) · อีก 6 ตารางยัง `service_role` เท่านั้น
+         ⇒ ลูกค้าเราที่ไม่ใช่สมาชิกเห็น **0 แถว** (วัดแล้ว)
+         🔁 **แก้ 26 พ.ย. 69 เวลา ~09:45 (ledger #111) — เคยเขียนว่า "อีก 6 ตารางยัง `service_role` เท่านั้น"**
+            เซสชันบนเครื่องเจ้าของ apply `0075_marketing_os_member_read_results` ที่ 09:30:11
+            ⇒ เปิด **อีก 2 ตาราง** ให้ `authenticated` อ่านได้ **แบบอิงสมาชิกเหมือนกัน**:
+            · `marketing_brand_rules` — `grant select` ทั้งตาราง + policy `is_workspace_member`
+            · `marketing_behavior_events` — 🔑 **column-level grant 8 คอลัมน์** (`id`·`workspace_id`·
+              `occurred_at`·`source`·`name`·`topic`·`format`·`mode`) + policy `is_workspace_member`
+              ⇒ `session_id`/`props` **ไม่ถูกเปิด** · ดีไซน์นี้รัดกุมกว่าเปิดทั้งตาราง
+            ⇒ **เหลือ 4 ตารางที่ยัง `service_role` เท่านั้น** (`behavior_batches`·`behavior_config`
+              ·`behavior_limits`·`workspace_state`)
+            🔴 **และเป็นเหตุให้ `has_table_privilege` เชื่อไม่ได้ลำพัง** — column-level grant ทำให้
+              `has_table_privilege(...,'select')` = **false** แต่ `select`/`count(*)` **ทำได้จริง**
+              ⇒ ตรวจสิทธิ์ต้องดู `has_column_privilege` หรือ `pg_attribute.attacl` ด้วย ไม่ใช่แค่ระดับตาราง
       🔴 **ค่านี้อยู่นอกรีโป เทสต์มองไม่เห็น** — ถ้ามีคนเอา `marketing_os` ออกจากรายการ จะไม่มีอะไรเตือน
          (นี่คือเหตุผลที่ ADR-0012 ยังยืนยันว่าท่อของเราต้องเดินผ่าน **rpc** ไม่ใช่ `.schema()`
           ⇒ ท่อ ingest จะไม่พังตามค่านี้ ไม่ว่าใครจะไปแก้มันเมื่อไร)
